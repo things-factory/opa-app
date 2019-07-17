@@ -1,6 +1,6 @@
 {
   "name": "@things-factory/opa-app",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "main": "dist-server/index.js",
   "browser": "client/index.js",
   "things-factory": true,
@@ -47,5 +47,7 @@
     "@things-factory/transport-base": "*",
     "@things-factory/warehouse-base": "*"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@things-factory/opa-test": "*"
+  }
 }
