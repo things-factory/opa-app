@@ -12,5 +12,85 @@ export default function route(page) {
     case 'create-arrival-notice':
       import('./pages/create-arrival-notice')
       return page
+
+    case 'company-profile':
+      import('./pages/company-profile')
+      return page
+
+    case 'confirm-arrival-notice':
+      import('./pages/confirm-arrival-notice')
+      return page
+
+    case 'confirm-shipping-notice':
+      import('./pages/confirm-shipping-notice')
+      return page
+
+    case 'confirm-transport-order':
+      import('./pages/confirm-transport-order')
+      return page
+
+    case 'create-shipping-notice':
+      import('./pages/create-shipping-notice')
+      return page
+
+    case 'create-transport-order':
+      import('./pages/create-transport-order')
+      return page
+
+    case 'inbound-work-order':
+      import('./pages/inbound-work-order')
+      return page
+
+    case 'intransit-stock':
+      import('./pages/intransit-stock')
+      return page
+
+    case 'onhand-stock':
+      import('./pages/onhand-stock')
+      return page
+
+    case 'outbound-work-order':
+      import('./pages/outbound-work-order')
+      return page
+
+    case 'picking-by-product':
+      import('./pages/picking-by-product')
+      return page
+
+    case 'picking-by-unit':
+      import('./pages/picking-by-unit')
+      return page
+
+    case 'putaway-goods':
+      import('./pages/putaway-goods')
+      return page
+
+    case 'receive-arrival-notice':
+      import('./pages/receive-arrival-notice')
+      return page
+
+    case 'receive-goods':
+      import('./pages/receive-goods')
+      return page
+
+    case 'receive-shipping-notice':
+      import('./pages/receive-shipping-notice')
+      return page
+
+    case 'receive-transport-order':
+      import('./pages/receive-transport-order')
+      return page
+
+    case 'summary-bill-amount':
+      import('./pages/summary-bill-amount')
+      return page
+
+    case 'update-claim-chit':
+      import('./pages/update-claim-chit')
+      return page
+
+    case 'vas-work-order':
+      import('./pages/vas-work-order')
+      return page
   }
 }
