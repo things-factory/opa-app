@@ -1,4 +1,4 @@
-import { i18next, localize } from '@things-factory/i18n-base'
+∏import { i18next, localize } from '@things-factory/i18n-base'
 import { PageView } from '@things-factory/shell'
 import { html, css } from 'lit-element'
 

@@ -41,14 +41,6 @@ export default function route(page) {
       import('./pages/inbound-work-order')
       return page
 
-    case 'intransit-stock':
-      import('./pages/intransit-stock')
-      return page
-
-    case 'onhand-stock':
-      import('./pages/onhand-stock')
-      return page
-
     case 'outbound-work-order':
       import('./pages/outbound-work-order')
       return page

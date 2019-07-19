@@ -1,7 +1,7 @@
 import { i18next, localize } from '@things-factory/i18n-base'
 import { isMobileDevice, PageView } from '@things-factory/shell'
 import '@things-factory/simple-ui'
-import { html, css } from 'lit-element'
+import { css, html } from 'lit-element'
 
 class CreateArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
@@ -233,7 +233,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     }
 
     this.servicesData = {
-      records: new Array(20).fill().map(el => new Object())
+      records: new Array(20).fill().map(() => new Object())
     }
   }
 }

@@ -192,7 +192,7 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
     }
 
     this.data = {
-      records: new Array(50).fill().map(el => new Object())
+      records: new Array(50).fill().map(() => new Object())
     }
   }
 }
