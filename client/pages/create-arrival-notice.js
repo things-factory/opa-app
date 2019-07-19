@@ -16,11 +16,9 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   static get styles() {
     return css`
       :host {
-        flex: 1;
         display: flex;
         flex-direction: column;
         overflow-x: overlay;
-        height: 100%;
       }
       .grist {
         display: flex;
@@ -31,13 +29,23 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         overflow-y: hidden;
         flex: 1;
       }
+      .button-container {
+        display: flex;
+        margin-left: auto;
+      }
     `
+  }
+
+  get context() {
+    return {
+      title: i18next.t('title.create_arrival_notice')
+    }
   }
 
   render() {
     return html`
       <div>
-        <label>Arrival Notice</label>
+        <label>${i18next.t('title.arrival_notice')}</label>
 
         <form>
           <input name="purchase-order" />
@@ -52,43 +60,32 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       </div>
 
       <div class="grist">
-        <label>Arrive Notice Detail</label>
+        <label>${i18next.t('title.arrival_notice_detail')}</label>
 
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.productsConfig}
           .data=${this.productsData}
-          @page-changed=${e => {
-            this.page = e.detail
-          }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
         ></data-grist>
 
         <div class="button-container">
-          <mwc-button id="product-add">Add</mwc-button>
-          <mwc-button id="product-save">Save</mwc-button>
+          <mwc-button id="product-add">${i18next.t('button.add')}</mwc-button>
+          <mwc-button id="product-save">${i18next.t('button.save')}</mwc-button>
         </div>
       </div>
 
       <div class="grist">
-        <label>VAS Request</label>
+        <label>${i18next.t('title.vas_request')}</label>
+
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.servicesConfig}
           .data=${this.servicesData}
-          @page-changed=${e => {
-            this.page = e.detail
-          }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
         ></data-grist>
 
         <div class="button-container">
-          <mwc-button id="service-add">Add</mwc-button>
-          <mwc-button id="service-save">Save</mwc-button>
+          <mwc-button id="service-add">${i18next.t('button.add')}</mwc-button>
+          <mwc-button id="service-save">${i18next.t('button.save')}</mwc-button>
         </div>
       </div>
     `
@@ -173,7 +170,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     }
 
     this.productsData = {
-      records: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
+      records: new Array(20).fill().map(el => new Object())
     }
 
     this.servicesConfig = {
@@ -236,7 +233,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     }
 
     this.servicesData = {
-      records: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
+      records: new Array(20).fill().map(el => new Object())
     }
   }
 }
