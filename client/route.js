@@ -8,5 +8,9 @@ export default function route(page) {
     case 'opa-home':
       import('./pages/opa-home')
       return page
+
+    case 'create-arrival-notice':
+      import('./pages/create-arrival-notice')
+      return page
   }
 }
