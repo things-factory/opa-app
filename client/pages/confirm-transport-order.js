@@ -82,7 +82,8 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
         },
         {
           type: 'gutter',
-          name: 'row-selector'
+          name: 'row-selector',
+          multiple: true
         },
         {
           type: 'string',

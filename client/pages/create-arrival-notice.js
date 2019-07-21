@@ -108,7 +108,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           name: 'product_code',
           header: i18next.t('field.product_code'),
           record: {
-            align: 'center'
+            align: 'center',
+            editable: true
           },
           width: 120
         },
@@ -117,7 +118,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           name: 'description',
           header: i18next.t('field.description'),
           record: {
-            align: 'left'
+            align: 'left',
+            editable: true
           },
           width: 200
         },
@@ -126,7 +128,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           name: 'packing_type',
           header: i18next.t('field.packing_type'),
           record: {
-            align: 'left'
+            align: 'left',
+            editable: true
           },
           width: 130
         },
@@ -135,25 +138,28 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           name: 'pack_qty',
           header: i18next.t('field.pack_qty'),
           record: {
-            align: 'left'
+            align: 'left',
+            editable: true
           },
           width: 80
         },
         {
-          type: 'number',
+          type: 'float',
           name: 'total_qty',
           header: i18next.t('field.total_qty'),
           record: {
-            align: 'right'
+            align: 'right',
+            editable: true
           },
           width: 80
         },
         {
-          type: 'number',
+          type: 'float',
           name: 'container_no',
           header: i18next.t('field.container_no'),
           record: {
-            align: 'right'
+            align: 'right',
+            editable: true
           },
           width: 130
         },
@@ -162,7 +168,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           name: 'batch_no',
           header: i18next.t('field.batch_no'),
           record: {
-            align: 'center'
+            align: 'center',
+            editable: true
           },
           width: 200
         }
@@ -189,7 +196,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           name: 'service',
           header: i18next.t('field.service'),
           record: {
-            align: 'center'
+            align: 'center',
+            editable: true
           },
           width: 120
         },
@@ -198,16 +206,18 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           name: 'description',
           header: i18next.t('field.description'),
           record: {
-            align: 'left'
+            align: 'left',
+            editable: true
           },
           width: 200
         },
         {
-          type: 'number',
+          type: 'float',
           name: 'qty',
           header: i18next.t('field.qty'),
           record: {
-            align: 'right'
+            align: 'right',
+            editable: true
           },
           width: 100
         },
@@ -216,16 +226,18 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           name: 'unit',
           header: i18next.t('field.unit'),
           record: {
-            align: 'center'
+            align: 'center',
+            editable: true
           },
           width: 100
         },
         {
-          type: 'number',
+          type: 'float',
           name: 'price',
           header: i18next.t('field.price'),
           record: {
-            align: 'right'
+            align: 'right',
+            editable: true
           },
           width: 100
         }
