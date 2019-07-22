@@ -94,11 +94,16 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
           editable: true
         },
         {
-          type: 'string',
+          type: 'link',
           name: 'purchase_order',
           header: i18next.t('field.purchase_order'),
           record: {
-            align: 'center'
+            align: 'center',
+            options: {
+              href: function(column, record, rowIndex) {
+                return `${location.origin}/arrival-notice-detail/${record.purchase_order}`
+              }
+            }
           },
           editable: true
         },
@@ -130,7 +135,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
           editable: true
         },
         {
-          type: 'string',
+          type: 'datetime',
           name: 'eta',
           header: i18next.t('field.eta'),
           record: {
@@ -148,7 +153,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
           editable: true
         },
         {
-          type: 'string',
+          type: 'date',
           name: 'confirm_date',
           header: i18next.t('field.confirm_date'),
           record: {
@@ -157,7 +162,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
           editable: true
         },
         {
-          type: 'string',
+          type: 'date',
           name: 'receive_date',
           header: i18next.t('field.receive_date'),
           record: {
@@ -166,7 +171,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
           editable: true
         },
         {
-          type: 'string',
+          type: 'date',
           name: 'reject_date',
           header: i18next.t('field.reject_date'),
           record: {
@@ -178,7 +183,19 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
     }
 
     this.arriveData = {
-      records: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
+      records: [
+        {
+          company: 'Company',
+          purchase_order: 'ORD-1002034',
+          supplier_name: 'HatioLab',
+          gan: 'GAN-1995820385',
+          do_no: 'DO-195877392-02-49185',
+          eat: '2019-07-21',
+          statue: 'ARRIVED',
+          confirm_date: '2019-07-21',
+          receive_date: '2019-07-21'
+        }
+      ]
     }
   }
 }

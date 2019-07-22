@@ -13,6 +13,10 @@ export default function route(page) {
       import('./pages/create-arrival-notice')
       return page
 
+    case 'arrival-notice-detail':
+      import('./pages/arrival-notice-detail')
+      return page
+
     case 'company-profile':
       import('./pages/company-profile')
       return page

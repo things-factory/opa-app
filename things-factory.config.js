@@ -13,6 +13,10 @@ export default {
       page: 'create-arrival-notice'
     },
     {
+      tagname: 'arrival-notice-detail',
+      page: 'arrival-notice-detail'
+    },
+    {
       tagname: 'company-profile',
       page: 'company-profile'
     },
