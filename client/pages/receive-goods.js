@@ -1,0 +1,180 @@
+import { i18next, localize } from '@things-factory/i18n-base'
+import { isMobileDevice, PageView } from '@things-factory/shell'
+import '@things-factory/simple-ui'
+import { css, html } from 'lit-element'
+
+class ReceiveGoods extends localize(i18next)(PageView) {
+  static get properties() {
+    return {
+      productsConfig: Object,
+      servicesConfig: Object,
+      productsData: Object,
+      servicesData: Object
+    }
+  }
+
+  static get styles() {
+    return css`
+      :host {
+        display: flex;
+        flex-direction: column;
+        overflow-x: overlay;
+      }
+      .input-box {
+        display: flex;
+        flex: 1;
+      }
+      .grist {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+      }
+      data-grist {
+        overflow-y: hidden;
+        flex: 1;
+      }
+      .button-container {
+        display: flex;
+        margin-left: auto;
+      }
+    `
+  }
+
+  render() {
+    return html`
+      <div class="input-box">
+        <label>${i18next.t('title.receive-goods-master')}</label>
+
+        <form>
+          <input name="work-order" />
+          <input name="purchase-order" />
+          <input name="supplier-name" />
+          <input name="gan" />
+          <input name="do-no" />
+          <input name="contact-point" />
+          <input name="contact-no." />
+          <input name="fax" />
+          <input name="eta" />
+        </form>
+      </div>
+
+      <div class="grist">
+        <label>${i18next.t('title.receive-goods-detail')}</label>
+        <data-grist
+          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+          .config=${this.servicesConfig}
+          .data=${this.servicesData}
+          @page-changed=${e => {
+            this.page = e.detail
+          }}
+          @limit-changed=${e => {
+            this.limit = e.detail
+          }}
+        ></data-grist>
+      </div>
+    `
+  }
+
+  firstUpdated() {
+    this.servicesConfig = {
+      columns: [
+        {
+          type: 'gutter',
+          name: 'sequence'
+        },
+        {
+          type: 'gutter',
+          name: 'button',
+          icon: 'delete'
+        },
+        {
+          type: 'string',
+          name: 'check box',
+          header: i18next.t('field.check_box'),
+          record: {
+            align: 'center',
+            editable: true
+          }
+        },
+        {
+          type: 'string',
+          name: 'product code',
+          header: i18next.t('field.product_code'),
+          record: {
+            align: 'center',
+            editable: true
+          }
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.description'),
+          record: {
+            align: 'center',
+            editable: true
+          }
+        },
+        {
+          type: 'string',
+          name: 'packing type',
+          header: i18next.t('field.packing_type'),
+          record: {
+            align: 'center',
+            editable: true
+          }
+        },
+        {
+          type: 'number',
+          name: 'pack quantity',
+          header: i18next.t('field.pack_quantity'),
+          record: {
+            align: 'center',
+            editable: true
+          }
+        },
+        {
+          type: 'number',
+          name: 'total quantity',
+          header: i18next.t('field.total_quantity'),
+          record: {
+            align: 'center',
+            editable: true
+          }
+        },
+        {
+          type: 'number',
+          name: 'container No.',
+          header: i18next.t('field.catainer_no'),
+          record: {
+            align: 'center',
+            editable: true
+          }
+        },
+        {
+          type: 'number',
+          name: 'batch No.',
+          header: i18next.t('field.product_code'),
+          record: {
+            align: 'center',
+            editable: true
+          }
+        },
+        {
+          type: 'string',
+          name: 'buffer location',
+          header: i18next.t('field.buffer_location'),
+          record: {
+            align: 'center',
+            editable: true
+          }
+        }
+      ]
+    }
+
+    this.servicesData = {
+      records: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
+    }
+  }
+}
+
+window.customElements.define('receive-goods', ReceiveGoods)
