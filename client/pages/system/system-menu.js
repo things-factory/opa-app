@@ -539,18 +539,20 @@ class SystemMenu extends localize(i18next)(PageView) {
   }
 
   async _deleteMenu(menuName) {
-    await client.query({
-      query: gql`
-        mutation {
-          deleteMenu(${gqlBuilder.buildArgs({
-            name: menuName
-          })}) {
-            name
+    let deleteConfirm = confirm('Are you sure?')
+    if (deleteConfirm) {
+      await client.query({
+        query: gql`
+          mutation {
+            deleteMenu(${gqlBuilder.buildArgs({
+              name: menuName
+            })}) {
+              name
+            }
           }
-        }
-      `
-    })
-
+        `
+      })
+    }
     this._getGroupMenus()
     this._getScreens()
   }
