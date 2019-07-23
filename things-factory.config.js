@@ -5,6 +5,14 @@ export default {
   route,
   routes: [
     {
+      tagname: 'system-menu',
+      page: 'system-menu'
+    },
+    {
+      tagname: 'system-menu-column',
+      page: 'system-menu-column'
+    },
+    {
       tagname: 'opa-home',
       page: 'opa-home'
     },

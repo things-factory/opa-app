@@ -5,6 +5,14 @@ export default function route(page) {
     case 'index':
       return isMobileDevice() ? 'menu-list' : 'opa-home'
 
+    case 'system-menu':
+      import('./pages/system/system-menu')
+      return page
+
+    case 'system-menu-column':
+      import('./pages/system/system-menu-column')
+      return page
+
     case 'opa-home':
       import('./pages/opa-home')
       return page
