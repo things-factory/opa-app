@@ -234,7 +234,9 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
   }
 
   stateChanged(state) {
-    this._orderId = state.route.resourceId
+    if (JSON.parse(this.active)) {
+      this._orderId = state.route.resourceId
+    }
   }
 
   updated(changedProps) {
