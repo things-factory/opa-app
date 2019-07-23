@@ -1,6 +1,6 @@
 import { i18next, localize } from '@things-factory/i18n-base'
 import { PageView } from '@things-factory/shell'
-import { html, css } from 'lit-element'
+import { css, html } from 'lit-element'
 
 class CreateTransportOrder extends localize(i18next)(PageView) {
   static get properties() {
@@ -35,12 +35,23 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
         <label>${i18next.t('title.transport_order')}</label>
 
         <form>
-          <input name="customer-company" />
-          <input name="contact-point" />
-          <input name="delivery-date" />
-          <input name="contact-number" />
-          <input name="delievery-address" />
-          <input name="fleet-spec" />
+          <label>${i18next.t('label.customer_company')}</label>
+          <input name="customer_company" />
+
+          <label>${i18next.t('label.contact_point')}</label>
+          <input name="contact_point" />
+
+          <label>${i18next.t('label.delivery_date')}</label>
+          <input name="delivery_date" />
+
+          <label>${i18next.t('label.contact_number')}</label>
+          <input name="contact_number" />
+
+          <label>${i18next.t('label.delievery_address')}</label>
+          <input name="delievery_address" />
+
+          <label>${i18next.t('label.fleet_spec')}</label>
+          <input name="fleet_spec" />
         </form>
       </div>
 

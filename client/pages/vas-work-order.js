@@ -38,22 +38,39 @@ class VasWorkOrder extends localize(i18next)(PageView) {
   render() {
     return html`
       <div class="grist">
-        <label>Arrive Notice Master</label>
+        <label>${i18next.t('title.arrival_notice_master')}</label>
         <form>
-          <input name="work order" />
-          <input name="purchase Order" />
-          <input name="Supplier Name" />
-          <input name="GAN" />
-          <input name="DO No" />
-          <input name="Contact Point" />
-          <input name="Contact No." />
-          <input name="Fax " />
-          <input name="ETA" />
+          <label>${i18next.t('label.work_order')}</label>
+          <input name="work_order" />
+
+          <label>${i18next.t('label.purchase_order')}</label>
+          <input name="purchase_order" />
+
+          <label>${i18next.t('label.supplier_name')}</label>
+          <input name="supplier_name" />
+
+          <label>${i18next.t('label.gan')}</label>
+          <input name="gan" />
+
+          <label>${i18next.t('label.do_no')}</label>
+          <input name="do_no" />
+
+          <label>${i18next.t('label.contact_point')}</label>
+          <input name="contact_point" />
+
+          <label>${i18next.t('label.contact_no')}</label>
+          <input name="contact_no" />
+
+          <label>${i18next.t('label.fax')}</label>
+          <input name="fax" />
+
+          <label>${i18next.t('label.eta')}</label>
+          <input name="eta" />
         </form>
       </div>
 
       <div class="grist">
-        <label>VAS Request and materials</label>
+        <label>${i18next.t('title.vas_request_and_materials')}</label>
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.servicesConfig}

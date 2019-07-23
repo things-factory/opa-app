@@ -48,14 +48,31 @@ class OutboundWorkOrder extends localize(i18next)(PageView) {
         <label>${i18next.t('title.Shipping Notice Master')}</label>
 
         <form>
+          <label>${i18next.t('label.work_order_no')}</label>
           <input name="work_order_no" />
+
+          <label>${i18next.t('label.customer_company')}</label>
           <input name="customer_company" />
+
+          <label>${i18next.t('label.contact_point')}</label>
           <input name="contact_point" />
+
+          <label>${i18next.t('label.delivery_date')}</label>
           <input name="delivery_date" />
+
+          <label>${i18next.t('label.contact_number')}</label>
           <input name="contact_number" />
+
+          <label>${i18next.t('label.export')}</label>
           <input name="export" />
+
+          <label>${i18next.t('label.delivery_address')}</label>
           <input name="delivery_address" />
+
+          <label>${i18next.t('label.need_fleet')}</label>
           <input name="need_fleet" />
+
+          <label>${i18next.t('label.fleet_spec')}</label>
           <input name="fleet_spec" />
         </form>
         <div class="button-container">

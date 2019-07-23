@@ -1,7 +1,7 @@
-import { localize, i18next } from '@things-factory/i18n-base'
+import { i18next, localize } from '@things-factory/i18n-base'
 import { isMobileDevice, PageView } from '@things-factory/shell'
 import '@things-factory/simple-ui'
-import { html, css } from 'lit-element'
+import { css, html } from 'lit-element'
 
 class InboundWorkOrder extends localize(i18next)(PageView) {
   static get properties() {
@@ -48,13 +48,28 @@ class InboundWorkOrder extends localize(i18next)(PageView) {
         <div><label>${i18next.t('field.work_order')}</label><span>BARCODE</span></div>
 
         <form>
-          <input name="purchase-order" />
-          <input name="supplier-name" />
+          <label>${i18next.t('label.purchase_order')}</label>
+          <input name="purchase_order" />
+
+          <label>${i18next.t('label.supplier_name')}</label>
+          <input name="supplier_name" />
+
+          <label>${i18next.t('label.gan')}</label>
           <input name="gan" />
-          <input name="delivery-no" />
-          <input name="contact-point" />
-          <input name="contact-no" />
+
+          <label>${i18next.t('label.delivery_no')}</label>
+          <input name="delivery_no" />
+
+          <label>${i18next.t('label.contact_point')}</label>
+          <input name="contact_point" />
+
+          <label>${i18next.t('label.contact_no')}</label>
+          <input name="contact_no" />
+
+          <label>${i18next.t('label.fax')}</label>
           <input name="fax" />
+
+          <label>${i18next.t('label.eta')}</label>
           <input name="eta" />
         </form>
       </div>

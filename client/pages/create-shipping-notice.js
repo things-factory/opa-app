@@ -48,14 +48,29 @@ class CreateShippingNotice extends localize(i18next)(PageView) {
         <label>${i18next.t('title.shipping_notice')}</label>
 
         <form>
-          <input name="customer-company" />
-          <input name="contact-point" />
-          <input name="delivery-date" />
-          <input name="contact-number" />
+          <label>${i18next.t('label.customer_company')}</label>
+          <input name="customer_company" />
+
+          <label>${i18next.t('label.contact_point')}</label>
+          <input name="contact_point" />
+
+          <label>${i18next.t('label.delivery_date')}</label>
+          <input name="delivery_date" />
+
+          <label>${i18next.t('label.contact_number')}</label>
+          <input name="contact_number" />
+
+          <label>${i18next.t('label.export')}</label>
           <input name="export" type="checkbox" />
-          <input name="delivery-address" />
-          <input name="need-fleet" type="checkbox" />
-          <input name="fleet-spec" />
+
+          <label>${i18next.t('label.delivery_address')}</label>
+          <input name="delivery_address" />
+
+          <label>${i18next.t('label.need_fleet')}</label>
+          <input name="need_fleet" type="checkbox" />
+
+          <label>${i18next.t('label.fleet_spec')}</label>
+          <input name="fleet_spec" />
         </form>
       </div>
 

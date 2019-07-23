@@ -347,7 +347,10 @@ class SystemMenu extends localize(i18next)(PageView) {
     return html`
       <div>
         <form>
+          <label>${i18next.t('label.name')}</label>
           <input name="name" />
+
+          <label>${i18next.t('label.description')}</label>
           <input name="description" />
         </form>
       </div>

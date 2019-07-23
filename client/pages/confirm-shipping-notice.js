@@ -44,12 +44,23 @@ class ConfirmShippingNotice extends localize(i18next)(PageView) {
     return html`
       <div>
         <form>
+          <label>${i18next.t('label.company')}</label>
           <input name="company" />
-          <input name="delivery-date" />
-          <input name="fleet-no" />
+
+          <label>${i18next.t('label.delivery_date')}</label>
+          <input name="delivery_date" />
+
+          <label>${i18next.t('label.fleet_no')}</label>
+          <input name="fleet_no" />
+
+          <label>${i18next.t('label.driver')}</label>
           <input name="driver" />
-          <input name="delivery-address" />
-          <input name="fleet-spec" />
+
+          <label>${i18next.t('label.delivery_address')}</label>
+          <input name="delivery_address" />
+
+          <label>${i18next.t('label.fleet_spec')}</label>
+          <input name="fleet_spec" />
         </form>
       </div>
 

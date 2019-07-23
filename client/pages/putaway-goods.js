@@ -42,14 +42,31 @@ class PutawayGoods extends localize(i18next)(PageView) {
         <label>${i18next.t('title.putaway_goods_master')}</label>
 
         <form>
-          <input name="work-order" />
-          <input name="purchase-order" />
-          <input name="supplier-name" />
+          <label>${i18next.t('label.work_order')}</label>
+          <input name="work_order" />
+
+          <label>${i18next.t('label.purchase_order')}</label>
+          <input name="purchase_order" />
+
+          <label>${i18next.t('label.supplier_name')}</label>
+          <input name="supplier_name" />
+
+          <label>${i18next.t('label.gan')}</label>
           <input name="gan" />
-          <input name="do-no" />
-          <input name="contact-point" />
-          <input name="contact-no" />
+
+          <label>${i18next.t('label.do_no')}</label>
+          <input name="do_no" />
+
+          <label>${i18next.t('label.contact_point')}</label>
+          <input name="contact_point" />
+
+          <label>${i18next.t('label.contact_no')}</label>
+          <input name="contact_no" />
+
+          <label>${i18next.t('label.fax')}</label>
           <input name="fax" />
+
+          <label>${i18next.t('label.eta')}</label>
           <input name="eta" />
         </form>
       </div>

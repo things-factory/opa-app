@@ -15,9 +15,14 @@ class CompanyProfile extends localize(i18next)(PageView) {
         <label>${i18next.t('title.information')}</label>
 
         <form>
-          <input name="company-name" />
-          <input name="default-delivery" />
-          <input name="default-contact-no" />
+          <label>${i18next.t('label.company_name')}</label>
+          <input name="company_name" />
+
+          <label>${i18next.t('label.company_name')}</label>
+          <input name="default_delivery" />
+
+          <label>${i18next.t('label.company_name')}</label>
+          <input name="default_contact_no" />
         </form>
       </div>
 
@@ -25,9 +30,14 @@ class CompanyProfile extends localize(i18next)(PageView) {
         <label>${i18next.t('title.contact_point')}</label>
 
         <form>
+          <label>${i18next.t('label.name')}</label>
           <input name="name" />
+
+          <label>${i18next.t('label.email')}</label>
           <input name="email" />
-          <input name="phone-no" />
+
+          <label>${i18next.t('label.phone_no')}</label>
+          <input name="phone_no" />
         </form>
       </div>
     `

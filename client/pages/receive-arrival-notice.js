@@ -44,11 +44,20 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
     return html`
       <div class="search-form">
         <form>
+          <label>${i18next.t('label.gan')}</label>
           <input name="gan" />
+
+          <label>${i18next.t('label.eta')}</label>
           <input name="eta" />
-          <input name="do-no" />
+
+          <label>${i18next.t('label.do_no')}</label>
+          <input name="do_no" />
+
+          <label>${i18next.t('label.company')}</label>
           <input name="company" />
-          <input name="supplier-name" />
+
+          <label>${i18next.t('label.supplier_name')}</label>
+          <input name="supplier_name" />
         </form>
       </div>
 

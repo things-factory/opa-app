@@ -39,8 +39,28 @@ class SystemMenuColumn extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.system_menu_column')
+      title: i18next.t('title.system_menu_column'),
+      exportable: {
+        name: i18next.t('title.system_menu_column'),
+        data: this._exportableData.bind(this)
+      }
     }
+  }
+
+  _exportableData() {
+    if (!this.data.records || !(this.data.records instanceof Array) || this.data.records.length == 0) {
+      this.data.records = [{}]
+    }
+
+    return this.data.records.map(item => {
+      return this.config.columns
+        .filter(c => c.type !== 'gutter')
+        .reduce((record, column) => {
+          record[column.term || column.name] = item[column.name]
+          delete record.id
+          return record
+        }, {})
+    })
   }
 
   render() {
@@ -373,19 +393,22 @@ class SystemMenuColumn extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _deleteColumn(columnId) {
-    await client.query({
-      query: gql`
-        mutation {
-          deleteMenu(${gqlBuilder.buildArgs({
-            id: columnId
-          })}) {
-            name
+    let deleteConfirm = confirm('Are you sure?')
+    if (deleteConfirm) {
+      await client.query({
+        query: gql`
+          mutation {
+            deleteMenu(${gqlBuilder.buildArgs({
+              id: columnId
+            })}) {
+              name
+            }
           }
-        }
-      `
-    })
+        `
+      })
 
-    this._getMenuColumns()
+      this._getMenuColumns()
+    }
   }
 }
 
