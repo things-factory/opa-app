@@ -1,7 +1,9 @@
 import { i18next, localize } from '@things-factory/i18n-base'
+import { openPopup } from '@things-factory/layout-base'
 import { isMobileDevice, PageView } from '@things-factory/shell'
 import '@things-factory/simple-ui'
 import { css, html } from 'lit-element'
+import '../components/resource-selector'
 
 class CreateArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
@@ -84,7 +86,16 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         ></data-grist>
 
         <div class="button-container">
-          <mwc-button id="product-add">${i18next.t('button.add')}</mwc-button>
+          <mwc-button
+            id="product-add"
+            @click="${() => {
+              this.productsData = {
+                ...this.productsData,
+                records: [...this.productsData.records, { id: '', name: '', description: '' }]
+              }
+            }}"
+            >${i18next.t('button.add')}</mwc-button
+          >
           <mwc-button id="product-save">${i18next.t('button.save')}</mwc-button>
         </div>
       </div>
@@ -99,7 +110,16 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         ></data-grist>
 
         <div class="button-container">
-          <mwc-button id="service-add">${i18next.t('button.add')}</mwc-button>
+          <mwc-button
+            id="service-add"
+            @click="${() => {
+              this.servicesData = {
+                ...this.servicesData,
+                records: [...this.servicesData.records, { id: '', name: '', description: '' }]
+              }
+            }}"
+            >${i18next.t('button.add')}</mwc-button
+          >
           <mwc-button id="service-save">${i18next.t('button.save')}</mwc-button>
         </div>
       </div>
@@ -107,6 +127,9 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   firstUpdated() {
+    this.productsData = { records: [] }
+    this.servicesData = { records: [] }
+
     this.productsConfig = {
       columns: [
         {
@@ -120,11 +143,24 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'product_code',
-          header: i18next.t('field.product_code'),
+          name: 'Customer Product',
+          header: i18next.t('field.product_name'),
           record: {
-            align: 'center',
             editable: true
+          },
+          handlers: {
+            dblclick: (columns, data, column, record, rowIndex) => {
+              openPopup(
+                html`
+                  <div style="background-color: white; display: flex; flex-direction: column; padding: 10px;">
+                    <resource-selector .resource="${column.name}"></resource-selector>
+                  </div>
+                `,
+                {
+                  backdrop: true
+                }
+              )
+            }
           },
           width: 120
         },
@@ -136,24 +172,35 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             align: 'left',
             editable: true
           },
-          width: 200
+          width: 250
         },
         {
-          type: 'string',
-          name: 'packing_type',
-          header: i18next.t('field.packing_type'),
+          type: 'select',
+          name: 'unit',
+          header: i18next.t('field.unit'),
           record: {
             align: 'left',
-            editable: true
+            editable: true,
+            options: [i18next.t('label.pallet'), i18next.t('label.box'), i18next.t('label.container')]
           },
-          width: 130
+          width: 120
         },
         {
-          type: 'string',
+          type: 'float',
+          name: 'pack_in_qty',
+          header: i18next.t('field.pack_in_qty'),
+          record: {
+            align: 'right',
+            editable: true
+          },
+          width: 80
+        },
+        {
+          type: 'float',
           name: 'pack_qty',
           header: i18next.t('field.pack_qty'),
           record: {
-            align: 'left',
+            align: 'right',
             editable: true
           },
           width: 80
@@ -167,32 +214,28 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             editable: true
           },
           width: 80
-        },
-        {
-          type: 'float',
-          name: 'container_no',
-          header: i18next.t('field.container_no'),
-          record: {
-            align: 'right',
-            editable: true
-          },
-          width: 130
-        },
-        {
-          type: 'string',
-          name: 'batch_no',
-          header: i18next.t('field.batch_no'),
-          record: {
-            align: 'center',
-            editable: true
-          },
-          width: 200
         }
+        // {
+        //   type: 'float',
+        //   name: 'container_no',
+        //   header: i18next.t('field.container_no'),
+        //   record: {
+        //     align: 'right',
+        //     editable: true
+        //   },
+        //   width: 130
+        // },
+        // {
+        //   type: 'string',
+        //   name: 'batch_no',
+        //   header: i18next.t('field.batch_no'),
+        //   record: {
+        //     align: 'center',
+        //     editable: true
+        //   },
+        //   width: 200
+        // }
       ]
-    }
-
-    this.productsData = {
-      records: new Array(20).fill().map(el => new Object())
     }
 
     this.servicesConfig = {
@@ -257,10 +300,6 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           width: 100
         }
       ]
-    }
-
-    this.servicesData = {
-      records: new Array(20).fill().map(() => new Object())
     }
   }
 }

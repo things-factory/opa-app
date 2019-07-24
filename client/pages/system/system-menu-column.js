@@ -120,6 +120,8 @@ class SystemMenuColumn extends connect(store)(localize(i18next)(PageView)) {
               textarea.style.width = '600px'
               textarea.style.height = '400px'
               delete record.__typename
+              this.columnId = record.id
+              delete record.id
               textarea.value = JSON.stringify(record, null, 2)
               const isCreate = !record.name
               openPopup(
@@ -380,10 +382,12 @@ class SystemMenuColumn extends connect(store)(localize(i18next)(PageView)) {
     await client.query({
       query: gql`
         mutation {
-          updateColumn(${gqlBuilder.buildArgs({
-            id: record.id,
+          updateMenuColumn(${gqlBuilder.buildArgs({
+            id: this.columnId,
             patch: record
-          })})
+          })}) {
+            name
+          }
         }
       `
     })
