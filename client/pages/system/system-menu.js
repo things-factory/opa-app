@@ -56,23 +56,69 @@ class SystemMenu extends localize(i18next)(PageView) {
           icon: 'edit',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              const textarea = document.createElement('textarea')
-              textarea.style.width = '600px'
-              textarea.style.height = '400px'
+              const inputArea = document.createElement('div')
               delete record.__typename
-              textarea.value = JSON.stringify(record, null, 2)
+              // string", name: "name", header: {…}, record: {…}, width: 200, …}
+              // 5: {type: "string", name: "description", header: {…}, record: {…}, width: 250, …}
+              // 6: {type: "int", name: "rank", header: {…}, record: {…}, width: 80, …}
+              // 7: {type: "boolean
+
+              Object.keys(record).forEach(key => {
+                const form = document.createElement('form')
+                const label = document.createElement('label')
+                const input = document.createElement('input')
+                input.setAttribute('style', 'float:right')
+                form.setAttribute('style', 'margin:10px;')
+                const colType = columns.find(n => n.name == key).type
+                if (colType == 'string') {
+                  input.dataType = 'string'
+                } else if (colType == 'int') {
+                  input.dataType = 'int'
+                } else if (colType == 'boolean') {
+                  input.dataType = 'boolean'
+                }
+                input.setAttribute('class', key)
+                label.innerText = key
+                input.value = record[key]
+                form.appendChild(label)
+                form.appendChild(input)
+                inputArea.appendChild(form)
+              })
+
               const isCreate = !record.name
+
               openPopup(
                 html`
-                  <div style="background-color: white; display: flex; flex-direction: column; padding: 10px;">
-                    ${textarea}
+                  <div
+                    id="popupDiv"
+                    style="background-color: white; display: flex; flex-direction: column; padding: 10px;"
+                  >
+                    ${inputArea}
                     <div style="margin-left: auto;">
                       <mwc-button
                         @click="${() => {
                           if (isCreate) {
-                            this._createGroup(JSON.parse(textarea.value))
+                            let inputValue = {}
+                            Object.keys(record).forEach(key => {
+                              inputValue[key] = inputArea.getElementsByClassName(key)[0].value
+                            })
+                            this._createGroup(JSON.parse(JSON.stringify(inputValue, null, 2)))
                           } else {
-                            this._updateMenu(JSON.parse(textarea.value))
+                            let inputValue = {}
+                            Object.keys(record).forEach(key => {
+                              let dataType = inputArea.getElementsByClassName(key)[0].dataType
+                              let value = inputArea.getElementsByClassName(key)[0].value
+                              if (dataType == 'string') {
+                                inputValue[key] = value
+                              } else if (dataType == 'int') {
+                                inputValue[key] = JSON.parse(value)
+                              } else if (dataType == 'boolean') {
+                                inputValue[key] = JSON.parse(value)
+                              } else {
+                                inputValue[key] = value
+                              }
+                            })
+                            this._updateMenu(JSON.parse(JSON.stringify(inputValue, null, 2)))
                           }
                         }}"
                         >save</mwc-button
@@ -162,23 +208,71 @@ class SystemMenu extends localize(i18next)(PageView) {
           icon: 'edit',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              const textarea = document.createElement('textarea')
-              textarea.style.width = '600px'
-              textarea.style.height = '400px'
-              const isCreate = !record.name
+              const inputArea = document.createElement('div')
               delete record.__typename
-              textarea.value = JSON.stringify(record, null, 2)
+              // string", name: "name", header: {…}, record: {…}, width: 200, …}
+              // 5: {type: "string", name: "description", header: {…}, record: {…}, width: 250, …}
+              // 6: {type: "int", name: "rank", header: {…}, record: {…}, width: 80, …}
+              // 7: {type: "boolean
+
+              Object.keys(record).forEach(key => {
+                const form = document.createElement('form')
+                const label = document.createElement('label')
+                const input = document.createElement('input')
+                input.setAttribute('style', 'float:right')
+                form.setAttribute('style', 'margin:10px;')
+                let colType = columns.find(n => n.name == key).type
+                if (colType == 'string') {
+                  input.dataType = 'string'
+                } else if (colType == 'int') {
+                  input.dataType = 'int'
+                } else if (colType == 'boolean') {
+                  input.dataType = 'boolean'
+                } else {
+                  input.dataType = 'SELECT'
+                }
+                input.setAttribute('class', key)
+                label.innerText = key
+                input.value = record[key]
+                form.appendChild(label)
+                form.appendChild(input)
+                inputArea.appendChild(form)
+              })
+
+              const isCreate = !record.name
+
               openPopup(
                 html`
-                  <div style="background-color: white; display: flex; flex-direction: column; padding: 10px;">
-                    ${textarea}
+                  <div
+                    id="popupDiv"
+                    style="background-color: white; display: flex; flex-direction: column; padding: 10px;"
+                  >
+                    ${inputArea}
                     <div style="margin-left: auto;">
                       <mwc-button
                         @click="${() => {
                           if (isCreate) {
-                            this._createScreen(JSON.parse(textarea.value))
+                            let inputValue = {}
+                            Object.keys(record).forEach(key => {
+                              inputValue[key] = inputArea.getElementsByClassName(key)[0].value
+                            })
+                            this._createGroup(JSON.parse(JSON.stringify(inputValue, null, 2)))
                           } else {
-                            this._updateMenu(JSON.parse(textarea.value))
+                            let inputValue = {}
+                            Object.keys(record).forEach(key => {
+                              let dataType = inputArea.getElementsByClassName(key)[0].dataType
+                              let value = inputArea.getElementsByClassName(key)[0].value
+                              if (dataType == 'string') {
+                                inputValue[key] = value
+                              } else if (dataType == 'int') {
+                                inputValue[key] = JSON.parse(value)
+                              } else if (dataType == 'boolean') {
+                                inputValue[key] = JSON.parse(value)
+                              } else {
+                                inputValue[key] = value
+                              }
+                            })
+                            this._updateMenu(JSON.parse(JSON.stringify(inputValue, null, 2)))
                           }
                         }}"
                         >save</mwc-button
