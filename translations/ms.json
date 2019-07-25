@@ -1,0 +1,20 @@
+{
+  "field.location": "lokasi",
+  "field.product_batch": "kumpulan produk",
+  "field.lot": "lot",
+  "field.warehouse": "gudang",
+  "field.zone": "zon",
+  "field.section": "seksyen",
+  "field.unit": "unit",
+  "field.shelf": "rak",
+  "field.bizplace": "tempat perniagaan",
+  "field.start_qty": "kuantiti permulaan",
+  "field.in_qty": "dalam kuantiti",
+  "field.out_qty": "luar kuantiti",
+  "field.end_qty": "kuantiti akhir",
+  "field.product": "produk",
+  "field.qty": "kuantiti",
+  "field.state": "keadaan",
+  "field.date": "tarikh",
+  "field.type": "jenis"
+}

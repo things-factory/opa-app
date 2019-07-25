@@ -135,8 +135,8 @@ class ReceiveShippingNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'delivery_arddress',
-          header: i18next.t('field.delivery_arddress'),
+          name: 'delivery_address',
+          header: i18next.t('field.delivery_address'),
           record: {
             align: 'center'
           },
@@ -208,7 +208,7 @@ class ReceiveShippingNotice extends localize(i18next)(PageView) {
         {
           type: 'number',
           name: 'FLLET NO',
-          header: i18next.t('field.flee_no'),
+          header: i18next.t('field.fleet_no'),
           record: {
             align: 'center'
           },
