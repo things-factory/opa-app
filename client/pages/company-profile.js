@@ -31,7 +31,7 @@ class CompanyProfile extends localize(i18next)(PageView) {
           overflow: auto;
         }
 
-        form {
+        .single-form {
           display: grid;
           grid-template-columns: repeat(12, 1fr);
           grid-gap: 12px 5px;
@@ -39,10 +39,10 @@ class CompanyProfile extends localize(i18next)(PageView) {
           max-width: var(--form-max-width);
           margin: var(--form-margin);
         }
-        fieldset {
+        .single-form fieldset {
           display: contents;
         }
-        legend {
+        .single-form legend {
           grid-column: span 12;
           text-transform: capitalize;
 
@@ -52,7 +52,7 @@ class CompanyProfile extends localize(i18next)(PageView) {
           border-bottom: var(--legend-border-bottom);
         }
 
-        fieldset > label {
+        .single-form label {
           grid-column: span 3;
           text-align: right;
           text-transform: capitalize;
@@ -61,10 +61,10 @@ class CompanyProfile extends localize(i18next)(PageView) {
           font: var(--label-font);
         }
 
-        fieldset > input,
-        fieldset > table,
-        fieldset > select,
-        fieldset > textarea {
+        .single-form input,
+        .single-form table,
+        .single-form select,
+        .single-form textarea {
           grid-column: span 8;
 
           border: var(--input-field-border);
@@ -73,15 +73,15 @@ class CompanyProfile extends localize(i18next)(PageView) {
           font: var(--input-field-font);
         }
 
-        fieldset > input[type='checkbox'],
-        fieldset > input[type='radio'] {
+        .single-form input[type='checkbox'],
+        .single-form input[type='radio'] {
           justify-self: end;
           align-self: start;
           grid-column: span 3 / auto;
         }
 
-        fieldset > input[type='checkbox'] + label,
-        fieldset > input[type='radio'] + label {
+        .single-form input[type='checkbox'] + label,
+        .single-form input[type='radio'] + label {
           text-align: left;
           grid-column: span 9 / auto;
 
@@ -102,30 +102,30 @@ class CompanyProfile extends localize(i18next)(PageView) {
         }
 
         @media screen and (max-width: 400px) {
-          form{
+          .single-form{
             max-width:90%;
             grid-gap: 5px;
           }
-          fieldset > label {
+          .single-form label {
             grid-column: span 12;
             text-align: left;
             align-self: end
           }
-          fieldset > input,
-          fieldset > table,
-          fieldset > select,
-          fieldset > textarea {
+          .single-form input,
+          .single-form table,
+          .single-form select,
+          .single-form textarea {
             grid-column: span 12;
           }
-          fieldset > input[type='checkbox'],
-          fieldset > input[type='radio'] {
+          .single-form input[type='checkbox'],
+          .single-form input[type='radio'] {
             justify-self: start;
             align-self: center;
             grid-column: span 1 / auto;
           }
 
-          fieldset > input[type='checkbox'] + label,
-          fieldset > input[type='radio'] + label {
+          .single-form input[type='checkbox'] + label,
+          .single-form input[type='radio'] + label {
             grid-column: span 11 / auto;
             align-self: center
           }
@@ -137,7 +137,7 @@ class CompanyProfile extends localize(i18next)(PageView) {
     return html`
       <div class="profile-brand"></div>
 
-      <form>
+      <form class="single-form">
         <fieldset>
           <legend>${i18next.t('title.information')}</legend>
           <label>${i18next.t('label.company_name')}</label>
