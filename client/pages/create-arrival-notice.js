@@ -62,26 +62,21 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             <label>${i18next.t('label.purchase_order')}</label>
             <input name="purchase_order" />
 
-          <label>${i18next.t('label.supplier_name')}</label>
-          <input name="supplier_name" />
+            <label>${i18next.t('label.supplier_name')}</label>
+            <input name="supplier_name" />
 
-          <label>${i18next.t('label.gan')}</label>
-          <input name="gan" />
+            <label>${i18next.t('label.gan')}</label>
+            <input name="gan" />
 
-          <label>${i18next.t('label.delivery_order_no')}</label>
-          <input name="delivery_order_no" />
+            <label>${i18next.t('label.delivery_order_no')}</label>
+            <input name="delivery_order_no" />
 
-          <label>${i18next.t('label.contact_point')}</label>
-          <input name="contact_point" />
+            <label>${i18next.t('label.eta_date')}</label>
+            <input name="eta_date" type="date" />
 
-          <label>${i18next.t('label.contact_no')}</label>
-          <input name="contact_no" />
-
-          <label>${i18next.t('label.eta')}</label>
-          <input name="eta" />
-
-          <label>${i18next.t('label.fax')}</label>
-          <input name="fax" />
+            <label>${i18next.t('label.eta_time')}</label>
+            <input name="eta_time" type="time" />
+          </fieldset>
         </form>
       </div>
 
@@ -134,17 +129,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           >
         </div>
 
-        <mwc-button
-          @click="${() => {
-            const products = this.shadowRoot.querySelector('#products').dirtyRecords
-            const services = this.shadowRoot.querySelector('#services').dirtyRecords
-
-            if (products.length > 0) {
-              this.createArrivalNotice(products, services)
-            }
-          }}"
-          >${i18next.t('button.submit')}</mwc-button
-        >
+        <mwc-button @click="${this.createArrivalNotice}">${i18next.t('button.submit')}</mwc-button>
       </div>
     `
   }
@@ -382,7 +367,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
         query {
-          product: customerProductById(${gqlBuilder.buildArgs({ id })}) {
+          product: productById(${gqlBuilder.buildArgs({ id })}) {
             id
             name
             yourName
@@ -396,8 +381,67 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     return response.data.product
   }
 
-  createArrivalNotice(products, services) {
-    console.log(products, services)
+  async createArrivalNotice() {
+    try {
+      const products = this.getProducts()
+      const services = this.getServices()
+      const orderInfo = this.getOrderInfo()
+
+      await client.query({
+        query: gql`
+          mutation {
+            createPurchaseOrder(${gqlBuilder.buildArgs({
+              purchaseOrder: {
+                name: orderInfo.purchase_order,
+                issuedOn: new Date(orderInfo.eta_date + ' ' + orderInfo.eta_time).getTime().toString(),
+                state: 'pending',
+                description: JSON.stringify({
+                  supplier: orderInfo.supplier_name,
+                  orderNo: orderInfo.delivery_order_no,
+                  products: products,
+                  services: services
+                })
+              }
+            })}) {
+              name
+            }
+          }
+        `
+      })
+
+      location.href = 'confirm-arrival-notice'
+    } catch (e) {
+      alert(e.message)
+    }
+  }
+
+  getProducts() {
+    const products = this.shadowRoot.querySelector('#products').dirtyRecords
+    if (products.length === 0) {
+      throw new Error(i18next.t('text.list_is_not_completed'))
+    } else {
+      return products
+    }
+  }
+
+  getServices() {
+    return this.shadowRoot.querySelector('#services').dirtyRecords
+  }
+
+  getOrderInfo() {
+    const orderInfo = {}
+    const inputs = Array.from(this.shadowRoot.querySelectorAll('form input'))
+    inputs
+      .filter(input => input.value)
+      .forEach(input => {
+        orderInfo[input.name] = input.value
+      })
+
+    if (inputs.length !== Object.keys(orderInfo).length) {
+      throw new Error(i18next.t('text.form_is_not_completed'))
+    } else {
+      return orderInfo
+    }
   }
 }
 
