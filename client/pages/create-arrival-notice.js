@@ -1,9 +1,8 @@
 import { i18next, localize } from '@things-factory/i18n-base'
-import { openPopup } from '@things-factory/layout-base'
-import { isMobileDevice, PageView } from '@things-factory/shell'
+import { isMobileDevice, PageView, client, gqlBuilder } from '@things-factory/shell'
+import gql from 'graphql-tag'
 import '@things-factory/simple-ui'
 import { css, html } from 'lit-element'
-import '../components/resource-selector'
 import { MultiColumnFormStyles } from '../styles'
 
 class CreateArrivalNotice extends localize(i18next)(PageView) {
@@ -63,30 +62,26 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             <label>${i18next.t('label.purchase_order')}</label>
             <input name="purchase_order" />
 
-            <label>${i18next.t('label.supplier_name')}</label>
-            <input name="supplier_name" />
+          <label>${i18next.t('label.supplier_name')}</label>
+          <input name="supplier_name" />
 
-            <label>${i18next.t('label.gan')}</label>
-            <input name="gan" />
+          <label>${i18next.t('label.gan')}</label>
+          <input name="gan" />
 
-            <input type="checkbox" name="email" checked />
-            <label>check option</label>
+          <label>${i18next.t('label.delivery_order_no')}</label>
+          <input name="delivery_order_no" />
 
-            <label>${i18next.t('label.delivery_order_no')}</label>
-            <input name="delivery_order_no" />
+          <label>${i18next.t('label.contact_point')}</label>
+          <input name="contact_point" />
 
-            <label>${i18next.t('label.contact_point')}</label>
-            <input name="contact_point" />
+          <label>${i18next.t('label.contact_no')}</label>
+          <input name="contact_no" />
 
-            <label>${i18next.t('label.contact_no')}</label>
-            <input name="contact_no" />
+          <label>${i18next.t('label.eta')}</label>
+          <input name="eta" />
 
-            <label>${i18next.t('label.eta')}</label>
-            <input name="eta" />
-
-            <label>${i18next.t('label.fax')}</label>
-            <input name="fax" />
-          </fieldset>
+          <label>${i18next.t('label.fax')}</label>
+          <input name="fax" />
         </form>
       </div>
 
@@ -94,9 +89,11 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         <h2>${i18next.t('title.arrival_notice_detail')}</h2>
 
         <data-grist
+          id="products"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.productsConfig}
           .data=${this.productsData}
+          @record-change="${this._onProductChangeHandler.bind(this)}"
         ></data-grist>
 
         <div class="button-container">
@@ -105,12 +102,11 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             @click="${() => {
               this.productsData = {
                 ...this.productsData,
-                records: [...this.productsData.records, { id: '', name: '', description: '' }]
+                records: [...this.productsData.records, { product: { id: '', name: '', description: '' } }]
               }
             }}"
             >${i18next.t('button.add')}</mwc-button
           >
-          <mwc-button id="product-save">${i18next.t('button.save')}</mwc-button>
         </div>
       </div>
 
@@ -118,9 +114,11 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         <h2>${i18next.t('title.vas_request')}</h2>
 
         <data-grist
+          id="services"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.servicesConfig}
           .data=${this.servicesData}
+          @record-change="${this._onServiceChangeHandler.bind(this)}"
         ></data-grist>
 
         <div class="button-container">
@@ -129,13 +127,24 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             @click="${() => {
               this.servicesData = {
                 ...this.servicesData,
-                records: [...this.servicesData.records, { id: '', name: '', description: '' }]
+                records: [...this.servicesData.records, { service: { id: '', name: '', description: '' } }]
               }
             }}"
             >${i18next.t('button.add')}</mwc-button
           >
-          <mwc-button id="service-save">${i18next.t('button.save')}</mwc-button>
         </div>
+
+        <mwc-button
+          @click="${() => {
+            const products = this.shadowRoot.querySelector('#products').dirtyRecords
+            const services = this.shadowRoot.querySelector('#services').dirtyRecords
+
+            if (products.length > 0) {
+              this.createArrivalNotice(products, services)
+            }
+          }}"
+          >${i18next.t('button.submit')}</mwc-button
+        >
       </div>
     `
   }
@@ -153,30 +162,30 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           name: 'button',
-          icon: 'delete'
+          icon: 'delete',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              this.productsData.records.splice(rowIndex, 1)
+
+              this.productsData = {
+                ...this.productsData,
+                records: [...this.productsData.records]
+              }
+            }
+          }
         },
         {
-          type: 'string',
-          name: 'Customer Product',
+          type: 'object',
+          name: 'product',
           header: i18next.t('field.product_name'),
           record: {
-            editable: true
-          },
-          handlers: {
-            dblclick: (columns, data, column, record, rowIndex) => {
-              openPopup(
-                html`
-                  <div style="background-color: white; display: flex; flex-direction: column; padding: 10px;">
-                    <resource-selector .resource="${column.name}"></resource-selector>
-                  </div>
-                `,
-                {
-                  backdrop: true
-                }
-              )
+            editable: true,
+            align: 'center',
+            options: {
+              queryName: 'customerProducts'
             }
           },
-          width: 120
+          width: 250
         },
         {
           type: 'string',
@@ -193,7 +202,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           name: 'unit',
           header: i18next.t('field.unit'),
           record: {
-            align: 'left',
+            align: 'center',
             editable: true,
             options: [i18next.t('label.pallet'), i18next.t('label.box'), i18next.t('label.container')]
           },
@@ -204,15 +213,14 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           name: 'pack_in_qty',
           header: i18next.t('field.pack_in_qty'),
           record: {
-            align: 'right',
-            editable: true
+            align: 'right'
           },
           width: 80
         },
         {
           type: 'float',
           name: 'pack_qty',
-          header: i18next.t('field.pack_qty'),
+          header: i18next.t('field.qty'),
           record: {
             align: 'right',
             editable: true
@@ -229,26 +237,6 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           },
           width: 80
         }
-        // {
-        //   type: 'float',
-        //   name: 'container_no',
-        //   header: i18next.t('field.container_no'),
-        //   record: {
-        //     align: 'right',
-        //     editable: true
-        //   },
-        //   width: 130
-        // },
-        // {
-        //   type: 'string',
-        //   name: 'batch_no',
-        //   header: i18next.t('field.batch_no'),
-        //   record: {
-        //     align: 'center',
-        //     editable: true
-        //   },
-        //   width: 200
-        // }
       ]
     }
 
@@ -261,17 +249,30 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           name: 'button',
-          icon: 'delete'
+          icon: 'delete',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              this.servicesData.records.splice(rowIndex, 1)
+
+              this.servicesData = {
+                ...this.servicesData,
+                records: [...this.servicesData.records]
+              }
+            }
+          }
         },
         {
-          type: 'string',
+          type: 'object',
           name: 'service',
           header: i18next.t('field.service'),
           record: {
             align: 'center',
-            editable: true
+            editable: true,
+            options: {
+              queryName: 'ownerProducts'
+            }
           },
-          width: 120
+          width: 250
         },
         {
           type: 'string',
@@ -282,6 +283,25 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             editable: true
           },
           width: 200
+        },
+        {
+          type: 'select',
+          name: 'unit',
+          header: i18next.t('field.unit'),
+          record: {
+            align: 'center',
+            options: [i18next.t('label.pallet'), i18next.t('label.box'), i18next.t('label.container')]
+          },
+          width: 120
+        },
+        {
+          type: 'float',
+          name: 'unit_price',
+          header: i18next.t('field.unit_price'),
+          record: {
+            align: 'right'
+          },
+          width: 100
         },
         {
           type: 'float',
@@ -295,26 +315,89 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'unit',
-          header: i18next.t('field.unit'),
-          record: {
-            align: 'center',
-            editable: true
-          },
-          width: 100
-        },
-        {
-          type: 'float',
-          name: 'price',
+          name: 'total_price',
           header: i18next.t('field.price'),
           record: {
-            align: 'right',
-            editable: true
+            align: 'right'
           },
           width: 100
         }
       ]
     }
+  }
+
+  async _onProductChangeHandler(e) {
+    const before = e.detail.before
+    const after = e.detail.after
+
+    if ((before.product && before.product.id) != (after.product && after.product.id)) {
+      const productMaster = await this.getMasterInfo(after.product.id)
+
+      this.productsData.records[e.detail.row].unit = productMaster.unit
+      this.productsData.records[e.detail.row].pack_in_qty = 10
+
+      this.productsData = {
+        ...this.productsData,
+        records: [...this.productsData.records]
+      }
+    }
+
+    if (after.unit && before.pack_qty != after.pack_qty) {
+      this.productsData.records[e.detail.row].total_qty = after.pack_in_qty * after.pack_qty
+
+      this.productsData = {
+        ...this.productsData,
+        records: [...this.productsData.records]
+      }
+    }
+  }
+
+  async _onServiceChangeHandler(e) {
+    const before = e.detail.before
+    const after = e.detail.after
+
+    if ((before.service && before.service.id) != (after.service && after.service.id)) {
+      const serviceMaster = await this.getMasterInfo(after.service.id)
+
+      this.servicesData.records[e.detail.row].unit = serviceMaster.unit
+      this.servicesData.records[e.detail.row].unit_price = 5
+
+      this.servicesData = {
+        ...this.servicesData,
+        records: [...this.servicesData.records]
+      }
+    }
+
+    if (after.unit_price && before.qty != after.qty) {
+      this.servicesData.records[e.detail.row].total_price = 'RM ' + after.unit_price * after.qty
+
+      this.servicesData = {
+        ...this.servicesData,
+        records: [...this.servicesData.records]
+      }
+    }
+  }
+
+  async getMasterInfo(id) {
+    const response = await client.query({
+      query: gql`
+        query {
+          product: customerProductById(${gqlBuilder.buildArgs({ id })}) {
+            id
+            name
+            yourName
+            description
+            unit
+          }
+        }
+      `
+    })
+
+    return response.data.product
+  }
+
+  createArrivalNotice(products, services) {
+    console.log(products, services)
   }
 }
 
