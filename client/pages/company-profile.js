@@ -1,6 +1,7 @@
 import { i18next, localize } from '@things-factory/i18n-base'
 import { PageView } from '@things-factory/shell'
 import { css, html } from 'lit-element'
+import { SingleColumnFormStyles } from '../styles'
 
 class CompanyProfile extends localize(i18next)(PageView) {
   get context() {
@@ -25,110 +26,14 @@ class CompanyProfile extends localize(i18next)(PageView) {
 
   static get styles() {
     return [
-      css``,
+      SingleColumnFormStyles,
       css`
-        :host {
-          overflow: auto;
-        }
-
-        .single-form {
-          display: grid;
-          grid-template-columns: repeat(12, 1fr);
-          grid-gap: 12px 5px;
-          grid-auto-rows: minmax(24px, auto);
-          max-width: var(--form-max-width);
-          margin: var(--form-margin);
-        }
-        .single-form fieldset {
-          display: contents;
-        }
-        .single-form legend {
-          grid-column: span 12;
-          text-transform: capitalize;
-
-          padding: var(--legend-padding);
-          font: var(--legend-font);
-          color: var(--legend-text-color);
-          border-bottom: var(--legend-border-bottom);
-        }
-
-        .single-form label {
-          grid-column: span 3;
-          text-align: right;
-          text-transform: capitalize;
-
-          color: var(--label-color);
-          font: var(--label-font);
-        }
-
-        .single-form input,
-        .single-form table,
-        .single-form select,
-        .single-form textarea {
-          grid-column: span 8;
-
-          border: var(--input-field-border);
-          border-radius: var(--input-field-border-radius);
-          padding: var(--input-field-padding);
-          font: var(--input-field-font);
-        }
-
-        .single-form input[type='checkbox'],
-        .single-form input[type='radio'] {
-          justify-self: end;
-          align-self: start;
-          grid-column: span 3 / auto;
-        }
-
-        .single-form input[type='checkbox'] + label,
-        .single-form input[type='radio'] + label {
-          text-align: left;
-          grid-column: span 9 / auto;
-
-          font: var(--form-sublabel-font);
-          color: var(--form-sublabel-color);
-        }
-
-        input:focus {
-          outline: none;
-          border: 1px solid var(--focus-background-color);
-        }
-
         .profile-brand {
           background: url('../assets/images/brand.png') center center no-repeat;
           width: var(--profile-brand-width);
           height: var(--profile-brand-height);
           margin: var(--profile-brand-padding);
         }
-
-        @media screen and (max-width: 400px) {
-          .single-form{
-            max-width:90%;
-            grid-gap: 5px;
-          }
-          .single-form label {
-            grid-column: span 12;
-            text-align: left;
-            align-self: end
-          }
-          .single-form input,
-          .single-form table,
-          .single-form select,
-          .single-form textarea {
-            grid-column: span 12;
-          }
-          .single-form input[type='checkbox'],
-          .single-form input[type='radio'] {
-            justify-self: start;
-            align-self: center;
-            grid-column: span 1 / auto;
-          }
-
-          .single-form input[type='checkbox'] + label,
-          .single-form input[type='radio'] + label {
-            grid-column: span 11 / auto;
-            align-self: center
-          }
       `
     ]
   }
@@ -137,7 +42,7 @@ class CompanyProfile extends localize(i18next)(PageView) {
     return html`
       <div class="profile-brand"></div>
 
-      <form class="single-form">
+      <form class="single-column-form">
         <fieldset>
           <legend>${i18next.t('title.information')}</legend>
           <label>${i18next.t('label.company_name')}</label>

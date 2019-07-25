@@ -1,6 +1,7 @@
 import { i18next, localize } from '@things-factory/i18n-base'
 import { PageView } from '@things-factory/shell'
 import { css, html } from 'lit-element'
+import { SingleColumnFormStyles } from '../styles'
 
 class CreateTransportOrder extends localize(i18next)(PageView) {
   static get properties() {
@@ -8,19 +9,22 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
   }
 
   static get styles() {
-    return css`
-      :host {
-        display: flex;
-        flex-direction: column;
-      }
-      .form-container {
-        flex: 1;
-      }
-      .button-container {
-        display: flex;
-        margin-left: auto;
-      }
-    `
+    return [
+      SingleColumnFormStyles,
+      css`
+        :host {
+          display: flex;
+          flex-direction: column;
+        }
+        .form-container {
+          flex: 1;
+        }
+        .button-container {
+          display: flex;
+          margin-left: auto;
+        }
+      `
+    ]
   }
 
   get context() {
@@ -32,26 +36,27 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
   render() {
     return html`
       <div class="form-container">
-        <label>${i18next.t('title.transport_order')}</label>
+        <form class="single-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.information')}</legend>
+            <label>${i18next.t('label.customer_company')}</label>
+            <input name="customer_company" />
 
-        <form>
-          <label>${i18next.t('label.customer_company')}</label>
-          <input name="customer_company" />
+            <label>${i18next.t('label.contact_point')}</label>
+            <input name="contact_point" />
 
-          <label>${i18next.t('label.contact_point')}</label>
-          <input name="contact_point" />
+            <label>${i18next.t('label.delivery_date')}</label>
+            <input name="delivery_date" />
 
-          <label>${i18next.t('label.delivery_date')}</label>
-          <input name="delivery_date" />
+            <label>${i18next.t('label.contact_number')}</label>
+            <input name="contact_number" />
 
-          <label>${i18next.t('label.contact_number')}</label>
-          <input name="contact_number" />
+            <label>${i18next.t('label.delievery_address')}</label>
+            <input name="delievery_address" />
 
-          <label>${i18next.t('label.delievery_address')}</label>
-          <input name="delievery_address" />
-
-          <label>${i18next.t('label.fleet_spec')}</label>
-          <input name="fleet_spec" />
+            <label>${i18next.t('label.fleet_spec')}</label>
+            <input name="fleet_spec" />
+          </fieldset>
         </form>
       </div>
 

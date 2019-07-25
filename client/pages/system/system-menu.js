@@ -4,6 +4,7 @@ import { openPopup } from '@things-factory/layout-base'
 import gql from 'graphql-tag'
 import { html, css } from 'lit-element'
 import '@things-factory/simple-ui'
+import { MultiColumnFormStyles } from '../../styles'
 
 class SystemMenu extends localize(i18next)(PageView) {
   static get properties() {
@@ -16,25 +17,34 @@ class SystemMenu extends localize(i18next)(PageView) {
   }
 
   static get styles() {
-    return css`
-      :host {
-        display: flex;
-        flex-direction: column;
-        overflow-x: overlay;
-      }
-      .grist {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-      }
-      data-grist {
-        overflow-y: hidden;
-        flex: 1;
-      }
-      .button-container {
-        margin-left: auto;
-      }
-    `
+    return [
+      MultiColumnFormStyles,
+      css`
+        :host {
+          display: flex;
+          flex-direction: column;
+          overflow-x: overlay;
+        }
+        .grist {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+        }
+        data-grist {
+          overflow-y: hidden;
+          flex: 1;
+        }
+        .button-container {
+          margin-left: auto;
+        }
+        h2 {
+          padding: var(--subtitle-padding);
+          font: var(--subtitle-font);
+          color: var(--subtitle-text-color);
+          border-bottom: var(--subtitle-border-bottom);
+        }
+      `
+    ]
   }
 
   get context() {
@@ -440,17 +450,20 @@ class SystemMenu extends localize(i18next)(PageView) {
   render() {
     return html`
       <div>
-        <form>
-          <label>${i18next.t('label.name')}</label>
-          <input name="name" />
+        <form class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('label.name')}</legend>
+            <label>${i18next.t('label.name')}</label>
+            <input name="name" />
 
-          <label>${i18next.t('label.description')}</label>
-          <input name="description" />
+            <label>${i18next.t('label.description')}</label>
+            <input name="description" />
+          </fieldset>
         </form>
       </div>
 
       <div class="grist">
-        <label>${i18next.t('title.group_menu')}</label>
+        <h2>${i18next.t('title.group_menu')}</h2>
 
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
@@ -480,7 +493,7 @@ class SystemMenu extends localize(i18next)(PageView) {
       </div>
 
       <div class="grist">
-        <label>${i18next.t('title.screen')}</label>
+        <h2>${i18next.t('title.screen')}</h2>
 
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
