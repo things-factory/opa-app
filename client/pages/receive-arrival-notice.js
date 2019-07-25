@@ -76,7 +76,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       </div>
 
       <div class="grist">
-        <h2>${i18next.t('title.receive-arrival-notice')}</h2>
+        <h2>${i18next.t('title.receive_arrival_notice')}</h2>
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.arriveConfig}
@@ -110,6 +110,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'company',
+          width: 120,
           header: i18next.t('field.company'),
           record: {
             align: 'center'
@@ -119,6 +120,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'link',
           name: 'purchase_order',
+          width: 160,
           header: i18next.t('field.purchase_order'),
           record: {
             align: 'center',
@@ -133,6 +135,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'supplier_name',
+          width: 120,
           header: i18next.t('field.supplier_name'),
           record: {
             align: 'center'
@@ -142,6 +145,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'gan',
+          width: 120,
           header: i18next.t('field.gan'),
           record: {
             align: 'center'
@@ -151,6 +155,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'do_no',
+          width: 120,
           header: i18next.t('field.do_no'),
           record: {
             align: 'center'
@@ -160,6 +165,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'datetime',
           name: 'eta',
+          width: 120,
           header: i18next.t('field.eta'),
           record: {
             align: 'center'
@@ -169,6 +175,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'status',
+          width: 120,
           header: i18next.t('field.status'),
           record: {
             align: 'center'
@@ -178,6 +185,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'date',
           name: 'confirm_date',
+          width: 120,
           header: i18next.t('field.confirm_date'),
           record: {
             align: 'center'
@@ -187,6 +195,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'date',
           name: 'receive_date',
+          width: 120,
           header: i18next.t('field.receive_date'),
           record: {
             align: 'center'
@@ -196,6 +205,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'date',
           name: 'reject_date',
+          width: 120,
           header: i18next.t('field.reject_date'),
           record: {
             align: 'center'
@@ -213,12 +223,14 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
           supplier_name: 'HatioLab',
           gan: 'GAN-1995820385',
           do_no: 'DO-195877392-02-49185',
-          eat: '2019-07-21',
+          eta: Date.now(),
           statue: 'ARRIVED',
-          confirm_date: '2019-07-21',
-          receive_date: '2019-07-21'
+          confirm_date: Date.now(),
+          receive_date: Date.now(),
+          reject_date: Date.now()
         }
-      ]
+      ],
+      total: 1
     }
   }
 }
