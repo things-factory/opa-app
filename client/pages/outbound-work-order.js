@@ -2,6 +2,7 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { isMobileDevice, PageView } from '@things-factory/shell'
 import '@things-factory/simple-ui'
 import { css, html } from 'lit-element'
+import { MultiColumnFormStyles } from '../styles'
 
 class OutboundWorkOrder extends localize(i18next)(PageView) {
   static get properties() {
@@ -14,26 +15,35 @@ class OutboundWorkOrder extends localize(i18next)(PageView) {
   }
 
   static get styles() {
-    return css`
-      :host {
-        display: flex;
-        flex-direction: column;
-        overflow-x: overlay;
-      }
-      .grist {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-      }
-      data-grist {
-        overflow-y: hidden;
-        flex: 1;
-      }
-      .button-container {
-        display: flex;
-        margin-left: auto;
-      }
-    `
+    return [
+      MultiColumnFormStyles,
+      css`
+        :host {
+          display: flex;
+          flex-direction: column;
+          overflow-x: overlay;
+        }
+        .grist {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+        }
+        data-grist {
+          overflow-y: hidden;
+          flex: 1;
+        }
+        .button-container {
+          display: flex;
+          margin-left: auto;
+        }
+        h2 {
+          padding: var(--subtitle-padding);
+          font: var(--subtitle-font);
+          color: var(--subtitle-text-color);
+          border-bottom: var(--subtitle-border-bottom);
+        }
+      `
+    ]
   }
 
   get context() {
@@ -45,35 +55,36 @@ class OutboundWorkOrder extends localize(i18next)(PageView) {
   render() {
     return html`
       <div>
-        <label>${i18next.t('title.Shipping Notice Master')}</label>
+        <form class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.Shipping Notice Master')}</legend>
+            <label>${i18next.t('label.work_order_no')}</label>
+            <input name="work_order_no" />
 
-        <form>
-          <label>${i18next.t('label.work_order_no')}</label>
-          <input name="work_order_no" />
+            <label>${i18next.t('label.customer_company')}</label>
+            <input name="customer_company" />
 
-          <label>${i18next.t('label.customer_company')}</label>
-          <input name="customer_company" />
+            <label>${i18next.t('label.contact_point')}</label>
+            <input name="contact_point" />
 
-          <label>${i18next.t('label.contact_point')}</label>
-          <input name="contact_point" />
+            <label>${i18next.t('label.delivery_date')}</label>
+            <input name="delivery_date" />
 
-          <label>${i18next.t('label.delivery_date')}</label>
-          <input name="delivery_date" />
+            <label>${i18next.t('label.contact_number')}</label>
+            <input name="contact_number" />
 
-          <label>${i18next.t('label.contact_number')}</label>
-          <input name="contact_number" />
+            <label>${i18next.t('label.export')}</label>
+            <input name="export" />
 
-          <label>${i18next.t('label.export')}</label>
-          <input name="export" />
+            <label>${i18next.t('label.delivery_address')}</label>
+            <input name="delivery_address" />
 
-          <label>${i18next.t('label.delivery_address')}</label>
-          <input name="delivery_address" />
+            <label>${i18next.t('label.need_fleet')}</label>
+            <input name="need_fleet" />
 
-          <label>${i18next.t('label.need_fleet')}</label>
-          <input name="need_fleet" />
-
-          <label>${i18next.t('label.fleet_spec')}</label>
-          <input name="fleet_spec" />
+            <label>${i18next.t('label.fleet_spec')}</label>
+            <input name="fleet_spec" />
+          </fieldset>
         </form>
         <div class="button-container">
           <mwc-button id="service-save">${i18next.t('button.save')}</mwc-button>
@@ -81,7 +92,7 @@ class OutboundWorkOrder extends localize(i18next)(PageView) {
       </div>
 
       <div class="grist">
-        <label>${i18next.t('title.Shipping Notice Detail')}</label>
+        <h2>${i18next.t('title.Shipping Notice Detail')}</h2>
 
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
@@ -91,7 +102,7 @@ class OutboundWorkOrder extends localize(i18next)(PageView) {
       </div>
 
       <div class="grist">
-        <label>${i18next.t('title.Editing VAS Request')}</label>
+        <h2>${i18next.t('title.Editing VAS Request')}</h2>
 
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
