@@ -55,8 +55,8 @@ class ReceiveGoods extends localize(i18next)(PageView) {
       <div>
         <form class="multi-column-form">
           <fieldset>
-            <legend>${i18next.t('title.receive-goods-master')}</legend>
-            <label>${i18next.t('label.work_order-goods-master')}</label>
+            <legend>${i18next.t('title.receive_goods_master')}</legend>
+            <label>${i18next.t('label.work_order_goods_master')}</label>
             <input name="work_order" />
 
             <label>${i18next.t('label.purchase_order')}</label>
@@ -87,7 +87,7 @@ class ReceiveGoods extends localize(i18next)(PageView) {
       </div>
 
       <div class="grist">
-        <h2>${i18next.t('title.receive-goods-detail')}</h2>
+        <h2>${i18next.t('title.receive_goods_detail')}</h2>
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.servicesConfig}

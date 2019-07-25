@@ -57,7 +57,7 @@ class OutboundWorkOrder extends localize(i18next)(PageView) {
       <div>
         <form class="multi-column-form">
           <fieldset>
-            <legend>${i18next.t('title.Shipping Notice Master')}</legend>
+            <legend>${i18next.t('title.shipping_notice_master')}</legend>
             <label>${i18next.t('label.work_order_no')}</label>
             <input name="work_order_no" />
 
@@ -92,7 +92,7 @@ class OutboundWorkOrder extends localize(i18next)(PageView) {
       </div>
 
       <div class="grist">
-        <h2>${i18next.t('title.Shipping Notice Detail')}</h2>
+        <h2>${i18next.t('title.shipping_notice_detail')}</h2>
 
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
@@ -102,7 +102,7 @@ class OutboundWorkOrder extends localize(i18next)(PageView) {
       </div>
 
       <div class="grist">
-        <h2>${i18next.t('title.Editing VAS Request')}</h2>
+        <h2>${i18next.t('title.editing_vas_request')}</h2>
 
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}

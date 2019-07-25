@@ -64,7 +64,7 @@ class VasWorkOrder extends localize(i18next)(PageView) {
             <input name="gan" />
 
             <label>${i18next.t('label.do_no')}</label>
-            <input name="do_no" />
+            <input name="DO No." />
 
             <label>${i18next.t('label.contact_point')}</label>
             <input name="contact_point" />
@@ -189,7 +189,7 @@ class VasWorkOrder extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'Services',
-          header: i18next.t('field.Services'),
+          header: i18next.t('field.services'),
           record: {
             align: 'center'
           },
