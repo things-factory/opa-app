@@ -1,6 +1,6 @@
 {
   "name": "@things-factory/opa-app",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "main": "dist-server/index.js",
   "browser": "client/index.js",
   "things-factory": true,
@@ -26,6 +26,7 @@
     "@things-factory/apptool-ui": "*",
     "@things-factory/auth-ui-jwt": "*",
     "@things-factory/biz-ui": "*",
+    "@things-factory/board-ui": "*",
     "@things-factory/component-ui": "*",
     "@things-factory/context-ui": "*",
     "@things-factory/export-ui": "*",
@@ -50,6 +51,7 @@
     "@things-factory/warehouse-base": "*"
   },
   "devDependencies": {
+    "@things-factory/board-test": "*",
     "@things-factory/opa-test": "*"
   }
 }

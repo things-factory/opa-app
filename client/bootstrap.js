@@ -1,8 +1,11 @@
-import { registMenuProvider } from '@things-factory/menu-base'
+import { addRoutingType, registMenuProvider } from '@things-factory/menu-base'
 import { client, store, gqlBuilder, UPDATE_DEFAULT_ROUTE_PAGE } from '@things-factory/shell'
 import gql from 'graphql-tag'
 
 export default function bootstrap() {
+  store.dispatch(addRoutingType('VIEWER', 'board-viewer'))
+  store.dispatch(addRoutingType('PLAYER', 'board-player'))
+
   store.dispatch({
     type: UPDATE_DEFAULT_ROUTE_PAGE,
     defaultRoutePage: 'opa-home'
@@ -69,6 +72,7 @@ export default function bootstrap() {
                  name
                  routingType
                  idField
+                 titleField
                  resourceName
                  template
                  hiddenFlag
