@@ -50,6 +50,12 @@ class ReceiveGoods extends localize(i18next)(PageView) {
     ]
   }
 
+  get context() {
+    return {
+      title: i18next.t('title.receive_goods_master')
+    }
+  }
+
   render() {
     return html`
       <div>

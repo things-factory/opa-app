@@ -54,6 +54,12 @@ class PickingByUnit extends localize(i18next)(PageView) {
     ]
   }
 
+  get context() {
+    return {
+      title: i18next.t('title.picking_by_unit')
+    }
+  }
+
   render() {
     return html`
       <div class="input-area">

@@ -45,6 +45,12 @@ class VasWorkOrder extends localize(i18next)(PageView) {
     ]
   }
 
+  get context() {
+    return {
+      title: i18next.t('title.vas_work_order')
+    }
+  }
+
   render() {
     return html`
       <div class="">

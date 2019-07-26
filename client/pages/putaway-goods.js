@@ -46,6 +46,12 @@ class PutawayGoods extends localize(i18next)(PageView) {
     ]
   }
 
+  get context() {
+    return {
+      title: i18next.t('title.putaway_goods_master')
+    }
+  }
+
   render() {
     return html`
       <div class="input-area">

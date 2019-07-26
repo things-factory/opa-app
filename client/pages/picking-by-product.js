@@ -54,6 +54,12 @@ class PickingByProduct extends localize(i18next)(PageView) {
     ]
   }
 
+  get context() {
+    return {
+      title: i18next.t('title.picking_by_product')
+    }
+  }
+
   render() {
     return html`
       <div class="input-area">

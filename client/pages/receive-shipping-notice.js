@@ -41,6 +41,12 @@ class ReceiveShippingNotice extends localize(i18next)(PageView) {
     `
   }
 
+  get context() {
+    return {
+      title: i18next.t('title.receive_shipping_notice')
+    }
+  }
+
   render() {
     return html`
       <div class="search-form">
@@ -66,7 +72,7 @@ class ReceiveShippingNotice extends localize(i18next)(PageView) {
       </div>
 
       <div class="grist">
-        <label>${i18next.t('title.receive-shipping-notice')}</label>
+        <label>${i18next.t('title.receive_shipping_notice')}</label>
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.shippingConfig}
