@@ -453,10 +453,10 @@ class SystemMenu extends localize(i18next)(PageView) {
         <form class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('label.name')}</legend>
-            <label>${i18next.t('label.name')}</label>
+            <label>${i18next.t('field.name')}</label>
             <input name="name" />
 
-            <label>${i18next.t('label.description')}</label>
+            <label>${i18next.t('field.description')}</label>
             <input name="description" />
           </fieldset>
         </form>
@@ -493,7 +493,7 @@ class SystemMenu extends localize(i18next)(PageView) {
       </div>
 
       <div class="grist">
-        <h2>${i18next.t('title.screen')}</h2>
+        <h2>${i18next.t('title.view_setting')}</h2>
 
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
