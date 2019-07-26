@@ -48,11 +48,11 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.delivery_date')}</label>
             <input name="delivery_date" />
 
-            <label>${i18next.t('label.contact_number')}</label>
+            <label>${i18next.t('label.contact_no')}</label>
             <input name="contact_number" />
 
-            <label>${i18next.t('label.delievery_address')}</label>
-            <input name="delievery_address" />
+            <label>${i18next.t('label.delivery_address')}</label>
+            <input name="delivery_address" />
 
             <label>${i18next.t('label.fleet_spec')}</label>
             <input name="fleet_spec" />

@@ -57,7 +57,7 @@ class ReceiveShippingNotice extends localize(i18next)(PageView) {
           <label>${i18next.t('label.driver')}</label>
           <input name="driver" />
 
-          <label>${i18next.t('label.delivery_addr')}</label>
+          <label>${i18next.t('label.delivery_address')}</label>
           <input name="delivery_addr" />
 
           <label>${i18next.t('label.fleet_spec')}</label>
