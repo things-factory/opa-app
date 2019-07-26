@@ -1,8 +1,13 @@
 import { registMenuProvider } from '@things-factory/menu-base'
-import { client, store, gqlBuilder } from '@things-factory/shell'
+import { client, store, gqlBuilder, UPDATE_DEFAULT_ROUTE_PAGE } from '@things-factory/shell'
 import gql from 'graphql-tag'
 
 export default function bootstrap() {
+  store.dispatch({
+    type: UPDATE_DEFAULT_ROUTE_PAGE,
+    defaultRoutePage: 'opa-home'
+  })
+
   store.dispatch(
     registMenuProvider(async () => {
       const userType = store.getState().auth.user.userType
