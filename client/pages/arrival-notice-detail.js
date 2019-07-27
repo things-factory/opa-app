@@ -1,7 +1,7 @@
 import { i18next, localize } from '@things-factory/i18n-base'
 import { isMobileDevice, PageView, store } from '@things-factory/shell'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import '@things-factory/simple-ui'
+import '@things-factory/grist-ui'
 import { css, html } from 'lit-element'
 
 class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {

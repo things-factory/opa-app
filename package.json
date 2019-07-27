@@ -1,6 +1,6 @@
 {
   "name": "@things-factory/opa-app",
-  "version": "0.0.24",
+  "version": "0.0.25",
   "main": "dist-server/index.js",
   "browser": "client/index.js",
   "things-factory": true,
@@ -34,6 +34,7 @@
     "@things-factory/export-ui-excel": "*",
     "@things-factory/fav-base": "*",
     "@things-factory/form-ui": "*",
+    "@things-factory/grist-ui": "*",
     "@things-factory/i18n-ui": "*",
     "@things-factory/import-ui": "*",
     "@things-factory/import-ui-excel": "*",
@@ -46,7 +47,6 @@
     "@things-factory/sales-base": "*",
     "@things-factory/setting-ui": "*",
     "@things-factory/shell": "*",
-    "@things-factory/simple-ui": "*",
     "@things-factory/system-ui": "*",
     "@things-factory/transport-base": "*",
     "@things-factory/warehouse-base": "*"
