@@ -3,6 +3,7 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { isMobileDevice, PageView } from '@things-factory/shell'
 import '@things-factory/simple-ui'
 import { css, html } from 'lit-element'
+import { SearchFormStyles } from '../styles'
 
 class ReceiveShippingNotice extends localize(i18next)(PageView) {
   static get properties() {
@@ -13,32 +14,31 @@ class ReceiveShippingNotice extends localize(i18next)(PageView) {
   }
 
   static get styles() {
-    return css`
-      :host {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        overflow-x: overlay;
-        height: 100%;
-      }
-      .search-form {
-        display: flex;
-        flex: 1;
-      }
-      .grist {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-      }
-      data-grist {
-        overflow-y: hidden;
-        flex: 1;
-      }
-      .button-container {
-        display: flex;
-        margin-left: auto;
-      }
-    `
+    return [
+      SearchFormStyles,
+      css`
+        :host {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          overflow-x: overlay;
+          height: 100%;
+        }
+        .grist {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+        }
+        data-grist {
+          overflow-y: hidden;
+          flex: 1;
+        }
+        .button-container {
+          display: flex;
+          margin-left: auto;
+        }
+      `
+    ]
   }
 
   get context() {
@@ -49,8 +49,8 @@ class ReceiveShippingNotice extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <div class="search-form">
-        <form>
+      <div>
+        <form class="search-form">
           <label>${i18next.t('label.company')}</label>
           <input name="company" />
 
@@ -72,7 +72,6 @@ class ReceiveShippingNotice extends localize(i18next)(PageView) {
       </div>
 
       <div class="grist">
-        <label>${i18next.t('title.receive_shipping_notice')}</label>
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.shippingConfig}

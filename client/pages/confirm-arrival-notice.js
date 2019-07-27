@@ -2,7 +2,7 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { isMobileDevice, PageView } from '@things-factory/shell'
 import '@things-factory/simple-ui'
 import { css, html } from 'lit-element'
-import { MultiColumnFormStyles } from '../styles'
+import { SearchFormStyles } from '../styles'
 
 class ConfirmArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
@@ -14,7 +14,7 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
 
   static get styles() {
     return [
-      MultiColumnFormStyles,
+      SearchFormStyles,
       css`
         :host {
           display: flex;
@@ -47,24 +47,21 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
   render() {
     return html`
       <div>
-        <form class="multi-column-form">
-          <fieldset>
-            <legend>${i18next.t('label.gan')}</legend>
-            <label>${i18next.t('label.gan')}</label>
-            <input name="gan" />
+        <form class="search-form">
+          <label>${i18next.t('label.gan')}</label>
+          <input name="gan" />
 
-            <label>${i18next.t('label.eta')}</label>
-            <input name="eta" />
+          <label>${i18next.t('label.eta')}</label>
+          <input name="eta" />
 
-            <label>${i18next.t('label.delivery_no')}</label>
-            <input name="delivery_no" />
+          <label>${i18next.t('label.delivery_no')}</label>
+          <input name="delivery_no" />
 
-            <label>${i18next.t('label.company')}</label>
-            <input name="company" />
+          <label>${i18next.t('label.company')}</label>
+          <input name="company" />
 
-            <label>${i18next.t('label.supplier_name')}</label>
-            <input name="supplier_name" />
-          </fieldset>
+          <label>${i18next.t('label.supplier_name')}</label>
+          <input name="supplier_name" />
         </form>
       </div>
 
