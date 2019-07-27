@@ -1,6 +1,6 @@
 {
   "name": "@things-factory/opa-app",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "main": "dist-server/index.js",
   "browser": "client/index.js",
   "things-factory": true,
@@ -39,6 +39,7 @@
     "@things-factory/import-ui-excel": "*",
     "@things-factory/menu-ui": "*",
     "@things-factory/more-ui": "*",
+    "@things-factory/print-service": "^1.0.0-beta",
     "@things-factory/print-ui": "*",
     "@things-factory/product-base": "*",
     "@things-factory/resource-ui": "*",
