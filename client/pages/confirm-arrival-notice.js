@@ -19,20 +19,10 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-          overflow-x: overlay;
         }
-        .grist {
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-        }
+
         data-grist {
-          overflow-y: hidden;
           flex: 1;
-        }
-        .button-container {
-          display: flex;
-          margin-left: auto;
         }
       `
     ]
@@ -40,48 +30,46 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.confirm_arrival_notice')
+      title: i18next.t('title.confirm_arrival_notice'),
+      actions: [
+        {
+          title: i18next.t('button.confirm'),
+          action: () => {}
+        }
+      ]
     }
   }
 
   render() {
     return html`
-      <div>
-        <form class="search-form">
-          <label>${i18next.t('label.gan')}</label>
-          <input name="gan" />
+      <form class="search-form">
+        <label>${i18next.t('label.gan')}</label>
+        <input name="gan" />
 
-          <label>${i18next.t('label.eta')}</label>
-          <input name="eta" />
+        <label>${i18next.t('label.eta')}</label>
+        <input name="eta" />
 
-          <label>${i18next.t('label.delivery_no')}</label>
-          <input name="delivery_no" />
+        <label>${i18next.t('label.delivery_no')}</label>
+        <input name="delivery_no" />
 
-          <label>${i18next.t('label.company')}</label>
-          <input name="company" />
+        <label>${i18next.t('label.company')}</label>
+        <input name="company" />
 
-          <label>${i18next.t('label.supplier_name')}</label>
-          <input name="supplier_name" />
-        </form>
-      </div>
+        <label>${i18next.t('label.supplier_name')}</label>
+        <input name="supplier_name" />
+      </form>
 
-      <div class="grist">
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .data=${this.data}
-          @page-changed=${e => {
-            this.page = e.detail
-          }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
-        ></data-grist>
-      </div>
-
-      <div class="button-container">
-        <mwc-button>${i18next.t('button.confirm')}</mwc-button>
-      </div>
+      <data-grist
+        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+        .config=${this.config}
+        .data=${this.data}
+        @page-changed=${e => {
+          this.page = e.detail
+        }}
+        @limit-changed=${e => {
+          this.limit = e.detail
+        }}
+      ></data-grist>
     `
   }
 

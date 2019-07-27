@@ -17,30 +17,12 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       SearchFormStyles,
       css`
         :host {
-          flex: 1;
           display: flex;
           flex-direction: column;
-          overflow-x: overlay;
-          height: 100%;
         }
-        .grist {
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-        }
+
         data-grist {
-          overflow-y: hidden;
           flex: 1;
-        }
-        .button-container {
-          display: flex;
-          margin-left: auto;
-        }
-        h2 {
-          padding: var(--subtitle-padding);
-          font: var(--subtitle-font);
-          color: var(--subtitle-text-color);
-          border-bottom: var(--subtitle-border-bottom);
         }
       `
     ]
@@ -48,47 +30,46 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.receive_arrival_notice')
+      title: i18next.t('title.receive_arrival_notice'),
+      actions: [
+        {
+          title: i18next.t('button.receive'),
+          action: () => {}
+        }
+      ]
     }
   }
 
   render() {
     return html`
-      <div>
-        <form class="search-form">
-          <label>${i18next.t('label.gan')}</label>
-          <input name="gan" />
+      <form class="search-form">
+        <label>${i18next.t('label.gan')}</label>
+        <input name="gan" />
 
-          <label>${i18next.t('label.eta')}</label>
-          <input name="eta" />
+        <label>${i18next.t('label.eta')}</label>
+        <input name="eta" />
 
-          <label>${i18next.t('label.do_no')}</label>
-          <input name="do_no" />
+        <label>${i18next.t('label.do_no')}</label>
+        <input name="do_no" />
 
-          <label>${i18next.t('label.company')}</label>
-          <input name="company" />
+        <label>${i18next.t('label.company')}</label>
+        <input name="company" />
 
-          <label>${i18next.t('label.supplier_name')}</label>
-          <input name="supplier_name" />
-        </form>
-      </div>
+        <label>${i18next.t('label.supplier_name')}</label>
+        <input name="supplier_name" />
+      </form>
 
-      <div class="grist">
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.arriveConfig}
-          .data=${this.arriveData}
-          @page-changed=${e => {
-            this.page = e.detail
-          }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
-        ></data-grist>
-      </div>
-      <div class="button-container">
-        <mwc-button id="service-receive">${i18next.t('button.receive')}</mwc-button>
-      </div>
+      <data-grist
+        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+        .config=${this.arriveConfig}
+        .data=${this.arriveData}
+        @page-changed=${e => {
+          this.page = e.detail
+        }}
+        @limit-changed=${e => {
+          this.limit = e.detail
+        }}
+      ></data-grist>
     `
   }
 

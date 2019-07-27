@@ -18,24 +18,12 @@ class ReceiveShippingNotice extends localize(i18next)(PageView) {
       SearchFormStyles,
       css`
         :host {
-          flex: 1;
           display: flex;
           flex-direction: column;
-          overflow-x: overlay;
-          height: 100%;
         }
-        .grist {
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-        }
+
         data-grist {
-          overflow-y: hidden;
           flex: 1;
-        }
-        .button-container {
-          display: flex;
-          margin-left: auto;
         }
       `
     ]
@@ -43,50 +31,49 @@ class ReceiveShippingNotice extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.receive_shipping_notice')
+      title: i18next.t('title.receive_shipping_notice'),
+      actions: [
+        {
+          title: i18next.t('button.receive'),
+          action: () => {}
+        }
+      ]
     }
   }
 
   render() {
     return html`
-      <div>
-        <form class="search-form">
-          <label>${i18next.t('label.company')}</label>
-          <input name="company" />
+      <form class="search-form">
+        <label>${i18next.t('label.company')}</label>
+        <input name="company" />
 
-          <label>${i18next.t('label.delivery_date')}</label>
-          <input name="delivery_date" />
+        <label>${i18next.t('label.delivery_date')}</label>
+        <input name="delivery_date" />
 
-          <label>${i18next.t('label.fleet_no')}</label>
-          <input name="fleet_no" />
+        <label>${i18next.t('label.fleet_no')}</label>
+        <input name="fleet_no" />
 
-          <label>${i18next.t('label.driver')}</label>
-          <input name="driver" />
+        <label>${i18next.t('label.driver')}</label>
+        <input name="driver" />
 
-          <label>${i18next.t('label.delivery_address')}</label>
-          <input name="delivery_addr" />
+        <label>${i18next.t('label.delivery_address')}</label>
+        <input name="delivery_addr" />
 
-          <label>${i18next.t('label.fleet_spec')}</label>
-          <input name="fleet_spec" />
-        </form>
-      </div>
+        <label>${i18next.t('label.fleet_spec')}</label>
+        <input name="fleet_spec" />
+      </form>
 
-      <div class="grist">
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.shippingConfig}
-          .data=${this.shippingData}
-          @page-changed=${e => {
-            this.page = e.detail
-          }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
-        ></data-grist>
-      </div>
-      <div class="button-container">
-        <mwc-button id="service-receive">${i18next.t('button.receive')}</mwc-button>
-      </div>
+      <data-grist
+        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+        .config=${this.shippingConfig}
+        .data=${this.shippingData}
+        @page-changed=${e => {
+          this.page = e.detail
+        }}
+        @limit-changed=${e => {
+          this.limit = e.detail
+        }}
+      ></data-grist>
     `
   }
 

@@ -19,20 +19,10 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-          overflow-x: overlay;
         }
-        .grist {
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-        }
+
         data-grist {
-          overflow-y: hidden;
           flex: 1;
-        }
-        .button-container {
-          display: flex;
-          margin-left: auto;
         }
       `
     ]
@@ -40,51 +30,49 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.confirm_transport_order')
+      title: i18next.t('title.confirm_transport_order'),
+      actions: [
+        {
+          title: i18next.t('button.confirm'),
+          action: () => {}
+        }
+      ]
     }
   }
 
   render() {
     return html`
-      <div>
-        <form class="search-form">
-          <label>${i18next.t('label.company')}</label>
-          <input name="company" />
+      <form class="search-form">
+        <label>${i18next.t('label.company')}</label>
+        <input name="company" />
 
-          <label>${i18next.t('label.delivery_date')}</label>
-          <input name="delivery_date" />
+        <label>${i18next.t('label.delivery_date')}</label>
+        <input name="delivery_date" />
 
-          <label>${i18next.t('label.fleet_no')}</label>
-          <input name="fleet_no" />
+        <label>${i18next.t('label.fleet_no')}</label>
+        <input name="fleet_no" />
 
-          <label>${i18next.t('label.driver')}</label>
-          <input name="driver" />
+        <label>${i18next.t('label.driver')}</label>
+        <input name="driver" />
 
-          <label>${i18next.t('label.delivery_address')}</label>
-          <input name="delivery_address" />
+        <label>${i18next.t('label.delivery_address')}</label>
+        <input name="delivery_address" />
 
-          <label>${i18next.t('label.fleet_spec')}</label>
-          <input name="fleet_spec" />
-        </form>
-      </div>
+        <label>${i18next.t('label.fleet_spec')}</label>
+        <input name="fleet_spec" />
+      </form>
 
-      <div class="grist">
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .data=${this.data}
-          @page-changed=${e => {
-            this.page = e.detail
-          }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
-        ></data-grist>
-      </div>
-
-      <div class="button-container">
-        <mwc-button>${i18next.t('button.confirm')}</mwc-button>
-      </div>
+      <data-grist
+        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+        .config=${this.config}
+        .data=${this.data}
+        @page-changed=${e => {
+          this.page = e.detail
+        }}
+        @limit-changed=${e => {
+          this.limit = e.detail
+        }}
+      ></data-grist>
     `
   }
 
