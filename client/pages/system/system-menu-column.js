@@ -20,7 +20,7 @@ class SystemMenuColumn extends connect(store)(localize(i18next)(PageView)) {
       :host {
         display: flex;
         flex-direction: column;
-        overflow-x: overlay;
+        overflow-x: auto;
       }
       .grist {
         display: flex;
