@@ -1,12 +1,9 @@
+import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
-import { isMobileDevice, PageView, store } from '@things-factory/shell'
-import { connect } from 'pwa-helpers/connect-mixin.js'
-import '@things-factory/grist-ui'
 import { css, html } from 'lit-element'
-import { connect } from 'pwa-helpers/connect-mixin'
-import { MultiColumnFormStyles } from '../styles'
+import { connect } from 'pwa-helpers/connect-mixin.js'
 
 class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {

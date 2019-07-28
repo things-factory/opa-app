@@ -1,6 +1,7 @@
-import { i18next, localize } from '@things-factory/i18n-base'
-import { isMobileDevice, PageView } from '@things-factory/shell'
 import '@things-factory/grist-ui'
+import { i18next, localize } from '@things-factory/i18n-base'
+import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
+import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '../styles'
 
@@ -89,8 +90,8 @@ class ReceiveGoods extends localize(i18next)(PageView) {
 
       <data-grist
         .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-        .config=${this.servicesConfig}
-        .data=${this.servicesData}
+        .config=${this.config}
+        .data=${this.data}
         @page-changed=${e => {
           this.page = e.detail
         }}

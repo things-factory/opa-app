@@ -1,8 +1,9 @@
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { isMobileDevice, PageView } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
+import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { SearchFormStyles } from '../styles'
+import { MultiColumnFormStyles } from '../styles'
 
 class ReceiveArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
@@ -14,15 +15,29 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
 
   static get styles() {
     return [
-      SearchFormStyles,
+      MultiColumnFormStyles,
       css`
         :host {
+          flex: 1;
           display: flex;
           flex-direction: column;
+          overflow-x: overlay;
+          height: 100%;
         }
-
-        data-grist {
+        .grist {
+          display: flex;
+          flex-direction: column;
           flex: 1;
+        }
+        data-grist {
+          overflow-y: hidden;
+          flex: 1;
+        }
+        h2 {
+          padding: var(--subtitle-padding);
+          font: var(--subtitle-font);
+          color: var(--subtitle-text-color);
+          border-bottom: var(--subtitle-border-bottom);
         }
       `
     ]
@@ -34,7 +49,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.receive'),
-          action: () => {}
+          action: this._receiveOrder.bind(this)
         }
       ]
     }
@@ -77,9 +92,6 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
             this.limit = e.detail
           }}
         ></data-grist>
-      </div>
-      <div class="button-container">
-        <mwc-button @click="${this._receiveOrder}">${i18next.t('button.receive')}</mwc-button>
       </div>
     `
   }

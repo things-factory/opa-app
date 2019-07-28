@@ -49,7 +49,13 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.create_arrival_notice')
+      title: i18next.t('title.create_arrival_notice'),
+      actions: [
+        {
+          title: i18next.t('button.submit'),
+          action: this.createArrivalNotice.bind(this)
+        }
+      ]
     }
   }
 
@@ -128,8 +134,6 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             >${i18next.t('button.add')}</mwc-button
           >
         </div>
-
-        <mwc-button @click="${this.createArrivalNotice}">${i18next.t('button.submit')}</mwc-button>
       </div>
     `
   }
