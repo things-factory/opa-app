@@ -1,6 +1,6 @@
 import { i18next, localize } from '@things-factory/i18n-base'
 import { isMobileDevice, PageView } from '@things-factory/shell'
-import '@things-factory/simple-ui'
+import '@things-factory/grist-ui'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '../styles'
 
@@ -21,7 +21,7 @@ class CreateShippingNotice extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-          overflow-x: overlay;
+          overflow-x: auto;
         }
         .grist {
           display: flex;

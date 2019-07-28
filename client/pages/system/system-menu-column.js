@@ -1,7 +1,7 @@
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
 import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
-import '@things-factory/simple-ui'
+import '@things-factory/grist-ui'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
@@ -20,7 +20,7 @@ class SystemMenuColumn extends connect(store)(localize(i18next)(PageView)) {
       :host {
         display: flex;
         flex-direction: column;
-        overflow-x: overlay;
+        overflow-x: auto;
       }
       .grist {
         display: flex;

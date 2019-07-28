@@ -1,6 +1,6 @@
 import { i18next, localize } from '@things-factory/i18n-base'
 import { isMobileDevice, PageView } from '@things-factory/shell'
-import '@things-factory/simple-ui'
+import '@things-factory/grist-ui'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '../styles'
 
@@ -19,23 +19,19 @@ class PutawayGoods extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-          overflow-x: overlay;
         }
-        .input-area {
-          flex: 1;
-        }
-        .scan-area {
-          flex: 1;
-        }
+
         .grist {
           display: flex;
           flex-direction: column;
+
           flex: 1;
         }
+
         data-grist {
-          overflow-y: hidden;
           flex: 1;
         }
+
         h2 {
           padding: var(--subtitle-padding);
           font: var(--subtitle-font);
@@ -48,54 +44,59 @@ class PutawayGoods extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.putaway_goods_master')
+      title: i18next.t('title.putaway_goods_master'),
+      actions: [
+        {
+          title: i18next.t('button.save'),
+          action: () => {}
+        }
+      ]
     }
   }
 
   render() {
     return html`
-      <div class="input-area">
-        <form class="multi-column-form">
-          <fieldset>
-            <legend>${i18next.t('title.putaway_goods_master')}</legend>
-            <label>${i18next.t('label.work_order')}</label>
-            <input name="work_order" />
-
-            <label>${i18next.t('label.purchase_order')}</label>
-            <input name="purchase_order" />
-
-            <label>${i18next.t('label.supplier_name')}</label>
-            <input name="supplier_name" />
-
-            <label>${i18next.t('label.gan')}</label>
-            <input name="gan" />
-
-            <label>${i18next.t('label.do_no')}</label>
-            <input name="do_no" />
-
-            <label>${i18next.t('label.contact_point')}</label>
-            <input name="contact_point" />
-
-            <label>${i18next.t('label.contact_no')}</label>
-            <input name="contact_no" />
-
-            <label>${i18next.t('label.fax')}</label>
-            <input name="fax" />
-
-            <label>${i18next.t('label.eta')}</label>
-            <input name="eta" />
-          </fieldset>
-        </form>
-      </div>
-
-      <div class="scan-area">
       <form class="multi-column-form">
-          <fieldset>
-            <legend>${i18next.t('title.putaway_goods_scan_area')}</legend>
-        <input name="product-barcode" />
-        <input name="location" />
+        <fieldset>
+          <legend>${i18next.t('title.putaway_goods_master')}</legend>
+          <label>${i18next.t('label.work_order')}</label>
+          <input name="work_order" />
+
+          <label>${i18next.t('label.purchase_order')}</label>
+          <input name="purchase_order" />
+
+          <label>${i18next.t('label.supplier_name')}</label>
+          <input name="supplier_name" />
+
+          <label>${i18next.t('label.gan')}</label>
+          <input name="gan" />
+
+          <label>${i18next.t('label.do_no')}</label>
+          <input name="do_no" />
+
+          <label>${i18next.t('label.contact_point')}</label>
+          <input name="contact_point" />
+
+          <label>${i18next.t('label.contact_no')}</label>
+          <input name="contact_no" />
+
+          <label>${i18next.t('label.fax')}</label>
+          <input name="fax" />
+
+          <label>${i18next.t('label.eta')}</label>
+          <input name="eta" />
         </fieldset>
-      </div>
+
+        <fieldset>
+          <legend>${i18next.t('title.putaway_goods_scan_area')}</legend>
+
+          <label>${i18next.t('label.product_barcode')}</label>
+          <input name="product-barcode" />
+
+          <label>${i18next.t('labe.location')}</label>
+          <input name="location" />
+        </fieldset>
+      </form>
 
       <div class="grist">
         <h2>${i18next.t('title.putaway_goods_detail')}</h2>

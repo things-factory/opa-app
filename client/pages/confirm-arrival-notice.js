@@ -1,9 +1,8 @@
+import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { isMobileDevice, PageView, client, gqlBuilder } from '@things-factory/shell'
-import gql from 'graphql-tag'
-import '@things-factory/simple-ui'
+import { isMobileDevice, PageView } from '@things-factory/shell'
 import { css, html } from 'lit-element'
-import { MultiColumnFormStyles } from '../styles'
+import { SearchFormStyles } from '../styles'
 
 class ConfirmArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
@@ -15,25 +14,15 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
 
   static get styles() {
     return [
-      MultiColumnFormStyles,
+      SearchFormStyles,
       css`
         :host {
           display: flex;
           flex-direction: column;
-          overflow-x: overlay;
         }
-        .grist {
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-        }
+
         data-grist {
-          overflow-y: hidden;
           flex: 1;
-        }
-        .button-container {
-          display: flex;
-          margin-left: auto;
         }
       `
     ]
@@ -41,47 +30,46 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.confirm_arrival_notice')
+      title: i18next.t('title.confirm_arrival_notice'),
+      actions: [
+        {
+          title: i18next.t('button.confirm'),
+          action: () => {}
+        }
+      ]
     }
   }
 
   render() {
     return html`
-      <div>
-        <form class="multi-column-form">
-          <fieldset>
-            <legend>${i18next.t('label.gan')}</legend>
-            <label>${i18next.t('label.gan')}</label>
-            <input name="gan" />
+      <form class="search-form">
+        <label>${i18next.t('label.gan')}</label>
+        <input name="gan" />
 
-            <label>${i18next.t('label.eta')}</label>
-            <input name="eta" />
+        <label>${i18next.t('label.eta')}</label>
+        <input name="eta" />
 
-            <label>${i18next.t('label.delivery_no')}</label>
-            <input name="delivery_no" />
+        <label>${i18next.t('label.delivery_no')}</label>
+        <input name="delivery_no" />
 
-            <label>${i18next.t('label.company')}</label>
-            <input name="company" />
+        <label>${i18next.t('label.company')}</label>
+        <input name="company" />
 
-            <label>${i18next.t('label.supplier_name')}</label>
-            <input name="supplier_name" />
-          </fieldset>
-        </form>
-      </div>
+        <label>${i18next.t('label.supplier_name')}</label>
+        <input name="supplier_name" />
+      </form>
 
-      <div class="grist">
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .data=${this.data}
-          @page-changed=${e => {
-            this.page = e.detail
-          }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
-        ></data-grist>
-      </div>
+      <data-grist
+        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+        .config=${this.config}
+        .data=${this.data}
+        @page-changed=${e => {
+          this.page = e.detail
+        }}
+        @limit-changed=${e => {
+          this.limit = e.detail
+        }}
+      ></data-grist>
 
       <div class="button-container">
         <mwc-button @click="${this._cancelOrder}">${i18next.t('button.cancel')}</mwc-button>

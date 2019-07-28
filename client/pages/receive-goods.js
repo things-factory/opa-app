@@ -1,7 +1,6 @@
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
-import '@things-factory/simple-ui'
-import gql from 'graphql-tag'
+import { isMobileDevice, PageView } from '@things-factory/shell'
+import '@things-factory/grist-ui'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '../styles'
 
@@ -20,30 +19,10 @@ class ReceiveGoods extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-          overflow-x: overlay;
         }
-        .input-box {
-          display: flex;
-          flex: 1;
-        }
-        .grist {
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-        }
+
         data-grist {
-          overflow-y: hidden;
           flex: 1;
-        }
-        .button-container {
-          display: flex;
-          margin-left: auto;
-        }
-        h2 {
-          padding: var(--subtitle-padding);
-          font: var(--subtitle-font);
-          color: var(--subtitle-text-color);
-          border-bottom: var(--subtitle-border-bottom);
         }
       `
     ]
@@ -51,7 +30,13 @@ class ReceiveGoods extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.receive_goods_master')
+      title: i18next.t('title.receive_goods_master'),
+      actions: [
+        {
+          title: i18next.t('button.save'),
+          action: () => {}
+        }
+      ]
     }
   }
 
@@ -102,20 +87,17 @@ class ReceiveGoods extends localize(i18next)(PageView) {
         </form>
       </div>
 
-      <div class="grist">
-        <h2>${i18next.t('title.receive_goods_detail')}</h2>
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .data=${this.data}
-          @page-changed=${e => {
-            this.page = e.detail
-          }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
-        ></data-grist>
-      </div>
+      <data-grist
+        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+        .config=${this.servicesConfig}
+        .data=${this.servicesData}
+        @page-changed=${e => {
+          this.page = e.detail
+        }}
+        @limit-changed=${e => {
+          this.limit = e.detail
+        }}
+      ></data-grist>
     `
   }
 

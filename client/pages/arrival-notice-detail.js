@@ -1,7 +1,9 @@
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
-import '@things-factory/simple-ui'
 import gql from 'graphql-tag'
+import { isMobileDevice, PageView, store } from '@things-factory/shell'
+import { connect } from 'pwa-helpers/connect-mixin.js'
+import '@things-factory/grist-ui'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
 import { MultiColumnFormStyles } from '../styles'
@@ -18,35 +20,22 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
   }
 
   static get styles() {
-    return [
-      MultiColumnFormStyles,
-      css`
-        :host {
-          display: flex;
-          flex-direction: column;
-          overflow-x: overlay;
-        }
-        .grist {
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-        }
-        data-grist {
-          overflow-y: hidden;
-          flex: 1;
-        }
-        .button-container {
-          display: flex;
-          margin-left: auto;
-        }
-        h2 {
-          padding: var(--subtitle-padding);
-          font: var(--subtitle-font);
-          color: var(--subtitle-text-color);
-          border-bottom: var(--subtitle-border-bottom);
-        }
-      `
-    ]
+    return css`
+      :host {
+        display: flex;
+        flex-direction: column;
+        overflow-x: auto;
+      }
+      .grist {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+      }
+      data-grist {
+        overflow-y: hidden;
+        flex: 1;
+      }
+    `
   }
 
   get context() {

@@ -1,7 +1,7 @@
 // Services,description,quantity,unit,status
 import { i18next, localize } from '@things-factory/i18n-base'
 import { isMobileDevice, PageView } from '@things-factory/shell'
-import '@things-factory/simple-ui'
+import '@things-factory/grist-ui'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '../styles'
 
@@ -20,21 +20,21 @@ class VasWorkOrder extends localize(i18next)(PageView) {
       MultiColumnFormStyles,
       css`
         :host {
-          flex: 1;
           display: flex;
           flex-direction: column;
-          overflow-x: overlay;
-          height: 100%;
         }
+
         .grist {
           display: flex;
           flex-direction: column;
+
           flex: 1;
         }
+
         data-grist {
-          overflow-y: hidden;
           flex: 1;
         }
+
         h2 {
           padding: var(--subtitle-padding);
           font: var(--subtitle-font);
@@ -47,45 +47,49 @@ class VasWorkOrder extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.vas_work_order')
+      title: i18next.t('title.vas_work_order'),
+      actions: [
+        {
+          title: i18next.t('button.save'),
+          action: () => {}
+        }
+      ]
     }
   }
 
   render() {
     return html`
-      <div class="">
-        <form class="multi-column-form">
-          <fieldset class="multi-column-form">
-            <legend>${i18next.t('title.arrival_notice_master')}</legend>
-            <label>${i18next.t('label.work_order')}</label>
-            <input name="work_order" />
+      <form class="multi-column-form">
+        <fieldset class="multi-column-form">
+          <legend>${i18next.t('title.arrival_notice_master')}</legend>
+          <label>${i18next.t('label.work_order')}</label>
+          <input name="work_order" />
 
-            <label>${i18next.t('label.purchase_order')}</label>
-            <input name="purchase_order" />
+          <label>${i18next.t('label.purchase_order')}</label>
+          <input name="purchase_order" />
 
-            <label>${i18next.t('label.supplier_name')}</label>
-            <input name="supplier_name" />
+          <label>${i18next.t('label.supplier_name')}</label>
+          <input name="supplier_name" />
 
-            <label>${i18next.t('label.gan')}</label>
-            <input name="gan" />
+          <label>${i18next.t('label.gan')}</label>
+          <input name="gan" />
 
-            <label>${i18next.t('label.do_no')}</label>
-            <input name="DO No." />
+          <label>${i18next.t('label.do_no')}</label>
+          <input name="DO No." />
 
-            <label>${i18next.t('label.contact_point')}</label>
-            <input name="contact_point" />
+          <label>${i18next.t('label.contact_point')}</label>
+          <input name="contact_point" />
 
-            <label>${i18next.t('label.contact_no')}</label>
-            <input name="contact_no" />
+          <label>${i18next.t('label.contact_no')}</label>
+          <input name="contact_no" />
 
-            <label>${i18next.t('label.fax')}</label>
-            <input name="fax" />
+          <label>${i18next.t('label.fax')}</label>
+          <input name="fax" />
 
-            <label>${i18next.t('label.eta')}</label>
-            <input name="eta" />
-          </fieldset>
-        </form>
-      </div>
+          <label>${i18next.t('label.eta')}</label>
+          <input name="eta" />
+        </fieldset>
+      </form>
 
       <div class="grist">
         <h2>${i18next.t('title.vas_request_and_materials')}</h2>

@@ -1,104 +1,34 @@
-import { addRoutingType, registMenuProvider } from '@things-factory/menu-base'
-import { client, store, gqlBuilder, UPDATE_DEFAULT_ROUTE_PAGE } from '@things-factory/shell'
-import gql from 'graphql-tag'
+import { addRoutingType, updateMenuProvider } from '@things-factory/menu-base'
+import { store, UPDATE_BASE_URL, UPDATE_DEFAULT_ROUTE_PAGE, isMobileDevice } from '@things-factory/shell'
+
+import { menuProvider } from './providers/menu-provider'
 
 export default function bootstrap() {
-  store.dispatch(addRoutingType('VIEWER', 'board-viewer'))
-  store.dispatch(addRoutingType('PLAYER', 'board-player'))
+  /*
+   * things-board 기능을 메뉴에서 지원하기 위해서, VIEWER, PLAYER routing type을 추가함.
+   */
+  store.dispatch(addRoutingType('VIEWER', 'board-viewer', 'bar_chart'))
+  store.dispatch(addRoutingType('PLAYER', 'board-player', 'play_arrow'))
 
+  /*
+   * server endpoint를 설정할 수 있음. (기본은 client가 패포된 서버를 사용함.)
+   */
   store.dispatch({
-    type: UPDATE_DEFAULT_ROUTE_PAGE,
-    defaultRoutePage: 'opa-home'
+    type: UPDATE_BASE_URL
+    // baseUrl: 'http://opaone.com'
   })
 
-  store.dispatch(
-    registMenuProvider(async () => {
-      const userType = store.getState().auth.user.userType
-      let argsObj = {}
-      if (userType === 'admin') {
-        argsObj = {
-          filters: [
-            {
-              name: 'menuType',
-              operator: 'eq',
-              value: 'MENU'
-            }
-          ],
-          sortings: [
-            {
-              name: 'rank'
-            }
-          ]
-        }
-      } else {
-        argsObj = {
-          filters: [
-            {
-              name: 'category',
-              operator: 'like',
-              value: userType
-            },
-            {
-              name: 'menuType',
-              operator: 'eq',
-              value: 'MENU'
-            },
-            {
-              name: 'hiddenFlag',
-              operator: 'eq',
-              value: 'false',
-              dataType: 'boolean'
-            }
-          ],
-          sortings: [
-            {
-              name: 'rank'
-            }
-          ]
-        }
-      }
+  /*
+   * default page를 설정함.
+   * signin 후에 자동으로 이동되는 페이지임.
+   */
+  store.dispatch({
+    type: UPDATE_DEFAULT_ROUTE_PAGE,
+    defaultRoutePage: isMobileDevice() ? 'menu-list' : 'opa-home'
+  })
 
-      const response = await client.query({
-        query: gql`
-          query {
-            menus(${gqlBuilder.buildArgs(argsObj)}) {
-              items {
-                id
-                name
-                childrens {
-                 id
-                 rank
-                 category
-                 name
-                 routingType
-                 idField
-                 titleField
-                 resourceName
-                 template
-                 hiddenFlag
-                }
-              }
-            }
-          }
-        `
-      })
-
-      return response.data.menus.items.map(item => {
-        return {
-          ...item,
-          childrens: [
-            ...item.childrens
-              .filter(children => {
-                if (userType !== 'admin') {
-                  return children.category.toLowerCase().indexOf(userType) >= 0 && !children.hiddenFlag
-                } else {
-                  return children
-                }
-              })
-              .sort((a, b) => a.rank - b.rank)
-          ]
-        }
-      })
-    })
-  )
+  /*
+   * menuProvider를 등록함. (임시, 데모용임)
+   */
+  store.dispatch(updateMenuProvider(menuProvider))
 }

@@ -1,7 +1,7 @@
 import { i18next, localize } from '@things-factory/i18n-base'
 import { isMobileDevice, PageView, client, gqlBuilder } from '@things-factory/shell'
 import gql from 'graphql-tag'
-import '@things-factory/simple-ui'
+import '@things-factory/grist-ui'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '../styles'
 
@@ -22,7 +22,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-          overflow-x: overlay;
+          overflow-x: auto;
         }
         .grist {
           display: flex;

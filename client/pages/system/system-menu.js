@@ -3,7 +3,7 @@ import { PageView, isMobileDevice, client, gqlBuilder } from '@things-factory/sh
 import { openPopup } from '@things-factory/layout-base'
 import gql from 'graphql-tag'
 import { html, css } from 'lit-element'
-import '@things-factory/simple-ui'
+import '@things-factory/grist-ui'
 import { MultiColumnFormStyles } from '../../styles'
 
 class SystemMenu extends localize(i18next)(PageView) {
@@ -23,7 +23,7 @@ class SystemMenu extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-          overflow-x: overlay;
+          overflow-x: auto;
         }
         .grist {
           display: flex;
@@ -443,8 +443,10 @@ class SystemMenu extends localize(i18next)(PageView) {
     }
   }
 
-  activated(state) {
-    this._getGroupMenus()
+  activated(active) {
+    if (active) {
+      this._getGroupMenus()
+    }
   }
 
   render() {
