@@ -118,16 +118,16 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
             }
           }
         },
-        {
-          type: 'string',
-          name: 'company',
-          header: i18next.t('field.company'),
-          record: {
-            align: 'center'
-          },
-          sortable: true,
-          width: 120
-        },
+        // {
+        //   type: 'string',
+        //   name: 'company',
+        //   header: i18next.t('field.company'),
+        //   record: {
+        //     align: 'center'
+        //   },
+        //   sortable: true,
+        //   width: 120
+        // },
         {
           type: 'string',
           name: 'name',

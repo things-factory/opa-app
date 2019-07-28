@@ -211,9 +211,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           name: 'unit',
           header: i18next.t('field.unit'),
           record: {
-            align: 'center',
-            editable: true,
-            options: [i18next.t('label.pallet'), i18next.t('label.box'), i18next.t('label.container')]
+            align: 'center'
           },
           width: 120
         },
@@ -341,9 +339,11 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
     if ((before.product && before.product.id) != (after.product && after.product.id)) {
       const productMaster = await this.getMasterInfo(after.product.id)
+      const productUnit = productMaster.unit.split(' ')
 
-      this.productsData.records[e.detail.row].unit = productMaster.unit
-      this.productsData.records[e.detail.row].pack_in_qty = 10
+      this.productsData.records[e.detail.row].pack_in_qty = productUnit[0]
+      this.productsData.records[e.detail.row].unit = productUnit[1]
+      this.productsData.records[e.detail.row].description = productMaster.description
 
       this.productsData = {
         ...this.productsData,
@@ -370,6 +370,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
       this.servicesData.records[e.detail.row].unit = serviceMaster.unit
       this.servicesData.records[e.detail.row].unit_price = 5
+      this.servicesData.records[e.detail.row].description = serviceMaster.description
 
       this.servicesData = {
         ...this.servicesData,
@@ -443,6 +444,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
   getProducts() {
     const products = this.shadowRoot.querySelector('#products').dirtyRecords
+    console.log(products)
     if (products.length === 0) {
       throw new Error(i18next.t('text.list_is_not_completed'))
     } else {

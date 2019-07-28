@@ -4,6 +4,7 @@ import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-fac
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
+import { MultiColumnFormStyles } from '../styles'
 
 class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -17,22 +18,35 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
   }
 
   static get styles() {
-    return css`
-      :host {
-        display: flex;
-        flex-direction: column;
-        overflow-x: auto;
-      }
-      .grist {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-      }
-      data-grist {
-        overflow-y: hidden;
-        flex: 1;
-      }
-    `
+    return [
+      MultiColumnFormStyles,
+      css`
+        :host {
+          display: flex;
+          flex-direction: column;
+          overflow-x: overlay;
+        }
+        .grist {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+        }
+        data-grist {
+          overflow-y: hidden;
+          flex: 1;
+        }
+        .button-container {
+          display: flex;
+          margin-left: auto;
+        }
+        h2 {
+          padding: var(--subtitle-padding);
+          font: var(--subtitle-font);
+          color: var(--subtitle-text-color);
+          border-bottom: var(--subtitle-border-bottom);
+        }
+      `
+    ]
   }
 
   get context() {
