@@ -1,4 +1,4 @@
-import { addRoutingType, registMenuProvider } from '@things-factory/menu-base'
+import { addRoutingType, updateMenuProvider } from '@things-factory/menu-base'
 import { store, UPDATE_BASE_URL, UPDATE_DEFAULT_ROUTE_PAGE, isMobileDevice } from '@things-factory/shell'
 
 import { menuProvider } from './providers/menu-provider'
@@ -30,5 +30,5 @@ export default function bootstrap() {
   /*
    * menuProvider를 등록함. (임시, 데모용임)
    */
-  store.dispatch(registMenuProvider(menuProvider))
+  store.dispatch(updateMenuProvider(menuProvider))
 }

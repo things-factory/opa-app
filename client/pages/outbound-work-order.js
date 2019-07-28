@@ -45,7 +45,7 @@ class OutboundWorkOrder extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.create_arrival_notice'),
+      title: i18next.t('title.outbound_work_order'),
       actions: [
         {
           title: i18next.t('button.save'),
