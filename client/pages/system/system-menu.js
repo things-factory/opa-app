@@ -443,8 +443,10 @@ class SystemMenu extends localize(i18next)(PageView) {
     }
   }
 
-  activated(state) {
-    this._getGroupMenus()
+  activated(active) {
+    if (active) {
+      this._getGroupMenus()
+    }
   }
 
   render() {
