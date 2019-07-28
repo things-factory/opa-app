@@ -29,7 +29,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.create_shipping_notice')
+      title: i18next.t('title.create_transport_order')
     }
   }
 
