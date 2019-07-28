@@ -1,6 +1,6 @@
 {
   "name": "@things-factory/opa-app",
-  "version": "0.0.34",
+  "version": "0.0.35",
   "main": "dist-server/index.js",
   "browser": "client/index.js",
   "things-factory": true,
@@ -53,6 +53,7 @@
   },
   "devDependencies": {
     "@things-factory/board-test": "*",
+    "@things-factory/grist-test": "*",
     "@things-factory/opa-test": "*"
   }
 }
