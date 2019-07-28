@@ -1,14 +1,15 @@
 import { i18next, localize } from '@things-factory/i18n-base'
-import { isMobileDevice, PageView } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
 import '@things-factory/simple-ui'
+import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '../styles'
 
 class ReceiveArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
     return {
-      arriveConfig: Object,
-      arriveData: Object
+      config: Object,
+      data: Object
     }
   }
 
@@ -22,10 +23,6 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
           flex-direction: column;
           overflow-x: overlay;
           height: 100%;
-        }
-        .search-form {
-          display: flex;
-          flex: 1;
         }
         .grist {
           display: flex;
@@ -59,7 +56,6 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
   render() {
     return html`
       <div>
-        <!-- <div class="search-form"> -->
         <form class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('label.gan')}</legend>
@@ -76,7 +72,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
             <input name="company" />
 
             <label>${i18next.t('label.supplier_name')}</label>
-            <input name="supplier_name" />
+            <input name="supplier" />
           </fieldset>
         </form>
       </div>
@@ -85,8 +81,8 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         <h2>${i18next.t('title.receive_arrival_notice')}</h2>
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.arriveConfig}
-          .data=${this.arriveData}
+          .config=${this.config}
+          .data=${this.data}
           @page-changed=${e => {
             this.page = e.detail
           }}
@@ -96,13 +92,13 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         ></data-grist>
       </div>
       <div class="button-container">
-        <mwc-button id="service-receive">${i18next.t('button.receive')}</mwc-button>
+        <mwc-button @click="${this._receiveOrder}">${i18next.t('button.receive')}</mwc-button>
       </div>
     `
   }
 
-  firstUpdated() {
-    this.arriveConfig = {
+  async firstUpdated() {
+    this.config = {
       columns: [
         {
           type: 'gutter',
@@ -110,8 +106,40 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'gutter',
+          name: 'row-selector'
+        },
+        {
+          type: 'gutter',
           name: 'button',
-          icon: 'delete'
+          icon: 'search',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              const selectedOrder = this.rawOrderData.find(orderData => orderData.name === record.name)
+              location.href = `arrival-notice-detail/${selectedOrder.name}`
+            }
+          }
+        },
+        {
+          type: 'object',
+          name: 'warehouse',
+          header: i18next.t('field.buffer_location'),
+          record: {
+            align: 'center',
+            editable: true,
+            options: {
+              queryName: 'warehouses',
+              basicArgs: {
+                filters: [
+                  {
+                    name: 'type',
+                    operator: 'eq',
+                    value: 'BUFFER'
+                  }
+                ]
+              }
+            }
+          },
+          width: 250
         },
         {
           type: 'string',
@@ -125,22 +153,17 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'link',
-          name: 'purchase_order',
+          name: 'name',
           width: 160,
-          header: i18next.t('field.purchase_order'),
+          header: i18next.t('field.name'),
           record: {
-            align: 'center',
-            options: {
-              href: function(column, record, rowIndex) {
-                return `${location.origin}/arrival-notice-detail/${record.purchase_order}`
-              }
-            }
+            align: 'center'
           },
           editable: true
         },
         {
           type: 'string',
-          name: 'supplier_name',
+          name: 'supplier',
           width: 120,
           header: i18next.t('field.supplier_name'),
           record: {
@@ -190,6 +213,16 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'date',
+          name: 'request_date',
+          width: 120,
+          header: i18next.t('field.request_date'),
+          record: {
+            align: 'center'
+          },
+          editable: true
+        },
+        {
+          type: 'date',
           name: 'confirm_date',
           width: 120,
           header: i18next.t('field.confirm_date'),
@@ -207,37 +240,111 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
             align: 'center'
           },
           editable: true
-        },
-        {
-          type: 'date',
-          name: 'reject_date',
-          width: 120,
-          header: i18next.t('field.reject_date'),
-          record: {
-            align: 'center'
-          },
-          editable: true
         }
       ]
     }
 
-    this.arriveData = {
-      records: [
-        {
-          company: 'Company',
-          purchase_order: 'ORD-1002034',
-          supplier_name: 'HatioLab',
-          gan: 'GAN-1995820385',
-          do_no: 'DO-195877392-02-49185',
-          eta: Date.now(),
-          statue: 'ARRIVED',
-          confirm_date: Date.now(),
-          receive_date: Date.now(),
-          reject_date: Date.now()
+    this.data = await this._getArrivalNotices()
+  }
+
+  async _getArrivalNotices() {
+    const response = await client.query({
+      query: gql`
+        query {
+          orders: purchaseOrders(${gqlBuilder.buildArgs({
+            filters: [
+              {
+                name: 'state',
+                operator: 'eq',
+                value: 'Requested'
+              }
+            ]
+          })}) {
+            items {
+              id
+              name
+              issuedOn
+              state
+              description
+              updatedAt
+            }
+            total
+          }
         }
-      ],
-      total: 1
+      `
+    })
+
+    this.rawOrderData = response.data.orders.items || []
+
+    return {
+      records: response.data.orders.items.map(item => {
+        const orderInfo = JSON.parse(item.description)
+        return {
+          warehouse: {
+            id: '',
+            name: i18next.t('label.buffer_location'),
+            description: i18next.t('text.please_choose_buffer_location')
+          },
+          company: 'Company name',
+          name: item.name,
+          supplier: orderInfo.supplier,
+          gan: orderInfo.gan,
+          do_no: orderInfo.orderNo,
+          eta: item.issuedOn,
+          status: item.state,
+          request_date: orderInfo.requestedDate,
+          confirm_date: orderInfo.confirmedDate,
+          receive_date: orderInfo.receivedDate
+        }
+      }),
+      total: response.data.orders.total
     }
+  }
+
+  async _receiveOrder() {
+    const selectedOrder = this._getGrist().selected[0]
+    const foundOrder = this.rawOrderData.find(orderData => orderData.name === selectedOrder.name)
+    if (foundOrder && selectedOrder.warehouse.id) {
+      await this._updateOrder(foundOrder)
+      this.data = await this._getArrivalNotices()
+    } else if (!foundOrder) {
+      alert(i18next.t('text.there_no_selected'))
+    } else {
+      alert(i18next.t('text.buffer_location_is_not_selected'))
+    }
+  }
+
+  async _updateOrder(order) {
+    try {
+      if (order.state.toLowerCase() !== 'requested') throw new Error('text.status_not_suitable')
+      let description = {
+        ...JSON.parse(order.description),
+        confirmedDate: new Date().getTime()
+      }
+
+      await client.query({
+        query: gql`
+          mutation {
+            updatePurchaseOrder(${gqlBuilder.buildArgs({
+              name: order.name,
+              patch: {
+                state: 'Confirmed',
+                description: JSON.stringify(description)
+              }
+            })}) {
+              name
+              state
+            }
+          }
+        `
+      })
+    } catch (e) {
+      alert(e.message)
+    }
+  }
+
+  _getGrist() {
+    return this.shadowRoot.querySelector('data-grist')
   }
 }
 

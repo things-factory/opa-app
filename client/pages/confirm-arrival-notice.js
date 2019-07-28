@@ -1,5 +1,6 @@
 import { i18next, localize } from '@things-factory/i18n-base'
-import { isMobileDevice, PageView } from '@things-factory/shell'
+import { isMobileDevice, PageView, client, gqlBuilder } from '@things-factory/shell'
+import gql from 'graphql-tag'
 import '@things-factory/simple-ui'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '../styles'
@@ -83,12 +84,14 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
       </div>
 
       <div class="button-container">
-        <mwc-button>${i18next.t('button.confirm')}</mwc-button>
+        <mwc-button @click="${this._cancelOrder}">${i18next.t('button.cancel')}</mwc-button>
+        <mwc-button @click="${this._rejectOrder}">${i18next.t('button.reject')}</mwc-button>
+        <mwc-button @click="${this._confirmOrder}">${i18next.t('button.confirm')}</mwc-button>
       </div>
     `
   }
 
-  firstUpdated() {
+  async firstUpdated() {
     this.config = {
       columns: [
         {
@@ -98,27 +101,38 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           name: 'row-selector',
-          multiple: true
+          multiple: false
+        },
+        {
+          type: 'gutter',
+          name: 'button',
+          icon: 'search',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              const selectedOrder = this.rawOrderData.find(orderData => orderData.name === record.name)
+              location.href = `arrival-notice-detail/${selectedOrder.name}`
+            }
+          }
         },
         {
           type: 'string',
           name: 'company',
           header: i18next.t('field.company'),
           record: {
-            align: 'left'
+            align: 'center'
           },
           sortable: true,
           width: 120
         },
         {
           type: 'string',
-          name: 'purchase_order',
+          name: 'name',
           header: i18next.t('field.purchase_order'),
           record: {
             align: 'left'
           },
           sortable: true,
-          width: 120
+          width: 230
         },
         {
           type: 'string',
@@ -138,7 +152,7 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
             align: 'left'
           },
           sortable: true,
-          width: 120
+          width: 230
         },
         {
           type: 'string',
@@ -148,14 +162,14 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
             align: 'left'
           },
           sortable: true,
-          width: 120
+          width: 230
         },
         {
-          type: 'string',
+          type: 'datetime',
           name: 'eta',
           header: i18next.t('field.eta'),
           record: {
-            align: 'left'
+            align: 'center'
           },
           sortable: true,
           width: 120
@@ -165,37 +179,47 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
           name: 'status',
           header: i18next.t('field.status'),
           record: {
-            align: 'left'
+            align: 'center'
           },
           sortable: true,
           width: 120
         },
         {
-          type: 'string',
-          name: 'confirm_date',
-          header: i18next.t('field.confirm_date'),
-          record: {
-            align: 'left'
-          },
-          sortable: true,
-          width: 120
-        },
-        {
-          type: 'string',
-          name: 'receive_date',
-          header: i18next.t('field.receive_date'),
-          record: {
-            align: 'left'
-          },
-          sortable: true,
-          width: 120
-        },
-        {
-          type: 'string',
+          type: 'datetime',
           name: 'reject_date',
           header: i18next.t('field.reject_date'),
           record: {
-            align: 'left'
+            align: 'center'
+          },
+          sortable: true,
+          width: 120
+        },
+        {
+          type: 'datetime',
+          name: 'request_date',
+          header: i18next.t('field.request_date'),
+          record: {
+            align: 'center'
+          },
+          sortable: true,
+          width: 120
+        },
+        {
+          type: 'datetime',
+          name: 'confirm_date',
+          header: i18next.t('field.confirm_date'),
+          record: {
+            align: 'center'
+          },
+          sortable: true,
+          width: 120
+        },
+        {
+          type: 'datetime',
+          name: 'receive_date',
+          header: i18next.t('field.receive_date'),
+          record: {
+            align: 'center'
           },
           sortable: true,
           width: 120
@@ -208,8 +232,148 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
       }
     }
 
-    this.data = {
-      records: new Array(50).fill().map(() => new Object())
+    this.data = await this.getArrivalNotices()
+  }
+
+  async getArrivalNotices() {
+    const response = await client.query({
+      query: gql`
+        query {
+          orders: purchaseOrders(${gqlBuilder.buildArgs({
+            filters: []
+          })}) {
+            items {
+              id
+              name
+              issuedOn
+              state
+              description
+              updatedAt
+            }
+            total
+          }
+        }
+      `
+    })
+
+    this.rawOrderData = response.data.orders.items
+
+    return {
+      records: this._parseOrderData(response.data.orders.items),
+      total: response.data.orders.total
+    }
+  }
+
+  _parseOrderData(orders) {
+    return orders.map(order => {
+      const info = JSON.parse(order.description)
+      return {
+        company: 'Company Name',
+        name: order.name,
+        supplier_name: info.supplier,
+        gan: info.gan,
+        delivery_order_no: info.orderNo,
+        eta: order.issuedOn,
+        status: order.state,
+        reject_date: info.rejectedDate,
+        request_date: info.requestedDate,
+        confirm_date: info.confirmedDate,
+        receive_date: info.receivedDate
+      }
+    })
+  }
+
+  async _cancelOrder() {
+    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._getGrist().selected[0].name)
+    if (selectedOrder) {
+      await this._deleteOrder(selectedOrder)
+      this.data = await this.getArrivalNotices()
+    } else {
+      alert(i18next.t('text.there_no_selected'))
+    }
+  }
+
+  async _rejectOrder() {
+    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._getGrist().selected[0].name)
+    if (selectedOrder) {
+      await this._updateOrder(selectedOrder, false)
+      this.data = await this.getArrivalNotices()
+    } else {
+      alert(i18next.t('text.there_no_selected'))
+    }
+  }
+
+  async _confirmOrder() {
+    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._getGrist().selected[0].name)
+    if (selectedOrder) {
+      await this._updateOrder(selectedOrder, true)
+      this.data = await this.getArrivalNotices()
+    } else {
+      alert(i18next.t('text.there_no_selected'))
+    }
+  }
+
+  _getGrist() {
+    return this.shadowRoot.querySelector('data-grist')
+  }
+
+  async _deleteOrder(order) {
+    try {
+      if (order.state.toLowerCase() !== 'pending') throw new Error('text.status_not_suitable')
+
+      await client.query({
+        query: gql`
+          mutation {
+            deletePurchaseOrder(${gqlBuilder.buildArgs({ name: order.name })}) {
+              name
+            }
+          }
+        `
+      })
+    } catch (e) {
+      alert(e.message)
+    }
+  }
+
+  async _updateOrder(order, isConfirm) {
+    try {
+      if (order.state.toLowerCase() !== 'pending') throw new Error('text.status_not_suitable')
+
+      let state = ''
+      let description = JSON.parse(order.description)
+
+      if (isConfirm) {
+        state = 'Requested'
+        description = {
+          ...description,
+          requestedDate: new Date().getTime()
+        }
+      } else {
+        state = 'Rejected'
+        description = {
+          ...description,
+          rejectedDate: new Date().getTime()
+        }
+      }
+
+      await client.query({
+        query: gql`
+          mutation {
+            updatePurchaseOrder(${gqlBuilder.buildArgs({
+              name: order.name,
+              patch: {
+                state: state,
+                description: JSON.stringify(description)
+              }
+            })}) {
+              name
+              state
+            }
+          }
+        `
+      })
+    } catch (e) {
+      alert(e.message)
     }
   }
 }

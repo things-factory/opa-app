@@ -65,11 +65,11 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             <label>${i18next.t('label.supplier_name')}</label>
             <input name="supplier_name" />
 
-            <label>${i18next.t('label.gan')}</label>
-            <input name="gan" />
+            <!--label>${i18next.t('label.gan')}</label>
+            <input name="gan" /-->
 
-            <label>${i18next.t('label.delivery_order_no')}</label>
-            <input name="delivery_order_no" />
+            <!--label>${i18next.t('label.delivery_order_no')}</label>
+            <input name="delivery_order_no" /-->
 
             <label>${i18next.t('label.eta_date')}</label>
             <input name="eta_date" type="date" />
@@ -181,6 +181,26 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             editable: true
           },
           width: 250
+        },
+        {
+          type: 'string',
+          name: 'container_no',
+          header: i18next.t('field.container_no'),
+          record: {
+            align: 'center',
+            editable: true
+          },
+          width: 120
+        },
+        {
+          type: 'string',
+          name: 'batch_no',
+          header: i18next.t('field.batch_no'),
+          record: {
+            align: 'center',
+            editable: true
+          },
+          width: 120
         },
         {
           type: 'select',
@@ -394,12 +414,14 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
               purchaseOrder: {
                 name: orderInfo.purchase_order,
                 issuedOn: new Date(orderInfo.eta_date + ' ' + orderInfo.eta_time).getTime().toString(),
-                state: 'pending',
+                state: 'Pending',
                 description: JSON.stringify({
                   supplier: orderInfo.supplier_name,
-                  orderNo: orderInfo.delivery_order_no,
+                  orderNo: this._generateOrderNo(),
                   products: products,
-                  services: services
+                  services: services,
+                  gan: this._generateGAN(),
+                  type: 'po'
                 })
               }
             })}) {
@@ -442,6 +464,14 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     } else {
       return orderInfo
     }
+  }
+
+  _generateOrderNo() {
+    return `PO-NO-${new Date().getTime().toString()}`
+  }
+
+  _generateGAN() {
+    return `PO-GAN-${new Date().getTime().toString()}`
   }
 }
 
