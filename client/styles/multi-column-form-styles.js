@@ -76,7 +76,7 @@ export const MultiColumnFormStyles = css`
     margin: 0;
   }
 
-  @media screen and (max-width: 400px) {
+  @media screen and (max-width: 460px) {
     .multi-column-form {
       max-width: 90%;
       grid-template-columns: repeat(12, 1fr);

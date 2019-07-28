@@ -71,7 +71,7 @@ export const SearchFormStyles = css`
     color: var(--search-form-icon-color);
   }
 
-  @media screen and (max-width: 400px) {
+  @media screen and (max-width: 460px) {
     .search-form {
       grid-template-columns: repeat(12, 1fr);
       grid-gap: 10px 5px;
