@@ -283,7 +283,7 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
           multiple: false
         },
         handlers: {
-          click: 'row-select'
+          click: 'select-row'
         }
       }
     }
