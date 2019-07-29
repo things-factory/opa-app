@@ -79,7 +79,6 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <div>
         <form class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.transport_order')}</legend>
@@ -187,7 +186,6 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             >${i18next.t('button.add')}</mwc-button
           >
         </div>
-      </div>
     `
   }
 

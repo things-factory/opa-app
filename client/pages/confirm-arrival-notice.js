@@ -20,7 +20,6 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-          overflow-x: overlay;
         }
         .grist {
           display: flex;
@@ -57,27 +56,25 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <div>
-        <form class="multi-column-form">
-          <fieldset>
-            <legend>${i18next.t('label.gan')}</legend>
-            <label>${i18next.t('label.gan')}</label>
-            <input name="gan" />
+      <form class="multi-column-form">
+        <fieldset>
+          <legend>${i18next.t('label.gan')}</legend>
+          <label>${i18next.t('label.gan')}</label>
+          <input name="gan" />
 
-            <label>${i18next.t('label.eta')}</label>
-            <input name="eta" />
+          <label>${i18next.t('label.eta')}</label>
+          <input name="eta" />
 
-            <label>${i18next.t('label.delivery_no')}</label>
-            <input name="delivery_no" />
+          <label>${i18next.t('label.delivery_no')}</label>
+          <input name="delivery_no" />
 
-            <label>${i18next.t('label.company')}</label>
-            <input name="company" />
+          <label>${i18next.t('label.company')}</label>
+          <input name="company" />
 
-            <label>${i18next.t('label.supplier_name')}</label>
-            <input name="supplier_name" />
-          </fieldset>
-        </form>
-      </div>
+          <label>${i18next.t('label.supplier_name')}</label>
+          <input name="supplier_name" />
+        </fieldset>
+      </form>
 
       <div class="grist">
         <data-grist

@@ -71,7 +71,6 @@ class CreateShippingNotice extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <div>
         <form class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.shipping_notice')}</legend>
@@ -130,7 +129,6 @@ class CreateShippingNotice extends localize(i18next)(PageView) {
           <mwc-button id="product-add">${i18next.t('button.add')}</mwc-button>
           <mwc-button id="product-save">${i18next.t('button.save')}</mwc-button>
         </div>
-      </div>
     `
   }
 

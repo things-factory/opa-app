@@ -6,6 +6,7 @@ export const MultiColumnFormStyles = css`
   }
 
   .multi-column-form {
+    width: 100%;
     display: grid;
     grid-template-columns: repeat(24, 1fr);
     grid-gap: var(--form-grid-gap);

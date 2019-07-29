@@ -468,7 +468,6 @@ class SystemMenu extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <div>
         <form class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('label.name')}</legend>
@@ -547,7 +546,6 @@ class SystemMenu extends localize(i18next)(PageView) {
             >${i18next.t('button.add')}</mwc-button
           >
         </div>
-      </div>
     `
   }
 
