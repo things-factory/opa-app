@@ -39,10 +39,6 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
       title: i18next.t('title.confirm_arrival_notice'),
       actions: [
         {
-          title: i18next.t('button.cancel'),
-          action: this._cancelOrder.bind(this)
-        },
-        {
           title: i18next.t('button.reject'),
           action: this._rejectOrder.bind(this)
         },
