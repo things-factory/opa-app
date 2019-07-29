@@ -34,10 +34,6 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
           overflow-y: hidden;
           flex: 1;
         }
-        .button-container {
-          display: flex;
-          margin-left: auto;
-        }
         h2 {
           padding: var(--subtitle-padding);
           font: var(--subtitle-font);
@@ -126,23 +122,6 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
           @record-change="${this._onProductChangeHandler.bind(this)}"
         ></data-grist>
 
-        <div class="button-container">
-          <mwc-button
-            id="product-add"
-            @click="${() => {
-              const needObjValue = this.shadowRoot.querySelector('input[name=from_warehouse]').checked
-              this.productsData = {
-                ...this.productsData,
-                records: [
-                  ...this.productsData.records,
-                  { product: needObjValue ? { id: '', name: '', description: '' } : '' }
-                ]
-              }
-            }}"
-            >${i18next.t('button.add')}</mwc-button
-          >
-        </div>
-
         <h2>${i18next.t('title.vas_request')}</h2>
         <data-grist
           id="services"
@@ -157,19 +136,6 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
           }}
           @record-change="${this._onServiceChangeHandler.bind(this)}"
         ></data-grist>
-
-        <div class="button-container">
-          <mwc-button
-            id="service-add"
-            @click="${() => {
-              this.servicesData = {
-                ...this.servicesData,
-                records: [...this.servicesData.records, { service: { id: '', name: '', description: '' } }]
-              }
-            }}"
-            >${i18next.t('button.add')}</mwc-button
-          >
-        </div>
       </div>
     `
   }

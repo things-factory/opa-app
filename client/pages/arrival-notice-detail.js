@@ -35,10 +35,6 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           overflow-y: hidden;
           flex: 1;
         }
-        .button-container {
-          display: flex;
-          margin-left: auto;
-        }
         h2 {
           padding: var(--subtitle-padding);
           font: var(--subtitle-font);
@@ -51,7 +47,15 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.create_arrival_notice')
+      title: i18next.t('title.create_arrival_notice'),
+      actions: [
+        {
+          title: i18next.t('button.back'),
+          action: () => {
+            history.back()
+          }
+        }
+      ]
     }
   }
 
@@ -105,15 +109,6 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           .config=${this.servicesConfig}
           .data=${this.servicesData}
         ></data-grist>
-      </div>
-
-      <div class="button-container">
-        <mwc-button
-          @click="${() => {
-            history.back()
-          }}"
-          >${i18next.t('button.back')}</mwc-button
-        >
       </div>
     `
   }

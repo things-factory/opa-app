@@ -34,10 +34,6 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           overflow-y: hidden;
           flex: 1;
         }
-        .button-container {
-          display: flex;
-          margin-left: auto;
-        }
         h2 {
           padding: var(--subtitle-padding);
           font: var(--subtitle-font);
@@ -113,19 +109,6 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           .data=${this.productsData}
           @record-change="${this._onProductChangeHandler.bind(this)}"
         ></data-grist>
-
-        <div class="button-container">
-          <mwc-button
-            id="product-add"
-            @click="${() => {
-              this.productsData = {
-                ...this.productsData,
-                records: [...this.productsData.records, { product: { id: '', name: '', description: '' } }]
-              }
-            }}"
-            >${i18next.t('button.add')}</mwc-button
-          >
-        </div>
       </div>
 
       <div class="grist">
@@ -138,19 +121,6 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           .data=${this.servicesData}
           @record-change="${this._onServiceChangeHandler.bind(this)}"
         ></data-grist>
-
-        <div class="button-container">
-          <mwc-button
-            id="service-add"
-            @click="${() => {
-              this.servicesData = {
-                ...this.servicesData,
-                records: [...this.servicesData.records, { service: { id: '', name: '', description: '' } }]
-              }
-            }}"
-            >${i18next.t('button.add')}</mwc-button
-          >
-        </div>
       </div>
     `
   }
