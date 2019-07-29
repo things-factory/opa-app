@@ -1,17 +1,16 @@
 // Services,description,quantity,unit,status
-import { i18next, localize } from '@things-factory/i18n-base'
-import { isMobileDevice, PageView } from '@things-factory/shell'
 import '@things-factory/grist-ui'
+import { i18next, localize } from '@things-factory/i18n-base'
+import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
+import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '../styles'
 
 class VasWorkOrder extends localize(i18next)(PageView) {
   static get properties() {
     return {
-      productsConfig: Object,
-      servicesConfig: Object,
-      productsData: Object,
-      servicesData: Object
+      config: Object,
+      data: Object
     }
   }
 
@@ -62,32 +61,41 @@ class VasWorkOrder extends localize(i18next)(PageView) {
       <form class="multi-column-form">
         <fieldset class="multi-column-form">
           <legend>${i18next.t('title.arrival_notice_master')}</legend>
-          <label>${i18next.t('label.work_order')}</label>
-          <input name="work_order" />
+          <label>${i18next.t('label.order_no')}</label>
+          <input
+            name="order_no"
+            @keypress="${async e => {
+              if (e.keyCode === 13) {
+                e.preventDefault()
+                this.orderNo = e.currentTarget.value
+                await this._getServices()
+              }
+            }}"
+          />
 
           <label>${i18next.t('label.purchase_order')}</label>
-          <input name="purchase_order" />
+          <input name="purchase_order" readonly />
 
           <label>${i18next.t('label.supplier_name')}</label>
-          <input name="supplier_name" />
+          <input name="supplier_name" readonly />
 
           <label>${i18next.t('label.gan')}</label>
-          <input name="gan" />
+          <input name="gan" readonly />
 
-          <label>${i18next.t('label.do_no')}</label>
-          <input name="DO No." />
-
-          <label>${i18next.t('label.contact_point')}</label>
+          <!--label>${i18next.t('label.contact_point')}</label>
           <input name="contact_point" />
 
           <label>${i18next.t('label.contact_no')}</label>
           <input name="contact_no" />
 
           <label>${i18next.t('label.fax')}</label>
-          <input name="fax" />
+          <input name="fax" /-->
 
-          <label>${i18next.t('label.eta')}</label>
-          <input name="eta" />
+          <label>${i18next.t('label.eta_date')}</label>
+          <input name="eta_date" readonly />
+
+          <label>${i18next.t('label.eta_time')}</label>
+          <input name="eta_time" readonly />
         </fieldset>
       </form>
 
@@ -95,8 +103,8 @@ class VasWorkOrder extends localize(i18next)(PageView) {
         <h2>${i18next.t('title.vas_request_and_materials')}</h2>
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.servicesConfig}
-          .data=${this.servicesData}
+          .config=${this.config}
+          .data=${this.data}
           @page-changed=${e => {
             this.page = e.detail
           }}
@@ -109,7 +117,7 @@ class VasWorkOrder extends localize(i18next)(PageView) {
   }
 
   firstUpdated() {
-    this.productsConfig = {
+    this.config = {
       columns: [
         {
           type: 'gutter',
@@ -118,16 +126,28 @@ class VasWorkOrder extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           name: 'button',
-          icon: 'delete'
+          icon: 'check',
+          handlers: {
+            dblclick: async (columns, data, column, record, rowIndex) => {
+              this.rawOrderData.description.services.forEach(item => {
+                if (item.service.name === record.service.name) {
+                  item.serviceState = 'done'
+                }
+              })
+
+              await this._updatePurchaseOrder()
+              await this._getServices()
+            }
+          }
         },
         {
-          type: 'string',
-          name: 'product_code',
-          header: i18next.t('field.product_code'),
+          type: 'object',
+          name: 'service',
+          header: i18next.t('field.service'),
           record: {
             align: 'center'
           },
-          width: 120
+          width: 200
         },
         {
           type: 'string',
@@ -136,92 +156,7 @@ class VasWorkOrder extends localize(i18next)(PageView) {
           record: {
             align: 'left'
           },
-          width: 200
-        },
-        {
-          type: 'string',
-          name: 'packing_type',
-          header: i18next.t('field.packing_type'),
-          record: {
-            align: 'left'
-          },
-          width: 130
-        },
-        {
-          type: 'string',
-          name: 'pack_qty',
-          header: i18next.t('field.pack_qty'),
-          record: {
-            align: 'left'
-          },
-          width: 80
-        },
-        {
-          type: 'number',
-          name: 'total_qty',
-          header: i18next.t('field.total_qty'),
-          record: {
-            align: 'right'
-          },
-          width: 80
-        },
-        {
-          type: 'number',
-          name: 'container_no',
-          header: i18next.t('field.container_no'),
-          record: {
-            align: 'right'
-          },
-          width: 130
-        },
-        {
-          type: 'string',
-          name: 'batch_no',
-          header: i18next.t('field.batch_no'),
-          record: {
-            align: 'center'
-          },
-          width: 200
-        }
-      ]
-    }
-
-    this.productsData = {
-      records: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
-    }
-
-    this.servicesConfig = {
-      columns: [
-        {
-          type: 'gutter',
-          name: 'sequence'
-        },
-        {
-          type: 'string',
-          name: 'Services',
-          header: i18next.t('field.services'),
-          record: {
-            align: 'center'
-          },
-          width: 120
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: {
-            align: 'left'
-          },
-          width: 200
-        },
-        {
-          type: 'number',
-          name: 'qty',
-          header: i18next.t('field.qty'),
-          record: {
-            align: 'right'
-          },
-          width: 100
+          width: 250
         },
         {
           type: 'string',
@@ -233,9 +168,9 @@ class VasWorkOrder extends localize(i18next)(PageView) {
           width: 100
         },
         {
-          type: 'string',
-          name: 'status',
-          header: i18next.t('field.status'),
+          type: 'number',
+          name: 'qty',
+          header: i18next.t('field.qty'),
           record: {
             align: 'right'
           },
@@ -244,9 +179,124 @@ class VasWorkOrder extends localize(i18next)(PageView) {
       ]
     }
 
-    this.servicesData = {
-      records: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
+    this._focusOnBarcodField()
+  }
+
+  _focusOnBarcodField() {
+    this.shadowRoot.querySelector('input[name=order_no]').focus()
+  }
+
+  async _updatePurchaseOrder() {
+    const response = await client.query({
+      query: gql`
+        mutation {
+          order: updatePurchaseOrder(${gqlBuilder.buildArgs({
+            name: this.rawOrderData.name,
+            patch: {
+              description: JSON.stringify(this.rawOrderData.description)
+            }
+          })}) {
+            name
+            description
+          }
+        }
+      `
+    })
+
+    const currentProducts = JSON.parse(response.data.order.description).products
+    const currentServices = JSON.parse(response.data.order.description).services
+    const issReadyToPutaway =
+      currentProducts.every(product => product.productState === 'unloaded') &&
+      currentServices.every(service => service.serviceState === 'done')
+
+    if (issReadyToPutaway) {
+      await this._updateOrderState()
     }
+  }
+
+  async _updateOrderState() {
+    await client.query({
+      query: gql`
+        mutation {
+          order: updatePurchaseOrder(${gqlBuilder.buildArgs({
+            name: this.rawOrderData.name,
+            patch: {
+              state: 'Unloaded'
+            }
+          })}) {
+            name
+            description
+          }
+        }
+      `
+    })
+
+    alert(i18next.t('text.order_is_ready_for_putaway'))
+  }
+
+  async _getServices() {
+    const response = await client.query({
+      query: gql`
+        query {
+          orders: purchaseOrders(${gqlBuilder.buildArgs({
+            filters: [
+              {
+                name: 'state',
+                operator: 'eq',
+                value: 'Confirmed'
+              },
+              {
+                name: 'description',
+                operator: 'like',
+                value: this.orderNo
+              }
+            ]
+          })}) {
+            items {
+              id
+              name
+              issuedOn
+              state
+              description
+              updatedAt
+            }
+            total
+          }
+        }
+      `
+    })
+
+    if (response.data.orders.items[0]) {
+      this.rawOrderData = this._parseOrder(response.data.orders.items[0])
+      this._fillUpForm(this.rawOrderData)
+      this.data = {
+        records: this.rawOrderData.description.services.filter(service => service.serviceState !== 'done'),
+        total: this.rawOrderData.description.services.length
+      }
+    }
+  }
+
+  _parseOrder(rawData) {
+    return {
+      ...rawData,
+      description: JSON.parse(rawData.description)
+    }
+  }
+
+  _fillUpForm(order) {
+    this.shadowRoot.querySelector('input[name=purchase_order]').value = order.name
+    this.shadowRoot.querySelector('input[name=supplier_name]').value = order.description.supplier
+    this.shadowRoot.querySelector('input[name=gan]').value = order.description.gan
+
+    const issuedDate = new Date(Number(order.issuedOn))
+    const year = issuedDate.getFullYear()
+    const month = issuedDate.getMonth() + 1 < 10 ? `0${issuedDate.getMonth() + 1}` : issuedDate.getMonth() + 1
+    const date = issuedDate.getDate() < 10 ? `0${issuedDate.getDate()}` : issuedDate.getDate()
+    const hours = issuedDate.getHours() < 10 ? `0${issuedDate.getHours()}` : issuedDate.getHours()
+    const minutes = issuedDate.getMinutes() < 10 ? `0${issuedDate.getMinutes()}` : issuedDate.getMinutes()
+
+    this.shadowRoot.querySelector('input[name=eta_date').value = `${year}-${month}-${date}`
+    this.shadowRoot.querySelector('input[name=eta_time').value = `${hours}:${minutes}`
   }
 }
 

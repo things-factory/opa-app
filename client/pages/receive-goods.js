@@ -22,6 +22,13 @@ class ReceiveGoods extends localize(i18next)(PageView) {
           flex-direction: column;
         }
 
+        .grist {
+          display: flex;
+          flex-direction: column;
+
+          flex: 1;
+        }
+
         data-grist {
           flex: 1;
         }
@@ -43,31 +50,31 @@ class ReceiveGoods extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <div>
-        <form class="multi-column-form">
-          <fieldset>
-            <legend>${i18next.t('title.receive_goods_master')}</legend>
-            <label>${i18next.t('label.order_no')}</label>
-            <input
-              name="order_no"
-              @keypress="${async e => {
-                if (e.keyCode === 13) {
-                  e.preventDefault()
-                  this.data = this._getProducts(e.currentTarget.value)
-                }
-              }}"
-            />
+      <form class="multi-column-form">
+        <fieldset>
+          <legend>${i18next.t('title.receive_goods_master')}</legend>
+          <label>${i18next.t('label.order_no')}</label>
+          <input
+            name="order_no"
+            @keypress="${async e => {
+              if (e.keyCode === 13) {
+                e.preventDefault()
+                this.orderNo = e.currentTarget.value
+                this.data = this._getProducts()
+              }
+            }}"
+          />
 
-            <label>${i18next.t('label.purchase_order')}</label>
-            <input name="purchase_order" readonly />
+          <label>${i18next.t('label.purchase_order')}</label>
+          <input name="purchase_order" readonly />
 
-            <label>${i18next.t('label.supplier_name')}</label>
-            <input name="supplier_name" readonly />
+          <label>${i18next.t('label.supplier_name')}</label>
+          <input name="supplier_name" readonly />
 
-            <label>${i18next.t('label.gan')}</label>
-            <input name="gan" readonly />
+          <label>${i18next.t('label.gan')}</label>
+          <input name="gan" readonly />
 
-            <!--label>${i18next.t('label.do_no')}</label>
+          <!--label>${i18next.t('label.do_no')}</label>
             <input name="do_no" readonly />
 
             <label>${i18next.t('label.contact_point')}</label>
@@ -79,14 +86,13 @@ class ReceiveGoods extends localize(i18next)(PageView) {
             <label>${i18next.t('label.fax')}</label>
             <input name="fax" readonly /-->
 
-            <label>${i18next.t('label.eta_date')}</label>
-            <input name="eta_date" readonly />
+          <label>${i18next.t('label.eta_date')}</label>
+          <input name="eta_date" readonly />
 
-            <label>${i18next.t('label.eta_time')}</label>
-            <input name="eta_time" readonly />
-          </fieldset>
-        </form>
-      </div>
+          <label>${i18next.t('label.eta_time')}</label>
+          <input name="eta_time" readonly />
+        </fieldset>
+      </form>
 
       <data-grist
         .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
@@ -114,8 +120,15 @@ class ReceiveGoods extends localize(i18next)(PageView) {
           name: 'button',
           icon: 'check',
           handlers: {
-            dblclick: (columns, data, column, record, rowIndex) => {
-              console.log(record)
+            dblclick: async (columns, data, column, record, rowIndex) => {
+              this.rawOrderData.description.products.forEach(item => {
+                if (item.product.name === record.product.name) {
+                  item.productState = 'unloaded'
+                }
+              })
+
+              await this._updatePurchaseOrder()
+              await this._getProducts()
             }
           }
         },
@@ -201,7 +214,55 @@ class ReceiveGoods extends localize(i18next)(PageView) {
     this.shadowRoot.querySelector('input[name=order_no]').focus()
   }
 
-  async _getProducts(orderNumber) {
+  async _updatePurchaseOrder() {
+    const response = await client.query({
+      query: gql`
+        mutation {
+          order: updatePurchaseOrder(${gqlBuilder.buildArgs({
+            name: this.rawOrderData.name,
+            patch: {
+              description: JSON.stringify(this.rawOrderData.description)
+            }
+          })}) {
+            name
+            description
+          }
+        }
+      `
+    })
+
+    const currentProducts = JSON.parse(response.data.order.description).products
+    const currentServices = JSON.parse(response.data.order.description).services
+    const issReadyToPutaway =
+      currentProducts.every(product => product.productState === 'unloaded') &&
+      currentServices.every(service => service.serviceState === 'done')
+
+    if (issReadyToPutaway) {
+      await this._updateOrderState()
+    }
+  }
+
+  async _updateOrderState() {
+    await client.query({
+      query: gql`
+        mutation {
+          order: updatePurchaseOrder(${gqlBuilder.buildArgs({
+            name: this.rawOrderData.name,
+            patch: {
+              state: 'Unloaded'
+            }
+          })}) {
+            name
+            description
+          }
+        }
+      `
+    })
+
+    alert(i18next.t('text.order_is_ready_for_putaway'))
+  }
+
+  async _getProducts() {
     const response = await client.query({
       query: gql`
         query {
@@ -215,7 +276,7 @@ class ReceiveGoods extends localize(i18next)(PageView) {
               {
                 name: 'description',
                 operator: 'like',
-                value: orderNumber
+                value: this.orderNo
               }
             ]
           })}) {
@@ -234,11 +295,11 @@ class ReceiveGoods extends localize(i18next)(PageView) {
     })
 
     if (response.data.orders.items[0]) {
-      const order = this._parseOrder(response.data.orders.items[0])
-      if (order) this._fillUpForm(order)
+      this.rawOrderData = this._parseOrder(response.data.orders.items[0])
+      this._fillUpForm(this.rawOrderData)
       this.data = {
-        records: order.description.products,
-        total: order.description.products.length
+        records: this.rawOrderData.description.products.filter(product => product.productState !== 'unloaded'),
+        total: this.rawOrderData.description.products.length
       }
     }
   }

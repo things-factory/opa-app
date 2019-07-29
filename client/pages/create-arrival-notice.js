@@ -207,7 +207,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           width: 120
         },
         {
-          type: 'select',
+          type: 'string',
           name: 'unit',
           header: i18next.t('field.unit'),
           record: {
@@ -239,8 +239,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           name: 'total_qty',
           header: i18next.t('field.total_qty'),
           record: {
-            align: 'right',
-            editable: true
+            align: 'right'
           },
           width: 80
         }
@@ -292,12 +291,11 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           width: 200
         },
         {
-          type: 'select',
+          type: 'string',
           name: 'unit',
           header: i18next.t('field.unit'),
           record: {
-            align: 'center',
-            options: [i18next.t('label.pallet'), i18next.t('label.box'), i18next.t('label.container')]
+            align: 'center'
           },
           width: 120
         },
@@ -408,8 +406,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
   async createArrivalNotice() {
     try {
-      const products = this.getProducts()
-      const services = this.getServices()
+      const products = this._getProducts()
+      const services = this._getServices()
       const orderInfo = this.getOrderInfo()
 
       await client.query({
@@ -442,9 +440,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     }
   }
 
-  getProducts() {
+  _getProducts() {
     const products = this.shadowRoot.querySelector('#products').dirtyRecords
-    console.log(products)
     if (products.length === 0) {
       throw new Error(i18next.t('text.list_is_not_completed'))
     } else {
@@ -452,7 +449,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     }
   }
 
-  getServices() {
+  _getServices() {
     return this.shadowRoot.querySelector('#services').dirtyRecords
   }
 

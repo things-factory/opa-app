@@ -288,7 +288,7 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
   }
 
   async _cancelOrder() {
-    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._getGrist().selected[0].name)
+    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
     if (selectedOrder) {
       await this._deleteOrder(selectedOrder)
       this.data = await this.getArrivalNotices()
@@ -298,7 +298,7 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
   }
 
   async _rejectOrder() {
-    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._getGrist().selected[0].name)
+    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
     if (selectedOrder) {
       await this._updateOrder(selectedOrder, false)
       this.data = await this.getArrivalNotices()
@@ -308,7 +308,7 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
   }
 
   async _confirmOrder() {
-    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._getGrist().selected[0].name)
+    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
     if (selectedOrder) {
       await this._updateOrder(selectedOrder, true)
       this.data = await this.getArrivalNotices()
@@ -317,7 +317,7 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
     }
   }
 
-  _getGrist() {
+  get _grist() {
     return this.shadowRoot.querySelector('data-grist')
   }
 

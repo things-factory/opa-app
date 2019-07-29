@@ -6,7 +6,7 @@ import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { MultiColumnFormStyles } from '../styles'
 
-class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
+class TransportOrderDetail extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       orderName: Object,
@@ -60,33 +60,33 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
       <div>
         <form class="multi-column-form">
           <fieldset>
-            <legend>${i18next.t('title.arrival_notice')}</legend>
-            <label>${i18next.t('label.purchase_order')}</label>
-            <input name="purchase_order" readonly />
+            <legend>${i18next.t('title.transport_order')}</legend>
+            <label>${i18next.t('label.contact_point')}</label>
+            <input name="name" readonly />
 
-            <label>${i18next.t('label.supplier_name')}</label>
-            <input name="supplier_name" readonly />
+            <label>${i18next.t('label.description')}</label>
+            <input name="description" readonly />
 
-            <label>${i18next.t('label.gan')}</label>
-            <input name="gan" />
+            <label>${i18next.t('label.delivery_date')}</label>
+            <input name="when" type="date" readonly />
 
-            <label>${i18next.t('label.delivery_order_no')}</label>
-            <input name="delivery_order_no" />
+            <label>${i18next.t('label.contact_no')}</label>
+            <input name="contact_no" readonly />
 
-            <label>${i18next.t('label.eta_date')}</label>
-            <input name="eta_date" type="date" readonly />
+            <label>${i18next.t('label.from')}</label>
+            <input name="from" readonly />
 
-            <label>${i18next.t('label.eta_time')}</label>
-            <input name="eta_time" type="time" readonly />
+            <label>${i18next.t('label.to')}</label>
+            <input name="to" readonly />
 
-            <label>${i18next.t('label.status')}</label>
-            <input name="status" readonly />
+            <label>${i18next.t('label.load_type')}</label>
+            <input name="load_type" readonly />
           </fieldset>
         </form>
       </div>
 
       <div class="grist">
-        <h2>${i18next.t('title.arrival_notice_detail')}</h2>
+        <h2>${i18next.t('title.products')}</h2>
 
         <data-grist
           id="products"
@@ -129,16 +129,13 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           name: 'sequence'
         },
         {
-          type: 'object',
+          type: 'string',
           name: 'product',
           header: i18next.t('field.product_name'),
           record: {
-            align: 'center',
-            options: {
-              queryName: 'customerProducts'
-            }
+            align: 'center'
           },
-          width: 250
+          width: 280
         },
         {
           type: 'string',
@@ -168,12 +165,11 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           width: 120
         },
         {
-          type: 'select',
+          type: 'string',
           name: 'unit',
           header: i18next.t('field.unit'),
           record: {
-            align: 'center',
-            options: [i18next.t('label.pallet'), i18next.t('label.box'), i18next.t('label.container')]
+            align: 'center'
           },
           width: 120
         },
@@ -235,12 +231,11 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           width: 200
         },
         {
-          type: 'select',
+          type: 'string',
           name: 'unit',
           header: i18next.t('field.unit'),
           record: {
-            align: 'center',
-            options: [i18next.t('label.pallet'), i18next.t('label.box'), i18next.t('label.container')]
+            align: 'center'
           },
           width: 120
         },
@@ -285,7 +280,15 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
     if (changedProps.has('orderName')) {
       const orderInfo = await this.getOrderInfo(this.orderName)
       this._fillUpForm(orderInfo)
-      this.productsData = { records: orderInfo.description.products }
+
+      this.productsData = {
+        records: orderInfo.description.products.map(item => {
+          return {
+            ...item,
+            product: typeof item.product === 'string' ? item.product : `${item.product.name}`
+          }
+        })
+      }
       this.servicesData = { records: orderInfo.description.services }
     }
   }
@@ -294,13 +297,15 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
     const response = await client.query({
       query: gql`
         query {
-          order: purchaseOrder(${gqlBuilder.buildArgs({ name })}) {
+          order: transportOrder(${gqlBuilder.buildArgs({ name })}) {
             id
             name
-            issuedOn
-            state
             description
-            updatedAt
+            when
+            from
+            to
+            loadType
+            state
           }
         }
       `
@@ -313,21 +318,19 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _fillUpForm(orderInfo) {
-    this.shadowRoot.querySelector('input[name=purchase_order]').value = orderInfo.name
-    this.shadowRoot.querySelector('input[name=supplier_name]').value = orderInfo.description.supplier
-    const issuedDate = new Date(Number(orderInfo.issuedOn))
-    const year = issuedDate.getFullYear()
-    const month = issuedDate.getMonth() + 1 < 10 ? `0${issuedDate.getMonth() + 1}` : issuedDate.getMonth() + 1
-    const date = issuedDate.getDate() < 10 ? `0${issuedDate.getDate()}` : issuedDate.getDate()
-    const hours = issuedDate.getHours() < 10 ? `0${issuedDate.getHours()}` : issuedDate.getHours()
-    const minutes = issuedDate.getMinutes() < 10 ? `0${issuedDate.getMinutes()}` : issuedDate.getMinutes()
+    this.shadowRoot.querySelector('input[name=name]').value = orderInfo.name
+    this.shadowRoot.querySelector('input[name=description]').value = orderInfo.description.description
+    this.shadowRoot.querySelector('input[name=contact_no]').value = orderInfo.description.contactNo
+    this.shadowRoot.querySelector('input[name=from]').value = orderInfo.from
+    this.shadowRoot.querySelector('input[name=to]').value = orderInfo.to
+    this.shadowRoot.querySelector('input[name=load_type]').value = orderInfo.loadType
 
-    this.shadowRoot.querySelector('input[name=eta_date').value = `${year}-${month}-${date}`
-    this.shadowRoot.querySelector('input[name=eta_time').value = `${hours}:${minutes}`
-    this.shadowRoot.querySelector('input[name=gan]').value = orderInfo.description.gan
-    this.shadowRoot.querySelector('input[name=delivery_order_no]').value = orderInfo.description.orderNo
-    this.shadowRoot.querySelector('input[name=status]').value = orderInfo.state
+    const devliveryDate = new Date(Number(orderInfo.when))
+    const year = devliveryDate.getFullYear()
+    const month = devliveryDate.getMonth() + 1 < 10 ? `0${devliveryDate.getMonth() + 1}` : devliveryDate.getMonth() + 1
+    const date = devliveryDate.getDate() < 10 ? `0${devliveryDate.getDate()}` : devliveryDate.getDate()
+    this.shadowRoot.querySelector('input[name=when]').value = `${year}-${month}-${date}`
   }
 }
 
-window.customElements.define('arrival-notice-detail', ArrivalNoticeDetail)
+window.customElements.define('transport-order-detail', TransportOrderDetail)

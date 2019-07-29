@@ -41,6 +41,10 @@ export default function route(page) {
       import('./pages/confirm-transport-order')
       return page
 
+    case 'transport-order-detail':
+      import('./pages/transport-order-detail')
+      return page
+
     case 'create-shipping-notice':
       import('./pages/create-shipping-notice')
       return page

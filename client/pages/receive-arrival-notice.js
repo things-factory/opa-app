@@ -304,7 +304,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
     const selectedOrder = this._getGrist().selected[0]
     const foundOrder = this.rawOrderData.find(orderData => orderData.name === selectedOrder.name)
     if (foundOrder && selectedOrder.warehouse.id) {
-      await this._updateOrder(foundOrder)
+      await this._updateOrder(foundOrder, selectedOrder.warehouse)
       this.data = await this._getArrivalNotices()
     } else if (!foundOrder) {
       alert(i18next.t('text.there_no_selected'))
@@ -313,12 +313,13 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
     }
   }
 
-  async _updateOrder(order) {
+  async _updateOrder(order, bufferLocation) {
     try {
       if (order.state.toLowerCase() !== 'requested') throw new Error('text.status_not_suitable')
       let description = {
         ...JSON.parse(order.description),
-        confirmedDate: new Date().getTime()
+        confirmedDate: new Date().getTime(),
+        bufferLocation
       }
 
       await client.query({
