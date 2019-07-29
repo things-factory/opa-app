@@ -78,6 +78,9 @@ class ConfirmShippingNotice extends localize(i18next)(PageView) {
 
   firstUpdated() {
     this.config = {
+      pagination: {
+        infinite: true
+      },
       columns: [
         {
           type: 'gutter',
@@ -239,10 +242,13 @@ class ConfirmShippingNotice extends localize(i18next)(PageView) {
           width: 120
         }
       ],
-      pagination: {
-        pages: [20, 30, 50, 100, 200],
-        page: 30,
-        limit: 50
+      rows: {
+        selectable: {
+          multiple: false
+        },
+        handlers: {
+          click: 'select-row'
+        }
       }
     }
 

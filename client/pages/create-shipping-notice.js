@@ -24,6 +24,7 @@ class CreateShippingNotice extends localize(i18next)(PageView) {
           overflow-x: auto;
         }
         .grist {
+          background-color: var(--main-section-background-color);
           display: flex;
           flex-direction: column;
           flex: 1;
@@ -42,6 +43,22 @@ class CreateShippingNotice extends localize(i18next)(PageView) {
           color: var(--subtitle-text-color);
           border-bottom: var(--subtitle-border-bottom);
         }
+        .grist h2 {
+          margin: var(--grist-title-margin);
+          border: var(--grist-title-border);
+          color: var(--secondary-color);
+        }
+
+        .grist h2 mwc-icon {
+          vertical-align: middle;
+          margin: var(--grist-title-icon-margin);
+          font-size: var(--grist-title-icon-size);
+          color: var(--grist-title-icon-color);
+        }
+
+        h2 + data-grist {
+          padding-top: var(--grist-title-with-grid-padding);
+        }
       `
     ]
   }
@@ -54,7 +71,6 @@ class CreateShippingNotice extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <div>
         <form class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.shipping_notice')}</legend>
@@ -86,7 +102,7 @@ class CreateShippingNotice extends localize(i18next)(PageView) {
       </div>
 
       <div class="grist">
-        <h2>${i18next.t('title.shipping_notice_detail')}</h2>
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.shipping_notice_detail')}</h2>
 
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
@@ -101,7 +117,7 @@ class CreateShippingNotice extends localize(i18next)(PageView) {
       </div>
 
       <div class="grist">
-        <h2>${i18next.t('title.vas_request')}</h2>
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas_request')}</h2>
 
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
@@ -113,7 +129,6 @@ class CreateShippingNotice extends localize(i18next)(PageView) {
           <mwc-button id="product-add">${i18next.t('button.add')}</mwc-button>
           <mwc-button id="product-save">${i18next.t('button.save')}</mwc-button>
         </div>
-      </div>
     `
   }
 

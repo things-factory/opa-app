@@ -74,30 +74,28 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <div>
-        <form class="multi-column-form">
-          <fieldset>
-            <legend>${i18next.t('title.arrival_notice')}</legend>
-            <label>${i18next.t('label.purchase_order')}</label>
-            <input name="purchase_order" />
+      <form class="multi-column-form">
+        <fieldset>
+          <legend>${i18next.t('title.arrival_notice')}</legend>
+          <label>${i18next.t('label.purchase_order')}</label>
+          <input name="purchase_order" />
 
-            <label>${i18next.t('label.supplier_name')}</label>
-            <input name="supplier_name" />
+          <label>${i18next.t('label.supplier_name')}</label>
+          <input name="supplier_name" />
 
-            <!--label>${i18next.t('label.gan')}</label>
+          <!--label>${i18next.t('label.gan')}</label>
             <input name="gan" /-->
 
-            <!--label>${i18next.t('label.delivery_order_no')}</label>
+          <!--label>${i18next.t('label.delivery_order_no')}</label>
             <input name="delivery_order_no" /-->
 
-            <label>${i18next.t('label.eta_date')}</label>
-            <input name="eta_date" type="date" />
+          <label>${i18next.t('label.eta_date')}</label>
+          <input name="eta_date" type="date" />
 
-            <label>${i18next.t('label.eta_time')}</label>
-            <input name="eta_time" type="time" />
-          </fieldset>
-        </form>
-      </div>
+          <label>${i18next.t('label.eta_time')}</label>
+          <input name="eta_time" type="time" />
+        </fieldset>
+      </form>
 
       <div class="grist">
         <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.arrival_notice_detail')}</h2>
@@ -332,9 +330,16 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       const productMaster = await this.getMasterInfo(after.product.id)
       const productUnit = productMaster.unit.split(' ')
 
-      this.productsData.records[e.detail.row].pack_in_qty = productUnit[0]
-      this.productsData.records[e.detail.row].unit = productUnit[1]
-      this.productsData.records[e.detail.row].description = productMaster.description
+      let record = this.productsData.records[e.detail.row]
+
+      if (!record) {
+        record = {}
+        this.productsData.records.push(record)
+      }
+
+      record.pack_in_qty = productUnit[0]
+      record.unit = productUnit[1]
+      record.description = productMaster.description
 
       this.productsData = {
         ...this.productsData,
@@ -359,9 +364,16 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     if ((before.service && before.service.id) != (after.service && after.service.id)) {
       const serviceMaster = await this.getMasterInfo(after.service.id)
 
-      this.servicesData.records[e.detail.row].unit = serviceMaster.unit
-      this.servicesData.records[e.detail.row].unit_price = 5
-      this.servicesData.records[e.detail.row].description = serviceMaster.description
+      let record = this.servicesData.records[e.detail.row]
+
+      if (!record) {
+        record = {}
+        this.productsData.records.push(record)
+      }
+
+      record.unit = serviceMaster.unit
+      record.unit_price = 5
+      record.description = serviceMaster.description
 
       this.servicesData = {
         ...this.servicesData,

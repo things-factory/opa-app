@@ -25,6 +25,7 @@ class InboundWorkOrder extends localize(i18next)(PageView) {
         }
 
         .grist {
+          background-color: var(--main-section-background-color);
           display: flex;
           flex-direction: column;
           flex: 1;
@@ -41,6 +42,22 @@ class InboundWorkOrder extends localize(i18next)(PageView) {
           color: var(--subtitle-text-color);
           border-bottom: var(--subtitle-border-bottom);
         }
+        .grist h2 {
+          margin: var(--grist-title-margin);
+          border: var(--grist-title-border);
+          color: var(--secondary-color);
+        }
+
+        .grist h2 mwc-icon {
+          vertical-align: middle;
+          margin: var(--grist-title-icon-margin);
+          font-size: var(--grist-title-icon-size);
+          color: var(--grist-title-icon-color);
+        }
+
+        h2 + data-grist {
+          padding-top: var(--grist-title-with-grid-padding);
+        }
       `
     ]
   }
@@ -53,61 +70,57 @@ class InboundWorkOrder extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <div>
-        <form class="multi-column-form">
-          <fieldset>
-            <legend>${i18next.t('field.work_order')}</legend>
-            <label>${i18next.t('label.order_no')}</label>
-            <input
-              name="order_no"
-              @keypress="${e => {
-                if (e.keyCode === 13) {
-                  this._getOrderDetail(e.currentTarget.value)
-                  e.preventDefault()
-                }
-              }}"
-            />
-          </fieldset>
-        </form>
-      </div>
+      <form class="multi-column-form">
+        <fieldset>
+          <legend>${i18next.t('field.work_order')}</legend>
+          <label>${i18next.t('label.order_no')}</label>
+          <input
+            name="order_no"
+            @keypress="${e => {
+              if (e.keyCode === 13) {
+                this._getOrderDetail(e.currentTarget.value)
+                e.preventDefault()
+              }
+            }}"
+          />
+        </fieldset>
+      </form>
 
-      <div>
-        <form class="multi-column-form">
-          <fieldset>
-            <legend>${i18next.t('field.work_order')}</legend>
+      <form class="multi-column-form">
+        <fieldset>
+          <legend>${i18next.t('field.work_order')}</legend>
 
-            <label>${i18next.t('label.name')}</label>
-            <input name="name" readonly />
+          <label>${i18next.t('label.name')}</label>
+          <input name="name" readonly />
 
-            <label>${i18next.t('label.supplier_name')}</label>
-            <input name="supplier_name" readonly />
+          <label>${i18next.t('label.supplier_name')}</label>
+          <input name="supplier_name" readonly />
 
-            <label>${i18next.t('label.gan')}</label>
-            <input name="gan" readonly />
+          <label>${i18next.t('label.gan')}</label>
+          <input name="gan" readonly />
 
-            <label>${i18next.t('label.delivery_order_no')}</label>
-            <input name="delivery_order_no" readonly />
+          <label>${i18next.t('label.delivery_order_no')}</label>
+          <input name="delivery_order_no" readonly />
 
-            <!--label>${i18next.t('label.contact_point')}</label>
+          <!--label>${i18next.t('label.contact_point')}</label>
             <input name="contact_point" /-->
 
-            <!--label>${i18next.t('label.contact_no')}</label>
+          <!--label>${i18next.t('label.contact_no')}</label>
             <input name="contact_no" /-->
 
-            <!--label>${i18next.t('label.fax')}</label>
+          <!--label>${i18next.t('label.fax')}</label>
             <input name="fax" /-->
 
-            <label>${i18next.t('label.eta_date')}</label>
-            <input name="eta_date" type="date" readonly />
+          <label>${i18next.t('label.eta_date')}</label>
+          <input name="eta_date" type="date" readonly />
 
-            <label>${i18next.t('label.eta_time')}</label>
-            <input name="eta_time" type="time" readonly />
-          </fieldset>
-        </form>
-      </div>
+          <label>${i18next.t('label.eta_time')}</label>
+          <input name="eta_time" type="time" readonly />
+        </fieldset>
+      </form>
 
       <div class="grist">
-        <h2>${i18next.t('title.arrival_notice_detail')}</h2>
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.arrival_notice_detail')}</h2>
 
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
@@ -117,7 +130,7 @@ class InboundWorkOrder extends localize(i18next)(PageView) {
       </div>
 
       <div class="grist">
-        <h2>${i18next.t('title.vas_request')}</h2>
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas_request')}</h2>
 
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}

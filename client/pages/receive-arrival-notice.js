@@ -25,6 +25,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
           height: 100%;
         }
         .grist {
+          background-color: var(--main-section-background-color);
           display: flex;
           flex-direction: column;
           flex: 1;
@@ -38,6 +39,22 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
           font: var(--subtitle-font);
           color: var(--subtitle-text-color);
           border-bottom: var(--subtitle-border-bottom);
+        }
+        .grist h2 {
+          margin: var(--grist-title-margin);
+          border: var(--grist-title-border);
+          color: var(--secondary-color);
+        }
+
+        .grist h2 mwc-icon {
+          vertical-align: middle;
+          margin: var(--grist-title-icon-margin);
+          font-size: var(--grist-title-icon-size);
+          color: var(--grist-title-icon-color);
+        }
+
+        h2 + data-grist {
+          padding-top: var(--grist-title-with-grid-padding);
         }
       `
     ]
@@ -57,30 +74,28 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <div>
-        <form class="multi-column-form">
-          <fieldset>
-            <legend>${i18next.t('label.gan')}</legend>
-            <label>${i18next.t('label.gan')}</label>
-            <input name="gan" />
+      <form class="multi-column-form">
+        <fieldset>
+          <legend>${i18next.t('label.gan')}</legend>
+          <label>${i18next.t('label.gan')}</label>
+          <input name="gan" />
 
-            <label>${i18next.t('label.eta')}</label>
-            <input name="eta" />
+          <label>${i18next.t('label.eta')}</label>
+          <input name="eta" />
 
-            <label>${i18next.t('label.do_no')}</label>
-            <input name="do_no" />
+          <label>${i18next.t('label.do_no')}</label>
+          <input name="do_no" />
 
-            <label>${i18next.t('label.company')}</label>
-            <input name="company" />
+          <label>${i18next.t('label.company')}</label>
+          <input name="company" />
 
-            <label>${i18next.t('label.supplier_name')}</label>
-            <input name="supplier" />
-          </fieldset>
-        </form>
-      </div>
+          <label>${i18next.t('label.supplier_name')}</label>
+          <input name="supplier" />
+        </fieldset>
+      </form>
 
       <div class="grist">
-        <h2>${i18next.t('title.receive_arrival_notice')}</h2>
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.receive_arrival_notice')}</h2>
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
@@ -98,6 +113,9 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
 
   async firstUpdated() {
     this.config = {
+      pagination: {
+        infinite: true
+      },
       columns: [
         {
           type: 'gutter',
@@ -240,7 +258,15 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
           },
           editable: true
         }
-      ]
+      ],
+      rows: {
+        selectable: {
+          multiple: false
+        },
+        handlers: {
+          click: 'select-row'
+        }
+      }
     }
 
     this.data = await this._getArrivalNotices()
