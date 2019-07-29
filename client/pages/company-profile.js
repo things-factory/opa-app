@@ -28,6 +28,9 @@ class CompanyProfile extends localize(i18next)(PageView) {
     return [
       SingleColumnFormStyles,
       css`
+        :host {
+          background-color: var(--main-section-background-color);
+        }
         .profile-brand {
           background: url('../assets/images/brand.png') center center no-repeat;
           width: var(--profile-brand-width);
