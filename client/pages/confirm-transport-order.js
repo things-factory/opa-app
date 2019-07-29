@@ -1,6 +1,7 @@
-import { i18next, localize } from '@things-factory/i18n-base'
-import { isMobileDevice, PageView } from '@things-factory/shell'
 import '@things-factory/grist-ui'
+import { i18next, localize } from '@things-factory/i18n-base'
+import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
+import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { SearchFormStyles } from '../styles'
 
@@ -33,8 +34,16 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
       title: i18next.t('title.confirm_transport_order'),
       actions: [
         {
+          title: i18next.t('button.cancel'),
+          action: this._cancelOrder.bind(this)
+        },
+        {
+          title: i18next.t('button.reject'),
+          action: this._rejectOrder.bind(this)
+        },
+        {
           title: i18next.t('button.confirm'),
-          action: () => {}
+          action: this._confirmOrder.bind(this)
         }
       ]
     }
@@ -47,19 +56,19 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
         <input name="company" />
 
         <label>${i18next.t('label.delivery_date')}</label>
-        <input name="delivery_date" />
+        <input name="delivery_date" type="date" />
 
-        <label>${i18next.t('label.fleet_no')}</label>
-        <input name="fleet_no" />
+        <label>${i18next.t('label.vehicle_reg_no')}</label>
+        <input name="vehicle_reg_no" />
 
         <label>${i18next.t('label.driver')}</label>
         <input name="driver" />
 
-        <label>${i18next.t('label.delivery_address')}</label>
-        <input name="delivery_address" />
+        <label>${i18next.t('label.to')}</label>
+        <input name="to" />
 
-        <label>${i18next.t('label.fleet_spec')}</label>
-        <input name="fleet_spec" />
+        <label>${i18next.t('label.load_type')}</label>
+        <input name="load_type" />
       </form>
 
       <data-grist
@@ -76,7 +85,7 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
     `
   }
 
-  firstUpdated() {
+  async firstUpdated() {
     this.config = {
       columns: [
         {
@@ -86,11 +95,62 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           name: 'row-selector',
-          multiple: true
+          multiple: false
+        },
+        {
+          type: 'gutter',
+          name: 'button',
+          icon: 'search',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              const selectedOrder = this.rawOrderData.find(orderData => orderData.name === record.name)
+              location.href = `transport-order-detail/${selectedOrder.name}`
+            }
+          }
         },
         {
           type: 'string',
-          name: 'delivery_date',
+          name: 'name',
+          header: i18next.t('field.name'),
+          record: {
+            align: 'left'
+          },
+          sortable: true,
+          width: 120
+        },
+        {
+          type: 'string',
+          name: 'do_no',
+          header: i18next.t('field.delivery_order_no'),
+          record: {
+            align: 'left'
+          },
+          sortable: true,
+          width: 120
+        },
+        {
+          type: 'string',
+          name: 'company',
+          header: i18next.t('field.company'),
+          record: {
+            align: 'left'
+          },
+          sortable: true,
+          width: 120
+        },
+        {
+          type: 'string',
+          name: 'contact_no',
+          header: i18next.t('field.contact_point'),
+          record: {
+            align: 'left'
+          },
+          sortable: true,
+          width: 120
+        },
+        {
+          type: 'date',
+          name: 'when',
           header: i18next.t('field.delivery_date'),
           record: {
             align: 'left'
@@ -100,8 +160,19 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'customer_company',
-          header: i18next.t('field.customer_company'),
+          name: 'from',
+          header: i18next.t('field.from'),
+          record: {
+            align: 'left'
+          },
+          sortable: true,
+          width: 120
+        },
+
+        {
+          type: 'string',
+          name: 'to',
+          header: i18next.t('field.to'),
           record: {
             align: 'left'
           },
@@ -110,8 +181,8 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'contact_point',
-          header: i18next.t('field.contact_point'),
+          name: 'load_type',
+          header: i18next.t('field.load_type'),
           record: {
             align: 'left'
           },
@@ -119,9 +190,54 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
           width: 120
         },
         {
+          type: 'object',
+          name: 'transport_vehicle',
+          header: i18next.t('field.transport_vehicle'),
+          record: {
+            editable: true,
+            align: 'center',
+            options: {
+              queryName: 'transportVehicles'
+            }
+          },
+          width: 250
+        },
+        {
+          type: 'object',
+          name: 'driver',
+          header: i18next.t('field.driver'),
+          record: {
+            editable: true,
+            align: 'center',
+            options: {
+              queryName: 'workers',
+              basicArgs: {
+                filters: [
+                  {
+                    name: 'type',
+                    operator: 'eq',
+                    value: 'DRIVER'
+                  }
+                ]
+              }
+            }
+          },
+          width: 250
+        },
+        {
           type: 'string',
-          name: 'contact_number',
-          header: i18next.t('field.contact_number'),
+          name: 'state',
+          header: i18next.t('field.state'),
+          record: {
+            align: 'center'
+          },
+          sortable: true,
+          width: 120
+        },
+        {
+          type: 'datetime',
+          name: 'request_date',
+          header: i18next.t('field.request_date'),
           record: {
             align: 'left'
           },
@@ -129,37 +245,7 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
           width: 120
         },
         {
-          type: 'string',
-          name: 'delivery_address',
-          header: i18next.t('field.delivery_address'),
-          record: {
-            align: 'left'
-          },
-          sortable: true,
-          width: 120
-        },
-        {
-          type: 'string',
-          name: 'fleet_spec',
-          header: i18next.t('field.fleet_spec'),
-          record: {
-            align: 'left'
-          },
-          sortable: true,
-          width: 120
-        },
-        {
-          type: 'string',
-          name: 'status',
-          header: i18next.t('field.status'),
-          record: {
-            align: 'left'
-          },
-          sortable: true,
-          width: 120
-        },
-        {
-          type: 'string',
+          type: 'datetime',
           name: 'confirm_date',
           header: i18next.t('field.confirm_date'),
           record: {
@@ -169,9 +255,9 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
           width: 120
         },
         {
-          type: 'string',
-          name: 'receive_date',
-          header: i18next.t('field.receive_date'),
+          type: 'datetime',
+          name: 'delivered_date',
+          header: i18next.t('field.delivered_date'),
           record: {
             align: 'left'
           },
@@ -179,29 +265,9 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
           width: 120
         },
         {
-          type: 'string',
+          type: 'datetime',
           name: 'reject_date',
           header: i18next.t('field.reject_date'),
-          record: {
-            align: 'left'
-          },
-          sortable: true,
-          width: 120
-        },
-        {
-          type: 'string',
-          name: 'fleet_no',
-          header: i18next.t('field.fleet_no'),
-          record: {
-            align: 'left'
-          },
-          sortable: true,
-          width: 120
-        },
-        {
-          type: 'string',
-          name: 'driver',
-          header: i18next.t('field.driver'),
           record: {
             align: 'left'
           },
@@ -216,8 +282,153 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
       }
     }
 
-    this.data = {
-      records: new Array(50).fill().map(() => new Object())
+    this.data = await this.getTransportOrders()
+  }
+
+  async getTransportOrders() {
+    const response = await client.query({
+      query: gql`
+        query {
+          orders: transportOrders(${gqlBuilder.buildArgs({
+            filters: []
+          })}) {
+            items {
+              id
+              name
+              description
+              when
+              from
+              to
+              loadType
+              state
+            }
+            total
+          }
+        }
+      `
+    })
+
+    this.rawOrderData = response.data.orders.items
+
+    return {
+      records: this._parseOrderData(response.data.orders.items),
+      total: response.data.orders.total
+    }
+  }
+
+  _parseOrderData(orders) {
+    return orders.map(order => {
+      const info = JSON.parse(order.description)
+      return {
+        company: 'Company Name',
+        contact_no: info.contactNo,
+        name: order.name,
+        description: info.description,
+        do_no: info.orderNo,
+        when: order.when,
+        from: order.from,
+        to: order.to,
+        load_type: order.loadType,
+        state: order.state,
+        reject_date: info.rejectedDate,
+        request_date: info.requestedDate,
+        confirm_date: info.confirmedDate,
+        delivered_date: info.deliveredDate
+      }
+    })
+  }
+
+  async _cancelOrder() {
+    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
+    if (selectedOrder) {
+      await this._deleteOrder(selectedOrder)
+      this.data = await this.getTransportOrders()
+    } else {
+      alert(i18next.t('text.there_no_selected'))
+    }
+  }
+
+  async _rejectOrder() {
+    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
+    if (selectedOrder) {
+      await this._updateOrder(selectedOrder, false)
+      this.data = await this.getTransportOrders()
+    } else {
+      alert(i18next.t('text.there_no_selected'))
+    }
+  }
+
+  async _confirmOrder() {
+    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
+    if (selectedOrder) {
+      await this._updateOrder(selectedOrder, true)
+      this.data = await this.getTransportOrders()
+    } else {
+      alert(i18next.t('text.there_no_selected'))
+    }
+  }
+
+  get _grist() {
+    return this.shadowRoot.querySelector('data-grist')
+  }
+
+  async _deleteOrder(order) {
+    try {
+      if (order.state.toLowerCase() !== 'pending') throw new Error('text.status_not_suitable')
+
+      await client.query({
+        query: gql`
+          mutation {
+            deleteTransportOrder(${gqlBuilder.buildArgs({ name: order.name })}) {
+              name
+            }
+          }
+        `
+      })
+    } catch (e) {
+      alert(e.message)
+    }
+  }
+
+  async _updateOrder(order, isConfirm) {
+    try {
+      if (order.state.toLowerCase() !== 'pending') throw new Error('text.status_not_suitable')
+
+      let state = ''
+      let description = JSON.parse(order.description)
+
+      if (isConfirm) {
+        state = 'Requested'
+        description = {
+          ...description,
+          requestedDate: new Date().getTime()
+        }
+      } else {
+        state = 'Rejected'
+        description = {
+          ...description,
+          rejectedDate: new Date().getTime()
+        }
+      }
+
+      await client.query({
+        query: gql`
+          mutation {
+            updateTransportOrder(${gqlBuilder.buildArgs({
+              name: order.name,
+              patch: {
+                state: state,
+                description: JSON.stringify(description)
+              }
+            })}) {
+              name
+              state
+            }
+          }
+        `
+      })
+    } catch (e) {
+      alert(e.message)
     }
   }
 }
