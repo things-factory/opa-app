@@ -260,7 +260,15 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
           },
           editable: true
         }
-      ]
+      ],
+      rows: {
+        selectable: {
+          multiple: false
+        },
+        handlers: {
+          click: 'row-select'
+        }
+      }
     }
 
     this.data = await this._getArrivalNotices()

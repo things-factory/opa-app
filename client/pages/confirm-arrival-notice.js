@@ -235,6 +235,9 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
       rows: {
         selectable: {
           multiple: false
+        },
+        handlers: {
+          click: 'row-select'
         }
       }
     }
