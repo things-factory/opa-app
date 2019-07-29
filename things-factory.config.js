@@ -45,8 +45,8 @@ export default {
       page: 'transport-order-detail'
     },
     {
-      tagname: 'create-shipping-notice',
-      page: 'create-shipping-notice'
+      tagname: 'create-release-goods',
+      page: 'create-release-goods'
     },
     {
       tagname: 'create-transport-order',
