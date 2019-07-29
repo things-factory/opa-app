@@ -1,8 +1,8 @@
 import { i18next, localize } from '@things-factory/i18n-base'
-import { isMobileDevice, PageView } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
 import '@things-factory/grist-ui'
 import { css, html } from 'lit-element'
-import { SearchFormStyles } from '../styles'
+import { MultiColumnFormStyles } from '../styles'
 
 class ConfirmReleaseGoods extends localize(i18next)(PageView) {
   static get properties() {
@@ -14,7 +14,7 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
 
   static get styles() {
     return [
-      SearchFormStyles,
+      MultiColumnFormStyles,
       css`
         :host {
           display: flex;
@@ -39,7 +39,7 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.confirm'),
-          action: () => {}
+          action: this._confirmOrder.bind(this)
         }
       ]
     }
@@ -47,41 +47,42 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <form class="search-form">
-        <label>${i18next.t('label.company')}</label>
-        <input name="company" />
+      <form class="multi-column-form">
+        <fieldset>
+          <label>${i18next.t('label.delivery_no')}</label>
+          <input name="delivery_no" />
 
-        <label>${i18next.t('label.delivery_date')}</label>
-        <input name="delivery_date" />
+          <label>${i18next.t('label.shipping_no')}</label>
+          <input name="shipping_no" />
 
-        <label>${i18next.t('label.fleet_no')}</label>
-        <input name="fleet_no" />
+          <label>${i18next.t('label.delivery_date')}</label>
+          <input name="delivery_date" />
 
-        <label>${i18next.t('label.driver')}</label>
-        <input name="driver" />
+          <label>${i18next.t('label.driver_name')}</label>
+          <input name="driver_name" />
 
-        <label>${i18next.t('label.delivery_address')}</label>
-        <input name="delivery_address" />
-
-        <label>${i18next.t('label.fleet_spec')}</label>
-        <input name="fleet_spec" />
+          <label>${i18next.t('label.reg_number')}</label>
+          <input name="reg_number" />
+        </fieldset>
       </form>
 
-      <data-grist
-        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-        .config=${this.config}
-        .data=${this.data}
-        @page-changed=${e => {
-          this.page = e.detail
-        }}
-        @limit-changed=${e => {
-          this.limit = e.detail
-        }}
-      ></data-grist>
+      <div class="grist">
+        <data-grist
+          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+          .config=${this.config}
+          .data=${this.data}
+          @page-changed=${e => {
+            this.page = e.detail
+          }}
+          @limit-changed=${e => {
+            this.limit = e.detail
+          }}
+        ></data-grist>
+      </div>
     `
   }
 
-  firstUpdated() {
+  async firstUpdated() {
     this.config = {
       pagination: {
         infinite: true
@@ -97,14 +98,25 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
           multiple: true
         },
         {
+          type: 'gutter',
+          name: 'button',
+          icon: 'search',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              const selectedOrder = this.rawOrderData.find(orderData => orderData.name === record.name)
+              location.href = `release-goods-detail/${selectedOrder.name}`
+            }
+          }
+        },
+        {
           type: 'string',
-          name: 'company',
-          header: i18next.t('field.company'),
+          name: 'name',
+          header: i18next.t('field.delivery_order'),
           record: {
             align: 'left'
           },
           sortable: true,
-          width: 120
+          width: 230
         },
         {
           type: 'string',
@@ -138,16 +150,6 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'delivery_order_no',
-          header: i18next.t('field.delivery_order_no'),
-          record: {
-            align: 'left'
-          },
-          sortable: true,
-          width: 120
-        },
-        {
-          type: 'string',
           name: 'delivery_address',
           header: i18next.t('field.delivery_address'),
           record: {
@@ -168,18 +170,8 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'need_fleet',
-          header: i18next.t('field.need_fleet'),
-          record: {
-            align: 'left'
-          },
-          sortable: true,
-          width: 120
-        },
-        {
-          type: 'string',
-          name: 'fleet_spec',
-          header: i18next.t('field.fleet_spec'),
+          name: 'need_transport',
+          header: i18next.t('field.need_transport'),
           record: {
             align: 'left'
           },
@@ -257,9 +249,148 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
       }
     }
 
-    this.data = {
-      records: new Array(50).fill().map(() => new Object())
+    this.data = await this.getReleaseGoods()
+  }
+
+  async getReleaseGoods() {
+    const response = await client.query({
+      query: gql`
+        query {
+          orders: deliveryOrders(${gqlBuilder.buildArgs({
+            filters: []
+          })}) {
+            items {
+              id
+              name
+              issuedOn
+              type
+              state
+              description
+              updatedAt
+            }
+            total
+          }
+        }
+      `
+    })
+
+    this.rawOrderData = response.data.orders.items
+
+    return {
+      records: this._parseOrderData(response.data.orders.items),
+      total: response.data.orders.total
     }
+  }
+
+  _parseOrderData(orders) {
+    return orders.map(order => {
+      const info = JSON.parse(order.description)
+      return {
+        company: 'Company Name',
+        name: order.name,
+        delivery_order_no: info.orderNo,
+        status: order.state,
+        reject_date: info.rejectedDate,
+        request_date: info.requestedDate,
+        confirm_date: info.confirmedDate,
+        receive_date: info.receivedDate
+      }
+    })
+  }
+
+  async _rejectOrder() {
+    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
+    if (selectedOrder) {
+      await this._updateOrder(selectedOrder, false)
+      this.data = await this.getReleaseGoods()
+    } else {
+      this._notify(i18next.t('text.there_no_selected'))
+    }
+  }
+
+  async _confirmOrder() {
+    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
+    if (selectedOrder) {
+      await this._updateOrder(selectedOrder, true)
+      this.data = await this.getReleaseGoods()
+    } else {
+      this._notify(i18next.t('text.there_no_selected'))
+    }
+  }
+
+  get _grist() {
+    return this.shadowRoot.querySelector('data-grist')
+  }
+
+  async _deleteOrder(order) {
+    try {
+      if (order.state.toLowerCase() !== 'pending') throw new Error('text.status_not_suitable')
+
+      await client.query({
+        query: gql`
+          mutation {
+            deleteDeliveryOrder(${gqlBuilder.buildArgs({ name: order.name })}) {
+              name
+            }
+          }
+        `
+      })
+    } catch (e) {
+      this._notify(e.message)
+    }
+  }
+
+  async _updateOrder(order, isConfirm) {
+    try {
+      if (order.state.toLowerCase() !== 'pending') throw new Error('text.status_not_suitable')
+
+      let state = ''
+      let description = JSON.parse(order.description)
+
+      if (isConfirm) {
+        state = 'Requested'
+        description = {
+          ...description,
+          requestedDate: new Date().getTime()
+        }
+      } else {
+        state = 'Rejected'
+        description = {
+          ...description,
+          rejectedDate: new Date().getTime()
+        }
+      }
+
+      await client.query({
+        query: gql`
+          mutation {
+            updateDeliveryOrder(${gqlBuilder.buildArgs({
+              name: order.name,
+              patch: {
+                state: state,
+                description: JSON.stringify(description)
+              }
+            })}) {
+              name
+              state
+            }
+          }
+        `
+      })
+    } catch (e) {
+      this._notify(e.message)
+    }
+  }
+
+  _notify(message, level = '') {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: {
+          level,
+          message
+        }
+      })
+    )
   }
 }
 
