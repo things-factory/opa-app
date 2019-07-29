@@ -158,6 +158,9 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     this.servicesData = { records: [] }
 
     this.productsConfig = {
+      pagination: {
+        infinite: true
+      },
       columns: [
         {
           type: 'gutter',
@@ -262,6 +265,9 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     }
 
     this.servicesConfig = {
+      pagination: {
+        infinite: true
+      },
       columns: [
         {
           type: 'gutter',
