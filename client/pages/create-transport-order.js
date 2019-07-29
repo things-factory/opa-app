@@ -26,6 +26,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
           height: 100%;
         }
         .grist {
+          background-color: var(--main-section-background-color);
           display: flex;
           flex-direction: column;
           flex: 1;
@@ -43,6 +44,22 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
           font: var(--subtitle-font);
           color: var(--subtitle-text-color);
           border-bottom: var(--subtitle-border-bottom);
+        }
+        .grist h2 {
+          margin: var(--grist-title-margin);
+          border: var(--grist-title-border);
+          color: var(--secondary-color);
+        }
+
+        .grist h2 mwc-icon {
+          vertical-align: middle;
+          margin: var(--grist-title-icon-margin);
+          font-size: var(--grist-title-icon-size);
+          color: var(--grist-title-icon-color);
+        }
+
+        h2 + data-grist {
+          padding-top: var(--grist-title-with-grid-padding);
         }
       `
     ]
@@ -111,7 +128,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
       </div>
 
       <div class="grist">
-        <h2>${i18next.t('title.products')}</h2>
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.products')}</h2>
         <data-grist
           id="products"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
@@ -143,7 +160,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
           >
         </div>
 
-        <h2>${i18next.t('title.vas_request')}</h2>
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas_request')}</h2>
         <data-grist
           id="services"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
