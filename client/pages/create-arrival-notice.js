@@ -368,7 +368,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
       if (!record) {
         record = {}
-        this.productsData.records.push(record)
+        this.servicesData.records.push(record)
       }
 
       record.unit = serviceMaster.unit
