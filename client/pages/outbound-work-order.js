@@ -113,6 +113,9 @@ class OutboundWorkOrder extends localize(i18next)(PageView) {
 
   firstUpdated() {
     this.shippingNoticeConfig = {
+      pagination: {
+        infinite: true
+      },
       columns: [
         {
           type: 'gutter',
@@ -201,6 +204,9 @@ class OutboundWorkOrder extends localize(i18next)(PageView) {
     }
 
     this.servicesConfig = {
+      pagination: {
+        infinite: true
+      },
       columns: [
         {
           type: 'gutter',

@@ -113,6 +113,9 @@ class PickingByProduct extends localize(i18next)(PageView) {
 
   firstUpdated() {
     this.servicesConfig = {
+      pagination: {
+        infinite: true
+      },
       columns: [
         {
           type: 'gutter',

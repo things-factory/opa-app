@@ -119,6 +119,9 @@ class CreateShippingNotice extends localize(i18next)(PageView) {
 
   firstUpdated() {
     this.productsConfig = {
+      pagination: {
+        infinite: true
+      },
       columns: [
         {
           type: 'gutter',
@@ -191,6 +194,9 @@ class CreateShippingNotice extends localize(i18next)(PageView) {
     }
 
     this.servicesConfig = {
+      pagination: {
+        infinite: true
+      },
       columns: [
         {
           type: 'gutter',

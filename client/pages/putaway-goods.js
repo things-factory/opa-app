@@ -109,6 +109,9 @@ class PutawayGoods extends localize(i18next)(PageView) {
 
   firstUpdated() {
     this.config = {
+      pagination: {
+        infinite: true
+      },
       columns: [
         {
           type: 'gutter',
