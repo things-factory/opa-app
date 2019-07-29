@@ -87,6 +87,9 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
 
   async firstUpdated() {
     this.config = {
+      pagination: {
+        infinite: true
+      },
       columns: [
         {
           type: 'gutter',

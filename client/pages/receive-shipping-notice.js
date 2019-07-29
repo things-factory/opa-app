@@ -79,6 +79,9 @@ class ReceiveShippingNotice extends localize(i18next)(PageView) {
 
   firstUpdated() {
     this.shippingConfig = {
+      pagination: {
+        infinite: true
+      },
       columns: [
         {
           type: 'gutter',
