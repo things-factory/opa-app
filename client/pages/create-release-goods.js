@@ -453,8 +453,7 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
   _generateSO() {
     // check wheter it's so or not
     const shippingBoolean = this.shadowRoot.querySelector('#shipping-export')
-    if (shippingBoolean == 'TRUE')
-    return `SO-${new Date().getTime().toString()}` : ''
+    if (shippingBoolean == 'TRUE') return `SO-${new Date().getTime().toString()}`
   }
 }
 

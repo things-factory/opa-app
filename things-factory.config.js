@@ -107,6 +107,14 @@ export default {
     {
       tagname: 'vas-work-order',
       page: 'vas-work-order'
+    },
+    {
+      tagname: 'onhand-stock',
+      page: 'onhand-stock'
+    },
+    {
+      tagname: 'intransit-stock',
+      page: 'intransit-stock'
     }
   ],
   bootstrap
