@@ -354,9 +354,16 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       const productMaster = await this.getMasterInfo(after.product.id)
       const productUnit = productMaster.unit.split(' ')
 
-      this.productsData.records[e.detail.row].pack_in_qty = productUnit[0]
-      this.productsData.records[e.detail.row].unit = productUnit[1]
-      this.productsData.records[e.detail.row].description = productMaster.description
+      let record = this.productsData.records[e.detail.row]
+
+      if (!record) {
+        record = {}
+        this.productsData.records.push(record)
+      }
+
+      record.pack_in_qty = productUnit[0]
+      record.unit = productUnit[1]
+      record.description = productMaster.description
 
       this.productsData = {
         ...this.productsData,
@@ -381,9 +388,16 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     if ((before.service && before.service.id) != (after.service && after.service.id)) {
       const serviceMaster = await this.getMasterInfo(after.service.id)
 
-      this.servicesData.records[e.detail.row].unit = serviceMaster.unit
-      this.servicesData.records[e.detail.row].unit_price = 5
-      this.servicesData.records[e.detail.row].description = serviceMaster.description
+      let record = this.servicesData.records[e.detail.row]
+
+      if (!record) {
+        record = {}
+        this.productsData.records.push(record)
+      }
+
+      record.unit = serviceMaster.unit
+      record.unit_price = 5
+      record.description = serviceMaster.description
 
       this.servicesData = {
         ...this.servicesData,
