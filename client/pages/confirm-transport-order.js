@@ -215,8 +215,8 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
                 filters: [
                   {
                     name: 'type',
-                    operator: 'eq',
-                    value: 'DRIVER'
+                    operator: 'like',
+                    value: 'driver'
                   }
                 ]
               }
@@ -344,7 +344,7 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
       await this._deleteOrder(selectedOrder)
       this.data = await this.getTransportOrders()
     } else {
-      alert(i18next.t('text.there_no_selected'))
+      this._notify(i18next.t('text.there_no_selected'))
     }
   }
 
@@ -354,7 +354,7 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
       await this._updateOrder(selectedOrder, false)
       this.data = await this.getTransportOrders()
     } else {
-      alert(i18next.t('text.there_no_selected'))
+      this._notify(i18next.t('text.there_no_selected'))
     }
   }
 
@@ -364,7 +364,7 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
       await this._updateOrder(selectedOrder, true)
       this.data = await this.getTransportOrders()
     } else {
-      alert(i18next.t('text.there_no_selected'))
+      this._notify(i18next.t('text.there_no_selected'))
     }
   }
 
@@ -386,7 +386,7 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
         `
       })
     } catch (e) {
-      alert(e.message)
+      this._notify(e.message)
     }
   }
 
@@ -428,8 +428,19 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
         `
       })
     } catch (e) {
-      alert(e.message)
+      this._notify(e.message)
     }
+  }
+
+  _notify(message, level = '') {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: {
+          level,
+          message
+        }
+      })
+    )
   }
 }
 

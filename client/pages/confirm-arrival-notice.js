@@ -293,7 +293,7 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
       await this._deleteOrder(selectedOrder)
       this.data = await this.getArrivalNotices()
     } else {
-      alert(i18next.t('text.there_no_selected'))
+      this._notify(i18next.t('text.there_no_selected'))
     }
   }
 
@@ -303,7 +303,7 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
       await this._updateOrder(selectedOrder, false)
       this.data = await this.getArrivalNotices()
     } else {
-      alert(i18next.t('text.there_no_selected'))
+      this._notify(i18next.t('text.there_no_selected'))
     }
   }
 
@@ -313,7 +313,7 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
       await this._updateOrder(selectedOrder, true)
       this.data = await this.getArrivalNotices()
     } else {
-      alert(i18next.t('text.there_no_selected'))
+      this._notify(i18next.t('text.there_no_selected'))
     }
   }
 
@@ -335,7 +335,7 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
         `
       })
     } catch (e) {
-      alert(e.message)
+      this._notify(e.message)
     }
   }
 
@@ -377,8 +377,19 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
         `
       })
     } catch (e) {
-      alert(e.message)
+      this._notify(e.message)
     }
+  }
+
+  _notify(message, level = '') {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: {
+          level,
+          message
+        }
+      })
+    )
   }
 }
 

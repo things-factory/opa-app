@@ -1,7 +1,7 @@
-import { i18next, localize } from '@things-factory/i18n-base'
-import { isMobileDevice, PageView, client, gqlBuilder } from '@things-factory/shell'
-import gql from 'graphql-tag'
 import '@things-factory/grist-ui'
+import { i18next, localize } from '@things-factory/i18n-base'
+import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
+import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '../styles'
 
@@ -453,7 +453,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
       location.href = 'confirm-arrival-notice'
     } catch (e) {
-      alert(e.message)
+      this._notify(e.message)
     }
   }
 
@@ -492,6 +492,17 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
   _generateGAN() {
     return `PO-GAN-${new Date().getTime().toString()}`
+  }
+
+  _notify(message, level = '') {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: {
+          level,
+          message
+        }
+      })
+    )
   }
 }
 
