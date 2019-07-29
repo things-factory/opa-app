@@ -223,8 +223,8 @@ class ReceiveTransportOrder extends localize(i18next)(PageView) {
                 filters: [
                   {
                     name: 'type',
-                    operator: 'eq',
-                    value: 'DRIVER'
+                    operator: 'like',
+                    value: 'driver'
                   }
                 ]
               }
@@ -351,9 +351,9 @@ class ReceiveTransportOrder extends localize(i18next)(PageView) {
       await this._updateOrder(foundOrder, selectedOrder.transport_vehicle, selectedOrder.driver)
       this.data = await this._getTransportOrders()
     } else if (!foundOrder) {
-      alert(i18next.t('text.there_no_selected'))
+      this._notify(i18next.t('text.there_no_selected'))
     } else {
-      alert(i18next.t('text.vehicle_or_driver_not_selected'))
+      this._notify(i18next.t('text.vehicle_or_driver_not_selected'))
     }
   }
 
@@ -384,12 +384,23 @@ class ReceiveTransportOrder extends localize(i18next)(PageView) {
         `
       })
     } catch (e) {
-      alert(e.message)
+      this._notify(e.message)
     }
   }
 
   _getGrist() {
     return this.shadowRoot.querySelector('data-grist')
+  }
+
+  _notify(message, level = '') {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: {
+          level,
+          message
+        }
+      })
+    )
   }
 }
 

@@ -307,9 +307,9 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       await this._updateOrder(foundOrder, selectedOrder.warehouse)
       this.data = await this._getArrivalNotices()
     } else if (!foundOrder) {
-      alert(i18next.t('text.there_no_selected'))
+      this._notify(i18next.t('text.there_no_selected'))
     } else {
-      alert(i18next.t('text.buffer_location_is_not_selected'))
+      this._notify(i18next.t('text.buffer_location_is_not_selected'))
     }
   }
 
@@ -339,12 +339,23 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         `
       })
     } catch (e) {
-      alert(e.message)
+      this._notify(e.message)
     }
   }
 
   _getGrist() {
     return this.shadowRoot.querySelector('data-grist')
+  }
+
+  _notify(message, level = '') {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: {
+          level,
+          message
+        }
+      })
+    )
   }
 }
 

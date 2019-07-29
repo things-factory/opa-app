@@ -318,7 +318,18 @@ class PutawayGoods extends localize(i18next)(PageView) {
       `
     })
 
-    alert(i18next.t('text.putaway_is_done'))
+    this._notify(i18next.t('text.putaway_is_done'))
+  }
+
+  _notify(message, level = '') {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: {
+          level,
+          message
+        }
+      })
+    )
   }
 }
 

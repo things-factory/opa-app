@@ -475,7 +475,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
 
       location.href = 'confirm-transport-order'
     } catch (e) {
-      alert(e.message)
+      this._notify(e.message)
     }
   }
 
@@ -500,7 +500,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
       })
       return tempObj
     } catch (e) {
-      alert(e)
+      this._notify(e.message)
     }
   }
 
@@ -519,6 +519,17 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
 
   _getServices() {
     return this.shadowRoot.querySelector('#services').dirtyRecords
+  }
+
+  _notify(message, level = '') {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: {
+          level,
+          message
+        }
+      })
+    )
   }
 }
 

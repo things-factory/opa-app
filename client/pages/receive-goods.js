@@ -259,7 +259,7 @@ class ReceiveGoods extends localize(i18next)(PageView) {
       `
     })
 
-    alert(i18next.t('text.order_is_ready_for_putaway'))
+    this._notify(i18next.t('text.order_is_ready_for_putaway'))
   }
 
   async _getProducts() {
@@ -325,6 +325,17 @@ class ReceiveGoods extends localize(i18next)(PageView) {
 
     this.shadowRoot.querySelector('input[name=eta_date').value = `${year}-${month}-${date}`
     this.shadowRoot.querySelector('input[name=eta_time').value = `${hours}:${minutes}`
+  }
+
+  _notify(message, level = '') {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: {
+          level,
+          message
+        }
+      })
+    )
   }
 }
 
