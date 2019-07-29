@@ -100,5 +100,13 @@ export default function route(page) {
     case 'vas-work-order':
       import('./pages/vas-work-order')
       return page
+
+    case 'onhand-stock':
+      import('./pages/onhand-stock')
+      return page
+
+    case 'intransit-stock':
+      import('./pages/intransit-stock')
+      return page
   }
 }
