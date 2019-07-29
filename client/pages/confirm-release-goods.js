@@ -4,7 +4,7 @@ import '@things-factory/grist-ui'
 import { css, html } from 'lit-element'
 import { SearchFormStyles } from '../styles'
 
-class ConfirmShippingNotice extends localize(i18next)(PageView) {
+class ConfirmReleaseGoods extends localize(i18next)(PageView) {
   static get properties() {
     return {
       config: Object,
@@ -20,8 +20,13 @@ class ConfirmShippingNotice extends localize(i18next)(PageView) {
           display: flex;
           flex-direction: column;
         }
-
+        .grist {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+        }
         data-grist {
+          overflow-y: hidden;
           flex: 1;
         }
       `
@@ -30,7 +35,7 @@ class ConfirmShippingNotice extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.confirm_shipping_notice'),
+      title: i18next.t('title.confirm_release_goods'),
       actions: [
         {
           title: i18next.t('button.confirm'),
@@ -258,4 +263,4 @@ class ConfirmShippingNotice extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('confirm-shipping-notice', ConfirmShippingNotice)
+window.customElements.define('confirm-release-goods', ConfirmReleaseGoods)

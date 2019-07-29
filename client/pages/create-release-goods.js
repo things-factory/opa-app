@@ -65,7 +65,13 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.create_release_of_goods_notice')
+      title: i18next.t('title.create_release_of_goods_notice'),
+      actions: [
+        {
+          title: i18next.t('button.submit'),
+          action: this.createReleaseOfGoods.bind(this)
+        }
+      ]
     }
   }
 
@@ -452,9 +458,11 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
 
   _generateSO() {
     // check wheter it's so or not
-    const shippingBoolean = this.shadowRoot.querySelector('#shipping-export')
+    const shippingBoolean = this.shadowRoot.querySelector('#shipping-export').checked
     if (shippingBoolean == 'TRUE') {
       return `SO-${new Date().getTime().toString()}`
+    } else {
+      return ''
     }
   }
 }

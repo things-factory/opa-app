@@ -33,8 +33,8 @@ export default function route(page) {
       import('./pages/confirm-arrival-notice')
       return page
 
-    case 'confirm-shipping-notice':
-      import('./pages/confirm-shipping-notice')
+    case 'confirm-release-goods':
+      import('./pages/confirm-release-goods')
       return page
 
     case 'confirm-transport-order':

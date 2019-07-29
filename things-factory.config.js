@@ -33,8 +33,8 @@ export default {
       page: 'confirm-arrival-notice'
     },
     {
-      tagname: 'confirm-shipping-notice',
-      page: 'confirm-shipping-notice'
+      tagname: 'confirm-release-goods',
+      page: 'confirm-release-goods'
     },
     {
       tagname: 'confirm-transport-order',
