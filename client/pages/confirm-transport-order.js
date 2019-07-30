@@ -1,6 +1,6 @@
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, navigate } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { SearchFormStyles } from '../styles'
@@ -107,7 +107,7 @@ class ConfirmTransportOrder extends localize(i18next)(PageView) {
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               const selectedOrder = this.rawOrderData.find(orderData => orderData.name === record.name)
-              location.href = `transport-order-detail/${selectedOrder.name}`
+              navigate(`transport-order-detail/${selectedOrder.name}`)
             }
           }
         },

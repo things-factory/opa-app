@@ -1,5 +1,5 @@
 import { i18next, localize } from '@things-factory/i18n-base'
-import { isMobileDevice, PageView } from '@things-factory/shell'
+import { isMobileDevice, PageView, navigate } from '@things-factory/shell'
 import '@things-factory/grist-ui'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '../styles'
@@ -421,7 +421,7 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
         `
       })
 
-      location.href = 'confirm-release-of-goods'
+      navigate('confirm-release-of-goods')
     } catch (e) {
       alert(e.message)
     }

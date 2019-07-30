@@ -1,5 +1,5 @@
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, navigate } from '@things-factory/shell'
 import '@things-factory/grist-ui'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '../styles'
@@ -104,7 +104,7 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               const selectedOrder = this.rawOrderData.find(orderData => orderData.name === record.name)
-              location.href = `release-goods-detail/${selectedOrder.name}`
+              navigate(`release-goods-detail/${selectedOrder.name}`)
             }
           }
         },
