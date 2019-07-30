@@ -37,6 +37,10 @@ export default {
       page: 'confirm-release-goods'
     },
     {
+      tagname: 'release-goods-detail',
+      page: 'release-goods-detail'
+    },
+    {
       tagname: 'confirm-transport-order',
       page: 'confirm-transport-order'
     },
