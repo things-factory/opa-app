@@ -1,6 +1,7 @@
+import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, PageView, navigate } from '@things-factory/shell'
-import '@things-factory/grist-ui'
+import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '../styles'
 
@@ -37,6 +38,10 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
     return {
       title: i18next.t('title.confirm_release_goods'),
       actions: [
+        {
+          title: i18next.t('button.cancel'),
+          action: this._cancelOrder.bind(this)
+        },
         {
           title: i18next.t('button.confirm'),
           action: this._confirmOrder.bind(this)
@@ -108,47 +113,47 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'name',
-          header: i18next.t('field.delivery_order'),
+          header: i18next.t('field.name'),
           record: {
             align: 'left'
           },
           sortable: true,
-          width: 230
+          width: 200
         },
+        // {
+        //   type: 'string',
+        //   name: 'company',
+        //   header: i18next.t('field.company'),
+        //   record: {
+        //     align: 'left'
+        //   },
+        //   sortable: true,
+        //   width: 200
+        // },
         {
           type: 'string',
-          name: 'delivery_date',
-          header: i18next.t('field.delivery_date'),
+          name: 'contact_point',
+          header: i18next.t('field.contact_point'),
           record: {
             align: 'left'
           },
           sortable: true,
-          width: 120
+          width: 180
         },
         {
           type: 'string',
-          name: 'delivery_address',
-          header: i18next.t('field.delivery_address'),
+          name: 'delivery_order_no',
+          header: i18next.t('field.delivery_order_no'),
           record: {
             align: 'left'
           },
           sortable: true,
-          width: 120
+          width: 180
         },
         {
-          type: 'string',
-          name: 'receiver_contact_point',
-          header: i18next.t('field.receiver_contact_point'),
-          record: {
-            align: 'left'
-          },
-          sortable: true,
-          width: 120
-        },
-        {
-          type: 'string',
-          name: 'receiver_contact_number',
-          header: i18next.t('field.receiver_contact_number'),
+          type: 'date',
+          name: 'release_date',
+          header: i18next.t('field.release_date'),
           record: {
             align: 'left'
           },
@@ -160,13 +165,23 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
           name: 'status',
           header: i18next.t('field.status'),
           record: {
+            align: 'center'
+          },
+          sortable: true,
+          width: 120
+        },
+        {
+          type: 'datetime',
+          name: 'request_date',
+          header: i18next.t('field.request_date'),
+          record: {
             align: 'left'
           },
           sortable: true,
           width: 120
         },
         {
-          type: 'string',
+          type: 'datetime',
           name: 'confirm_date',
           header: i18next.t('field.confirm_date'),
           record: {
@@ -176,7 +191,7 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
           width: 120
         },
         {
-          type: 'string',
+          type: 'datetime',
           name: 'reject_date',
           header: i18next.t('field.reject_date'),
           record: {
@@ -265,6 +280,16 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
         receive_date: info.receivedDate
       }
     })
+  }
+
+  async _cancelOrder() {
+    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
+    if (selectedOrder) {
+      await this._deleteOrder(selectedOrder)
+      this.data = await this.getReleaseGoods()
+    } else {
+      this._notify(i18next.t('text.there_no_selected'))
+    }
   }
 
   async _confirmOrder() {

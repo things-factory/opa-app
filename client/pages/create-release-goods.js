@@ -91,7 +91,7 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
             <input name="receiver_contact_no" />
 
             <label>${i18next.t('label.release_date')}</label>
-            <input name="release_date" />
+            <input name="release_date" type="date" />
 
             <input name="shipping_export" id="shipping-export" type="checkbox" @change="${this._exportingChanged.bind(
               this
