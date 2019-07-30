@@ -80,7 +80,6 @@ class OnhandStock extends localize(i18next)(PageView) {
       columns: [
         { type: 'gutter', name: 'dirty' },
         { type: 'gutter', name: 'sequence' },
-        { type: 'gutter', name: 'row-selector', multiple: true },
         { type: 'gutter', name: 'button', icon: 'edit' },
         {
           name: 'name',
