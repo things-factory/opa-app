@@ -22,10 +22,10 @@ export default function bootstrap() {
    * default page를 설정함.
    * signin 후에 자동으로 이동되는 페이지임.
    */
-  // store.dispatch({
-  //   type: UPDATE_DEFAULT_ROUTE_PAGE,
-  //   defaultRoutePage: 'index'
-  // })
+  store.dispatch({
+    type: UPDATE_DEFAULT_ROUTE_PAGE,
+    defaultRoutePage: 'index'
+  })
 
   /*
    * menuProvider를 등록함. (임시, 데모용임)
