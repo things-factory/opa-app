@@ -453,7 +453,7 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
                 type: 'do',
                 description: JSON.stringify({
                   contactPoint: orderInfo.receiver_contact_point,
-                  releaseDate: new Date(orderInfo.release_date),
+                  releaseDate: new Date(orderInfo.release_date).getTime().toString(),
                   containerNo: orderInfo.container_no,
                   loadType: orderInfo.container_load_type,
                   arrivalDate: orderInfo.container_arrival_date,

@@ -89,8 +89,8 @@ export default {
       page: 'receive-arrival-notice'
     },
     {
-      tagname: 'receive-goods',
-      page: 'receive-goods'
+      tagname: 'receive-release-goods',
+      page: 'receive-release-goods'
     },
     {
       tagname: 'receive-shipping-notice',

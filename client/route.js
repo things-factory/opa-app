@@ -81,8 +81,8 @@ export default function route(page) {
       import('./pages/receive-arrival-notice')
       return page
 
-    case 'receive-goods':
-      import('./pages/receive-goods')
+    case 'receive-release-goods':
+      import('./pages/receive-release-goods')
       return page
 
     case 'receive-shipping-notice':
