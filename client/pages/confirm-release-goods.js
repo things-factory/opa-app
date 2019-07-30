@@ -60,12 +60,6 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
 
           <label>${i18next.t('label.receiver_contact_point')}</label>
           <input name="receiver_contact_point" />
-
-          <label>${i18next.t('label.driver_name')}</label>
-          <input name="driver_name" />
-
-          <label>${i18next.t('label.reg_number')}</label>
-          <input name="reg_number" />
         </fieldset>
       </form>
 
@@ -253,6 +247,18 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
         name: order.name,
         delivery_order_no: info.orderNo,
         status: order.state,
+        type: order.type,
+        contact_point: info.contactPoint,
+        release_date: info.releaseDate,
+        container_no: info.containerNo,
+        load_type: info.loadType,
+        arrival_date: info.arrivalDate,
+        departure_date: info.departureDate,
+        ship_name: info.shipName,
+        deliver_to: info.deliverTo,
+        transporter_name: info.transporterName,
+        driver_name: info.driverName,
+        reg_number: info.regNumber,
         reject_date: info.rejectedDate,
         request_date: info.requestedDate,
         confirm_date: info.confirmedDate,
