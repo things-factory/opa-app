@@ -337,6 +337,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         this.productsData.records.push(record)
       }
 
+      record.product = after.product
       record.pack_in_qty = productUnit[0]
       record.unit = productUnit[1]
       record.description = productMaster.description
@@ -371,6 +372,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         this.servicesData.records.push(record)
       }
 
+      record.product = after.product
       record.unit = serviceMaster.unit
       record.unit_price = 5
       record.description = serviceMaster.description
