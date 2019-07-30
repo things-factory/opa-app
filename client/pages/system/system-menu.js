@@ -220,7 +220,10 @@ class SystemMenu extends localize(i18next)(PageView) {
           },
           width: 80
         }
-      ]
+      ],
+      pagination: {
+        infinite: true
+      }
     }
 
     this.screenConfig = {
@@ -456,7 +459,10 @@ class SystemMenu extends localize(i18next)(PageView) {
           },
           width: 80
         }
-      ]
+      ],
+      pagination: {
+        infinite: true
+      }
     }
   }
 

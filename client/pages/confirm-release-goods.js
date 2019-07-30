@@ -198,7 +198,7 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
       ],
       rows: {
         selectable: {
-          multiple: false
+          multiple: true
         },
         handlers: {
           click: 'select-row'
