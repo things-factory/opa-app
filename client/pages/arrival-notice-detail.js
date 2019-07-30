@@ -47,7 +47,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.create_arrival_notice'),
+      title: i18next.t('title.arrival_notice'),
       actions: [
         {
           title: i18next.t('button.back'),

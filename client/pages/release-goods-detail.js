@@ -47,7 +47,7 @@ class ReleaseGoodsDetail extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.create_arrival_notice'),
+      title: i18next.t('title.release_goods'),
       actions: [
         {
           title: i18next.t('button.back'),
@@ -64,24 +64,51 @@ class ReleaseGoodsDetail extends connect(store)(localize(i18next)(PageView)) {
       <div>
         <form class="multi-column-form">
           <fieldset>
-            <legend>${i18next.t('title.arrival_notice')}</legend>
-            <label>${i18next.t('label.purchase_order')}</label>
-            <input name="purchase_order" readonly />
-
-            <label>${i18next.t('label.supplier_name')}</label>
-            <input name="supplier_name" readonly />
-
-            <label>${i18next.t('label.gan')}</label>
-            <input name="gan" />
+            <legend>${i18next.t('title.release_goods')}</legend>
+            <label>${i18next.t('label.delivery_order')}</label>
+            <input name="delivery_order" readonly />
 
             <label>${i18next.t('label.delivery_order_no')}</label>
-            <input name="delivery_order_no" />
+            <input name="delivery_order_no" readonly />
 
-            <label>${i18next.t('label.eta_date')}</label>
-            <input name="eta_date" type="date" readonly />
+            <label>${i18next.t('label.receiver_contact_point')}</label>
+            <input name="receiver_contact_point" />
 
-            <label>${i18next.t('label.eta_time')}</label>
-            <input name="eta_time" type="time" readonly />
+            <label>${i18next.t('label.release_date')}</label>
+            <input name="release_date" type="date" readonly />
+
+            <label>${i18next.t('label.delivery_date')}</label>
+            <input name="delivery_date" type="date" readonly />
+
+            <label>${i18next.t('label.deliver_to')}</label>
+            <input name="deliver_to" readonly />
+
+            <label>${i18next.t('label.so_no')}</label>
+            <input name="so_no" readonly />
+
+            <label>${i18next.t('label.ship_name')}</label>
+            <input name="ship_name" readonly />
+
+            <label>${i18next.t('label.container_no')}</label>
+            <input name="container_no" />
+
+            <label>${i18next.t('label.container_load_type')}</label>
+            <input name="container_load_type" />
+
+            <label>${i18next.t('label.container_arrival_date')}</label>
+            <input name="container_arrival_date" type="date" readonly />
+
+            <label>${i18next.t('label.container_leaving_date')}</label>
+            <input name="container_leaving_date" type="date" readonly />
+
+            <label>${i18next.t('label.transporter_name')}</label>
+            <input name="transporter_name" />
+
+            <label>${i18next.t('label.driver_name')}</label>
+            <input name="driver_name" />
+
+            <label>${i18next.t('label.reg_number')}</label>
+            <input name="reg_number" />
 
             <label>${i18next.t('label.status')}</label>
             <input name="status" readonly />
@@ -90,7 +117,7 @@ class ReleaseGoodsDetail extends connect(store)(localize(i18next)(PageView)) {
       </div>
 
       <div class="grist">
-        <h2>${i18next.t('title.arrival_notice_detail')}</h2>
+        <h2>${i18next.t('title.release_goods_detail')}</h2>
 
         <data-grist
           id="products"
@@ -293,6 +320,7 @@ class ReleaseGoodsDetail extends connect(store)(localize(i18next)(PageView)) {
             id
             name
             issuedOn
+            type
             state
             description
             updatedAt
@@ -308,19 +336,27 @@ class ReleaseGoodsDetail extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _fillUpForm(orderInfo) {
-    this.shadowRoot.querySelector('input[name=purchase_order]').value = orderInfo.name
-    this.shadowRoot.querySelector('input[name=supplier_name]').value = orderInfo.description.supplier
+    this.shadowRoot.querySelector('input[name=delivery_order]').value = orderInfo.name
+    this.shadowRoot.querySelector('input[name=delivery_order_no]').value = orderInfo.description.orderNo
     const issuedDate = new Date(Number(orderInfo.issuedOn))
     const year = issuedDate.getFullYear()
     const month = issuedDate.getMonth() + 1 < 10 ? `0${issuedDate.getMonth() + 1}` : issuedDate.getMonth() + 1
     const date = issuedDate.getDate() < 10 ? `0${issuedDate.getDate()}` : issuedDate.getDate()
-    const hours = issuedDate.getHours() < 10 ? `0${issuedDate.getHours()}` : issuedDate.getHours()
-    const minutes = issuedDate.getMinutes() < 10 ? `0${issuedDate.getMinutes()}` : issuedDate.getMinutes()
 
-    this.shadowRoot.querySelector('input[name=eta_date').value = `${year}-${month}-${date}`
-    this.shadowRoot.querySelector('input[name=eta_time').value = `${hours}:${minutes}`
-    this.shadowRoot.querySelector('input[name=gan]').value = orderInfo.description.gan
-    this.shadowRoot.querySelector('input[name=delivery_order_no]').value = orderInfo.description.orderNo
+    this.shadowRoot.querySelector('input[name=release_date').value = `${year}-${month}-${date}`
+    this.shadowRoot.querySelector('input[name=delivery_date').value = `${year}-${month}-${date}`
+    this.shadowRoot.querySelector('input[name=container_arrival_date').value = `${year}-${month}-${date}`
+    this.shadowRoot.querySelector('input[name=container_leaving_date').value = `${year}-${month}-${date}`
+    this.shadowRoot.querySelector('input[name=deliver_to]').value = orderInfo.description.deliverTo
+    this.shadowRoot.querySelector('input[name=driver_name]').value = orderInfo.description.driverName
+    this.shadowRoot.querySelector('input[name=reg_number]').value = orderInfo.description.regNumber
+    this.shadowRoot.querySelector('input[name=receiver_contact_point]').value = orderInfo.description.contactPoint
+    this.shadowRoot.querySelector('input[name=so_no]').value = orderInfo.description.so
+    this.shadowRoot.querySelector('input[name=ship_name]').value = orderInfo.description.shipName
+    this.shadowRoot.querySelector('input[name=container_no]').value = orderInfo.description.containerNo
+    this.shadowRoot.querySelector('input[name=container_load_type]').value = orderInfo.description.loadType
+    this.shadowRoot.querySelector('input[name=transporter_name]').value = orderInfo.description.transporterName
+    this.shadowRoot.querySelector('input[name=container_no]').value = orderInfo.description.containerNo
     this.shadowRoot.querySelector('input[name=status]').value = orderInfo.state
   }
 }
