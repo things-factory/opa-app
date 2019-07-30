@@ -52,17 +52,14 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
           <label>${i18next.t('label.delivery_no')}</label>
           <input name="delivery_no" />
 
-          <label>${i18next.t('label.shipping_no')}</label>
-          <input name="shipping_no" />
-
           <label>${i18next.t('label.delivery_date')}</label>
           <input name="delivery_date" />
 
-          <label>${i18next.t('label.driver_name')}</label>
-          <input name="driver_name" />
+          <label>${i18next.t('label.shipping_no')}</label>
+          <input name="shipping_no" />
 
-          <label>${i18next.t('label.reg_number')}</label>
-          <input name="reg_number" />
+          <label>${i18next.t('label.receiver_contact_point')}</label>
+          <input name="receiver_contact_point" />
         </fieldset>
       </form>
 
@@ -130,26 +127,6 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'contact_point',
-          header: i18next.t('field.contact_point'),
-          record: {
-            align: 'left'
-          },
-          sortable: true,
-          width: 120
-        },
-        {
-          type: 'string',
-          name: 'contact_number',
-          header: i18next.t('field.contact_number'),
-          record: {
-            align: 'left'
-          },
-          sortable: true,
-          width: 120
-        },
-        {
-          type: 'string',
           name: 'delivery_address',
           header: i18next.t('field.delivery_address'),
           record: {
@@ -160,8 +137,8 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'export',
-          header: i18next.t('field.export'),
+          name: 'receiver_contact_point',
+          header: i18next.t('field.receiver_contact_point'),
           record: {
             align: 'left'
           },
@@ -170,8 +147,8 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'need_transport',
-          header: i18next.t('field.need_transport'),
+          name: 'receiver_contact_number',
+          header: i18next.t('field.receiver_contact_number'),
           record: {
             align: 'left'
           },
@@ -200,16 +177,6 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'receive_date',
-          header: i18next.t('field.receive_date'),
-          record: {
-            align: 'left'
-          },
-          sortable: true,
-          width: 120
-        },
-        {
-          type: 'string',
           name: 'reject_date',
           header: i18next.t('field.reject_date'),
           record: {
@@ -220,18 +187,8 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'fleet_no',
-          header: i18next.t('field.fleet_no'),
-          record: {
-            align: 'left'
-          },
-          sortable: true,
-          width: 120
-        },
-        {
-          type: 'string',
-          name: 'driver',
-          header: i18next.t('field.driver'),
+          name: 'receive_date',
+          header: i18next.t('field.receive_date'),
           record: {
             align: 'left'
           },
@@ -290,22 +247,24 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
         name: order.name,
         delivery_order_no: info.orderNo,
         status: order.state,
+        type: order.type,
+        contact_point: info.contactPoint,
+        release_date: info.releaseDate,
+        container_no: info.containerNo,
+        load_type: info.loadType,
+        arrival_date: info.arrivalDate,
+        departure_date: info.departureDate,
+        ship_name: info.shipName,
+        deliver_to: info.deliverTo,
+        transporter_name: info.transporterName,
+        driver_name: info.driverName,
+        reg_number: info.regNumber,
         reject_date: info.rejectedDate,
         request_date: info.requestedDate,
         confirm_date: info.confirmedDate,
         receive_date: info.receivedDate
       }
     })
-  }
-
-  async _rejectOrder() {
-    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
-    if (selectedOrder) {
-      await this._updateOrder(selectedOrder, false)
-      this.data = await this.getReleaseGoods()
-    } else {
-      this._notify(i18next.t('text.there_no_selected'))
-    }
   }
 
   async _confirmOrder() {
@@ -320,6 +279,16 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
 
   get _grist() {
     return this.shadowRoot.querySelector('data-grist')
+  }
+
+  async _rejectOrder() {
+    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
+    if (selectedOrder) {
+      await this._updateOrder(selectedOrder, false)
+      this.data = await this.getReleaseGoods()
+    } else {
+      this._notify(i18next.t('text.there_no_selected'))
+    }
   }
 
   async _deleteOrder(order) {
