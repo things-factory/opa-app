@@ -3,7 +3,7 @@ import { isMobileDevice } from '@things-factory/shell'
 export default function route(page) {
   switch (page) {
     case 'index':
-      return isMobileDevice() ? 'menu-list' : 'opa-home'
+      return isMobileDevice() ? '/menu-list' : '/opa-home'
 
     case 'system-menu':
       import('./pages/system/system-menu')
