@@ -5,7 +5,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '../styles'
 
-class ConfirmReleaseGoods extends localize(i18next)(PageView) {
+class ReceiveReleaseGoods extends localize(i18next)(PageView) {
   static get properties() {
     return {
       config: Object,
@@ -36,16 +36,8 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.confirm_release_goods'),
+      title: i18next.t('title.receive_release_goods'),
       actions: [
-        {
-          title: i18next.t('button.cancel'),
-          action: this._cancelOrder.bind(this)
-        },
-        {
-          title: i18next.t('button.reject'),
-          action: this._rejectOrder.bind(this)
-        },
         {
           title: i18next.t('button.confirm'),
           action: this._confirmOrder.bind(this)
@@ -286,20 +278,10 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
     })
   }
 
-  async _cancelOrder() {
-    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
-    if (selectedOrder) {
-      await this._deleteOrder(selectedOrder)
-      this.data = await this.getReleaseGoods()
-    } else {
-      this._notify(i18next.t('text.there_no_selected'))
-    }
-  }
-
   async _confirmOrder() {
     const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
     if (selectedOrder) {
-      await this._updateOrder(selectedOrder, true)
+      await this._updateOrder(selectedOrder)
       this.data = await this.getReleaseGoods()
     } else {
       this._notify(i18next.t('text.there_no_selected'))
@@ -310,35 +292,7 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  async _rejectOrder() {
-    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
-    if (selectedOrder) {
-      await this._updateOrder(selectedOrder, false)
-      this.data = await this.getReleaseGoods()
-    } else {
-      this._notify(i18next.t('text.there_no_selected'))
-    }
-  }
-
-  async _deleteOrder(order) {
-    try {
-      if (order.state.toLowerCase() !== 'pending') throw new Error('text.status_not_suitable')
-
-      await client.query({
-        query: gql`
-          mutation {
-            deleteDeliveryOrder(${gqlBuilder.buildArgs({ name: order.name })}) {
-              name
-            }
-          }
-        `
-      })
-    } catch (e) {
-      this._notify(e.message)
-    }
-  }
-
-  async _updateOrder(order, isConfirm) {
+  async _updateOrder(order) {
     try {
       if (order.state.toLowerCase() !== 'pending') throw new Error('text.status_not_suitable')
 
@@ -392,4 +346,4 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('confirm-release-goods', ConfirmReleaseGoods)
+window.customElements.define('receive-release-goods', ReceiveReleaseGoods)
