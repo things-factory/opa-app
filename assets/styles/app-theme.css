@@ -278,6 +278,7 @@ body {
   --profile-brand-width: 150px;
   --profile-brand-height: 45px;
   --profile-brand-padding: 30px auto 20px auto;
+  --profile-wrap-max-width: 550px;
 }
 
 @media only screen and (max-width: 460px) {
@@ -295,5 +296,7 @@ body {
     --context-toolbar-function-border-radius: 0;
     --context-toolbar-function-button-height: 50px;
     --context-toolbar-function-button-lineheight: 45px;
+
+    --profile-wrap-max-width: 85vw;
   }
 }
