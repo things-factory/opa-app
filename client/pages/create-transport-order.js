@@ -99,7 +99,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.load_type')}</label>
             <input name="load_type" />
 
-            <label>${i18next.t('label.from_warehouse')}</label>
+            
             <input
               name="from_warehouse"
               type="checkbox"
@@ -118,6 +118,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
                 this.productsData = { records: [] }
               }}"
             />
+            <label>${i18next.t('label.from_warehouse')}</label>
           </fieldset>
         </form>
       </div>
@@ -137,7 +138,6 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
           }}
           @record-change="${this._onProductChangeHandler.bind(this)}"
         ></data-grist>
-        <h2>${i18next.t('title.vas_request')}</h2>
 
         <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas_request')}</h2>
         <data-grist
