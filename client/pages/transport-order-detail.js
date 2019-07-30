@@ -200,7 +200,10 @@ class TransportOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           },
           width: 80
         }
-      ]
+      ],
+      pagination: {
+        infinite: true
+      }
     }
 
     this.servicesConfig = {
@@ -266,7 +269,10 @@ class TransportOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           },
           width: 100
         }
-      ]
+      ],
+      pagination: {
+        infinite: true
+      }
     }
   }
 

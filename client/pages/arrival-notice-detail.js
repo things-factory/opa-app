@@ -199,7 +199,10 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           },
           width: 80
         }
-      ]
+      ],
+      pagination: {
+        infinite: true
+      }
     }
 
     this.servicesConfig = {
@@ -266,7 +269,10 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           },
           width: 100
         }
-      ]
+      ],
+      pagination: {
+        infinite: true
+      }
     }
   }
 
