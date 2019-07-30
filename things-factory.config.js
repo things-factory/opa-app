@@ -81,6 +81,10 @@ export default {
       page: 'picking-by-unit'
     },
     {
+      tagname: 'receive-goods',
+      page: 'receive-goods'
+    },
+    {
       tagname: 'putaway-goods',
       page: 'putaway-goods'
     },

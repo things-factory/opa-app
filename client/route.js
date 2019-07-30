@@ -73,6 +73,10 @@ export default function route(page) {
       import('./pages/picking-by-unit')
       return page
 
+    case 'receive-goods':
+      import('./pages/receive-goods')
+      return page
+
     case 'putaway-goods':
       import('./pages/putaway-goods')
       return page
