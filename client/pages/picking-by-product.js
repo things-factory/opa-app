@@ -141,7 +141,7 @@ class PickingByProduct extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           name: 'button',
-          icon: 'delete'
+          icon: 'delete_outline'
         },
         {
           type: 'string',

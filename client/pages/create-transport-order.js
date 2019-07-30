@@ -173,7 +173,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           name: 'button',
-          icon: 'delete',
+          icon: 'delete_outline',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               this.productsData.records.splice(rowIndex, 1)
@@ -282,7 +282,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           name: 'button',
-          icon: 'delete',
+          icon: 'delete_outline',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               this.servicesData.records.splice(rowIndex, 1)

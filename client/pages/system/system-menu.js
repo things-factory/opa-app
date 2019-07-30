@@ -163,7 +163,7 @@ class SystemMenu extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           name: 'button',
-          icon: 'delete',
+          icon: 'delete_outline',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               this._deleteMenu(record.name)
@@ -173,7 +173,7 @@ class SystemMenu extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           name: 'button',
-          icon: 'info',
+          icon: 'info_outline',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               this._groupName = record.name
@@ -317,7 +317,7 @@ class SystemMenu extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           name: 'button',
-          icon: 'delete',
+          icon: 'delete_outline',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               this._deleteMenu(record.name)
@@ -327,7 +327,7 @@ class SystemMenu extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           name: 'button',
-          icon: 'info',
+          icon: 'info_outline',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               if (!record || !record.name) return
