@@ -63,6 +63,7 @@ body {
   --menu-tree-grouplevel-border-bottom: 1px solid rgba(0, 0, 0, 0.5);
   --menu-tree-grouplevel-active-border-left: 3px solid var(--primary-color);
   --menu-tree-focus-color: #fff;
+  --menu-tree-favorite-color: var(--menu-tree-toplevel-color);
 
   --context-toolbar-padding: 7px 15px 0 15px;
   --context-toolbar-function-border-radius: var(--border-radius);
@@ -188,6 +189,16 @@ body {
   --grist-object-editor-font: normal 1em var(--theme-font);
   --grist-object-editor-color: var(--secondary-color);
 
+  --data-list-background-color: var(--main-section-background-color);
+  --data-list-item-padding: 5px 15px;
+  --data-list-item-border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  --data-list-item-name-font: bold 1em/1em var(--theme-font);
+  --data-list-item-name-color: var(--secondary-color);
+  --data-list-item-disc-font: normal 0.8em/0.8em var(--theme-font);
+  --data-list-item-disc-color: var(--secondary-text-color);
+  --data-list-item-etc-font: normal 0.7em/0.7em var(--theme-font);
+  --data-list-item-etc-color: #585858;
+
   /* button style */
   --button-background-color: var(--secondary-color);
   --button-active-background-color: var(--primary-color);
@@ -198,6 +209,7 @@ body {
   --button-radius: 5px;
   --button-border: 1px solid transparent;
   --button-active-border: 1px solid rgba(0, 0, 0, 0.2);
+
   /* chart style */
 
   /* icon style */
