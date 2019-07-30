@@ -1,5 +1,5 @@
 import { localize, i18next } from '@things-factory/i18n-base'
-import { PageView, isMobileDevice, client, gqlBuilder } from '@things-factory/shell'
+import { PageView, isMobileDevice, client, gqlBuilder, navigate } from '@things-factory/shell'
 import { openPopup } from '@things-factory/layout-base'
 import gql from 'graphql-tag'
 import { html, css } from 'lit-element'
@@ -220,7 +220,10 @@ class SystemMenu extends localize(i18next)(PageView) {
           },
           width: 80
         }
-      ]
+      ],
+      pagination: {
+        infinite: true
+      }
     }
 
     this.screenConfig = {
@@ -331,7 +334,7 @@ class SystemMenu extends localize(i18next)(PageView) {
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               if (!record || !record.name) return
-              location.href = `system-menu-column/${record.name}`
+              navigate(`system-menu-column/${record.name}`)
             }
           }
         },
@@ -456,7 +459,10 @@ class SystemMenu extends localize(i18next)(PageView) {
           },
           width: 80
         }
-      ]
+      ],
+      pagination: {
+        infinite: true
+      }
     }
   }
 

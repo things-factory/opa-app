@@ -1,6 +1,6 @@
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, navigate } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '../styles'
@@ -326,18 +326,18 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     const before = e.detail.before
     const after = e.detail.after
 
+    let record = this.productsData.records[e.detail.row]
+    if (!record) {
+      record = { ...after }
+      this.productsData.records.push(record)
+    } else if (record !== after) {
+      record = Object.assign(record, after)
+    }
+
     if ((before.product && before.product.id) != (after.product && after.product.id)) {
       const productMaster = await this.getMasterInfo(after.product.id)
       const productUnit = productMaster.unit.split(' ')
 
-      let record = this.productsData.records[e.detail.row]
-
-      if (!record) {
-        record = {}
-        this.productsData.records.push(record)
-      }
-
-      record.product = after.product
       record.pack_in_qty = productUnit[0]
       record.unit = productUnit[1]
       record.description = productMaster.description
@@ -349,7 +349,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     }
 
     if (after.unit && before.pack_qty != after.pack_qty) {
-      this.productsData.records[e.detail.row].total_qty = after.pack_in_qty * after.pack_qty
+      record.total_qty = after.pack_in_qty * after.pack_qty
 
       this.productsData = {
         ...this.productsData,
@@ -362,17 +362,22 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     const before = e.detail.before
     const after = e.detail.after
 
+    let record = this.servicesData.records[e.detail.row]
+    if (!record) {
+      record = { ...after }
+      this.servicesData.records.push(record)
+    } else if (record !== after) {
+      Object.assign(record, after)
+    }
+
     if ((before.service && before.service.id) != (after.service && after.service.id)) {
       const serviceMaster = await this.getMasterInfo(after.service.id)
-
-      let record = this.servicesData.records[e.detail.row]
 
       if (!record) {
         record = {}
         this.servicesData.records.push(record)
       }
 
-      record.product = after.product
       record.unit = serviceMaster.unit
       record.unit_price = 5
       record.description = serviceMaster.description
@@ -384,7 +389,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     }
 
     if (after.unit_price && before.qty != after.qty) {
-      this.servicesData.records[e.detail.row].total_price = 'RM ' + after.unit_price * after.qty
+      record.total_price = 'RM ' + after.unit_price * after.qty
 
       this.servicesData = {
         ...this.servicesData,
@@ -441,7 +446,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         `
       })
 
-      location.href = 'confirm-arrival-notice'
+      navigate('confirm-arrival-notice')
     } catch (e) {
       this._notify(e.message)
     }

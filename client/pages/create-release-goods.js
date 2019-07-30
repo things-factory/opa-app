@@ -1,6 +1,7 @@
-import { i18next, localize } from '@things-factory/i18n-base'
-import { isMobileDevice, PageView } from '@things-factory/shell'
 import '@things-factory/grist-ui'
+import { i18next, localize } from '@things-factory/i18n-base'
+import { client, gqlBuilder, isMobileDevice, PageView, navigate } from '@things-factory/shell'
+import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '../styles'
 
@@ -80,6 +81,8 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
         <form class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.release_of_goods')}</legend>
+            <label>${i18next.t('label.delivery_order')}</label>
+          <input name="delivery_order" />
 
             <label>${i18next.t('label.receiver_contact_point')}</label>
             <input name="receiver_contact_point" />
@@ -88,44 +91,46 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
             <input name="receiver_contact_no" />
 
             <label>${i18next.t('label.release_date')}</label>
-            <input name="release_date" />
+            <input name="release_date" type="date" />
 
-            <input name="shipping_export" id="shipping-export" type="checkbox" />
+            <input name="shipping_export" id="shipping-export" type="checkbox" @change="${this._exportingChanged.bind(
+              this
+            )}" />
             <label>${i18next.t('label.shipping_export')}</label>
 
-            <label>${i18next.t('label.container_no')}</label>
-            <input name="container_no" />
+            <label class="exp-input" hidden>${i18next.t('label.container_no')}</label>
+            <input class="exp-input" name="container_no" hidden />
 
-            <label>${i18next.t('label.container_load_type')}</label>
-            <select name="container_load_type">
+            <label class="exp-input" hidden>${i18next.t('label.container_load_type')}</label>
+            <select name="container_load_type" class="exp-input" hidden>
               <option>FCL</option>
               <option>LCL</option>
               <option>40 ton</option>
             </select>
 
-            <label>${i18next.t('label.container_arrival_date')}</label>
-            <input name="container_arrival_date" type="date" />
+            <label class="exp-input" hidden>${i18next.t('label.container_arrival_date')}</label>
+            <input name="container_arrival_date" type="date" class="exp-input"  hidden />
 
-            <label>${i18next.t('label.container_leaving_date')}</label>
-            <input name="container_leaving_date" type="date" />
+            <label class="exp-input" hidden>${i18next.t('label.container_leaving_date')}</label>
+            <input name="container_leaving_date" type="date" class="exp-input" hidden />
 
-            <label>${i18next.t('label.ship_name')}</label>
-            <input name="ship_name" />
+            <label class="exp-input" hidden>${i18next.t('label.ship_name')}</label>
+            <input name="ship_name" class="exp-input" hidden />
 
-            <input name="need_transport" type="checkbox" />
+            <input name="need_transport" type="checkbox" checked @change="${this._needTrsptChanged.bind(this)}" />
             <label>${i18next.t('label.need_transport')}</label>
 
-            <label>${i18next.t('label.deliver_to')}</label>
-            <input name="deliver_to" />
+            <label class="trs-input" hidden>${i18next.t('label.deliver_to')}</label>
+            <input name="deliver_to" class="trs-input" hidden />
 
-            <label>${i18next.t('label.transporter_name')}</label>
-            <input name="transporter_name" />
+            <label class="trs-input" hidden>${i18next.t('label.transporter_name')}</label>
+            <input name="transporter_name" class="trs-input" hidden />
 
-            <label>${i18next.t('label.driver_name')}</label>
-            <input name="driver_name" />
+            <label class="trs-input" hidden>${i18next.t('label.driver_name')}</label>
+            <input name="driver_name" class="trs-input" hidden />
 
-            <label>${i18next.t('label.reg_number')}</label>
-            <input name="reg_number" />
+            <label class="trs-input" hidden>${i18next.t('label.reg_number')}</label>
+            <input name="reg_number" class="trs-input" hidden />
           </fieldset>
         </form>
       </div>
@@ -157,6 +162,9 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
   }
 
   firstUpdated() {
+    this.productsData = { records: [] }
+    this.servicesData = { records: [] }
+
     this.productsConfig = {
       pagination: {
         infinite: true
@@ -205,8 +213,8 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'packing_type',
-          header: i18next.t('field.packing_type'),
+          name: 'unit',
+          header: i18next.t('field.unit'),
           record: {
             align: 'center'
           },
@@ -214,12 +222,22 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'pack_qty',
-          header: i18next.t('field.pack_qty'),
+          name: 'pack_in_qty',
+          header: i18next.t('field.pack_in_qty'),
           record: {
             align: 'center'
           },
           width: 120
+        },
+        {
+          type: 'float',
+          name: 'pack_qty',
+          header: i18next.t('field.qty'),
+          record: {
+            align: 'right',
+            editable: true
+          },
+          width: 80
         },
         {
           type: 'string',
@@ -229,20 +247,24 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
             align: 'center'
           },
           width: 120
-        },
-        {
-          type: 'string',
-          name: 'batch_no',
-          header: i18next.t('field.batch_no'),
-          record: {
-            align: 'center'
-          },
-          width: 120
         }
+        // ,
+        // {
+        //   type: 'string',
+        //   name: 'batch_no',
+        //   header: i18next.t('field.batch_no'),
+        //   record: {
+        //     align: 'center'
+        //   },
+        //   width: 120
+        // }
       ]
     }
 
     this.servicesConfig = {
+      pagination: {
+        infinite: true
+      },
       columns: [
         {
           type: 'gutter',
@@ -274,24 +296,24 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
               queryName: 'ownerProducts'
             }
           },
-          width: 120
+          width: 250
         },
         {
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
           record: {
-            align: 'left'
+            align: 'left',
+            editable: true
           },
           width: 200
         },
         {
-          type: 'select',
+          type: 'string',
           name: 'unit',
           header: i18next.t('field.unit'),
           record: {
-            align: 'center',
-            options: [i18next.t('label.pallet'), i18next.t('label.box'), i18next.t('label.container')]
+            align: 'center'
           },
           width: 120
         },
@@ -305,11 +327,12 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
           width: 100
         },
         {
-          type: 'number',
+          type: 'float',
           name: 'qty',
           header: i18next.t('field.qty'),
           record: {
-            align: 'right'
+            align: 'right',
+            editable: true
           },
           width: 100
         },
@@ -334,9 +357,16 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
       const productMaster = await this.getMasterInfo(after.product.id)
       const productUnit = productMaster.unit.split(' ')
 
-      this.productsData.records[e.detail.row].pack_in_qty = productUnit[0]
-      this.productsData.records[e.detail.row].unit = productUnit[1]
-      this.productsData.records[e.detail.row].description = productMaster.description
+      let record = this.productsData.records[e.detail.row]
+
+      if (!record) {
+        record = {}
+        this.productsData.records.push(record)
+      }
+
+      record.pack_in_qty = productUnit[0]
+      record.unit = productUnit[1]
+      record.description = productMaster.description
 
       this.productsData = {
         ...this.productsData,
@@ -361,9 +391,16 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
     if ((before.service && before.service.id) != (after.service && after.service.id)) {
       const serviceMaster = await this.getMasterInfo(after.service.id)
 
-      this.servicesData.records[e.detail.row].unit = serviceMaster.unit
-      this.servicesData.records[e.detail.row].unit_price = 5
-      this.servicesData.records[e.detail.row].description = serviceMaster.description
+      let record = this.servicesData.records[e.detail.row]
+
+      if (!record) {
+        record = {}
+        this.servicesData.records.push(record)
+      }
+
+      record.unit = serviceMaster.unit
+      record.unit_price = 5
+      record.description = serviceMaster.description
 
       this.servicesData = {
         ...this.servicesData,
@@ -379,6 +416,24 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
         records: [...this.servicesData.records]
       }
     }
+  }
+
+  async getMasterInfo(id) {
+    const response = await client.query({
+      query: gql`
+        query {
+          product: productById(${gqlBuilder.buildArgs({ id })}) {
+            id
+            name
+            yourName
+            description
+            unit
+          }
+        }
+      `
+    })
+
+    return response.data.product
   }
 
   async createReleaseOfGoods() {
@@ -421,7 +476,7 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
         `
       })
 
-      location.href = 'confirm-release-of-goods'
+      navigate('confirm-release-goods')
     } catch (e) {
       alert(e.message)
     }
@@ -436,9 +491,13 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
     }
   }
 
+  _getServices() {
+    return this.shadowRoot.querySelector('#services').dirtyRecords
+  }
+
   getOrderInfo() {
     const orderInfo = {}
-    const inputs = Array.from(this.shadowRoot.querySelectorAll('form input'))
+    const inputs = Array.from(this.shadowRoot.querySelectorAll('form input')).filter(input => !input.hidden)
     inputs
       .filter(input => input.value)
       .forEach(input => {
@@ -457,13 +516,53 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
   }
 
   _generateSO() {
-    // check wheter it's so or not
-    const shippingBoolean = this.shadowRoot.querySelector('#shipping-export').checked
-    if (shippingBoolean == 'TRUE') {
+    if (this.shadowRoot.querySelector('#shipping-export').checked) {
       return `SO-${new Date().getTime().toString()}`
     } else {
       return ''
     }
+  }
+
+  _needTrsptChanged(e) {
+    const isNeedTransport = e.currentTarget.checked
+    if (isNeedTransport) {
+      this._hideTransportInputs()
+    } else {
+      this._showTransportInputs()
+    }
+  }
+
+  _exportingChanged(e) {
+    const isExporting = e.currentTarget.checked
+    if (isExporting) {
+      this._showExportingInputs()
+    } else {
+      this._hideExportingInputs()
+    }
+  }
+
+  _showTransportInputs() {
+    this._transportElements.forEach(el => (el.hidden = false))
+  }
+
+  _hideTransportInputs() {
+    this._transportElements.forEach(el => (el.hidden = true))
+  }
+
+  _showExportingInputs() {
+    this._exportElements.forEach(el => (el.hidden = false))
+  }
+
+  _hideExportingInputs() {
+    this._exportElements.forEach(el => (el.hidden = true))
+  }
+
+  get _exportElements() {
+    return Array.from(this.shadowRoot.querySelectorAll('.exp-input'))
+  }
+
+  get _transportElements() {
+    return Array.from(this.shadowRoot.querySelectorAll('.trs-input'))
   }
 }
 

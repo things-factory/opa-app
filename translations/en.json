@@ -143,7 +143,7 @@
   "field.currency": "currency",
   "field.expires_on": "expires on",
   "field.total_price": "total price",
-  "field.vat":"vat",
+  "field.vat": "vat",
   "field.request_date": "request date",
   "field.delivery_order": "delivery order",
   "field.transport_vehicle": "transport vehicle",
@@ -168,12 +168,6 @@
   "text.form_is_not_completed": "form is not completed",
   "text.putaway_is_done": "putaway is done",
   "text.order_is_ready_for_putaway": "order is ready for putaway",
-  "text.vehicle_or_driver_not_selected": "vehicle or driver not selected"
-
-
-
-
-
-
-
+  "text.vehicle_or_driver_not_selected": "vehicle or driver not selected",
+  "label.delivery_order": "delivery order"
 }
