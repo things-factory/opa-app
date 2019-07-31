@@ -1,5 +1,5 @@
 import { addRoutingType, updateMenuProvider } from '@things-factory/menu-base'
-import { store, UPDATE_BASE_URL, UPDATE_DEFAULT_ROUTE_PAGE, isMobileDevice } from '@things-factory/shell'
+import { store, UPDATE_BASE_URL } from '@things-factory/shell'
 
 import { menuProvider } from './providers/menu-provider'
 
@@ -16,15 +16,6 @@ export default function bootstrap() {
   store.dispatch({
     type: UPDATE_BASE_URL
     // baseUrl: 'http://opaone.com'
-  })
-
-  /*
-   * default page를 설정함.
-   * signin 후에 자동으로 이동되는 페이지임.
-   */
-  store.dispatch({
-    type: UPDATE_DEFAULT_ROUTE_PAGE,
-    defaultRoutePage: ''
   })
 
   /*
