@@ -24,7 +24,7 @@ export default function bootstrap() {
    */
   store.dispatch({
     type: UPDATE_DEFAULT_ROUTE_PAGE,
-    defaultRoutePage: 'index'
+    defaultRoutePage: ''
   })
 
   /*
