@@ -4,7 +4,7 @@ import { openPopup } from '@things-factory/layout-base'
 import gql from 'graphql-tag'
 import { html, css } from 'lit-element'
 import '@things-factory/grist-ui'
-import { MultiColumnFormStyles } from '../../styles'
+import { MultiColumnFormStyles } from '@things-factory/form-ui'
 
 class SystemMenu extends localize(i18next)(PageView) {
   static get properties() {

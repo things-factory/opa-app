@@ -3,7 +3,7 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { isMobileDevice, PageView } from '@things-factory/shell'
 import '@things-factory/grist-ui'
 import { css, html } from 'lit-element'
-import { SearchFormStyles } from '../styles'
+import { SearchFormStyles } from '@things-factory/form-ui'
 
 class ReceiveShippingNotice extends localize(i18next)(PageView) {
   static get properties() {

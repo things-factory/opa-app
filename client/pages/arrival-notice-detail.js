@@ -4,7 +4,7 @@ import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-fac
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { MultiColumnFormStyles } from '../styles'
+import { MultiColumnFormStyles } from '@things-factory/form-ui'
 
 class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {

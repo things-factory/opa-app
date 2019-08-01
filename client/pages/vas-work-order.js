@@ -4,7 +4,7 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { MultiColumnFormStyles } from '../styles'
+import { MultiColumnFormStyles } from '@things-factory/form-ui'
 
 class VasWorkOrder extends localize(i18next)(PageView) {
   static get properties() {

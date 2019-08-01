@@ -1,7 +1,7 @@
 import { i18next, localize } from '@things-factory/i18n-base'
 import { PageView } from '@things-factory/shell'
 import { css, html } from 'lit-element'
-import { SingleColumnFormStyles } from '../styles'
+import { SingleColumnFormStyles } from '@things-factory/form-ui'
 
 class CompanyProfile extends localize(i18next)(PageView) {
   get context() {

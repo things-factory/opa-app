@@ -2,7 +2,9 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { isMobileDevice, PageView } from '@things-factory/shell'
 import '@things-factory/grist-ui'
 import { css, html } from 'lit-element'
-import { MultiColumnFormStyles } from '../styles'
+import { MultiColumnFormStyles } from '@things-factory/form-ui'
+
+import '@things-factory/barcode-ui'
 
 class PickingByProduct extends localize(i18next)(PageView) {
   static get properties() {
@@ -10,7 +12,8 @@ class PickingByProduct extends localize(i18next)(PageView) {
       productsConfig: Object,
       servicesConfig: Object,
       productsData: Object,
-      servicesData: Object
+      servicesData: Object,
+      product_barcode: String
     }
   }
 
@@ -109,10 +112,15 @@ class PickingByProduct extends localize(i18next)(PageView) {
         <fieldset>
           <legend>${i18next.t('title.picking_by_unit_scan_area')}</legend>
           <label>${i18next.t('label.product_barcode')}</label>
-          <input name="product_barcode" />
+          <barcode-input
+            name="product_barcode"
+            .bcid="qrcode"
+            .value=${this.product_barcode}
+            custom-input
+          ></barcode-input>
 
           <label>${i18next.t('label.location')}</label>
-          <input name="location" />
+          <barcode-input name="location" .bcid="qrcode" .value=${this.product_barcode} custom-input />
         </fieldset>
       </form>
 
