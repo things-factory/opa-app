@@ -168,11 +168,11 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
       columns: [
         {
           type: 'gutter',
-          name: 'sequence'
+          gutterName: 'sequence'
         },
         {
           type: 'gutter',
-          name: 'button',
+          gutterName: 'button',
           icon: 'delete_outline',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
@@ -277,11 +277,11 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
       columns: [
         {
           type: 'gutter',
-          name: 'sequence'
+          gutterName: 'sequence'
         },
         {
           type: 'gutter',
-          name: 'button',
+          gutterName: 'button',
           icon: 'delete_outline',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
@@ -359,7 +359,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
   }
 
   async _onProductChangeHandler(e) {
-    const before = e.detail.before
+    const before = e.detail.before || {}
     const after = e.detail.after
     const needObjValue = this.shadowRoot.querySelector('input[name=from_warehouse]').checked
 
@@ -388,7 +388,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
   }
 
   async _onServiceChangeHandler(e) {
-    const before = e.detail.before
+    const before = e.detail.before || {}
     const after = e.detail.after
 
     if ((before.service && before.service.id) != (after.service && after.service.id)) {

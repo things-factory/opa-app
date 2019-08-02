@@ -148,7 +148,7 @@ class ReleaseGoodsDetail extends connect(store)(localize(i18next)(PageView)) {
       columns: [
         {
           type: 'gutter',
-          name: 'sequence'
+          gutterName: 'sequence'
         },
         {
           type: 'object',
@@ -236,7 +236,7 @@ class ReleaseGoodsDetail extends connect(store)(localize(i18next)(PageView)) {
       columns: [
         {
           type: 'gutter',
-          name: 'sequence'
+          gutterName: 'sequence'
         },
         {
           type: 'object',

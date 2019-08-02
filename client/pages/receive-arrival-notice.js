@@ -119,15 +119,15 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       columns: [
         {
           type: 'gutter',
-          name: 'sequence'
+          gutterName: 'sequence'
         },
         {
           type: 'gutter',
-          name: 'row-selector'
+          gutterName: 'row-selector'
         },
         {
           type: 'gutter',
-          name: 'button',
+          gutterName: 'button',
           icon: 'search',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {

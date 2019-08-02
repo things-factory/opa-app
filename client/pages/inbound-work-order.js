@@ -149,7 +149,7 @@ class InboundWorkOrder extends localize(i18next)(PageView) {
       columns: [
         {
           type: 'gutter',
-          name: 'sequence'
+          gutterName: 'sequence'
         },
         {
           type: 'object',
@@ -224,7 +224,7 @@ class InboundWorkOrder extends localize(i18next)(PageView) {
       columns: [
         {
           type: 'gutter',
-          name: 'sequence'
+          gutterName: 'sequence'
         },
         {
           type: 'object',

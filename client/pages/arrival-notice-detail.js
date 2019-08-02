@@ -121,7 +121,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
       columns: [
         {
           type: 'gutter',
-          name: 'sequence'
+          gutterName: 'sequence'
         },
         {
           type: 'object',
@@ -209,7 +209,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
       columns: [
         {
           type: 'gutter',
-          name: 'sequence'
+          gutterName: 'sequence'
         },
         {
           type: 'object',

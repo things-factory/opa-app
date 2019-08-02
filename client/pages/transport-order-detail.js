@@ -126,7 +126,7 @@ class TransportOrderDetail extends connect(store)(localize(i18next)(PageView)) {
       columns: [
         {
           type: 'gutter',
-          name: 'sequence'
+          gutterName: 'sequence'
         },
         {
           type: 'string',
@@ -210,7 +210,7 @@ class TransportOrderDetail extends connect(store)(localize(i18next)(PageView)) {
       columns: [
         {
           type: 'gutter',
-          name: 'sequence'
+          gutterName: 'sequence'
         },
         {
           type: 'object',

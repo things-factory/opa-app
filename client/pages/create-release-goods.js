@@ -172,11 +172,11 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
       columns: [
         {
           type: 'gutter',
-          name: 'sequence'
+          gutterName: 'sequence'
         },
         {
           type: 'gutter',
-          name: 'button',
+          gutterName: 'button',
           icon: 'delete_outline',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
@@ -268,11 +268,11 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
       columns: [
         {
           type: 'gutter',
-          name: 'sequence'
+          gutterName: 'sequence'
         },
         {
           type: 'gutter',
-          name: 'button',
+          gutterName: 'button',
           icon: 'delete_outline',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
@@ -350,7 +350,7 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
   }
 
   async _onProductChangeHandler(e) {
-    const before = e.detail.before
+    const before = e.detail.before || {}
     const after = e.detail.after
 
     if ((before.product && before.product.id) != (after.product && after.product.id)) {
@@ -385,7 +385,7 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
   }
 
   async _onServiceChangeHandler(e) {
-    const before = e.detail.before
+    const before = e.detail.before || {}
     const after = e.detail.after
 
     if ((before.service && before.service.id) != (after.service && after.service.id)) {

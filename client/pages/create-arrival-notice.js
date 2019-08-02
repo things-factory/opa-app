@@ -134,11 +134,11 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       columns: [
         {
           type: 'gutter',
-          name: 'sequence'
+          gutterName: 'sequence'
         },
         {
           type: 'gutter',
-          name: 'button',
+          gutterName: 'button',
           icon: 'delete_outline',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
@@ -241,11 +241,11 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       columns: [
         {
           type: 'gutter',
-          name: 'sequence'
+          gutterName: 'sequence'
         },
         {
           type: 'gutter',
-          name: 'button',
+          gutterName: 'button',
           icon: 'delete_outline',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
@@ -323,7 +323,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   async _onProductChangeHandler(e) {
-    const before = e.detail.before
+    const before = e.detail.before || {}
     const after = e.detail.after
 
     let record = this.productsData.records[e.detail.row]
@@ -359,7 +359,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   async _onServiceChangeHandler(e) {
-    const before = e.detail.before
+    const before = e.detail.before || {}
     const after = e.detail.after
 
     let record = this.servicesData.records[e.detail.row]

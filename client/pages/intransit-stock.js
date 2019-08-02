@@ -78,9 +78,9 @@ class IntransitStock extends localize(i18next)(PageView) {
   async firstUpdated() {
     this.config = {
       columns: [
-        { type: 'gutter', name: 'dirty' },
-        { type: 'gutter', name: 'sequence' },
-        { type: 'gutter', name: 'button', icon: 'edit' },
+        { type: 'gutter', gutterName: 'dirty' },
+        { type: 'gutter', gutterName: 'sequence' },
+        { type: 'gutter', gutterName: 'button', icon: 'edit' },
         {
           name: 'name',
           type: 'string',

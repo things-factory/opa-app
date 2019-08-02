@@ -132,11 +132,11 @@ class PutawayGoods extends localize(i18next)(PageView) {
       columns: [
         {
           type: 'gutter',
-          name: 'sequence'
+          gutterName: 'sequence'
         },
         {
           type: 'gutter',
-          name: 'button',
+          gutterName: 'button',
           icon: 'check',
           handlers: {
             dblclick: async (columns, data, column, record, rowIndex) => {
