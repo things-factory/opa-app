@@ -29,6 +29,10 @@ export default function route(page) {
       import('./pages/company-profile')
       return page
 
+    case 'company-list':
+      import('./pages/company-list')
+      return page
+
     case 'confirm-arrival-notice':
       import('./pages/confirm-arrival-notice')
       return page

@@ -29,6 +29,10 @@ export default {
       page: 'company-profile'
     },
     {
+      tagname: 'company-list',
+      page: 'company-list'
+    },
+    {
       tagname: 'confirm-arrival-notice',
       page: 'confirm-arrival-notice'
     },
