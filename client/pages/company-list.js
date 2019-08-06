@@ -2,10 +2,9 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { getColumns } from '@things-factory/resource-base'
-import { client, gqlBuilder, PageView, ScrollbarStyles, isMobileDevice } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import '@things-factory/resource-ui/client/data-grist/wrapper/data-list-wrapper'
 
 class CompanyList extends localize(i18next)(PageView) {
   static get styles() {
@@ -22,11 +21,14 @@ class CompanyList extends localize(i18next)(PageView) {
         search-form {
           overflow: visible;
         }
-
-        data-list-wrapper {
+        .grist {
+          display: flex;
+          flex-direction: column;
           flex: 1;
-
-          overflow: hidden;
+        }
+        data-grist {
+          overflow-y: hidden;
+          flex: 1;
         }
       `
     ]
@@ -34,45 +36,9 @@ class CompanyList extends localize(i18next)(PageView) {
 
   static get properties() {
     return {
-      items: Array,
-      _columns: Array,
-      _searchFields: Array
-    }
-  }
-
-  async activated(active) {
-    if (active) {
-      const response = await getColumns('Company')
-      const metaData = response.menu
-
-      this._searchFields = metaData.columns
-        .filter(field => field.searchRank && field.searchRank > 0)
-        .sort((a, b) => (a['searchRank'] > b['searchRank'] ? 1 : -1))
-        .map(field => {
-          return {
-            name: field.name,
-            type: field.searchEditor ? field.searchEditor : 'text',
-            props: {
-              min: field.rangeVal ? field.rangeVal.split(',')[0] : null,
-              max: field.rangeVal ? field.rangeVal.split(',')[1] : null,
-              searchOper: field.searchOper ? field.searchOper : 'eq',
-              placeholder: field.term
-            },
-            value: field.searchInitVal
-          }
-        })
-
-      this._columns = metaData.columns
-        .filter(column => column.gridRank > 0)
-        .map(column => {
-          column.term = i18next.t(column.term)
-          return column
-        })
-        .sort((a, b) => {
-          return a['gridRank'] > b['gridRank'] ? 1 : -1
-        })
-
-      this.fetchHandler()
+      _searchFields: Array,
+      config: Object,
+      data: Object
     }
   }
 
@@ -82,24 +48,142 @@ class CompanyList extends localize(i18next)(PageView) {
         id="search-form"
         .fields=${this._searchFields}
         initFocus="description"
-        @submit=${this._getCompanies}
+        @submit=${async () => {
+          const { records, total } = await this._getCompanies()
+          this.data = {
+            records,
+            total
+          }
+        }}
       ></search-form>
 
-      <data-list-wrapper
-        pulltorefresh
-        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-        .columns=${this._columns}
-        .records=${this.items}
-        .fetchHandler=${this.fetchHandler.bind(this)}
-      >
-      </data-list-wrapper>
+      <div class="grist">
+        <data-grist
+          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+          .config=${this.config}
+          .data=${this.data}
+          @page-changed=${e => {
+            this.page = e.detail
+          }}
+          @limit-changed=${e => {
+            this.limit = e.detail
+          }}
+        ></data-grist>
+      </div>
     `
   }
 
   get context() {
     return {
-      title: i18next.t('title.company')
+      title: i18next.t('title.company'),
+      actions: [
+        {
+          title: 'add',
+          action: () => {
+            console.log('this is add action')
+          }
+        },
+        {
+          title: 'save',
+          action: () => {
+            console.log('this is save action')
+          }
+        },
+        {
+          title: 'delete',
+          action: () => {
+            console.log('this is delete action')
+          }
+        }
+      ]
     }
+  }
+
+  async firstUpdated() {
+    this.config = {
+      pagination: {
+        infinite: true
+      },
+      columns: [
+        {
+          type: 'gutter',
+          gutterName: 'sequence'
+        },
+        {
+          type: 'gutter',
+          gutterName: 'row-selector',
+          multiple: false
+        },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'search',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              const selectedOrder = this.rawOrderData.find(orderData => orderData.name === record.name)
+              navigate(`company-list/${selectedOrder.resourceId}`)
+            }
+          }
+        }
+      ]
+    }
+  }
+
+  async activated(active) {
+    if (active) {
+      const response = await getColumns('Company')
+      this._searchFields = this._modifySearchFields(response.menu.columns)
+
+      this.config = {
+        ...this.config,
+        columns: [...this.config.columns, ...this._modifyGridFields(response.menu.columns)]
+      }
+
+      const { records, total } = await this._getCompanies()
+      this.data = {
+        records,
+        total
+      }
+    }
+  }
+
+  _modifySearchFields(columns) {
+    return columns
+      .filter(field => field.searchRank && field.searchRank > 0)
+      .sort((a, b) => a.searchRank - b.searchRank)
+      .map(field => {
+        return {
+          name: field.name,
+          type: field.searchEditor ? field.searchEditor : 'text',
+          props: {
+            min: field.rangeVal ? field.rangeVal.split(',')[0] : null,
+            max: field.rangeVal ? field.rangeVal.split(',')[1] : null,
+            searchOper: field.searchOper ? field.searchOper : 'eq',
+            placeholder: i18next.t(field.term)
+          },
+          value: field.searchInitVal
+        }
+      })
+  }
+
+  _modifyGridFields(columns) {
+    return columns
+      .filter(column => column.gridRank && column.gridRank > 0)
+      .sort((a, b) => a.gridRank - b.gridRank)
+      .map(column => {
+        const type = column.refType == 'Entity' || column.refType == 'Menu' ? 'object' : column.colType
+        return {
+          type,
+          name: column.name,
+          header: i18next.t(column.term),
+          record: {
+            editable: column.gridEditor !== 'readonly',
+            align: column.gridAlign || 'left'
+          },
+          sortable: true,
+          width: column.gridWidth || 100
+        }
+      })
   }
 
   get searchForm() {
@@ -123,9 +207,7 @@ class CompanyList extends localize(i18next)(PageView) {
     return conditions
   }
 
-  async fetchHandler() {
-    this.columns = []
-
+  async _getCompanies() {
     const response = await client.query({
       query: gql`
         query {
@@ -134,14 +216,23 @@ class CompanyList extends localize(i18next)(PageView) {
           })}) {
             items {
               name
+              description
+              countryCode
+              brn
+              address
+              state
+              updatedAt
+              updater{
+                id
+                name
+                description
+              }
             }
             total
           }
         }
       `
     })
-
-    this.searchForm.form.reset()
 
     return {
       total: response.data.companies.total || 0,
