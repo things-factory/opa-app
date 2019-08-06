@@ -199,20 +199,8 @@ class BizplaceList extends localize(i18next)(PageView) {
             filters: []
           })}) {
             items {
-              domain {
-                id
-                name
-                description
-              }
-              contactPoints {
-                id
-                name
-                description
-              }
               company {
-                id
                 name
-                description
               }
               name
               description
