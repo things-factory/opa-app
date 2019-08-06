@@ -132,11 +132,12 @@ class CompanyList extends localize(i18next)(PageView) {
   async activated(active) {
     if (active) {
       const response = await getColumns('Company')
-      this._searchFields = this._modifySearchFields(response.menu.columns)
+      this._columns = response.menu.columns
+      this._searchFields = this._modifySearchFields(this._columns)
 
       this.config = {
         ...this.config,
-        columns: [...this.config.columns, ...this._modifyGridFields(response.menu.columns)]
+        columns: [...this.config.columns, ...this._modifyGridFields(this._columns)]
       }
 
       const { records, total } = await this._getCompanies()
@@ -220,7 +221,7 @@ class CompanyList extends localize(i18next)(PageView) {
               countryCode
               brn
               address
-              state
+              status
               updatedAt
               updater{
                 id
