@@ -131,6 +131,10 @@ export default {
     {
       tagname: 'intransit-stock',
       page: 'intransit-stock'
+    },
+    {
+      tagname: 'system-domain',
+      page: 'system-domain'
     }
   ],
   bootstrap

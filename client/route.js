@@ -124,5 +124,9 @@ export default function route(page) {
     case 'intransit-stock':
       import('./pages/intransit-stock')
       return page
+
+    case 'system-domain':
+      import('./pages/system/system-domain')
+      return page
   }
 }
