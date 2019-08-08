@@ -196,7 +196,7 @@ class BizplaceList extends localize(i18next)(PageView) {
       query: gql`
         query {
           bizplaces(${gqlBuilder.buildArgs({
-            filters: []
+            filters: this._conditionParser()
           })}) {
             items {
               company {
@@ -224,6 +224,24 @@ class BizplaceList extends localize(i18next)(PageView) {
       total: response.data.bizplaces.total || 0,
       records: response.data.bizplaces.items || []
     }
+  }
+
+  _conditionParser() {
+    const fields = this.searchForm.getFields()
+    const conditionFields = fields.filter(
+      field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox'
+    )
+    const conditions = []
+
+    conditionFields.forEach(field => {
+      conditions.push({
+        name: field.name,
+        value: field.type === 'text' ? field.value : field.type === 'checkbox' ? field.checked : field.value,
+        operator: field.getAttribute('searchOper'),
+        dataType: field.type === 'text' ? 'string' : field.type === 'number' ? 'float' : 'boolean'
+      })
+    })
+    return conditions
   }
 }
 
