@@ -44,7 +44,6 @@
     "@things-factory/print-proxy-service": "^1.0.0-beta",
     "@things-factory/print-service": "^1.0.0-beta",
     "@things-factory/print-ui": "*",
-    "@things-factory/product-base": "*",
     "@things-factory/resource-ui": "*",
     "@things-factory/sales-base": "*",
     "@things-factory/setting-ui": "*",

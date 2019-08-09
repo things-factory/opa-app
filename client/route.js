@@ -5,6 +5,10 @@ export default function route(page) {
     case '':
       return isMobileDevice() ? '/menu-list' : '/board-viewer/872a1e69-7acb-45a1-a914-87dfb0d295b4' //'/opa-home'
 
+    case 'system-user':
+      import('./pages/system/system-user')
+      return page
+
     case 'system-menu':
       import('./pages/system/system-menu')
       return page

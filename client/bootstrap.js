@@ -1,7 +1,5 @@
-import { addRoutingType, updateMenuProvider } from '@things-factory/menu-base'
+import { addRoutingType } from '@things-factory/menu-base'
 import { store, UPDATE_BASE_URL } from '@things-factory/shell'
-
-import { menuProvider } from './providers/menu-provider'
 
 export default function bootstrap() {
   /*
@@ -17,9 +15,4 @@ export default function bootstrap() {
     type: UPDATE_BASE_URL
     // baseUrl: 'http://opaone.com'
   })
-
-  /*
-   * menuProvider를 등록함. (임시, 데모용임)
-   */
-  store.dispatch(updateMenuProvider(menuProvider))
 }

@@ -17,6 +17,10 @@ export default {
       page: 'opa-home'
     },
     {
+      tagname: 'system-user',
+      page: 'system-user'
+    },
+    {
       tagname: 'create-arrival-notice',
       page: 'create-arrival-notice'
     },
