@@ -1,8 +1,8 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { getColumns } from '@things-factory/resource-base'
 import { client, isMobileDevice, PageView } from '@things-factory/shell'
+import { openPopup } from '@things-factory/layout-base'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 
@@ -87,13 +87,21 @@ class SystemDomain extends localize(i18next)(PageView) {
   }
 
   async firstUpdated() {
-    const re = await getColumns('Company')
-    console.log(re)
     this.config = {
       pagination: {
         infinite: true
       },
       columns: [
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'delete_outline',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              this._deleteSystemDomain(record.name)
+            }
+          }
+        },
         {
           type: 'string',
           name: 'name',
@@ -195,7 +203,6 @@ class SystemDomain extends localize(i18next)(PageView) {
         query {
           domains {
             items {
-              id
               name
               description
               timezone
@@ -221,13 +228,16 @@ class SystemDomain extends localize(i18next)(PageView) {
     }
   }
 
-  async _saveSystemDomain() {}
-
-  async _updateOrder() {}
-
-  _getGrist() {
-    return this.shadowRoot.querySelector('data-grist')
+  async _saveSystemDomain() {
+    try {
+      //그리드 데이터  update / create
+    } catch (e) {
+      this._notify(e.message)
+    }
   }
+
+  async _updateSystemDomain() {}
+  async _deleteSystemDomain() {}
 
   _notify(message, level = '') {
     document.dispatchEvent(
