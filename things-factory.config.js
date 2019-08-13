@@ -29,16 +29,16 @@ export default {
       page: 'arrival-notice-detail'
     },
     {
-      tagname: 'bizplace-list',
-      page: 'bizplace-list'
-    },
-    {
       tagname: 'company-profile',
       page: 'company-profile'
     },
     {
       tagname: 'company-list',
       page: 'company-list'
+    },
+    {
+      tagname: 'bizplace-list',
+      page: 'bizplace-list'
     },
     {
       tagname: 'confirm-arrival-notice',
