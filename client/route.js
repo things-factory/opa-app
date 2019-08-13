@@ -29,16 +29,16 @@ export default function route(page) {
       import('./pages/arrival-notice-detail')
       return page
 
-    case 'bizplace-list':
-      import('./pages/bizplace-list')
-      return page
-
     case 'company-profile':
       import('./pages/company-profile')
       return page
 
     case 'company-list':
       import('./pages/company-list')
+      return page
+
+    case 'bizplace-list':
+      import('./pages/bizplace-list')
       return page
 
     case 'confirm-arrival-notice':

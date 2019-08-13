@@ -4,7 +4,9 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { getColumns } from '@things-factory/resource-base'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
+import { openPopup } from '@things-factory/layout-base'
 import { css, html } from 'lit-element'
+import './contact-point-list'
 
 class BizplaceList extends localize(i18next)(PageView) {
   static get styles() {
@@ -38,7 +40,10 @@ class BizplaceList extends localize(i18next)(PageView) {
     return {
       _searchFields: Array,
       config: Object,
-      data: Object
+      data: Object,
+      backdrop: Boolean,
+      direction: String,
+      hovering: String
     }
   }
 
@@ -120,8 +125,7 @@ class BizplaceList extends localize(i18next)(PageView) {
           icon: 'search',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              const selectedOrder = this.rawOrderData.find(orderData => orderData.name === record.name)
-              navigate(`bizplace-list/${selectedOrder.resourceId}`)
+              this._openContactPoints(record.id, record.name)
             }
           }
         }
@@ -199,6 +203,7 @@ class BizplaceList extends localize(i18next)(PageView) {
             filters: this._conditionParser()
           })}) {
             items {
+              id
               company {
                 name
               }
@@ -224,6 +229,16 @@ class BizplaceList extends localize(i18next)(PageView) {
       total: response.data.bizplaces.total || 0,
       records: response.data.bizplaces.items || []
     }
+  }
+
+  _openContactPoints(bizplaceId, bizplaceName) {
+    openPopup(html`
+      <contact-point-list
+        style="height: 400px;"
+        .bizplaceId="${bizplaceId}"
+        .bizplaceName="${bizplaceName}"
+      ></contact-point-list>
+    `)
   }
 
   _conditionParser() {
