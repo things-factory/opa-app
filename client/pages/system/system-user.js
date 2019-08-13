@@ -1,4 +1,5 @@
 import { i18next, localize } from '@things-factory/i18n-base'
+import { openPopup } from '@things-factory/layout-base'
 import {
   client,
   gqlBuilder,
@@ -10,10 +11,12 @@ import {
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '@things-factory/grist-ui'
+import './system-user-detail'
 
 class SystemUser extends localize(i18next)(PageView) {
   static get properties() {
     return {
+      active: String,
       _searchFields: Array,
       _fields: Array,
       config: Object,
@@ -55,7 +58,9 @@ class SystemUser extends localize(i18next)(PageView) {
         id="search-form"
         .fields="${this._searchFields}"
         initFocus="description"
-        @submit="${this.getUsers}"
+        @submit="${async () => {
+          this.data = await this.getUsers()
+        }}"
       ></search-form>
 
       <data-grist
@@ -124,6 +129,27 @@ class SystemUser extends localize(i18next)(PageView) {
 
     this.config = {
       columns: [
+        {
+          type: 'gutter',
+          gutterName: 'sequence'
+        },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'reorder',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              openPopup(
+                html`
+                  <system-user-detail .email="${record.email}" style="width: 90vw; height: 70vh;"></system-user>
+                `,
+                {
+                  backdrop: true
+                }
+              )
+            }
+          }
+        },
         {
           type: 'object',
           name: 'domain',
@@ -249,9 +275,15 @@ class SystemUser extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('search-form')
   }
 
+  get grist() {
+    return this.shadowRoot.querySelector('data-grist')
+  }
+
   _parseFilters() {
+    let filters = []
+    if (!this.searchForm) return filters
     const fields = this.searchForm.getFields()
-    const filters = fields.map(field => {
+    filters = fields.map(field => {
       const value =
         field.type === 'text' ? field.value : field.type === 'checkbox' ? JSON.stringify(field.checked) : field.value
       if (value) {
@@ -263,6 +295,8 @@ class SystemUser extends localize(i18next)(PageView) {
         }
       }
     })
+
+    return filters
   }
 }
 
