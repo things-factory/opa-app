@@ -34,7 +34,7 @@ export default function route(page) {
       return page
 
     case 'company-list':
-      import('./pages/company-list')
+      import('./pages/master/company-list')
       return page
 
     case 'bizplace-list':

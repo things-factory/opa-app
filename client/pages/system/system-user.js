@@ -1,3 +1,4 @@
+import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
 import {
@@ -6,14 +7,16 @@ import {
   isMobileDevice,
   PageView,
   PullToRefreshStyles,
-  ScrollbarStyles
+  ScrollbarStyles,
+  store
 } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import '@things-factory/grist-ui'
+import { connect } from 'pwa-helpers/connect-mixin'
+import './system-create-user'
 import './system-user-detail'
 
-class SystemUser extends localize(i18next)(PageView) {
+class SystemUser extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       active: String,
@@ -22,7 +25,8 @@ class SystemUser extends localize(i18next)(PageView) {
       config: Object,
       data: Object,
       page: Number,
-      limit: Number
+      limit: Number,
+      _currentPopupName: String
     }
   }
 
@@ -48,7 +52,13 @@ class SystemUser extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.user')
+      title: i18next.t('title.user'),
+      actions: [
+        {
+          title: i18next.t('button.create_user'),
+          action: this._createUser.bind(this)
+        }
+      ]
     }
   }
 
@@ -59,7 +69,7 @@ class SystemUser extends localize(i18next)(PageView) {
         .fields="${this._searchFields}"
         initFocus="description"
         @submit="${async () => {
-          this.data = await this.getUsers()
+          this.data = await this._getUsers()
         }}"
       ></search-form>
 
@@ -79,7 +89,7 @@ class SystemUser extends localize(i18next)(PageView) {
 
   async activated(active) {
     if (active) {
-      this.data = await this.getUsers()
+      this.data = await this._getUsers()
     }
   }
 
@@ -116,14 +126,6 @@ class SystemUser extends localize(i18next)(PageView) {
           placeholder: i18next.t('field.email'),
           searchOper: 'like'
         }
-      },
-      {
-        name: 'user_type',
-        type: 'text',
-        props: {
-          placeholder: i18next.t('field.user_type'),
-          searchOper: 'like'
-        }
       }
     ]
 
@@ -139,14 +141,24 @@ class SystemUser extends localize(i18next)(PageView) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              openPopup(
+              this._currentPopupName = openPopup(
                 html`
-                  <system-user-detail .email="${record.email}" style="width: 90vw; height: 70vh;"></system-user>
-                `,
-                {
-                  backdrop: true
-                }
-              )
+                  <system-user-detail .email="${record.email}" style="width: 90vw; height: 70vh;"></system-user-detail>
+                `
+              ).name
+            }
+          }
+        },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'delete',
+          handlers: {
+            click: async (columns, data, column, record, rowIndex) => {
+              if (confirm(i18next.t('text.sure_to_delete'))) {
+                await this._deleteUser(record.email)
+                this.data = await this._getUsers()
+              }
             }
           }
         },
@@ -155,7 +167,7 @@ class SystemUser extends localize(i18next)(PageView) {
           name: 'domain',
           header: i18next.t('field.domain'),
           record: {
-            editable: true,
+            editable: false,
             align: 'center',
             options: {
               queryName: 'domains',
@@ -178,7 +190,16 @@ class SystemUser extends localize(i18next)(PageView) {
           name: 'name',
           header: i18next.t('field.name'),
           record: {
-            editable: true
+            editable: false
+          },
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'email',
+          header: i18next.t('field.email'),
+          record: {
+            editable: false
           },
           width: 150
         },
@@ -187,27 +208,9 @@ class SystemUser extends localize(i18next)(PageView) {
           name: 'description',
           header: i18next.t('field.description'),
           record: {
-            editable: true
+            editable: false
           },
           width: 200
-        },
-        {
-          type: 'string',
-          name: 'email',
-          header: i18next.t('field.email'),
-          record: {
-            editable: true
-          },
-          width: 150
-        },
-        {
-          type: 'string',
-          name: 'user_type',
-          header: i18next.t('field.user_type'),
-          record: {
-            editable: true
-          },
-          width: 150
         },
         {
           type: 'object',
@@ -220,7 +223,7 @@ class SystemUser extends localize(i18next)(PageView) {
         },
         {
           type: 'datetime',
-          name: 'updated_at',
+          name: 'updatedAt',
           header: i18next.t('field.updated_at'),
           record: {
             editable: false
@@ -231,7 +234,7 @@ class SystemUser extends localize(i18next)(PageView) {
     }
   }
 
-  async getUsers() {
+  async _getUsers() {
     const response = await client.query({
       query: gql`
         query {
@@ -297,6 +300,36 @@ class SystemUser extends localize(i18next)(PageView) {
     })
 
     return filters
+  }
+
+  _createUser() {
+    this._currentPopupName = openPopup(
+      html`
+        <system-create-user style="width: 90vw; height: 70vh;"></system-create-user>
+      `
+    ).name
+  }
+
+  async _deleteUser(email) {
+    await client.query({
+      query: gql`
+        mutation {
+          deleteUser(${gqlBuilder.buildArgs({
+            email
+          })}) {
+            id
+            name
+          }
+        }
+      `
+    })
+  }
+
+  async stateChanged(state) {
+    if (this.active && this._currentPopupName && !state.layout.viewparts[this._currentPopupName]) {
+      this.data = await this._getUsers()
+      this._currentPopupName = null
+    }
   }
 }
 
