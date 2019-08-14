@@ -19,6 +19,10 @@ export default {
       tagname: 'bizplace-list',
       page: 'bizplaces'
     },
+    {
+      tagname: 'create-transport-vehicle',
+      page: 'create_transport_vehicle'
+    },
 
     /**
      * Order Menus Section

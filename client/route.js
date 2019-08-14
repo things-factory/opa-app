@@ -20,6 +20,10 @@ export default function route(page) {
       import('./pages/master/bizplace-list')
       return page
 
+    case 'create_transport_vehicle':
+      import('./pages/master/create-transport-vehicle')
+      return page
+
     /**
      * Order Menus Section
      */
