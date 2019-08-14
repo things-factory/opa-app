@@ -69,6 +69,10 @@ export default function route(page) {
       import('./pages/create-transport-order')
       return page
 
+    case 'create-transport-vehicle':
+      import('./pages/create-transport-vehicle')
+      return page
+
     case 'inbound-work-order':
       import('./pages/inbound-work-order')
       return page

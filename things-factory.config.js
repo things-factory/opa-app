@@ -69,6 +69,10 @@ export default {
       page: 'create-transport-order'
     },
     {
+      tagname: 'create-transport-vehicle',
+      page: 'create-transport-vehicle'
+    },
+    {
       tagname: 'inbound-work-order',
       page: 'inbound-work-order'
     },
