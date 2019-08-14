@@ -132,7 +132,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               const selectedOrder = this.rawOrderData.find(orderData => orderData.name === record.name)
-              navigate(`arrival-notice-detail/${selectedOrder.name}`)
+              navigate(`arrival_notice_detail/${selectedOrder.name}`)
             }
           }
         },

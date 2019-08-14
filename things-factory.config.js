@@ -4,145 +4,138 @@ import route from './client/route'
 export default {
   route,
   routes: [
+    /**
+     * Master Menus Section
+     */
     {
-      tagname: 'system-menu',
-      page: 'system-menu'
-    },
-    {
-      tagname: 'system-menu-column',
-      page: 'system-menu-column'
-    },
-    {
-      tagname: 'opa-home',
-      page: 'opa-home'
-    },
-    {
-      tagname: 'system-user',
-      page: 'system-user'
-    },
-    {
-      tagname: 'create-arrival-notice',
-      page: 'create-arrival-notice'
-    },
-    {
-      tagname: 'arrival-notice-detail',
-      page: 'arrival-notice-detail'
+      tagname: 'company-list',
+      page: 'companies'
     },
     {
       tagname: 'company-profile',
-      page: 'company-profile'
-    },
-    {
-      tagname: 'company-list',
-      page: 'company-list'
+      page: 'company_profile'
     },
     {
       tagname: 'bizplace-list',
-      page: 'bizplace-list'
+      page: 'bizplaces'
+    },
+
+    /**
+     * Order Menus Section
+     */
+    {
+      tagname: 'create-arrival-notice',
+      page: 'arrival_notice'
     },
     {
       tagname: 'confirm-arrival-notice',
-      page: 'confirm-arrival-notice'
+      page: 'confirm_arrival_notice'
     },
     {
-      tagname: 'confirm-release-goods',
-      page: 'confirm-release-goods'
-    },
-    {
-      tagname: 'release-goods-detail',
-      page: 'release-goods-detail'
-    },
-    {
-      tagname: 'confirm-transport-order',
-      page: 'confirm-transport-order'
-    },
-    {
-      tagname: 'transport-order-detail',
-      page: 'transport-order-detail'
-    },
-    {
-      tagname: 'create-release-goods',
-      page: 'create-release-goods'
-    },
-    {
-      tagname: 'create-transport-order',
-      page: 'create-transport-order'
-    },
-    {
-      tagname: 'create-transport-vehicle',
-      page: 'create-transport-vehicle'
-    },
-    {
-      tagname: 'inbound-work-order',
-      page: 'inbound-work-order'
-    },
-    {
-      tagname: 'intransit-stock',
-      page: 'intransit-stock'
-    },
-    {
-      tagname: 'onhand-stock',
-      page: 'onhand-stock'
-    },
-    {
-      tagname: 'outbound-work-order',
-      page: 'outbound-work-order'
-    },
-    {
-      tagname: 'picking-by-product',
-      page: 'picking-by-product'
-    },
-    {
-      tagname: 'picking-by-unit',
-      page: 'picking-by-unit'
-    },
-    {
-      tagname: 'receive-goods',
-      page: 'receive-goods'
-    },
-    {
-      tagname: 'putaway-goods',
-      page: 'putaway-goods'
+      tagname: 'confirm-arrival-notice',
+      page: 'confirm_arrival_notice'
     },
     {
       tagname: 'receive-arrival-notice',
-      page: 'receive-arrival-notice'
+      page: 'receive_arrival_notice'
+    },
+    {
+      tagname: 'create-release-goods',
+      page: 'release_goods'
+    },
+    {
+      tagname: 'confirm-release-goods',
+      page: 'confirm_release_goods'
     },
     {
       tagname: 'receive-release-goods',
-      page: 'receive-release-goods'
+      page: 'receive_release_goods'
     },
     {
-      tagname: 'receive-shipping-notice',
-      page: 'receive-shipping-notice'
+      tagname: 'create-transport-order',
+      page: 'transport'
+    },
+    {
+      tagname: 'confirm-transport-order',
+      page: 'confirm_transport'
     },
     {
       tagname: 'receive-transport-order',
-      page: 'receive-transport-order'
+      page: 'receive_transport'
     },
     {
-      tagname: 'summary-bill-amount',
-      page: 'summary-bill-amount'
+      tagname: 'transport-order-detail',
+      page: 'transport_order_detail'
     },
-    {
-      tagname: 'update-claim-chit',
-      page: 'update-claim-chit'
-    },
-    {
-      tagname: 'vas-work-order',
-      page: 'vas-work-order'
-    },
+
+    /**
+     * Stock Menus Section
+     */
     {
       tagname: 'onhand-stock',
-      page: 'onhand-stock'
+      page: 'onhand_stock'
     },
     {
       tagname: 'intransit-stock',
-      page: 'intransit-stock'
+      page: 'intransit_stock'
+    },
+
+    /**
+     * System Menus Section
+     */
+    {
+      tagname: 'system-user',
+      page: 'users'
+    },
+    {
+      tagname: 'system-user',
+      page: 'users'
+    },
+    {
+      tagname: 'system-menu',
+      page: 'menus'
+    },
+    {
+      tagname: 'system-menu-column',
+      page: 'menu_columns'
     },
     {
       tagname: 'system-domain',
-      page: 'system-domain'
+      page: 'domains'
+    },
+    /**
+     * Inbound Menus Section
+     */
+    {
+      tagname: 'inbound-work-order',
+      page: 'inbound_work_order'
+    },
+    {
+      tagname: 'receive-goods',
+      page: 'receiving'
+    },
+    {
+      tagname: 'putaway-goods',
+      page: 'putaway'
+    },
+    {
+      tagname: 'vas-work-order',
+      page: 'vas'
+    },
+    /**
+     * Outbound Menus Section
+     */
+    {
+      tagname: 'outbound-work-order',
+      page: 'outbound'
+    },
+    {
+      tagname: 'picking-by-product',
+      page: 'picking_product'
+    },
+    {
+      tagname: 'picking-by-unit',
+      page: 'picking_unit'
     }
   ],
   bootstrap

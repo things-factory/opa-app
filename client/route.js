@@ -5,136 +5,135 @@ export default function route(page) {
     case '':
       return isMobileDevice() ? '/menu-list' : '/board-viewer/872a1e69-7acb-45a1-a914-87dfb0d295b4' //'/opa-home'
 
-    case 'system-user':
-      import('./pages/system/system-user')
-      return page
-
-    case 'system-menu':
-      import('./pages/system/system-menu')
-      return page
-
-    case 'system-menu-column':
-      import('./pages/system/system-menu-column')
-      return page
-
-    case 'opa-home':
-      import('./pages/opa-home')
-      return page
-
-    case 'create-arrival-notice':
-      import('./pages/create-arrival-notice')
-      return page
-
-    case 'arrival-notice-detail':
-      import('./pages/arrival-notice-detail')
-      return page
-
-    case 'company-profile':
-      import('./pages/company-profile')
-      return page
-
-    case 'company-list':
+    /**
+     * Master Menus Section
+     */
+    case 'companies':
       import('./pages/master/company-list')
       return page
 
-    case 'bizplace-list':
-      import('./pages/bizplace-list')
+    case 'company_profile':
+      import('./pages/master/company-profile')
       return page
 
-    case 'confirm-arrival-notice':
-      import('./pages/confirm-arrival-notice')
+    case 'bizplaces':
+      import('./pages/master/bizplace-list')
       return page
 
-    case 'confirm-release-goods':
-      import('./pages/confirm-release-goods')
+    /**
+     * Order Menus Section
+     */
+    case 'arrival_notice':
+      import('./pages/order/create-arrival-notice')
       return page
 
-    case 'release-goods-detail':
-      import('./pages/release-goods-detail')
+    case 'confirm_arrival_notice':
+      import('./pages/order/confirm-arrival-notice')
       return page
 
-    case 'confirm-transport-order':
-      import('./pages/confirm-transport-order')
+    case 'receive_arrival_notice':
+      import('./pages/order/receive-arrival-notice')
       return page
 
-    case 'transport-order-detail':
-      import('./pages/transport-order-detail')
+    case 'arrival_notice_detail':
+      import('./pages/order/arrival-notice-detail')
       return page
 
-    case 'create-release-goods':
-      import('./pages/create-release-goods')
+    case 'release_goods':
+      import('./pages/order/create-release-goods')
       return page
 
-    case 'create-transport-order':
-      import('./pages/create-transport-order')
+    case 'confirm_release_goods':
+      import('./pages/order/confirm-release-goods')
       return page
 
-    case 'create-transport-vehicle':
-      import('./pages/create-transport-vehicle')
+    case 'receive_release_goods':
+      import('./pages/order/receive-release-goods')
       return page
 
-    case 'inbound-work-order':
-      import('./pages/inbound-work-order')
+    case 'release_goods_detail':
+      import('./pages/order/release-goods-detail')
       return page
 
-    case 'outbound-work-order':
-      import('./pages/outbound-work-order')
+    case 'transport':
+      import('./pages/order/create-transport-order')
       return page
 
-    case 'picking-by-product':
-      import('./pages/picking-by-product')
+    case 'confirm_transport':
+      import('./pages/order/confirm-transport-order')
       return page
 
-    case 'picking-by-unit':
-      import('./pages/picking-by-unit')
+    case 'receive_transport':
+      import('./pages/order/receive-transport-order')
       return page
 
-    case 'receive-goods':
-      import('./pages/receive-goods')
+    case 'transport_order_detail':
+      import('./pages/order/transport-order-detail')
       return page
 
-    case 'putaway-goods':
-      import('./pages/putaway-goods')
+      transport_order_detail
+    /**
+     * Stock Menus Section
+     */
+    case 'onhand_stock':
+      import('./pages/stock/onhand-stock')
       return page
 
-    case 'receive-arrival-notice':
-      import('./pages/receive-arrival-notice')
+    case 'intransit_stock':
+      import('./pages/stock/intransit-stock')
       return page
 
-    case 'receive-release-goods':
-      import('./pages/receive-release-goods')
+    /**
+     * System Menus Section
+     */
+    case 'users':
+      import('./pages/system/system-user')
       return page
 
-    case 'receive-shipping-notice':
-      import('./pages/receive-shipping-notice')
+    case 'menus':
+      import('./pages/system/system-menu')
       return page
 
-    case 'receive-transport-order':
-      import('./pages/receive-transport-order')
+    case 'menu_columns':
+      import('./pages/system/system-menu-column')
       return page
 
-    case 'summary-bill-amount':
-      import('./pages/summary-bill-amount')
-      return page
-
-    case 'update-claim-chit':
-      import('./pages/update-claim-chit')
-      return page
-
-    case 'vas-work-order':
-      import('./pages/vas-work-order')
-      return page
-
-    case 'onhand-stock':
-      import('./pages/onhand-stock')
-      return page
-
-    case 'intransit-stock':
-      import('./pages/intransit-stock')
-      return page
-
-    case 'system-domain':
+    case 'domains':
       import('./pages/system/system-domain')
+      return page
+
+    /**
+     * Inbound Menus Section
+     */
+    case 'inbound_work_order':
+      import('./pages/inbound/inbound-work-order')
+      return page
+
+    case 'receiving':
+      import('./pages/inbound/receive-goods')
+      return page
+
+    case 'putaway':
+      import('./pages/inbound/putaway-goods')
+      return page
+
+    case 'vas':
+      import('./pages/inbound/vas-work-order')
+      return page
+
+    /**
+     * Inbound Menus Section
+     */
+    case 'outbound':
+      import('./pages/outbound/outbound-work-order')
+      return page
+
+    case 'picking_product':
+      import('./pages/outbound/picking-by-product')
+      return page
+
+    case 'picking_unit':
+      import('./pages/outbound/picking-by-unit')
       return page
   }
 }

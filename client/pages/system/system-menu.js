@@ -334,7 +334,7 @@ class SystemMenu extends localize(i18next)(PageView) {
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               if (!record || !record.name) return
-              navigate(`system-menu-column/${record.name}`)
+              navigate(`menu_columns/${record.name}`)
             }
           }
         },

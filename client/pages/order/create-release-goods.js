@@ -476,7 +476,7 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
         `
       })
 
-      navigate('confirm-release-goods')
+      navigate('confirm_release_goods')
     } catch (e) {
       alert(e.message)
     }

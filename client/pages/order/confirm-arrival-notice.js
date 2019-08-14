@@ -5,7 +5,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 
-class ConfirmReleaseGoods extends localize(i18next)(PageView) {
+class ConfirmArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
     return {
       config: Object,
@@ -36,12 +36,8 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.confirm_release_goods'),
+      title: i18next.t('title.confirm_arrival_notice'),
       actions: [
-        {
-          title: i18next.t('button.cancel'),
-          action: this._cancelOrder.bind(this)
-        },
         {
           title: i18next.t('button.reject'),
           action: this._rejectOrder.bind(this)
@@ -58,17 +54,21 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
     return html`
       <form class="multi-column-form">
         <fieldset>
+          <legend>${i18next.t('label.gan')}</legend>
+          <label>${i18next.t('label.gan')}</label>
+          <input name="gan" />
+
+          <label>${i18next.t('label.eta')}</label>
+          <input name="eta" />
+
           <label>${i18next.t('label.delivery_no')}</label>
           <input name="delivery_no" />
 
-          <label>${i18next.t('label.delivery_date')}</label>
-          <input name="delivery_date" />
+          <label>${i18next.t('label.company')}</label>
+          <input name="company" />
 
-          <label>${i18next.t('label.shipping_no')}</label>
-          <input name="shipping_no" />
-
-          <label>${i18next.t('label.receiver_contact_point')}</label>
-          <input name="receiver_contact_point" />
+          <label>${i18next.t('label.supplier_name')}</label>
+          <input name="supplier_name" />
         </fieldset>
       </form>
 
@@ -101,7 +101,7 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           gutterName: 'row-selector',
-          multiple: true
+          multiple: false
         },
         {
           type: 'gutter',
@@ -110,39 +110,39 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               const selectedOrder = this.rawOrderData.find(orderData => orderData.name === record.name)
-              navigate(`release-goods-detail/${selectedOrder.name}`)
+              navigate(`arrival_notice_detail/${selectedOrder.name}`)
             }
           }
         },
         {
           type: 'string',
           name: 'name',
-          header: i18next.t('field.name'),
+          header: i18next.t('field.purchase_order'),
           record: {
             align: 'left'
           },
           sortable: true,
-          width: 200
+          width: 230
         },
-        // {
-        //   type: 'string',
-        //   name: 'company',
-        //   header: i18next.t('field.company'),
-        //   record: {
-        //     align: 'left'
-        //   },
-        //   sortable: true,
-        //   width: 200
-        // },
         {
           type: 'string',
-          name: 'contact_point',
-          header: i18next.t('field.contact_point'),
+          name: 'supplier_name',
+          header: i18next.t('field.supplier_name'),
           record: {
             align: 'left'
           },
           sortable: true,
-          width: 180
+          width: 120
+        },
+        {
+          type: 'string',
+          name: 'gan',
+          header: i18next.t('field.gan'),
+          record: {
+            align: 'left'
+          },
+          sortable: true,
+          width: 230
         },
         {
           type: 'string',
@@ -152,14 +152,14 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
             align: 'left'
           },
           sortable: true,
-          width: 180
+          width: 230
         },
         {
-          type: 'date',
-          name: 'release_date',
-          header: i18next.t('field.release_date'),
+          type: 'datetime',
+          name: 'eta',
+          header: i18next.t('field.eta'),
           record: {
-            align: 'left'
+            align: 'center'
           },
           sortable: true,
           width: 120
@@ -176,10 +176,20 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
         },
         {
           type: 'datetime',
+          name: 'reject_date',
+          header: i18next.t('field.reject_date'),
+          record: {
+            align: 'center'
+          },
+          sortable: true,
+          width: 120
+        },
+        {
+          type: 'datetime',
           name: 'request_date',
           header: i18next.t('field.request_date'),
           record: {
-            align: 'left'
+            align: 'center'
           },
           sortable: true,
           width: 120
@@ -189,27 +199,17 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
           name: 'confirm_date',
           header: i18next.t('field.confirm_date'),
           record: {
-            align: 'left'
+            align: 'center'
           },
           sortable: true,
           width: 120
         },
         {
           type: 'datetime',
-          name: 'reject_date',
-          header: i18next.t('field.reject_date'),
-          record: {
-            align: 'left'
-          },
-          sortable: true,
-          width: 120
-        },
-        {
-          type: 'string',
           name: 'receive_date',
           header: i18next.t('field.receive_date'),
           record: {
-            align: 'left'
+            align: 'center'
           },
           sortable: true,
           width: 120
@@ -217,7 +217,7 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
       ],
       rows: {
         selectable: {
-          multiple: true
+          multiple: false
         },
         handlers: {
           click: 'select-row'
@@ -225,21 +225,20 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
       }
     }
 
-    this.data = await this.getReleaseGoods()
+    this.data = await this.getArrivalNotices()
   }
 
-  async getReleaseGoods() {
+  async getArrivalNotices() {
     const response = await client.query({
       query: gql`
         query {
-          orders: deliveryOrders(${gqlBuilder.buildArgs({
+          orders: purchaseOrders(${gqlBuilder.buildArgs({
             filters: []
           })}) {
             items {
               id
               name
               issuedOn
-              type
               state
               description
               updatedAt
@@ -264,20 +263,11 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
       return {
         company: 'Company Name',
         name: order.name,
+        supplier_name: info.supplier,
+        gan: info.gan,
         delivery_order_no: info.orderNo,
+        eta: order.issuedOn,
         status: order.state,
-        type: order.type,
-        contact_point: info.contactPoint,
-        release_date: info.releaseDate,
-        container_no: info.containerNo,
-        load_type: info.loadType,
-        arrival_date: info.arrivalDate,
-        departure_date: info.departureDate,
-        ship_name: info.shipName,
-        deliver_to: info.deliverTo,
-        transporter_name: info.transporterName,
-        driver_name: info.driverName,
-        reg_number: info.regNumber,
         reject_date: info.rejectedDate,
         request_date: info.requestedDate,
         confirm_date: info.confirmedDate,
@@ -290,7 +280,17 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
     const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
     if (selectedOrder) {
       await this._deleteOrder(selectedOrder)
-      this.data = await this.getReleaseGoods()
+      this.data = await this.getArrivalNotices()
+    } else {
+      this._notify(i18next.t('text.there_no_selected'))
+    }
+  }
+
+  async _rejectOrder() {
+    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
+    if (selectedOrder) {
+      await this._updateOrder(selectedOrder, false)
+      this.data = await this.getArrivalNotices()
     } else {
       this._notify(i18next.t('text.there_no_selected'))
     }
@@ -300,7 +300,7 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
     const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
     if (selectedOrder) {
       await this._updateOrder(selectedOrder, true)
-      this.data = await this.getReleaseGoods()
+      this.data = await this.getArrivalNotices()
     } else {
       this._notify(i18next.t('text.there_no_selected'))
     }
@@ -310,16 +310,6 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  async _rejectOrder() {
-    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
-    if (selectedOrder) {
-      await this._updateOrder(selectedOrder, false)
-      this.data = await this.getReleaseGoods()
-    } else {
-      this._notify(i18next.t('text.there_no_selected'))
-    }
-  }
-
   async _deleteOrder(order) {
     try {
       if (order.state.toLowerCase() !== 'pending') throw new Error('text.status_not_suitable')
@@ -327,7 +317,7 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
       await client.query({
         query: gql`
           mutation {
-            deleteDeliveryOrder(${gqlBuilder.buildArgs({ name: order.name })}) {
+            deletePurchaseOrder(${gqlBuilder.buildArgs({ name: order.name })}) {
               name
             }
           }
@@ -362,7 +352,7 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
       await client.query({
         query: gql`
           mutation {
-            updateDeliveryOrder(${gqlBuilder.buildArgs({
+            updatePurchaseOrder(${gqlBuilder.buildArgs({
               name: order.name,
               patch: {
                 state: state,
@@ -390,6 +380,12 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
       })
     )
   }
+
+  async activated(active) {
+    if (active) {
+      this.data = await this.getArrivalNotices()
+    }
+  }
 }
 
-window.customElements.define('confirm-release-goods', ConfirmReleaseGoods)
+window.customElements.define('confirm-arrival-notice', ConfirmArrivalNotice)

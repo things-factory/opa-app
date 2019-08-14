@@ -78,22 +78,12 @@ class CompanyList extends localize(i18next)(PageView) {
       title: i18next.t('title.company'),
       actions: [
         {
-          title: 'add',
-          action: () => {
-            console.log('this is add action')
-          }
+          title: i18next.t('button.save'),
+          action: this._saveCompany.bind(this)
         },
         {
-          title: 'save',
-          action: () => {
-            console.log('this is save action')
-          }
-        },
-        {
-          title: 'delete',
-          action: () => {
-            console.log('this is delete action')
-          }
+          title: i18next.t('button.delete'),
+          action: this._deleteCompany.bind(this)
         }
       ]
     }
@@ -112,7 +102,7 @@ class CompanyList extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           gutterName: 'row-selector',
-          multiple: false
+          multiple: true
         },
         {
           type: 'gutter',
@@ -121,7 +111,7 @@ class CompanyList extends localize(i18next)(PageView) {
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               const selectedOrder = this.rawOrderData.find(orderData => orderData.name === record.name)
-              navigate(`company-list/${selectedOrder.resourceId}`)
+              navigate(`bizplaces/${selectedOrder.resourceId}`)
             }
           }
         }
@@ -239,6 +229,21 @@ class CompanyList extends localize(i18next)(PageView) {
       total: response.data.companies.total || 0,
       records: response.data.companies.items || []
     }
+  }
+
+  _saveCompany() {
+    if (this.grist.dirtyRecords && this.grist.dirtyRecords.length > 0) {
+      console.log('save it')
+    }
+  }
+
+  _deleteCompany() {
+    if (this.grist.di) {
+    }
+  }
+
+  get grist() {
+    return this.shadowRoot.querySelector('data-grist')
   }
 }
 

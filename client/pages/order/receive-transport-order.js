@@ -115,7 +115,7 @@ class ReceiveTransportOrder extends localize(i18next)(PageView) {
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               const selectedOrder = this.rawOrderData.find(orderData => orderData.name === record.name)
-              navigate(`transport-order-detail/${selectedOrder.name}`)
+              navigate(`transport_order_detail/${selectedOrder.name}`)
             }
           }
         },

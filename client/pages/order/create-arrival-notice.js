@@ -1,10 +1,11 @@
+import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, PageView, navigate } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 
-class CreateTransportOrder extends localize(i18next)(PageView) {
+class CreateArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
     return {
       productsConfig: Object,
@@ -19,11 +20,9 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
       MultiColumnFormStyles,
       css`
         :host {
-          flex: 1;
           display: flex;
           flex-direction: column;
-          overflow-x: overlay;
-          height: 100%;
+          overflow-x: auto;
         }
         .grist {
           background-color: var(--main-section-background-color);
@@ -63,11 +62,11 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.create_transport_order'),
+      title: i18next.t('title.create_arrival_notice'),
       actions: [
         {
-          title: i18next.t('button.save'),
-          action: this._createTransportOrder.bind(this)
+          title: i18next.t('button.submit'),
+          action: this.createArrivalNotice.bind(this)
         }
       ]
     }
@@ -75,82 +74,49 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
 
   render() {
     return html`
-        <form class="multi-column-form">
-          <fieldset>
-            <legend>${i18next.t('title.transport_order')}</legend>
-            <label>${i18next.t('label.contact_point')}</label>
-            <input name="name" />
+      <form class="multi-column-form">
+        <fieldset>
+          <legend>${i18next.t('title.arrival_notice')}</legend>
+          <label>${i18next.t('label.purchase_order')}</label>
+          <input name="purchase_order" />
 
-            <label>${i18next.t('label.description')}</label>
-            <input name="description" />
+          <label>${i18next.t('label.supplier_name')}</label>
+          <input name="supplier_name" />
 
-            <label>${i18next.t('label.delivery_date')}</label>
-            <input name="when" type="date" />
+          <!--label>${i18next.t('label.gan')}</label>
+            <input name="gan" /-->
 
-            <label>${i18next.t('label.contact_no')}</label>
-            <input name="contact_no" />
+          <!--label>${i18next.t('label.delivery_order_no')}</label>
+            <input name="delivery_order_no" /-->
 
-            <label>${i18next.t('label.from')}</label>
-            <input name="from" />
+          <label>${i18next.t('label.eta_date')}</label>
+          <input name="eta_date" type="date" />
 
-            <label>${i18next.t('label.to')}</label>
-            <input name="to" />
-
-            <label>${i18next.t('label.load_type')}</label>
-            <input name="load_type" />
-
-            
-            <input
-              name="from_warehouse"
-              type="checkbox"
-              checked
-              @change="${e => {
-                this.productsConfig = {
-                  columns: this.productsConfig.columns.map(column => {
-                    if (column.name === 'product') {
-                      column.type = e.currentTarget.checked ? 'object' : 'string'
-                    }
-
-                    return { ...column }
-                  })
-                }
-
-                this.productsData = { records: [] }
-              }}"
-            />
-            <label>${i18next.t('label.from_warehouse')}</label>
-          </fieldset>
-        </form>
-      </div>
+          <label>${i18next.t('label.eta_time')}</label>
+          <input name="eta_time" type="time" />
+        </fieldset>
+      </form>
 
       <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.products')}</h2>
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.arrival_notice_detail')}</h2>
+
         <data-grist
           id="products"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.productsConfig}
           .data=${this.productsData}
-          @page-changed=${e => {
-            this.page = e.detail
-          }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
           @record-change="${this._onProductChangeHandler.bind(this)}"
         ></data-grist>
+      </div>
 
+      <div class="grist">
         <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas_request')}</h2>
+
         <data-grist
           id="services"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.servicesConfig}
           .data=${this.servicesData}
-          @page-changed=${e => {
-            this.page = e.detail
-          }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
           @record-change="${this._onServiceChangeHandler.bind(this)}"
         ></data-grist>
       </div>
@@ -233,8 +199,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
           name: 'unit',
           header: i18next.t('field.unit'),
           record: {
-            align: 'center',
-            editable: true
+            align: 'center'
           },
           width: 120
         },
@@ -243,8 +208,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
           name: 'pack_in_qty',
           header: i18next.t('field.pack_in_qty'),
           record: {
-            align: 'right',
-            editable: true
+            align: 'right'
           },
           width: 80
         },
@@ -361,15 +325,22 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
   async _onProductChangeHandler(e) {
     const before = e.detail.before || {}
     const after = e.detail.after
-    const needObjValue = this.shadowRoot.querySelector('input[name=from_warehouse]').checked
 
-    if (needObjValue && (before.product && before.product.id) != (after.product && after.product.id)) {
+    let record = this.productsData.records[e.detail.row]
+    if (!record) {
+      record = { ...after }
+      this.productsData.records.push(record)
+    } else if (record !== after) {
+      record = Object.assign(record, after)
+    }
+
+    if ((before.product && before.product.id) != (after.product && after.product.id)) {
       const productMaster = await this.getMasterInfo(after.product.id)
       const productUnit = productMaster.unit.split(' ')
 
-      this.productsData.records[e.detail.row].pack_in_qty = productUnit[0]
-      this.productsData.records[e.detail.row].unit = productUnit[1]
-      this.productsData.records[e.detail.row].description = productMaster.description
+      record.pack_in_qty = productUnit[0]
+      record.unit = productUnit[1]
+      record.description = productMaster.description
 
       this.productsData = {
         ...this.productsData,
@@ -377,8 +348,8 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
       }
     }
 
-    if ((after.unit && before.pack_qty != after.pack_qty) || (after.unit && before.pack_in_qty != after.pack_in_qty)) {
-      this.productsData.records[e.detail.row].total_qty = after.pack_in_qty * after.pack_qty
+    if (after.unit && before.pack_qty != after.pack_qty) {
+      record.total_qty = after.pack_in_qty * after.pack_qty
 
       this.productsData = {
         ...this.productsData,
@@ -391,12 +362,25 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
     const before = e.detail.before || {}
     const after = e.detail.after
 
+    let record = this.servicesData.records[e.detail.row]
+    if (!record) {
+      record = { ...after }
+      this.servicesData.records.push(record)
+    } else if (record !== after) {
+      Object.assign(record, after)
+    }
+
     if ((before.service && before.service.id) != (after.service && after.service.id)) {
       const serviceMaster = await this.getMasterInfo(after.service.id)
 
-      this.servicesData.records[e.detail.row].unit = serviceMaster.unit
-      this.servicesData.records[e.detail.row].unit_price = 5
-      this.servicesData.records[e.detail.row].description = serviceMaster.description
+      if (!record) {
+        record = {}
+        this.servicesData.records.push(record)
+      }
+
+      record.unit = serviceMaster.unit
+      record.unit_price = 5
+      record.description = serviceMaster.description
 
       this.servicesData = {
         ...this.servicesData,
@@ -405,7 +389,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
     }
 
     if (after.unit_price && before.qty != after.qty) {
-      this.servicesData.records[e.detail.row].total_price = 'RM ' + after.unit_price * after.qty
+      record.total_price = 'RM ' + after.unit_price * after.qty
 
       this.servicesData = {
         ...this.servicesData,
@@ -432,28 +416,28 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
     return response.data.product
   }
 
-  async _createTransportOrder() {
+  async createArrivalNotice() {
     try {
-      const formData = this._serializeForm()
+      const products = this._getProducts()
+      const services = this._getServices()
+      const orderInfo = this.getOrderInfo()
+
       await client.query({
         query: gql`
           mutation {
-            orders: createTransportOrder(${gqlBuilder.buildArgs({
-              transportOrder: {
-                name: formData.name,
+            createPurchaseOrder(${gqlBuilder.buildArgs({
+              purchaseOrder: {
+                name: orderInfo.purchase_order,
+                issuedOn: new Date(orderInfo.eta_date + ' ' + orderInfo.eta_time).getTime().toString(),
+                state: 'Pending',
                 description: JSON.stringify({
-                  orderNo: this._generateDONo(),
-                  description: formData.description,
-                  contactNo: formData.contact_no,
-                  products: this._getProducts(),
-                  services: this._getServices()
-                }),
-                when: new Date(formData.when).getTime().toString(),
-                from: formData.from,
-                to: formData.to,
-                loadType: formData.load_type,
-                orderType: 'TO',
-                state: 'Pending'
+                  supplier: orderInfo.supplier_name,
+                  orderNo: this._generateOrderNo(),
+                  products: products,
+                  services: services,
+                  gan: this._generateGAN(),
+                  type: 'po'
+                })
               }
             })}) {
               name
@@ -462,39 +446,10 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
         `
       })
 
-      navigate('confirm-transport-order')
+      navigate('confirm_arrival_notice')
     } catch (e) {
       this._notify(e.message)
     }
-  }
-
-  _generateDONo() {
-    return `D-ORD-${new Date().getTime().toString()}`
-  }
-
-  get _getInputs() {
-    return Array.from(this.shadowRoot.querySelectorAll('form input'))
-  }
-
-  _serializeForm() {
-    try {
-      let tempObj = {}
-
-      this._getInputs.map(input => {
-        if (input.value) {
-          tempObj[input.name] = input.value
-        } else {
-          throw new Error(i18next.t('text.form_is_not_completed'))
-        }
-      })
-      return tempObj
-    } catch (e) {
-      this._notify(e.message)
-    }
-  }
-
-  _clearForm() {
-    this._getInputs.forEach(input => (input.value = ''))
   }
 
   _getProducts() {
@@ -510,6 +465,30 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('#services').dirtyRecords
   }
 
+  getOrderInfo() {
+    const orderInfo = {}
+    const inputs = Array.from(this.shadowRoot.querySelectorAll('form input'))
+    inputs
+      .filter(input => input.value)
+      .forEach(input => {
+        orderInfo[input.name] = input.value
+      })
+
+    if (inputs.length !== Object.keys(orderInfo).length) {
+      throw new Error(i18next.t('text.form_is_not_completed'))
+    } else {
+      return orderInfo
+    }
+  }
+
+  _generateOrderNo() {
+    return `PO-NO-${new Date().getTime().toString()}`
+  }
+
+  _generateGAN() {
+    return `PO-GAN-${new Date().getTime().toString()}`
+  }
+
   _notify(message, level = '') {
     document.dispatchEvent(
       new CustomEvent('notify', {
@@ -522,4 +501,4 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('create-transport-order', CreateTransportOrder)
+window.customElements.define('create-arrival-notice', CreateArrivalNotice)
