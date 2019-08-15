@@ -23,6 +23,10 @@ export default {
       tagname: 'transport-vehicle',
       page: 'transport_vehicle'
     },
+    {
+      tagname: 'worker-list',
+      page: 'worker_list'
+    },
 
     /**
      * Order Menus Section

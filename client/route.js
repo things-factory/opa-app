@@ -24,6 +24,10 @@ export default function route(page) {
       import('./pages/master/transport-vehicle')
       return page
 
+    case 'worker_list':
+      import('./pages/master/worker-list')
+      return page
+
     /**
      * Order Menus Section
      */

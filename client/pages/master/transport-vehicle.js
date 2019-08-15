@@ -8,6 +8,7 @@ import { MultiColumnFormStyles } from '@things-factory/form-ui'
 class TransportVehicle extends localize(i18next)(PageView) {
   static get properties() {
     return {
+      _searchFields: Array,
       vehiclesConfig: Object,
       vehiclesData: Object
     }
@@ -15,15 +16,19 @@ class TransportVehicle extends localize(i18next)(PageView) {
 
   static get styles() {
     return [
-      MultiColumnFormStyles,
+      ScrollbarStyles,
       css`
         :host {
           display: flex;
           flex-direction: column;
-          overflow-x: auto;
+
+          overflow: hidden;
+        }
+
+        search-form {
+          overflow: visible;
         }
         .grist {
-          background-color: var(--main-section-background-color);
           display: flex;
           flex-direction: column;
           flex: 1;
@@ -32,39 +37,29 @@ class TransportVehicle extends localize(i18next)(PageView) {
           overflow-y: hidden;
           flex: 1;
         }
-        h2 {
-          padding: var(--subtitle-padding);
-          font: var(--subtitle-font);
-          color: var(--subtitle-text-color);
-          border-bottom: var(--subtitle-border-bottom);
-        }
-        .grist h2 {
-          margin: var(--grist-title-margin);
-          border: var(--grist-title-border);
-          color: var(--secondary-color);
-        }
-
-        .grist h2 mwc-icon {
-          vertical-align: middle;
-          margin: var(--grist-title-icon-margin);
-          font-size: var(--grist-title-icon-size);
-          color: var(--grist-title-icon-color);
-        }
-
-        h2 + data-grist {
-          padding-top: var(--grist-title-with-grid-padding);
-        }
       `
     ]
   }
 
   get context() {
     return {
-      title: i18next.t('title.create_truck_detail'),
+      title: i18next.t('title.vehicle_detail'),
       actions: [
         {
-          title: i18next.t('button.submit'),
+          title: i18next.t('button.add'),
+          action: () => {
+            console.log('this is save action')
+          }
+        },
+        {
+          title: i18next.t('button.save'),
           action: this.createTransportVehicle.bind(this)
+        },
+        {
+          title: i18next.t('button.delete'),
+          action: () => {
+            console.log('this is delete action')
+          }
         }
       ]
     }
@@ -72,13 +67,21 @@ class TransportVehicle extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <form class="multi-column-form">
-        <fieldset>
-          <legend>${i18next.t('title.transport_vehicle')}</legend>
-        </fieldset>
-      </form>
+      <search-form
+        id="search-form"
+        .fields=${this._searchFields}
+        initFocus="name"
+        @submit=${async () => {
+          const { records, total } = await this._getVehicleList()
+          this.data = {
+            records,
+            total
+          }
+        }}
+      ></search-form>
+
       <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.transport_vehicle_detail')}</h2>
+        <!-- <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.transport_vehicle_detail')}</h2> -->
 
         <data-grist
           id="vehicles"
@@ -92,8 +95,66 @@ class TransportVehicle extends localize(i18next)(PageView) {
   }
 
   firstUpdated() {
-    this.vehiclesData = { records: [] }
+    this._searchFields = [
+      {
+        name: 'name',
+        type: 'text',
+        props: {
+          searchOper: 'like',
+          placeholder: i18next.t('field.name')
+        }
+      },
+      {
+        name: 'regNumber',
+        type: 'text',
+        props: {
+          searchOper: 'like',
+          placeholder: i18next.t('field.registration_no')
+        }
+      },
+      {
+        name: 'brand',
+        type: 'text',
+        props: {
+          searchOper: 'like',
+          placeholder: i18next.t('field.brand')
+        }
+      },
+      {
+        name: 'model',
+        type: 'text',
+        props: {
+          searchOper: 'like',
+          placeholder: i18next.t('field.model')
+        }
+      },
+      {
+        name: 'color',
+        type: 'text',
+        props: {
+          searchOper: 'like',
+          placeholder: i18next.t('field.color')
+        }
+      },
+      {
+        name: 'size',
+        type: 'text',
+        props: {
+          searchOper: 'like',
+          placeholder: i18next.t('field.size')
+        }
+      },
+      {
+        name: 'status',
+        type: 'text',
+        props: {
+          searchOper: 'like',
+          placeholder: i18next.t('field.status')
+        }
+      }
+    ]
 
+    this.vehiclesData = { records: [] }
     this.vehiclesConfig = {
       pagination: {
         infinite: true
@@ -183,7 +244,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
           name: 'size',
           header: i18next.t('field.size'),
           record: {
-            align: 'right',
+            align: 'center',
             editable: true
           },
           width: 80
@@ -193,13 +254,67 @@ class TransportVehicle extends localize(i18next)(PageView) {
           name: 'status',
           header: i18next.t('field.status'),
           record: {
-            align: 'right',
+            align: 'center',
             editable: true
           },
           width: 250
         }
       ]
     }
+  }
+
+  async _getVehicleList() {
+    const response = await client.query({
+      query: gql`
+        query{
+          transportVehicles(${gqlBuilder.buildArgs({
+            filters: this._conditionParser()
+          })}){
+            items{
+              name
+              model
+              brand
+            }
+            total
+          }
+        }
+      `
+    })
+  }
+
+  _conditionParser() {
+    const fields = this.searchForm.getFields()
+    const conditionFields = fields.filter(
+      field =>
+        (field.type !== 'checkbox' && field.value && field.value !== '') ||
+        field.type === 'checkbox' ||
+        field.type === 'select'
+    )
+    const conditions = []
+
+    conditionFields.forEach(field => {
+      conditions.push({
+        name: field.name,
+        value:
+          field.type === 'text'
+            ? field.value
+            : field.type === 'select'
+            ? field.value
+            : field.type === 'checkbox'
+            ? field.checked
+            : field.value,
+        operator: field.getAttribute('searchOper'),
+        dataType:
+          field.type === 'text'
+            ? 'string'
+            : field.type === 'select'
+            ? 'string'
+            : field.type === 'number'
+            ? 'float'
+            : 'boolean'
+      })
+    })
+    return conditions
   }
 
   async _onVehicleChangeHandler(e) {
@@ -216,7 +331,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
 
   async createTransportVehicle() {
     try {
-      const vehicles = this._getVehicles()
+      const vehicles = this._getNewVehicles()
 
       await client.query({
         query: gql`
@@ -243,7 +358,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
     }
   }
 
-  _getVehicles() {
+  _getNewVehicles() {
     const vehicles = this.shadowRoot.querySelector('#vehicles').dirtyRecords
     if (vehicles.length === 0) {
       throw new Error(i18next.t('text.list_is_not_completed'))
