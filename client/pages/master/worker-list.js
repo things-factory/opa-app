@@ -1,12 +1,24 @@
-import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { getColumns } from '@things-factory/resource-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, navigate, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import { MultiColumnFormStyles } from '@things-factory/form-ui'
 
 class WorkerList extends localize(i18next)(PageView) {
+  static get properties() {
+    return {
+      _searchFields: Array,
+      config: Object,
+      backdrop: Boolean,
+      direction: String,
+      hovering: String,
+      limit: Number,
+      page: Number,
+      data: Object
+    }
+  }
+
   static get styles() {
     return [
       ScrollbarStyles,
@@ -25,6 +37,7 @@ class WorkerList extends localize(i18next)(PageView) {
           display: flex;
           flex-direction: column;
           flex: 1;
+          overflow-y: hidden;
         }
         data-grist {
           overflow-y: hidden;
@@ -34,15 +47,28 @@ class WorkerList extends localize(i18next)(PageView) {
     ]
   }
 
-  static get properties() {
+  get context() {
     return {
-      _searchFields: Array,
-      config: Object,
-      data: Object,
-      backdrop: Boolean,
-      direction: String,
-      hovering: String
+      title: i18next.t('title.worker_list'),
+      actions: [
+        {
+          title: i18next.t('button.submit'),
+          action: this.createWorker.bind(this)
+        },
+        {
+          title: 'delete',
+          action: () => {
+            this._deleteMenu()
+          }
+        }
+      ]
     }
+  }
+
+  constructor() {
+    super()
+    this.page = 1
+    this.limit = 20
   }
 
   render() {
@@ -50,9 +76,9 @@ class WorkerList extends localize(i18next)(PageView) {
       <search-form
         id="search-form"
         .fields=${this._searchFields}
-        initFocus="description"
+        initFocus="name"
         @submit=${async () => {
-          const { records, total } = await this._getWorkers()
+          const { records, total } = await this._getWorkerList()
           this.data = {
             records,
             total
@@ -62,54 +88,18 @@ class WorkerList extends localize(i18next)(PageView) {
 
       <div class="grist">
         <data-grist
+          id="workers"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
           .data=${this.data}
-          @page-changed=${e => {
+          @page-changed=${async e => {
             this.page = e.detail
+            this.data = await this._getWorkerList()
           }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
+          @record-change="${this._onWorkerChangeHandler.bind(this)}"
         ></data-grist>
       </div>
     `
-  }
-
-  get context() {
-    return {
-      title: i18next.t('title.worker'),
-      actions: [
-        {
-          title: i18next.t('button.add'),
-          action: () => {
-            console.log('this is save action')
-          }
-        },
-        {
-          title: 'save',
-          action: () => {
-            console.log('this is save action')
-          }
-        },
-        {
-          title: 'delete',
-          action: () => {
-            console.log('this is delete action')
-          }
-        }
-      ]
-    }
-  }
-
-  async updated(changedProps) {
-    if (changedProps.has('bizplaceId')) {
-      const { records, total } = await this._getContactPoints()
-      this.data = {
-        records,
-        total
-      }
-    }
   }
 
   async firstUpdated() {
@@ -131,10 +121,11 @@ class WorkerList extends localize(i18next)(PageView) {
         }
       }
     ]
+    this.data = { records: [] }
 
     this.config = {
       pagination: {
-        infinite: true
+        pages: [20, 40, 80, 100]
       },
       columns: [
         {
@@ -143,16 +134,16 @@ class WorkerList extends localize(i18next)(PageView) {
         },
         {
           type: 'gutter',
-          gutterName: 'row-selector',
-          multiple: false
-        },
-        {
-          type: 'gutter',
           gutterName: 'button',
           icon: 'delete_outline',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              this._deleteMenu(record.name)
+              this.data.records.splice(rowIndex, 1)
+
+              this.data = {
+                ...this.data,
+                records: [...this.data.records]
+              }
             }
           }
         },
@@ -169,24 +160,34 @@ class WorkerList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'description',
+          header: i18next.t('field.description'),
           record: {
             align: 'left',
             editable: true
           },
-          header: i18next.t('field.description'),
-          width: 220
+          width: 250
         },
         {
-          type: 'select',
+          type: 'string',
           name: 'type',
+          header: i18next.t('field.description'),
           record: {
-            align: 'center',
-            editable: true,
-            options: await this._getWorkerCodes()
+            align: 'left',
+            editable: true
           },
-          header: i18next.t('field.type'),
-          width: 160
+          width: 250
         },
+        // {
+        //   type: 'select',
+        //   name: 'type',
+        //   record: {
+        //     align: 'center',
+        //     editable: true,
+        //     options: await this._getWorkerCodes()
+        //   },
+        //   header: i18next.t('field.type'),
+        //   width: 160
+        // },
         {
           type: 'object',
           name: 'bizplace',
@@ -218,7 +219,7 @@ class WorkerList extends localize(i18next)(PageView) {
             editable: false
           },
           header: i18next.t('field.updater'),
-          width: 150
+          width: (150).buildArgs
         },
         {
           type: 'datetime',
@@ -231,94 +232,6 @@ class WorkerList extends localize(i18next)(PageView) {
         }
       ]
     }
-  }
-
-  get searchForm() {
-    return this.shadowRoot.querySelector('search-form')
-  }
-
-  async _getWorkers(workerId, workerName) {
-    const response = await client.query({
-      query: gql`
-        query {
-          workers(${gqlBuilder.buildArgs({
-            filters: this._conditionParser()
-          })}) {
-            items {
-              name
-              description
-              type
-              updatedAt
-              updater{
-                id
-                name
-                description
-              }
-            }
-            total
-          }
-        }
-      `
-    })
-
-    return {
-      total: response.data.workers.total || 0,
-      records: response.data.workers.items || []
-    }
-  }
-
-  async _deleteMenu(menuName) {
-    let deleteConfirm = confirm('Are you sure?')
-    if (deleteConfirm) {
-      await client.query({
-        query: gql`
-          mutation {
-            deleteMenu(${gqlBuilder.buildArgs({
-              name: menuName
-            })}) {
-              name
-            }
-          }
-        `
-      })
-    }
-    this._getGroupMenus()
-    this._getScreens()
-  }
-
-  _conditionParser() {
-    const fields = this.searchForm.getFields()
-    const conditionFields = fields.filter(
-      field =>
-        (field.type !== 'checkbox' && field.value && field.value !== '') ||
-        field.type === 'checkbox' ||
-        field.type === 'select'
-    )
-    const conditions = []
-
-    conditionFields.forEach(field => {
-      conditions.push({
-        name: field.name,
-        value:
-          field.type === 'text'
-            ? field.value
-            : field.type === 'select'
-            ? field.value
-            : field.type === 'checkbox'
-            ? field.checked
-            : field.value,
-        operator: field.getAttribute('searchOper'),
-        dataType:
-          field.type === 'text'
-            ? 'string'
-            : field.type === 'select'
-            ? 'string'
-            : field.type === 'number'
-            ? 'float'
-            : 'boolean'
-      })
-    })
-    return conditions
   }
 
   async _getWorkerCodes() {
@@ -338,6 +251,131 @@ class WorkerList extends localize(i18next)(PageView) {
     })
 
     return response.data.commonCode.details.map(worker => worker.name)
+  }
+
+  async activated(active) {
+    if (active) {
+      this.data = await this._getWorkerList()
+    }
+  }
+
+  get searchForm() {
+    return this.shadowRoot.querySelector('search-form')
+  }
+
+  async _getWorkerList() {
+    const response = await client.query({
+      query: gql`
+      query {
+        workers(${gqlBuilder.buildArgs({
+          filters: this._conditionParser()
+        })}) {
+          items {
+            name
+            description
+            type
+            updatedAt
+            updater{
+              id
+              name
+              description
+            }
+          }
+          total
+        }
+      }
+    `
+    })
+
+    return {
+      total: response.data.workers.total || 0,
+      records: response.data.workers.items || []
+    }
+  }
+
+  _conditionParser() {
+    if (!this.searchForm) return []
+    const fields = this.searchForm.getFields()
+    const conditionFields = fields.filter(
+      field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox'
+    )
+    const conditions = []
+
+    conditionFields.forEach(field => {
+      conditions.push({
+        name: field.name,
+        value: field.type === 'text' ? field.value : field.type === 'checkbox' ? field.checked : field.value,
+        operator: field.getAttribute('searchOper'),
+        dataType: field.type === 'text' ? 'string' : field.type === 'number' ? 'float' : 'boolean'
+      })
+    })
+    return conditions
+  }
+
+  async _onWorkerChangeHandler(e) {
+    const before = e.detail.before || {}
+    const after = e.detail.after
+    let record = this.data.records[e.detail.row]
+    if (!record) {
+      record = { ...after }
+      this.data.records.push(record)
+    } else if (record !== after) {
+      record = Object.assign(record, after)
+    }
+  }
+
+  async createWorker() {
+    try {
+      const workers = this._getNewWorkers()
+
+      await client.query({
+        query: gql`
+          mutation {
+            createWorker(${gqlBuilder.buildArgs({
+              worker: workers[0]
+            })}) {
+              name
+              description
+              type
+              updatedAt
+              updater
+              {
+                id
+                name
+                description
+              }
+            }
+          }
+        `
+      })
+
+      navigate('worker-list')
+    } catch (e) {
+      this._notify(e.message)
+    }
+  }
+
+  _getNewWorkers() {
+    const workers = this.shadowRoot.querySelector('#workers').dirtyRecords
+    if (workers.length === 0) {
+      throw new Error(i18next.t('text.list_is_not_completed'))
+    } else {
+      return workers.map(worker => {
+        delete worker.__dirty__
+        return worker
+      })
+    }
+  }
+
+  _notify(message, level = '') {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: {
+          level,
+          message
+        }
+      })
+    )
   }
 }
 
