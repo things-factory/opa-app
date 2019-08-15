@@ -5,7 +5,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 
-class CreateTransportVehicle extends localize(i18next)(PageView) {
+class TransportVehicle extends localize(i18next)(PageView) {
   static get properties() {
     return {
       vehiclesConfig: Object,
@@ -222,7 +222,7 @@ class CreateTransportVehicle extends localize(i18next)(PageView) {
         query: gql`
           mutation {
             createTransportVehicle(${gqlBuilder.buildArgs({
-              transportVehicle: vehicles
+              transportVehicle: vehicles[0]
             })}) {
               name
               regNumber
@@ -248,8 +248,10 @@ class CreateTransportVehicle extends localize(i18next)(PageView) {
     if (vehicles.length === 0) {
       throw new Error(i18next.t('text.list_is_not_completed'))
     } else {
-      debugger
-      return vehicles
+      return vehicles.map(vehicle => {
+        delete vehicle.__dirty__
+        return vehicle
+      })
     }
   }
 
@@ -265,4 +267,4 @@ class CreateTransportVehicle extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('create-transport-vehicle', CreateTransportVehicle)
+window.customElements.define('transport-vehicle', TransportVehicle)

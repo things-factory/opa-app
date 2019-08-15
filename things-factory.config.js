@@ -20,8 +20,8 @@ export default {
       page: 'bizplaces'
     },
     {
-      tagname: 'create-transport-vehicle',
-      page: 'create_transport_vehicle'
+      tagname: 'transport-vehicle',
+      page: 'transport_vehicle'
     },
 
     /**
