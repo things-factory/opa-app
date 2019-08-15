@@ -14,8 +14,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
       backdrop: Boolean,
       direction: String,
       hovering: String,
-      limit: Number,
-      page: Number,
       data: Object
     }
   }
@@ -50,7 +48,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.vehicle_detail'),
+      title: i18next.t('title.transport_vehicle'),
       actions: [
         {
           title: i18next.t('button.add'),
@@ -72,25 +70,13 @@ class TransportVehicle extends localize(i18next)(PageView) {
     }
   }
 
-  constructor() {
-    super()
-    this.page = 1
-    this.limit = 20
-  }
-
   render() {
     return html`
       <search-form
         id="search-form"
         .fields=${this._searchFields}
         initFocus="name"
-        @submit=${async () => {
-          const { records, total } = await this._getVehicleList()
-          this.data = {
-            records,
-            total
-          }
-        }}
+        @submit=${async () => this.dataGrist.fetch()}
       ></search-form>
 
       <div class="grist">
@@ -99,10 +85,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
           .data=${this.data}
-          @page-changed=${async e => {
-            this.page = e.detail
-            this.data = await this._getVehicleList()
-          }}
+          .fetchHandler="${this.fetchHandler.bind(this)}"
           @record-change="${this._onVehicleChangeHandler.bind(this)}"
         ></data-grist>
       </div>
@@ -128,30 +111,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
         }
       },
       {
-        name: 'brand',
-        type: 'text',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.brand')
-        }
-      },
-      {
-        name: 'model',
-        type: 'text',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.model')
-        }
-      },
-      {
-        name: 'color',
-        type: 'text',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.color')
-        }
-      },
-      {
         name: 'size',
         type: 'text',
         props: {
@@ -172,7 +131,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
     this.data = { records: [] }
     this.config = {
       pagination: {
-        pages: [20, 40, 80, 100]
+        // infinite: true
       },
       columns: [
         {
@@ -230,36 +189,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'brand',
-          header: i18next.t('field.brand'),
-          record: {
-            align: 'center',
-            editable: true
-          },
-          width: 120
-        },
-        {
-          type: 'string',
-          name: 'model',
-          header: i18next.t('field.model'),
-          record: {
-            align: 'center',
-            editable: true
-          },
-          width: 120
-        },
-        {
-          type: 'string',
-          name: 'color',
-          header: i18next.t('field.color'),
-          record: {
-            align: 'center',
-            editable: true
-          },
-          width: 120
-        },
-        {
-          type: 'string',
           name: 'size',
           header: i18next.t('field.size'),
           record: {
@@ -284,7 +213,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
 
   async activated(active) {
     if (active) {
-      this.data = await this._getVehicleList()
+      this.data = await this.fetchHandler()
     }
   }
 
@@ -292,24 +221,23 @@ class TransportVehicle extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('search-form')
   }
 
-  async _getVehicleList() {
+  get dataGrist() {
+    return this.shadowRoot.querySelector('data-grist')
+  }
+
+  async fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
         query{
           transportVehicles(${gqlBuilder.buildArgs({
             filters: this._conditionParser(),
-            pagination: {
-              limit: this.limit,
-              page: this.page
-            }
+            pagination: { page, limit },
+            sortings: sorters
           })}){
             items{
               name
               regNumber
               description
-              brand
-              model
-              color
               size
               status
               updatedAt
@@ -374,9 +302,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
             })}) {
               name
               regNumber
-              brand
-              model
-              color
               size
               status
               description
@@ -385,7 +310,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
         `
       })
 
-      navigate('transport-vehicle')
+      navigate('transport_vehicle')
     } catch (e) {
       this._notify(e.message)
     }
