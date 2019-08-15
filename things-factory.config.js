@@ -21,7 +21,7 @@ export default {
     },
     {
       tagname: 'transport-vehicle',
-      page: 'transport_vehicles'
+      page: 'transport_vehicle'
     },
     {
       tagname: 'worker-list',

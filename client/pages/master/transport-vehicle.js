@@ -1,6 +1,7 @@
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, navigate } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, navigate, ScrollbarStyles } from '@things-factory/shell'
+import { getColumns } from '@things-factory/resource-base'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
@@ -9,8 +10,13 @@ class TransportVehicle extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _searchFields: Array,
-      vehiclesConfig: Object,
-      vehiclesData: Object
+      config: Object,
+      backdrop: Boolean,
+      direction: String,
+      hovering: String,
+      limit: Number,
+      page: Number,
+      data: Object
     }
   }
 
@@ -32,6 +38,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
           display: flex;
           flex-direction: column;
           flex: 1;
+          overflow-y: hidden;
         }
         data-grist {
           overflow-y: hidden;
@@ -65,6 +72,12 @@ class TransportVehicle extends localize(i18next)(PageView) {
     }
   }
 
+  constructor() {
+    super()
+    this.page = 1
+    this.limit = 20
+  }
+
   render() {
     return html`
       <search-form
@@ -81,13 +94,15 @@ class TransportVehicle extends localize(i18next)(PageView) {
       ></search-form>
 
       <div class="grist">
-        <!-- <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.transport_vehicle_detail')}</h2> -->
-
         <data-grist
           id="vehicles"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.vehiclesConfig}
-          .data=${this.vehiclesData}
+          .config=${this.config}
+          .data=${this.data}
+          @page-changed=${async e => {
+            this.page = e.detail
+            this.data = await this._getVehicleList()
+          }}
           @record-change="${this._onVehicleChangeHandler.bind(this)}"
         ></data-grist>
       </div>
@@ -154,10 +169,10 @@ class TransportVehicle extends localize(i18next)(PageView) {
       }
     ]
 
-    this.vehiclesData = { records: [] }
-    this.vehiclesConfig = {
+    this.data = { records: [] }
+    this.config = {
       pagination: {
-        infinite: true
+        pages: [20, 40, 80, 100]
       },
       columns: [
         {
@@ -166,15 +181,19 @@ class TransportVehicle extends localize(i18next)(PageView) {
         },
         {
           type: 'gutter',
+          gutterName: 'row-selector',
+          multiple: false
+        },
+        {
+          type: 'gutter',
           gutterName: 'button',
           icon: 'delete_outline',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              this.vehiclesData.records.splice(rowIndex, 1)
-
-              this.vehiclesData = {
-                ...this.vehiclesData,
-                records: [...this.vehiclesData.records]
+              this.data.records.splice(rowIndex, 1)
+              this.data = {
+                ...this.data,
+                records: [...this.data.records]
               }
             }
           }
@@ -263,55 +282,69 @@ class TransportVehicle extends localize(i18next)(PageView) {
     }
   }
 
+  async activated(active) {
+    if (active) {
+      this.data = await this._getVehicleList()
+    }
+  }
+
+  get searchForm() {
+    return this.shadowRoot.querySelector('search-form')
+  }
+
   async _getVehicleList() {
     const response = await client.query({
       query: gql`
         query{
           transportVehicles(${gqlBuilder.buildArgs({
-            filters: this._conditionParser()
+            filters: this._conditionParser(),
+            pagination: {
+              limit: this.limit,
+              page: this.page
+            }
           })}){
             items{
               name
-              model
+              regNumber
+              description
               brand
+              model
+              color
+              size
+              status
+              updatedAt
+              updater {
+                id
+                name
+                description
+              }
             }
             total
           }
         }
       `
     })
+
+    return {
+      total: response.data.transportVehicles.total || 0,
+      records: response.data.transportVehicles.items || []
+    }
   }
 
   _conditionParser() {
+    if (!this.searchForm) return []
     const fields = this.searchForm.getFields()
     const conditionFields = fields.filter(
-      field =>
-        (field.type !== 'checkbox' && field.value && field.value !== '') ||
-        field.type === 'checkbox' ||
-        field.type === 'select'
+      field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox'
     )
     const conditions = []
 
     conditionFields.forEach(field => {
       conditions.push({
         name: field.name,
-        value:
-          field.type === 'text'
-            ? field.value
-            : field.type === 'select'
-            ? field.value
-            : field.type === 'checkbox'
-            ? field.checked
-            : field.value,
+        value: field.type === 'text' ? field.value : field.type === 'checkbox' ? field.checked : field.value,
         operator: field.getAttribute('searchOper'),
-        dataType:
-          field.type === 'text'
-            ? 'string'
-            : field.type === 'select'
-            ? 'string'
-            : field.type === 'number'
-            ? 'float'
-            : 'boolean'
+        dataType: field.type === 'text' ? 'string' : field.type === 'number' ? 'float' : 'boolean'
       })
     })
     return conditions
@@ -320,10 +353,10 @@ class TransportVehicle extends localize(i18next)(PageView) {
   async _onVehicleChangeHandler(e) {
     const before = e.detail.before || {}
     const after = e.detail.after
-    let record = this.vehiclesData.records[e.detail.row]
+    let record = this.data.records[e.detail.row]
     if (!record) {
       record = { ...after }
-      this.vehiclesData.records.push(record)
+      this.data.records.push(record)
     } else if (record !== after) {
       record = Object.assign(record, after)
     }
