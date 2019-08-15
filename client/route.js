@@ -110,6 +110,10 @@ export default function route(page) {
       import('./pages/system/system-domain')
       return page
 
+    case 'roles':
+      import('./pages/system/system-role')
+      return page
+
     /**
      * Inbound Menus Section
      */

@@ -111,6 +111,10 @@ export default {
       tagname: 'system-domain',
       page: 'domains'
     },
+    {
+      tagname: 'system-role',
+      page: 'roles'
+    },
     /**
      * Inbound Menus Section
      */
