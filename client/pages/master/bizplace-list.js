@@ -54,11 +54,7 @@ class BizplaceList extends localize(i18next)(PageView) {
         .fields=${this._searchFields}
         initFocus="description"
         @submit=${async () => {
-          const { records, total } = await this._getBizplaces()
-          this.data = {
-            records,
-            total
-          }
+          this.shadowRoot.querySelector('data-grist').fetch()
         }}
       ></search-form>
 
@@ -66,13 +62,7 @@ class BizplaceList extends localize(i18next)(PageView) {
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
-          .data=${this.data}
-          @page-changed=${e => {
-            this.page = e.detail
-          }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
+          .fetchHandler="${this._fetchHandler.bind(this)}"
         ></data-grist>
       </div>
     `
@@ -106,9 +96,6 @@ class BizplaceList extends localize(i18next)(PageView) {
 
   async firstUpdated() {
     this.config = {
-      pagination: {
-        infinite: true
-      },
       columns: [
         {
           type: 'gutter',
@@ -142,12 +129,6 @@ class BizplaceList extends localize(i18next)(PageView) {
       this.config = {
         ...this.config,
         columns: [...this.config.columns, ...this._modifyGridFields(this._columns)]
-      }
-
-      const { records, total } = await this._getBizplaces()
-      this.data = {
-        records,
-        total
       }
     }
   }
@@ -195,12 +176,14 @@ class BizplaceList extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('search-form')
   }
 
-  async _getBizplaces() {
+  async _fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
         query {
           bizplaces(${gqlBuilder.buildArgs({
-            filters: this._conditionParser()
+            filters: this._conditionParser(),
+            pagination: { page, limit },
+            sortings: sorters
           })}) {
             items {
               id
