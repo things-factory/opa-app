@@ -53,16 +53,14 @@ class BizplaceList extends localize(i18next)(PageView) {
         id="search-form"
         .fields=${this._searchFields}
         initFocus="description"
-        @submit=${async () => {
-          this.shadowRoot.querySelector('data-grist').fetch()
-        }}
+        @submit=${async () => this.dataGrist.fetch()}
       ></search-form>
 
       <div class="grist">
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
-          .fetchHandler="${this._fetchHandler.bind(this)}"
+          .fetchHandler="${this.fetchHandler.bind(this)}"
         ></data-grist>
       </div>
     `
@@ -176,7 +174,11 @@ class BizplaceList extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('search-form')
   }
 
-  async _fetchHandler({ page, limit, sorters = [] }) {
+  get dataGrist() {
+    return this.shadowRoot.querySelector('data-grist')
+  }
+
+  async fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
         query {
