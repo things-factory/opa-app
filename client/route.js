@@ -20,11 +20,11 @@ export default function route(page) {
       import('./pages/master/bizplace-list')
       return page
 
-    case 'transport_vehicle':
+    case 'transport_vehicles':
       import('./pages/master/transport-vehicle')
       return page
 
-    case 'worker_list':
+    case 'workers':
       import('./pages/master/worker-list')
       return page
 

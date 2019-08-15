@@ -21,11 +21,11 @@ export default {
     },
     {
       tagname: 'transport-vehicle',
-      page: 'transport_vehicle'
+      page: 'transport_vehicles'
     },
     {
       tagname: 'worker-list',
-      page: 'worker_list'
+      page: 'workers'
     },
 
     /**
