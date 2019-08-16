@@ -53,7 +53,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
         {
           title: i18next.t('button.add'),
           action: () => {
-            console.log('this is save action')
+            console.log('this is add action')
           }
         },
         {
@@ -62,9 +62,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
         },
         {
           title: i18next.t('button.delete'),
-          action: () => {
-            console.log('this is delete action')
-          }
+          action: this.deleteTransportVehicle.bind(this)
         }
       ]
     }
@@ -130,8 +128,10 @@ class TransportVehicle extends localize(i18next)(PageView) {
 
     this.data = { records: [] }
     this.config = {
-      pagination: {
-        // infinite: true
+      rows: {
+        selectable: {
+          multiple: false
+        }
       },
       columns: [
         {
@@ -140,22 +140,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
         },
         {
           type: 'gutter',
-          gutterName: 'row-selector',
-          multiple: false
-        },
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'delete_outline',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              this.data.records.splice(rowIndex, 1)
-              this.data = {
-                ...this.data,
-                records: [...this.data.records]
-              }
-            }
-          }
+          gutterName: 'row-selector'
         },
         {
           type: 'string',
@@ -211,12 +196,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
     }
   }
 
-  async activated(active) {
-    if (active) {
-      this.data = await this.fetchHandler()
-    }
-  }
-
   get searchForm() {
     return this.shadowRoot.querySelector('search-form')
   }
@@ -252,6 +231,8 @@ class TransportVehicle extends localize(i18next)(PageView) {
         }
       `
     })
+
+    this.rawVehicleData = response.data.transportVehicles.items
 
     return {
       total: response.data.transportVehicles.total || 0,
@@ -314,6 +295,32 @@ class TransportVehicle extends localize(i18next)(PageView) {
     } catch (e) {
       this._notify(e.message)
     }
+  }
+
+  async deleteTransportVehicle() {
+    let confirmDelete = confirm('Are you sure?')
+    if (confirmDelete) {
+      try {
+        const selectedVehicle = this.rawVehicleData.find(
+          vehicleData => vehicleData.name === this.dataGrist.selected[0].name
+        )
+        await client.query({
+          query: gql`
+            mutation {
+              deleteTransportVehicle(${gqlBuilder.buildArgs({ name: selectedVehicle.name })}){
+                name
+                regNumber
+              }
+            }
+          `
+        })
+      } catch (e) {
+        console.log(this.selectedVehicle)
+        this._notify(e.message)
+      }
+    }
+    this._getGroupMenus()
+    this._getScreens()
   }
 
   _getNewVehicles() {
