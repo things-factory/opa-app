@@ -27,6 +27,10 @@ export default {
       tagname: 'worker-list',
       page: 'workers'
     },
+    {
+      tagname: 'warehouse-list',
+      page: 'warehouses'
+    },
 
     /**
      * Order Menus Section

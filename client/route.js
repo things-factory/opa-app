@@ -28,6 +28,10 @@ export default function route(page) {
       import('./pages/master/worker-list')
       return page
 
+    case 'warehouses':
+      import('./pages/master/warehouse-list')
+      return page
+
     /**
      * Order Menus Section
      */

@@ -56,11 +56,16 @@ class WorkerList extends localize(i18next)(PageView) {
           action: this.createWorker.bind(this)
         },
         {
-          title: 'delete',
-          action: () => {
-            this._deleteMenu()
-          }
+          title: i18next.t('button.delete'),
+          action: this._cancelWorker.bind(this)
         }
+
+        // {
+        //   title: 'delete',
+        //   action: () => {
+        //     this._deleteMenu()
+        //   }
+        // }
       ]
     }
   }
@@ -130,7 +135,18 @@ class WorkerList extends localize(i18next)(PageView) {
       columns: [
         {
           type: 'gutter',
-          gutterName: 'sequence'
+          gutterName: 'sequence',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              const selectedWorker = this.rawWorkerData.find(workerData => workerData.name === record.name)
+              navigate(`release_worker_detail/${selectedWorker.name}`)
+            }
+          }
+        },
+        {
+          type: 'gutter',
+          gutterName: 'row-selector',
+          multiple: false
         },
         {
           type: 'gutter',
@@ -170,7 +186,7 @@ class WorkerList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'type',
-          header: i18next.t('field.description'),
+          header: i18next.t('field.type'),
           record: {
             align: 'left',
             editable: true
@@ -232,6 +248,7 @@ class WorkerList extends localize(i18next)(PageView) {
         }
       ]
     }
+    this.data = await this._getWorkerList()
   }
 
   async _getWorkerCodes() {
@@ -288,9 +305,24 @@ class WorkerList extends localize(i18next)(PageView) {
     })
 
     return {
+      // total: this._parseOrderData(response.data.workers.items),
       total: response.data.workers.total || 0,
       records: response.data.workers.items || []
     }
+  }
+
+  _parseWorkerData(workers) {
+    return workers.map(worker => {
+      const info = JSON.parse(worker.description)
+      return {
+        //  company: 'Company Name',
+        name: worker.name,
+        description: worker.description,
+        type: worker.type,
+        updatedAt: worker.update,
+        updater: worker.updater
+      }
+    })
   }
 
   _conditionParser() {
@@ -321,6 +353,16 @@ class WorkerList extends localize(i18next)(PageView) {
       this.data.records.push(record)
     } else if (record !== after) {
       record = Object.assign(record, after)
+    }
+  }
+
+  async _cancelWorker() {
+    const selectedWorker = this.rawWorkerData.find(workerData => workerData.name === this._grist.selected[0].name)
+    if (selectedWorker) {
+      await this._deleteWorker(selectedWorker)
+      this.data = await this._getWorkerList()
+    } else {
+      this._notify(i18next.t('text.there_no_selected'))
     }
   }
 
@@ -363,6 +405,23 @@ class WorkerList extends localize(i18next)(PageView) {
       return workers.map(worker => {
         delete worker.__dirty__
         return worker
+      })
+    }
+  }
+
+  async _deleteWorker(name) {
+    let deleteConfirm = confirm('Are you sure?')
+    if (deleteConfirm) {
+      await client.query({
+        query: gql`
+          mutation {
+            deleteWorker(${gqlBuilder.buildArgs({
+              name: name
+            })}) {
+              name
+            }
+          }
+        `
       })
     }
   }
