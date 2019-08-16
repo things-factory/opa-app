@@ -13,8 +13,6 @@ class WorkerList extends localize(i18next)(PageView) {
       backdrop: Boolean,
       direction: String,
       hovering: String,
-      limit: Number,
-      page: Number,
       data: Object
     }
   }
@@ -57,23 +55,10 @@ class WorkerList extends localize(i18next)(PageView) {
         },
         {
           title: i18next.t('button.delete'),
-          action: this._cancelWorker.bind(this)
+          action: this.deleteWorkerList.bind(this)
         }
-
-        // {
-        //   title: 'delete',
-        //   action: () => {
-        //     this._deleteMenu()
-        //   }
-        // }
       ]
     }
-  }
-
-  constructor() {
-    super()
-    this.page = 1
-    this.limit = 20
   }
 
   render() {
@@ -82,13 +67,7 @@ class WorkerList extends localize(i18next)(PageView) {
         id="search-form"
         .fields=${this._searchFields}
         initFocus="name"
-        @submit=${async () => {
-          const { records, total } = await this._getWorkerList()
-          this.data = {
-            records,
-            total
-          }
-        }}
+        @submit=${async () => this.dataGrist.fetch()}
       ></search-form>
 
       <div class="grist">
@@ -97,10 +76,7 @@ class WorkerList extends localize(i18next)(PageView) {
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
           .data=${this.data}
-          @page-changed=${async e => {
-            this.page = e.detail
-            this.data = await this._getWorkerList()
-          }}
+          .fetchHandler="${this.fetchHandler.bind(this)}"
           @record-change="${this._onWorkerChangeHandler.bind(this)}"
         ></data-grist>
       </div>
@@ -132,16 +108,15 @@ class WorkerList extends localize(i18next)(PageView) {
       pagination: {
         pages: [20, 40, 80, 100]
       },
+      rows: {
+        selectable: {
+          multiple: false
+        }
+      },
       columns: [
         {
           type: 'gutter',
-          gutterName: 'sequence',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              const selectedWorker = this.rawWorkerData.find(workerData => workerData.name === record.name)
-              navigate(`release_worker_detail/${selectedWorker.name}`)
-            }
-          }
+          gutterName: 'sequence'
         },
         {
           type: 'gutter',
@@ -251,41 +226,22 @@ class WorkerList extends localize(i18next)(PageView) {
     this.data = await this._getWorkerList()
   }
 
-  async _getWorkerCodes() {
-    const response = await client.query({
-      query: gql`
-        query {
-          commonCode(${gqlBuilder.buildArgs({
-            name: 'WORKER_TYPE'
-          })}) {
-            name
-            details {
-              name
-            }
-          }
-        }
-      `
-    })
-
-    return response.data.commonCode.details.map(worker => worker.name)
-  }
-
-  async activated(active) {
-    if (active) {
-      this.data = await this._getWorkerList()
-    }
-  }
-
   get searchForm() {
     return this.shadowRoot.querySelector('search-form')
   }
 
-  async _getWorkerList() {
+  get dataGrist() {
+    return this.shadowRoot.querySelector('data-grist')
+  }
+
+  async fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
       query {
         workers(${gqlBuilder.buildArgs({
-          filters: this._conditionParser()
+          filters: this._conditionParser(),
+          pagination: { page, limit },
+          sortings: sorters
         })}) {
           items {
             name
@@ -304,25 +260,13 @@ class WorkerList extends localize(i18next)(PageView) {
     `
     })
 
+    this.rawWorkerData = response.data.workers.items
+
     return {
       // total: this._parseOrderData(response.data.workers.items),
       total: response.data.workers.total || 0,
       records: response.data.workers.items || []
     }
-  }
-
-  _parseWorkerData(workers) {
-    return workers.map(worker => {
-      const info = JSON.parse(worker.description)
-      return {
-        //  company: 'Company Name',
-        name: worker.name,
-        description: worker.description,
-        type: worker.type,
-        updatedAt: worker.update,
-        updater: worker.updater
-      }
-    })
   }
 
   _conditionParser() {
@@ -353,16 +297,6 @@ class WorkerList extends localize(i18next)(PageView) {
       this.data.records.push(record)
     } else if (record !== after) {
       record = Object.assign(record, after)
-    }
-  }
-
-  async _cancelWorker() {
-    const selectedWorker = this.rawWorkerData.find(workerData => workerData.name === this._grist.selected[0].name)
-    if (selectedWorker) {
-      await this._deleteWorker(selectedWorker)
-      this.data = await this._getWorkerList()
-    } else {
-      this._notify(i18next.t('text.there_no_selected'))
     }
   }
 
@@ -397,6 +331,32 @@ class WorkerList extends localize(i18next)(PageView) {
     }
   }
 
+  async deleteWorkerList() {
+    let confirmDelete = confirm('Are you sure?')
+    if (confirmDelete) {
+      try {
+        const selectedWorker = this.rawWorkerData.find(
+          workerData => workerData.name === this.dataGrist.selected[0].name
+        )
+        await client.query({
+          query: gql`
+            mutation {
+              deleteWorker(${gqlBuilder.buildArgs({ name: selectedWorker.name })}){
+                name
+                description
+              }
+            }
+          `
+        })
+      } catch (e) {
+        console.log(this.selectedVehicle)
+        this._notify(e.message)
+      }
+    }
+    this._getGroupMenus()
+    this._getScreens()
+  }
+
   _getNewWorkers() {
     const workers = this.shadowRoot.querySelector('#workers').dirtyRecords
     if (workers.length === 0) {
@@ -409,21 +369,23 @@ class WorkerList extends localize(i18next)(PageView) {
     }
   }
 
-  async _deleteWorker(name) {
-    let deleteConfirm = confirm('Are you sure?')
-    if (deleteConfirm) {
-      await client.query({
-        query: gql`
-          mutation {
-            deleteWorker(${gqlBuilder.buildArgs({
-              name: name
-            })}) {
+  async _getWorkerCodes() {
+    const response = await client.query({
+      query: gql`
+        query {
+          commonCode(${gqlBuilder.buildArgs({
+            name: 'WORKER_TYPE'
+          })}) {
+            name
+            details {
               name
             }
           }
-        `
-      })
-    }
+        }
+      `
+    })
+
+    return response.data.commonCode.details.map(worker => worker.name)
   }
 
   _notify(message, level = '') {
