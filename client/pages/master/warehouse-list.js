@@ -14,7 +14,6 @@ class WarehouseList extends localize(i18next)(PageView) {
       direction: String,
       hovering: String,
       limit: Number,
-      page: Number,
       data: Object
     }
   }
@@ -52,21 +51,15 @@ class WarehouseList extends localize(i18next)(PageView) {
       title: i18next.t('title.warehouse_list'),
       actions: [
         {
-          title: i18next.t('button.submit')
-          // action: this.createWarehouse.bind(this)
+          title: i18next.t('button.submit'),
+          action: this.createWarehouse.bind(this)
         },
         {
-          title: i18next.t('button.delete')
-          // action: this._cancelWarehouse.bind(this)
+          title: i18next.t('button.delete'),
+          action: this.deleteWarehouseList.bind(this)
         }
       ]
     }
-  }
-
-  constructor() {
-    super()
-    this.page = 1
-    this.limit = 20
   }
 
   render() {
@@ -75,13 +68,7 @@ class WarehouseList extends localize(i18next)(PageView) {
         id="search-form"
         .fields=${this._searchFields}
         initFocus="name"
-        @submit=${async () => {
-          const { records, total } = await this._getWarehouseList()
-          this.data = {
-            records,
-            total
-          }
-        }}
+        @submit=${async () => this.dataGrist.fetch()}
       ></search-form>
 
       <div class="grist">
@@ -90,10 +77,7 @@ class WarehouseList extends localize(i18next)(PageView) {
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
           .data=${this.data}
-          @page-changed=${async e => {
-            this.page = e.detail
-            this.data = await this._getWarehouseList()
-          }}
+          .fetchHandler="${this.fetchHandler.bind(this)}"
           @record-change="${this._onWarehouseChangeHandler.bind(this)}"
         ></data-grist>
       </div>
@@ -173,16 +157,16 @@ class WarehouseList extends localize(i18next)(PageView) {
       pagination: {
         pages: [20, 40, 80, 100]
       },
+      rows: {
+        selectable: {
+          multiple: false
+        }
+      },
+
       columns: [
         {
           type: 'gutter',
           gutterName: 'sequence'
-          // handlers: {
-          // click: (columns, data, column, record, rowIndex) => {
-          // const selectedWarehouse = this.rawWarehouseData.find(workerData => workerData.name === record.name)
-          // navigate(`release_worker_detail/${selectedWarehouse.name}`)
-          // }
-          // }
         },
         {
           type: 'gutter',
@@ -298,22 +282,22 @@ class WarehouseList extends localize(i18next)(PageView) {
     this.data = await this._getWarehouseList()
   }
 
-  async activated(active) {
-    if (active) {
-      this.data = await this._getWarehouseList()
-    }
-  }
-
   get searchForm() {
     return this.shadowRoot.querySelector('search-form')
   }
 
-  async _getWarehouseList() {
+  get dataGrist() {
+    return this.shadowRoot.querySelector('data-grist')
+  }
+
+  async fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
       query {
-        workers(${gqlBuilder.buildArgs({
-          filters: this._conditionParser()
+        warehouses(${gqlBuilder.buildArgs({
+          filters: this._conditionParser(),
+          pagination: { page, limit },
+          sortings: sorters
         })}) {
           items {
             name
@@ -343,7 +327,7 @@ class WarehouseList extends localize(i18next)(PageView) {
     })
 
     return {
-      // total: this._parseOrderData(response.data.workers.items),
+      // total: this._parseOrderData(response.data.warehouses.items),
       total: response.data.warehouses.total || 0,
       records: response.data.warehouses.items || []
     }
@@ -380,25 +364,15 @@ class WarehouseList extends localize(i18next)(PageView) {
     }
   }
 
-  async _cancelWarehouse() {
-    const selectedWarehouse = this.rawWarehouseData.find(workerData => workerData.name === this._grist.selected[0].name)
-    if (selectedWarehouse) {
-      await this._deleteWarehouse(selectedWarehouse)
-      this.data = await this._getWarehouseList()
-    } else {
-      this._notify(i18next.t('text.there_no_selected'))
-    }
-  }
-
   async createWarehouse() {
     try {
-      const workers = this._getNewWarehouses()
+      const warehouses = this._getNewWarehouses()
 
       await client.query({
         query: gql`
           mutation {
             createWarehouse(${gqlBuilder.buildArgs({
-              worker: workers[0]
+              warehouse: warehouses[0]
             })}) {
               name
               description
@@ -415,37 +389,48 @@ class WarehouseList extends localize(i18next)(PageView) {
         `
       })
 
-      navigate('worker-list')
+      navigate('warehouses')
     } catch (e) {
       this._notify(e.message)
     }
   }
 
-  _getNewWarehouses() {
-    const workers = this.shadowRoot.querySelector('#workers').dirtyRecords
-    if (workers.length === 0) {
-      throw new Error(i18next.t('text.list_is_not_completed'))
-    } else {
-      return workers.map(worker => {
-        delete worker.__dirty__
-        return worker
-      })
+  async deleteWarehouseList() {
+    let confirmDelete = confirm('Are you sure?')
+    if (confirmDelete) {
+      try {
+        const selectedWarehouse = this.rawWarehouseData.find(
+          warehouseData => warehouseData.name === this.dataGrist.selected[0].name
+        )
+        await client.query({
+          query: gql`
+            mutation {
+              deleteWarehouse(${gqlBuilder.buildArgs({ name: selectedWarehouse.name })}){
+                name
+                description
+              }
+            }
+          `
+        })
+        navigate('warehouses')
+      } catch (e) {
+        console.log(this.selectedWarehouse)
+
+        this._notify(e.message)
+      }
     }
+    this._getGroupMenus()
+    this._getScreens()
   }
 
-  async _deleteWarehouse(name) {
-    let deleteConfirm = confirm('Are you sure?')
-    if (deleteConfirm) {
-      await client.query({
-        query: gql`
-          mutation {
-            deleteWarehouse(${gqlBuilder.buildArgs({
-              name: name
-            })}) {
-              name
-            }
-          }
-        `
+  _getNewWarehouses() {
+    const warehouses = this.shadowRoot.querySelector('#warehouses').dirtyRecords
+    if (warehouses.length === 0) {
+      throw new Error(i18next.t('text.list_is_not_completed'))
+    } else {
+      return warehouses.map(warehouse => {
+        delete warehouses.__dirty__
+        return warehouse
       })
     }
   }

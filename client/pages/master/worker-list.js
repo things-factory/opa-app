@@ -325,7 +325,7 @@ class WorkerList extends localize(i18next)(PageView) {
         `
       })
 
-      navigate('worker-list')
+      navigate('workers')
     } catch (e) {
       this._notify(e.message)
     }
@@ -348,8 +348,10 @@ class WorkerList extends localize(i18next)(PageView) {
             }
           `
         })
+        navigate('workers')
       } catch (e) {
         console.log(this.selectedVehicle)
+
         this._notify(e.message)
       }
     }
