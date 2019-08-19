@@ -58,7 +58,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
         },
         {
           title: i18next.t('button.save'),
-          action: this.createTransportVehicle.bind(this)
+          action: this.updateMultipleTransportVehicle.bind(this)
         },
         {
           title: i18next.t('button.delete'),
@@ -271,15 +271,15 @@ class TransportVehicle extends localize(i18next)(PageView) {
     }
   }
 
-  async createTransportVehicle() {
+  async updateMultipleTransportVehicle() {
     try {
       const vehicles = this._getNewVehicles()
 
       await client.query({
         query: gql`
           mutation {
-            createTransportVehicle(${gqlBuilder.buildArgs({
-              transportVehicle: vehicles[0]
+            updateMultipleTransportVehicle(${gqlBuilder.buildArgs({
+              patches: vehicles[0]
             })}) {
               name
               regNumber
@@ -290,8 +290,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
           }
         `
       })
-
-      navigate('transport_vehicle')
     } catch (e) {
       this._notify(e.message)
     }
@@ -319,8 +317,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
         this._notify(e.message)
       }
     }
-    this._getGroupMenus()
-    this._getScreens()
   }
 
   _getNewVehicles() {
