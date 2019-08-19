@@ -1,5 +1,6 @@
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import { getColumns } from '@things-factory/resource-base'
 import { client, gqlBuilder, isMobileDevice, PageView, navigate, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
@@ -84,26 +85,6 @@ class WorkerList extends localize(i18next)(PageView) {
   }
 
   async firstUpdated() {
-    this._searchFields = [
-      {
-        name: 'name',
-        type: 'text',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.name')
-        }
-      },
-      {
-        name: 'type',
-        type: 'text',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.type')
-        }
-      }
-    ]
-    this.data = { records: [] }
-
     this.config = {
       pagination: {
         pages: [20, 40, 80, 100]
@@ -137,93 +118,61 @@ class WorkerList extends localize(i18next)(PageView) {
               }
             }
           }
-        },
-        {
-          type: 'string',
-          name: 'name',
-          record: {
-            align: 'left',
-            editable: true
-          },
-          header: i18next.t('field.name'),
-          width: 120
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 250
-        },
-        {
-          type: 'string',
-          name: 'type',
-          header: i18next.t('field.type'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 250
-        },
-        // {
-        //   type: 'select',
-        //   name: 'type',
-        //   record: {
-        //     align: 'center',
-        //     editable: true,
-        //     options: await this._getWorkerCodes()
-        //   },
-        //   header: i18next.t('field.type'),
-        //   width: 160
-        // },
-        {
-          type: 'object',
-          name: 'bizplace',
-          record: {
-            align: 'center',
-            editable: true,
-            options: {
-              queryName: 'bizplaces',
-              basicArgs: {
-                filters: [
-                  {
-                    name: 'name',
-                    value: 'o',
-                    operator: 'like',
-                    dataType: 'string'
-                  }
-                ]
-              }
-            }
-          },
-          header: i18next.t('field.bizplace'),
-          width: 200
-        },
-        {
-          type: 'object',
-          name: 'updater',
-          record: {
-            align: 'left',
-            editable: false
-          },
-          header: i18next.t('field.updater'),
-          width: (150).buildArgs
-        },
-        {
-          type: 'datetime',
-          name: 'updatedAt',
-          record: {
-            align: 'left'
-          },
-          header: i18next.t('field.updated_at'),
-          width: 150
         }
       ]
     }
-    this.data = await this._getWorkerList()
+  }
+
+  async activated(active) {
+    if (active) {
+      const response = await getColumns('Worker')
+      this._columns = response.menu.columns
+      this._searchFields = this._modifySearchFields(this._columns)
+
+      this.config = {
+        ...this.config,
+        columns: [...this.config.columns, ...this._modifyGridFields(this._columns)]
+      }
+    }
+  }
+
+  _modifySearchFields(columns) {
+    return columns
+      .filter(field => field.searchRank && field.searchRank > 0)
+      .sort((a, b) => a.searchRank - b.searchRank)
+      .map(field => {
+        return {
+          name: field.name,
+          type: field.searchEditor ? field.searchEditor : 'text',
+          props: {
+            min: field.rangeVal ? field.rangeVal.split(',')[0] : null,
+            max: field.rangeVal ? field.rangeVal.split(',')[1] : null,
+            searchOper: field.searchOper ? field.searchOper : 'eq',
+            placeholder: i18next.t(field.term)
+          },
+          value: field.searchInitVal
+        }
+      })
+  }
+
+  _modifyGridFields(columns) {
+    return columns
+      .filter(column => column.gridRank && column.gridRank > 0)
+      .sort((a, b) => a.gridRank - b.gridRank)
+      .map(column => {
+        const type = column.refType == 'Entity' || column.refType == 'Menu' ? 'object' : column.colType
+        return {
+          type,
+          name: column.name,
+          header: i18next.t(column.term),
+          record: {
+            editable: column.gridEditor !== 'readonly',
+            align: column.gridAlign || 'left'
+          },
+          sortable: true,
+          width: column.gridWidth || 100
+        }
+      })
   }
 
   get searchForm() {
@@ -355,7 +304,7 @@ class WorkerList extends localize(i18next)(PageView) {
         this._notify(e.message)
       }
     }
-    this._getGroupMenus()
+    // this._getGroupMenus()
     this._getScreens()
   }
 
