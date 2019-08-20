@@ -35,6 +35,13 @@ export class ContactPointList extends localize(i18next)(LitElement) {
           color: var(--subtitle-text-color);
           border-bottom: var(--subtitle-border-bottom);
         }
+        .button-container {
+          display: flex;
+          margin-left: auto;
+        }
+        .button-container > mwc-button {
+          padding: 10px;
+        }
       `
     ]
   }
@@ -44,77 +51,34 @@ export class ContactPointList extends localize(i18next)(LitElement) {
       bizplaceId: String,
       bizplaceName: String,
       _searchFields: Array,
-      config: Object,
-      data: Object
+      config: Object
     }
   }
 
   render() {
     return html`
       <h2>${this.bizplaceName}</h2>
+
       <search-form
         id="search-form"
         .fields=${this._searchFields}
         initFocus="description"
-        @submit=${async () => {
-          const { records, total } = await this._getContactPoints()
-          this.data = {
-            records,
-            total
-          }
-        }}
+        @submit=${async () => this.dataGrist.fetch()}
       ></search-form>
 
       <div class="grist">
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
-          .data=${this.data}
-          @page-changed=${e => {
-            this.page = e.detail
-          }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
+          .fetchHandler=${this.fetchHandler.bind(this)}
         ></data-grist>
       </div>
+
+      <div class="button-container">
+        <mwc-button @click=${this._saveContactPoints}>${i18next.t('button.save')}</mwc-button>
+        <mwc-button @click=${this._deleteContactPoints}>${i18next.t('button.delete')}</mwc-button>
+      </div>
     `
-  }
-
-  get context() {
-    return {
-      title: i18next.t('title.contactPoint'),
-      actions: [
-        {
-          title: 'add',
-          action: () => {
-            console.log('this is add action')
-          }
-        },
-        {
-          title: 'save',
-          action: () => {
-            console.log('this is save action')
-          }
-        },
-        {
-          title: 'delete',
-          action: () => {
-            console.log('this is delete action')
-          }
-        }
-      ]
-    }
-  }
-
-  async updated(changedProps) {
-    if (changedProps.has('bizplaceId')) {
-      const { records, total } = await this._getContactPoints()
-      this.data = {
-        records,
-        total
-      }
-    }
   }
 
   async firstUpdated() {
@@ -162,10 +126,16 @@ export class ContactPointList extends localize(i18next)(LitElement) {
     ]
 
     this.config = {
-      pagination: {
-        infinite: true
+      rows: {
+        selectable: {
+          multiple: true
+        }
       },
       columns: [
+        {
+          type: 'gutter',
+          gutterName: 'dirty'
+        },
         {
           type: 'gutter',
           gutterName: 'sequence'
@@ -173,7 +143,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
         {
           type: 'gutter',
           gutterName: 'row-selector',
-          multiple: false
+          multiple: true
         },
         {
           type: 'string',
@@ -252,14 +222,21 @@ export class ContactPointList extends localize(i18next)(LitElement) {
     return this.shadowRoot.querySelector('search-form')
   }
 
-  async _getContactPoints(bizplaceId, bizplaceName) {
+  get dataGrist() {
+    return this.shadowRoot.querySelector('data-grist')
+  }
+
+  async fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
         query {
           contactPoints(${gqlBuilder.buildArgs({
-            filters: this._conditionParser()
+            filters: this._conditionParser(),
+            pagination: { page, limit },
+            sortings: sorters
           })}) {
             items {
+              id
               name
               email
               fax
@@ -293,21 +270,65 @@ export class ContactPointList extends localize(i18next)(LitElement) {
         value: this.bizplaceId,
         operator: 'eq',
         dataType: 'string'
-      }
+      },
+      ...fields.map(field => {
+        if ((field.type === 'text' && field.value) || field.value !== '' || field.type === 'checkbox') {
+          conditions.push({
+            name: field.name,
+            value: field.type === 'checkbox' ? field.checked : field.value,
+            operator: field.getAttribute('searchoper'),
+            dataType: field.type === 'text' ? 'string' : field.type === 'number' ? 'float' : 'boolean'
+          })
+        }
+      })
     ]
 
-    fields.forEach(field => {
-      if ((field.type === 'text' && field.value) || field.value !== '' || field.type === 'checkbox') {
-        conditions.push({
-          name: field.name,
-          value: field.type === 'checkbox' ? field.checked : field.value,
-          operator: field.getAttribute('searchoper'),
-          dataType: field.type === 'text' ? 'string' : field.type === 'number' ? 'float' : 'boolean'
-        })
-      }
-    })
-
     return conditions
+  }
+
+  async _saveContactPoints() {
+    let patches = this.dataGrist.dirtyRecords
+    if (patches && patches.length) {
+      patches = patches.map(contactPoint => {
+        contactPoint.cuFlag = contactPoint.__dirty__
+        contactPoint.bizplace = { id: this.bizplaceId }
+        delete contactPoint.__dirty__
+        return contactPoint
+      })
+
+      const response = await client.query({
+        query: gql`
+          mutation {
+            updateMultipleContactPoint(${gqlBuilder.buildArgs({
+              patches
+            })}) {
+              name
+            }
+          }
+        `
+      })
+
+      if (!response.errors) this.dataGrist.fetch()
+    }
+  }
+
+  async _deleteContactPoints() {
+    const names = this.dataGrist.selected.map(record => record.name)
+    if (names && names.length > 0) {
+      const response = await client.query({
+        query: gql`
+            mutation {
+              deleteContactPoints(${gqlBuilder.buildArgs({
+                names
+              })}) {
+                name
+              }
+            }
+          `
+      })
+
+      if (!response.errors) this.dataGrist.fetch()
+    }
   }
 }
 

@@ -2,13 +2,14 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { getColumns } from '@things-factory/resource-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
+import { connect } from 'pwa-helpers/connect-mixin'
 import gql from 'graphql-tag'
 import { openPopup } from '@things-factory/layout-base'
 import { css, html } from 'lit-element'
 import './contact-point-list'
 
-class BizplaceList extends localize(i18next)(PageView) {
+class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -38,6 +39,7 @@ class BizplaceList extends localize(i18next)(PageView) {
 
   static get properties() {
     return {
+      _companyId: String,
       _searchFields: Array,
       config: Object,
       data: Object,
@@ -71,30 +73,33 @@ class BizplaceList extends localize(i18next)(PageView) {
       title: i18next.t('title.bizplace'),
       actions: [
         {
-          title: 'add',
-          action: () => {
-            console.log('this is add action')
-          }
+          title: i18next.t('button.save'),
+          action: this._saveBizplaces.bind(this)
         },
         {
-          title: 'save',
-          action: () => {
-            console.log('this is save action')
-          }
-        },
-        {
-          title: 'delete',
-          action: () => {
-            console.log('this is delete action')
-          }
+          title: i18next.t('button.delete'),
+          action: this._deleteBizplaces.bind(this)
         }
       ]
     }
   }
 
   async firstUpdated() {
+    const response = await getColumns('Bizplace')
+    this._columns = response.menu.columns
+    this._searchFields = this._modifySearchFields(this._columns)
+
     this.config = {
+      rows: {
+        selectable: {
+          multiple: true
+        }
+      },
       columns: [
+        {
+          type: 'gutter',
+          gutterName: 'dirty'
+        },
         {
           type: 'gutter',
           gutterName: 'sequence'
@@ -102,32 +107,20 @@ class BizplaceList extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           gutterName: 'row-selector',
-          multiple: false
+          multiple: true
         },
         {
           type: 'gutter',
           gutterName: 'button',
-          icon: 'search',
+          icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               this._openContactPoints(record.id, record.name)
             }
           }
-        }
+        },
+        ...this._modifyGridFields(this._columns)
       ]
-    }
-  }
-
-  async activated(active) {
-    if (active) {
-      const response = await getColumns('Bizplace')
-      this._columns = response.menu.columns
-      this._searchFields = this._modifySearchFields(this._columns)
-
-      this.config = {
-        ...this.config,
-        columns: [...this.config.columns, ...this._modifyGridFields(this._columns)]
-      }
     }
   }
 
@@ -179,11 +172,19 @@ class BizplaceList extends localize(i18next)(PageView) {
   }
 
   async fetchHandler({ page, limit, sorters = [] }) {
+    if (!this._companyId) return
     const response = await client.query({
       query: gql`
         query {
           bizplaces(${gqlBuilder.buildArgs({
-            filters: this._conditionParser(),
+            filters: [
+              {
+                name: 'company_id',
+                operator: 'eq',
+                value: this._companyId
+              },
+              ...this._conditionParser()
+            ],
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -197,6 +198,7 @@ class BizplaceList extends localize(i18next)(PageView) {
               address
               postalCode
               status
+              latlng
               updatedAt
               updater {
                 id
@@ -210,16 +212,18 @@ class BizplaceList extends localize(i18next)(PageView) {
       `
     })
 
-    return {
-      total: response.data.bizplaces.total || 0,
-      records: response.data.bizplaces.items || []
+    if (!response.errors) {
+      return {
+        total: response.data.bizplaces.total || 0,
+        records: response.data.bizplaces.items || []
+      }
     }
   }
 
   _openContactPoints(bizplaceId, bizplaceName) {
     openPopup(html`
       <contact-point-list
-        style="height: 400px;"
+        style="width: 80vw; height: 80vh"
         .bizplaceId="${bizplaceId}"
         .bizplaceName="${bizplaceName}"
       ></contact-point-list>
@@ -242,6 +246,57 @@ class BizplaceList extends localize(i18next)(PageView) {
       })
     })
     return conditions
+  }
+
+  async _saveBizplaces() {
+    let patches = this.dataGrist.dirtyRecords
+    if (patches && patches.length) {
+      patches = patches.map(bizplace => {
+        bizplace.cuFlag = bizplace.__dirty__
+        bizplace.company = { id: this._companyId }
+        delete bizplace.__dirty__
+        return bizplace
+      })
+
+      const response = await client.query({
+        query: gql`
+            mutation {
+              updateMultipleBizplace(${gqlBuilder.buildArgs({
+                patches
+              })}) {
+                name
+              }
+            }
+          `
+      })
+
+      if (!response.errors) this.dataGrist.fetch()
+    }
+  }
+
+  async _deleteBizplaces() {
+    const names = this.dataGrist.selected.map(record => record.name)
+    if (names && names.length > 0) {
+      const response = await client.query({
+        query: gql`
+            mutation {
+              deleteBizplaces(${gqlBuilder.buildArgs({
+                names
+              })}) {
+                name
+              }
+            }
+          `
+      })
+
+      if (!response.errors) this.dataGrist.fetch()
+    }
+  }
+
+  stateChanged(state) {
+    if (this.active) {
+      this._companyId = state && state.route && state.route.resourceId
+    }
   }
 }
 

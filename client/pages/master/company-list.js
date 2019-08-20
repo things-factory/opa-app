@@ -2,7 +2,7 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { getColumns } from '@things-factory/resource-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 
@@ -48,26 +48,14 @@ class CompanyList extends localize(i18next)(PageView) {
         id="search-form"
         .fields=${this._searchFields}
         initFocus="description"
-        @submit=${async () => {
-          const { records, total } = await this._getCompanies()
-          this.data = {
-            records,
-            total
-          }
-        }}
+        @submit=${async () => this.dataGrist.fetch()}
       ></search-form>
 
       <div class="grist">
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
-          .data=${this.data}
-          @page-changed=${e => {
-            this.page = e.detail
-          }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
+          .fetchHandler="${this.fetchHandler.bind(this)}"
         ></data-grist>
       </div>
     `
@@ -90,10 +78,11 @@ class CompanyList extends localize(i18next)(PageView) {
   }
 
   async firstUpdated() {
+    const response = await getColumns('Company')
+    this._columns = response.menu.columns
+    this._searchFields = this._modifySearchFields(this._columns)
+
     this.config = {
-      pagination: {
-        infinite: true
-      },
       columns: [
         {
           type: 'gutter',
@@ -107,34 +96,15 @@ class CompanyList extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           gutterName: 'button',
-          icon: 'search',
+          icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              const selectedOrder = this.rawOrderData.find(orderData => orderData.name === record.name)
-              navigate(`bizplaces/${selectedOrder.resourceId}`)
+              navigate(`bizplaces/${record.id}`)
             }
           }
-        }
+        },
+        ...this._modifyGridFields(this._columns)
       ]
-    }
-  }
-
-  async activated(active) {
-    if (active) {
-      const response = await getColumns('Company')
-      this._columns = response.menu.columns
-      this._searchFields = this._modifySearchFields(this._columns)
-
-      this.config = {
-        ...this.config,
-        columns: [...this.config.columns, ...this._modifyGridFields(this._columns)]
-      }
-
-      const { records, total } = await this._getCompanies()
-      this.data = {
-        records,
-        total
-      }
     }
   }
 
@@ -181,31 +151,21 @@ class CompanyList extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('search-form')
   }
 
-  buildFilters() {
-    const conditions = []
-
-    this.searchForm.getFields().forEach(field => {
-      if (field.value) {
-        conditions.push({
-          name: field.name,
-          operator: field.getAttribute('searchOper'),
-          value: field.value,
-          dataType: this._columns.find(c => c.name === field.name).colType
-        })
-      }
-    })
-
-    return conditions
+  get dataGrist() {
+    return this.shadowRoot.querySelector('data-grist')
   }
 
-  async _getCompanies() {
+  async fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
         query {
           companies(${gqlBuilder.buildArgs({
-            filters: this.buildFilters()
+            filters: this.buildFilters(),
+            pagination: { page, limit },
+            sortings: sorters
           })}) {
             items {
+              id
               name
               description
               countryCode
@@ -231,20 +191,26 @@ class CompanyList extends localize(i18next)(PageView) {
     }
   }
 
-  _saveCompany() {
-    if (this.grist.dirtyRecords && this.grist.dirtyRecords.length > 0) {
-      console.log('save it')
-    }
+  buildFilters() {
+    const conditions = []
+
+    this.searchForm.getFields().forEach(field => {
+      if (field.value) {
+        conditions.push({
+          name: field.name,
+          operator: field.getAttribute('searchOper'),
+          value: field.value,
+          dataType: this._columns.find(c => c.name === field.name).colType
+        })
+      }
+    })
+
+    return conditions
   }
 
-  _deleteCompany() {
-    if (this.grist.di) {
-    }
-  }
+  _saveCompany() {}
 
-  get grist() {
-    return this.shadowRoot.querySelector('data-grist')
-  }
+  _deleteCompany() {}
 }
 
 window.customElements.define('company-list', CompanyList)
