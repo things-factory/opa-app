@@ -6,7 +6,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 
-class WorkerList extends localize(i18next)(PageView) {
+export class LocationList extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _searchFields: Array,
@@ -14,7 +14,9 @@ class WorkerList extends localize(i18next)(PageView) {
       backdrop: Boolean,
       direction: String,
       hovering: String,
-      data: Object
+      data: Object,
+      locationId: String,
+      locationName: String
     }
   }
 
@@ -48,15 +50,15 @@ class WorkerList extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.worker_list'),
+      title: i18next.t('title.location_list'),
       actions: [
         {
           title: i18next.t('button.submit'),
-          action: this.createWorker.bind(this)
+          action: this.createLocation.bind(this)
         },
         {
           title: i18next.t('button.delete'),
-          action: this.deleteWorkerList.bind(this)
+          action: this.deleteLocationList.bind(this)
         }
       ]
     }
@@ -64,6 +66,8 @@ class WorkerList extends localize(i18next)(PageView) {
 
   render() {
     return html`
+      <h2>${this.locationName}</h2>
+
       <search-form
         id="search-form"
         .fields=${this._searchFields}
@@ -73,12 +77,12 @@ class WorkerList extends localize(i18next)(PageView) {
 
       <div class="grist">
         <data-grist
-          id="workers"
+          id="locations"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
           .data=${this.data}
           .fetchHandler="${this.fetchHandler.bind(this)}"
-          @record-change="${this._onWorkerChangeHandler.bind(this)}"
+          @record-change="${this._onLocationChangeHandler.bind(this)}"
         ></data-grist>
       </div>
     `
@@ -107,16 +111,6 @@ class WorkerList extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           gutterName: 'button',
-          icon: 'search',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              this._openContactPoints(record.id, record.name)
-            }
-          }
-        },
-        {
-          type: 'gutter',
-          gutterName: 'button',
           icon: 'delete_outline',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
@@ -135,7 +129,7 @@ class WorkerList extends localize(i18next)(PageView) {
 
   async activated(active) {
     if (active) {
-      const response = await getColumns('Worker')
+      const response = await getColumns('Location')
       this._columns = response.menu.columns
       this._searchFields = this._modifySearchFields(this._columns)
 
@@ -197,7 +191,7 @@ class WorkerList extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
       query {
-        workers(${gqlBuilder.buildArgs({
+        warehouses(${gqlBuilder.buildArgs({
           filters: this._conditionParser(),
           pagination: { page, limit },
           sortings: sorters
@@ -219,12 +213,12 @@ class WorkerList extends localize(i18next)(PageView) {
     `
     })
 
-    this.rawWorkerData = response.data.workers.items
+    this.rawLocationData = response.data.warehouses.items
 
     return {
-      // total: this._parseOrderData(response.data.workers.items),
-      total: response.data.workers.total || 0,
-      records: response.data.workers.items || []
+      // total: this._parseOrderData(response.data.locations.items),
+      total: response.data.warehouses.total || 0,
+      records: response.data.warehouses.items || []
     }
   }
 
@@ -247,7 +241,7 @@ class WorkerList extends localize(i18next)(PageView) {
     return conditions
   }
 
-  async _onWorkerChangeHandler(e) {
+  async _onLocationChangeHandler(e) {
     const before = e.detail.before || {}
     const after = e.detail.after
     let record = this.data.records[e.detail.row]
@@ -259,15 +253,15 @@ class WorkerList extends localize(i18next)(PageView) {
     }
   }
 
-  async createWorker() {
+  async createLocation() {
     try {
-      const workers = this._getNewWorkers()
+      const locations = this._getNewLocations()
 
       await client.query({
         query: gql`
           mutation {
-            createWorker(${gqlBuilder.buildArgs({
-              worker: workers[0]
+            createLocation(${gqlBuilder.buildArgs({
+              location: locations[0]
             })}) {
               name
               description
@@ -284,30 +278,30 @@ class WorkerList extends localize(i18next)(PageView) {
         `
       })
 
-      navigate('workers')
+      navigate('locations')
     } catch (e) {
       this._notify(e.message)
     }
   }
 
-  async deleteWorkerList() {
+  async deleteLocationList() {
     let confirmDelete = confirm('Are you sure?')
     if (confirmDelete) {
       try {
-        const selectedWorker = this.rawWorkerData.find(
-          workerData => workerData.name === this.dataGrist.selected[0].name
+        const selectedLocation = this.rawLocationData.find(
+          locationData => locationData.name === this.dataGrist.selected[0].name
         )
         await client.query({
           query: gql`
             mutation {
-              deleteWorker(${gqlBuilder.buildArgs({ name: selectedWorker.name })}){
+              deleteLocation(${gqlBuilder.buildArgs({ name: selectedLocation.name })}){
                 name
                 description
               }
             }
           `
         })
-        navigate('workers')
+        navigate('locations')
       } catch (e) {
         console.log(this.selectedVehicle)
 
@@ -318,19 +312,19 @@ class WorkerList extends localize(i18next)(PageView) {
     this._getScreens()
   }
 
-  _getNewWorkers() {
-    const workers = this.shadowRoot.querySelector('#workers').dirtyRecords
-    if (workers.length === 0) {
+  _getNewLocations() {
+    const locations = this.shadowRoot.querySelector('#locations').dirtyRecords
+    if (locations.length === 0) {
       throw new Error(i18next.t('text.list_is_not_completed'))
     } else {
-      return workers.map(worker => {
-        delete worker.__dirty__
-        return worker
+      return locations.map(location => {
+        delete location.__dirty__
+        return location
       })
     }
   }
 
-  async _getWorkerCodes() {
+  async _getLocationCodes() {
     const response = await client.query({
       query: gql`
         query {
@@ -346,7 +340,7 @@ class WorkerList extends localize(i18next)(PageView) {
       `
     })
 
-    return response.data.commonCode.details.map(worker => worker.name)
+    return response.data.commonCode.details.map(location => location.name)
   }
 
   _notify(message, level = '') {
@@ -361,4 +355,4 @@ class WorkerList extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('worker-list', WorkerList)
+window.customElements.define('location-list', LocationList)

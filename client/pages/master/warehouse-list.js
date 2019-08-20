@@ -1,9 +1,12 @@
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import { getColumns } from '@things-factory/resource-base'
 import { client, gqlBuilder, isMobileDevice, PageView, navigate, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import { openPopup } from '@things-factory/layout-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
+import './location-list'
 
 class WarehouseList extends localize(i18next)(PageView) {
   static get properties() {
@@ -13,7 +16,6 @@ class WarehouseList extends localize(i18next)(PageView) {
       backdrop: Boolean,
       direction: String,
       hovering: String,
-      limit: Number,
       data: Object
     }
   }
@@ -70,6 +72,7 @@ class WarehouseList extends localize(i18next)(PageView) {
         initFocus="name"
         @submit=${async () => this.dataGrist.fetch()}
       ></search-form>
+      q
 
       <div class="grist">
         <data-grist
@@ -85,74 +88,6 @@ class WarehouseList extends localize(i18next)(PageView) {
   }
 
   async firstUpdated() {
-    this._searchFields = [
-      {
-        name: 'name',
-        type: 'text',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.name')
-        }
-      },
-      {
-        name: 'description',
-        type: 'text',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.description')
-        }
-      },
-      {
-        name: 'warehouse',
-        type: 'text',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.warehouse')
-        }
-      },
-      {
-        name: 'zone',
-        type: 'text',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.zone')
-        }
-      },
-      {
-        name: 'section',
-        type: 'text',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.section')
-        }
-      },
-      {
-        name: 'unit',
-        type: 'text',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.unit')
-        }
-      },
-      {
-        name: 'shelf',
-        type: 'text',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.shelf')
-        }
-      },
-      {
-        name: 'state',
-        type: 'text',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.state')
-        }
-      }
-    ]
-    this.data = { records: [] }
-
     this.config = {
       pagination: {
         pages: [20, 40, 80, 100]
@@ -162,7 +97,6 @@ class WarehouseList extends localize(i18next)(PageView) {
           multiple: false
         }
       },
-
       columns: [
         {
           type: 'gutter',
@@ -172,6 +106,16 @@ class WarehouseList extends localize(i18next)(PageView) {
           type: 'gutter',
           gutterName: 'row-selector',
           multiple: false
+        },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'search',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              this._openLocations(record.id, record.name)
+            }
+          }
         },
         {
           type: 'gutter',
@@ -187,99 +131,61 @@ class WarehouseList extends localize(i18next)(PageView) {
               }
             }
           }
-        },
-        {
-          type: 'string',
-          name: 'name',
-          record: {
-            align: 'left',
-            editable: true
-          },
-          header: i18next.t('field.name'),
-          width: 120
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 250
-        },
-        {
-          type: 'string',
-          name: 'warehouse',
-          header: i18next.t('field.warehouse'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 250
-        },
-        {
-          type: 'string',
-          name: 'zone',
-          header: i18next.t('field.zone'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 250
-        },
-        {
-          type: 'string',
-          name: 'section',
-          header: i18next.t('field.warehouse'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 250
-        },
-        {
-          type: 'string',
-          name: 'unit',
-          header: i18next.t('field.unit'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 250
-        },
-        {
-          type: 'string',
-          name: 'shelf',
-          header: i18next.t('field.shelf'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 250
-        },
-        {
-          type: 'string',
-          name: 'state',
-          header: i18next.t('field.state'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 250
-        },
-        {
-          type: 'datetime',
-          name: 'updatedAt',
-          record: {
-            align: 'left'
-          },
-          header: i18next.t('field.updated_at'),
-          width: 150
         }
       ]
     }
-    this.data = await this._getWarehouseList()
+  }
+
+  async activated(active) {
+    if (active) {
+      const response = await getColumns('Warehouse')
+      this._columns = response.menu.columns
+      this._searchFields = this._modifySearchFields(this._columns)
+
+      this.config = {
+        ...this.config,
+        columns: [...this.config.columns, ...this._modifyGridFields(this._columns)]
+      }
+    }
+  }
+
+  _modifySearchFields(columns) {
+    return columns
+      .filter(field => field.searchRank && field.searchRank > 0)
+      .sort((a, b) => a.searchRank - b.searchRank)
+      .map(field => {
+        return {
+          name: field.name,
+          type: field.searchEditor ? field.searchEditor : 'text',
+          props: {
+            min: field.rangeVal ? field.rangeVal.split(',')[0] : null,
+            max: field.rangeVal ? field.rangeVal.split(',')[1] : null,
+            searchOper: field.searchOper ? field.searchOper : 'eq',
+            placeholder: i18next.t(field.term)
+          },
+          value: field.searchInitVal
+        }
+      })
+  }
+
+  _modifyGridFields(columns) {
+    return columns
+      .filter(column => column.gridRank && column.gridRank > 0)
+      .sort((a, b) => a.gridRank - b.gridRank)
+      .map(column => {
+        const type = column.refType == 'Entity' || column.refType == 'Menu' ? 'object' : column.colType
+        return {
+          type,
+          name: column.name,
+          header: i18next.t(column.term),
+          record: {
+            editable: column.gridEditor !== 'readonly',
+            align: column.gridAlign || 'left'
+          },
+          sortable: true,
+          width: column.gridWidth || 100
+        }
+      })
   }
 
   get searchForm() {
@@ -303,16 +209,6 @@ class WarehouseList extends localize(i18next)(PageView) {
             name
             description
             type
-            locations{
-              id
-              name
-              zone
-              row
-              shelf
-              status
-              description
-              warehouse
-            }
             updatedAt
             updater{
               id
@@ -325,6 +221,8 @@ class WarehouseList extends localize(i18next)(PageView) {
       }
     `
     })
+
+    this.rawWarehouseData = response.data.warehouses.items
 
     return {
       // total: this._parseOrderData(response.data.warehouses.items),
@@ -377,6 +275,18 @@ class WarehouseList extends localize(i18next)(PageView) {
               name
               description
               type
+              locations{
+                id
+                name
+                zone
+                row
+                column
+                shelf
+                status
+                description
+                
+              }
+
               updatedAt
               updater
               {
@@ -407,6 +317,7 @@ class WarehouseList extends localize(i18next)(PageView) {
             mutation {
               deleteWarehouse(${gqlBuilder.buildArgs({ name: selectedWarehouse.name })}){
                 name
+                type
                 description
               }
             }
@@ -414,12 +325,12 @@ class WarehouseList extends localize(i18next)(PageView) {
         })
         navigate('warehouses')
       } catch (e) {
-        console.log(this.selectedWarehouse)
+        console.log(this.selectedVehicle)
 
         this._notify(e.message)
       }
     }
-    this._getGroupMenus()
+    // this._getGroupMenus()
     this._getScreens()
   }
 
@@ -429,10 +340,35 @@ class WarehouseList extends localize(i18next)(PageView) {
       throw new Error(i18next.t('text.list_is_not_completed'))
     } else {
       return warehouses.map(warehouse => {
-        delete warehouses.__dirty__
+        delete warehouse.__dirty__
         return warehouse
       })
     }
+  }
+
+  // async _getWarehouseCodes() {
+  //   const response = await client.query({
+  //     query: gql`
+  //       query {
+  //         commonCode(${gqlBuilder.buildArgs({
+  //           name: 'WORKER_TYPE'
+  //         })}) {
+  //           name
+  //           details {
+  //             name
+  //           }
+  //         }
+  //       }
+  //     `
+  //   })
+
+  //   return response.data.commonCode.details.map(warehouse => warehouse.name)
+  // }
+
+  _openLocations(locationId, locationName) {
+    openPopup(html`
+      <location-list style="height: 400px;" .locationId="${locationId}" .locationName="${locationName}"></location-list>
+    `)
   }
 
   _notify(message, level = '') {
