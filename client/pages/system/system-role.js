@@ -1,4 +1,5 @@
 import '@things-factory/grist-ui'
+import '@things-factory/form-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
 import { getColumns } from '@things-factory/resource-base'
@@ -8,22 +9,26 @@ import {
   isMobileDevice,
   PageView,
   PullToRefreshStyles,
-  ScrollbarStyles,
-  store
+  ScrollbarStyles
 } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { connect } from 'pwa-helpers/connect-mixin'
+import './system-role-detail'
+import './system-create-role'
 
-class SystemRole extends connect(store)(localize(i18next)(PageView)) {
+class SystemRole extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _searchFields: Array,
+      active: String,
       config: Object,
       data: Object,
       backdrop: Boolean,
       direction: String,
-      hovering: String
+      hovering: String,
+      _currentPopupName: String,
+      page: Number,
+      limit: Number
     }
   }
 
@@ -55,27 +60,13 @@ class SystemRole extends connect(store)(localize(i18next)(PageView)) {
     ]
   }
 
-  get context() {
-    return {
-      title: i18next.t('title.role'),
-      actions: [
-        {
-          title: i18next.t('button.add_role'),
-          action: this._addRole.bind(this)
-        }
-      ]
-    }
-  }
-
   render() {
     return html`
       <search-form
         id="search-form"
         .fields=${this._searchFields}
-        initFocus="description"
-        @submit="${async () => {
-          this.data = await this._getRoles()
-        }}"
+        initFocus="name"
+        @submit=${async () => this.dataGrist.fetch()}
       ></search-form>
 
       <div class="grist">
@@ -88,20 +79,23 @@ class SystemRole extends connect(store)(localize(i18next)(PageView)) {
     `
   }
 
-  async activated(active) {
-    if (active) {
-      const response = await getColumns('Role')
-      this._columns = response.menu.columns
-      this._searchFields = this._modifySearchFields(this._columns)
-
-      this.config = {
-        ...this.config,
-        columns: [...this.config.columns, ...this._modifyGridFields(this._columns)]
-      }
+  get context() {
+    return {
+      title: i18next.t('title.role'),
+      actions: [
+        {
+          title: i18next.t('button.add_role'),
+          action: this._createRole.bind(this)
+        },
+        {
+          title: i18next.t('button.delete'),
+          action: this._deleteRole.bind(this)
+        }
+      ]
     }
   }
 
-  firstUpdated() {
+  async firstUpdated() {
     this.config = {
       columns: [
         {
@@ -119,7 +113,11 @@ class SystemRole extends connect(store)(localize(i18next)(PageView)) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              this._openRoles(record.id, record.name)
+              this._currentPopupName = openPopup(
+                html`
+                  <system-role-detail .name="${record.name}" style="width: 90vw; height: 70vh;"></system-role-detail>
+                `
+              ).name
             }
           }
         },
@@ -131,7 +129,7 @@ class SystemRole extends connect(store)(localize(i18next)(PageView)) {
             click: async (columns, data, column, record, rowIndex) => {
               if (confirm(i18next.t('text.sure_to_delete'))) {
                 await this._deleteRole(record.name)
-                this.data = await this._getUsers()
+                this.data = await this.fetchHandler()
               }
             }
           }
@@ -140,50 +138,17 @@ class SystemRole extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async fetchHandler({ page, limit, sorters = [] }) {
-    const response = await client.query({
-      query: gql`
-        query {
-          roles(${gqlBuilder.buildArgs({
-            filters: this._conditionParser(),
-            pagination: { page, limit },
-            sortings: sorters
-          })}) {
-            items {
-              id
-              domain {
-                id
-                name
-                description
-              }
-              name
-              description
-              
-              updater {
-                id
-                name
-                description
-              }
-              updatedAt
-            }
-            total
-          }
-        }
-      `
-    })
+  async activated(active) {
+    if (active) {
+      const response = await getColumns('Role')
+      this._columns = response.menu.columns
+      this._searchFields = this._modifySearchFields(this._columns)
 
-    return {
-      total: response.data.roles.total || 0,
-      records: response.data.roles.items || []
+      this.config = {
+        ...this.config,
+        columns: [...this.config.columns, ...this._modifyGridFields(this._columns)]
+      }
     }
-  }
-
-  get searchForm() {
-    return this.shadowRoot.querySelector('search-form')
-  }
-
-  get grist() {
-    return this.shadowRoot.querySelector('data-grist')
   }
 
   _modifySearchFields(columns) {
@@ -225,6 +190,48 @@ class SystemRole extends connect(store)(localize(i18next)(PageView)) {
       })
   }
 
+  get searchForm() {
+    return this.shadowRoot.querySelector('search-form')
+  }
+
+  get grist() {
+    return this.shadowRoot.querySelector('data-grist')
+  }
+
+  async fetchHandler({ page, limit, sorters = [] }) {
+    const response = await client.query({
+      query: gql`
+        query {
+          roles(${gqlBuilder.buildArgs({
+            filters: this._conditionParser(),
+            pagination: { page, limit },
+            sortings: sorters
+          })}) {
+            items {
+              id
+              name
+              description
+              updatedAt
+              updater {
+                id
+                name
+                description
+              }
+            }
+            total
+          }
+        }
+      `
+    })
+
+    this.rawRoleData = response.data.roles.items
+
+    return {
+      total: response.data.roles.total || 0,
+      records: response.data.roles.items || []
+    }
+  }
+
   _conditionParser() {
     const fields = this.searchForm.getFields()
     const conditionFields = fields.filter(
@@ -243,17 +250,19 @@ class SystemRole extends connect(store)(localize(i18next)(PageView)) {
     return conditions
   }
 
-  _openRoles(roleId, roleName) {
-    openPopup(html`
-      <system-edit-role style="height: 400px;" .roleId="${roleId}" .roleName="${roleName}"></system-edit-role>
-    `)
+  _createRole() {
+    this._currentPopupName = openPopup(
+      html`
+        <system-create-role style="width: 90vw; height: 70vh;"></system-create-role>
+      `
+    ).name
   }
 
   async _deleteRole(name) {
     await client.query({
       query: gql`
         mutation {
-          deleteUser(${gqlBuilder.buildArgs({
+          deleteRole(${gqlBuilder.buildArgs({
             name
           })}) {
             id
@@ -266,7 +275,7 @@ class SystemRole extends connect(store)(localize(i18next)(PageView)) {
 
   async stateChanged(state) {
     if (this.active && this._currentPopupName && !state.layout.viewparts[this._currentPopupName]) {
-      this.data = await this._getUsers()
+      this.data = await this.fetchHandler()
       this._currentPopupName = null
     }
   }
