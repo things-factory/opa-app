@@ -1,10 +1,10 @@
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, navigate, ScrollbarStyles } from '@things-factory/shell'
 import { getColumns } from '@things-factory/resource-base'
+import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
+import { pathToFileURL } from 'url'
 
 class TransportVehicle extends localize(i18next)(PageView) {
   static get properties() {
@@ -58,7 +58,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
         },
         {
           title: i18next.t('button.save'),
-          action: this.updateMultipleTransportVehicle.bind(this)
+          action: this._saveTransportVehicle.bind(this)
         },
         {
           title: i18next.t('button.delete'),
@@ -82,51 +82,13 @@ class TransportVehicle extends localize(i18next)(PageView) {
           id="vehicles"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
-          .data=${this.data}
           .fetchHandler="${this.fetchHandler.bind(this)}"
-          @record-change="${this._onVehicleChangeHandler.bind(this)}"
         ></data-grist>
       </div>
     `
   }
 
-  firstUpdated() {
-    this._searchFields = [
-      {
-        name: 'name',
-        type: 'text',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.name')
-        }
-      },
-      {
-        name: 'regNumber',
-        type: 'text',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.registration_no')
-        }
-      },
-      {
-        name: 'size',
-        type: 'text',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.size')
-        }
-      },
-      {
-        name: 'status',
-        type: 'text',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.status')
-        }
-      }
-    ]
-
-    this.data = { records: [] }
+  async firstUpdated() {
     this.config = {
       rows: {
         selectable: {
@@ -141,59 +103,61 @@ class TransportVehicle extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           gutterName: 'row-selector'
-        },
-        {
-          type: 'string',
-          name: 'name',
-          header: i18next.t('field.name'),
-          record: {
-            editable: true,
-            align: 'center'
-          },
-          width: 250
-        },
-        {
-          type: 'string',
-          name: 'regNumber',
-          header: i18next.t('field.registration_no'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 200
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 250
-        },
-        {
-          type: 'string',
-          name: 'size',
-          header: i18next.t('field.size'),
-          record: {
-            align: 'center',
-            editable: true
-          },
-          width: 80
-        },
-        {
-          type: 'string',
-          name: 'status',
-          header: i18next.t('field.status'),
-          record: {
-            align: 'center',
-            editable: true
-          },
-          width: 250
         }
       ]
     }
+  }
+
+  async activated(active) {
+    if (active) {
+      const response = await getColumns('Transport Vehicle')
+      this._columns = response.menu.columns
+      this._searchFields = this._modifySearchFields(this._columns)
+
+      this.config = {
+        ...this.config,
+        columns: [...this.config.columns, ...this._modifyGridFields(this._columns)]
+      }
+    }
+  }
+
+  _modifySearchFields(columns) {
+    return columns
+      .filter(field => field.searchRank && field.searchRank > 0)
+      .sort((a, b) => a.searchRank - b.searchRank)
+      .map(field => {
+        return {
+          name: field.name,
+          type: field.searchEditor ? field.searchEditor : 'text',
+          props: {
+            min: field.rangeVal ? field.rangeVal.split(',')[0] : null,
+            max: field.rangeVal ? field.rangeVal.split(',')[1] : null,
+            searchOper: field.searchOper ? field.searchOper : 'eq',
+            placeholder: i18next.t(field.term)
+          },
+          value: field.searchInitVal
+        }
+      })
+  }
+
+  _modifyGridFields(columns) {
+    return columns
+      .filter(column => column.gridRank && column.gridRank > 0)
+      .sort((a, b) => a.gridRank - b.gridRank)
+      .map(column => {
+        const type = column.refType == 'Entity' || column.refType == 'Menu' ? 'object' : column.colType
+        return {
+          type,
+          name: column.name,
+          header: i18next.t(column.term),
+          record: {
+            editable: column.gridEditor !== 'readonly',
+            align: column.gridAlign || 'left'
+          },
+          sortable: true,
+          width: column.gridWidth || 100
+        }
+      })
   }
 
   get searchForm() {
@@ -259,27 +223,20 @@ class TransportVehicle extends localize(i18next)(PageView) {
     return conditions
   }
 
-  async _onVehicleChangeHandler(e) {
-    const before = e.detail.before || {}
-    const after = e.detail.after
-    let record = this.data.records[e.detail.row]
-    if (!record) {
-      record = { ...after }
-      this.data.records.push(record)
-    } else if (record !== after) {
-      record = Object.assign(record, after)
-    }
-  }
+  async _saveTransportVehicle() {
+    let patches = this.dataGrist.dirtyRecords
+    if (patches && patches.length) {
+      patches = patches.map(vehicles => {
+        vehicles.cuFlag = vehicles.__dirty__
+        delete vehicles.__dirty__
+        return vehicles
+      })
 
-  async updateMultipleTransportVehicle() {
-    try {
-      const vehicles = this._getNewVehicles()
-
-      await client.query({
+      const response = await client.query({
         query: gql`
           mutation {
             updateMultipleTransportVehicle(${gqlBuilder.buildArgs({
-              patches: vehicles[0]
+              patches
             })}) {
               name
               regNumber
@@ -290,10 +247,34 @@ class TransportVehicle extends localize(i18next)(PageView) {
           }
         `
       })
-    } catch (e) {
-      this._notify(e.message)
+
+      if (!response.errors) this.dataGrist.fetch()
     }
   }
+
+  // async updateMultipleTransportVehicle() {
+  //   try {
+  //     const vehicles = this._getNewVehicles()
+
+  //     await client.query({
+  //       query: gql`
+  //         mutation {
+  //           updateMultipleTransportVehicle(${gqlBuilder.buildArgs({
+  //             patches: vehicles
+  //           })}) {
+  //             name
+  //             regNumber
+  //             size
+  //             status
+  //             description
+  //           }
+  //         }
+  //       `
+  //     })
+  //   } catch (e) {
+  //     this._notify(e.message)
+  //   }
+  // }
 
   async deleteTransportVehicle() {
     let confirmDelete = confirm('Are you sure?')
@@ -312,6 +293,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
             }
           `
         })
+        this.fetchHandler()
       } catch (e) {
         console.log(this.selectedVehicle)
         this._notify(e.message)
@@ -319,17 +301,17 @@ class TransportVehicle extends localize(i18next)(PageView) {
     }
   }
 
-  _getNewVehicles() {
-    const vehicles = this.shadowRoot.querySelector('#vehicles').dirtyRecords
-    if (vehicles.length === 0) {
-      throw new Error(i18next.t('text.list_is_not_completed'))
-    } else {
-      return vehicles.map(vehicle => {
-        delete vehicle.__dirty__
-        return vehicle
-      })
-    }
-  }
+  // _getNewVehicles() {
+  //   const vehicles = this.shadowRoot.querySelector('#vehicles').dirtyRecords
+  //   if (vehicles.length === 0) {
+  //     throw new Error(i18next.t('text.list_is_not_completed'))
+  //   } else {
+  //     return vehicles.map(vehicle => {
+  //       delete vehicle.__dirty__
+  //       return vehicle
+  //     })
+  //   }
+  // }
 
   _notify(message, level = '') {
     document.dispatchEvent(
