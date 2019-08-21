@@ -124,6 +124,12 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
+  updated(changedProps) {
+    if (changedProps.has('_companyId')) {
+      this.dataGrist.fetch()
+    }
+  }
+
   _modifySearchFields(columns) {
     return columns
       .filter(field => field.searchRank && field.searchRank > 0)
@@ -280,11 +286,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
       const response = await client.query({
         query: gql`
             mutation {
-              deleteBizplaces(${gqlBuilder.buildArgs({
-                names
-              })}) {
-                name
-              }
+              deleteBizplaces(${gqlBuilder.buildArgs({ names })})
             }
           `
       })

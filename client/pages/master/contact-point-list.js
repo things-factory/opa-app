@@ -57,7 +57,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
 
   render() {
     return html`
-      <h2>${this.bizplaceName}</h2>
+      <h2>${i18next.t('title.contact_poinat')} ${this.bizplaceName}</h2>
 
       <search-form
         id="search-form"
@@ -318,11 +318,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
       const response = await client.query({
         query: gql`
             mutation {
-              deleteContactPoints(${gqlBuilder.buildArgs({
-                names
-              })}) {
-                name
-              }
+              deleteContactPoints(${gqlBuilder.buildArgs({ names })})
             }
           `
       })

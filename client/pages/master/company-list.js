@@ -67,11 +67,11 @@ class CompanyList extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.save'),
-          action: this._saveCompany.bind(this)
+          action: this._saveCompanies.bind(this)
         },
         {
           title: i18next.t('button.delete'),
-          action: this._deleteCompany.bind(this)
+          action: this._deleteCompanies.bind(this)
         }
       ]
     }
@@ -83,6 +83,11 @@ class CompanyList extends localize(i18next)(PageView) {
     this._searchFields = this._modifySearchFields(this._columns)
 
     this.config = {
+      rows: {
+        selectable: {
+          multiple: true
+        }
+      },
       columns: [
         {
           type: 'gutter',
@@ -208,9 +213,45 @@ class CompanyList extends localize(i18next)(PageView) {
     return conditions
   }
 
-  _saveCompany() {}
+  async _saveCompanies() {
+    let patches = this.dataGrist.dirtyRecords
+    if (patches && patches.length) {
+      patches = patches.map(company => {
+        company.cuFlag = bizplace.__dirty__
+        delete company.__dirty__
+        return company
+      })
 
-  _deleteCompany() {}
+      const response = await client.query({
+        query: gql`
+            mutation {
+              updateMultipleCompany(${gqlBuilder.buildArgs({
+                patches
+              })}) {
+                name
+              }
+            }
+          `
+      })
+
+      if (!response.errors) this.dataGrist.fetch()
+    }
+  }
+
+  async _deleteCompanies() {
+    const names = this.dataGrist.selected.map(record => record.name)
+    if (names && names.length > 0) {
+      const response = await client.query({
+        query: gql`
+            mutation {
+              deleteCompanies(${gqlBuilder.buildArgs({ names })})
+            }
+          `
+      })
+
+      if (!response.errors) this.dataGrist.fetch()
+    }
+  }
 }
 
 window.customElements.define('company-list', CompanyList)
