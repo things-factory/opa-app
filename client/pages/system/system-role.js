@@ -3,14 +3,7 @@ import '@things-factory/form-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
 import { getColumns } from '@things-factory/resource-base'
-import {
-  client,
-  gqlBuilder,
-  isMobileDevice,
-  PageView,
-  PullToRefreshStyles,
-  ScrollbarStyles
-} from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import './system-role-detail'
@@ -35,7 +28,6 @@ class SystemRole extends localize(i18next)(PageView) {
   static get styles() {
     return [
       ScrollbarStyles,
-      PullToRefreshStyles,
       css`
         :host {
           display: flex;
