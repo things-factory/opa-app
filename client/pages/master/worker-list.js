@@ -78,7 +78,6 @@ class WorkerList extends localize(i18next)(PageView) {
           .config=${this.config}
           .data=${this.data}
           .fetchHandler="${this.fetchHandler.bind(this)}"
-          @record-change="${this._onWorkerChangeHandler.bind(this)}"
         ></data-grist>
       </div>
     `
@@ -268,7 +267,7 @@ class WorkerList extends localize(i18next)(PageView) {
         return workers
       })
 
-      const response = await this._getNewWorkers({
+      const response = await client.query({
         query: gql`
           mutation {
             updateMultipleWorker(${gqlBuilder.buildArgs({
