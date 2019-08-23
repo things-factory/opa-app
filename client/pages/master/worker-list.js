@@ -260,14 +260,19 @@ class WorkerList extends localize(i18next)(PageView) {
   }
 
   async createWorker() {
-    try {
-      const workers = this._getNewWorkers()
+    let patches = this.dataGrist.dirtyRecords
+    if (patches && patches.length) {
+      patches = patches.map(workers => {
+        workers.cuFlag = workers.__dirty__
+        delete workers.__dirty__
+        return workers
+      })
 
-      await client.query({
+      const response = await this._getNewWorkers({
         query: gql`
           mutation {
-            createWorker(${gqlBuilder.buildArgs({
-              worker: workers[0]
+            updateMultipleWorker(${gqlBuilder.buildArgs({
+              patches
             })}) {
               name
               description
@@ -281,12 +286,11 @@ class WorkerList extends localize(i18next)(PageView) {
               }
             }
           }
+        
         `
       })
 
-      navigate('workers')
-    } catch (e) {
-      this._notify(e.message)
+      if (!response.errors) this.dataGrist.fetch()
     }
   }
 
