@@ -42,10 +42,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
       _companyId: String,
       _searchFields: Array,
       config: Object,
-      data: Object,
-      backdrop: Boolean,
-      direction: String,
-      hovering: String
+      data: Object
     }
   }
 
@@ -124,8 +121,8 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  updated(changedProps) {
-    if (changedProps.has('_companyId')) {
+  activated(active) {
+    if (JSON.parse(active) && this._companyId && this.dataGrist) {
       this.dataGrist.fetch()
     }
   }
