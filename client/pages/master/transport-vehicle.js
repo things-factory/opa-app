@@ -62,7 +62,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
         },
         {
           title: i18next.t('button.delete'),
-          action: this.deleteTransportVehicle.bind(this)
+          action: this._deleteTransportVehicle.bind(this)
         }
       ]
     }
@@ -89,6 +89,10 @@ class TransportVehicle extends localize(i18next)(PageView) {
   }
 
   async firstUpdated() {
+    const response = await getColumns('Transport Vehicle')
+    this._columns = response.menu.columns
+    this._searchFields = this._modifySearchFields(this._columns)
+
     this.config = {
       rows: {
         selectable: {
@@ -103,21 +107,9 @@ class TransportVehicle extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           gutterName: 'row-selector'
-        }
+        },
+        ...this._modifyGridFields(this._columns)
       ]
-    }
-  }
-
-  async activated(active) {
-    if (active) {
-      const response = await getColumns('Transport Vehicle')
-      this._columns = response.menu.columns
-      this._searchFields = this._modifySearchFields(this._columns)
-
-      this.config = {
-        ...this.config,
-        columns: [...this.config.columns, ...this._modifyGridFields(this._columns)]
-      }
     }
   }
 
@@ -228,6 +220,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
     if (patches && patches.length) {
       patches = patches.map(vehicles => {
         vehicles.cuFlag = vehicles.__dirty__
+        debugger
         delete vehicles.__dirty__
         return vehicles
       })
@@ -252,31 +245,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
     }
   }
 
-  // async updateMultipleTransportVehicle() {
-  //   try {
-  //     const vehicles = this._getNewVehicles()
-
-  //     await client.query({
-  //       query: gql`
-  //         mutation {
-  //           updateMultipleTransportVehicle(${gqlBuilder.buildArgs({
-  //             patches: vehicles
-  //           })}) {
-  //             name
-  //             regNumber
-  //             size
-  //             status
-  //             description
-  //           }
-  //         }
-  //       `
-  //     })
-  //   } catch (e) {
-  //     this._notify(e.message)
-  //   }
-  // }
-
-  async deleteTransportVehicle() {
+  async _deleteTransportVehicle() {
     let confirmDelete = confirm('Are you sure?')
     if (confirmDelete) {
       try {
@@ -293,25 +262,14 @@ class TransportVehicle extends localize(i18next)(PageView) {
             }
           `
         })
-        this.fetchHandler()
+
+        this.dataGrist.fetch()
       } catch (e) {
         console.log(this.selectedVehicle)
         this._notify(e.message)
       }
     }
   }
-
-  // _getNewVehicles() {
-  //   const vehicles = this.shadowRoot.querySelector('#vehicles').dirtyRecords
-  //   if (vehicles.length === 0) {
-  //     throw new Error(i18next.t('text.list_is_not_completed'))
-  //   } else {
-  //     return vehicles.map(vehicle => {
-  //       delete vehicle.__dirty__
-  //       return vehicle
-  //     })
-  //   }
-  // }
 
   _notify(message, level = '') {
     document.dispatchEvent(
