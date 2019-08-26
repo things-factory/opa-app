@@ -304,32 +304,18 @@ class WorkerList extends localize(i18next)(PageView) {
           query: gql`
             mutation {
               deleteWorker(${gqlBuilder.buildArgs({ name: selectedWorker.name })}){
-                name
-                description
+                name{
+                  true
+                }
               }
             }
           `
         })
-        navigate('workers')
-      } catch (e) {
-        console.log(this.selectedVehicle)
 
+        this.dataGrist.fetch()
+      } catch (e) {
         this._notify(e.message)
       }
-    }
-    // this._getGroupMenus()
-    this._getScreens()
-  }
-
-  _getNewWorkers() {
-    const workers = this.shadowRoot.querySelector('#workers').dirtyRecords
-    if (workers.length === 0) {
-      throw new Error(i18next.t('text.list_is_not_completed'))
-    } else {
-      return workers.map(worker => {
-        delete worker.__dirty__
-        return worker
-      })
     }
   }
 
