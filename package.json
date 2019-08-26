@@ -1,6 +1,6 @@
 {
   "name": "@things-factory/opa-app",
-  "version": "0.0.61",
+  "version": "0.0.62",
   "main": "dist-server/index.js",
   "browser": "client/index.js",
   "things-factory": true,
@@ -28,6 +28,7 @@
     "@things-factory/barcode-ui": "*",
     "@things-factory/biz-ui": "*",
     "@things-factory/board-ui": "*",
+    "@things-factory/code-base": "*",
     "@things-factory/component-ui": "*",
     "@things-factory/context-ui": "*",
     "@things-factory/export-ui": "*",
