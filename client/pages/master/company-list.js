@@ -1,7 +1,6 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { getColumns } from '@things-factory/resource-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
@@ -77,27 +76,46 @@ class CompanyList extends localize(i18next)(PageView) {
     }
   }
 
+  activated(active) {
+    if (JSON.parse(active) && this.dataGrist) {
+      this.dataGrist.fetch()
+    }
+  }
+
   async firstUpdated() {
-    const response = await getColumns('Company')
-    this._columns = response.menu.columns
-    this._searchFields = this._modifySearchFields(this._columns)
+    this._searchFields = [
+      {
+        name: 'name',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+      },
+      {
+        name: 'countryCode',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.country_code') }
+      },
+      {
+        name: 'brn',
+        type: 'text',
+        props: { searchOper: 'eq', placeholder: i18next.t('label.brn') }
+      },
+      {
+        name: 'address',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.address') }
+      },
+      {
+        name: 'state',
+        type: 'text',
+        props: { searchOper: 'eq', placeholder: i18next.t('label.state') }
+      }
+    ]
 
     this.config = {
-      rows: {
-        selectable: {
-          multiple: true
-        }
-      },
+      rows: { selectable: { multiple: true } },
       columns: [
-        {
-          type: 'gutter',
-          gutterName: 'sequence'
-        },
-        {
-          type: 'gutter',
-          gutterName: 'row-selector',
-          multiple: true
-        },
+        { type: 'gutter', gutterName: 'sequence' },
+        { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'gutter',
           gutterName: 'button',
@@ -108,48 +126,80 @@ class CompanyList extends localize(i18next)(PageView) {
             }
           }
         },
-        ...this._modifyGridFields(this._columns)
+        {
+          type: 'string',
+          name: 'name',
+          header: i18next.t('field.name'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.description'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'countryCode',
+          header: i18next.t('field.country_code'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'string',
+          name: 'brn',
+          header: i18next.t('field.brn'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'address',
+          header: i18next.t('field.address'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'object',
+          name: 'bizplaces',
+          header: i18next.t('field.bizplace'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'state',
+          header: i18next.t('field.state'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'datetime',
+          name: 'updatedAt',
+          header: i18next.t('field.updated_at'),
+          record: { editable: false, align: 'left' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'object',
+          name: 'updater',
+          header: i18next.t('field.updater'),
+          record: { editable: false, align: 'left' },
+          sortable: true,
+          width: 80
+        }
       ]
     }
-  }
-
-  _modifySearchFields(columns) {
-    return columns
-      .filter(field => field.searchRank && field.searchRank > 0)
-      .sort((a, b) => a.searchRank - b.searchRank)
-      .map(field => {
-        return {
-          name: field.name,
-          type: field.searchEditor ? field.searchEditor : 'text',
-          props: {
-            min: field.rangeVal ? field.rangeVal.split(',')[0] : null,
-            max: field.rangeVal ? field.rangeVal.split(',')[1] : null,
-            searchOper: field.searchOper ? field.searchOper : 'eq',
-            placeholder: i18next.t(field.term)
-          },
-          value: field.searchInitVal
-        }
-      })
-  }
-
-  _modifyGridFields(columns) {
-    return columns
-      .filter(column => column.gridRank && column.gridRank > 0)
-      .sort((a, b) => a.gridRank - b.gridRank)
-      .map(column => {
-        const type = column.refType == 'Entity' || column.refType == 'Menu' ? 'object' : column.colType
-        return {
-          type,
-          name: column.name,
-          header: i18next.t(column.term),
-          record: {
-            editable: column.gridEditor !== 'readonly',
-            align: column.gridAlign || 'left'
-          },
-          sortable: true,
-          width: column.gridWidth || 100
-        }
-      })
   }
 
   get searchForm() {
@@ -165,7 +215,7 @@ class CompanyList extends localize(i18next)(PageView) {
       query: gql`
         query {
           companies(${gqlBuilder.buildArgs({
-            filters: this.buildFilters(),
+            filters: this._conditionParser(),
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -196,21 +246,24 @@ class CompanyList extends localize(i18next)(PageView) {
     }
   }
 
-  buildFilters() {
-    const conditions = []
-
-    this.searchForm.getFields().forEach(field => {
-      if (field.value) {
-        conditions.push({
+  _conditionParser() {
+    return this.searchForm
+      .getFields()
+      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
+      .map(field => {
+        return {
           name: field.name,
-          operator: field.getAttribute('searchOper'),
-          value: field.value,
-          dataType: this._columns.find(c => c.name === field.name).colType
-        })
-      }
-    })
-
-    return conditions
+          value:
+            field.type === 'text'
+              ? field.value
+              : field.type === 'checkbox'
+              ? field.checked
+              : field.type === 'number'
+              ? parseFloat(field.value)
+              : field.value,
+          operator: field.getAttribute('searchOper')
+        }
+      })
   }
 
   async _saveCompanies() {

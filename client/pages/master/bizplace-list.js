@@ -82,9 +82,28 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async firstUpdated() {
-    const response = await getColumns('Bizplace')
-    this._columns = response.menu.columns
-    this._searchFields = this._modifySearchFields(this._columns)
+    this._searchFields = [
+      {
+        name: 'name',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+      },
+      {
+        name: 'address',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.address') }
+      },
+      {
+        name: 'postalCode',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.postal_code') }
+      },
+      {
+        name: 'status',
+        type: 'text',
+        props: { searchOper: 'eq', placeholder: i18next.t('label.status') }
+      }
+    ]
 
     this.config = {
       rows: {
@@ -116,7 +135,70 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
             }
           }
         },
-        ...this._modifyGridFields(this._columns)
+        {
+          type: 'string',
+          name: 'name',
+          header: i18next.t('field.name'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.description'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'address',
+          header: i18next.t('field.address'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'postalCode',
+          header: i18next.t('field.postal_code'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 120
+        },
+        {
+          type: 'string',
+          name: 'latlng',
+          header: i18next.t('field.latlng'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'datetime',
+          name: 'updatedAt',
+          header: i18next.t('field.updated_at'),
+          record: { editable: false, align: 'left' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'object',
+          name: 'updater',
+          header: i18next.t('field.updater'),
+          record: { editable: false, align: 'left' },
+          sortable: true,
+          width: 80
+        }
       ]
     }
   }
@@ -125,45 +207,6 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
     if (JSON.parse(active) && this._companyId && this.dataGrist) {
       this.dataGrist.fetch()
     }
-  }
-
-  _modifySearchFields(columns) {
-    return columns
-      .filter(field => field.searchRank && field.searchRank > 0)
-      .sort((a, b) => a.searchRank - b.searchRank)
-      .map(field => {
-        return {
-          name: field.name,
-          type: field.searchEditor ? field.searchEditor : 'text',
-          props: {
-            min: field.rangeVal ? field.rangeVal.split(',')[0] : null,
-            max: field.rangeVal ? field.rangeVal.split(',')[1] : null,
-            searchOper: field.searchOper ? field.searchOper : 'eq',
-            placeholder: i18next.t(field.term)
-          },
-          value: field.searchInitVal
-        }
-      })
-  }
-
-  _modifyGridFields(columns) {
-    return columns
-      .filter(column => column.gridRank && column.gridRank > 0)
-      .sort((a, b) => a.gridRank - b.gridRank)
-      .map(column => {
-        const type = column.refType == 'Entity' || column.refType == 'Menu' ? 'object' : column.colType
-        return {
-          type,
-          name: column.name,
-          header: i18next.t(column.term),
-          record: {
-            editable: column.gridEditor !== 'readonly',
-            align: column.gridAlign || 'left'
-          },
-          sortable: true,
-          width: column.gridWidth || 100
-        }
-      })
   }
 
   get searchForm() {
@@ -175,19 +218,19 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async fetchHandler({ page, limit, sorters = [] }) {
-    if (!this._companyId) return
+    let filters = []
+    if (this._companyId) {
+      filters.push({
+        name: 'company_id',
+        operator: 'eq',
+        value: this._companyId
+      })
+    }
     const response = await client.query({
       query: gql`
         query {
           bizplaces(${gqlBuilder.buildArgs({
-            filters: [
-              {
-                name: 'company_id',
-                operator: 'eq',
-                value: this._companyId
-              },
-              ...this._conditionParser()
-            ],
+            filters: [...filters, ...this._conditionParser()],
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -234,21 +277,23 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _conditionParser() {
-    const fields = this.searchForm.getFields()
-    const conditionFields = fields.filter(
-      field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox'
-    )
-    const conditions = []
-
-    conditionFields.forEach(field => {
-      conditions.push({
-        name: field.name,
-        value: field.type === 'text' ? field.value : field.type === 'checkbox' ? field.checked : field.value,
-        operator: field.getAttribute('searchOper'),
-        dataType: field.type === 'text' ? 'string' : field.type === 'number' ? 'float' : 'boolean'
+    return this.searchForm
+      .getFields()
+      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
+      .map(field => {
+        return {
+          name: field.name,
+          value:
+            field.type === 'text'
+              ? field.value
+              : field.type === 'checkbox'
+              ? field.checked
+              : field.type === 'number'
+              ? parseFloat(field.value)
+              : field.value,
+          operator: field.getAttribute('searchOper')
+        }
       })
-    })
-    return conditions
   }
 
   async _saveBizplaces() {

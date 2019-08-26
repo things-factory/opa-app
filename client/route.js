@@ -16,6 +16,10 @@ export default function route(page) {
       import('./pages/master/company-profile')
       return page
 
+    case 'products':
+      import('./pages/master/product-list')
+      return page
+
     case 'bizplaces':
       import('./pages/master/bizplace-list')
       return page

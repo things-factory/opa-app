@@ -66,12 +66,14 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
         <h2>${i18next.t('title.create_user')}</h2>
         <form class="multi-column-form">
           <fieldset>
-            <label>${i18next.t('label.domain')}</label>
+            <label>${i18next.t('label.bizplace')}</label>
             <select name="domain">
               ${this.domains.map(
                 domain =>
                   html`
-                    <option value="${domain.id}">${domain.name} (${domain.description})</option>
+                    <option value="${domain.id}"
+                      >${domain.name} ${domain.description ? ` (${domain.description})` : ''}</option
+                    >
                   `
               )}
             </select>
@@ -203,15 +205,7 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
             createUser(${gqlBuilder.buildArgs({
               user
             })}) {
-              id
               name
-              description
-              email
-              roles {
-                id
-                name
-                description
-              }
             }
           }
         `
@@ -235,6 +229,7 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
     if (this.shadowRoot.querySelector('form').checkValidity() && password) {
       return {
         name: this._getInputByName('name').value,
+        domain: { id: this._getInputByName('domain').value },
         description: this._getInputByName('description').value,
         password,
         email: this._getInputByName('email').value,
@@ -255,7 +250,7 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
   }
 
   _getInputByName(name) {
-    return this.shadowRoot.querySelector(`input[name=${name}]`)
+    return this.shadowRoot.querySelector(`select[name=${name}], input[name=${name}]`)
   }
 
   _getChecekedRoles() {

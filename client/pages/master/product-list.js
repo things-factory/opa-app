@@ -1,11 +1,20 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, ScrollbarStyles } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
-import { css, html, LitElement } from 'lit-element'
+import { css, html } from 'lit-element'
+import { getCodeByName } from '@things-factory/code-base'
 
-export class ContactPointList extends localize(i18next)(LitElement) {
+class ProductList extends localize(i18next)(PageView) {
+  static get properties() {
+    return {
+      _searchFields: Array,
+      config: Object,
+      data: Object
+    }
+  }
+
   static get styles() {
     return [
       ScrollbarStyles,
@@ -13,8 +22,8 @@ export class ContactPointList extends localize(i18next)(LitElement) {
         :host {
           display: flex;
           flex-direction: column;
+
           overflow: hidden;
-          background-color: white;
         }
 
         search-form {
@@ -29,36 +38,12 @@ export class ContactPointList extends localize(i18next)(LitElement) {
           overflow-y: hidden;
           flex: 1;
         }
-        h2 {
-          padding: var(--subtitle-padding);
-          font: var(--subtitle-font);
-          color: var(--subtitle-text-color);
-          border-bottom: var(--subtitle-border-bottom);
-        }
-        .button-container {
-          display: flex;
-          margin-left: auto;
-        }
-        .button-container > mwc-button {
-          padding: 10px;
-        }
       `
     ]
   }
 
-  static get properties() {
-    return {
-      bizplaceId: String,
-      bizplaceName: String,
-      _searchFields: Array,
-      config: Object
-    }
-  }
-
   render() {
     return html`
-      <h2>${i18next.t('title.contact_poinat')} ${this.bizplaceName}</h2>
-
       <search-form
         id="search-form"
         .fields=${this._searchFields}
@@ -70,57 +55,77 @@ export class ContactPointList extends localize(i18next)(LitElement) {
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
-          .fetchHandler=${this.fetchHandler.bind(this)}
+          .fetchHandler="${this.fetchHandler.bind(this)}"
         ></data-grist>
-      </div>
-
-      <div class="button-container">
-        <mwc-button @click=${this._saveContactPoints}>${i18next.t('button.save')}</mwc-button>
-        <mwc-button @click=${this._deleteContactPoints}>${i18next.t('button.delete')}</mwc-button>
       </div>
     `
   }
 
-  async firstUpdated() {
+  get context() {
+    return {
+      title: i18next.t('title.product'),
+      actions: [
+        {
+          title: i18next.t('button.save'),
+          action: this._saveProducts.bind(this)
+        },
+        {
+          title: i18next.t('button.delete'),
+          action: this._deleteProducts.bind(this)
+        }
+      ]
+    }
+  }
+
+  activated(active) {
+    if (JSON.parse(active) && this.dataGrist) {
+      this.dataGrist.fetch()
+    }
+  }
+
+  firstUpdated() {
     this._searchFields = [
       {
         name: 'name',
-        type: 'text',
         props: {
           searchOper: 'like',
           placeholder: i18next.t('field.name')
         }
       },
       {
-        name: 'email',
-        type: 'text',
+        name: 'yourName',
         props: {
           searchOper: 'like',
-          placeholder: i18next.t('field.email')
+          placeholder: i18next.t('field.your_name')
         }
       },
       {
-        name: 'fax',
-        type: 'text',
+        name: 'refTo',
         props: {
           searchOper: 'like',
-          placeholder: i18next.t('field.fax')
+          placeholder: i18next.t('field.origin_product')
         }
       },
       {
-        name: 'phone',
-        type: 'text',
+        name: 'type',
+        type: 'select',
+        options: [
+          {
+            name: 'test',
+            value: 'test'
+          }
+        ],
         props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.phone')
+          type: 'select',
+          searchOper: 'eq',
+          placeholder: i18next.t('field.type')
         }
       },
       {
-        name: 'description',
-        type: 'text',
+        name: 'packageType',
         props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.description')
+          searchOper: 'eq',
+          placeholder: i18next.t('field.package_type')
         }
       }
     ]
@@ -149,70 +154,97 @@ export class ContactPointList extends localize(i18next)(LitElement) {
           type: 'string',
           name: 'name',
           record: {
-            align: 'left',
             editable: true
           },
           header: i18next.t('field.name'),
-          width: 120
+          width: 180
+        },
+        {
+          type: 'string',
+          name: 'yourName',
+          record: {
+            editable: true
+          },
+          header: i18next.t('field.your_name'),
+          width: 180
         },
         {
           type: 'string',
           name: 'description',
           record: {
-            align: 'left',
             editable: true
           },
           header: i18next.t('field.description'),
-          width: 220
+          width: 250
+        },
+        {
+          type: 'object',
+          name: 'refTo',
+          record: {
+            editable: false
+          },
+          header: i18next.t('field.origin_product'),
+          width: 250
         },
         {
           type: 'string',
-          name: 'email',
+          name: 'type',
           record: {
-            align: 'left',
+            align: 'center',
             editable: true
           },
-          header: i18next.t('field.email'),
-          width: 120
+          header: i18next.t('field.type'),
+          width: 150
         },
         {
           type: 'string',
-          name: 'fax',
+          name: 'packageType',
           record: {
-            align: 'left',
+            align: 'center',
             editable: true
           },
-          header: i18next.t('field.fax'),
-          width: 120
+          header: i18next.t('field.package_type'),
+          width: 150
         },
         {
           type: 'string',
-          name: 'phone',
+          name: 'unit',
           record: {
-            align: 'left',
+            align: 'center',
             editable: true
           },
-          header: i18next.t('field.phone'),
-          width: 120
+          header: i18next.t('field.unit'),
+          width: 150
+        },
+        {
+          type: 'number',
+          name: 'weight',
+          record: {
+            align: 'right',
+            editable: true
+          },
+          header: i18next.t('field.weight'),
+          width: 150
         },
         {
           type: 'object',
           name: 'updater',
           record: {
-            align: 'left',
+            align: 'center',
             editable: false
           },
           header: i18next.t('field.updater'),
-          width: 150
+          width: 250
         },
         {
           type: 'datetime',
           name: 'updatedAt',
           record: {
-            align: 'left'
+            align: 'center',
+            editable: false
           },
           header: i18next.t('field.updated_at'),
-          width: 150
+          width: 180
         }
       ]
     }
@@ -227,46 +259,51 @@ export class ContactPointList extends localize(i18next)(LitElement) {
   }
 
   async fetchHandler({ page, limit, sorters = [] }) {
-    let filters = []
-    if (this.bizplaceId) {
-      filters.push({
-        name: 'bizplace_id',
-        operator: 'eq',
-        value: this.bizplaceId
-      })
-    }
-
     const response = await client.query({
       query: gql`
         query {
-          contactPoints(${gqlBuilder.buildArgs({
-            filters: [...filters, ...this._conditionParser()],
+          products(${gqlBuilder.buildArgs({
+            filters: this._conditionParser(),
             pagination: { page, limit },
             sortings: sorters
           })}) {
             items {
               id
-              name
-              email
-              fax
-              phone
-              description
-              updatedAt
-              updater{
+              bizplace {
                 id
                 name
                 description
               }
+              name
+              yourName
+              description
+              refTo {
+                id
+                name
+                description
+              }
+              type
+              packageType
+              weight
+              unit
+              updater {
+                id
+                name
+                description
+              }
+              updatedAt
             }
             total
           }
         }
-      `
+        `
     })
 
-    return {
-      total: response.data.contactPoints.total || 0,
-      records: response.data.contactPoints.items || []
+    if (!response.errors) {
+      return {
+        total: response.data.products.total || 0,
+        records: response.data.products.items || []
+      }
     }
   }
 
@@ -290,46 +327,9 @@ export class ContactPointList extends localize(i18next)(LitElement) {
       })
   }
 
-  async _saveContactPoints() {
-    let patches = this.dataGrist.dirtyRecords
-    if (patches && patches.length) {
-      patches = patches.map(contactPoint => {
-        contactPoint.cuFlag = contactPoint.__dirty__
-        contactPoint.bizplace = { id: this.bizplaceId }
-        delete contactPoint.__dirty__
-        return contactPoint
-      })
+  _saveProducts() {}
 
-      const response = await client.query({
-        query: gql`
-          mutation {
-            updateMultipleContactPoint(${gqlBuilder.buildArgs({
-              patches
-            })}) {
-              name
-            }
-          }
-        `
-      })
-
-      if (!response.errors) this.dataGrist.fetch()
-    }
-  }
-
-  async _deleteContactPoints() {
-    const names = this.dataGrist.selected.map(record => record.name)
-    if (names && names.length > 0) {
-      const response = await client.query({
-        query: gql`
-            mutation {
-              deleteContactPoints(${gqlBuilder.buildArgs({ names })})
-            }
-          `
-      })
-
-      if (!response.errors) this.dataGrist.fetch()
-    }
-  }
+  _deleteProducts() {}
 }
 
-window.customElements.define('contact-point-list', ContactPointList)
+window.customElements.define('product-list', ProductList)

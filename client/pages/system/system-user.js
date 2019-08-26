@@ -13,12 +13,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
     return {
       active: String,
       _searchFields: Array,
-      _fields: Array,
-      config: Object,
-      data: Object,
-      page: Number,
-      limit: Number,
-      _currentPopupName: String
+      config: Object
     }
   }
 
@@ -67,13 +62,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
       <data-grist
         .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
         .config=${this.config}
-        .data=${this.data}
-        @page-changed=${e => {
-          this.page = e.detail
-        }}
-        @limit-changed=${e => {
-          this.limit = e.detail
-        }}
+        .fetchHandler=${this.fetchHandler.bind(this)}
       ></data-grist>
     `
   }
@@ -132,7 +121,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              this._currentPopupName = openPopup(
+              openPopup(
                 html`
                   <system-user-detail .email="${record.email}" style="width: 90vw; height: 70vh;"></system-user-detail>
                 `
@@ -159,20 +148,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.domain'),
           record: {
             editable: false,
-            align: 'center',
-            options: {
-              queryName: 'domains',
-              basicArgs: {
-                filters: [
-                  {
-                    name: 'system_flag',
-                    operator: 'eq',
-                    value: 'true',
-                    dataType: 'boolean'
-                  }
-                ]
-              }
-            }
+            align: 'center'
           },
           width: 250
         },
@@ -225,12 +201,12 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _getUsers() {
+  async fetchHandler({}) {
     const response = await client.query({
       query: gql`
         query {
           users(${gqlBuilder.buildArgs({
-            filters: this._parseFilters(),
+            filters: this._conditionParser(),
             pagination: {
               page: this.page || 1,
               limit: this.limit || 30
@@ -273,28 +249,28 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  _parseFilters() {
-    let filters = []
-    if (!this.searchForm) return filters
-    const fields = this.searchForm.getFields()
-    filters = fields.map(field => {
-      const value =
-        field.type === 'text' ? field.value : field.type === 'checkbox' ? JSON.stringify(field.checked) : field.value
-      if (value) {
+  _conditionParser() {
+    return this.searchForm
+      .getFields()
+      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
+      .map(field => {
         return {
           name: field.name,
-          value: field.value,
-          operator: field.getAttribute('searchoper'),
-          dataType: field.type === 'text' ? 'string' : field
+          value:
+            field.type === 'text'
+              ? field.value
+              : field.type === 'checkbox'
+              ? field.checked
+              : field.type === 'number'
+              ? parseFloat(field.value)
+              : field.value,
+          operator: field.getAttribute('searchOper')
         }
-      }
-    })
-
-    return filters
+      })
   }
 
   _createUser() {
-    this._currentPopupName = openPopup(
+    openPopup(
       html`
         <system-create-user style="width: 90vw; height: 70vh;"></system-create-user>
       `

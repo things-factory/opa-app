@@ -16,6 +16,10 @@ export default {
       page: 'company_profile'
     },
     {
+      tagname: 'product-list',
+      page: 'products'
+    },
+    {
       tagname: 'bizplace-list',
       page: 'bizplaces'
     },

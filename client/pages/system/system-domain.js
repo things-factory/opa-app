@@ -107,6 +107,7 @@ class SystemDomain extends localize(i18next)(PageView) {
           name: 'name',
           header: i18next.t('field.name'),
           record: {
+            editable: true,
             align: 'center'
           },
           width: 100
@@ -116,6 +117,7 @@ class SystemDomain extends localize(i18next)(PageView) {
           name: 'description',
           header: i18next.t('field.description'),
           record: {
+            editable: true,
             align: 'center'
           },
           width: 100
@@ -125,6 +127,7 @@ class SystemDomain extends localize(i18next)(PageView) {
           name: 'timezone',
           header: i18next.t('field.timezone'),
           record: {
+            editable: true,
             align: 'center'
           },
           width: 100
@@ -134,6 +137,7 @@ class SystemDomain extends localize(i18next)(PageView) {
           name: 'system_flag',
           header: i18next.t('field.system_flag'),
           record: {
+            editable: true,
             align: 'center'
           },
           width: 100
@@ -143,6 +147,7 @@ class SystemDomain extends localize(i18next)(PageView) {
           name: 'subdomain',
           header: i18next.t('field.subdomain'),
           record: {
+            editable: true,
             align: 'center'
           },
           width: 100
@@ -152,6 +157,7 @@ class SystemDomain extends localize(i18next)(PageView) {
           name: 'brand_name',
           header: i18next.t('field.brand_name'),
           record: {
+            editable: true,
             align: 'center'
           },
           width: 100
@@ -161,6 +167,7 @@ class SystemDomain extends localize(i18next)(PageView) {
           name: 'brand_image',
           header: i18next.t('field.brand_image'),
           record: {
+            editable: true,
             align: 'center'
           },
           width: 100
@@ -170,6 +177,7 @@ class SystemDomain extends localize(i18next)(PageView) {
           name: 'content_image',
           header: i18next.t('field.content_image'),
           record: {
+            editable: true,
             align: 'center'
           },
           width: 100
@@ -179,6 +187,7 @@ class SystemDomain extends localize(i18next)(PageView) {
           name: 'theme',
           header: i18next.t('field.theme'),
           record: {
+            editable: true,
             align: 'center'
           },
           width: 100

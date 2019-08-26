@@ -225,21 +225,23 @@ class SystemRole extends localize(i18next)(PageView) {
   }
 
   _conditionParser() {
-    const fields = this.searchForm.getFields()
-    const conditionFields = fields.filter(
-      field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox'
-    )
-    const conditions = []
-
-    conditionFields.forEach(field => {
-      conditions.push({
-        name: field.name,
-        value: field.type === 'text' ? field.value : field.type === 'checkbox' ? field.checked : field.value,
-        operator: field.getAttribute('searchOper'),
-        dataType: field.type === 'text' ? 'string' : field.type === 'number' ? 'float' : 'boolean'
+    return this.searchForm
+      .getFields()
+      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
+      .map(field => {
+        return {
+          name: field.name,
+          value:
+            field.type === 'text'
+              ? field.value
+              : field.type === 'checkbox'
+              ? field.checked
+              : field.type === 'number'
+              ? parseFloat(field.value)
+              : field.value,
+          operator: field.getAttribute('searchOper')
+        }
       })
-    })
-    return conditions
   }
 
   _createRole() {
