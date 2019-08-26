@@ -28,9 +28,18 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
           overflow: hidden;
         }
 
-        data-grist {
+        search-form {
+          overflow: visible;
+        }
+        .grist {
+          display: flex;
+          flex-direction: column;
           flex: 1;
           overflow-y: auto;
+        }
+        data-grist {
+          overflow-y: hidden;
+          flex: 1;
         }
       `
     ]
@@ -52,25 +61,32 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
     return html`
       <search-form
         id="search-form"
-        .fields="${this._searchFields}"
-        initFocus="description"
-        @submit="${async () => {
-          this.data = await this._getUsers()
-        }}"
+        .fields=${this._searchFields}
+        @submit=${async () => this.dataGrist.fetch()}
       ></search-form>
 
-      <data-grist
-        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-        .config=${this.config}
-        .fetchHandler=${this.fetchHandler.bind(this)}
-      ></data-grist>
+      <div class="grist">
+        <data-grist
+          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+          .config=${this.config}
+          .fetchHandler="${this.fetchHandler.bind(this)}"
+        ></data-grist>
+      </div>
     `
   }
 
-  async activated(active) {
-    if (active) {
-      this.data = await this._getUsers()
+  activated(active) {
+    if (active && JSON.parse(active) && this.dataGrist) {
+      this.dataGrist.fetch()
     }
+  }
+
+  get searchForm() {
+    return this.shadowRoot.querySelector('search-form')
+  }
+
+  get dataGrist() {
+    return this.shadowRoot.querySelector('data-grist')
   }
 
   firstUpdated() {
@@ -111,10 +127,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
 
     this.config = {
       columns: [
-        {
-          type: 'gutter',
-          gutterName: 'sequence'
-        },
+        { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'gutter',
           gutterName: 'button',
@@ -125,7 +138,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
                 html`
                   <system-user-detail .email="${record.email}" style="width: 90vw; height: 70vh;"></system-user-detail>
                 `
-              ).name
+              )
             }
           }
         },
@@ -134,10 +147,9 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
           gutterName: 'button',
           icon: 'delete',
           handlers: {
-            click: async (columns, data, column, record, rowIndex) => {
+            click: (columns, data, column, record, rowIndex) => {
               if (confirm(i18next.t('text.sure_to_delete'))) {
-                await this._deleteUser(record.email)
-                this.data = await this._getUsers()
+                this._deleteUser(record.email)
               }
             }
           }
@@ -201,16 +213,14 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async fetchHandler({}) {
+  async fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
         query {
           users(${gqlBuilder.buildArgs({
             filters: this._conditionParser(),
-            pagination: {
-              page: this.page || 1,
-              limit: this.limit || 30
-            }
+            pagination: { page, limit },
+            sortings: sorters
           })}) {
             items {
               id
@@ -236,17 +246,9 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
     })
 
     return {
-      records: response.data.users.items,
-      total: response.data.users.total
+      total: response.data.users.total || 0,
+      records: response.data.users.items || []
     }
-  }
-
-  get searchForm() {
-    return this.shadowRoot.querySelector('search-form')
-  }
-
-  get grist() {
-    return this.shadowRoot.querySelector('data-grist')
   }
 
   _conditionParser() {
@@ -274,7 +276,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
       html`
         <system-create-user style="width: 90vw; height: 70vh;"></system-create-user>
       `
-    ).name
+    )
   }
 
   async _deleteUser(email) {
@@ -283,10 +285,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
         mutation {
           deleteUser(${gqlBuilder.buildArgs({
             email
-          })}) {
-            id
-            name
-          }
+          })})
         }
       `
     })
@@ -294,7 +293,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
 
   async stateChanged(state) {
     if (this.active && this._currentPopupName && !state.layout.viewparts[this._currentPopupName]) {
-      this.data = await this._getUsers()
+      this.dataGrist.fetch()
       this._currentPopupName = null
     }
   }

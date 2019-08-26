@@ -8,13 +8,13 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
   static get properties() {
     return {
       domains: Array,
-      config: Object,
-      data: Object,
+      roleConfig: Object,
+      priviledgeConfig: Object,
       email: String,
       roles: Array,
-      userInfo: Object,
-      page: Number,
-      limit: Number
+      _selectedRoleName: String,
+      _priviledges: Object,
+      userInfo: Object
     }
   }
 
@@ -31,8 +31,13 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
         }
         .grist {
           display: flex;
-          flex-direction: column;
           flex: 1;
+          overflow-y: auto;
+        }
+        .grist-column {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
         }
         data-grist {
           overflow-y: hidden;
@@ -54,15 +59,6 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
     ]
   }
 
-  constructor() {
-    super()
-    this.domains = []
-    this.config = {}
-    this.data = {}
-    this.limit = 50
-    this.page = 1
-  }
-
   render() {
     return html`
       <div>
@@ -71,11 +67,13 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
           <fieldset>
             <label>${i18next.t('label.domain')}</label>
             <select name="domain">
-              ${this.domains.map(domain => {
+              ${(this.domains || []).map(domain => {
                 const isSelected = this.userInfo && this.userInfo.domain && this.userInfo.domain.id === domain.id
 
                 return html`
-                  <option value="${domain.id}" ?selected="${isSelected}">${domain.name} (${domain.description})</option>
+                  <option value="${domain.id}" ?selected="${isSelected}"
+                    >${domain.name} ${domain.description ? `(${domain.description})` : ''}</option
+                  >
                 `
               })}
             </select>
@@ -93,18 +91,23 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
       </div>
 
       <div class="grist">
-        <h2>${i18next.t('title.role')}</h2>
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config="${this.config}"
-          .data="${this.data}"
-          @page-changed=${e => {
-            this.page = e.detail
-          }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
-        ></data-grist>
+        <div class="grist-column">
+          <h2>${i18next.t('title.role')}</h2>
+          <data-grist
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config="${this.roleConfig}"
+            .fetchHandler="${this.fetchHandler.bind(this)}"
+          ></data-grist>
+        </div>
+
+        <div class="grist-column">
+          <h2>${i18next.t('title.priviledge')}: ${this._selectedRoleName}</h2>
+          <data-grist
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .data="${this._priviledges}"
+            .config="${this.priviledgeConfig}"
+          ></data-grist>
+        </div>
       </div>
 
       <div class="button-container">
@@ -126,13 +129,23 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
 
   async firstUpdated() {
     this.domains = await this._getDomains()
-    this.roles = await this._getRoles()
 
-    this.config = {
+    this.roleConfig = {
       columns: [
+        { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'gutter',
-          gutterName: 'sequence'
+          gutterName: 'button',
+          icon: 'reorder',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              this._selectedRoleName = record.name
+              this._priviledges = {
+                records: record.priviledges,
+                total: record.priviledges.length
+              }
+            }
+          }
         },
         {
           type: 'string',
@@ -160,6 +173,36 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
         }
       ]
     }
+
+    this.priviledgeConfig = {
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'string',
+          name: 'category',
+          header: i18next.t('field.category'),
+          record: {
+            editable: false
+          }
+        },
+        {
+          type: 'string',
+          name: 'name',
+          header: i18next.t('field.name'),
+          record: {
+            editable: false
+          }
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.description'),
+          record: {
+            editable: false
+          }
+        }
+      ]
+    }
   }
 
   async _getDomains() {
@@ -180,15 +223,25 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
     return response.data.domains.items
   }
 
-  async _getRoles() {
+  async fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
         query {
-          roles(filters: []) {
+          roles(${gqlBuilder.buildArgs({
+            filters: [],
+            pagination: { page, limit },
+            sortings: sorters
+          })}) {
             items {
               id
               name
               description
+              priviledges {
+                id
+                category
+                name
+                description
+              }
             }
             total
           }
@@ -196,7 +249,12 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
       `
     })
 
-    return response.data.roles.items
+    if (!response.errors) {
+      return {
+        total: response.data.roles.total || 0,
+        records: response.data.roles.items || []
+      }
+    }
   }
 
   async _getUserInfo() {
@@ -207,6 +265,11 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
             email: this.email
           })}) {
             id
+            domain {
+              id
+              name
+              description
+            }
             name
             description
             email
@@ -223,8 +286,9 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
   }
 
   _fillupView() {
-    Array.from(this.shadowRoot.querySelectorAll('input')).forEach(input => {
-      input.value = this.userInfo[input.name]
+    Array.from(this.shadowRoot.querySelectorAll('input, select')).forEach(input => {
+      input.value =
+        this.userInfo[input.name] instanceof Object ? this.userInfo[input.name].name : this.userInfo[input.name]
     })
   }
 
@@ -244,11 +308,13 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
   }
 
   async _saveUserInfo() {
-    const userInfo = {
+    const patch = {
       name: this._getInputByName('name').value,
       description: this._getInputByName('description').value,
       email: this._getInputByName('email').value,
-      roles: this._getChecekedRoles().map(role => role.id)
+      roles: this._getChecekedRoles().map(role => {
+        return { id: role.id }
+      })
     }
 
     const response = await client.query({
@@ -256,7 +322,7 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
         mutation {
           updateUser(${gqlBuilder.buildArgs({
             email: this.email,
-            patch: userInfo
+            patch
           })}) {
             id
             name
