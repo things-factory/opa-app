@@ -92,7 +92,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
       {
         name: 'reg_number',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.Registration_Number') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.reg_number') }
       },
       {
         name: 'size',
@@ -111,24 +111,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'reorder',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              navigate(`bizplaces/${record.id}`)
-            }
-          }
-        },
-        {
-          type: 'string',
-          name: 'name',
-          header: i18next.t('field.name'),
-          record: { editable: true, align: 'left' },
-          sortable: true,
-          width: 100
-        },
         {
           type: 'string',
           name: 'regNumber',
@@ -261,10 +243,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
               patches
             })}) {
               name
-              regNumber
-              size
-              status
-              description
             }
           }
         `
@@ -286,7 +264,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
             mutation {
               deleteTransportVehicle(${gqlBuilder.buildArgs({ name: selectedVehicle.name })}){
                 name
-                regNumber
               }
             }
           `
