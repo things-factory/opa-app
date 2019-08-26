@@ -1,23 +1,11 @@
+import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { getColumns } from '@things-factory/resource-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { pathToFileURL } from 'url'
 
 class TransportVehicle extends localize(i18next)(PageView) {
-  static get properties() {
-    return {
-      _searchFields: Array,
-      config: Object,
-      backdrop: Boolean,
-      direction: String,
-      hovering: String,
-      data: Object
-    }
-  }
-
   static get styles() {
     return [
       ScrollbarStyles,
@@ -36,7 +24,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
           display: flex;
           flex-direction: column;
           flex: 1;
-          overflow-y: hidden;
         }
         data-grist {
           overflow-y: hidden;
@@ -46,16 +33,37 @@ class TransportVehicle extends localize(i18next)(PageView) {
     ]
   }
 
+  static get properties() {
+    return {
+      _searchFields: Array,
+      config: Object,
+      data: Object
+    }
+  }
+
+  render() {
+    return html`
+      <search-form
+        id="search-form"
+        .fields=${this._searchFields}
+        initFocus="description"
+        @submit=${async () => this.dataGrist.fetch()}
+      ></search-form>
+
+      <div class="grist">
+        <data-grist
+          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+          .config=${this.config}
+          .fetchHandler="${this.fetchHandler.bind(this)}"
+        ></data-grist>
+      </div>
+    `
+  }
+
   get context() {
     return {
-      title: i18next.t('title.transport_vehicle'),
+      title: i18next.t('title.transportvehicle'),
       actions: [
-        {
-          title: i18next.t('button.add'),
-          action: () => {
-            console.log('this is add action')
-          }
-        },
         {
           title: i18next.t('button.save'),
           action: this._saveTransportVehicle.bind(this)
@@ -68,88 +76,101 @@ class TransportVehicle extends localize(i18next)(PageView) {
     }
   }
 
-  render() {
-    return html`
-      <search-form
-        id="search-form"
-        .fields=${this._searchFields}
-        initFocus="name"
-        @submit=${async () => this.dataGrist.fetch()}
-      ></search-form>
-
-      <div class="grist">
-        <data-grist
-          id="vehicles"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .fetchHandler="${this.fetchHandler.bind(this)}"
-        ></data-grist>
-      </div>
-    `
-  }
-
-  async firstUpdated() {
-    const response = await getColumns('Transport Vehicle')
-    this._columns = response.menu.columns
-    this._searchFields = this._modifySearchFields(this._columns)
-
-    this.config = {
-      rows: {
-        selectable: {
-          multiple: false
-        }
-      },
-      columns: [
-        {
-          type: 'gutter',
-          gutterName: 'sequence'
-        },
-        {
-          type: 'gutter',
-          gutterName: 'row-selector'
-        },
-        ...this._modifyGridFields(this._columns)
-      ]
+  activated(active) {
+    if (JSON.parse(active) && this.dataGrist) {
+      this.dataGrist.fetch()
     }
   }
 
-  _modifySearchFields(columns) {
-    return columns
-      .filter(field => field.searchRank && field.searchRank > 0)
-      .sort((a, b) => a.searchRank - b.searchRank)
-      .map(field => {
-        return {
-          name: field.name,
-          type: field.searchEditor ? field.searchEditor : 'text',
-          props: {
-            min: field.rangeVal ? field.rangeVal.split(',')[0] : null,
-            max: field.rangeVal ? field.rangeVal.split(',')[1] : null,
-            searchOper: field.searchOper ? field.searchOper : 'eq',
-            placeholder: i18next.t(field.term)
-          },
-          value: field.searchInitVal
-        }
-      })
-  }
+  async firstUpdated() {
+    this._searchFields = [
+      {
+        name: 'name',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+      },
+      {
+        name: 'reg_number',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.Registration_Number') }
+      },
+      {
+        name: 'size',
+        type: 'text',
+        props: { searchOper: 'eq', placeholder: i18next.t('label.size') }
+      },
+      {
+        name: 'status',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.status') }
+      }
+    ]
 
-  _modifyGridFields(columns) {
-    return columns
-      .filter(column => column.gridRank && column.gridRank > 0)
-      .sort((a, b) => a.gridRank - b.gridRank)
-      .map(column => {
-        const type = column.refType == 'Entity' || column.refType == 'Menu' ? 'object' : column.colType
-        return {
-          type,
-          name: column.name,
-          header: i18next.t(column.term),
-          record: {
-            editable: column.gridEditor !== 'readonly',
-            align: column.gridAlign || 'left'
-          },
+    this.config = {
+      rows: { selectable: { multiple: true } },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        { type: 'gutter', gutterName: 'row-selector', multiple: true },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'reorder',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              navigate(`bizplaces/${record.id}`)
+            }
+          }
+        },
+        {
+          type: 'string',
+          name: 'name',
+          header: i18next.t('field.name'),
+          record: { editable: true, align: 'left' },
           sortable: true,
-          width: column.gridWidth || 100
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'reg_number',
+          header: i18next.t('field.Registration_Number'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'size',
+          header: i18next.t('field.size'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 100
+        },
+        {
+          type: 'datetime',
+          name: 'updatedAt',
+          header: i18next.t('field.updated_at'),
+          record: { editable: false, align: 'left' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'object',
+          name: 'updater',
+          header: i18next.t('field.updater'),
+          record: { editable: false, align: 'left' },
+          sortable: true,
+          width: 80
         }
-      })
+      ]
+    }
   }
 
   get searchForm() {
@@ -163,20 +184,20 @@ class TransportVehicle extends localize(i18next)(PageView) {
   async fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
-        query{
+        query {
           transportVehicles(${gqlBuilder.buildArgs({
             filters: this._conditionParser(),
             pagination: { page, limit },
             sortings: sorters
-          })}){
-            items{
+          })}) {
+            items {
               name
               regNumber
               description
               size
               status
               updatedAt
-              updater {
+              updater{
                 id
                 name
                 description
@@ -187,7 +208,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
         }
       `
     })
-
     this.rawVehicleData = response.data.transportVehicles.items
 
     return {
@@ -197,22 +217,23 @@ class TransportVehicle extends localize(i18next)(PageView) {
   }
 
   _conditionParser() {
-    if (!this.searchForm) return []
-    const fields = this.searchForm.getFields()
-    const conditionFields = fields.filter(
-      field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox'
-    )
-    const conditions = []
-
-    conditionFields.forEach(field => {
-      conditions.push({
-        name: field.name,
-        value: field.type === 'text' ? field.value : field.type === 'checkbox' ? field.checked : field.value,
-        operator: field.getAttribute('searchOper'),
-        dataType: field.type === 'text' ? 'string' : field.type === 'number' ? 'float' : 'boolean'
+    return this.searchForm
+      .getFields()
+      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
+      .map(field => {
+        return {
+          name: field.name,
+          value:
+            field.type === 'text'
+              ? field.value
+              : field.type === 'checkbox'
+              ? field.checked
+              : field.type === 'number'
+              ? parseFloat(field.value)
+              : field.value,
+          operator: field.getAttribute('searchOper')
+        }
       })
-    })
-    return conditions
   }
 
   async _saveTransportVehicle() {
@@ -220,7 +241,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
     if (patches && patches.length) {
       patches = patches.map(vehicles => {
         vehicles.cuFlag = vehicles.__dirty__
-        debugger
+
         delete vehicles.__dirty__
         return vehicles
       })
@@ -269,17 +290,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
         this._notify(e.message)
       }
     }
-  }
-
-  _notify(message, level = '') {
-    document.dispatchEvent(
-      new CustomEvent('notify', {
-        detail: {
-          level,
-          message
-        }
-      })
-    )
   }
 }
 
