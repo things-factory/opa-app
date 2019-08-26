@@ -132,7 +132,15 @@ class TransportVehicle extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'regNumber',
-          header: i18next.t('field.Registration_Number'),
+          header: i18next.t('field.registration_number'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.description'),
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 150
