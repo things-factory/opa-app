@@ -93,6 +93,11 @@ class WarehouseList extends localize(i18next)(PageView) {
         name: 'description',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.description') }
+      },
+      {
+        name: 'type',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.type') }
       }
     ]
 
@@ -128,12 +133,20 @@ class WarehouseList extends localize(i18next)(PageView) {
           width: 150
         },
         {
+          type: 'string',
+          name: 'type',
+          header: i18next.t('field.type'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 150
+        },
+        {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
           record: { editable: false, align: 'left' },
           sortable: true,
-          width: 80
+          width: 100
         },
         {
           type: 'object',
@@ -141,7 +154,7 @@ class WarehouseList extends localize(i18next)(PageView) {
           header: i18next.t('field.updater'),
           record: { editable: false, align: 'left' },
           sortable: true,
-          width: 80
+          width: 100
         }
       ]
     }
@@ -167,6 +180,7 @@ class WarehouseList extends localize(i18next)(PageView) {
             items {
               name
               description
+              type
               updatedAt
               updater{
                 id
@@ -224,12 +238,6 @@ class WarehouseList extends localize(i18next)(PageView) {
                 patches
               })}) {
                 name
-                description
-                updater {
-                  name
-                  description
-                }
-                updatedAt
               }
             }
           `
