@@ -24,6 +24,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
           display: flex;
           flex-direction: column;
           flex: 1;
+          overflow-y: auto;
         }
         data-grist {
           overflow-y: hidden;
