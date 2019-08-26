@@ -225,12 +225,11 @@ class WarehouseList extends localize(i18next)(PageView) {
               })}) {
                 name
                 description
-                updatedAt
-                updater{
-                  id
+                updater {
                   name
                   description
                 }
+                updatedAt
               }
             }
           `
