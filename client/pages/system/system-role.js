@@ -1,27 +1,19 @@
-import '@things-factory/grist-ui'
 import '@things-factory/form-ui'
+import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { getColumns } from '@things-factory/resource-base'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import './system-role-detail'
 import './system-create-role'
+import './system-role-detail'
 
 class SystemRole extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _searchFields: Array,
-      active: String,
       config: Object,
-      data: Object,
-      backdrop: Boolean,
-      direction: String,
-      hovering: String,
-      _currentPopupName: String,
-      page: Number,
-      limit: Number
+      data: Object
     }
   }
 
@@ -81,24 +73,37 @@ class SystemRole extends localize(i18next)(PageView) {
         },
         {
           title: i18next.t('button.delete'),
-          action: this._deleteRole.bind(this)
+          action: this._deleteRoles.bind(this)
         }
       ]
     }
   }
 
+  activated(active) {
+    if (JSON.parse(active) && this.dataGrist) {
+      this.dataGrist.fetch()
+    }
+  }
+
   async firstUpdated() {
+    this._searchFields = [
+      {
+        name: 'name',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+      },
+      {
+        name: 'description',
+        type: 'text',
+        props: { searchOper: 'eq', placeholder: i18next.t('label.description') }
+      }
+    ]
+
     this.config = {
+      rows: { selectable: { multiple: true } },
       columns: [
-        {
-          type: 'gutter',
-          gutterName: 'sequence'
-        },
-        {
-          type: 'gutter',
-          gutterName: 'row-selector',
-          multiple: false
-        },
+        { type: 'gutter', gutterName: 'sequence' },
+        { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'gutter',
           gutterName: 'button',
@@ -114,79 +119,30 @@ class SystemRole extends localize(i18next)(PageView) {
           }
         },
         {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'delete',
-          handlers: {
-            click: async (columns, data, column, record, rowIndex) => {
-              if (confirm(i18next.t('text.sure_to_delete'))) {
-                await this._deleteRole(record.name)
-                this.data = await this.fetchHandler()
-              }
-            }
-          }
+          type: 'string',
+          name: 'name',
+          header: i18next.t('field.name'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.description'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 150
         }
       ]
     }
-  }
-
-  async activated(active) {
-    if (active) {
-      const response = await getColumns('Role')
-      this._columns = response.menu.columns
-      this._searchFields = this._modifySearchFields(this._columns)
-
-      this.config = {
-        ...this.config,
-        columns: [...this.config.columns, ...this._modifyGridFields(this._columns)]
-      }
-    }
-  }
-
-  _modifySearchFields(columns) {
-    return columns
-      .filter(field => field.searchRank && field.searchRank > 0)
-      .sort((a, b) => a.searchRank - b.searchRank)
-      .map(field => {
-        return {
-          name: field.name,
-          type: field.searchEditor ? field.searchEditor : 'text',
-          props: {
-            min: field.rangeVal ? field.rangeVal.split(',')[0] : null,
-            max: field.rangeVal ? field.rangeVal.split(',')[1] : null,
-            searchOper: field.searchOper ? field.searchOper : 'eq',
-            placeholder: i18next.t(field.term)
-          },
-          value: field.searchInitVal
-        }
-      })
-  }
-
-  _modifyGridFields(columns) {
-    return columns
-      .filter(column => column.gridRank && column.gridRank > 0)
-      .sort((a, b) => a.gridRank - b.gridRank)
-      .map(column => {
-        const type = column.refType == 'Entity' || column.refType == 'Menu' ? 'object' : column.colType
-        return {
-          type,
-          name: column.name,
-          header: i18next.t(column.term),
-          record: {
-            editable: column.gridEditor !== 'readonly',
-            align: column.gridAlign || 'left'
-          },
-          sortable: true,
-          width: column.gridWidth || 100
-        }
-      })
   }
 
   get searchForm() {
     return this.shadowRoot.querySelector('search-form')
   }
 
-  get grist() {
+  get dataGrist() {
     return this.shadowRoot.querySelector('data-grist')
   }
 
@@ -215,8 +171,6 @@ class SystemRole extends localize(i18next)(PageView) {
         }
       `
     })
-
-    this.rawRoleData = response.data.roles.items
 
     return {
       total: response.data.roles.total || 0,
@@ -252,19 +206,19 @@ class SystemRole extends localize(i18next)(PageView) {
     ).name
   }
 
-  async _deleteRole(name) {
-    await client.query({
-      query: gql`
-        mutation {
-          deleteRole(${gqlBuilder.buildArgs({
-            name
-          })}) {
-            id
-            name
-          }
-        }
-      `
-    })
+  async _deleteRoles() {
+    const names = this.dataGrist.selected.map(record => record.name)
+    if (names && names.length > 0) {
+      const response = await client.query({
+        query: gql`
+            mutation {
+              deleteRoles(${gqlBuilder.buildArgs({ names })})
+            }
+          `
+      })
+
+      if (!response.errors) this.dataGrist.fetch()
+    }
   }
 
   async stateChanged(state) {

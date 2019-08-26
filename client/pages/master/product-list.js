@@ -93,14 +93,14 @@ class ProductList extends localize(i18next)(PageView) {
         }
       },
       {
-        name: 'yourName',
+        name: 'your_name',
         props: {
           searchOper: 'like',
           placeholder: i18next.t('field.your_name')
         }
       },
       {
-        name: 'refTo',
+        name: 'ref_to',
         props: {
           searchOper: 'like',
           placeholder: i18next.t('field.origin_product')
@@ -114,7 +114,7 @@ class ProductList extends localize(i18next)(PageView) {
         }
       },
       {
-        name: 'packageType',
+        name: 'package_type',
         props: {
           searchOper: 'like',
           placeholder: i18next.t('field.package_type')
