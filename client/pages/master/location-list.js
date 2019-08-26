@@ -1,25 +1,11 @@
+import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { getColumns } from '@things-factory/resource-base'
-import { client, gqlBuilder, isMobileDevice, PageView, navigate, ScrollbarStyles } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
 
-export class LocationList extends localize(i18next)(PageView) {
-  static get properties() {
-    return {
-      _searchFields: Array,
-      config: Object,
-      backdrop: Boolean,
-      direction: String,
-      hovering: String,
-      data: Object,
-      locationId: String,
-      locationName: String
-    }
-  }
-
+class LocationList extends localize(i18next)(PageView) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -38,7 +24,6 @@ export class LocationList extends localize(i18next)(PageView) {
           display: flex;
           flex-direction: column;
           flex: 1;
-          overflow-y: hidden;
         }
         data-grist {
           overflow-y: hidden;
@@ -48,135 +33,181 @@ export class LocationList extends localize(i18next)(PageView) {
     ]
   }
 
-  get context() {
+  static get properties() {
     return {
-      title: i18next.t('title.location_list'),
-      actions: [
-        {
-          title: i18next.t('button.submit'),
-          action: this.createLocation.bind(this)
-        },
-        {
-          title: i18next.t('button.delete'),
-          action: this.deleteLocationList.bind(this)
-        }
-      ]
+      _searchFields: Array,
+      config: Object,
+      data: Object
     }
   }
 
   render() {
     return html`
-      <h2>${this.locationName}</h2>
-
       <search-form
         id="search-form"
         .fields=${this._searchFields}
-        initFocus="name"
+        initFocus="description"
         @submit=${async () => this.dataGrist.fetch()}
       ></search-form>
 
       <div class="grist">
         <data-grist
-          id="locations"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
-          .data=${this.data}
           .fetchHandler="${this.fetchHandler.bind(this)}"
-          @record-change="${this._onLocationChangeHandler.bind(this)}"
         ></data-grist>
       </div>
     `
   }
 
-  async firstUpdated() {
-    this.config = {
-      pagination: {
-        pages: [20, 40, 80, 100]
-      },
-      rows: {
-        selectable: {
-          multiple: false
-        }
-      },
-      columns: [
+  get context() {
+    return {
+      title: i18next.t('title.location'),
+      actions: [
         {
-          type: 'gutter',
-          gutterName: 'sequence'
+          title: i18next.t('button.save'),
+          action: this._saveLocation.bind(this)
         },
         {
-          type: 'gutter',
-          gutterName: 'row-selector',
-          multiple: false
-        },
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'delete_outline',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              this.data.records.splice(rowIndex, 1)
-
-              this.data = {
-                ...this.data,
-                records: [...this.data.records]
-              }
-            }
-          }
+          title: i18next.t('button.delete'),
+          action: this._deleteLocation.bind(this)
         }
       ]
     }
   }
 
-  async activated(active) {
-    if (active) {
-      const response = await getColumns('Location')
-      this._columns = response.menu.columns
-      this._searchFields = this._modifySearchFields(this._columns)
-
-      this.config = {
-        ...this.config,
-        columns: [...this.config.columns, ...this._modifyGridFields(this._columns)]
-      }
+  activated(active) {
+    if (JSON.parse(active) && this.dataGrist) {
+      this.dataGrist.fetch()
     }
   }
 
-  _modifySearchFields(columns) {
-    return columns
-      .filter(field => field.searchRank && field.searchRank > 0)
-      .sort((a, b) => a.searchRank - b.searchRank)
-      .map(field => {
-        return {
-          name: field.name,
-          type: field.searchEditor ? field.searchEditor : 'text',
-          props: {
-            min: field.rangeVal ? field.rangeVal.split(',')[0] : null,
-            max: field.rangeVal ? field.rangeVal.split(',')[1] : null,
-            searchOper: field.searchOper ? field.searchOper : 'eq',
-            placeholder: i18next.t(field.term)
-          },
-          value: field.searchInitVal
-        }
-      })
-  }
+  async firstUpdated() {
+    this._searchFields = [
+      {
+        name: 'name',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+      },
+      {
+        name: 'warehouse',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.warehouse') }
+      },
+      {
+        name: 'zone',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.zone') }
+      },
+      {
+        name: 'section',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.section') }
+      },
+      {
+        name: 'unit',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.unit') }
+      },
+      {
+        name: 'shelf',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.shelf') }
+      },
+      {
+        name: 'state',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.state') }
+      }
+    ]
 
-  _modifyGridFields(columns) {
-    return columns
-      .filter(column => column.gridRank && column.gridRank > 0)
-      .sort((a, b) => a.gridRank - b.gridRank)
-      .map(column => {
-        const type = column.refType == 'Entity' || column.refType == 'Menu' ? 'object' : column.colType
-        return {
-          type,
-          name: column.name,
-          header: i18next.t(column.term),
-          record: {
-            editable: column.gridEditor !== 'readonly',
-            align: column.gridAlign || 'left'
-          },
+    this.config = {
+      rows: { selectable: { multiple: true } },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        { type: 'gutter', gutterName: 'row-selector', multiple: true },
+        {
+          type: 'string',
+          name: 'name',
+          header: i18next.t('field.name'),
+          record: { editable: true, align: 'left' },
           sortable: true,
-          width: column.gridWidth || 100
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.description'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'warehouse',
+          header: i18next.t('field.warehouse'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'string',
+          name: 'zone',
+          header: i18next.t('field.zone'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'string',
+          name: 'section',
+          header: i18next.t('field.section'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'string',
+          name: 'unit',
+          header: i18next.t('field.unit'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'string',
+          name: 'shelf',
+          header: i18next.t('field.shelf'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'string',
+          name: 'state',
+          header: i18next.t('field.state'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'datetime',
+          name: 'updatedAt',
+          header: i18next.t('field.updated_at'),
+          record: { editable: false, align: 'left' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'object',
+          name: 'updater',
+          header: i18next.t('field.updater'),
+          record: { editable: false, align: 'left' },
+          sortable: true,
+          width: 80
         }
-      })
+      ]
+    }
   }
 
   get searchForm() {
@@ -190,101 +221,90 @@ export class LocationList extends localize(i18next)(PageView) {
   async fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
-      query {
-        warehouses(${gqlBuilder.buildArgs({
-          filters: this._conditionParser(),
-          pagination: { page, limit },
-          sortings: sorters
-        })}) {
-          items {
-            name
-            description
-            type
-            updatedAt
-            updater{
-              id
+        query {
+          locations(${gqlBuilder.buildArgs({
+            filters: this._conditionParser(),
+            pagination: { page, limit },
+            sortings: sorters
+          })}) {
+            items {
               name
               description
-            }
-          }
-          total
-        }
-      }
-    `
-    })
-
-    this.rawLocationData = response.data.warehouses.items
-
-    return {
-      // total: this._parseOrderData(response.data.locations.items),
-      total: response.data.warehouses.total || 0,
-      records: response.data.warehouses.items || []
-    }
-  }
-
-  _conditionParser() {
-    if (!this.searchForm) return []
-    const fields = this.searchForm.getFields()
-    const conditionFields = fields.filter(
-      field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox'
-    )
-    const conditions = []
-
-    conditionFields.forEach(field => {
-      conditions.push({
-        name: field.name,
-        value: field.type === 'text' ? field.value : field.type === 'checkbox' ? field.checked : field.value,
-        operator: field.getAttribute('searchOper'),
-        dataType: field.type === 'text' ? 'string' : field.type === 'number' ? 'float' : 'boolean'
-      })
-    })
-    return conditions
-  }
-
-  async _onLocationChangeHandler(e) {
-    const before = e.detail.before || {}
-    const after = e.detail.after
-    let record = this.data.records[e.detail.row]
-    if (!record) {
-      record = { ...after }
-      this.data.records.push(record)
-    } else if (record !== after) {
-      record = Object.assign(record, after)
-    }
-  }
-
-  async createLocation() {
-    try {
-      const locations = this._getNewLocations()
-
-      await client.query({
-        query: gql`
-          mutation {
-            createLocation(${gqlBuilder.buildArgs({
-              location: locations[0]
-            })}) {
-              name
-              description
-              type
               updatedAt
-              updater
-              {
+              updater{
                 id
                 name
                 description
               }
             }
+            total
           }
-        `
-      })
+        }
+      `
+    })
 
-      navigate('locations')
-    } catch (e) {
-      this._notify(e.message)
+    this.rawLocationData = response.data.locations.items
+
+    return {
+      total: response.data.locations.total || 0,
+      records: response.data.locations.items || []
     }
   }
 
-  async deleteLocationList() {
+  _conditionParser() {
+    return this.searchForm
+      .getFields()
+      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
+      .map(field => {
+        return {
+          name: field.name,
+          value:
+            field.type === 'text'
+              ? field.value
+              : field.type === 'checkbox'
+              ? field.checked
+              : field.type === 'number'
+              ? parseFloat(field.value)
+              : field.value,
+          operator: field.getAttribute('searchOper')
+        }
+      })
+  }
+
+  async _saveLocation() {
+    let patches = this.dataGrist.dirtyRecords
+    if (patches && patches.length) {
+      patches = patches.map(locations => {
+        locations.cuFlag = locations.__dirty__
+        delete locations.__dirty__
+        return locations
+      })
+
+      const response = await client.query({
+        query: gql`
+            mutation {
+              updateMultipleLocation(${gqlBuilder.buildArgs({
+                patches
+              })}) {
+                name
+                description
+                type
+                updatedAt
+                updater{
+                  id
+                  name
+                  description
+                }
+              }
+            }
+          `
+      })
+
+      if (!response.errors) this.dataGrist.fetch()
+    }
+  }
+
+  async _deleteLocation() {
     let confirmDelete = confirm('Are you sure?')
     if (confirmDelete) {
       try {
@@ -294,64 +314,16 @@ export class LocationList extends localize(i18next)(PageView) {
         await client.query({
           query: gql`
             mutation {
-              deleteLocation(${gqlBuilder.buildArgs({ name: selectedLocation.name })}){
-                name
-                description
-              }
+              deleteLocation(${gqlBuilder.buildArgs({ name: selectedLocation.name })})
             }
           `
         })
-        navigate('locations')
-      } catch (e) {
-        console.log(this.selectedVehicle)
 
+        this.dataGrist.fetch()
+      } catch (e) {
         this._notify(e.message)
       }
     }
-    // this._getGroupMenus()
-    this._getScreens()
-  }
-
-  _getNewLocations() {
-    const locations = this.shadowRoot.querySelector('#locations').dirtyRecords
-    if (locations.length === 0) {
-      throw new Error(i18next.t('text.list_is_not_completed'))
-    } else {
-      return locations.map(location => {
-        delete location.__dirty__
-        return location
-      })
-    }
-  }
-
-  async _getLocationCodes() {
-    const response = await client.query({
-      query: gql`
-        query {
-          commonCode(${gqlBuilder.buildArgs({
-            name: 'WORKER_TYPE'
-          })}) {
-            name
-            details {
-              name
-            }
-          }
-        }
-      `
-    })
-
-    return response.data.commonCode.details.map(location => location.name)
-  }
-
-  _notify(message, level = '') {
-    document.dispatchEvent(
-      new CustomEvent('notify', {
-        detail: {
-          level,
-          message
-        }
-      })
-    )
   }
 }
 

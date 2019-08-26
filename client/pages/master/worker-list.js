@@ -62,7 +62,7 @@ class WorkerList extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.company'),
+      title: i18next.t('title.worker'),
       actions: [
         {
           title: i18next.t('button.save'),
