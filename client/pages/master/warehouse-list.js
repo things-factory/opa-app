@@ -126,6 +126,14 @@ class WarehouseList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
+          name: 'type',
+          header: i18next.t('field.type'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 100
+        },
+        {
+          type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
           record: { editable: true, align: 'left' },
@@ -172,6 +180,7 @@ class WarehouseList extends localize(i18next)(PageView) {
             items {
               id
               name
+              type
               description
               updatedAt
               updater{
@@ -242,21 +251,17 @@ class WarehouseList extends localize(i18next)(PageView) {
   async _deleteWarehouse() {
     let confirmDelete = confirm('Are you sure?')
     if (confirmDelete) {
-      try {
-        const selectedWarehouse = this.rawWarehouseData.find(
-          warehouseData => warehouseData.name === this.dataGrist.selected[0].name
-        )
-        await client.query({
+      const names = this.dataGrist.selected.map(record => record.name)
+      if (names && names.length > 0) {
+        const response = await client.query({
           query: gql`
-            mutation {
-              deleteWarehouse(${gqlBuilder.buildArgs({ name: selectedWarehouse.name })})
-            }
-          `
+              mutation {
+                deleteWarehouses(${gqlBuilder.buildArgs({ names })})
+              }
+            `
         })
 
-        this.dataGrist.fetch()
-      } catch (e) {
-        this._notify(e.message)
+        if (!response.errors) this.dataGrist.fetch()
       }
     }
   }
