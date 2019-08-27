@@ -133,14 +133,6 @@ class WarehouseList extends localize(i18next)(PageView) {
           width: 150
         },
         {
-          type: 'string',
-          name: 'type',
-          header: i18next.t('field.type'),
-          record: { editable: true, align: 'left' },
-          sortable: true,
-          width: 150
-        },
-        {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
@@ -176,11 +168,11 @@ class WarehouseList extends localize(i18next)(PageView) {
             filters: this._conditionParser(),
             pagination: { page, limit },
             sortings: sorters
-          })}) {
+          })}) {  
             items {
+              id
               name
               description
-              type
               updatedAt
               updater{
                 id

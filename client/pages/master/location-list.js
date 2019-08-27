@@ -102,12 +102,12 @@ class LocationList extends localize(i18next)(PageView) {
       {
         name: 'section',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.section') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.row') }
       },
       {
         name: 'unit',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.unit') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.column') }
       },
       {
         name: 'shelf',
@@ -117,7 +117,7 @@ class LocationList extends localize(i18next)(PageView) {
       {
         name: 'state',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.state') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.status') }
       }
     ]
 
@@ -134,22 +134,7 @@ class LocationList extends localize(i18next)(PageView) {
           sortable: true,
           width: 100
         },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: { editable: true, align: 'left' },
-          sortable: true,
-          width: 150
-        },
-        {
-          type: 'string',
-          name: 'warehouse',
-          header: i18next.t('field.warehouse'),
-          record: { editable: true, align: 'left' },
-          sortable: true,
-          width: 80
-        },
+
         {
           type: 'string',
           name: 'zone',
@@ -160,7 +145,7 @@ class LocationList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'section',
+          name: 'row',
           header: i18next.t('field.section'),
           record: { editable: true, align: 'left' },
           sortable: true,
@@ -168,12 +153,13 @@ class LocationList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'unit',
+          name: 'column',
           header: i18next.t('field.unit'),
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 80
         },
+
         {
           type: 'string',
           name: 'shelf',
@@ -184,7 +170,7 @@ class LocationList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'state',
+          name: 'status',
           header: i18next.t('field.state'),
           record: { editable: true, align: 'left' },
           sortable: true,
@@ -229,7 +215,11 @@ class LocationList extends localize(i18next)(PageView) {
           })}) {
             items {
               name
-              description
+              zone
+              row
+              column
+              shelf
+              status
               updatedAt
               updater{
                 id
@@ -288,7 +278,6 @@ class LocationList extends localize(i18next)(PageView) {
               })}) {
                 name
                 description
-                type
                 updatedAt
                 updater{
                   id
