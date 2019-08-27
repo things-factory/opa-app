@@ -85,11 +85,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
   async firstUpdated() {
     this._searchFields = [
       {
-        name: 'name',
-        type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
-      },
-      {
         name: 'reg_number',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.reg_number') }
@@ -257,24 +252,17 @@ class TransportVehicle extends localize(i18next)(PageView) {
   async _deleteTransportVehicle() {
     let confirmDelete = confirm('Are you sure?')
     if (confirmDelete) {
-      try {
-        const selectedVehicle = this.rawVehicleData.find(
-          vehicleData => vehicleData.name === this.dataGrist.selected[0].name
-        )
-        await client.query({
+      const names = this.dataGrist.selected.map(record => record.name)
+      if (names && names.length > 0) {
+        const response = await client.query({
           query: gql`
-            mutation {
-              deleteTransportVehicle(${gqlBuilder.buildArgs({ name: selectedVehicle.name })}){
-                name
+              mutation {
+                deleteTransportVehicles(${gqlBuilder.buildArgs({ names })})
               }
-            }
-          `
+            `
         })
 
-        this.dataGrist.fetch()
-      } catch (e) {
-        console.log(this.selectedVehicle)
-        this._notify(e.message)
+        if (!response.errors) this.dataGrist.fetch()
       }
     }
   }
