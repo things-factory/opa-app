@@ -163,6 +163,7 @@ class WorkerList extends localize(i18next)(PageView) {
             sortings: sorters
           })}) {
             items {
+              id
               name
               description
               type
