@@ -59,11 +59,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
 
   render() {
     return html`
-      <search-form
-        id="search-form"
-        .fields=${this._searchFields}
-        @submit=${async () => this.dataGrist.fetch()}
-      ></search-form>
+      <search-form id="search-form" .fields=${this._searchFields} @submit=${() => this.dataGrist.fetch()}></search-form>
 
       <div class="grist">
         <data-grist
@@ -136,7 +132,12 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
             click: (columns, data, column, record, rowIndex) => {
               openPopup(
                 html`
-                  <system-user-detail .email="${record.email}" style="width: 90vw; height: 70vh;"></system-user-detail>
+                  <system-user-detail
+                    @user-updated="${() => this.dataGrist.fetch()}"
+                    .userId="${record.id}"
+                    .email="${record.email}"
+                    style="width: 90vw; height: 70vh;"
+                  ></system-user-detail>
                 `
               )
             }
@@ -245,9 +246,16 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
       `
     })
 
-    return {
-      total: response.data.users.total || 0,
-      records: response.data.users.items || []
+    if (!response.errors) {
+      return {
+        total: response.data.users.total || 0,
+        records: response.data.users.items || []
+      }
+    } else {
+      return {
+        total: 0,
+        records: []
+      }
     }
   }
 
@@ -274,13 +282,16 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
   _createUser() {
     openPopup(
       html`
-        <system-create-user style="width: 90vw; height: 70vh;"></system-create-user>
+        <system-create-user
+          @user-created="${() => this.dataGrist.fetch()}"
+          style="width: 90vw; height: 70vh;"
+        ></system-create-user>
       `
     )
   }
 
   async _deleteUser(email) {
-    await client.query({
+    const response = await client.query({
       query: gql`
         mutation {
           deleteUser(${gqlBuilder.buildArgs({
@@ -289,12 +300,9 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
         }
       `
     })
-  }
 
-  async stateChanged(state) {
-    if (this.active && this._currentPopupName && !state.layout.viewparts[this._currentPopupName]) {
+    if (!response.errors) {
       this.dataGrist.fetch()
-      this._currentPopupName = null
     }
   }
 }

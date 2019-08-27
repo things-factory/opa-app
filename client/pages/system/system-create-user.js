@@ -7,11 +7,11 @@ import { css, html, LitElement } from 'lit-element'
 class SystemCreateUser extends localize(i18next)(LitElement) {
   static get properties() {
     return {
-      domains: Array,
-      config: Object,
-      data: Object,
-      page: Number,
-      limit: Number
+      bizplaces: Array,
+      roleConfig: Object,
+      priviledgeConfig: Object,
+      _selectedRoleName: String,
+      _priviledges: Object
     }
   }
 
@@ -28,8 +28,13 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
         }
         .grist {
           display: flex;
-          flex-direction: column;
           flex: 1;
+          overflow-y: auto;
+        }
+        .grist-column {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
         }
         data-grist {
           overflow-y: hidden;
@@ -51,15 +56,6 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
     ]
   }
 
-  constructor() {
-    super()
-    this.domains = []
-    this.config = {}
-    this.data = {}
-    this.limit = 50
-    this.page = 1
-  }
-
   render() {
     return html`
       <div>
@@ -67,12 +63,12 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
         <form class="multi-column-form">
           <fieldset>
             <label>${i18next.t('label.bizplace')}</label>
-            <select name="domain">
-              ${this.domains.map(
-                domain =>
+            <select name="bizplace">
+              ${(this.bizplaces || []).map(
+                bizplace =>
                   html`
-                    <option value="${domain.id}"
-                      >${domain.name} ${domain.description ? ` (${domain.description})` : ''}</option
+                    <option value="${bizplace.domain.id}"
+                      >${bizplace.name} ${bizplace.description ? ` (${bizplace.description})` : ''}</option
                     >
                   `
               )}
@@ -88,56 +84,66 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
             <input name="email" type="email" required />
 
             <label>${i18next.t('label.password')}</label>
-            <input name="password" type="password" />
+            <input name="password" type="password" required />
 
             <label>${i18next.t('label.confirm_password')}</label>
-            <input name="confirm_password" type="password" />
+            <input name="confirm_password" type="password" required />
           </fieldset>
         </form>
       </div>
 
       <div class="grist">
-        <h2>${i18next.t('title.role')}</h2>
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config="${this.config}"
-          .data="${this.data}"
-          @page-changed=${e => {
-            this.page = e.detail
-          }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
-        ></data-grist>
+        <div class="grist-column">
+          <h2>${i18next.t('title.role')}</h2>
+          <data-grist
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config="${this.roleConfig}"
+            .fetchHandler="${this.fetchHandler.bind(this)}"
+          ></data-grist>
+        </div>
+
+        <div class="grist-column">
+          <h2>${i18next.t('title.priviledge')}: ${this._selectedRoleName}</h2>
+          <data-grist
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config="${this.priviledgeConfig}"
+            .data="${this._priviledges}"
+          ></data-grist>
+        </div>
       </div>
 
       <div class="button-container">
-        <mwc-button @click="${this._createUser}">${i18next.t('button.submit')}</mwc-button>
+        <mwc-button @click="${this._createUser}">${i18next.t('button.save')}</mwc-button>
       </div>
     `
   }
 
   async firstUpdated() {
-    this.domains = await this._getDomains()
-    const roles = await this._getRoles()
-    this.data = {
-      records: roles,
-      total: roles.length
-    }
+    this.bizplaces = await this._fetchBizplaces()
 
-    this.config = {
+    this.roleConfig = {
+      rows: {
+        handlers: {
+          click: async (columns, data, column, record, rowIndex) => {
+            this._selectedRoleName = record.name
+            const priviledges = await this._fetchPriviledges(record.name)
+            this._priviledges = {
+              records: priviledges,
+              total: priviledges.length
+            }
+          }
+        }
+      },
       columns: [
-        {
-          type: 'gutter',
-          gutterName: 'sequence'
-        },
+        { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),
           record: {
             editable: false
-          }
+          },
+          width: 150
         },
         {
           type: 'string',
@@ -145,27 +151,87 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
           header: i18next.t('field.description'),
           record: {
             editable: false
-          }
+          },
+          width: 250
         },
         {
           type: 'boolean',
-          name: 'checked',
-          header: i18next.t('label.checked'),
+          name: 'assigned',
+          header: i18next.t('label.assigned'),
           record: {
             editable: true
-          }
+          },
+          width: 80
+        }
+      ]
+    }
+
+    this.priviledgeConfig = {
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'string',
+          name: 'category',
+          header: i18next.t('field.category'),
+          record: {
+            editable: false
+          },
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'name',
+          header: i18next.t('field.name'),
+          record: {
+            editable: false
+          },
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.description'),
+          record: {
+            editable: false
+          },
+          width: 250
         }
       ]
     }
   }
 
-  async _getDomains() {
+  async _fetchBizplaces() {
     const response = await client.query({
       query: gql`
         query {
-          domains(filters: []) {
+          bizplaces(${gqlBuilder.buildArgs({ filters: [] })}) {
             items {
               id
+              name
+              description
+              domain {
+                id
+              }
+            }
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      return response.data.bizplaces.items || []
+    }
+  }
+
+  async _fetchPriviledges(name) {
+    const response = await client.query({
+      query: gql`
+        query {
+          role(${gqlBuilder.buildArgs({
+            name
+          })}) {
+            priviledges {
+              category
               name
               description
             }
@@ -174,14 +240,20 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
       `
     })
 
-    return response.data.domains.items
+    if (!response.errors) {
+      return response.data.role.priviledges
+    }
   }
 
-  async _getRoles() {
+  async fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
         query {
-          roles(filters: []) {
+          roles(${gqlBuilder.buildArgs({
+            filters: [],
+            pagination: { page, limit },
+            sortings: sorters
+          })}) {
             items {
               id
               name
@@ -193,13 +265,18 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
       `
     })
 
-    return response.data.roles.items
+    if (!response.errors) {
+      return {
+        records: response.data.roles.items || [],
+        total: response.data.roles.total || 0
+      }
+    }
   }
 
   async _createUser() {
     try {
       const user = this._getUserInfo()
-      await client.query({
+      const response = await client.query({
         query: gql`
           mutation {
             createUser(${gqlBuilder.buildArgs({
@@ -211,7 +288,10 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
         `
       })
 
-      history.back()
+      if (!response.errors) {
+        history.back()
+        this.dispatchEvent(new CustomEvent('user-created', { bubbles: true, composed: true, cancelable: true }))
+      }
     } catch (e) {
       document.dispatchEvent(
         new CustomEvent('notify', {
@@ -225,28 +305,24 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
   }
 
   _getUserInfo() {
-    const password = this._getValidPassword()
-    if (this.shadowRoot.querySelector('form').checkValidity() && password) {
+    if (this.shadowRoot.querySelector('form').checkValidity() && this._validatePassword()) {
       return {
         name: this._getInputByName('name').value,
-        domain: { id: this._getInputByName('domain').value },
+        domain: { id: this._getInputByName('bizplace').value },
         description: this._getInputByName('description').value,
-        password,
+        password: this._getInputByName('password').value,
         email: this._getInputByName('email').value,
-        roles: this._getChecekedRoles().map(role => role.id)
+        roles: this._getChecekedRoles()
       }
     } else {
       throw new Error(i18next.t('text.user_info_not_valid'))
     }
   }
 
-  _getValidPassword() {
+  _validatePassword() {
     const password = this._getInputByName('password').value
     const confirmPassword = this._getInputByName('confirm_password').value
-
-    if (password === confirmPassword) {
-      return password
-    }
+    return password === confirmPassword
   }
 
   _getInputByName(name) {
@@ -256,7 +332,11 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
   _getChecekedRoles() {
     const grist = this.shadowRoot.querySelector('data-grist')
     grist.commit()
-    return grist.data.records.filter(role => role.checked)
+    return grist.data.records
+      .filter(role => role.assigned)
+      .map(role => {
+        return { id: role.id }
+      })
   }
 }
 
