@@ -277,13 +277,6 @@ class LocationList extends localize(i18next)(PageView) {
                 patches
               })}) {
                 name
-                description
-                updatedAt
-                updater{
-                  id
-                  name
-                  description
-                }
               }
             }
           `
@@ -294,24 +287,17 @@ class LocationList extends localize(i18next)(PageView) {
   }
 
   async _deleteLocation() {
-    let confirmDelete = confirm('Are you sure?')
-    if (confirmDelete) {
-      try {
-        const selectedLocation = this.rawLocationData.find(
-          locationData => locationData.name === this.dataGrist.selected[0].name
-        )
-        await client.query({
-          query: gql`
+    const names = this.dataGrist.selected.map(record => record.name)
+    if (names && names.length > 0) {
+      const response = await client.query({
+        query: gql`
             mutation {
-              deleteLocation(${gqlBuilder.buildArgs({ name: selectedLocation.name })})
+              deleteLocations(${gqlBuilder.buildArgs({ names })})
             }
           `
-        })
+      })
 
-        this.dataGrist.fetch()
-      } catch (e) {
-        this._notify(e.message)
-      }
+      if (!response.errors) this.dataGrist.fetch()
     }
   }
 }
