@@ -231,6 +231,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
     let patches = this.dataGrist.dirtyRecords
     if (patches && patches.length) {
       patches = patches.map(vehicles => {
+        vehicles.name = vehicles.regNumber
         vehicles.cuFlag = vehicles.__dirty__
 
         delete vehicles.__dirty__
