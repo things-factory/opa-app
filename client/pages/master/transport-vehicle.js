@@ -181,6 +181,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
             sortings: sorters
           })}) {
             items {
+              id
               name
               regNumber
               description
