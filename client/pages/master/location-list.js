@@ -3,7 +3,9 @@ import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
+import { openPopup } from '@things-factory/layout-base'
 import { css, html } from 'lit-element'
+import './generate-list'
 
 class LocationList extends localize(i18next)(PageView) {
   static get styles() {
@@ -64,6 +66,10 @@ class LocationList extends localize(i18next)(PageView) {
     return {
       title: i18next.t('title.location'),
       actions: [
+        {
+          title: i18next.t('button.generate'),
+          action: this._generateLocation.bind(this)
+        },
         {
           title: i18next.t('button.save'),
           action: this._saveLocation.bind(this)
@@ -126,6 +132,16 @@ class LocationList extends localize(i18next)(PageView) {
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'reorder',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              this._openGenerate(record.id, record.name)
+            }
+          }
+        },
         {
           type: 'string',
           name: 'name',
@@ -241,6 +257,16 @@ class LocationList extends localize(i18next)(PageView) {
     }
   }
 
+  _openGenerate(locationId, locationName) {
+    openPopup(html`
+      <generate-list
+        style="width: 80vw; height: 80vh"
+        .locationId="${locationId}"
+        .locationName="${locationName}"
+      ></generate-list>
+    `)
+  }
+
   _conditionParser() {
     return this.searchForm
       .getFields()
@@ -299,6 +325,16 @@ class LocationList extends localize(i18next)(PageView) {
 
       if (!response.errors) this.dataGrist.fetch()
     }
+  }
+
+  async _generateLocation(locationId, locationName) {
+    openPopup(html`
+      <generate-list
+        style="width: 80vw; height: 80vh"
+        .locationId="${locationId}"
+        .locationName="${locationName}"
+      ></generate-list>
+    `)
   }
 }
 
