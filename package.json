@@ -52,7 +52,8 @@
     "@things-factory/shell": "*",
     "@things-factory/system-ui": "*",
     "@things-factory/transport-base": "*",
-    "@things-factory/warehouse-base": "*"
+    "@things-factory/warehouse-base": "*",
+    "pg": "*"
   },
   "devDependencies": {
     "@things-factory/board-test": "*",

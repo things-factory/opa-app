@@ -4,6 +4,7 @@ node_modules/
 yarn*.*
 package-lock.json
 db.sqlite
+ormconfig.js
 .DS_Store
 .vscode
 db.sqlite-journal
