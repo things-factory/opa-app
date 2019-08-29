@@ -7,14 +7,11 @@ import { css, html, LitElement } from 'lit-element'
 class SystemRoleDetail extends localize(i18next)(LitElement) {
   static get properties() {
     return {
-      domains: Array,
-      config: Object,
-      data: Object,
+      roleId: String,
       name: String,
-      priviledges: Array,
-      roleInfo: Object,
-      page: Number,
-      limit: Number
+      domains: Array,
+      priviledgeConfig: Object,
+      roleInfo: Object
     }
   }
 
@@ -54,15 +51,6 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
     ]
   }
 
-  constructor() {
-    super()
-    this.domains = []
-    this.config = {}
-    this.data = {}
-    this.limit = 50
-    this.page = 1
-  }
-
   render() {
     return html`
       <div>
@@ -70,18 +58,10 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
         <form class="multi-column-form">
           <fieldset>
             <label>${i18next.t('label.domain')}</label>
-            <select name="domain">
-              ${this.domains.map(domain => {
-                const isSelected = this.roleInfo && this.roleInfo.domain && this.roleInfo.domain.id === domain.id
-
-                return html`
-                  <option value="${domain.id}" ?selected="${isSelected}">${domain.name} (${domain.description})</option>
-                `
-              })}
-            </select>
+            <input name="domain" readonly />
 
             <label>${i18next.t('label.name')}</label>
-            <input name="name" />
+            <input name="name" required />
 
             <label>${i18next.t('label.description')}</label>
             <input name="description" />
@@ -93,14 +73,8 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
         <h2>${i18next.t('title.priviledge')}</h2>
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config="${this.config}"
-          .data="${this.data}"
-          @page-changed=${e => {
-            this.page = e.detail
-          }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
+          .config="${this.priviledgeConfig}"
+          .fetchHandler="${this.fetchHandler.bind(this)}"
         ></data-grist>
       </div>
 
@@ -110,22 +84,8 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
     `
   }
 
-  async updated(changedProps) {
-    if (changedProps.has('name')) {
-      this.roleInfo = await this._getRoleInfo()
-      this._fillupView()
-    }
-
-    if (changedProps.has('roleInfo') || changedProps.has('priviledges')) {
-      this._checkPriviledge()
-    }
-  }
-
   async firstUpdated() {
-    this.domains = await this._getDomains()
-    this.priviledges = await this._getPriviledges()
-
-    this.config = {
+    this.priviledgeConfig = {
       columns: [
         {
           type: 'gutter',
@@ -141,6 +101,14 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
         },
         {
           type: 'string',
+          name: 'category',
+          header: i18next.t('field.category'),
+          record: {
+            editable: false
+          }
+        },
+        {
+          type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
           record: {
@@ -149,17 +117,33 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
         },
         {
           type: 'boolean',
-          name: 'checked',
-          header: i18next.t('label.checked'),
+          name: 'assigned',
+          header: i18next.t('label.assigned'),
           record: {
             editable: true
-          }
+          },
+          width: 80
         }
       ]
     }
   }
 
-  async _getDomains() {
+  async updated(changedProps) {
+    if (changedProps.has('name')) {
+      this.roleInfo = await this._fetchRoleInfo()
+      this.dataGrist.fetch()
+    }
+
+    if (changedProps.has('roleInfo')) {
+      this._fillupView()
+    }
+  }
+
+  get dataGrist() {
+    return this.shadowRoot.querySelector('data-grist')
+  }
+
+  async _fetchDomains() {
     const response = await client.query({
       query: gql`
         query {
@@ -177,27 +161,32 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
     return response.data.domains.items
   }
 
-  async _getPriviledges() {
+  async fetchHandler() {
     const response = await client.query({
       query: gql`
         query {
-          priviledges(filters: []) {
-            items {
-              id
-              name
-              category
-              description
-            }
-            total
+          rolePriviledges(${gqlBuilder.buildArgs({
+            roleId: this.roleId
+          })}) {
+            id
+            name
+            category
+            description
+            assigned
           }
         }
       `
     })
 
-    return response.data.priviledges.items
+    if (!response.errors) {
+      return {
+        records: response.data.rolePriviledges || [],
+        total: response.data.rolePriviledges.length || 0
+      }
+    }
   }
 
-  async _getRoleInfo() {
+  async _fetchRoleInfo() {
     const response = await client.query({
       query: gql`
         query {
@@ -205,6 +194,11 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
             name: this.name
           })}) {
             id
+            domain {
+              id
+              name
+              description
+            }
             name
             description
             priviledges {
@@ -222,59 +216,70 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
 
   _fillupView() {
     Array.from(this.shadowRoot.querySelectorAll('input')).forEach(input => {
-      input.value = this.roleInfo[input.name]
+      const roleInfo = this.roleInfo[input.name]
+      input.value =
+        roleInfo instanceof Object
+          ? `${roleInfo.name} ${roleInfo.description ? `(${roleInfo.description})` : ''}`
+          : roleInfo
     })
-  }
-
-  _checkPriviledge() {
-    if (
-      this.roleInfo.priviledges &&
-      this.roleInfo.priviledges.length >= 0 &&
-      this.priviledges &&
-      this.priviledges.length
-    ) {
-      this.data = {
-        records: this.priviledges.map(priviledge => {
-          const rolePriviledgesIds = this.roleInfo.priviledges.map(rolePriviledge => rolePriviledge.id)
-          return {
-            ...priviledge,
-            checked: rolePriviledgesIds.includes(priviledge.id)
-          }
-        }),
-        total: this.priviledges.length
-      }
-    }
   }
 
   async _saveRoleInfo() {
-    const roleInfo = {
-      name: this._getInputByName('name').value,
-      description: this._getInputByName('description').value,
-      priviledge: this._getChecekedPriviledges().map(priviledge => priviledge.id)
-    }
+    try {
+      const patch = this._getRoleInfo()
 
-    const response = await client.query({
-      query: gql`
-        mutation {
-          updateRole(${gqlBuilder.buildArgs({
-            name: this.name,
-            patch: roleInfo
-          })}) {
-            id
-            name
-            description
-            priviledges {
+      const response = await client.query({
+        query: gql`
+          mutation {
+            updateRole(${gqlBuilder.buildArgs({
+              name: this.name,
+              patch
+            })}) {
               id
+              domain {
+                id
+                name
+                description
+              }
               name
-              category
+              description
+              priviledges {
+                id
+                name
+                category
+                description
+              }
             }
           }
-        }
-      `
-    })
+        `
+      })
 
-    this.roleInfo = { ...response.data.updateRole }
-    this.name = this.roleInfo.name
+      this.roleInfo = { ...response.data.updateRole }
+      this.name = this.roleInfo.name
+
+      this.dispatchEvent(new CustomEvent('role-updated', { bubbles: true, composed: true, cancelable: true }))
+    } catch (e) {
+      document.dispatchEvent(
+        new CustomEvent('notify', {
+          detail: {
+            level: 'error',
+            message: e.message
+          }
+        })
+      )
+    }
+  }
+
+  _getRoleInfo() {
+    if (this.shadowRoot.querySelector('form').checkValidity()) {
+      return {
+        name: this._getInputByName('name').value,
+        description: this._getInputByName('description').value,
+        priviledges: this._getCheckedPriviledges()
+      }
+    } else {
+      throw new Error(i18next.t('text.role_info_not_valid'))
+    }
   }
 
   _getInputByName(name) {
@@ -284,7 +289,11 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
   _getCheckedPriviledges() {
     const grist = this.shadowRoot.querySelector('data-grist')
     grist.commit()
-    return grist.data.records.filter(priviledge => priviledge.checked)
+    return grist.data.records
+      .filter(priviledge => priviledge.assigned)
+      .map(priviledge => {
+        return { id: priviledge.id }
+      })
   }
 }
 

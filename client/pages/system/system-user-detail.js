@@ -288,8 +288,9 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
             name
           })}) {
             priviledges {
-              category
+              id
               name
+              category
               description
             }
           }
@@ -354,7 +355,7 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
         name: this._getInputByName('name').value,
         description: this._getInputByName('description').value,
         email: this._getInputByName('email').value,
-        roles: this._getChecekedRoles()
+        roles: this._getCheckedRoles()
       }
     } else {
       throw new Error(i18next.t('text.user_info_not_valid'))
@@ -365,7 +366,7 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
     return this.shadowRoot.querySelector(`input[name=${name}]`)
   }
 
-  _getChecekedRoles() {
+  _getCheckedRoles() {
     const grist = this.shadowRoot.querySelector('data-grist')
     grist.commit()
     return grist.data.records

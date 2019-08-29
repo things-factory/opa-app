@@ -7,11 +7,8 @@ import { css, html, LitElement } from 'lit-element'
 class SystemCreateRole extends localize(i18next)(LitElement) {
   static get properties() {
     return {
-      domains: Array,
-      config: Object,
-      data: Object,
-      page: Number,
-      limit: Number
+      bizplaces: Array,
+      priviledgeConfig: Object
     }
   }
 
@@ -51,27 +48,20 @@ class SystemCreateRole extends localize(i18next)(LitElement) {
     ]
   }
 
-  constructor() {
-    super()
-    this.domains = []
-    this.config = {}
-    this.data = {}
-    this.limit = 50
-    this.page = 1
-  }
-
   render() {
     return html`
       <div>
         <h2>${i18next.t('title.create_role')}</h2>
         <form class="multi-column-form">
           <fieldset>
-            <label>${i18next.t('label.domain')}</label>
-            <select name="domain">
-              ${this.domains.map(
-                domain =>
+            <label>${i18next.t('label.bizplace')}</label>
+            <select name="bizplace">
+              ${(this.bizplaces || []).map(
+                bizplace =>
                   html`
-                    <option value="${domain.id}">${domain.name} (${domain.description})</option>
+                    <option value="${bizplace.domain.id}"
+                      >${bizplace.name} ${bizplace.description ? ` (${bizplace.description})` : ''}</option
+                    >
                   `
               )}
             </select>
@@ -89,14 +79,8 @@ class SystemCreateRole extends localize(i18next)(LitElement) {
         <h2>${i18next.t('title.assign_priviledge')}</h2>
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config="${this.config}"
-          .data="${this.data}"
-          @page-changed=${e => {
-            this.page = e.detail
-          }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
+          .config="${this.priviledgeConfig}"
+          .fetchHandler="${this.fetchHandler.bind(this)}"
         ></data-grist>
       </div>
 
@@ -107,19 +91,11 @@ class SystemCreateRole extends localize(i18next)(LitElement) {
   }
 
   async firstUpdated() {
-    this.domains = await this._getDomains()
-    const priviledges = await this._getPriviledges()
-    this.data = {
-      records: priviledges,
-      total: priviledges.length
-    }
+    this.bizplaces = await this._fetchBizplaces()
 
-    this.config = {
+    this.priviledgeConfig = {
       columns: [
-        {
-          type: 'gutter',
-          gutterName: 'sequence'
-        },
+        { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'string',
           name: 'name',
@@ -146,39 +122,49 @@ class SystemCreateRole extends localize(i18next)(LitElement) {
         },
         {
           type: 'boolean',
-          name: 'checked',
-          header: i18next.t('label.checked'),
+          name: 'assigned',
+          header: i18next.t('label.assigned'),
           record: {
             editable: true
-          }
+          },
+          width: 80
         }
       ]
     }
   }
 
-  async _getDomains() {
+  async _fetchBizplaces() {
     const response = await client.query({
       query: gql`
         query {
-          domains(filters: []) {
+          bizplaces(${gqlBuilder.buildArgs({ filters: [] })}) {
             items {
               id
               name
               description
+              domain {
+                id
+              }
             }
           }
         }
       `
     })
 
-    return response.data.domains.items
+    if (!response.errors) {
+      return response.data.bizplaces.items || []
+    }
   }
 
-  async _getPriviledges() {
+  async fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
         query {
-          priviledges(filters: []) {
+          priviledges(${gqlBuilder.buildArgs({
+            filters: [],
+            pagination: { page, limit },
+            sortings: sorters
+          })}) {
             items {
               id
               name
@@ -191,20 +177,28 @@ class SystemCreateRole extends localize(i18next)(LitElement) {
       `
     })
 
-    return response.data.priviledges.items
+    if (!response.errors) {
+      return {
+        records: response.data.priviledges.items || [],
+        total: response.data.priviledges.total || 0
+      }
+    }
   }
 
   async _createRole() {
     try {
-      const user = this._getRoleInfo()
-      await client.query({
+      const role = this._getRoleInfo()
+      const response = await client.query({
         query: gql`
           mutation {
             createRole(${gqlBuilder.buildArgs({
               role
             })}) {
               id
-              domain
+              domain {
+                id 
+                name
+              }
               name
               description
               priviledges {
@@ -213,14 +207,20 @@ class SystemCreateRole extends localize(i18next)(LitElement) {
                 category
                 description
               }
-              creatorId
+              creator{
+                id
+                name
+              }
               createdAt
             }
           }
         `
       })
 
-      history.back()
+      if (!response.errors) {
+        history.back()
+        this.dispatchEvent(new CustomEvent('role-created', { bubbles: true, composed: true, cancelable: true }))
+      }
     } catch (e) {
       document.dispatchEvent(
         new CustomEvent('notify', {
@@ -234,12 +234,12 @@ class SystemCreateRole extends localize(i18next)(LitElement) {
   }
 
   _getRoleInfo() {
-    const password = this._getValidPassword()
-    if (this.shadowRoot.querySelector('form').checkValidity() && password) {
+    if (this.shadowRoot.querySelector('form').checkValidity()) {
       return {
         name: this._getInputByName('name').value,
+        domain: { id: this._getInputByName('bizplace').value },
         description: this._getInputByName('description').value,
-        priviledges: this._getCheckedPriviledge().map(priviledge => priviledge.id)
+        priviledges: this._getCheckedPriviledges()
       }
     } else {
       throw new Error(i18next.t('text.role_info_not_valid'))
@@ -247,13 +247,17 @@ class SystemCreateRole extends localize(i18next)(LitElement) {
   }
 
   _getInputByName(name) {
-    return this.shadowRoot.querySelector(`input[name=${name}]`)
+    return this.shadowRoot.querySelector(`select[name=${name}], input[name=${name}]`)
   }
 
-  _getCheckedPriviledge() {
+  _getCheckedPriviledges() {
     const grist = this.shadowRoot.querySelector('data-grist')
     grist.commit()
-    return grist.data.records.filter(priviledge => priviledge.checked)
+    return grist.data.records
+      .filter(priviledge => priviledge.assigned)
+      .map(priviledge => {
+        return { id: priviledge.id }
+      })
   }
 }
 

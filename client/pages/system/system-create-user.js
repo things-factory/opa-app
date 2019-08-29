@@ -312,7 +312,7 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
         description: this._getInputByName('description').value,
         password: this._getInputByName('password').value,
         email: this._getInputByName('email').value,
-        roles: this._getChecekedRoles()
+        roles: this._getCheckedRoles()
       }
     } else {
       throw new Error(i18next.t('text.user_info_not_valid'))
@@ -329,7 +329,7 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
     return this.shadowRoot.querySelector(`select[name=${name}], input[name=${name}]`)
   }
 
-  _getChecekedRoles() {
+  _getCheckedRoles() {
     const grist = this.shadowRoot.querySelector('data-grist')
     grist.commit()
     return grist.data.records

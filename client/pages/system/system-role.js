@@ -110,11 +110,16 @@ class SystemRole extends localize(i18next)(PageView) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              this._currentPopupName = openPopup(
+              openPopup(
                 html`
-                  <system-role-detail .name="${record.name}" style="width: 90vw; height: 70vh;"></system-role-detail>
+                  <system-role-detail
+                    @role-updated="${() => this.dataGrist.fetch()}"
+                    .roleId="${record.id}"
+                    .name="${record.name}"
+                    style="width: 90vw; height: 70vh;"
+                  ></system-role-detail>
                 `
-              ).name
+              )
             }
           }
         },
@@ -157,6 +162,10 @@ class SystemRole extends localize(i18next)(PageView) {
           })}) {
             items {
               id
+              domain{
+                id
+                name
+              }
               name
               description
               updatedAt
@@ -172,9 +181,16 @@ class SystemRole extends localize(i18next)(PageView) {
       `
     })
 
-    return {
-      total: response.data.roles.total || 0,
-      records: response.data.roles.items || []
+    if (!response.errors) {
+      return {
+        total: response.data.roles.total || 0,
+        records: response.data.roles.items || []
+      }
+    } else {
+      return {
+        total: 0,
+        records: []
+      }
     }
   }
 
@@ -201,7 +217,8 @@ class SystemRole extends localize(i18next)(PageView) {
   _createRole() {
     this._currentPopupName = openPopup(
       html`
-        <system-create-role style="width: 90vw; height: 70vh;"></system-create-role>
+        <system-create-role @role-created="${() => this.dataGrist.fetch()}" style="width: 90vw; height: 70vh;">
+        </system-create-role>
       `
     ).name
   }
@@ -218,13 +235,6 @@ class SystemRole extends localize(i18next)(PageView) {
       })
 
       if (!response.errors) this.dataGrist.fetch()
-    }
-  }
-
-  async stateChanged(state) {
-    if (this.active && this._currentPopupName && !state.layout.viewparts[this._currentPopupName]) {
-      this.data = await this.fetchHandler()
-      this._currentPopupName = null
     }
   }
 }
