@@ -1,7 +1,7 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, ScrollbarStyles } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, ScrollbarStyles, navigate } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
@@ -101,7 +101,7 @@ export class GenerateList extends localize(i18next)(LitElement) {
       </div>
 
       <div class="button-container">
-        <mwc-button @click=${this._generateLocationLists}>${i18next.t('button.save')}</mwc-button>
+        <mwc-button @click=${this._generateLocationList}>${i18next.t('button.save')}</mwc-button>
       </div>
     `
   }
@@ -129,7 +129,7 @@ export class GenerateList extends localize(i18next)(LitElement) {
           multiple: true
         },
         {
-          type: 'number',
+          type: 'string',
           name: 'start',
           record: {
             align: 'left',
@@ -139,7 +139,7 @@ export class GenerateList extends localize(i18next)(LitElement) {
           width: 250
         },
         {
-          type: 'number',
+          type: 'string',
           name: 'end',
           record: {
             align: 'left',
@@ -149,7 +149,7 @@ export class GenerateList extends localize(i18next)(LitElement) {
           width: 250
         },
         {
-          type: 'number',
+          type: 'string',
           name: 'column',
           record: {
             align: 'left',
@@ -159,7 +159,7 @@ export class GenerateList extends localize(i18next)(LitElement) {
           width: 250
         },
         {
-          type: 'number',
+          type: 'string',
           name: 'cell',
           record: {
             align: 'left',
@@ -189,7 +189,7 @@ export class GenerateList extends localize(i18next)(LitElement) {
     }
   }
 
-  _generateLocationList() {
+  async _generateLocationList() {
     let locationsData = this.locationData.records
 
     if (locationsData && locationsData.length) {
@@ -231,18 +231,20 @@ export class GenerateList extends localize(i18next)(LitElement) {
               locations['name'] =
                 this.zoneName.toUpperCase() +
                 '' +
-                i +
+                i.toString().padStart(2, '0') +
                 '-' +
                 j.toString().padStart(2, '0') +
                 '-' +
                 locations.cellInstance
 
               const locationObj = {}
-              locationObj['name'] = locations.name
-              locationObj['zone'] = locations.zone
-              locationObj['section'] = i
-              locationObj['unit'] = j
-              locationObj['shelf'] = locations.cellInstance
+              locationObj['name'] = locations.name.toString()
+              locationObj['zone'] = locations.zone.toString()
+              locationObj['row'] = i.toString().padStart(2, '0')
+              locationObj['column'] = j.toString().padStart(2, '0')
+              locationObj['shelf'] = locations.cellInstance.toString()
+              locationObj['status'] = 'Empty'
+              locationObj['cuFlag'] = '+'
 
               this.locationType.push(locationObj)
             }
@@ -250,8 +252,21 @@ export class GenerateList extends localize(i18next)(LitElement) {
         }
         return locations
       })
+      let patches = this.locationType
+      const response = await client.query({
+        query: gql`
+            mutation {
+              updateMultipleLocation(${gqlBuilder.buildArgs({
+                patches
+              })}) {
+                name
+              }
+            }
+          `
+      })
+
+      if (!response.errors) navigate('locations')
     }
-    return this.locationType
   }
 
   _generateLocationLists() {
