@@ -1,13 +1,14 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
-import gql from 'graphql-tag'
 import { openPopup } from '@things-factory/layout-base'
+import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
+import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import { connect } from 'pwa-helpers/connect-mixin'
 import './generate-list'
 
-class LocationList extends localize(i18next)(PageView) {
+class LocationList extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -37,6 +38,7 @@ class LocationList extends localize(i18next)(PageView) {
 
   static get properties() {
     return {
+      _warehouseId: String,
       _searchFields: Array,
       config: Object,
       data: Object
@@ -96,22 +98,17 @@ class LocationList extends localize(i18next)(PageView) {
         props: { searchOper: 'like', placeholder: i18next.t('label.name') }
       },
       {
-        name: 'warehouse',
-        type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.warehouse') }
-      },
-      {
         name: 'zone',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.zone') }
       },
       {
-        name: 'section',
+        name: 'row',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.row') }
       },
       {
-        name: 'unit',
+        name: 'column',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.column') }
       },
@@ -121,7 +118,7 @@ class LocationList extends localize(i18next)(PageView) {
         props: { searchOper: 'like', placeholder: i18next.t('label.shelf') }
       },
       {
-        name: 'state',
+        name: 'status',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.status') }
       }
@@ -130,6 +127,7 @@ class LocationList extends localize(i18next)(PageView) {
     this.config = {
       rows: { selectable: { multiple: true } },
       columns: [
+        { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
@@ -148,7 +146,7 @@ class LocationList extends localize(i18next)(PageView) {
           header: i18next.t('field.name'),
           record: { editable: true, align: 'left' },
           sortable: true,
-          width: 100
+          width: 150
         },
 
         {
@@ -162,7 +160,7 @@ class LocationList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'row',
-          header: i18next.t('field.section'),
+          header: i18next.t('field.row'),
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 80
@@ -170,7 +168,7 @@ class LocationList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'column',
-          header: i18next.t('field.unit'),
+          header: i18next.t('field.column'),
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 80
@@ -187,7 +185,7 @@ class LocationList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'status',
-          header: i18next.t('field.state'),
+          header: i18next.t('field.status'),
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 80
@@ -198,7 +196,7 @@ class LocationList extends localize(i18next)(PageView) {
           header: i18next.t('field.updated_at'),
           record: { editable: false, align: 'left' },
           sortable: true,
-          width: 80
+          width: 150
         },
         {
           type: 'object',
@@ -206,7 +204,7 @@ class LocationList extends localize(i18next)(PageView) {
           header: i18next.t('field.updater'),
           record: { editable: false, align: 'left' },
           sortable: true,
-          width: 80
+          width: 150
         }
       ]
     }
@@ -221,11 +219,20 @@ class LocationList extends localize(i18next)(PageView) {
   }
 
   async fetchHandler({ page, limit, sorters = [] }) {
+    let filters = []
+    if (this._warehouseId) {
+      filters.push({
+        name: 'warehouse_id',
+        operator: 'eq',
+        value: this._warehouseId
+      })
+    }
+
     const response = await client.query({
       query: gql`
         query {
           locations(${gqlBuilder.buildArgs({
-            filters: this._conditionParser(),
+            filters: [...filters, ...this._conditionParser()],
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -290,10 +297,13 @@ class LocationList extends localize(i18next)(PageView) {
   async _saveLocation() {
     let patches = this.dataGrist.dirtyRecords
     if (patches && patches.length) {
-      patches = patches.map(locations => {
-        locations.cuFlag = locations.__dirty__
-        delete locations.__dirty__
-        return locations
+      patches = patches.map(location => {
+        location.cuFlag = location.__dirty__
+        if (this._warehouseId) {
+          location.warehouse = { id: this._warehouseId }
+        }
+        delete location.__dirty__
+        return location
       })
 
       const response = await client.query({
@@ -335,6 +345,12 @@ class LocationList extends localize(i18next)(PageView) {
         .locationName="${locationName}"
       ></generate-list>
     `)
+  }
+
+  stateChanged(state) {
+    if (this.active) {
+      this._warehouseId = state && state.route && state.route.resourceId
+    }
   }
 }
 

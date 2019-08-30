@@ -123,7 +123,7 @@ class CompanyList extends localize(i18next)(PageView) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              navigate(`bizplaces/${record.id}`)
+              if (record.id) navigate(`bizplaces/${record.id}`)
             }
           }
         },

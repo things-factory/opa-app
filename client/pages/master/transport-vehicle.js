@@ -85,7 +85,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
   async firstUpdated() {
     this._searchFields = [
       {
-        name: 'reg_number',
+        name: 'regNumber',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.reg_number') }
       },
@@ -104,6 +104,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
     this.config = {
       rows: { selectable: { multiple: true } },
       columns: [
+        { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
@@ -112,7 +113,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
           header: i18next.t('field.registration_number'),
           record: { editable: true, align: 'left' },
           sortable: true,
-          width: 100
+          width: 150
         },
         {
           type: 'string',
@@ -120,7 +121,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
           header: i18next.t('field.description'),
           record: { editable: true, align: 'left' },
           sortable: true,
-          width: 150
+          width: 200
         },
         {
           type: 'string',
@@ -134,7 +135,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
           type: 'string',
           name: 'status',
           header: i18next.t('field.status'),
-          record: { editable: true, align: 'left' },
+          record: { editable: true, align: 'center' },
           sortable: true,
           width: 100
         },
@@ -142,17 +143,17 @@ class TransportVehicle extends localize(i18next)(PageView) {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
-          record: { editable: false, align: 'left' },
+          record: { editable: false, align: 'center' },
           sortable: true,
-          width: 80
+          width: 150
         },
         {
           type: 'object',
           name: 'updater',
           header: i18next.t('field.updater'),
-          record: { editable: false, align: 'left' },
+          record: { editable: false, align: 'center' },
           sortable: true,
-          width: 80
+          width: 150
         }
       ]
     }

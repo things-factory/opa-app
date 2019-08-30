@@ -95,14 +95,14 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         props: { searchOper: 'like', placeholder: i18next.t('label.address') }
       },
       {
-        name: 'postalCode',
+        name: 'postal_code',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.postal_code') }
       },
       {
         name: 'status',
         type: 'text',
-        props: { searchOper: 'eq', placeholder: i18next.t('label.status') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.status') }
       }
     ]
 
@@ -132,7 +132,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              this._openContactPoints(record.id, record.name)
+              if (record.id && record.name) this._openContactPoints(record.id, record.name)
             }
           }
         },
@@ -205,7 +205,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   activated(active) {
-    if (JSON.parse(active) && this._companyId && this.dataGrist) {
+    if (JSON.parse(active) && this.dataGrist) {
       this.dataGrist.fetch()
     }
   }
@@ -227,6 +227,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         value: this._companyId
       })
     }
+
     const response = await client.query({
       query: gql`
         query {
@@ -302,7 +303,9 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
     if (patches && patches.length) {
       patches = patches.map(bizplace => {
         bizplace.cuFlag = bizplace.__dirty__
-        bizplace.company = { id: this._companyId }
+        if (this._companyId) {
+          bizplace.company = { id: this._companyId }
+        }
         delete bizplace.__dirty__
         return bizplace
       })

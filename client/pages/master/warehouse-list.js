@@ -104,6 +104,7 @@ class WarehouseList extends localize(i18next)(PageView) {
     this.config = {
       rows: { selectable: { multiple: true } },
       columns: [
+        { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
@@ -112,7 +113,7 @@ class WarehouseList extends localize(i18next)(PageView) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              navigate(`locations/${record.id}`)
+              if (record.id) navigate(`locations/${record.id}`)
             }
           }
         },
