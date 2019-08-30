@@ -189,8 +189,9 @@ export class GenerateList extends localize(i18next)(LitElement) {
 
     if (locationsData && locationsData.length) {
       locationsData = locationsData.map(locations => {
-        locations['zone'] = this.zoneName
-        delete locations.__dirty__
+        locations['zone'] = this.zoneName.toUpperCase()
+        locations['locationType'] = []
+
         for (let i = locations.start; i <= locations.end; i++) {
           for (let j = 1; j <= locations.column; j++) {
             for (let k = 1; k <= locations.cell; k++) {
@@ -220,7 +221,7 @@ export class GenerateList extends localize(i18next)(LitElement) {
                   locations['cellInstance'] = 'H'
                   break
                 default:
-                // code block
+                  locations['cellInstance'] = 'NULL'
               }
 
               locations['name'] =
@@ -232,12 +233,25 @@ export class GenerateList extends localize(i18next)(LitElement) {
                 '-' +
                 locations.cellInstance
 
-              console.log(locations.name)
+              const locationObj = {}
+              locationObj['name'] = locations.name
+              locationObj['zone'] = locations.zone
+              locationObj['row'] = i
+              locationObj['column'] = j
+              locationObj['cell'] = locations.cellInstance
+
+              locations.locationType.push(locationObj)
             }
           }
         }
+        return locations
       })
     }
+    console.log(locationsData)
+  }
+
+  _generateLocationLists() {
+    console.log(this._generateLocationList)
   }
 }
 
