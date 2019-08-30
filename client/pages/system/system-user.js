@@ -13,6 +13,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
     return {
       _searchFields: Array,
       data: Object,
+      active: String,
       config: Object
     }
   }

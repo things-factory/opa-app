@@ -13,6 +13,7 @@ class SystemRole extends localize(i18next)(PageView) {
     return {
       _searchFields: Array,
       config: Object,
+      active: String,
       data: Object
     }
   }
@@ -68,7 +69,7 @@ class SystemRole extends localize(i18next)(PageView) {
       title: i18next.t('title.role'),
       actions: [
         {
-          title: i18next.t('button.add_role'),
+          title: i18next.t('button.add'),
           action: this._createRole.bind(this)
         },
         {
@@ -113,7 +114,16 @@ class SystemRole extends localize(i18next)(PageView) {
               openPopup(
                 html`
                   <system-role-detail
-                    @role-updated="${() => this.dataGrist.fetch()}"
+                    @role-updated="${() => {
+                      document.dispatchEvent(
+                        new CustomEvent('notify', {
+                          detail: {
+                            message: i18next.t('text.info_update_successfully')
+                          }
+                        })
+                      )
+                      this.dataGrist.fetch()
+                    }}"
                     .roleId="${record.id}"
                     .name="${record.name}"
                     style="width: 90vw; height: 70vh;"
@@ -137,7 +147,27 @@ class SystemRole extends localize(i18next)(PageView) {
           header: i18next.t('field.description'),
           record: { editable: true, align: 'left' },
           sortable: true,
-          width: 150
+          width: 200
+        },
+        {
+          type: 'object',
+          name: 'updater',
+          header: i18next.t('field.updater'),
+          record: {
+            editable: false,
+            align: 'center'
+          },
+          width: 180
+        },
+        {
+          type: 'datetime',
+          name: 'updatedAt',
+          header: i18next.t('field.updated_at'),
+          record: {
+            editable: false,
+            align: 'center'
+          },
+          width: 180
         }
       ]
     }
@@ -168,12 +198,12 @@ class SystemRole extends localize(i18next)(PageView) {
               }
               name
               description
-              updatedAt
               updater {
                 id
                 name
                 description
               }
+              updatedAt
             }
             total
           }
@@ -217,24 +247,45 @@ class SystemRole extends localize(i18next)(PageView) {
   _createRole() {
     this._currentPopupName = openPopup(
       html`
-        <system-create-role @role-created="${() => this.dataGrist.fetch()}" style="width: 90vw; height: 70vh;">
+        <system-create-role
+          @role-created="${() => {
+            this.dataGrist.fetch()
+            document.dispatchEvent(
+              new CustomEvent('notify', {
+                detail: {
+                  message: i18next.t('text.info_created_successfully')
+                }
+              })
+            )
+          }}"
+          style="width: 90vw; height: 70vh;"
+        >
         </system-create-role>
       `
     ).name
   }
 
   async _deleteRoles() {
-    const names = this.dataGrist.selected.map(record => record.name)
-    if (names && names.length > 0) {
-      const response = await client.query({
-        query: gql`
-            mutation {
-              deleteRoles(${gqlBuilder.buildArgs({ names })})
-            }
-          `
-      })
+    if (confirm(i18next.t('text.sure_to_delete'))) {
+      const names = this.dataGrist.selected.map(record => record.name)
+      if (names && names.length > 0) {
+        const response = await client.query({
+          query: gql`
+              mutation {
+                deleteRoles(${gqlBuilder.buildArgs({ names })})
+              }
+            `
+        })
 
-      if (!response.errors) this.dataGrist.fetch()
+        if (!response.errors) this.dataGrist.fetch()
+        await document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              message: i18next.t('text.info_delete_successfully')
+            }
+          })
+        )
+      }
     }
   }
 }

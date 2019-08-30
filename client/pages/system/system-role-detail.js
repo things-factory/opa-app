@@ -9,9 +9,8 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
     return {
       roleId: String,
       name: String,
-      domains: Array,
-      priviledgeConfig: Object,
-      roleInfo: Object
+      roleInfo: Object,
+      priviledgeConfig: Object
     }
   }
 
@@ -30,6 +29,7 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
           display: flex;
           flex-direction: column;
           flex: 1;
+          overflow-y: auto;
         }
         data-grist {
           overflow-y: hidden;
@@ -79,7 +79,7 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
       </div>
 
       <div class="button-container">
-        <mwc-button @click="${this._saveRoleInfo}">${i18next.t('button.save')}</mwc-button>
+        <mwc-button @click="${this._saveRoleInfo}">${i18next.t('button.update')}</mwc-button>
       </div>
     `
   }
@@ -93,11 +93,12 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
         },
         {
           type: 'string',
-          name: 'name',
-          header: i18next.t('field.name'),
+          name: 'description',
+          header: i18next.t('field.priviledges'),
           record: {
             editable: false
-          }
+          },
+          width: 200
         },
         {
           type: 'string',
@@ -105,15 +106,8 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
           header: i18next.t('field.category'),
           record: {
             editable: false
-          }
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: {
-            editable: false
-          }
+          },
+          width: 200
         },
         {
           type: 'boolean',
@@ -122,7 +116,7 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
           record: {
             editable: true
           },
-          width: 80
+          width: 100
         }
       ]
     }
@@ -258,6 +252,7 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
       this.name = this.roleInfo.name
 
       this.dispatchEvent(new CustomEvent('role-updated', { bubbles: true, composed: true, cancelable: true }))
+      history.back()
     } catch (e) {
       document.dispatchEvent(
         new CustomEvent('notify', {

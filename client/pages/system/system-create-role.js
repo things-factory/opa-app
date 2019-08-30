@@ -25,8 +25,9 @@ class SystemCreateRole extends localize(i18next)(LitElement) {
         }
         .grist {
           display: flex;
-          flex-direction: column;
           flex: 1;
+          flex-direction: column;
+          overflow-y: auto;
         }
         data-grist {
           overflow-y: hidden;
@@ -85,7 +86,7 @@ class SystemCreateRole extends localize(i18next)(LitElement) {
       </div>
 
       <div class="button-container">
-        <mwc-button @click="${this._createRole}">${i18next.t('button.submit')}</mwc-button>
+        <mwc-button @click="${this._createRole}">${i18next.t('button.create')}</mwc-button>
       </div>
     `
   }
@@ -98,27 +99,22 @@ class SystemCreateRole extends localize(i18next)(LitElement) {
         { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'string',
-          name: 'name',
-          header: i18next.t('field.name'),
-          record: {
-            editable: false
-          }
-        },
-        {
-          type: 'string',
           name: 'description',
-          header: i18next.t('field.description'),
+          header: i18next.t('field.priviledges'),
           record: {
             editable: false
-          }
+          },
+          width: 200
         },
         {
           type: 'string',
           name: 'category',
           header: i18next.t('field.category'),
           record: {
-            editable: false
-          }
+            editable: false,
+            align: 'center'
+          },
+          width: 200
         },
         {
           type: 'boolean',
@@ -127,7 +123,7 @@ class SystemCreateRole extends localize(i18next)(LitElement) {
           record: {
             editable: true
           },
-          width: 80
+          width: 100
         }
       ]
     }
