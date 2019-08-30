@@ -100,7 +100,7 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
       </div>
 
       <div class="button-container">
-        <mwc-button @click="${this._saveUserInfo}">${i18next.t('button.save')}</mwc-button>
+        <mwc-button @click="${this._saveUserInfo}">${i18next.t('button.update')}</mwc-button>
       </div>
     `
   }
