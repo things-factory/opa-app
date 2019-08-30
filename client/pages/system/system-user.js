@@ -11,8 +11,8 @@ import './system-user-detail'
 class SystemUser extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
-      active: String,
       _searchFields: Array,
+      data: Object,
       config: Object
     }
   }
@@ -50,8 +50,12 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
       title: i18next.t('title.user'),
       actions: [
         {
-          title: i18next.t('button.create_user'),
+          title: i18next.t('button.add'),
           action: this._createUser.bind(this)
+        },
+        {
+          title: i18next.t('button.delete'),
+          action: this._deleteUsers.bind(this)
         }
       ]
     }
@@ -72,17 +76,9 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
   }
 
   activated(active) {
-    if (active && JSON.parse(active) && this.dataGrist) {
+    if (JSON.parse(active) && this.dataGrist) {
       this.dataGrist.fetch()
     }
-  }
-
-  get searchForm() {
-    return this.shadowRoot.querySelector('search-form')
-  }
-
-  get dataGrist() {
-    return this.shadowRoot.querySelector('data-grist')
   }
 
   firstUpdated() {
@@ -122,8 +118,10 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
     ]
 
     this.config = {
+      rows: { selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
+        { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'gutter',
           gutterName: 'button',
@@ -133,25 +131,22 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
               openPopup(
                 html`
                   <system-user-detail
-                    @user-updated="${() => this.dataGrist.fetch()}"
+                    @user-updated="${() => {
+                      document.dispatchEvent(
+                        new CustomEvent('notify', {
+                          detail: {
+                            message: i18next.t('text.info_update_successfully')
+                          }
+                        })
+                      )
+                      this.dataGrist.fetch()
+                    }}"
                     .userId="${record.id}"
                     .email="${record.email}"
                     style="width: 90vw; height: 70vh;"
                   ></system-user-detail>
                 `
               )
-            }
-          }
-        },
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'delete',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              if (confirm(i18next.t('text.sure_to_delete'))) {
-                this._deleteUser(record.email)
-              }
             }
           }
         },
@@ -163,7 +158,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
             editable: false,
             align: 'center'
           },
-          width: 250
+          width: 150
         },
         {
           type: 'string',
@@ -172,7 +167,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
           record: {
             editable: false
           },
-          width: 150
+          width: 250
         },
         {
           type: 'string',
@@ -181,7 +176,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
           record: {
             editable: false
           },
-          width: 150
+          width: 200
         },
         {
           type: 'string',
@@ -212,6 +207,14 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
         }
       ]
     }
+  }
+
+  get searchForm() {
+    return this.shadowRoot.querySelector('search-form')
+  }
+
+  get dataGrist() {
+    return this.shadowRoot.querySelector('data-grist')
   }
 
   async fetchHandler({ page, limit, sorters = [] }) {
@@ -283,26 +286,45 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
     openPopup(
       html`
         <system-create-user
-          @user-created="${() => this.dataGrist.fetch()}"
+          @user-created="${() => {
+            this.dataGrist.fetch()
+            document.dispatchEvent(
+              new CustomEvent('notify', {
+                detail: {
+                  message: i18next.t('text.info_created_successfully')
+                }
+              })
+            )
+          }}"
           style="width: 90vw; height: 70vh;"
         ></system-create-user>
       `
     )
   }
 
-  async _deleteUser(email) {
-    const response = await client.query({
-      query: gql`
-        mutation {
-          deleteUser(${gqlBuilder.buildArgs({
-            email
-          })})
-        }
-      `
-    })
+  async _deleteUsers() {
+    if (confirm(i18next.t('text.sure_to_delete'))) {
+      const emails = this.dataGrist.selected.map(record => record.email)
+      if (emails && emails.length > 0) {
+        const response = await client.query({
+          query: gql`
+                mutation {
+                  deleteUsers(${gqlBuilder.buildArgs({ emails })})
+                }
+              `
+        })
 
-    if (!response.errors) {
-      this.dataGrist.fetch()
+        if (!response.errors) {
+          this.dataGrist.fetch()
+          await document.dispatchEvent(
+            new CustomEvent('notify', {
+              detail: {
+                message: i18next.t('text.info_delete_successfully')
+              }
+            })
+          )
+        }
+      }
     }
   }
 }

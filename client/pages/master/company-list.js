@@ -91,14 +91,14 @@ class CompanyList extends localize(i18next)(PageView) {
         props: { searchOper: 'like', placeholder: i18next.t('label.name') }
       },
       {
-        name: 'countryCode',
+        name: 'country_code',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.country_code') }
       },
       {
         name: 'brn',
         type: 'text',
-        props: { searchOper: 'eq', placeholder: i18next.t('label.brn') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.brn') }
       },
       {
         name: 'address',
@@ -106,9 +106,9 @@ class CompanyList extends localize(i18next)(PageView) {
         props: { searchOper: 'like', placeholder: i18next.t('label.address') }
       },
       {
-        name: 'state',
+        name: 'status',
         type: 'text',
-        props: { searchOper: 'eq', placeholder: i18next.t('label.state') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.status') }
       }
     ]
 
@@ -168,18 +168,10 @@ class CompanyList extends localize(i18next)(PageView) {
           width: 150
         },
         {
-          type: 'object',
-          name: 'bizplaces',
-          header: i18next.t('field.bizplace'),
-          record: { editable: true, align: 'left' },
-          sortable: true,
-          width: 100
-        },
-        {
           type: 'string',
-          name: 'state',
-          header: i18next.t('field.state'),
-          record: { editable: true, align: 'left' },
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: { editable: true, align: 'center' },
           sortable: true,
           width: 80
         },
@@ -271,7 +263,7 @@ class CompanyList extends localize(i18next)(PageView) {
     let patches = this.dataGrist.dirtyRecords
     if (patches && patches.length) {
       patches = patches.map(company => {
-        company.cuFlag = bizplace.__dirty__
+        company.cuFlag = company.__dirty__
         delete company.__dirty__
         return company
       })

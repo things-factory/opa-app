@@ -113,7 +113,7 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
       </div>
 
       <div class="button-container">
-        <mwc-button @click="${this._createUser}">${i18next.t('button.save')}</mwc-button>
+        <mwc-button @click="${this._createUser}">${i18next.t('button.create')}</mwc-button>
       </div>
     `
   }
