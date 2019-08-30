@@ -133,7 +133,16 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
               openPopup(
                 html`
                   <system-user-detail
-                    @user-updated="${() => this.dataGrist.fetch()}"
+                    @user-updated="${() => {
+                      document.dispatchEvent(
+                        new CustomEvent('notify', {
+                          detail: {
+                            message: i18next.t('text.info_update_successfully')
+                          }
+                        })
+                      )
+                      this.dataGrist.fetch()
+                    }}"
                     .userId="${record.id}"
                     .email="${record.email}"
                     style="width: 90vw; height: 70vh;"
@@ -163,7 +172,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
             editable: false,
             align: 'center'
           },
-          width: 250
+          width: 150
         },
         {
           type: 'string',
@@ -172,7 +181,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
           record: {
             editable: false
           },
-          width: 150
+          width: 250
         },
         {
           type: 'string',
@@ -181,7 +190,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
           record: {
             editable: false
           },
-          width: 150
+          width: 200
         },
         {
           type: 'string',
@@ -283,7 +292,16 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
     openPopup(
       html`
         <system-create-user
-          @user-created="${() => this.dataGrist.fetch()}"
+          @user-created="${() => {
+            this.dataGrist.fetch()
+            document.dispatchEvent(
+              new CustomEvent('notify', {
+                detail: {
+                  message: i18next.t('text.info_created_successfully')
+                }
+              })
+            )
+          }}"
           style="width: 90vw; height: 70vh;"
         ></system-create-user>
       `
@@ -303,6 +321,13 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       this.dataGrist.fetch()
+      await document.dispatchEvent(
+        new CustomEvent('notify', {
+          detail: {
+            message: i18next.t('text.info_delete_successfully')
+          }
+        })
+      )
     }
   }
 }

@@ -337,6 +337,7 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
       this.email = this.userInfo.email
 
       this.dispatchEvent(new CustomEvent('user-updated', { bubbles: true, composed: true, cancelable: true }))
+      history.back()
     } catch (e) {
       document.dispatchEvent(
         new CustomEvent('notify', {
