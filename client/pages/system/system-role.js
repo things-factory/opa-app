@@ -91,12 +91,18 @@ class SystemRole extends localize(i18next)(PageView) {
       {
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: {
+          placeholder: i18next.t('field.name'),
+          searchOper: 'like'
+        }
       },
       {
         name: 'description',
         type: 'text',
-        props: { searchOper: 'eq', placeholder: i18next.t('label.description') }
+        props: {
+          placeholder: i18next.t('field.description'),
+          searchOper: 'like'
+        }
       }
     ]
 
