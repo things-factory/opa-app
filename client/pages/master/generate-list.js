@@ -7,6 +7,11 @@ import { css, html, LitElement } from 'lit-element'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 
 export class GenerateList extends localize(i18next)(LitElement) {
+  constructor() {
+    super()
+    this.locationType = []
+  }
+
   static get styles() {
     return [
       MultiColumnFormStyles,
@@ -96,7 +101,7 @@ export class GenerateList extends localize(i18next)(LitElement) {
       </div>
 
       <div class="button-container">
-        <mwc-button @click=${this._generateLocationList}>${i18next.t('button.save')}</mwc-button>
+        <mwc-button @click=${this._generateLocationLists}>${i18next.t('button.save')}</mwc-button>
       </div>
     `
   }
@@ -190,7 +195,6 @@ export class GenerateList extends localize(i18next)(LitElement) {
     if (locationsData && locationsData.length) {
       locationsData = locationsData.map(locations => {
         locations['zone'] = this.zoneName.toUpperCase()
-        locations['locationType'] = []
 
         for (let i = locations.start; i <= locations.end; i++) {
           for (let j = 1; j <= locations.column; j++) {
@@ -236,18 +240,18 @@ export class GenerateList extends localize(i18next)(LitElement) {
               const locationObj = {}
               locationObj['name'] = locations.name
               locationObj['zone'] = locations.zone
-              locationObj['row'] = i
-              locationObj['column'] = j
-              locationObj['cell'] = locations.cellInstance
+              locationObj['section'] = i
+              locationObj['unit'] = j
+              locationObj['shelf'] = locations.cellInstance
 
-              locations.locationType.push(locationObj)
+              this.locationType.push(locationObj)
             }
           }
         }
         return locations
       })
     }
-    console.log(locationsData)
+    return this.locationType
   }
 
   _generateLocationLists() {
