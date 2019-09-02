@@ -112,13 +112,6 @@ class ProductList extends localize(i18next)(PageView) {
           searchOper: 'like',
           placeholder: i18next.t('field.type')
         }
-      },
-      {
-        name: 'packageType',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.package_type')
-        }
       }
     ]
 
@@ -189,16 +182,6 @@ class ProductList extends localize(i18next)(PageView) {
             editable: true
           },
           header: i18next.t('field.type'),
-          width: 150
-        },
-        {
-          type: 'string',
-          name: 'packageType',
-          record: {
-            align: 'center',
-            editable: true
-          },
-          header: i18next.t('field.package_type'),
           width: 150
         },
         {
@@ -278,7 +261,6 @@ class ProductList extends localize(i18next)(PageView) {
                 description
               }
               type
-              packageType
               weight
               unit
               updater {
