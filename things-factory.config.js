@@ -20,12 +20,20 @@ export default {
       page: 'products'
     },
     {
+      tagname: 'vas-list',
+      page: 'vas'
+    },
+    {
       tagname: 'bizplace-list',
       page: 'bizplaces'
     },
     {
       tagname: 'transport-vehicle',
       page: 'transport_vehicle'
+    },
+    {
+      tagname: 'transport-driver',
+      page: 'transport_driver'
     },
     {
       tagname: 'worker-list',
@@ -144,7 +152,7 @@ export default {
     },
     {
       tagname: 'vas-work-order',
-      page: 'vas'
+      page: 'vas-work-order'
     },
     /**
      * Outbound Menus Section

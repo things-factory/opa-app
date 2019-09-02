@@ -295,10 +295,15 @@ export class ContactPointList extends localize(i18next)(LitElement) {
     let patches = this.dataGrist.dirtyRecords
     if (patches && patches.length) {
       patches = patches.map(contactPoint => {
-        contactPoint.cuFlag = contactPoint.__dirty__
-        contactPoint.bizplace = { id: this.bizplaceId }
-        delete contactPoint.__dirty__
-        return contactPoint
+        let patchField = contactPoint.id ? { id: contactPoint.id } : {}
+        const dirtyFields = contactPoint.__dirtyfields__
+        for (let key in dirtyFields) {
+          patchField[key] = dirtyFields[key].after
+        }
+        patchField.bizplace = { id: this.bizplaceId }
+        patchField.cuFlag = contactPoint.__dirty__
+
+        return patchField
       })
 
       const response = await client.query({

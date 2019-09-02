@@ -1,11 +1,18 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 
-class CompanyList extends localize(i18next)(PageView) {
+class TransportDriver extends localize(i18next)(PageView) {
+  static get properties() {
+    return {
+      config: Object,
+      data: Object
+    }
+  }
+
   static get styles() {
     return [
       ScrollbarStyles,
@@ -24,7 +31,6 @@ class CompanyList extends localize(i18next)(PageView) {
           display: flex;
           flex-direction: column;
           flex: 1;
-          overflow-y: auto;
         }
         data-grist {
           overflow-y: hidden;
@@ -34,20 +40,11 @@ class CompanyList extends localize(i18next)(PageView) {
     ]
   }
 
-  static get properties() {
-    return {
-      _searchFields: Array,
-      config: Object,
-      data: Object
-    }
-  }
-
   render() {
     return html`
       <search-form
         id="search-form"
         .fields=${this._searchFields}
-        initFocus="description"
         @submit=${async () => this.dataGrist.fetch()}
       ></search-form>
 
@@ -63,15 +60,15 @@ class CompanyList extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.company'),
+      title: i18next.t('title.transport_driver'),
       actions: [
         {
           title: i18next.t('button.save'),
-          action: this._saveCompanies.bind(this)
+          action: this._saveTransportDriver.bind(this)
         },
         {
           title: i18next.t('button.delete'),
-          action: this._deleteCompanies.bind(this)
+          action: this._deleteTransportDriver.bind(this)
         }
       ]
     }
@@ -91,49 +88,30 @@ class CompanyList extends localize(i18next)(PageView) {
         props: { searchOper: 'like', placeholder: i18next.t('label.name') }
       },
       {
-        name: 'country_code',
+        name: 'driverCode',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.country_code') }
+        props: { searchOper: 'eq', placeholder: i18next.t('label.driver_code') }
       },
       {
-        name: 'brn',
+        name: 'description',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.brn') }
-      },
-      {
-        name: 'address',
-        type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.address') }
-      },
-      {
-        name: 'status',
-        type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.status') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.description') }
       }
     ]
 
     this.config = {
       rows: { selectable: { multiple: true } },
       columns: [
+        { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'reorder',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              if (record.id) navigate(`bizplaces/${record.id}`)
-            }
-          }
-        },
         {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),
           record: { editable: true, align: 'left' },
           sortable: true,
-          width: 100
+          width: 150
         },
         {
           type: 'string',
@@ -141,36 +119,12 @@ class CompanyList extends localize(i18next)(PageView) {
           header: i18next.t('field.description'),
           record: { editable: true, align: 'left' },
           sortable: true,
-          width: 150
+          width: 200
         },
         {
           type: 'string',
-          name: 'countryCode',
-          header: i18next.t('field.country_code'),
-          record: { editable: true, align: 'left' },
-          sortable: true,
-          width: 80
-        },
-        {
-          type: 'string',
-          name: 'brn',
-          header: i18next.t('field.brn'),
-          record: { editable: true, align: 'left' },
-          sortable: true,
-          width: 100
-        },
-        {
-          type: 'string',
-          name: 'address',
-          header: i18next.t('field.address'),
-          record: { editable: true, align: 'left' },
-          sortable: true,
-          width: 150
-        },
-        {
-          type: 'string',
-          name: 'status',
-          header: i18next.t('field.status'),
+          name: 'driverCode',
+          header: i18next.t('field.driver_code'),
           record: { editable: true, align: 'center' },
           sortable: true,
           width: 80
@@ -179,17 +133,17 @@ class CompanyList extends localize(i18next)(PageView) {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
-          record: { editable: false, align: 'left' },
+          record: { editable: false, align: 'center' },
           sortable: true,
-          width: 80
+          width: 150
         },
         {
           type: 'object',
           name: 'updater',
           header: i18next.t('field.updater'),
-          record: { editable: false, align: 'left' },
+          record: { editable: false, align: 'center' },
           sortable: true,
-          width: 80
+          width: 150
         }
       ]
     }
@@ -207,7 +161,7 @@ class CompanyList extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
         query {
-          companies(${gqlBuilder.buildArgs({
+          transportDrivers(${gqlBuilder.buildArgs({
             filters: this._conditionParser(),
             pagination: { page, limit },
             sortings: sorters
@@ -215,11 +169,8 @@ class CompanyList extends localize(i18next)(PageView) {
             items {
               id
               name
+              driverCode
               description
-              countryCode
-              brn
-              address
-              status
               updatedAt
               updater{
                 id
@@ -234,8 +185,8 @@ class CompanyList extends localize(i18next)(PageView) {
     })
 
     return {
-      total: response.data.companies.total || 0,
-      records: response.data.companies.items || []
+      total: response.data.transportDrivers.total || 0,
+      records: response.data.transportDrivers.items || []
     }
   }
 
@@ -259,45 +210,45 @@ class CompanyList extends localize(i18next)(PageView) {
       })
   }
 
-  async _saveCompanies() {
+  async _saveTransportDriver() {
     let patches = this.dataGrist.dirtyRecords
     if (patches && patches.length) {
-      patches = patches.map(company => {
-        let patchField = company.id ? { id: company.id } : {}
-        const dirtyFields = company.__dirtyfields__
+      patches = patches.map(transportDriver => {
+        let patchField = transportDriver.id ? { id: transportDriver.id } : {}
+        const dirtyFields = transportDriver.__dirtyfields__
         for (let key in dirtyFields) {
           patchField[key] = dirtyFields[key].after
         }
-        patchField.cuFlag = company.__dirty__
+        patchField.cuFlag = transportDriver.__dirty__
 
         return patchField
       })
 
       const response = await client.query({
         query: gql`
-            mutation {
-              updateMultipleCompany(${gqlBuilder.buildArgs({
-                patches
-              })}) {
-                name
-              }
+          mutation {
+            updateMultipleTransportDriver(${gqlBuilder.buildArgs({
+              patches
+            })}) {
+              name
             }
-          `
+          }
+        `
       })
 
       if (!response.errors) this.dataGrist.fetch()
     }
   }
 
-  async _deleteCompanies() {
+  async _deleteTransportDriver() {
     const names = this.dataGrist.selected.map(record => record.name)
     if (names && names.length > 0) {
       const response = await client.query({
         query: gql`
-            mutation {
-              deleteCompanies(${gqlBuilder.buildArgs({ names })})
-            }
-          `
+              mutation {
+                deleteTransportDrivers(${gqlBuilder.buildArgs({ names })})
+              }
+            `
       })
 
       if (!response.errors) this.dataGrist.fetch()
@@ -305,4 +256,4 @@ class CompanyList extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('company-list', CompanyList)
+window.customElements.define('transport-driver', TransportDriver)

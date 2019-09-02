@@ -20,12 +20,20 @@ export default function route(page) {
       import('./pages/master/product-list')
       return page
 
+    case 'vas':
+      import('./pages/master/vas-list')
+      return page
+
     case 'bizplaces':
       import('./pages/master/bizplace-list')
       return page
 
     case 'transport_vehicle':
       import('./pages/master/transport-vehicle')
+      return page
+
+    case 'transport_driver':
+      import('./pages/master/transport-driver')
       return page
 
     case 'workers':
@@ -141,7 +149,7 @@ export default function route(page) {
       import('./pages/inbound/putaway-goods')
       return page
 
-    case 'vas':
+    case 'vas-work-order':
       import('./pages/inbound/vas-work-order')
       return page
 
@@ -165,10 +173,6 @@ export default function route(page) {
      */
     case 'label_list':
       import('./pages/label/label-list')
-      return page
-
-    case 'relabel':
-      import('./pages/label/relabel')
       return page
   }
 }

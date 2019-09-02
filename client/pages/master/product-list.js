@@ -308,9 +308,14 @@ class ProductList extends localize(i18next)(PageView) {
     let patches = this.dataGrist.dirtyRecords
     if (patches && patches.length) {
       patches = patches.map(product => {
-        product.cuFlag = product.__dirty__
-        delete product.__dirty__
-        return product
+        let patchField = product.id ? { id: product.id } : {}
+        const dirtyFields = product.__dirtyfields__
+        for (let key in dirtyFields) {
+          patchField[key] = dirtyFields[key].after
+        }
+        patchField.cuFlag = product.__dirty__
+
+        return patchField
       })
 
       const response = await client.query({

@@ -211,10 +211,15 @@ class WorkerList extends localize(i18next)(PageView) {
   async _saveWorker() {
     let patches = this.dataGrist.dirtyRecords
     if (patches && patches.length) {
-      patches = patches.map(workers => {
-        workers.cuFlag = workers.__dirty__
-        delete workers.__dirty__
-        return workers
+      patches = patches.map(worker => {
+        let patchField = worker.id ? { id: worker.id } : {}
+        const dirtyFields = worker.__dirtyfields__
+        for (let key in dirtyFields) {
+          patchField[key] = dirtyFields[key].after
+        }
+        patchField.cuFlag = worker.__dirty__
+
+        return patchField
       })
 
       const response = await client.query({

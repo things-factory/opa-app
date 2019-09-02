@@ -7,7 +7,6 @@ import { css, html, LitElement } from 'lit-element'
 class SystemCreateRole extends localize(i18next)(LitElement) {
   static get properties() {
     return {
-      bizplaces: Array,
       priviledgeConfig: Object
     }
   }
@@ -55,18 +54,6 @@ class SystemCreateRole extends localize(i18next)(LitElement) {
         <h2>${i18next.t('title.create_role')}</h2>
         <form class="multi-column-form">
           <fieldset>
-            <label>${i18next.t('label.bizplace')}</label>
-            <select name="bizplace">
-              ${(this.bizplaces || []).map(
-                bizplace =>
-                  html`
-                    <option value="${bizplace.domain.id}"
-                      >${bizplace.name} ${bizplace.description ? ` (${bizplace.description})` : ''}</option
-                    >
-                  `
-              )}
-            </select>
-
             <label>${i18next.t('label.role_name')}</label>
             <input name="name" required />
 
@@ -92,8 +79,6 @@ class SystemCreateRole extends localize(i18next)(LitElement) {
   }
 
   async firstUpdated() {
-    this.bizplaces = await this._fetchBizplaces()
-
     this.priviledgeConfig = {
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -126,29 +111,6 @@ class SystemCreateRole extends localize(i18next)(LitElement) {
           width: 100
         }
       ]
-    }
-  }
-
-  async _fetchBizplaces() {
-    const response = await client.query({
-      query: gql`
-        query {
-          bizplaces(${gqlBuilder.buildArgs({ filters: [] })}) {
-            items {
-              id
-              name
-              description
-              domain {
-                id
-              }
-            }
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      return response.data.bizplaces.items || []
     }
   }
 
@@ -190,24 +152,7 @@ class SystemCreateRole extends localize(i18next)(LitElement) {
             createRole(${gqlBuilder.buildArgs({
               role
             })}) {
-              id
-              domain {
-                id 
-                name
-              }
               name
-              description
-              priviledges {
-                id
-                name
-                category
-                description
-              }
-              creator{
-                id
-                name
-              }
-              createdAt
             }
           }
         `
@@ -233,7 +178,6 @@ class SystemCreateRole extends localize(i18next)(LitElement) {
     if (this.shadowRoot.querySelector('form').checkValidity()) {
       return {
         name: this._getInputByName('name').value,
-        domain: { id: this._getInputByName('bizplace').value },
         description: this._getInputByName('description').value,
         priviledges: this._getCheckedPriviledges()
       }

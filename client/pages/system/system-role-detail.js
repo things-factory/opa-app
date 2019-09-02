@@ -57,9 +57,6 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
         <h2>${this.name}</h2>
         <form class="multi-column-form">
           <fieldset>
-            <label>${i18next.t('label.domain')}</label>
-            <input name="domain" readonly />
-
             <label>${i18next.t('label.name')}</label>
             <input name="name" required />
 
@@ -188,11 +185,6 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
             name: this.name
           })}) {
             id
-            domain {
-              id
-              name
-              description
-            }
             name
             description
             priviledges {

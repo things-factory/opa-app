@@ -237,6 +237,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
             sortings: sorters
           })}) {
             items {
+              id
               name
               zone
               row
@@ -298,12 +299,17 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     let patches = this.dataGrist.dirtyRecords
     if (patches && patches.length) {
       patches = patches.map(location => {
-        location.cuFlag = location.__dirty__
-        if (this._warehouseId) {
-          location.warehouse = { id: this._warehouseId }
+        let patchField = location.id ? { id: location.id } : {}
+        const dirtyFields = location.__dirtyfields__
+        for (let key in dirtyFields) {
+          patchField[key] = dirtyFields[key].after
         }
-        delete location.__dirty__
-        return location
+        patchField.cuFlag = location.__dirty__
+        if (this._warehouseId) {
+          patchField.warehouse = { id: this._warehouseId }
+        }
+
+        return patchField
       })
 
       const response = await client.query({

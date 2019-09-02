@@ -302,12 +302,17 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
     let patches = this.dataGrist.dirtyRecords
     if (patches && patches.length) {
       patches = patches.map(bizplace => {
-        bizplace.cuFlag = bizplace.__dirty__
-        if (this._companyId) {
-          bizplace.company = { id: this._companyId }
+        let patchField = bizplace.id ? { id: bizplace.id } : {}
+        const dirtyFields = bizplace.__dirtyfields__
+        for (let key in dirtyFields) {
+          patchField[key] = dirtyFields[key].after
         }
-        delete bizplace.__dirty__
-        return bizplace
+        patchField.cuFlag = bizplace.__dirty__
+        if (this._companyId) {
+          patchField.company = { id: this._companyId }
+        }
+
+        return patchField
       })
 
       const response = await client.query({

@@ -1,7 +1,7 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 
@@ -46,7 +46,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
       <search-form
         id="search-form"
         .fields=${this._searchFields}
-        initFocus="description"
         @submit=${async () => this.dataGrist.fetch()}
       ></search-form>
 
@@ -195,7 +194,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
         }
       `
     })
-    this.rawVehicleData = response.data.transportVehicles.items
 
     return {
       total: response.data.transportVehicles.total || 0,
@@ -226,12 +224,15 @@ class TransportVehicle extends localize(i18next)(PageView) {
   async _saveTransportVehicle() {
     let patches = this.dataGrist.dirtyRecords
     if (patches && patches.length) {
-      patches = patches.map(vehicles => {
-        vehicles.name = vehicles.regNumber
-        vehicles.cuFlag = vehicles.__dirty__
+      patches = patches.map(transportVehicle => {
+        let patchField = transportVehicle.id ? { id: transportVehicle.id } : {}
+        const dirtyFields = transportVehicle.__dirtyfields__
+        for (let key in dirtyFields) {
+          patchField[key] = dirtyFields[key].after
+        }
+        patchField.cuFlag = transportVehicle.__dirty__
 
-        delete vehicles.__dirty__
-        return vehicles
+        return patchField
       })
 
       const response = await client.query({

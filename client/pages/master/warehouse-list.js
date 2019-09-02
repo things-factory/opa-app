@@ -227,10 +227,15 @@ class WarehouseList extends localize(i18next)(PageView) {
   async _saveWarehouse() {
     let patches = this.dataGrist.dirtyRecords
     if (patches && patches.length) {
-      patches = patches.map(warehouses => {
-        warehouses.cuFlag = warehouses.__dirty__
-        delete warehouses.__dirty__
-        return warehouses
+      patches = patches.map(warehouse => {
+        let patchField = warehouse.id ? { id: warehouse.id } : {}
+        const dirtyFields = warehouse.__dirtyfields__
+        for (let key in dirtyFields) {
+          patchField[key] = dirtyFields[key].after
+        }
+        patchField.cuFlag = warehouse.__dirty__
+
+        return patchField
       })
 
       const response = await client.query({
