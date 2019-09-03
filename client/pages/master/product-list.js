@@ -73,7 +73,14 @@ class ProductList extends localize(i18next)(PageView) {
           title: i18next.t('button.delete'),
           action: this._deleteProducts.bind(this)
         }
-      ]
+      ],
+      exportable: {
+        name: i18next.t('title.product'),
+        data: this._exportableData.bind(this)
+      },
+      importable: {
+        handler: () => {}
+      }
     }
   }
 
@@ -224,14 +231,7 @@ class ProductList extends localize(i18next)(PageView) {
           header: i18next.t('field.updated_at'),
           width: 180
         }
-      ],
-      exportable: {
-        name: i18next.t('title.product'),
-        data: this._exportableData.bind(this)
-      },
-      importable: {
-        handler: () => {}
-      }
+      ]
     }
   }
 
