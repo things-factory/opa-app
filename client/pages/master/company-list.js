@@ -64,7 +64,6 @@ class CompanyList extends localize(i18next)(PageView) {
   get context() {
     return {
       title: i18next.t('title.company'),
-      exportable: true,
       actions: [
         {
           title: i18next.t('button.save'),
@@ -74,7 +73,14 @@ class CompanyList extends localize(i18next)(PageView) {
           title: i18next.t('button.delete'),
           action: this._deleteCompanies.bind(this)
         }
-      ]
+      ],
+      exportable: {
+        name: i18next.t('title.company'),
+        data: this._exportableData.bind(this)
+      },
+      importable: {
+        handler: () => {}
+      }
     }
   }
 
@@ -143,13 +149,13 @@ class CompanyList extends localize(i18next)(PageView) {
           header: i18next.t('field.description'),
           record: { editable: true, align: 'left' },
           sortable: true,
-          width: 200
+          width: 150
         },
         {
           type: 'string',
           name: 'countryCode',
           header: i18next.t('field.country_code'),
-          record: { editable: true, align: 'left' },
+          record: { editable: true, align: 'center' },
           sortable: true,
           width: 80
         },
@@ -167,7 +173,7 @@ class CompanyList extends localize(i18next)(PageView) {
           header: i18next.t('field.address'),
           record: { editable: true, align: 'left' },
           sortable: true,
-          width: 150
+          width: 250
         },
         {
           type: 'string',
@@ -181,7 +187,7 @@ class CompanyList extends localize(i18next)(PageView) {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
-          record: { editable: false, align: 'left' },
+          record: { editable: false, align: 'center' },
           sortable: true,
           width: 150
         },
@@ -189,7 +195,7 @@ class CompanyList extends localize(i18next)(PageView) {
           type: 'object',
           name: 'updater',
           header: i18next.t('field.updater'),
-          record: { editable: false, align: 'left' },
+          record: { editable: false, align: 'center' },
           sortable: true,
           width: 150
         }
@@ -304,6 +310,28 @@ class CompanyList extends localize(i18next)(PageView) {
 
       if (!response.errors) this.dataGrist.fetch()
     }
+  }
+
+  get _columns() {
+    return this.config.columns
+  }
+
+  _exportableData() {
+    let records = []
+    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+      records = this.dataGrist.selected
+    } else {
+      records = this.dataGrist.data.records
+    }
+
+    return records.map(item => {
+      return this._columns
+        .filter(column => column.type !== 'gutter')
+        .reduce((record, column) => {
+          record[column.name] = item[column.name]
+          return record
+        }, {})
+    })
   }
 }
 
