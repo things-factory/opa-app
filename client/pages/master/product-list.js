@@ -224,7 +224,14 @@ class ProductList extends localize(i18next)(PageView) {
           header: i18next.t('field.updated_at'),
           width: 180
         }
-      ]
+      ],
+      exportable: {
+        name: i18next.t('title.product'),
+        data: this._exportableData.bind(this)
+      },
+      importable: {
+        handler: () => {}
+      }
     }
   }
 
@@ -347,6 +354,28 @@ class ProductList extends localize(i18next)(PageView) {
 
       if (!response.errors) this.dataGrist.fetch()
     }
+  }
+
+  get _columns() {
+    return this.config.columns
+  }
+
+  _exportableData() {
+    let records = []
+    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+      records = this.dataGrist.selected
+    } else {
+      records = this.dataGrist.data.records
+    }
+
+    return records.map(item => {
+      return this._columns
+        .filter(column => column.type !== 'gutter')
+        .reduce((record, column) => {
+          record[column.name] = item[column.name]
+          return record
+        }, {})
+    })
   }
 }
 

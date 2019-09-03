@@ -70,7 +70,14 @@ class VasList extends localize(i18next)(PageView) {
           title: i18next.t('button.delete'),
           action: this._deleteVas.bind(this)
         }
-      ]
+      ],
+      exportable: {
+        name: i18next.t('title.vas'),
+        data: this._exportableData.bind(this)
+      },
+      importable: {
+        handler: () => {}
+      }
     }
   }
 
@@ -260,6 +267,28 @@ class VasList extends localize(i18next)(PageView) {
 
       if (!response.errors) this.dataGrist.fetch()
     }
+  }
+
+  get _columns() {
+    return this.config.columns
+  }
+
+  _exportableData() {
+    let records = []
+    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+      records = this.dataGrist.selected
+    } else {
+      records = this.dataGrist.data.records
+    }
+
+    return records.map(item => {
+      return this._columns
+        .filter(column => column.type !== 'gutter')
+        .reduce((record, column) => {
+          record[column.name] = item[column.name]
+          return record
+        }, {})
+    })
   }
 }
 

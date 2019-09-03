@@ -71,7 +71,14 @@ class TransportVehicle extends localize(i18next)(PageView) {
           title: i18next.t('button.delete'),
           action: this._deleteTransportVehicle.bind(this)
         }
-      ]
+      ],
+      exportable: {
+        name: i18next.t('title.transport_vehicle'),
+        data: this._exportableData.bind(this)
+      },
+      importable: {
+        handler: () => {}
+      }
     }
   }
 
@@ -110,7 +117,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
           type: 'string',
           name: 'regNumber',
           header: i18next.t('field.registration_number'),
-          record: { editable: true, align: 'left' },
+          record: { editable: true, align: 'center' },
           sortable: true,
           width: 150
         },
@@ -118,7 +125,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
-          record: { editable: true, align: 'left' },
+          record: { editable: true, align: 'center' },
           sortable: true,
           width: 200
         },
@@ -267,6 +274,28 @@ class TransportVehicle extends localize(i18next)(PageView) {
         if (!response.errors) this.dataGrist.fetch()
       }
     }
+  }
+
+  get _columns() {
+    return this.config.columns
+  }
+
+  _exportableData() {
+    let records = []
+    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+      records = this.dataGrist.selected
+    } else {
+      records = this.dataGrist.data.records
+    }
+
+    return records.map(item => {
+      return this._columns
+        .filter(column => column.type !== 'gutter')
+        .reduce((record, column) => {
+          record[column.name] = item[column.name]
+          return record
+        }, {})
+    })
   }
 }
 
