@@ -19,7 +19,6 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
       MultiColumnFormStyles,
       css`
         :host {
-          padding: 10px;
           display: flex;
           flex-direction: column;
           overflow-x: overlay;
