@@ -64,6 +64,7 @@ class CompanyList extends localize(i18next)(PageView) {
   get context() {
     return {
       title: i18next.t('title.company'),
+      exportable: true,
       actions: [
         {
           title: i18next.t('button.save'),
@@ -115,6 +116,7 @@ class CompanyList extends localize(i18next)(PageView) {
     this.config = {
       rows: { selectable: { multiple: true } },
       columns: [
+        { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
@@ -133,7 +135,7 @@ class CompanyList extends localize(i18next)(PageView) {
           header: i18next.t('field.name'),
           record: { editable: true, align: 'left' },
           sortable: true,
-          width: 100
+          width: 200
         },
         {
           type: 'string',
@@ -141,7 +143,7 @@ class CompanyList extends localize(i18next)(PageView) {
           header: i18next.t('field.description'),
           record: { editable: true, align: 'left' },
           sortable: true,
-          width: 150
+          width: 200
         },
         {
           type: 'string',
@@ -181,7 +183,7 @@ class CompanyList extends localize(i18next)(PageView) {
           header: i18next.t('field.updated_at'),
           record: { editable: false, align: 'left' },
           sortable: true,
-          width: 80
+          width: 150
         },
         {
           type: 'object',
@@ -189,7 +191,7 @@ class CompanyList extends localize(i18next)(PageView) {
           header: i18next.t('field.updater'),
           record: { editable: false, align: 'left' },
           sortable: true,
-          width: 80
+          width: 150
         }
       ]
     }

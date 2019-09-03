@@ -124,10 +124,6 @@ export default {
       page: 'menus'
     },
     {
-      tagname: 'system-menu-column',
-      page: 'menu_columns'
-    },
-    {
       tagname: 'system-domain',
       page: 'domains'
     },

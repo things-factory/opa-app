@@ -63,7 +63,6 @@ export class ContactPointList extends localize(i18next)(LitElement) {
       <search-form
         id="search-form"
         .fields=${this._searchFields}
-        initFocus="description"
         @submit=${async () => this.dataGrist.fetch()}
       ></search-form>
 

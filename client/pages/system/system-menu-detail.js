@@ -1,11 +1,21 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
-import { css, html } from 'lit-element'
+import { css, html, LitElement } from 'lit-element'
+import './system-menu-detail'
 
-class TransportVehicle extends localize(i18next)(PageView) {
+class SystemMenuDetail extends localize(i18next)(LitElement) {
+  static get properties() {
+    return {
+      menuName: String,
+      menuId: String,
+      config: Object,
+      data: Object
+    }
+  }
+
   static get styles() {
     return [
       ScrollbarStyles,
@@ -13,10 +23,15 @@ class TransportVehicle extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-
           overflow: hidden;
+          background-color: white;
         }
-
+        h2 {
+          padding: var(--subtitle-padding);
+          font: var(--subtitle-font);
+          color: var(--subtitle-text-color);
+          border-bottom: var(--subtitle-border-bottom);
+        }
         search-form {
           overflow: visible;
         }
@@ -24,25 +39,27 @@ class TransportVehicle extends localize(i18next)(PageView) {
           display: flex;
           flex-direction: column;
           flex: 1;
+          overflow-y: auto;
         }
         data-grist {
           overflow-y: hidden;
           flex: 1;
         }
+        .button-container {
+          display: flex;
+          margin-left: auto;
+        }
+        .button-container > mwc-button {
+          padding: 10px;
+        }
       `
     ]
   }
 
-  static get properties() {
-    return {
-      _searchFields: Array,
-      config: Object,
-      data: Object
-    }
-  }
-
   render() {
     return html`
+      <h2>${i18next.t('title.menu')} ${this.menuName}</h2>
+
       <search-form
         id="search-form"
         .fields=${this._searchFields}
@@ -56,47 +73,35 @@ class TransportVehicle extends localize(i18next)(PageView) {
           .fetchHandler="${this.fetchHandler.bind(this)}"
         ></data-grist>
       </div>
+
+      <div class="button-container">
+        <mwc-button @click=${this._saveMenus}>${i18next.t('button.save')}</mwc-button>
+        <mwc-button @click=${this._deleteMenus}>${i18next.t('button.delete')}</mwc-button>
+      </div>
     `
-  }
-
-  get context() {
-    return {
-      title: i18next.t('title.transport_vehicle'),
-      actions: [
-        {
-          title: i18next.t('button.save'),
-          action: this._saveTransportVehicle.bind(this)
-        },
-        {
-          title: i18next.t('button.delete'),
-          action: this._deleteTransportVehicle.bind(this)
-        }
-      ]
-    }
-  }
-
-  activated(active) {
-    if (JSON.parse(active) && this.dataGrist) {
-      this.dataGrist.fetch()
-    }
   }
 
   async firstUpdated() {
     this._searchFields = [
       {
-        name: 'regNumber',
+        name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.reg_number') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
       },
       {
-        name: 'size',
+        name: 'description',
         type: 'text',
-        props: { searchOper: 'eq', placeholder: i18next.t('label.size') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.description') }
       },
       {
-        name: 'status',
+        name: 'template',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.status') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.template') }
+      },
+      {
+        name: 'resourceUrl',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.resource_url') }
       }
     ]
 
@@ -107,12 +112,42 @@ class TransportVehicle extends localize(i18next)(PageView) {
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
+          type: 'object',
+          name: 'parent',
+          header: i18next.t('field.name'),
+          record: {
+            options: {
+              queryName: 'menus',
+              basicArgs: {
+                filters: [
+                  {
+                    name: 'menuType',
+                    value: 'MENU',
+                    operator: 'eq'
+                  }
+                ]
+              }
+            },
+            editable: true
+          },
+          sortable: true,
+          width: 180
+        },
+        {
           type: 'string',
-          name: 'regNumber',
-          header: i18next.t('field.registration_number'),
+          name: 'name',
+          header: i18next.t('field.name'),
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 150
+        },
+        {
+          type: 'integer',
+          name: 'rank',
+          header: i18next.t('field.rank'),
+          record: { editable: true, align: 'center' },
+          sortable: true,
+          width: 80
         },
         {
           type: 'string',
@@ -124,19 +159,27 @@ class TransportVehicle extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'size',
-          header: i18next.t('field.size'),
-          record: { editable: true, align: 'center' },
+          name: 'template',
+          header: i18next.t('field.template'),
+          record: { editable: true, align: 'left' },
           sortable: true,
-          width: 80
+          width: 160
         },
         {
           type: 'string',
-          name: 'status',
-          header: i18next.t('field.status'),
-          record: { editable: true, align: 'center' },
+          name: 'resourceUrl',
+          header: i18next.t('field.resource_url'),
+          record: { editable: true, align: 'left' },
           sortable: true,
-          width: 100
+          width: 160
+        },
+        {
+          type: 'boolean',
+          name: 'hiddenFlag',
+          header: i18next.t('field.hidden_flag'),
+          record: { editable: false, align: 'center' },
+          sortable: true,
+          width: 80
         },
         {
           type: 'datetime',
@@ -166,22 +209,28 @@ class TransportVehicle extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  async fetchHandler({ page, limit, sorters = [] }) {
+  async fetchHandler({ page, limit, sorters = [{ name: 'rank' }, { name: 'name' }] }) {
     const response = await client.query({
       query: gql`
         query {
-          transportVehicles(${gqlBuilder.buildArgs({
-            filters: this._conditionParser(),
+          menus(${gqlBuilder.buildArgs({
+            filters: [...this._conditionParser(), { name: 'parent', operator: 'eq', value: this.menuId }],
             pagination: { page, limit },
             sortings: sorters
           })}) {
             items {
               id
               name
-              regNumber
+              rank
               description
-              size
-              status
+              template
+              resourceUrl
+              parent {
+                id
+                name
+                description
+              }
+              hiddenFlag
               updatedAt
               updater{
                 id
@@ -196,8 +245,8 @@ class TransportVehicle extends localize(i18next)(PageView) {
     })
 
     return {
-      total: response.data.transportVehicles.total || 0,
-      records: response.data.transportVehicles.items || []
+      total: response.data.menus.total || 0,
+      records: response.data.menus.items || []
     }
   }
 
@@ -221,16 +270,19 @@ class TransportVehicle extends localize(i18next)(PageView) {
       })
   }
 
-  async _saveTransportVehicle() {
+  async _saveMenus() {
     let patches = this.dataGrist.dirtyRecords
     if (patches && patches.length) {
-      patches = patches.map(transportVehicle => {
-        let patchField = transportVehicle.id ? { id: transportVehicle.id } : {}
-        const dirtyFields = transportVehicle.__dirtyfields__
+      patches = patches.map(menu => {
+        let patchField = menu.id ? { id: menu.id } : {}
+        if (!patchField.parent) {
+          patchField.parent = { id: this.menuId }
+        }
+        const dirtyFields = menu.__dirtyfields__
         for (let key in dirtyFields) {
           patchField[key] = dirtyFields[key].after
         }
-        patchField.cuFlag = transportVehicle.__dirty__
+        patchField.cuFlag = menu.__dirty__
 
         return patchField
       })
@@ -238,7 +290,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
       const response = await client.query({
         query: gql`
           mutation {
-            updateMultipleTransportVehicle(${gqlBuilder.buildArgs({
+            updateMultipleMenu(${gqlBuilder.buildArgs({
               patches
             })}) {
               name
@@ -251,23 +303,20 @@ class TransportVehicle extends localize(i18next)(PageView) {
     }
   }
 
-  async _deleteTransportVehicle() {
-    let confirmDelete = confirm('Are you sure?')
-    if (confirmDelete) {
-      const names = this.dataGrist.selected.map(record => record.name)
-      if (names && names.length > 0) {
-        const response = await client.query({
-          query: gql`
+  async _deleteMenus() {
+    const names = this.dataGrist.selected.map(record => record.name)
+    if (names && names.length > 0) {
+      const response = await client.query({
+        query: gql`
               mutation {
-                deleteTransportVehicles(${gqlBuilder.buildArgs({ names })})
+                deleteMenus(${gqlBuilder.buildArgs({ names })})
               }
             `
-        })
+      })
 
-        if (!response.errors) this.dataGrist.fetch()
-      }
+      if (!response.errors) this.dataGrist.fetch()
     }
   }
 }
 
-window.customElements.define('transport-vehicle', TransportVehicle)
+window.customElements.define('system-menu-detail', SystemMenuDetail)

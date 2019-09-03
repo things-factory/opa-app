@@ -27,6 +27,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           display: flex;
           flex-direction: column;
           flex: 1;
+          overflow-y: auto;
         }
         data-grist {
           overflow-y: hidden;

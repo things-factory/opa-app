@@ -122,10 +122,6 @@ export default function route(page) {
       import('./pages/system/system-menu')
       return page
 
-    case 'menu_columns':
-      import('./pages/system/system-menu-column')
-      return page
-
     case 'domains':
       import('./pages/system/system-domain')
       return page

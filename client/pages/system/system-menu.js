@@ -1,32 +1,35 @@
-import { localize, i18next } from '@things-factory/i18n-base'
-import { PageView, isMobileDevice, client, gqlBuilder, navigate } from '@things-factory/shell'
-import { openPopup } from '@things-factory/layout-base'
-import gql from 'graphql-tag'
-import { html, css } from 'lit-element'
+import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
+import { i18next, localize } from '@things-factory/i18n-base'
+import { openPopup } from '@things-factory/layout-base'
+import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
+import gql from 'graphql-tag'
+import { css, html } from 'lit-element'
+import './system-menu-detail'
 
 class SystemMenu extends localize(i18next)(PageView) {
   static get properties() {
     return {
-      groupMenuConfig: Object,
-      screenConfig: Object,
-      groupMenus: Object,
-      screens: Object
+      config: Object,
+      data: Object
     }
   }
 
   static get styles() {
     return [
-      MultiColumnFormStyles,
+      ScrollbarStyles,
       css`
         :host {
           display: flex;
           flex-direction: column;
-          overflow-x: auto;
+
+          overflow: hidden;
+        }
+
+        search-form {
+          overflow: visible;
         }
         .grist {
-          background-color: var(--main-section-background-color);
           display: flex;
           flex-direction: column;
           flex: 1;
@@ -35,538 +38,161 @@ class SystemMenu extends localize(i18next)(PageView) {
           overflow-y: hidden;
           flex: 1;
         }
-        .button-container {
-          margin-left: auto;
-        }
-        h2 {
-          padding: var(--subtitle-padding);
-          font: var(--subtitle-font);
-          color: var(--subtitle-text-color);
-          border-bottom: var(--subtitle-border-bottom);
-        }
-        .grist h2 {
-          margin: var(--grist-title-margin);
-          border: var(--grist-title-border);
-          color: var(--secondary-color);
-        }
-
-        .grist h2 mwc-icon {
-          vertical-align: middle;
-          margin: var(--grist-title-icon-margin);
-          font-size: var(--grist-title-icon-size);
-          color: var(--grist-title-icon-color);
-        }
-
-        h2 + data-grist {
-          padding-top: var(--grist-title-with-grid-padding);
-        }
       `
     ]
   }
 
-  get context() {
-    return {
-      title: i18next.t('title.menu')
-    }
+  render() {
+    return html`
+      <search-form
+        id="search-form"
+        .fields=${this._searchFields}
+        @submit=${async () => this.dataGrist.fetch()}
+      ></search-form>
+
+      <div class="grist">
+        <data-grist
+          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+          .config=${this.config}
+          .fetchHandler="${this.fetchHandler.bind(this)}"
+        ></data-grist>
+      </div>
+    `
   }
 
-  firstUpdated() {
-    this.groupMenuConfig = {
-      columns: [
+  get context() {
+    return {
+      title: i18next.t('title.menu'),
+      actions: [
         {
-          type: 'gutter',
-          gutterName: 'sequence'
+          title: i18next.t('button.save'),
+          action: this._saveMenus.bind(this)
         },
         {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'edit',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              const inputArea = document.createElement('div')
-              delete record.__typename
-              // string", name: "name", header: {…}, record: {…}, width: 200, …}
-              // 5: {type: "string", name: "description", header: {…}, record: {…}, width: 250, …}
-              // 6: {type: "int", name: "rank", header: {…}, record: {…}, width: 80, …}
-              // 7: {type: "boolean
-
-              Object.keys(record).forEach(key => {
-                const form = document.createElement('form')
-                const label = document.createElement('label')
-                const input = document.createElement('input')
-                input.setAttribute('style', 'float:right')
-                form.setAttribute('style', 'margin:10px;')
-                const colType = columns.find(n => n.name == key).type
-                if (colType == 'string') {
-                  input.dataType = 'string'
-                } else if (colType == 'int') {
-                  input.dataType = 'int'
-                } else if (colType == 'boolean') {
-                  input.dataType = 'boolean'
-                }
-                input.setAttribute('class', key)
-                label.innerText = key
-                input.value = record[key]
-                form.appendChild(label)
-                form.appendChild(input)
-                inputArea.appendChild(form)
-              })
-
-              const isCreate = !record.name
-
-              openPopup(
-                html`
-                  <div
-                    id="popupDiv"
-                    style="background-color: white; display: flex; flex-direction: column; padding: 10px;"
-                  >
-                    ${inputArea}
-                    <div style="margin-left: auto;">
-                      <mwc-button
-                        @click="${() => {
-                          if (isCreate) {
-                            let inputValue = {}
-                            Object.keys(record).forEach(key => {
-                              inputValue[key] = inputArea.getElementsByClassName(key)[0].value
-                            })
-                            this._createGroup(JSON.parse(JSON.stringify(inputValue, null, 2)))
-                          } else {
-                            let inputValue = {}
-                            Object.keys(record).forEach(key => {
-                              let dataType = inputArea.getElementsByClassName(key)[0].dataType
-                              let value = inputArea.getElementsByClassName(key)[0].value
-                              if (dataType == 'string') {
-                                inputValue[key] = value
-                              } else if (dataType == 'int') {
-                                inputValue[key] = JSON.parse(value)
-                              } else if (dataType == 'boolean') {
-                                inputValue[key] = JSON.parse(value)
-                              } else {
-                                inputValue[key] = value
-                              }
-                            })
-                            this._updateMenu(JSON.parse(JSON.stringify(inputValue, null, 2)))
-                          }
-                        }}"
-                        >save</mwc-button
-                      >
-                    </div>
-                  </div>
-                `,
-                {
-                  backdrop: true
-                }
-              )
-            }
-          }
-        },
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'delete_outline',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              this._deleteMenu(record.name)
-            }
-          }
-        },
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'info_outline',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              this._groupName = record.name
-              this._getScreens()
-            }
-          }
-        },
-        {
-          type: 'string',
-          name: 'name',
-          header: i18next.t('field.name'),
-          record: {
-            align: 'left'
-          },
-          width: 200
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 250
-        },
-        {
-          type: 'int',
-          name: 'rank',
-          header: i18next.t('field.rank'),
-          record: {
-            align: 'center',
-            editable: true
-          },
-          width: 80
-        },
-        {
-          type: 'boolean',
-          name: 'hiddenFlag',
-          header: i18next.t('field.hidden_flag'),
-          record: {
-            align: 'center',
-            editable: true
-          },
-          width: 80
+          title: i18next.t('button.delete'),
+          action: this._deleteMenus.bind(this)
         }
-      ],
-      pagination: {
-        infinite: true
-      }
-    }
-
-    this.screenConfig = {
-      columns: [
-        {
-          type: 'gutter',
-          gutterName: 'sequence'
-        },
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'edit',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              const inputArea = document.createElement('div')
-              delete record.__typename
-              // string", name: "name", header: {…}, record: {…}, width: 200, …}
-              // 5: {type: "string", name: "description", header: {…}, record: {…}, width: 250, …}
-              // 6: {type: "int", name: "rank", header: {…}, record: {…}, width: 80, …}
-              // 7: {type: "boolean
-
-              Object.keys(record).forEach(key => {
-                const form = document.createElement('form')
-                const label = document.createElement('label')
-                const input = document.createElement('input')
-                input.setAttribute('style', 'float:right')
-                form.setAttribute('style', 'margin:10px;')
-                let colType = columns.find(n => n.name == key).type
-                if (colType == 'string') {
-                  input.dataType = 'string'
-                } else if (colType == 'int') {
-                  input.dataType = 'int'
-                } else if (colType == 'boolean') {
-                  input.dataType = 'boolean'
-                } else {
-                  input.dataType = 'SELECT'
-                }
-                input.setAttribute('class', key)
-                label.innerText = key
-                input.value = record[key]
-                form.appendChild(label)
-                form.appendChild(input)
-                inputArea.appendChild(form)
-              })
-
-              const isCreate = !record.name
-
-              openPopup(
-                html`
-                  <div
-                    id="popupDiv"
-                    style="background-color: white; display: flex; flex-direction: column; padding: 10px;"
-                  >
-                    ${inputArea}
-                    <div style="margin-left: auto;">
-                      <mwc-button
-                        @click="${() => {
-                          if (isCreate) {
-                            let inputValue = {}
-                            Object.keys(record).forEach(key => {
-                              inputValue[key] = inputArea.getElementsByClassName(key)[0].value
-                            })
-                            this._createGroup(JSON.parse(JSON.stringify(inputValue, null, 2)))
-                          } else {
-                            let inputValue = {}
-                            Object.keys(record).forEach(key => {
-                              let dataType = inputArea.getElementsByClassName(key)[0].dataType
-                              let value = inputArea.getElementsByClassName(key)[0].value
-                              if (dataType == 'string') {
-                                inputValue[key] = value
-                              } else if (dataType == 'int') {
-                                inputValue[key] = JSON.parse(value)
-                              } else if (dataType == 'boolean') {
-                                inputValue[key] = JSON.parse(value)
-                              } else {
-                                inputValue[key] = value
-                              }
-                            })
-                            this._updateMenu(JSON.parse(JSON.stringify(inputValue, null, 2)))
-                          }
-                        }}"
-                        >save</mwc-button
-                      >
-                    </div>
-                  </div>
-                `,
-                {
-                  backdrop: true
-                }
-              )
-            }
-          }
-        },
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'delete_outline',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              this._deleteMenu(record.name)
-            }
-          }
-        },
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'info_outline',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              if (!record || !record.name) return
-              navigate(`menu_columns/${record.name}`)
-            }
-          }
-        },
-        {
-          type: 'string',
-          name: 'name',
-          header: i18next.t('field.name'),
-          record: {
-            align: 'left'
-          },
-          width: 200
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 200
-        },
-        {
-          type: 'string',
-          name: 'template',
-          header: i18next.t('field.template'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 200
-        },
-        {
-          type: 'int',
-          name: 'rank',
-          header: i18next.t('field.rank'),
-          record: {
-            align: 'center',
-            editable: true
-          },
-          width: 80
-        },
-        {
-          type: 'boolean',
-          name: 'hiddenFlag',
-          header: i18next.t('field.hidden_flag'),
-          record: {
-            align: 'center',
-            editable: true
-          },
-          width: 80
-        },
-        {
-          type: 'string',
-          name: 'routing',
-          header: i18next.t('field.routing'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 200
-        },
-        {
-          type: 'select',
-          name: 'routingType',
-          header: i18next.t('field.routing_type'),
-          record: {
-            align: 'center',
-            options: ['STATIC', 'RESOURCE'],
-            editable: true
-          },
-          width: 100
-        },
-        {
-          type: 'select',
-          name: 'resourceType',
-          header: i18next.t('field.resource_type'),
-          record: {
-            align: 'center',
-            options: ['MENU', 'ENTITY'],
-            editable: true
-          },
-          width: 100
-        },
-        {
-          type: 'string',
-          name: 'resourceName',
-          header: i18next.t('field.resource_name'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 150
-        },
-        {
-          type: 'string',
-          name: 'resourceUrl',
-          header: i18next.t('field.resource_url'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 200
-        },
-        {
-          type: 'string',
-          name: 'idField',
-          header: i18next.t('field.id_field'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 80
-        },
-        {
-          type: 'string',
-          name: 'titleField',
-          header: i18next.t('field.title_field'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 80
-        }
-      ],
-      pagination: {
-        infinite: true
-      }
+      ]
     }
   }
 
   activated(active) {
-    if (active) {
-      this._getGroupMenus()
+    if (JSON.parse(active) && this.dataGrist) {
+      this.dataGrist.fetch()
     }
   }
 
-  render() {
-    return html`
-        <form class="multi-column-form">
-          <fieldset>
-            <legend>${i18next.t('label.name')}</legend>
-            <label>${i18next.t('field.name')}</label>
-            <input name="name" />
+  async firstUpdated() {
+    this._searchFields = [
+      {
+        name: 'name',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+      },
+      {
+        name: 'description',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.description') }
+      }
+    ]
 
-            <label>${i18next.t('field.description')}</label>
-            <input name="description" />
-          </fieldset>
-        </form>
-      </div>
-
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.group_menu')}</h2>
-
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.groupMenuConfig}
-          .data=${this.groupMenus}
-        ></data-grist>
-
-        <div class="button-container">
-          <mwc-button
-            @click="${() => {
-              this.groupMenus = {
-                ...this.groupMenus,
-                records: [
-                  ...this.groupMenus.records,
-                  {
-                    name: '',
-                    description: '',
-                    hiddenFlag: false,
-                    rank: ''
-                  }
-                ]
-              }
-            }}"
-            >${i18next.t('button.add')}</mwc-button
-          >
-        </div>
-      </div>
-
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.view_setting')}</h2>
-
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.screenConfig}
-          .data=${this.screens}
-        ></data-grist>
-
-        <div class="button-container">
-          <mwc-button
-            @click="${() => {
-              this.screens = {
-                ...this.screens,
-                records: [
-                  ...this.screens.records,
-                  {
-                    name: '',
-                    description: '',
-                    template: '',
-                    rank: '',
-                    hiddenFlag: false,
-                    routing: '',
-                    routingType: '',
-                    resourceType: '',
-                    resourceName: '',
-                    resourceUrl: '',
-                    idField: '',
-                    titleField: ''
-                  }
-                ]
-              }
-            }}"
-            >${i18next.t('button.add')}</mwc-button
-          >
-        </div>
-    `
+    this.config = {
+      rows: { selectable: { multiple: true } },
+      columns: [
+        { type: 'gutter', gutterName: 'dirty' },
+        { type: 'gutter', gutterName: 'sequence' },
+        { type: 'gutter', gutterName: 'row-selector', multiple: true },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'reorder',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              if (record.id && record.name) this._openMenuDetail(record.id, record.name)
+            }
+          }
+        },
+        {
+          type: 'string',
+          name: 'name',
+          header: i18next.t('field.name'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'integer',
+          name: 'rank',
+          header: i18next.t('field.rank'),
+          record: { editable: true, align: 'center' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.description'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'boolean',
+          name: 'hiddenFlag',
+          header: i18next.t('field.hidden_flag'),
+          record: { editable: false, align: 'center' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'datetime',
+          name: 'updatedAt',
+          header: i18next.t('field.updated_at'),
+          record: { editable: false, align: 'center' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'object',
+          name: 'updater',
+          header: i18next.t('field.updater'),
+          record: { editable: false, align: 'center' },
+          sortable: true,
+          width: 150
+        }
+      ]
+    }
   }
 
-  async _getGroupMenus() {
+  get searchForm() {
+    return this.shadowRoot.querySelector('search-form')
+  }
+
+  get dataGrist() {
+    return this.shadowRoot.querySelector('data-grist')
+  }
+
+  async fetchHandler({ page, limit, sorters = [{ name: 'rank' }, { name: 'name' }] }) {
     const response = await client.query({
       query: gql`
         query {
-          groupMenus: menus (${gqlBuilder.buildArgs({
-            filters: [{ name: 'menu_type', value: 'MENU', operator: 'eq' }]
+          menus(${gqlBuilder.buildArgs({
+            filters: [...this._conditionParser(), { name: 'menuType', operator: 'eq', value: 'MENU' }],
+            pagination: { page, limit },
+            sortings: sorters
           })}) {
             items {
+              id
               name
+              rank
               description
               hiddenFlag
-              rank
+              updatedAt
+              updater{
+                id
+                name
+                description
+              }
             }
             total
           }
@@ -574,120 +200,85 @@ class SystemMenu extends localize(i18next)(PageView) {
       `
     })
 
-    this.groupMenus = {
-      records: response.data.groupMenus.items,
-      total: response.data.groupMenus.total
+    return {
+      total: response.data.menus.total || 0,
+      records: response.data.menus.items || []
     }
   }
 
-  async _getScreens() {
-    if (!this._groupName) return
-    const response = await client.query({
-      query: gql`
-        query {
-          screens: menu(${gqlBuilder.buildArgs({
-            name: this._groupName
-          })}) {
-            childrens {
-              name
-              description
-              template
-              rank
-              hiddenFlag
-              routing
-              routingType
-              resourceType
-              resourceName
-              resourceUrl
-              idField
-              titleField
-            }
-          }
+  _conditionParser() {
+    return this.searchForm
+      .getFields()
+      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
+      .map(field => {
+        return {
+          name: field.name,
+          value:
+            field.type === 'text'
+              ? field.value
+              : field.type === 'checkbox'
+              ? field.checked
+              : field.type === 'number'
+              ? parseFloat(field.value)
+              : field.value,
+          operator: field.getAttribute('searchOper')
         }
-      `
-    })
-
-    this.screens = {
-      records: response.data.screens.childrens,
-      total: response.data.screens.childrens.length
-    }
+      })
   }
 
-  async _createGroup(record) {
-    record.menuType = 'MENU'
-    await client.query({
-      query: gql`
-        mutation {
-          createMenu(${gqlBuilder.buildArgs({
-            menu: record
-          })}) {
-            name
-          }
+  async _saveMenus() {
+    let patches = this.dataGrist.dirtyRecords
+    if (patches && patches.length) {
+      patches = patches.map(menu => {
+        let patchField = menu.id ? { id: menu.id } : {}
+        const dirtyFields = menu.__dirtyfields__
+        for (let key in dirtyFields) {
+          patchField[key] = dirtyFields[key].after
         }
-      `
-    })
+        patchField.cuFlag = menu.__dirty__
 
-    history.back()
-    this._getGroupMenus()
-    this._getScreens()
-  }
+        return patchField
+      })
 
-  async _createScreen(record) {
-    record.parent = this._groupName
-    record.menuType = 'SCREEN'
-    await client.query({
-      query: gql`
-        mutation {
-          createMenu(${gqlBuilder.buildArgs({
-            menu: record
-          })}) {
-            name
-          }
-        }
-      `
-    })
-
-    history.back()
-    this._getGroupMenus()
-    this._getScreens()
-  }
-
-  async _updateMenu(record) {
-    await client.query({
-      query: gql`
-        mutation {
-          updateMenu(${gqlBuilder.buildArgs({
-            name: record.name,
-            patch: record
-          })}) {
-            name
-          }
-        }
-      `
-    })
-
-    history.back()
-    this._getGroupMenus()
-    this._getScreens()
-  }
-
-  async _deleteMenu(menuName) {
-    let deleteConfirm = confirm('Are you sure?')
-    if (deleteConfirm) {
-      await client.query({
+      const response = await client.query({
         query: gql`
           mutation {
-            deleteMenu(${gqlBuilder.buildArgs({
-              name: menuName
+            updateMultipleMenu(${gqlBuilder.buildArgs({
+              patches
             })}) {
               name
             }
           }
         `
       })
+
+      if (!response.errors) this.dataGrist.fetch()
     }
-    this._getGroupMenus()
-    this._getScreens()
+  }
+
+  async _deleteMenus() {
+    const names = this.dataGrist.selected.map(record => record.name)
+    if (names && names.length > 0) {
+      const response = await client.query({
+        query: gql`
+              mutation {
+                deleteMenus(${gqlBuilder.buildArgs({ names })})
+              }
+            `
+      })
+
+      if (!response.errors) this.dataGrist.fetch()
+    }
+  }
+
+  _openMenuDetail(menuId, menuName) {
+    openPopup(html`
+      <system-menu-detail
+        style="width: 80vw; height: 80vh"
+        .menuId="${menuId}"
+        .menuName="${menuName}"
+      ></system-menu-detail>
+    `)
   }
 }
 

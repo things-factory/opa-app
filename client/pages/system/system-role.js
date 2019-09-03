@@ -109,6 +109,7 @@ class SystemRole extends localize(i18next)(PageView) {
     this.config = {
       rows: { selectable: { multiple: true } },
       columns: [
+        { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {

@@ -83,6 +83,9 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
 
   async firstUpdated() {
     this.priviledgeConfig = {
+      pagination: {
+        infinite: true
+      },
       columns: [
         {
           type: 'gutter',
@@ -122,7 +125,6 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
   async updated(changedProps) {
     if (changedProps.has('name')) {
       this.roleInfo = await this._fetchRoleInfo()
-      this.dataGrist.fetch()
     }
 
     if (changedProps.has('roleInfo')) {
