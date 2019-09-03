@@ -96,14 +96,40 @@ export class GenerateList extends localize(i18next)(LitElement) {
           .config=${this.config}
           .data=${this.locationData}
           @record-change="${this._onChangeHandler.bind(this)}"
-        >
-        </data-grist>
+        ></data-grist>
+
+        <data-grist
+          id="preview_grist"
+          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+          .config=${this.previewConfig}
+          .fetchHandler="${this.fetchHandler.bind(this)}"
+        ></data-grist>
       </div>
 
       <div class="button-container">
         <mwc-button @click=${this._generateLocationList}>${i18next.t('button.save')}</mwc-button>
+        <mwc-button @click=${this._deleteFromList}>${i18next.t('button.delete')}</mwc-button>
       </div>
     `
+  }
+
+  get context() {
+    return {
+      title: i18next.t('title.generate_location'),
+      actions: [
+        {
+          title: i18next.t('button.save'),
+          action: this._generateLocationList.bind(this)
+        }
+      ],
+      exportable: {
+        name: i18next.t('title.generate_location'),
+        data: this._exportableData.bind(this)
+      },
+      importable: {
+        handler: () => {}
+      }
+    }
   }
 
   async firstUpdated() {
@@ -170,10 +196,93 @@ export class GenerateList extends localize(i18next)(LitElement) {
         }
       ]
     }
+
+    this.previewConfig = {
+      rows: {
+        selectable: {
+          multiple: true
+        }
+      },
+      columns: [
+        {
+          type: 'gutter',
+          gutterName: 'dirty'
+        },
+        {
+          type: 'gutter',
+          gutterName: 'sequence'
+        },
+        {
+          type: 'gutter',
+          gutterName: 'row-selector',
+          multiple: true
+        },
+        {
+          type: 'string',
+          name: 'name',
+          record: {
+            align: 'left',
+            editable: true
+          },
+          header: i18next.t('field.name'),
+          width: 250
+        },
+        {
+          type: 'string',
+          name: 'zone',
+          record: {
+            align: 'left',
+            editable: true
+          },
+          header: i18next.t('field.zone'),
+          width: 250
+        },
+        {
+          type: 'string',
+          name: 'row',
+          record: {
+            align: 'left',
+            editable: true
+          },
+          header: i18next.t('field.row'),
+          width: 250
+        },
+        {
+          type: 'string',
+          name: 'column',
+          record: {
+            align: 'left',
+            editable: true
+          },
+          header: i18next.t('field.column'),
+          width: 250
+        },
+        {
+          type: 'string',
+          name: 'shelf',
+          record: {
+            align: 'left',
+            editable: true
+          },
+          header: i18next.t('field.shelf'),
+          width: 250
+        },
+        {
+          type: 'string',
+          name: 'status',
+          record: {
+            align: 'left',
+            editable: true
+          },
+          header: i18next.t('field.status'),
+          width: 250
+        }
+      ]
+    }
   }
 
   get dataGrist() {
-    return this.shadowRoot.querySelector('data-grist')
+    return this.shadowRoot.querySelector('#preview_grist')
   }
 
   async _onChangeHandler(e) {
@@ -252,26 +361,63 @@ export class GenerateList extends localize(i18next)(LitElement) {
         }
         return locations
       })
-      let patches = this.locationType
-      const response = await client.query({
-        query: gql`
-            mutation {
-              updateMultipleLocation(${gqlBuilder.buildArgs({
-                patches
-              })}) {
-                name
-              }
-            }
-          `
-      })
+      console.log(this.locationType)
+      this.dataGrist.fetch()
+      // let patches = this.locationType
+      // const response = await client.query({
+      //   query: gql`
+      //       mutation {
+      //         updateMultipleLocation(${gqlBuilder.buildArgs({
+      //           patches
+      //         })}) {
+      //           name
+      //         }
+      //       }
+      //     `
+      // })
 
-      if (!response.errors) navigate('locations')
+      // if (!response.errors) navigate('locations')
     }
   }
 
-  _generateLocationLists() {
-    console.log(this._generateLocationList)
+  fetchHandler() {
+    return {
+      total: this.locationType.length || 0,
+      records: this.locationType || []
+    }
   }
+
+  _deleteFromList() {
+    const indexes = this.dataGrist.selected.forEach(record => {
+      const index = record.__seq__ - 1
+      this.locationType.splice(index, 1)
+      console.log(record.__seq__)
+      console.log(this.locationType)
+    })
+    this.dataGrist.fetch()
+  }
+
+  // get _columns() {
+  //   return this.config.columns
+  // }
+
+  // _exportableData() {
+  //   let records = []
+  //   if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+  //     records = this.dataGrist.selected
+  //   } else {
+  //     records = this.dataGrist.data.records
+  //   }
+
+  //   return records.map(item => {
+  //     return this._columns
+  //       .filter(column => column.type !== 'gutter')
+  //       .reduce((record, column) => {
+  //         record[column.name] = item[column.name]
+  //         return record
+  //       }, {})
+  //   })
+  // }
 }
 
 window.customElements.define('generate-list', GenerateList)
