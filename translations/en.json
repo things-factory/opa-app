@@ -169,5 +169,20 @@
   "text.putaway_is_done": "putaway is done",
   "text.order_is_ready_for_putaway": "order is ready for putaway",
   "text.vehicle_or_driver_not_selected": "vehicle or driver not selected",
-  "label.delivery_order": "delivery order"
+  "label.delivery_order": "delivery order",
+  "label.brn": "business registration number",
+  "label.country_code": "country code",
+  "label.address": "address",
+  "field.origin_product": "origin product",
+  "field.your_name": "your name",
+  "field.default_price": "default price",
+  "label.postal_code": "postal code",
+  "label.shelf": "shelf",
+  "label.row": "row",
+  "label.column": "column",
+  "field.row": "row",
+  "field.column": "column",
+  "field.registration_number": "registration number",
+  "label.driver_code": "driver code",
+  "field.driver_code": "driver code"
 }

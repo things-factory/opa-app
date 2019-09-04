@@ -124,5 +124,20 @@
   "field.product_name": "nama produk",
   "field.pack_in_qty": "kuantiti dalam pek",
   "field.quantity": "kuantity",
-  "field.work_order": "susun atur kerja"
+  "field.work_order": "susun atur kerja",
+  "label.brn": "nombor pendaftaran bisnes",
+  "label.country_code": "kod negara",
+  "label.address": "alamat",
+  "field.origin_product": "produk asal",
+  "field.your_name": "nama anda",
+  "field.default_price": "harga lalai",
+  "label.postal_code": "poskod",
+  "label.shelf": "rak",
+  "label.row": "baris",
+  "label.column": "lajur",
+  "field.row": "baris",
+  "field.column": "lajur",
+  "field.registration_number": "nombor pendaftaran",
+  "label.driver_code": "kod pemandu",
+  "field.driver_code": "kod pemandu"
 }
