@@ -1,19 +1,11 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
-import { css, html } from 'lit-element'
+import { css, html, LitElement } from 'lit-element'
 
-class ProductList extends localize(i18next)(PageView) {
-  static get properties() {
-    return {
-      _searchFields: Array,
-      config: Object,
-      data: Object
-    }
-  }
-
+export class ProductOptionDetailList extends localize(i18next)(LitElement) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -21,8 +13,8 @@ class ProductList extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-
           overflow: hidden;
+          background-color: white;
         }
 
         search-form {
@@ -38,16 +30,39 @@ class ProductList extends localize(i18next)(PageView) {
           overflow-y: hidden;
           flex: 1;
         }
+        h2 {
+          padding: var(--subtitle-padding);
+          font: var(--subtitle-font);
+          color: var(--subtitle-text-color);
+          border-bottom: var(--subtitle-border-bottom);
+        }
+        .button-container {
+          display: flex;
+          margin-left: auto;
+        }
+        .button-container > mwc-button {
+          padding: 10px;
+        }
       `
     ]
   }
 
+  static get properties() {
+    return {
+      productOptionId: String,
+      productOptionName: String,
+      _searchFields: Array,
+      config: Object
+    }
+  }
+
   render() {
     return html`
+      <h2>${i18next.t('title.product_option_detail')} ${this.productOptionName}</h2>
+
       <search-form
         id="search-form"
         .fields=${this._searchFields}
-        initFocus="description"
         @submit=${async () => this.dataGrist.fetch()}
       ></search-form>
 
@@ -55,55 +70,33 @@ class ProductList extends localize(i18next)(PageView) {
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
-          .fetchHandler="${this.fetchHandler.bind(this)}"
+          .fetchHandler=${this.fetchHandler.bind(this)}
         ></data-grist>
       </div>
+
+      <div class="button-container">
+        <mwc-button @click=${this._saveProductOptionDetails}>${i18next.t('button.save')}</mwc-button>
+        <mwc-button @click=${this._deleteProductOptionDetails}>${i18next.t('button.delete')}</mwc-button>
+      </div>
     `
-  }
-
-  get context() {
-    return {
-      title: i18next.t('title.product'),
-      actions: [
-        {
-          title: i18next.t('button.save'),
-          action: this._saveProducts.bind(this)
-        },
-        {
-          title: i18next.t('button.delete'),
-          action: this._deleteProducts.bind(this)
-        }
-      ],
-      exportable: {
-        name: i18next.t('title.product'),
-        data: this._exportableData.bind(this)
-      },
-      importable: {
-        handler: () => {}
-      }
-    }
-  }
-
-  activated(active) {
-    if (JSON.parse(active) && this.dataGrist) {
-      this.dataGrist.fetch()
-    }
   }
 
   async firstUpdated() {
     this._searchFields = [
       {
         name: 'name',
+        type: 'text',
         props: {
           searchOper: 'like',
           placeholder: i18next.t('field.name')
         }
       },
       {
-        name: 'type',
+        name: 'description',
+        type: 'text',
         props: {
           searchOper: 'like',
-          placeholder: i18next.t('field.type')
+          placeholder: i18next.t('field.description')
         }
       }
     ]
@@ -119,62 +112,43 @@ class ProductList extends localize(i18next)(PageView) {
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'reorder',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              if (record.id) navigate(`product_options/${record.id}`)
-            }
-          }
-        },
-        {
           type: 'string',
           name: 'name',
           record: {
+            align: 'left',
             editable: true
           },
           header: i18next.t('field.name'),
-          width: 180
+          width: 120
         },
         {
           type: 'string',
           name: 'description',
           record: {
+            align: 'left',
             editable: true
           },
           header: i18next.t('field.description'),
-          width: 250
-        },
-        {
-          type: 'string',
-          name: 'type',
-          record: {
-            align: 'center',
-            editable: true
-          },
-          header: i18next.t('field.type'),
-          width: 150
+          width: 220
         },
         {
           type: 'object',
           name: 'updater',
           record: {
-            align: 'center',
+            align: 'left',
             editable: false
           },
           header: i18next.t('field.updater'),
-          width: 250
+          width: 150
         },
         {
           type: 'datetime',
           name: 'updatedAt',
           record: {
-            align: 'center',
-            editable: false
+            align: 'left'
           },
           header: i18next.t('field.updated_at'),
-          width: 180
+          width: 150
         }
       ]
     }
@@ -189,42 +163,43 @@ class ProductList extends localize(i18next)(PageView) {
   }
 
   async fetchHandler({ page, limit, sorters = [] }) {
+    let filters = []
+    if (this.productOptionId) {
+      filters.push({
+        name: 'productOption',
+        operator: 'eq',
+        value: this.productOptionId
+      })
+    }
+
     const response = await client.query({
       query: gql`
         query {
-          products(${gqlBuilder.buildArgs({
-            filters: this._conditionParser(),
+          productOptionDetails(${gqlBuilder.buildArgs({
+            filters: [...filters, ...this._conditionParser()],
             pagination: { page, limit },
             sortings: sorters
           })}) {
             items {
               id
-              bizplace {
-                id
-                name
-                description
-              }
               name
               description
-              type
-              updater {
+              updatedAt
+              updater{
                 id
                 name
                 description
               }
-              updatedAt
             }
             total
           }
         }
-        `
+      `
     })
 
-    if (!response.errors) {
-      return {
-        total: response.data.products.total || 0,
-        records: response.data.products.items || []
-      }
+    return {
+      total: response.data.productOptionDetails.total || 0,
+      records: response.data.productOptionDetails.items || []
     }
   }
 
@@ -248,43 +223,49 @@ class ProductList extends localize(i18next)(PageView) {
       })
   }
 
-  async _saveProducts() {
+  async _saveProductOptionDetails() {
     let patches = this.dataGrist.dirtyRecords
     if (patches && patches.length) {
-      patches = patches.map(product => {
-        let patchField = product.id ? { id: product.id } : {}
-        const dirtyFields = product.__dirtyfields__
+      patches = patches.map(productOptionDetail => {
+        let patchField = productOptionDetail.id ? { id: productOptionDetail.id } : {}
+        const dirtyFields = productOptionDetail.__dirtyfields__
         for (let key in dirtyFields) {
           patchField[key] = dirtyFields[key].after
         }
-        patchField.cuFlag = product.__dirty__
+        patchField.productOption = { id: this.productOptionId }
+        patchField.cuFlag = productOptionDetail.__dirty__
 
         return patchField
       })
 
       const response = await client.query({
         query: gql`
-            mutation {
-              updateMultipleProduct(${gqlBuilder.buildArgs({
-                patches
-              })}) {
-                name
-              }
+          mutation {
+            updateMultipleProductOptionDetail(${gqlBuilder.buildArgs({
+              patches
+            })}) {
+              name
             }
-          `
+          }
+        `
       })
 
       if (!response.errors) this.dataGrist.fetch()
     }
   }
 
-  async _deleteProducts() {
+  async _deleteProductOptionDetails() {
     const names = this.dataGrist.selected.map(record => record.name)
     if (names && names.length > 0) {
       const response = await client.query({
         query: gql`
             mutation {
-              deleteProducts(${gqlBuilder.buildArgs({ names })})
+              deleteProductOptionDetails(${gqlBuilder.buildArgs({
+                productOption: {
+                  id: this.productOptionId
+                },
+                names
+              })})
             }
           `
       })
@@ -292,28 +273,6 @@ class ProductList extends localize(i18next)(PageView) {
       if (!response.errors) this.dataGrist.fetch()
     }
   }
-
-  get _columns() {
-    return this.config.columns
-  }
-
-  _exportableData() {
-    let records = []
-    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
-      records = this.dataGrist.selected
-    } else {
-      records = this.dataGrist.data.records
-    }
-
-    return records.map(item => {
-      return this._columns
-        .filter(column => column.type !== 'gutter')
-        .reduce((record, column) => {
-          record[column.name] = item[column.name]
-          return record
-        }, {})
-    })
-  }
 }
 
-window.customElements.define('product-list', ProductList)
+window.customElements.define('product-option-detail-list', ProductOptionDetailList)

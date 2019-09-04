@@ -20,6 +20,10 @@ export default {
       page: 'products'
     },
     {
+      tagname: 'product-option-list',
+      page: 'product_options'
+    },
+    {
       tagname: 'vas-list',
       page: 'vas'
     },

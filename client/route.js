@@ -20,6 +20,10 @@ export default function route(page) {
       import('./pages/master/product-list')
       return page
 
+    case 'product_options':
+      import('./pages/master/product-option-list')
+      return page
+
     case 'vas':
       import('./pages/master/vas-list')
       return page
