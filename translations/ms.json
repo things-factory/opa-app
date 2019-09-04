@@ -139,5 +139,22 @@
   "field.column": "lajur",
   "field.registration_number": "nombor pendaftaran",
   "label.driver_code": "kod pemandu",
-  "field.driver_code": "kod pemandu"
+  "field.driver_code": "kod pemandu",
+  "title.company": "syarikat",
+  "title.product": "produk",
+  "title.vas": "vas",
+  "title.bizplace:": "tempat bisnes",
+  "title.warehouse": "gudang",
+  "title.location": "lokasi",
+  "title.transport_vehicle": "pengangkutan kenderaan",
+  "title.transport_driver": "pengangkutan pemandu",
+  "title.worker": "pekerja",
+  "title.user": "pengguna",
+  "title.role": "peranan",
+  "title.system_domain": "domain sistem",
+  "label.system_flag": "flag sistem",
+  "label.brand_name": "nama jenama",
+  "field.brand_image": "imej jenama",
+  "field.content_image": "imej kandungan",
+  "field.currency": "mata wang"
 }

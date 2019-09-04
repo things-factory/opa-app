@@ -184,5 +184,21 @@
   "field.column": "column",
   "field.registration_number": "registration number",
   "label.driver_code": "driver code",
-  "field.driver_code": "driver code"
+  "field.driver_code": "driver code",
+  "title.company": "company",
+  "title.product": "product",
+  "title.vas": "vas",
+  "title.bizplace:": "bizplace",
+  "title.warehouse": "warehouse",
+  "title.location": "location",
+  "title.transport_vehicle": "transport vehicle",
+  "title.transport_driver": "transport driver",
+  "title.worker": "worker",
+  "title.user": "user",
+  "title.role": "role",
+  "title.system_domain": "system domain",
+  "label.system_flag": "system flag",
+  "label.brand_name": "brand name",
+  "field.brand_image": "brand image",
+  "field.content_image": "content image"
 }
