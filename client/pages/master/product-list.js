@@ -118,16 +118,16 @@ class ProductList extends localize(i18next)(PageView) {
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'reorder',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              if (record.id) navigate(`product_options/${record.id}`)
-            }
-          }
-        },
+        // {
+        //   type: 'gutter',
+        //   gutterName: 'button',
+        //   icon: 'reorder',
+        //   handlers: {
+        //     click: (columns, data, column, record, rowIndex) => {
+        //       if (record.id) navigate(`product_options/${record.id}`)
+        //     }
+        //   }
+        // },
         {
           type: 'string',
           name: 'name',
