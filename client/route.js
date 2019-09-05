@@ -134,6 +134,10 @@ export default function route(page) {
       import('./pages/system/system-role')
       return page
 
+    case 'settings':
+      import('./pages/system/system-setting')
+      return page
+
     /**
      * Inbound Menus Section
      */
