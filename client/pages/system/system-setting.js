@@ -1,21 +1,11 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, ScrollbarStyles } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
-import { css, html, LitElement } from 'lit-element'
-import './system-menu-detail'
+import { css, html } from 'lit-element'
 
-class SystemMenuDetail extends localize(i18next)(LitElement) {
-  static get properties() {
-    return {
-      menuName: String,
-      menuId: String,
-      config: Object,
-      data: Object
-    }
-  }
-
+class SystemSetting extends localize(i18next)(PageView) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -23,15 +13,10 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
         :host {
           display: flex;
           flex-direction: column;
+
           overflow: hidden;
-          background-color: white;
         }
-        h2 {
-          padding: var(--subtitle-padding);
-          font: var(--subtitle-font);
-          color: var(--subtitle-text-color);
-          border-bottom: var(--subtitle-border-bottom);
-        }
+
         search-form {
           overflow: visible;
         }
@@ -39,30 +24,29 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
           display: flex;
           flex-direction: column;
           flex: 1;
-          overflow-y: auto;
         }
         data-grist {
           overflow-y: hidden;
           flex: 1;
         }
-        .button-container {
-          display: flex;
-          margin-left: auto;
-        }
-        .button-container > mwc-button {
-          padding: 10px;
-        }
       `
     ]
   }
 
+  static get properties() {
+    return {
+      _searchFields: Array,
+      config: Object,
+      data: Object
+    }
+  }
+
   render() {
     return html`
-      <h2>${i18next.t('title.menu')} ${this.menuName}</h2>
-
       <search-form
         id="search-form"
         .fields=${this._searchFields}
+        initFocus="description"
         @submit=${async () => this.dataGrist.fetch()}
       ></search-form>
 
@@ -73,12 +57,36 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
           .fetchHandler="${this.fetchHandler.bind(this)}"
         ></data-grist>
       </div>
-
-      <div class="button-container">
-        <mwc-button @click=${this._saveMenus}>${i18next.t('button.save')}</mwc-button>
-        <mwc-button @click=${this._deleteMenus}>${i18next.t('button.delete')}</mwc-button>
-      </div>
     `
+  }
+
+  get context() {
+    return {
+      title: i18next.t('title.setting'),
+      actions: [
+        {
+          title: i18next.t('button.save'),
+          action: this._saveSetting.bind(this)
+        },
+        {
+          title: i18next.t('button.delete'),
+          action: this._deleteSetting.bind(this)
+        }
+      ],
+      exportable: {
+        name: i18next.t('title.setting'),
+        data: this._exportableData.bind(this)
+      },
+      importable: {
+        handler: () => {}
+      }
+    }
+  }
+
+  activated(active) {
+    if (JSON.parse(active) && this.dataGrist) {
+      this.dataGrist.fetch()
+    }
   }
 
   async firstUpdated() {
@@ -94,14 +102,9 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
         props: { searchOper: 'like', placeholder: i18next.t('label.description') }
       },
       {
-        name: 'template',
+        name: 'category',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.template') }
-      },
-      {
-        name: 'resourceUrl',
-        type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.resource_url') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.category') }
       }
     ]
 
@@ -112,42 +115,12 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
-          type: 'object',
-          name: 'parent',
-          header: i18next.t('field.group_menu'),
-          record: {
-            options: {
-              queryName: 'menus',
-              basicArgs: {
-                filters: [
-                  {
-                    name: 'menuType',
-                    value: 'MENU',
-                    operator: 'eq'
-                  }
-                ]
-              }
-            },
-            editable: true
-          },
-          sortable: true,
-          width: 180
-        },
-        {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),
           record: { editable: true, align: 'left' },
           sortable: true,
-          width: 150
-        },
-        {
-          type: 'integer',
-          name: 'rank',
-          header: i18next.t('field.rank'),
-          record: { editable: true, align: 'center' },
-          sortable: true,
-          width: 80
+          width: 100
         },
         {
           type: 'string',
@@ -159,33 +132,26 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
         },
         {
           type: 'string',
-          name: 'template',
-          header: i18next.t('field.template'),
+          name: 'category',
+          header: i18next.t('field.category'),
           record: { editable: true, align: 'left' },
           sortable: true,
-          width: 160
+          width: 150
         },
         {
           type: 'string',
-          name: 'resourceUrl',
-          header: i18next.t('field.resource_url'),
+          name: 'value',
+          header: i18next.t('field.value'),
           record: { editable: true, align: 'left' },
           sortable: true,
-          width: 160
+          width: 180
         },
-        {
-          type: 'boolean',
-          name: 'hiddenFlag',
-          header: i18next.t('field.hidden_flag'),
-          record: { editable: false, align: 'center' },
-          sortable: true,
-          width: 80
-        },
+
         {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
-          record: { editable: false, align: 'center' },
+          record: { editable: false, align: 'left' },
           sortable: true,
           width: 150
         },
@@ -193,7 +159,7 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
           type: 'object',
           name: 'updater',
           header: i18next.t('field.updater'),
-          record: { editable: false, align: 'center' },
+          record: { editable: false, align: 'left' },
           sortable: true,
           width: 150
         }
@@ -209,28 +175,21 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  async fetchHandler({ page, limit, sorters = [{ name: 'rank' }, { name: 'name' }] }) {
+  async fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
         query {
-          menus(${gqlBuilder.buildArgs({
-            filters: [...this._conditionParser(), { name: 'parent', operator: 'eq', value: this.menuId }],
+          settings(${gqlBuilder.buildArgs({
+            filters: this._conditionParser(),
             pagination: { page, limit },
             sortings: sorters
           })}) {
             items {
               id
               name
-              rank
               description
-              template
-              resourceUrl
-              parent {
-                id
-                name
-                description
-              }
-              hiddenFlag
+              category
+              value
               updatedAt
               updater{
                 id
@@ -245,8 +204,8 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
     })
 
     return {
-      total: response.data.menus.total || 0,
-      records: response.data.menus.items || []
+      total: response.data.settings.total || 0,
+      records: response.data.settings.items || []
     }
   }
 
@@ -270,54 +229,72 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
       })
   }
 
-  async _saveMenus() {
+  async _saveSetting() {
     let patches = this.dataGrist.dirtyRecords
     if (patches && patches.length) {
-      patches = patches.map(menu => {
-        let patchField = menu.id ? { id: menu.id } : {}
-        if (!patchField.parent) {
-          patchField.parent = { id: this.menuId }
-        }
-        const dirtyFields = menu.__dirtyfields__
+      patches = patches.map(setting => {
+        let patchField = setting.id ? { id: setting.id } : {}
+        const dirtyFields = setting.__dirtyfields__
         for (let key in dirtyFields) {
           patchField[key] = dirtyFields[key].after
         }
-        patchField.cuFlag = menu.__dirty__
-        patchField.routingType = patchField.routingType ? patchField.routingType : 'STATIC'
+        patchField.cuFlag = setting.__dirty__
 
         return patchField
       })
 
       const response = await client.query({
         query: gql`
-          mutation {
-            updateMultipleMenu(${gqlBuilder.buildArgs({
-              patches
-            })}) {
-              name
+            mutation {
+              updateMultipleSetting(${gqlBuilder.buildArgs({
+                patches
+              })}) {
+                name
+              }
             }
-          }
-        `
+          `
       })
 
       if (!response.errors) this.dataGrist.fetch()
     }
   }
 
-  async _deleteMenus() {
+  async _deleteSetting() {
     const names = this.dataGrist.selected.map(record => record.name)
     if (names && names.length > 0) {
       const response = await client.query({
         query: gql`
-              mutation {
-                deleteMenus(${gqlBuilder.buildArgs({ names })})
-              }
-            `
+            mutation {
+              deleteSettings(${gqlBuilder.buildArgs({ names })})
+            }
+          `
       })
 
       if (!response.errors) this.dataGrist.fetch()
     }
   }
+
+  get _columns() {
+    return this.config.columns
+  }
+
+  _exportableData() {
+    let records = []
+    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+      records = this.dataGrist.selected
+    } else {
+      records = this.dataGrist.data.records
+    }
+
+    return records.map(item => {
+      return this._columns
+        .filter(column => column.type !== 'gutter')
+        .reduce((record, column) => {
+          record[column.name] = item[column.name]
+          return record
+        }, {})
+    })
+  }
 }
 
-window.customElements.define('system-menu-detail', SystemMenuDetail)
+window.customElements.define('system-setting', SystemSetting)

@@ -135,6 +135,10 @@ export default {
       tagname: 'system-role',
       page: 'roles'
     },
+    {
+      tagname: 'system-setting',
+      page: 'settings'
+    },
     /**
      * Inbound Menus Section
      */

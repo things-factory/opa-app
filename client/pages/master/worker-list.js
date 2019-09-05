@@ -188,8 +188,6 @@ class WorkerList extends localize(i18next)(PageView) {
       `
     })
 
-    this.rawWorkerData = response.data.workers.items
-
     return {
       total: response.data.workers.total || 0,
       records: response.data.workers.items || []
