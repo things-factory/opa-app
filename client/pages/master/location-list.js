@@ -139,16 +139,6 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'reorder',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              this._openGenerate(record.id, record.name)
-            }
-          }
-        },
-        {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),

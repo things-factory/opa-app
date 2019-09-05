@@ -58,7 +58,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
 
   render() {
     return html`
-      <h2>${i18next.t('title.contact_poinat')} ${this.bizplaceName}</h2>
+      <h2>${i18next.t('title.contact_point')} ${this.bizplaceName}</h2>
 
       <search-form
         id="search-form"
@@ -74,11 +74,34 @@ export class ContactPointList extends localize(i18next)(LitElement) {
         ></data-grist>
       </div>
 
-      <div class="button-container">
+      <!-- <div class="button-container">
         <mwc-button @click=${this._saveContactPoints}>${i18next.t('button.save')}</mwc-button>
         <mwc-button @click=${this._deleteContactPoints}>${i18next.t('button.delete')}</mwc-button>
-      </div>
+      </div> -->
     `
+  }
+
+  get context() {
+    return {
+      title: i18next.t('title.contact_point'),
+      actions: [
+        {
+          title: i18next.t('button.save'),
+          action: this._saveContactPoints.bind(this)
+        },
+        {
+          title: i18next.t('button.delete'),
+          action: this._deleteContactPoints.bind(this)
+        }
+      ],
+      exportable: {
+        name: i18next.t('title.contact_point'),
+        data: this._exportableData.bind(this)
+      },
+      importable: {
+        handler: () => {}
+      }
+    }
   }
 
   async firstUpdated() {
@@ -334,6 +357,28 @@ export class ContactPointList extends localize(i18next)(LitElement) {
 
       if (!response.errors) this.dataGrist.fetch()
     }
+  }
+
+  get _columns() {
+    return this.config.columns
+  }
+
+  _exportableData() {
+    let records = []
+    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+      records = this.dataGrist.selected
+    } else {
+      records = this.dataGrist.data.records
+    }
+
+    return records.map(item => {
+      return this._columns
+        .filter(column => column.type !== 'gutter')
+        .reduce((record, column) => {
+          record[column.name] = item[column.name]
+          return record
+        }, {})
+    })
   }
 }
 

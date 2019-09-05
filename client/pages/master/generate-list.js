@@ -9,7 +9,8 @@ import { MultiColumnFormStyles } from '@things-factory/form-ui'
 export class GenerateList extends localize(i18next)(LitElement) {
   constructor() {
     super()
-    this.locationType = []
+    this.locationList = []
+    this.tempLocationList = []
   }
 
   static get styles() {
@@ -94,7 +95,7 @@ export class GenerateList extends localize(i18next)(LitElement) {
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
-          .data=${this.locationData}
+          .data=${this.data}
           @record-change="${this._onChangeHandler.bind(this)}"
         ></data-grist>
 
@@ -107,7 +108,8 @@ export class GenerateList extends localize(i18next)(LitElement) {
       </div>
 
       <div class="button-container">
-        <mwc-button @click=${this._generateLocationList}>${i18next.t('button.save')}</mwc-button>
+        <mwc-button @click=${this._generateLocationList}>${i18next.t('button.generate')}</mwc-button>
+        <mwc-button @click=${this._saveGeneratedLocation}>${i18next.t('button.save')}</mwc-button>
         <mwc-button @click=${this._deleteFromList}>${i18next.t('button.delete')}</mwc-button>
       </div>
     `
@@ -133,7 +135,7 @@ export class GenerateList extends localize(i18next)(LitElement) {
   }
 
   async firstUpdated() {
-    this.locationData = { records: [] }
+    this.data = { records: [] }
     this.config = {
       rows: {
         selectable: {
@@ -289,20 +291,20 @@ export class GenerateList extends localize(i18next)(LitElement) {
     const before = e.detail.before || {}
     const after = e.detail.after
 
-    let record = this.locationData.records[e.detail.row]
+    let record = this.data.records[e.detail.row]
     if (!record) {
       record = { ...after }
-      this.locationData.records.push(record)
+      this.data.records.push(record)
     } else if (record !== after) {
       record = Object.assign(record, after)
     }
   }
 
-  async _generateLocationList() {
-    let locationsData = this.locationData.records
+  _generateLocationList() {
+    let locationData = this.data.records
 
-    if (locationsData && locationsData.length) {
-      locationsData = locationsData.map(locations => {
+    if (locationData && locationData.length) {
+      locationData = locationData.map(locations => {
         locations['zone'] = this.zoneName.toUpperCase()
 
         for (let i = locations.start; i <= locations.end; i++) {
@@ -355,69 +357,54 @@ export class GenerateList extends localize(i18next)(LitElement) {
               locationObj['status'] = 'Empty'
               locationObj['cuFlag'] = '+'
 
-              this.locationType.push(locationObj)
+              this.tempLocationList.push(locationObj)
             }
           }
         }
         return locations
       })
-      console.log(this.locationType)
+      this.locationList = this.tempLocationList
+      this.tempLocationList = []
+      console.log(this.locationList)
       this.dataGrist.fetch()
-      // let patches = this.locationType
-      // const response = await client.query({
-      //   query: gql`
-      //       mutation {
-      //         updateMultipleLocation(${gqlBuilder.buildArgs({
-      //           patches
-      //         })}) {
-      //           name
-      //         }
-      //       }
-      //     `
-      // })
-
-      // if (!response.errors) navigate('locations')
     }
+  }
+
+  async _saveGeneratedLocation() {
+    let patches = this.locationList
+    const response = await client.query({
+      query: gql`
+            mutation {
+              updateMultipleLocation(${gqlBuilder.buildArgs({
+                patches
+              })}) {
+                name
+              }
+            }
+          `
+    })
+
+    // if (!response.errors)
   }
 
   fetchHandler() {
     return {
-      total: this.locationType.length || 0,
-      records: this.locationType || []
+      total: this.locationList.length || 0,
+      records: this.locationList || []
     }
   }
 
   _deleteFromList() {
-    const indexes = this.dataGrist.selected.forEach(record => {
-      const index = record.__seq__ - 1
-      this.locationType.splice(index, 1)
-      console.log(record.__seq__)
-      console.log(this.locationType)
+    const selections = []
+    this.dataGrist.selected.forEach(selection => {
+      selections.push(selection.__seq__ - 1)
     })
+
+    for (let i = selections.length - 1; i >= 0; i--) {
+      this.locationList.splice(selections[i], 1)
+    }
     this.dataGrist.fetch()
   }
-
-  // get _columns() {
-  //   return this.config.columns
-  // }
-
-  // _exportableData() {
-  //   let records = []
-  //   if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
-  //     records = this.dataGrist.selected
-  //   } else {
-  //     records = this.dataGrist.data.records
-  //   }
-
-  //   return records.map(item => {
-  //     return this._columns
-  //       .filter(column => column.type !== 'gutter')
-  //       .reduce((record, column) => {
-  //         record[column.name] = item[column.name]
-  //         return record
-  //       }, {})
-  //   })
-  // }
 }
 
 window.customElements.define('generate-list', GenerateList)
