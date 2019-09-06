@@ -203,5 +203,14 @@
   "field.brand_image": "brand image",
   "field.content_image": "content image",
   "field.label_id_for_location": "location label id",
-  "field.label_id_for_pallet": "pallet label id"
+  "field.label_id_for_pallet": "pallet label id",
+  "title.generate_location_list": "hasilkan senarai penempatan",
+  "label.zone_name": "zone name",
+  "field.row_start": "row start",
+  "field.row_end": "row end",
+  "field.number_of_column": "number of column",
+  "field.number_of_cell": "number of cell",
+  "field.email": "email",
+  "field.fax": "fax",
+  "field.phone": "phone"
 }
