@@ -1,11 +1,12 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import { ORDER_STATUS } from './constants/order'
 
-class SystemSetting extends localize(i18next)(PageView) {
+class ArrivalNoticeList extends localize(i18next)(PageView) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -61,17 +62,7 @@ class SystemSetting extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.setting'),
-      actions: [
-        {
-          title: i18next.t('button.save'),
-          action: this._saveSetting.bind(this)
-        },
-        {
-          title: i18next.t('button.delete'),
-          action: this._deleteSetting.bind(this)
-        }
-      ],
+      title: i18next.t('title.arrival_notices'),
       exportable: {
         name: i18next.t('title.setting'),
         data: this._exportableData.bind(this)
@@ -96,14 +87,26 @@ class SystemSetting extends localize(i18next)(PageView) {
         props: { searchOper: 'like', placeholder: i18next.t('label.name') }
       },
       {
-        name: 'description',
-        type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.description') }
+        name: 'eta',
+        type: 'datetime-local',
+        props: { searchOper: 'like', placeholder: i18next.t('label.eta') }
       },
       {
-        name: 'category',
-        type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.category') }
+        name: 'pickingDateTime',
+        type: 'datetime-local',
+        props: { searchOper: 'like', placeholder: i18next.t('label.picking_date_time') }
+      },
+      {
+        name: 'status',
+        type: 'select',
+        options: [
+          { value: '' },
+          ...Object.keys(ORDER_STATUS).map(key => {
+            const status = ORDER_STATUS[key]
+            return { name: i18next.t(`label.${status.name}`), value: status.value }
+          })
+        ],
+        props: { searchOper: 'eq', placeholder: i18next.t('label.status') }
       }
     ]
 
@@ -112,55 +115,79 @@ class SystemSetting extends localize(i18next)(PageView) {
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
-        { type: 'gutter', gutterName: 'row-selector', multiple: true },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'reorder',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              if (record.id) navigate(`arrival_notice_detail/${record.name}`)
+            }
+          }
+        },
         {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),
-          record: { editable: true, align: 'left' },
+          record: { align: 'left' },
           sortable: true,
-          width: 100
+          width: 180
+        },
+        {
+          type: 'datetime',
+          name: 'eta',
+          header: i18next.t('field.eta'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 160
+        },
+        {
+          type: 'datetime',
+          name: 'pickingDateTime',
+          header: i18next.t('field.picking_date_time'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 160
         },
         {
           type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: { editable: true, align: 'left' },
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'deliveryOrderNo',
+          header: i18next.t('field.delivery_order_no'),
+          record: { align: 'center' },
           sortable: true,
           width: 200
         },
         {
-          type: 'string',
-          name: 'category',
-          header: i18next.t('field.category'),
-          record: { editable: true, align: 'left' },
+          type: 'object',
+          name: 'collectionOrder',
+          header: i18next.t('field.collection_order_id'),
+          record: { align: 'center' },
           sortable: true,
-          width: 150
+          width: 200
         },
-        {
-          type: 'string',
-          name: 'value',
-          header: i18next.t('field.value'),
-          record: { editable: true, align: 'left' },
-          sortable: true,
-          width: 180
-        },
-
         {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
-          record: { editable: false, align: 'left' },
+          record: { align: 'center' },
           sortable: true,
-          width: 150
+          width: 160
         },
         {
           type: 'object',
           name: 'updater',
           header: i18next.t('field.updater'),
-          record: { editable: false, align: 'left' },
+          record: { align: 'center' },
           sortable: true,
-          width: 150
+          width: 160
         }
       ]
     }
@@ -178,7 +205,7 @@ class SystemSetting extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
         query {
-          settings(${gqlBuilder.buildArgs({
+          arrivalNotices(${gqlBuilder.buildArgs({
             filters: this._conditionParser(),
             pagination: { page, limit },
             sortings: sorters
@@ -186,11 +213,17 @@ class SystemSetting extends localize(i18next)(PageView) {
             items {
               id
               name
-              description
-              category
-              value
+              eta
+              pickingDateTime
+              status
+              collectionOrder {
+                id
+                name
+                description
+              }
+              deliveryOrderNo
               updatedAt
-              updater{
+              updater {
                 id
                 name
                 description
@@ -203,8 +236,8 @@ class SystemSetting extends localize(i18next)(PageView) {
     })
 
     return {
-      total: response.data.settings.total || 0,
-      records: response.data.settings.items || []
+      total: response.data.arrivalNotices.total || 0,
+      records: response.data.arrivalNotices.items || []
     }
   }
 
@@ -226,51 +259,6 @@ class SystemSetting extends localize(i18next)(PageView) {
           operator: field.getAttribute('searchOper')
         }
       })
-  }
-
-  async _saveSetting() {
-    let patches = this.dataGrist.dirtyRecords
-    if (patches && patches.length) {
-      patches = patches.map(setting => {
-        let patchField = setting.id ? { id: setting.id } : {}
-        const dirtyFields = setting.__dirtyfields__
-        for (let key in dirtyFields) {
-          patchField[key] = dirtyFields[key].after
-        }
-        patchField.cuFlag = setting.__dirty__
-
-        return patchField
-      })
-
-      const response = await client.query({
-        query: gql`
-            mutation {
-              updateMultipleSetting(${gqlBuilder.buildArgs({
-                patches
-              })}) {
-                name
-              }
-            }
-          `
-      })
-
-      if (!response.errors) this.dataGrist.fetch()
-    }
-  }
-
-  async _deleteSetting() {
-    const names = this.dataGrist.selected.map(record => record.name)
-    if (names && names.length > 0) {
-      const response = await client.query({
-        query: gql`
-            mutation {
-              deleteSettings(${gqlBuilder.buildArgs({ names })})
-            }
-          `
-      })
-
-      if (!response.errors) this.dataGrist.fetch()
-    }
   }
 
   get _columns() {
@@ -296,4 +284,4 @@ class SystemSetting extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('system-setting', SystemSetting)
+window.customElements.define('arrival-notice-list', ArrivalNoticeList)

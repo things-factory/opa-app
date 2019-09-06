@@ -57,47 +57,15 @@ export default {
      */
     {
       tagname: 'create-arrival-notice',
-      page: 'arrival_notice'
+      page: 'create_arrival_notice'
     },
     {
-      tagname: 'confirm-arrival-notice',
-      page: 'confirm_arrival_notice'
+      tagname: 'arrival-notice-list',
+      page: 'arrival_notices'
     },
     {
-      tagname: 'confirm-arrival-notice',
-      page: 'confirm_arrival_notice'
-    },
-    {
-      tagname: 'receive-arrival-notice',
-      page: 'receive_arrival_notice'
-    },
-    {
-      tagname: 'create-release-goods',
-      page: 'release_goods'
-    },
-    {
-      tagname: 'confirm-release-goods',
-      page: 'confirm_release_goods'
-    },
-    {
-      tagname: 'receive-release-goods',
-      page: 'receive_release_goods'
-    },
-    {
-      tagname: 'create-transport-order',
-      page: 'transport'
-    },
-    {
-      tagname: 'confirm-transport-order',
-      page: 'confirm_transport'
-    },
-    {
-      tagname: 'receive-transport-order',
-      page: 'receive_transport'
-    },
-    {
-      tagname: 'transport-order-detail',
-      page: 'transport_order_detail'
+      tagname: 'arrival-notice-detail',
+      page: 'arrival_notice_detail'
     },
 
     /**

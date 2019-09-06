@@ -1,12 +1,10 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-
-// TODO: transport base의 ENUM 임포트 하도록 수정
-const LOAD_TYPE = [{ name: 'Full container load', value: 'fcl' }, { name: 'Low container load', value: 'lcl' }]
+import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
 
 class CreateArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
@@ -114,17 +112,22 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
           <!-- Show when userOwnTransport is true -->
           <label ?hidden="${this._ownTransport}">${i18next.t('label.picking_date')}</label>
-          <input ?hidden="${this._ownTransport}" ?required="${!this._ownTransport}" name="pickingDateTime"
-          type="datetime-local"" min="${this._getStdDatetime()}" />
+          <input
+            ?hidden="${this._ownTransport}"
+            ?required="${!this._ownTransport}"
+            name="pickingDateTime"
+            type="datetime-local"
+            min="${this._getStdDatetime()}"
+          />
 
           <label ?hidden="${this._ownTransport}">${i18next.t('label.from')}</label>
           <input ?hidden="${this._ownTransport}" ?required="${!this._ownTransport}" name="from" />
 
           <label ?hidden="${this._ownTransport}">${i18next.t('label.loadType')}</label>
           <select ?hidden="${this._ownTransport}" ?required="${!this._ownTransport}" name="loadType">
-            ${LOAD_TYPE.map(
+            ${LOAD_TYPES.map(
               loadType => html`
-                <option value="${loadType.value}">${loadType.name}</option>
+                <option value="${loadType.value}">${i18next.t(`label.${loadType.name}`)}</option>
               `
             )}
           </select>
@@ -362,7 +365,14 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       })
 
       if (!response.errors) {
-        console.log('arrival notice created')
+        navigate(`arrival_notice_detail/${response.data.generateArrivalNotice.name}`)
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              message: i18next.t('arrival_notice_created')
+            }
+          })
+        )
       }
     } catch (e) {
       document.dispatchEvent(
@@ -441,8 +451,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   _getArrivalNotice() {
-    let arrivalNotice = { status: 'PENDING' }
-    Array.from(this.shadowRoot.querySelectorAll('form input, select')).forEach(field => {
+    let arrivalNotice = { status: ORDER_STATUS.PENDING }
+    Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
       if (!field.hasAttribute('hidden') && field.value) {
         arrivalNotice[field.name] = field.type === 'checkbox' ? field.checked : field.value
       }
