@@ -7,6 +7,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
 import './generate-list'
+import { USBPrinter } from '@things-factory/barcode-base'
 
 class LocationList extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -69,6 +70,10 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     return {
       title: i18next.t('title.location'),
       actions: [
+        {
+          title: i18next.t('button.print_label'),
+          action: this._printLocationLabel.bind(this)
+        },
         {
           title: i18next.t('button.generate'),
           action: this._generateLocation.bind(this)
@@ -338,6 +343,33 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!response.errors) this.dataGrist.fetch()
+    }
+  }
+
+  async _printLocationLabel() {
+    const records = this.dataGrist.selected
+    var labelId = localStorage.getItem('label_id_for_location')
+
+    for (var record of records) {
+      var searchParams = new URLSearchParams()
+      searchParams.append('location', record.name)
+      searchParams.append('shelf', record.shelf)
+
+      const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
+        method: 'GET'
+      })
+
+      var command = await response.text()
+
+      try {
+        if (!this.printer) {
+          this.printer = new USBPrinter()
+        }
+
+        await this.printer.connectAndPrint(command)
+      } catch (e) {
+        throw new Error(e)
+      }
     }
   }
 

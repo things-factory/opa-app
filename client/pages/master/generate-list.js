@@ -67,8 +67,7 @@ export class GenerateList extends localize(i18next)(LitElement) {
 
   static get properties() {
     return {
-      bizplaceId: String,
-      bizplaceName: String,
+      warehouseId: String,
       _searchFields: Array,
       config: Object
     }
@@ -335,6 +334,24 @@ export class GenerateList extends localize(i18next)(LitElement) {
                 case 8:
                   locations['cellInstance'] = 'H'
                   break
+                case 9:
+                  locations['cellInstance'] = 'I'
+                  break
+                case 10:
+                  locations['cellInstance'] = 'J'
+                  break
+                case 11:
+                  locations['cellInstance'] = 'K'
+                  break
+                case 12:
+                  locations['cellInstance'] = 'L'
+                  break
+                case 13:
+                  locations['cellInstance'] = 'M'
+                  break
+                case 14:
+                  locations['cellInstance'] = 'N'
+                  break
                 default:
                   locations['cellInstance'] = 'NULL'
               }
@@ -355,6 +372,7 @@ export class GenerateList extends localize(i18next)(LitElement) {
               locationObj['column'] = j.toString().padStart(2, '0')
               locationObj['shelf'] = locations.cellInstance.toString()
               locationObj['status'] = 'Empty'
+              locationObj['warehouse'] = { id: this.warehouseId }
               locationObj['cuFlag'] = '+'
 
               this.tempLocationList.push(locationObj)
@@ -372,19 +390,30 @@ export class GenerateList extends localize(i18next)(LitElement) {
 
   async _saveGeneratedLocation() {
     let patches = this.locationList
-    const response = await client.query({
-      query: gql`
-            mutation {
-              updateMultipleLocation(${gqlBuilder.buildArgs({
-                patches
-              })}) {
-                name
-              }
+    try {
+      const response = await client.query({
+        query: gql`
+          mutation {
+            updateMultipleLocation(${gqlBuilder.buildArgs({
+              patches
+            })}) {
+              name
             }
-          `
-    })
+          }
+        `
+      })
 
-    // if (!response.errors)
+      if (!response.errors) history.back()
+    } catch (e) {
+      document.dispatchEvent(
+        new CustomEvent('notify', {
+          detail: {
+            level: 'error',
+            message: e.message
+          }
+        })
+      )
+    }
   }
 
   fetchHandler() {
@@ -395,15 +424,17 @@ export class GenerateList extends localize(i18next)(LitElement) {
   }
 
   _deleteFromList() {
-    const selections = []
-    this.dataGrist.selected.forEach(selection => {
-      selections.push(selection.__seq__ - 1)
-    })
+    let state = window.history.state
+    console.log(this.warehouseId)
+    // const selections = []
+    // this.dataGrist.selected.forEach(selection => {
+    //   selections.push(selection.__seq__ - 1)
+    // })
 
-    for (let i = selections.length - 1; i >= 0; i--) {
-      this.locationList.splice(selections[i], 1)
-    }
-    this.dataGrist.fetch()
+    // for (let i = selections.length - 1; i >= 0; i--) {
+    //   this.locationList.splice(selections[i], 1)
+    // }
+    // this.dataGrist.fetch()
   }
 }
 

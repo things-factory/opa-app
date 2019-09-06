@@ -159,5 +159,14 @@
   "field.content_image": "imej kandungan",
   "field.currency": "mata wang",
   "field.label_id_for_location": "field.label_id_for_location",
-  "field.label_id_for_pallet": "field.label_id_for_pallet"
+  "field.label_id_for_pallet": "field.label_id_for_pallet",
+  "title.generate_location_list": "hasilkan senarai penempatan",
+  "label.zone_name": "nama zon",
+  "field.row_start": "permulaan baris",
+  "field.row_end": "pengakhiran baris",
+  "field.number_of_column": "bilangan lajur",
+  "field.number_of_cell": "bilangan sel",
+  "field.email": "emel",
+  "field.fax": "fax",
+  "field.phone": "telefon"
 }

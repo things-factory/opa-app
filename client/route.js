@@ -55,55 +55,17 @@ export default function route(page) {
     /**
      * Order Menus Section
      */
-    case 'arrival_notice':
+    case 'create_arrival_notice':
       import('./pages/order/create-arrival-notice')
       return page
 
-    case 'confirm_arrival_notice':
-      import('./pages/order/confirm-arrival-notice')
-      return page
-
-    case 'receive_arrival_notice':
-      import('./pages/order/receive-arrival-notice')
+    case 'arrival_notices':
+      import('./pages/order/arrival-notice-list')
       return page
 
     case 'arrival_notice_detail':
       import('./pages/order/arrival-notice-detail')
       return page
-
-    case 'release_goods':
-      import('./pages/order/create-release-goods')
-      return page
-
-    case 'confirm_release_goods':
-      import('./pages/order/confirm-release-goods')
-      return page
-
-    case 'receive_release_goods':
-      import('./pages/order/receive-release-goods')
-      return page
-
-    case 'release_goods_detail':
-      import('./pages/order/release-goods-detail')
-      return page
-
-    case 'transport':
-      import('./pages/order/create-transport-order')
-      return page
-
-    case 'confirm_transport':
-      import('./pages/order/confirm-transport-order')
-      return page
-
-    case 'receive_transport':
-      import('./pages/order/receive-transport-order')
-      return page
-
-    case 'transport_order_detail':
-      import('./pages/order/transport-order-detail')
-      return page
-
-      transport_order_detail
     /**
      * Stock Menus Section
      */

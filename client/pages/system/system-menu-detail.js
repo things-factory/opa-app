@@ -159,6 +159,14 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
         },
         {
           type: 'string',
+          name: 'category',
+          header: i18next.t('field.category'),
+          record: { editable: true, align: 'center' },
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'string',
           name: 'template',
           header: i18next.t('field.template'),
           record: { editable: true, align: 'left' },
@@ -223,6 +231,7 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
               name
               rank
               description
+              category
               template
               resourceUrl
               parent {
