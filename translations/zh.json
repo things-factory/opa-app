@@ -37,6 +37,7 @@
   "title.group_menu": "菜单组",
   "title.view_setting": "视图设置",
   "title.menu": "选单",
+  "title.label_setting": "title.label_setting",
   "label.company_name": "公司名称",
   "label.name": "名字",
   "label.email": "邮件",
@@ -124,5 +125,7 @@
   "field.product_name": "产品名称",
   "field.pack_in_qty": "包装数量",
   "field.quantity": "量",
-  "field.work_order": "工作订单"
+  "field.work_order": "工作订单",
+  "field.label_id_for_location": "field.label_id_for_location",
+  "field.label_id_for_pallet": "field.label_id_for_pallet"
 }

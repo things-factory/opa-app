@@ -1,5 +1,8 @@
+import { html } from 'lit-html'
 import { addRoutingType } from '@things-factory/menu-base'
 import { store, UPDATE_BASE_URL } from '@things-factory/shell'
+import { ADD_SETTING } from '@things-factory/setting-base'
+import './viewparts/label-setting-let'
 
 export default function bootstrap() {
   /*
@@ -14,5 +17,15 @@ export default function bootstrap() {
   store.dispatch({
     type: UPDATE_BASE_URL
     // baseUrl: 'http://opaone.com'
+  })
+
+  store.dispatch({
+    type: ADD_SETTING,
+    setting: {
+      seq: 100,
+      template: html`
+        <label-setting-let></label-setting-let>
+      `
+    }
   })
 }

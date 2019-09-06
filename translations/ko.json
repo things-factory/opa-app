@@ -37,6 +37,7 @@
   "title.group_menu": "그룹 메뉴",
   "title.view_setting": "화면 설정",
   "title.menu": "메뉴",
+  "title.label_setting": "라벨 설정",
   "label.company_name": "회사 이름",
   "label.name": "이름",
   "label.email": "이메일",
@@ -124,5 +125,7 @@
   "field.product_name": "상품명",
   "field.pack_in_qty": "팩 수량",
   "field.quantity": "수량",
-  "field.work_order": "작업 순서"
+  "field.work_order": "작업 순서",
+  "field.label_id_for_location": "로케이션 라벨 아이디",
+  "field.label_id_for_pallet": "파레트 라벨 아이디"
 }

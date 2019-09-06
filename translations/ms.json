@@ -37,6 +37,7 @@
   "title.group_menu": "kumpulan menu",
   "title.view_setting": "lihat tetapan",
   "title.menu": "menu",
+  "title.label_setting": "title.label_setting",
   "label.company_name": "nama syarikat",
   "label.name": "nama",
   "label.email": "e-mel",
@@ -156,5 +157,7 @@
   "label.brand_name": "nama jenama",
   "field.brand_image": "imej jenama",
   "field.content_image": "imej kandungan",
-  "field.currency": "mata wang"
+  "field.currency": "mata wang",
+  "field.label_id_for_location": "field.label_id_for_location",
+  "field.label_id_for_pallet": "field.label_id_for_pallet"
 }

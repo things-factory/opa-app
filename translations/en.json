@@ -37,6 +37,7 @@
   "title.group_menu": "group menu",
   "title.view_setting": "view setting",
   "title.menu": "menu",
+  "title.label_setting": "label setting",
   "label.company_name": "company name",
   "label.name": "name",
   "label.email": "email",
@@ -200,5 +201,7 @@
   "label.system_flag": "system flag",
   "label.brand_name": "brand name",
   "field.brand_image": "brand image",
-  "field.content_image": "content image"
+  "field.content_image": "content image",
+  "field.label_id_for_location": "location label id",
+  "field.label_id_for_pallet": "pallet label id"
 }
