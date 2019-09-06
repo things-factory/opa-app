@@ -4,6 +4,8 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import { openPopup } from '@things-factory/layout-base'
+import '../components/import-pop-up'
 
 class CompanyList extends localize(i18next)(PageView) {
   static get styles() {
@@ -79,7 +81,7 @@ class CompanyList extends localize(i18next)(PageView) {
         data: this._exportableData.bind(this)
       },
       importable: {
-        handler: () => {}
+        handler: this._importableData.bind(this)
       }
     }
   }
@@ -209,6 +211,14 @@ class CompanyList extends localize(i18next)(PageView) {
 
   get dataGrist() {
     return this.shadowRoot.querySelector('data-grist')
+  }
+
+  _importableData(records) {
+    setTimeout(() => {
+      openPopup(html`
+        <import-pop-up style="width: 80vw; height: 80vh" .records=${records}></import-pop-up>
+      `)
+    }, 500)
   }
 
   async fetchHandler({ page, limit, sorters = [] }) {
