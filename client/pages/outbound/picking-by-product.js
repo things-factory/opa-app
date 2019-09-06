@@ -112,15 +112,14 @@ class PickingByProduct extends localize(i18next)(PageView) {
         <fieldset>
           <legend>${i18next.t('title.picking_by_unit_scan_area')}</legend>
           <label>${i18next.t('label.product_barcode')}</label>
-          <barcode-input
+          <barcode-scanable-input
             name="product_barcode"
-            .bcid="qrcode"
             .value=${this.product_barcode}
             custom-input
-          ></barcode-input>
+          ></barcode-scanable-input>
 
           <label>${i18next.t('label.location')}</label>
-          <barcode-input name="location" .bcid="qrcode" .value=${this.product_barcode} custom-input />
+          <barcode-scanable-input name="location" .value=${this.location} custom-input></barcode-scanable-input>
         </fieldset>
       </form>
 
