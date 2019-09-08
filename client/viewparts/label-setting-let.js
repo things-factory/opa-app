@@ -7,18 +7,33 @@ export class LabelSettingLet extends localize(i18next)(LitElement) {
   static get styles() {
     return [
       css`
+        div.field {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          max-width: 100%;
+
+          padding: 5px 0;
+        }
+
+        label {
+          width: 100px;
+          text-align: right;
+          padding-right: 10px;
+
+          font-size: 1em;
+          text-transform: capitalize;
+          color: rgba(0, 0, 0, 0.6);
+        }
+
         input {
+          flex: auto;
           border-top: none;
           border-left: none;
           border-right: none;
           border-bottom-color: #32526a;
           border-bottom-width: 1px;
-          width: 100%;
           height: 30px;
-        }
-
-        div.field {
-          padding-bottom: 10px;
         }
 
         ::placeholder {
@@ -40,6 +55,7 @@ export class LabelSettingLet extends localize(i18next)(LitElement) {
 
         <form slot="content" @submit=${e => this._handleSubmit(e)}>
           <div class="field">
+            <label>location</label>
             <input
               type="text"
               name="location_label"
@@ -51,6 +67,7 @@ export class LabelSettingLet extends localize(i18next)(LitElement) {
             />
           </div>
           <div class="field">
+            <label>pallet</label>
             <input
               type="text"
               name="location_label"
