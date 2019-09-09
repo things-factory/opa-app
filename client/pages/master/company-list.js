@@ -40,7 +40,8 @@ class CompanyList extends localize(i18next)(PageView) {
     return {
       _searchFields: Array,
       config: Object,
-      data: Object
+      data: Object,
+      importHandler: Object
     }
   }
 
@@ -171,6 +172,14 @@ class CompanyList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
+          name: 'postalCode',
+          header: i18next.t('field.postal_code'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'string',
           name: 'address',
           header: i18next.t('field.address'),
           record: { editable: true, align: 'left' },
@@ -216,7 +225,12 @@ class CompanyList extends localize(i18next)(PageView) {
   _importableData(records) {
     setTimeout(() => {
       openPopup(html`
-        <import-pop-up style="width: 80vw; height: 80vh" .records=${records}></import-pop-up>
+        <import-pop-up
+          style="width: 80vw; height: 80vh"
+          .records=${records}
+          .config=${this.config}
+          .importHandler="${this.importHandler.bind(this)}"
+        ></import-pop-up>
       `)
     }, 500)
   }
@@ -235,6 +249,7 @@ class CompanyList extends localize(i18next)(PageView) {
               name
               description
               countryCode
+              postalCode
               brn
               address
               status
@@ -254,6 +269,32 @@ class CompanyList extends localize(i18next)(PageView) {
     return {
       total: response.data.companies.total || 0,
       records: response.data.companies.items || []
+    }
+  }
+
+  async importHandler(patches) {
+    const response = await client.query({
+      query: gql`
+          mutation {
+            updateMultipleCompany(${gqlBuilder.buildArgs({
+              patches
+            })}) {
+              name
+            }
+          }
+        `
+    })
+
+    if (!response.errors) {
+      history.back()
+      this.dataGrist.fetch()
+      document.dispatchEvent(
+        new CustomEvent('notify', {
+          detail: {
+            message: i18next.t('text.data_imported_successfully')
+          }
+        })
+      )
     }
   }
 
@@ -303,7 +344,16 @@ class CompanyList extends localize(i18next)(PageView) {
           `
       })
 
-      if (!response.errors) this.dataGrist.fetch()
+      if (!response.errors) {
+        this.dataGrist.fetch()
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              message: i18next.t('text.data_updated_successfully')
+            }
+          })
+        )
+      }
     }
   }
 
@@ -318,7 +368,16 @@ class CompanyList extends localize(i18next)(PageView) {
           `
       })
 
-      if (!response.errors) this.dataGrist.fetch()
+      if (!response.errors) {
+        this.dataGrist.fetch()
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              message: i18next.t('text.data_deleted_successfully')
+            }
+          })
+        )
+      }
     }
   }
 

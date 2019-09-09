@@ -7,7 +7,9 @@ import { css, html, LitElement } from 'lit-element'
 class ImportPopUp extends localize(i18next)(LitElement) {
   static get properties() {
     return {
+      importHandler: Object,
       config: Object,
+      _config: Object,
       records: Array
     }
   }
@@ -59,46 +61,50 @@ class ImportPopUp extends localize(i18next)(LitElement) {
       <h2>${i18next.t('title.import_new_data')}</h2>
 
       <div class="grist">
-        <data-grist .mode=${isMobileDevice() ? 'LIST' : 'GRID'} .config=${this.config}></data-grist>
+        <data-grist .mode=${isMobileDevice() ? 'LIST' : 'GRID'} .config=${this._config}></data-grist>
       </div>
 
       <div class="button-container">
-        <mwc-button @click=${this.importHandler}>${i18next.t('button.import')}</mwc-button>
+        <mwc-button
+          @click=${() => {
+            if (this.importHandler && typeof this.importHandler === 'function') {
+              this.importHandler(this.getCurrentRecord())
+            }
+          }}
+          >${i18next.t('button.import')}</mwc-button
+        >
         <mwc-button @click=${e => history.back()}>${i18next.t('button.cancel')}</mwc-button>
       </div>
     `
   }
 
-  async firstUpdated() {
-    const extraColumns = []
-    for (let key in this.records[0]) {
-      const record = this.records[0]
-      const type = typeof record[key]
-      extraColumns.push({
-        type: type === 'number' ? 'float' : type === 'boolean' ? 'boolean' : 'string',
-        name: key,
-        record: {
-          editable: true
-        },
-        header: key,
-        width: 200
-      })
+  updated(changedProps) {
+    if (changedProps.has('config')) {
+      this._config = {
+        ...this.config,
+        pagination: { infinite: true },
+        columns: this.config.columns.filter(column => column.gutterName !== 'dirty' && column.gutterName !== 'button')
+      }
     }
-    this.config = {
-      rows: { selectable: { multiple: true } },
-      pagination: { infinite: true },
-      columns: [
-        { type: 'gutter', gutterName: 'dirty' },
-        { type: 'gutter', gutterName: 'sequence' },
-        { type: 'gutter', gutterName: 'row-selector', multiple: true },
-        ...extraColumns
-      ]
-    }
+  }
 
+  async firstUpdated() {
     this.dataGrist.data = {
       records: this.records,
       total: this.records.length
     }
+  }
+
+  getCurrentRecord() {
+    const grist = this.shadowRoot.querySelector('data-grist')
+    grist.commit()
+    //patches is array of records
+    return grist.data.records.map(record => {
+      return {
+        ...record,
+        cuFlag: '+'
+      }
+    })
   }
 }
 
