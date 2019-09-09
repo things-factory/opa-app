@@ -1,12 +1,13 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
 
-class CreateArrivalNotice extends localize(i18next)(PageView) {
+class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       /**
@@ -14,6 +15,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
        * flag for whether use transportation from warehouse or not.
        * true =>
        */
+      _ganNo: String,
       _ownTransport: Boolean,
       productGristConfig: Object,
       vasGristConfig: Object,
@@ -182,6 +184,18 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     this.vasData = {}
   }
 
+  updated(changedProps) {
+    if (changedProps.has('_ganNo') && this._ganNo) {
+      this.fetchGAN()
+      this._contextHandler()
+      this._updateBatchList()
+    } else if (changedProps.has('_ganNo') && !this._ganNo) {
+      this._clearPage()
+      this._contextHandler()
+      this._updateBatchList()
+    }
+  }
+
   firstUpdated() {
     this.productGristConfig = {
       pagination: { infinite: true },
@@ -199,8 +213,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
                 records: data.records.filter((record, idx) => idx !== rowIndex)
               }
 
-              // TODO: 시점 문제...
-              setTimeout(this._updateBatchList.bind(this), 300)
+              this._updateBatchList()
             }
           }
         },
@@ -320,6 +333,150 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     }
   }
 
+  _clearPage() {
+    this.form.reset()
+    this.productData = {}
+    this.vasGrist.data = {}
+  }
+
+  async fetchGAN() {
+    const response = await client.query({
+      query: gql`
+        query {
+          arrivalNotice(${gqlBuilder.buildArgs({
+            name: this._ganNo
+          })}) {
+            id
+            name
+            containerNo
+            ownTransport
+            pickingDateTime
+            eta
+            from
+            loadType
+            truckNo
+            deliveryOrderNo
+            status
+            collectionOrder {
+              id
+              name
+              description
+            }
+            arrivalNoticeProducts {
+              id
+              batchId
+              product {
+                id
+                name
+                description
+              }
+              description
+              packingType
+              weight
+              unit
+              packQty
+              totalWeight
+            }
+            arrivalNoticeVass {
+              vas {
+                id
+                name
+                description
+              }
+              description
+              batchId
+              remark
+            }
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      this._ownTransport = response.data.arrivalNotice.ownTransport
+      this._fillupForm(response.data.arrivalNotice)
+      this.productData = {
+        ...this.productData,
+        records: response.data.arrivalNotice.arrivalNoticeProducts
+      }
+
+      this.vasData = {
+        ...this.vasData,
+        records: response.data.arrivalNotice.arrivalNoticeVass
+      }
+    }
+  }
+
+  _fillupForm(arrivalNotice) {
+    for (let key in arrivalNotice) {
+      Array.from(this.form.querySelectorAll('input')).forEach(field => {
+        if (field.name === key && field.type === 'checkbox') {
+          field.checked = arrivalNotice[key]
+        } else if (field.name === key && field.type === 'datetime-local') {
+          let date = new Date(Number(arrivalNotice[key]))
+          date = date.toISOString()
+          field.value = date.substr(0, date.length - 1)
+        } else if (field.name === key) {
+          field.value = arrivalNotice[key]
+        }
+      })
+    }
+  }
+
+  _contextHandler() {
+    if (this._ganNo) {
+      store.dispatch({
+        type: UPDATE_CONTEXT,
+        context: {
+          ...this.context,
+          actions: [
+            {
+              title: i18next.t('button.update'),
+              action: () => {
+                try {
+                  this._validateForm()
+                  this._validateProducts()
+                  this._validateVas()
+
+                  this._editArrivalNotice(this._getArrivalNotice())
+                } catch (e) {
+                  this._showToast(e)
+                }
+              }
+            }
+          ]
+        }
+      })
+    } else {
+      store.dispatch({
+        type: UPDATE_CONTEXT,
+        context: {
+          ...this.context
+        }
+      })
+    }
+  }
+
+  async _editArrivalNotice(arrivalNotice) {
+    const response = await client.query({
+      query: gql`
+        mutation {
+          editArrivalNotice(${gqlBuilder.buildArgs({
+            name: this._ganNo,
+            arrivalNotice
+          })}) {
+            name 
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      navigate(`arrival_notice_detail/${response.data.editArrivalNotice.name}`)
+      this._showToast({ message: i18next.t('arrival_notice_created') })
+    }
+  }
+
   _getStdDatetime() {
     let date = new Date()
     date.setDate(date.getDate() + 1)
@@ -366,28 +523,18 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
       if (!response.errors) {
         navigate(`arrival_notice_detail/${response.data.generateArrivalNotice.name}`)
-        document.dispatchEvent(
-          new CustomEvent('notify', {
-            detail: {
-              message: i18next.t('arrival_notice_created')
-            }
-          })
-        )
+        this._showToast({ message: i18next.t('arrival_notice_created') })
       }
     } catch (e) {
-      document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            type: 'warn',
-            message: e.message
-          }
-        })
-      )
+      this._showToast(e)
     }
   }
 
   _validateForm() {
-    if (!this.form.checkValidity()) throw new Error(i18next.t('text.invalid_form'))
+    const elements = Array.from(this.form.querySelectorAll('input, select'))
+
+    if (!elements.filter(e => !e.hasAttribute('hidden')).every(e => e.checkValidity()))
+      throw new Error(i18next.t('text.invalid_form'))
   }
 
   _validateProducts() {
@@ -425,33 +572,36 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   _updateBatchList() {
-    this.productGrist.commit()
-    this.productData = this.productGrist.data
-    const batchIds = (this.productGrist.data.records || []).map(record => record.batchId)
+    // TODO: 시점 문제...
+    setTimeout(() => {
+      this.productGrist.commit()
+      this.productData = this.productGrist.data
+      const batchIds = (this.productGrist.data.records || []).map(record => record.batchId)
 
-    this.vasGrist.commit()
-    this.vasData = {
-      ...this.vasGrist.data,
-      records: this.vasGrist.data.records.map(record => {
-        return {
-          ...record,
-          batchId: batchIds.includes(record.batchId) ? record.batchId : null
-        }
-      })
-    }
+      this.vasGrist.commit()
+      this.vasData = {
+        ...this.vasGrist.data,
+        records: this.vasGrist.data.records.map(record => {
+          return {
+            ...record,
+            batchId: batchIds.includes(record.batchId) ? record.batchId : null
+          }
+        })
+      }
 
-    this.vasGristConfig = {
-      ...this.vasGristConfig,
-      columns: this.vasGristConfig.columns.map(column => {
-        if (column.name === 'batchId') column.record.options = [i18next.t('label.all'), ...batchIds]
+      this.vasGristConfig = {
+        ...this.vasGristConfig,
+        columns: this.vasGristConfig.columns.map(column => {
+          if (column.name === 'batchId') column.record.options = [i18next.t('label.all'), ...batchIds]
 
-        return column
-      })
-    }
+          return column
+        })
+      }
+    }, 300)
   }
 
   _getArrivalNotice() {
-    let arrivalNotice = { status: ORDER_STATUS.PENDING }
+    let arrivalNotice = { status: ORDER_STATUS.PENDING.value }
     Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
       if (!field.hasAttribute('hidden') && field.value) {
         arrivalNotice[field.name] = field.type === 'checkbox' ? field.checked : field.value
@@ -460,24 +610,39 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
     const products = this.productGrist.data.records.map((record, idx) => {
       const seq = idx + 1
-      return {
-        ...record,
-        seq
-      }
+      delete record.id
+      delete record.__typename
+      delete record.product.__typename
+
+      return { ...record, seq }
     })
 
     const vass = this.vasGrist.data.records.map(record => {
-      return {
-        ...record,
-        name
-      }
+      delete record.id
+      delete record.__typename
+      delete record.vas.__typename
+
+      return { ...record, name }
     })
 
-    return {
-      arrivalNotice,
-      products,
-      vass
+    return { arrivalNotice, products, vass }
+  }
+
+  stateChanged(state) {
+    if (this.active) {
+      this._ganNo = state && state.route && state.route.resourceId
     }
+  }
+
+  _showToast({ type, message }) {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: {
+          type,
+          message
+        }
+      })
+    )
   }
 }
 

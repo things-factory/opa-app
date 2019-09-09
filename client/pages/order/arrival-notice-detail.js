@@ -1,7 +1,7 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
@@ -104,10 +104,6 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
             name="ownTransport"
             ?checked="${this._ownTransport}"
             ?disabled="${this._status !== ORDER_STATUS.EDITING.value}"
-            @change=${e => {
-              console.log('value changed')
-              this._ownTransport = e.currentTarget.checked
-            }}
           />
 
           <!-- Show when userOwnTransport is true -->
@@ -184,7 +180,6 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.productGristConfig}
           .data="${this.productData}"
-          @record-change="${this._onProductChangeHandler.bind(this)}"
         ></data-grist>
       </div>
 
@@ -237,7 +232,6 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
-          record: { editable: this._status === ORDER_STATUS.EDITING.value },
           width: 180
         },
         {
@@ -320,7 +314,6 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
-          record: { editable: this._status === ORDER_STATUS.EDITING.value },
           width: 350
         }
       ]
@@ -439,29 +432,8 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _editArrivalNotice(arrivalNotice) {
-    const response = await client.query({
-      query: gql`
-        mutation {
-          editArrivalNotice(${gqlBuilder.buildArgs({
-            name: this._ganNo,
-            arrivalNotice
-          })}) {
-            name 
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      this.fetchGAN()
-      this._showToast({ message: i18next.t('text.gan_ready_to_confirmation') })
-    }
-  }
-
   _actionsHandler() {
-    this._modifyGrist()
-    let actions
+    let actions = []
 
     if (this._status === ORDER_STATUS.PENDING.value) {
       actions = [
@@ -484,22 +456,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
         }
       ]
     } else if (this._status === ORDER_STATUS.EDITING.value) {
-      actions = [
-        {
-          title: i18next.t('button.update'),
-          action: () => {
-            try {
-              this._validateForm()
-              this._validateProducts()
-              this._validateVas()
-
-              this._editArrivalNotice(this._getArrivalNotice())
-            } catch (e) {
-              this._showToast(e)
-            }
-          }
-        }
-      ]
+      navigate(`create_arrival_notice/${this._ganNo}`)
     } else if (this._status === ORDER_STATUS.PENDING_RECIEVE.value) {
       actions = [
         {
@@ -526,187 +483,6 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
         actions
       }
     })
-  }
-
-  _modifyGrist() {
-    const gutters =
-      this._status === ORDER_STATUS.EDITING.value
-        ? [
-            { type: 'gutter', gutterName: 'sequence' },
-            {
-              type: 'gutter',
-              gutterName: 'button',
-              icon: 'close',
-              handlers: {
-                click: (columns, data, column, record, rowIndex) => {
-                  this.productData = {
-                    ...this.productData,
-                    records: data.records.filter((record, idx) => idx !== rowIndex)
-                  }
-
-                  // TODO: 시점 문제...
-                  setTimeout(this._updateBatchList.bind(this), 300)
-                }
-              }
-            }
-          ]
-        : [{ type: 'gutter', gutterName: 'sequence' }]
-    this.productGristConfig = {
-      ...this.productGristConfig,
-      columns: [
-        ...gutters,
-        ...this.productGristConfig.columns
-          .filter(column => column.record)
-          .map(column => {
-            return {
-              ...column,
-              record: {
-                ...column.record,
-                editable: this._status === ORDER_STATUS.EDITING.value
-              }
-            }
-          })
-      ]
-    }
-
-    this.vasGristConfig = {
-      ...this.vasGristConfig,
-      columns: [
-        ...gutters,
-        ...this.vasGristConfig.columns
-          .filter(column => column.record)
-          .map(column => {
-            return {
-              ...column,
-              record: {
-                ...column.record,
-                editable: this._status === ORDER_STATUS.EDITING.value
-              }
-            }
-          })
-      ]
-    }
-  }
-
-  _validateForm() {
-    if (!this.form.checkValidity()) throw new Error(i18next.t('text.invalid_form'))
-  }
-
-  _validateProducts() {
-    this.productGrist.commit()
-    // no records
-    if (!this.productGrist.data.records || !this.productGrist.data.records.length)
-      throw new Error(i18next.t('text.no_products'))
-
-    // required field (batchId, packingType, weight, unit, packQty)
-    if (
-      this.productGrist.data.records.filter(
-        record => !record.batchId || !record.packingType || !record.weight || !record.unit || !record.packQty
-      ).length
-    )
-      throw new Error(i18next.t('text.empty_value_in_list'))
-
-    // duplication of batch id
-    const batchIds = this.productGrist.data.records.map(product => product.batchId)
-    if (batchIds.filter((batchId, idx, batchIds) => batchIds.indexOf(batchId) !== idx).length)
-      throw new Error(i18next.t('text.batch_id_is_duplicated'))
-  }
-
-  _validateVas() {
-    this.vasGrist.commit()
-    if (this.vasGrist.data.records && this.vasGrist.data.records.length) {
-      // required field (vas && remark)
-      if (this.vasGrist.data.records.filter(record => !record.vas || !record.remark).length)
-        throw new Error(i18next.t('text.empty_value_in_list'))
-
-      // duplication of vas for same batch
-      const vasBatches = this.vasGrist.data.records.map(vas => `${vas.vas.id}-${vas.batchId}`)
-      if (vasBatches.filter((vasBatch, idx, vasBatches) => vasBatches.indexOf(vasBatch) !== idx).length)
-        throw new Error(i18next.t('text.duplicated_vas_on_same_batch'))
-    }
-  }
-
-  _getArrivalNotice() {
-    let arrivalNotice = { status: ORDER_STATUS.PENDING }
-    Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
-      if (!field.hasAttribute('hidden') && field.value) {
-        arrivalNotice[field.name] = field.type === 'checkbox' ? field.checked : field.value
-      }
-    })
-
-    const products = this.productGrist.data.records.map((record, idx) => {
-      const seq = idx + 1
-      delete record.id
-      delete record.__typename
-      delete record.product.__typename
-
-      return {
-        ...record,
-        seq
-      }
-    })
-
-    const vass = this.vasGrist.data.records.map(record => {
-      delete record.id
-      delete record.__typename
-      delete record.vas.__typename
-
-      return {
-        ...record,
-        name
-      }
-    })
-
-    return {
-      arrivalNotice,
-      products,
-      vass
-    }
-  }
-
-  _onProductChangeHandler(event) {
-    const changeRecord = event.detail.after
-    const changedColumn = event.detail.column.name
-
-    if (changedColumn === 'weight' || changedColumn === 'unit' || changedColumn === 'packQty') {
-      changeRecord.totalWeight = this._calcTotalWeight(changeRecord.weight, changeRecord.unit, changeRecord.packQty)
-    }
-
-    this._updateBatchList()
-  }
-
-  _calcTotalWeight(weight, unit, packQty) {
-    if (weight && unit && packQty) {
-      return `${(weight * packQty).toFixed(2)} ${unit}`
-    } else {
-      return null
-    }
-  }
-
-  _updateBatchList() {
-    this.productGrist.commit()
-    this.productData = this.productGrist.data
-    const batchIds = (this.productGrist.data.records || []).map(record => record.batchId)
-
-    this.vasGrist.commit()
-    this.vasData = {
-      ...this.vasGrist.data,
-      records: this.vasGrist.data.records.map(record => {
-        return {
-          ...record,
-          batchId: batchIds.includes(record.batchId) ? record.batchId : null
-        }
-      })
-    }
-
-    this.vasGristConfig = {
-      ...this.vasGristConfig,
-      columns: this.vasGristConfig.columns.map(column => {
-        if (column.name === 'batchId') column.record.options = [i18next.t('label.all'), ...batchIds]
-
-        return column
-      })
-    }
   }
 
   stateChanged(state) {
