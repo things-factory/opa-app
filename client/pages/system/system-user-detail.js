@@ -107,6 +107,7 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
 
   async firstUpdated() {
     this.roleConfig = {
+      pagination: { infinite: true },
       rows: {
         handlers: {
           click: async (columns, data, column, record, rowIndex) => {
@@ -152,6 +153,7 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
     }
 
     this.priviledgeConfig = {
+      pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {

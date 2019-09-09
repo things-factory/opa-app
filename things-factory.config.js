@@ -67,6 +67,10 @@ export default {
       tagname: 'arrival-notice-detail',
       page: 'arrival_notice_detail'
     },
+    {
+      tagname: 'create-transport-order',
+      page: 'create_transport_order'
+    },
 
     /**
      * Stock Menus Section

@@ -66,6 +66,10 @@ export default function route(page) {
     case 'arrival_notice_detail':
       import('./pages/order/arrival-notice-detail')
       return page
+
+    case 'create_transport_order':
+      import('./pages/order/create-transport-order')
+      return page
     /**
      * Stock Menus Section
      */
