@@ -1,7 +1,8 @@
-import { html } from 'lit-html'
-import { addRoutingType } from '@things-factory/menu-base'
-import { store, UPDATE_BASE_URL } from '@things-factory/shell'
+import { addRoutingType, updateMenuProvider } from '@things-factory/menu-base'
 import { ADD_SETTING } from '@things-factory/setting-base'
+import { client, store, UPDATE_BASE_URL } from '@things-factory/shell'
+import gql from 'graphql-tag'
+import { html } from 'lit-html'
 import './viewparts/label-setting-let'
 
 export default function bootstrap() {
@@ -28,4 +29,31 @@ export default function bootstrap() {
       `
     }
   })
+
+  store.dispatch(
+    updateMenuProvider(async () => {
+      const response = await client.query({
+        query: gql`
+          query {
+            menus: opaMenus {
+              id
+              name
+              childrens {
+                id
+                name
+                routingType
+                idField
+                titleField
+                resourceName
+                resourceUrl
+                template
+              }
+            }
+          }
+        `
+      })
+
+      return response.data.menus
+    })
+  )
 }
