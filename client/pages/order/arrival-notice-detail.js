@@ -363,6 +363,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
               unit
               packQty
               totalWeight
+              palletQty
             }
             arrivalNoticeVass {
               vas {
@@ -450,7 +451,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           action: () => {
             this._updateArrivalNotice({ status: ORDER_STATUS.PENDING_RECIEVE.value }, () => {
               this._showToast({ message: i18next.t('text.gan_confirmed') })
-              history.back()
+              navigate('arrival_notices')
             })
           }
         }
@@ -474,7 +475,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
       ]
     }
 
-    actions = [...actions, { title: i18next.t('button.back'), action: () => history.back() }]
+    actions = [...actions, { title: i18next.t('button.back'), action: () => navigate('arrival_notices') }]
 
     store.dispatch({
       type: UPDATE_CONTEXT,

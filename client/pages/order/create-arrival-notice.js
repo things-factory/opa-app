@@ -277,7 +277,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           type: 'integer',
           name: 'palletQty',
           header: i18next.t('field.pallet_qty'),
-          record: { align: 'center' },
+          record: { editable: true, align: 'center' },
           width: 80
         }
       ]
