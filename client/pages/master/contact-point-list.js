@@ -4,6 +4,7 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
+import '../components/import-pop-up'
 
 export class ContactPointList extends localize(i18next)(LitElement) {
   static get styles() {
@@ -52,7 +53,8 @@ export class ContactPointList extends localize(i18next)(LitElement) {
       bizplaceId: String,
       bizplaceName: String,
       _searchFields: Array,
-      config: Object
+      config: Object,
+      importHandler: Object
     }
   }
 
@@ -249,6 +251,19 @@ export class ContactPointList extends localize(i18next)(LitElement) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
+  _importableData(records) {
+    setTimeout(() => {
+      openPopup(html`
+        <import-pop-up
+          style="width: 80vw; height: 80vh"
+          .records=${records}
+          .config=${this.config}
+          .importHandler="${this.importHandler.bind(this)}"
+        ></import-pop-up>
+      `)
+    }, 500)
+  }
+
   async fetchHandler({ page, limit, sorters = [] }) {
     let filters = []
     if (this.bizplaceId) {
@@ -290,6 +305,32 @@ export class ContactPointList extends localize(i18next)(LitElement) {
     return {
       total: response.data.contactPoints.total || 0,
       records: response.data.contactPoints.items || []
+    }
+  }
+
+  async importHandler(patches) {
+    const response = await client.query({
+      query: gql`
+          mutation {
+            updateMultipleCompany(${gqlBuilder.buildArgs({
+              patches
+            })}) {
+              name
+            }
+          }
+        `
+    })
+
+    if (!response.errors) {
+      history.back()
+      this.dataGrist.fetch()
+      document.dispatchEvent(
+        new CustomEvent('notify', {
+          detail: {
+            message: i18next.t('text.data_imported_successfully')
+          }
+        })
+      )
     }
   }
 
@@ -340,7 +381,16 @@ export class ContactPointList extends localize(i18next)(LitElement) {
         `
       })
 
-      if (!response.errors) this.dataGrist.fetch()
+      if (!response.errors) {
+        this.dataGrist.fetch()
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              message: i18next.t('text.data_updated_successfully')
+            }
+          })
+        )
+      }
     }
   }
 
@@ -355,7 +405,16 @@ export class ContactPointList extends localize(i18next)(LitElement) {
           `
       })
 
-      if (!response.errors) this.dataGrist.fetch()
+      if (!response.errors) {
+        this.dataGrist.fetch()
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              message: i18next.t('text.data_updated_successfully')
+            }
+          })
+        )
+      }
     }
   }
 

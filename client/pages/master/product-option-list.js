@@ -7,6 +7,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
 import './product-option-detail-list'
+import '../components/import-pop-up'
 
 class ProductOptionList extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -42,7 +43,8 @@ class ProductOptionList extends connect(store)(localize(i18next)(PageView)) {
       _productId: String,
       _searchFields: Array,
       config: Object,
-      data: Object
+      data: Object,
+      importHandler: Object
     }
   }
 
@@ -172,6 +174,19 @@ class ProductOptionList extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
+  _importableData(records) {
+    setTimeout(() => {
+      openPopup(html`
+        <import-pop-up
+          style="width: 80vw; height: 80vh"
+          .records=${records}
+          .config=${this.config}
+          .importHandler="${this.importHandler.bind(this)}"
+        ></import-pop-up>
+      `)
+    }, 500)
+  }
+
   async fetchHandler({ page, limit, sorters = [] }) {
     let filters = []
     if (this._productId) {
@@ -212,6 +227,32 @@ class ProductOptionList extends connect(store)(localize(i18next)(PageView)) {
         total: response.data.productOptions.total || 0,
         records: response.data.productOptions.items || []
       }
+    }
+  }
+
+  async importHandler(patches) {
+    const response = await client.query({
+      query: gql`
+          mutation {
+            updateMultipleCompany(${gqlBuilder.buildArgs({
+              patches
+            })}) {
+              name
+            }
+          }
+        `
+    })
+
+    if (!response.errors) {
+      history.back()
+      this.dataGrist.fetch()
+      document.dispatchEvent(
+        new CustomEvent('notify', {
+          detail: {
+            message: i18next.t('text.data_imported_successfully')
+          }
+        })
+      )
     }
   }
 
@@ -274,7 +315,16 @@ class ProductOptionList extends connect(store)(localize(i18next)(PageView)) {
           `
       })
 
-      if (!response.errors) this.dataGrist.fetch()
+      if (!response.errors) {
+        this.dataGrist.fetch()
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              message: i18next.t('text.data_updated_successfully')
+            }
+          })
+        )
+      }
     }
   }
 
@@ -294,7 +344,16 @@ class ProductOptionList extends connect(store)(localize(i18next)(PageView)) {
           `
       })
 
-      if (!response.errors) this.dataGrist.fetch()
+      if (!response.errors) {
+        this.dataGrist.fetch()
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              message: i18next.t('text.data_updated_successfully')
+            }
+          })
+        )
+      }
     }
   }
 

@@ -4,12 +4,14 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import '../components/import-pop-up'
 
 class VasList extends localize(i18next)(PageView) {
   static get properties() {
     return {
       config: Object,
-      data: Object
+      data: Object,
+      importHandler: Object
     }
   }
 
@@ -167,6 +169,19 @@ class VasList extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
+  _importableData(records) {
+    setTimeout(() => {
+      openPopup(html`
+        <import-pop-up
+          style="width: 80vw; height: 80vh"
+          .records=${records}
+          .config=${this.config}
+          .importHandler="${this.importHandler.bind(this)}"
+        ></import-pop-up>
+      `)
+    }, 500)
+  }
+
   async fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
@@ -198,6 +213,32 @@ class VasList extends localize(i18next)(PageView) {
     return {
       total: response.data.vass.total || 0,
       records: response.data.vass.items || []
+    }
+  }
+
+  async importHandler(patches) {
+    const response = await client.query({
+      query: gql`
+          mutation {
+            updateMultipleCompany(${gqlBuilder.buildArgs({
+              patches
+            })}) {
+              name
+            }
+          }
+        `
+    })
+
+    if (!response.errors) {
+      history.back()
+      this.dataGrist.fetch()
+      document.dispatchEvent(
+        new CustomEvent('notify', {
+          detail: {
+            message: i18next.t('text.data_imported_successfully')
+          }
+        })
+      )
     }
   }
 
@@ -250,7 +291,16 @@ class VasList extends localize(i18next)(PageView) {
         `
       })
 
-      if (!response.errors) this.dataGrist.fetch()
+      if (!response.errors) {
+        this.dataGrist.fetch()
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              message: i18next.t('text.data_updated_successfully')
+            }
+          })
+        )
+      }
     }
   }
 
@@ -265,7 +315,16 @@ class VasList extends localize(i18next)(PageView) {
             `
       })
 
-      if (!response.errors) this.dataGrist.fetch()
+      if (!response.errors) {
+        this.dataGrist.fetch()
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              message: i18next.t('text.data_updated_successfully')
+            }
+          })
+        )
+      }
     }
   }
 
