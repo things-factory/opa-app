@@ -6,7 +6,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { ORDER_STATUS } from './constants/order'
 
-class ArrivalNoticeList extends localize(i18next)(PageView) {
+class ArrivalNoticeRequests extends localize(i18next)(PageView) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -62,9 +62,9 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.arrival_notices'),
+      title: i18next.t('title.arrival_notice_requests'),
       exportable: {
-        name: i18next.t('title.arrival_notices'),
+        name: i18next.t('title.arrival_notice_requests'),
         data: this._exportableData.bind(this)
       },
       importable: {
@@ -101,10 +101,10 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
         type: 'select',
         options: [
           { value: '' },
-          ...Object.keys(ORDER_STATUS).map(key => {
-            const status = ORDER_STATUS[key]
-            return { name: i18next.t(`label.${status.name}`), value: status.value }
-          })
+          { name: i18next.t(`label.${ORDER_STATUS.PENDING_RECEIVE.name}`), value: ORDER_STATUS.PENDING_RECEIVE.value },
+          { name: i18next.t(`label.${ORDER_STATUS.INTRANSIT.name}`), value: ORDER_STATUS.INTRANSIT.value },
+          { name: i18next.t(`label.${ORDER_STATUS.ARRIVED.name}`), value: ORDER_STATUS.ARRIVED.value },
+          { name: i18next.t(`label.${ORDER_STATUS.PROCESSING.name}`), value: ORDER_STATUS.PROCESSING.value }
         ],
         props: { searchOper: 'eq', placeholder: i18next.t('label.status') }
       }
@@ -121,7 +121,18 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              if (record.id) navigate(`arrival_notice_detail/${record.name}`)
+              const status = record.status
+              console.log(ORDER_STATUS)
+              if (status === ORDER_STATUS.PENDING_RECEIVE.value) {
+                // 1. move to order receiving page
+                navigate(`receive_arrival_notice/${record.name}`)
+              } else if (status === ORDER_STATUS.INTRANSIT.value) {
+                // 2. move to order arriving check page
+                console.log('2. move to order arriving check page')
+              } else if (status === ORDER_STATUS.ARRIVED.value) {
+                // 3. move to generate work sheet page
+                console.log('3. move to generate work sheet page')
+              }
             }
           }
         },
@@ -205,7 +216,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
         query {
-          arrivalNotices(${gqlBuilder.buildArgs({
+          arrivalNoticeRequests(${gqlBuilder.buildArgs({
             filters: this._conditionParser(),
             pagination: { page, limit },
             sortings: sorters
@@ -237,8 +248,8 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       return {
-        total: response.data.arrivalNotices.total || 0,
-        records: response.data.arrivalNotices.items || []
+        total: response.data.arrivalNoticeRequests.total || 0,
+        records: response.data.arrivalNoticeRequests.items || []
       }
     }
   }
@@ -286,4 +297,4 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('arrival-notice-list', ArrivalNoticeList)
+window.customElements.define('arrival-notice-requests', ArrivalNoticeRequests)

@@ -5,10 +5,9 @@ import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } 
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
-import './system-create-user'
-import './system-user-detail'
+import './system-user-bizplaces-detail'
 
-class SystemUser extends connect(store)(localize(i18next)(PageView)) {
+class SystemUserBizplaces extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _searchFields: Array,
@@ -47,17 +46,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.user'),
-      actions: [
-        {
-          title: i18next.t('button.add'),
-          action: this._createUser.bind(this)
-        },
-        {
-          title: i18next.t('button.delete'),
-          action: this._deleteUsers.bind(this)
-        }
-      ]
+      title: i18next.t('title.user_bizplaces')
     }
   }
 
@@ -83,14 +72,6 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
 
   firstUpdated() {
     this._searchFields = [
-      {
-        name: 'domain',
-        type: 'text',
-        props: {
-          placeholder: i18next.t('field.domain'),
-          searchOper: 'like'
-        }
-      },
       {
         name: 'name',
         type: 'text',
@@ -121,7 +102,6 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
       rows: { selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
-        { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'gutter',
           gutterName: 'button',
@@ -130,35 +110,14 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
             click: (columns, data, column, record, rowIndex) => {
               openPopup(
                 html`
-                  <system-user-detail
-                    @user-updated="${() => {
-                      document.dispatchEvent(
-                        new CustomEvent('notify', {
-                          detail: {
-                            message: i18next.t('text.info_update_successfully')
-                          }
-                        })
-                      )
-                      this.dataGrist.fetch()
-                    }}"
-                    .userId="${record.id}"
+                  <system-user-bizplaces-detail
                     .email="${record.email}"
                     style="width: 90vw; height: 70vh;"
-                  ></system-user-detail>
+                  ></system-user-bizplaces-detail>
                 `
               )
             }
           }
-        },
-        {
-          type: 'object',
-          name: 'domain',
-          header: i18next.t('field.domain'),
-          record: {
-            editable: false,
-            align: 'center'
-          },
-          width: 150
         },
         {
           type: 'string',
@@ -281,52 +240,6 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
         }
       })
   }
-
-  _createUser() {
-    openPopup(
-      html`
-        <system-create-user
-          @user-created="${() => {
-            this.dataGrist.fetch()
-            document.dispatchEvent(
-              new CustomEvent('notify', {
-                detail: {
-                  message: i18next.t('text.info_created_successfully')
-                }
-              })
-            )
-          }}"
-          style="width: 90vw; height: 70vh;"
-        ></system-create-user>
-      `
-    )
-  }
-
-  async _deleteUsers() {
-    if (confirm(i18next.t('text.sure_to_delete'))) {
-      const emails = this.dataGrist.selected.map(record => record.email)
-      if (emails && emails.length > 0) {
-        const response = await client.query({
-          query: gql`
-                mutation {
-                  deleteUsers(${gqlBuilder.buildArgs({ emails })})
-                }
-              `
-        })
-
-        if (!response.errors) {
-          this.dataGrist.fetch()
-          await document.dispatchEvent(
-            new CustomEvent('notify', {
-              detail: {
-                message: i18next.t('text.info_delete_successfully')
-              }
-            })
-          )
-        }
-      }
-    }
-  }
 }
 
-window.customElements.define('system-user', SystemUser)
+window.customElements.define('system-user-bizplaces', SystemUserBizplaces)

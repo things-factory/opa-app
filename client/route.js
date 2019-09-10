@@ -67,6 +67,14 @@ export default function route(page) {
       import('./pages/order/arrival-notice-detail')
       return page
 
+    case 'arrival_notice_requests':
+      import('./pages/order/arrival-notice-requests')
+      return page
+
+    case 'receive_arrival_notice':
+      import('./pages/order/receive-arrival-notice')
+      return page
+
     case 'create_transport_order':
       import('./pages/order/create-transport-order')
       return page
@@ -86,6 +94,10 @@ export default function route(page) {
      */
     case 'users':
       import('./pages/system/system-user')
+      return page
+
+    case 'user_bizplaces':
+      import('./pages/system/system-user-bizplaces')
       return page
 
     case 'menus':

@@ -1,15 +1,21 @@
+import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, navigate } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
+import { connect } from 'pwa-helpers/connect-mixin.js'
+import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
 
-class ReceiveArrivalNotice extends localize(i18next)(PageView) {
+class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
-      config: Object,
-      data: Object
+      _ganNo: String,
+      _ownTransport: Boolean,
+      productGristConfig: Object,
+      vasGristConfig: Object,
+      productData: Object,
+      vasData: Object
     }
   }
 
@@ -18,17 +24,16 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       MultiColumnFormStyles,
       css`
         :host {
-          flex: 1;
           display: flex;
           flex-direction: column;
-          overflow-x: overlay;
-          height: 100%;
+          overflow-x: auto;
         }
         .grist {
           background-color: var(--main-section-background-color);
           display: flex;
           flex-direction: column;
           flex: 1;
+          overflow-y: auto;
         }
         data-grist {
           overflow-y: hidden;
@@ -66,318 +71,345 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.receive'),
-          action: this._receiveOrder.bind(this)
+          action: this._receiveArrivalNotice.bind(this)
         }
       ]
     }
+  }
+
+  activated(active) {
+    if (JSON.parse(active)) {
+      this.fetchGAN()
+    }
+  }
+
+  get form() {
+    return this.shadowRoot.querySelector('form')
   }
 
   render() {
     return html`
       <form class="multi-column-form">
         <fieldset>
-          <legend>${i18next.t('label.gan')}</legend>
-          <label>${i18next.t('label.gan')}</label>
-          <input name="gan" />
+          <legend>${i18next.t('title.gan')}: ${this._ganNo}</legend>
+          <label>${i18next.t('label.container_no')}</label>
+          <input name="containerNo" disabled />
 
-          <label>${i18next.t('label.eta')}</label>
-          <input name="eta" />
+          <label>${i18next.t('label.use_own_transport')}</label>
+          <input type="checkbox" name="ownTransport" ?checked="${this._ownTransport}" disabled />
 
-          <label>${i18next.t('label.do_no')}</label>
-          <input name="do_no" />
+          <!-- Show when userOwnTransport is true -->
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.collection_date_time')}</label>
+          <input ?hidden="${this._ownTransport}" name="collectionDateTime" type="datetime-local" disabled />
 
-          <label>${i18next.t('label.company')}</label>
-          <input name="company" />
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.from')}</label>
+          <input ?hidden="${this._ownTransport}" name="from" disabled />
 
-          <label>${i18next.t('label.supplier_name')}</label>
-          <input name="supplier" />
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.to')}</label>
+          <input ?hidden="${this._ownTransport}" name="to" disabled />
+
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.loadType')}</label>
+          <select ?hidden="${this._ownTransport}" name="loadType" disabled>
+            ${LOAD_TYPES.map(
+              loadType => html`
+                <option value="${loadType.value}">${i18next.t(`label.${loadType.name}`)}</option>
+              `
+            )}
+          </select>
+
+          <!-- Show when userOwnTransport option is false-->
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
+          <input ?hidden="${!this._ownTransport}" ?required="${this._ownTransport}" name="truckNo" disabled />
+
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.delivery_order_no')}</label>
+          <input ?hidden="${!this._ownTransport}" name="deliveryOrderNo" disabled />
+
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.eta_date')}</label>
+          <input
+            ?hidden="${!this._ownTransport}"
+            ?required="${this._ownTransport}"
+            name="eta"
+            type="datetime-local"
+            disabled
+          />
+
+          <label>${i18next.t('label.status')}</label>
+          <select name="status" disabled
+            >${Object.keys(ORDER_STATUS).map(key => {
+              const status = ORDER_STATUS[key]
+              return html`
+                <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option>
+              `
+            })}</select
+          >
         </fieldset>
       </form>
 
       <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.receive_arrival_notice')}</h2>
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product')}</h2>
+
         <data-grist
+          id="product-grist"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .data=${this.data}
-          @page-changed=${e => {
-            this.page = e.detail
-          }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
+          .config=${this.productGristConfig}
+          .data="${this.productData}"
+        ></data-grist>
+      </div>
+
+      <div class="grist">
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
+
+        <data-grist
+          id="vas-grist"
+          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+          .config=${this.vasGristConfig}
+          .data="${this.vasData}"
         ></data-grist>
       </div>
     `
   }
 
-  async firstUpdated() {
-    this.config = {
-      pagination: {
-        infinite: true
-      },
+  firstUpdated() {
+    this.productGristConfig = {
+      pagination: { infinite: true },
+      rows: { selectable: { multiple: true } },
       columns: [
+        { type: 'gutter', gutterName: 'sequence' },
         {
-          type: 'gutter',
-          gutterName: 'sequence'
-        },
-        {
-          type: 'gutter',
-          gutterName: 'row-selector'
-        },
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'search',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              const selectedOrder = this.rawOrderData.find(orderData => orderData.name === record.name)
-              navigate(`arrival_notice_detail/${selectedOrder.name}`)
-            }
-          }
+          type: 'string',
+          name: 'batchId',
+          header: i18next.t('field.batch_id'),
+          record: {
+            align: 'center',
+            options: { queryName: 'products' }
+          },
+          width: 150
         },
         {
           type: 'object',
-          name: 'warehouse',
-          header: i18next.t('field.buffer_location'),
+          name: 'product',
+          header: i18next.t('field.product'),
           record: {
             align: 'center',
-            editable: true,
-            options: {
-              queryName: 'warehouses',
-              basicArgs: {
-                filters: [
-                  {
-                    name: 'type',
-                    operator: 'eq',
-                    value: 'BUFFER'
-                  }
-                ]
-              }
-            }
+            options: { queryName: 'products' }
+          },
+          width: 180
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.description'),
+          width: 180
+        },
+        {
+          type: 'string',
+          name: 'packingType',
+          header: i18next.t('field.packing_type'),
+          record: { align: 'center' },
+          width: 150
+        },
+        {
+          type: 'float',
+          name: 'weight',
+          header: i18next.t('field.weight'),
+          record: { align: 'right' },
+          width: 80
+        },
+        {
+          type: 'select',
+          name: 'unit',
+          header: i18next.t('field.unit'),
+          record: { align: 'center', options: ['kg', 'g'] },
+          width: 80
+        },
+        {
+          type: 'integer',
+          name: 'packQty',
+          header: i18next.t('field.pack_qty'),
+          record: { align: 'right' },
+          width: 80
+        },
+        {
+          type: 'integer',
+          name: 'totalWeight',
+          header: i18next.t('field.total_weight'),
+          record: { align: 'center' },
+          width: 120
+        },
+        {
+          type: 'integer',
+          name: 'palletQty',
+          header: i18next.t('field.pallet_qty'),
+          record: { align: 'center' },
+          width: 80
+        }
+      ]
+    }
+
+    this.vasGristConfig = {
+      pagination: { infinite: true },
+      rows: { selectable: { multiple: true } },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'object',
+          name: 'vas',
+          header: i18next.t('field.vas'),
+          record: {
+            align: 'center',
+            options: { queryName: 'vass' }
           },
           width: 250
         },
         {
           type: 'string',
-          name: 'company',
-          width: 120,
-          header: i18next.t('field.company'),
-          record: {
-            align: 'center'
-          },
-          editable: true
+          name: 'description',
+          header: i18next.t('field.description'),
+          width: 180
         },
         {
-          type: 'link',
-          name: 'name',
-          width: 160,
-          header: i18next.t('field.name'),
+          type: 'select',
+          name: 'batchId',
+          header: i18next.t('field.batch_id'),
           record: {
-            align: 'center'
+            align: 'center',
+            options: [i18next.t('label.all')]
           },
-          editable: true
+          width: 150
         },
         {
           type: 'string',
-          name: 'supplier',
-          width: 120,
-          header: i18next.t('field.supplier_name'),
-          record: {
-            align: 'center'
-          },
-          editable: true
-        },
-        {
-          type: 'string',
-          name: 'gan',
-          width: 120,
-          header: i18next.t('field.gan'),
-          record: {
-            align: 'center'
-          },
-          editable: true
-        },
-        {
-          type: 'string',
-          name: 'do_no',
-          width: 120,
-          header: i18next.t('field.do_no'),
-          record: {
-            align: 'center'
-          },
-          editable: true
-        },
-        {
-          type: 'datetime',
-          name: 'eta',
-          width: 120,
-          header: i18next.t('field.eta'),
-          record: {
-            align: 'center'
-          },
-          editable: true
-        },
-        {
-          type: 'string',
-          name: 'status',
-          width: 120,
-          header: i18next.t('field.status'),
-          record: {
-            align: 'center'
-          },
-          editable: true
-        },
-        {
-          type: 'date',
-          name: 'request_date',
-          width: 120,
-          header: i18next.t('field.request_date'),
-          record: {
-            align: 'center'
-          },
-          editable: true
-        },
-        {
-          type: 'date',
-          name: 'confirm_date',
-          width: 120,
-          header: i18next.t('field.confirm_date'),
-          record: {
-            align: 'center'
-          },
-          editable: true
-        },
-        {
-          type: 'date',
-          name: 'receive_date',
-          width: 120,
-          header: i18next.t('field.receive_date'),
-          record: {
-            align: 'center'
-          },
-          editable: true
+          name: 'remark',
+          header: i18next.t('field.remark'),
+          width: 350
         }
-      ],
-      rows: {
-        selectable: {
-          multiple: false
-        },
-        handlers: {
-          click: 'select-row'
-        }
-      }
+      ]
     }
-
-    this.data = await this._getArrivalNotices()
   }
 
-  async _getArrivalNotices() {
+  updated(changedProps) {
+    if (changedProps.has('_ganNo')) {
+      this.fetchGAN()
+    }
+  }
+
+  async fetchGAN() {
+    if (!this._ganNo) return
     const response = await client.query({
       query: gql`
         query {
-          orders: purchaseOrders(${gqlBuilder.buildArgs({
-            filters: [
-              {
-                name: 'state',
-                operator: 'eq',
-                value: 'Requested'
-              }
-            ]
+          arrivalNotice(${gqlBuilder.buildArgs({
+            name: this._ganNo
           })}) {
-            items {
+            id
+            name
+            containerNo
+            ownTransport
+            collectionDateTime
+            eta
+            from
+            to
+            loadType
+            truckNo
+            deliveryOrderNo
+            status
+            collectionOrder {
               id
               name
-              issuedOn
-              state
               description
-              updatedAt
             }
-            total
+            orderProducts {
+              id
+              batchId
+              product {
+                id
+                name
+                description
+              }
+              description
+              packingType
+              weight
+              unit
+              packQty
+              totalWeight
+              palletQty
+            }
+            orderVass {
+              vas {
+                id
+                name
+                description
+              }
+              description
+              batchId
+              remark
+            }
           }
         }
       `
     })
 
-    this.rawOrderData = response.data.orders.items || []
-
-    return {
-      records: response.data.orders.items.map(item => {
-        const orderInfo = JSON.parse(item.description)
-        return {
-          warehouse: {
-            id: '',
-            name: i18next.t('label.buffer_location'),
-            description: i18next.t('text.please_choose_buffer_location')
-          },
-          company: 'Company name',
-          name: item.name,
-          supplier: orderInfo.supplier,
-          gan: orderInfo.gan,
-          do_no: orderInfo.orderNo,
-          eta: item.issuedOn,
-          status: item.state,
-          request_date: orderInfo.requestedDate,
-          confirm_date: orderInfo.confirmedDate,
-          receive_date: orderInfo.receivedDate
-        }
-      }),
-      total: response.data.orders.total
-    }
-  }
-
-  async _receiveOrder() {
-    const selectedOrder = this._getGrist().selected[0]
-    const foundOrder = this.rawOrderData.find(orderData => orderData.name === selectedOrder.name)
-    if (foundOrder && selectedOrder.warehouse.id) {
-      await this._updateOrder(foundOrder, selectedOrder.warehouse)
-      this.data = await this._getArrivalNotices()
-    } else if (!foundOrder) {
-      this._notify(i18next.t('text.there_no_selected'))
-    } else {
-      this._notify(i18next.t('text.buffer_location_is_not_selected'))
-    }
-  }
-
-  async _updateOrder(order, bufferLocation) {
-    try {
-      if (order.state.toLowerCase() !== 'requested') throw new Error('text.status_not_suitable')
-      let description = {
-        ...JSON.parse(order.description),
-        confirmedDate: new Date().getTime(),
-        bufferLocation
+    if (!response.errors) {
+      this._ownTransport = response.data.arrivalNotice.ownTransport
+      this._fillupForm(response.data.arrivalNotice)
+      this.productData = {
+        ...this.productData,
+        records: response.data.arrivalNotice.orderProducts
       }
 
-      await client.query({
-        query: gql`
-          mutation {
-            updatePurchaseOrder(${gqlBuilder.buildArgs({
-              name: order.name,
-              patch: {
-                state: 'Confirmed',
-                description: JSON.stringify(description)
-              }
-            })}) {
-              name
-              state
-            }
-          }
-        `
-      })
-    } catch (e) {
-      this._notify(e.message)
+      this.vasData = {
+        ...this.vasData,
+        records: response.data.arrivalNotice.orderVass
+      }
     }
   }
 
-  _getGrist() {
-    return this.shadowRoot.querySelector('data-grist')
+  _fillupForm(arrivalNotice) {
+    for (let key in arrivalNotice) {
+      Array.from(this.form.querySelectorAll('input')).forEach(field => {
+        if (field.name === key && field.type === 'checkbox') {
+          field.checked = arrivalNotice[key]
+        } else if (field.name === key && field.type === 'datetime-local') {
+          const datetime = Number(arrivalNotice[key])
+          const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
+          field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
+        } else if (field.name === key) {
+          field.value = arrivalNotice[key]
+        }
+      })
+    }
   }
 
-  _notify(message, level = '') {
+  async _receiveArrivalNotice() {
+    const response = await client.query({
+      query: gql`
+        mutation {
+          receiveArrivalNotice(${gqlBuilder.buildArgs({
+            name: this._ganNo
+          })}) {
+            name
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      history.back()
+      this._showToast({ message: i18next.t('text.arrival_notice_received') })
+    }
+  }
+
+  stateChanged(state) {
+    if (this.active) {
+      this._ganNo = state && state.route && state.route.resourceId
+    }
+  }
+
+  _showToast({ type, message }) {
     document.dispatchEvent(
       new CustomEvent('notify', {
         detail: {
-          level,
+          type,
           message
         }
       })

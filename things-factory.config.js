@@ -68,6 +68,14 @@ export default {
       page: 'arrival_notice_detail'
     },
     {
+      tagname: 'arrival-notice-requests',
+      page: 'arrival_notice_requests'
+    },
+    {
+      tagname: 'receive-arrival-notice',
+      page: 'receive_arrival_notice'
+    },
+    {
       tagname: 'create-transport-order',
       page: 'create_transport_order'
     },
@@ -92,8 +100,8 @@ export default {
       page: 'users'
     },
     {
-      tagname: 'system-user',
-      page: 'users'
+      tagname: 'system-user-bizplaces',
+      page: 'user_bizplaces'
     },
     {
       tagname: 'system-menu',
