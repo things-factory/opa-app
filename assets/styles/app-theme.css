@@ -198,6 +198,7 @@ body {
   --grist-object-editor-color: var(--secondary-color);
 
   --data-list-background-color: var(--main-section-background-color);
+  --data-list-item-margin: 5px 0 5px 10px;
   --data-list-item-padding: 5px 15px;
   --data-list-item-border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   --data-list-item-name-font: bold 1em/1em var(--theme-font);
@@ -206,6 +207,22 @@ body {
   --data-list-item-disc-color: var(--secondary-text-color);
   --data-list-item-etc-font: normal 0.7em/0.7em var(--theme-font);
   --data-list-item-etc-color: #585858;
+  --data-list-item-icon-font: normal 1em/1em;
+  --data-list-item-icon-color: var(--secondary-text-color);
+  --data-list-selected-background-color: var(--grid-record-selected-background-color);
+  --data-list-fab-position-horizontal: 15px;
+  --data-list-fab-position-vertical: 15px;
+  --data-list-fab-color: var(--primary-color);
+  --data-list-fab-shadow: var(--box-shadow);
+
+  --record-view-background-color: var(--main-section-background-color);
+  --record-view-label-font: bold 15px var(--theme-font);
+  --record-view-label-color: var(--secondary-color);
+  --record-view-font: normal 15px var(--theme-font);
+  --record-view-color: var(--secondary-color);
+  --record-view-focus-color: var(--primary-color);
+  --record-view-border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  --record-view-item-padding: 5px;
 
   /* button style */
   --button-background-color: var(--secondary-color);
@@ -228,9 +245,9 @@ body {
 
   /* material design component themes */
   --mdc-theme-on-primary: white;
-  --mdc-theme-primary: tomato;
+  --mdc-theme-primary: var(--primary-color);
   --mdc-theme-on-secondary: white;
-  --mdc-theme-secondary: tomato;
+  --mdc-theme-secondary: var(--primary-color);
 
   /* list page style*/
   --board-list-background-color: var(--main-section-background-color);
