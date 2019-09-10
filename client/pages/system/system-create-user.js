@@ -8,10 +8,7 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
   static get properties() {
     return {
       bizplaces: Array,
-      roleConfig: Object,
-      priviledgeConfig: Object,
-      _selectedRoleName: String,
-      _priviledges: Object
+      roleConfig: Object
     }
   }
 
@@ -28,13 +25,9 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
         }
         .grist {
           display: flex;
+          flex-direction: column;
           flex: 1;
           overflow-y: auto;
-        }
-        .grist-column {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
         }
         data-grist {
           overflow-y: hidden;
@@ -93,23 +86,12 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
       </div>
 
       <div class="grist">
-        <div class="grist-column">
-          <h2>${i18next.t('title.role')}</h2>
-          <data-grist
-            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-            .config="${this.roleConfig}"
-            .fetchHandler="${this.fetchHandler.bind(this)}"
-          ></data-grist>
-        </div>
-
-        <div class="grist-column">
-          <h2>${i18next.t('title.priviledge')}: ${this._selectedRoleName}</h2>
-          <data-grist
-            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-            .config="${this.priviledgeConfig}"
-            .data="${this._priviledges}"
-          ></data-grist>
-        </div>
+        <h2>${i18next.t('title.role')}</h2>
+        <data-grist
+          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+          .config="${this.roleConfig}"
+          .fetchHandler="${this.fetchHandler.bind(this)}"
+        ></data-grist>
       </div>
 
       <div class="button-container">
@@ -122,18 +104,6 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
     this.bizplaces = await this._fetchBizplaces()
 
     this.roleConfig = {
-      rows: {
-        handlers: {
-          click: async (columns, data, column, record, rowIndex) => {
-            this._selectedRoleName = record.name
-            const priviledges = await this._fetchPriviledges(record.name)
-            this._priviledges = {
-              records: priviledges,
-              total: priviledges.length
-            }
-          }
-        }
-      },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -165,39 +135,6 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
         }
       ]
     }
-
-    this.priviledgeConfig = {
-      columns: [
-        { type: 'gutter', gutterName: 'sequence' },
-        {
-          type: 'string',
-          name: 'category',
-          header: i18next.t('field.category'),
-          record: {
-            editable: false
-          },
-          width: 150
-        },
-        {
-          type: 'string',
-          name: 'name',
-          header: i18next.t('field.name'),
-          record: {
-            editable: false
-          },
-          width: 150
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: {
-            editable: false
-          },
-          width: 250
-        }
-      ]
-    }
   }
 
   async _fetchBizplaces() {
@@ -220,28 +157,6 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
 
     if (!response.errors) {
       return response.data.bizplaces.items || []
-    }
-  }
-
-  async _fetchPriviledges(name) {
-    const response = await client.query({
-      query: gql`
-        query {
-          role(${gqlBuilder.buildArgs({
-            name
-          })}) {
-            priviledges {
-              category
-              name
-              description
-            }
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      return response.data.role.priviledges
     }
   }
 

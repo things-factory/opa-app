@@ -92,9 +92,9 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
         props: { searchOper: 'like', placeholder: i18next.t('label.eta') }
       },
       {
-        name: 'pickingDateTime',
+        name: 'collectionDateTime',
         type: 'datetime-local',
-        props: { searchOper: 'like', placeholder: i18next.t('label.picking_date_time') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.collection_date_time') }
       },
       {
         name: 'status',
@@ -143,8 +143,8 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
         },
         {
           type: 'datetime',
-          name: 'pickingDateTime',
-          header: i18next.t('field.picking_date_time'),
+          name: 'collectionDateTime',
+          header: i18next.t('field.collection_date_time'),
           record: { align: 'center' },
           sortable: true,
           width: 160
@@ -214,7 +214,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
               id
               name
               eta
-              pickingDateTime
+              collectionDateTime
               status
               collectionOrder {
                 id

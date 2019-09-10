@@ -6,6 +6,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
+import moment from 'moment'
 
 class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -96,38 +97,23 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
         <fieldset>
           <legend>${i18next.t('title.gan')}: ${this._ganNo}</legend>
           <label>${i18next.t('label.container_no')}</label>
-          <input name="containerNo" ?disabled="${this._status !== ORDER_STATUS.EDITING.value}" />
+          <input name="containerNo" disabled />
 
           <label>${i18next.t('label.use_own_transport')}</label>
-          <input
-            type="checkbox"
-            name="ownTransport"
-            ?checked="${this._ownTransport}"
-            ?disabled="${this._status !== ORDER_STATUS.EDITING.value}"
-          />
+          <input type="checkbox" name="ownTransport" ?checked="${this._ownTransport}" disabled />
 
           <!-- Show when userOwnTransport is true -->
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.picking_date')}</label>
-          <input
-            ?hidden="${this._ownTransport}"
-            name="pickingDateTime"
-            type="datetime-local"
-            ?disabled="${this._status !== ORDER_STATUS.EDITING.value}"
-          />
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.collection_date_time')}</label>
+          <input ?hidden="${this._ownTransport}" name="collectionDateTime" type="datetime-local" disabled />
 
           <label ?hidden="${this._ownTransport}">${i18next.t('label.from')}</label>
-          <input
-            ?hidden="${this._ownTransport}"
-            name="from"
-            ?disabled="${this._status !== ORDER_STATUS.EDITING.value}"
-          />
+          <input ?hidden="${this._ownTransport}" name="from" disabled />
+
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.to')}</label>
+          <input ?hidden="${this._ownTransport}" name="to" disabled />
 
           <label ?hidden="${this._ownTransport}">${i18next.t('label.loadType')}</label>
-          <select
-            ?hidden="${this._ownTransport}"
-            name="loadType"
-            ?disabled="${this._status !== ORDER_STATUS.EDITING.value}"
-          >
+          <select ?hidden="${this._ownTransport}" name="loadType" disabled>
             ${LOAD_TYPES.map(
               loadType => html`
                 <option value="${loadType.value}">${i18next.t(`label.${loadType.name}`)}</option>
@@ -137,19 +123,10 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
 
           <!-- Show when userOwnTransport option is false-->
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
-          <input
-            ?hidden="${!this._ownTransport}"
-            ?required="${this._ownTransport}"
-            name="truckNo"
-            ?disabled="${this._status !== ORDER_STATUS.EDITING.value}"
-          />
+          <input ?hidden="${!this._ownTransport}" ?required="${this._ownTransport}" name="truckNo" disabled />
 
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.delivery_order_no')}</label>
-          <input
-            ?hidden="${!this._ownTransport}"
-            name="deliveryOrderNo"
-            ?disabled="${this._status !== ORDER_STATUS.EDITING.value}"
-          />
+          <input ?hidden="${!this._ownTransport}" name="deliveryOrderNo" disabled />
 
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.eta_date')}</label>
           <input
@@ -157,11 +134,11 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
             ?required="${this._ownTransport}"
             name="eta"
             type="datetime-local"
-            ?disabled="${this._status !== ORDER_STATUS.EDITING.value}"
+            disabled
           />
 
           <label>${i18next.t('label.status')}</label>
-          <select name="status" ?disabled="${this._status !== ORDER_STATUS.EDITING.value}"
+          <select name="status" disabled
             >${Object.keys(ORDER_STATUS).map(key => {
               const status = ORDER_STATUS[key]
               return html`
@@ -337,9 +314,10 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
             name
             containerNo
             ownTransport
-            pickingDateTime
+            collectionDateTime
             eta
             from
+            to
             loadType
             truckNo
             deliveryOrderNo
@@ -349,7 +327,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
               name
               description
             }
-            arrivalNoticeProducts {
+            orderProducts {
               id
               batchId
               product {
@@ -365,7 +343,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
               totalWeight
               palletQty
             }
-            arrivalNoticeVass {
+            orderVass {
               vas {
                 id
                 name
@@ -387,12 +365,12 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
       this._fillupForm(response.data.arrivalNotice)
       this.productData = {
         ...this.productData,
-        records: response.data.arrivalNotice.arrivalNoticeProducts
+        records: response.data.arrivalNotice.orderProducts
       }
 
       this.vasData = {
         ...this.vasData,
-        records: response.data.arrivalNotice.arrivalNoticeVass
+        records: response.data.arrivalNotice.orderVass
       }
     }
   }
@@ -403,9 +381,9 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = arrivalNotice[key]
         } else if (field.name === key && field.type === 'datetime-local') {
-          let date = new Date(Number(arrivalNotice[key]))
-          date = date.toISOString()
-          field.value = date.substr(0, date.length - 1)
+          const datetime = Number(arrivalNotice[key])
+          const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
+          field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
         } else if (field.name === key) {
           field.value = arrivalNotice[key]
         }
@@ -413,7 +391,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _updateArrivalNotice(patch, successCallback) {
+  async _updateArrivalNotice(patch) {
     const response = await client.query({
       query: gql`
         mutation {
@@ -429,7 +407,28 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       this.fetchGAN()
-      if (successCallback && typeof successCallback === 'function') successCallback()
+    } else {
+      throw new Error(response.errors[0])
+    }
+  }
+
+  async _confirmArrivalNotice() {
+    const response = await client.query({
+      query: gql`
+        mutation {
+          confirmArrivalNotice(${gqlBuilder.buildArgs({
+            name: this._ganNo
+          })}) {
+            name
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      this.fetchGAN()
+    } else {
+      throw new Error(response.errors[0])
     }
   }
 
@@ -440,39 +439,30 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
       actions = [
         {
           title: i18next.t('button.edit'),
-          action: () => {
-            this._updateArrivalNotice({ status: ORDER_STATUS.EDITING.value }, () => {
+          action: async () => {
+            try {
+              await this._updateArrivalNotice({ status: ORDER_STATUS.EDITING.value })
               this._showToast({ message: i18next.t('text.gan_now_editable') })
-            })
+            } catch (e) {
+              this._showToast(e)
+            }
           }
         },
         {
           title: i18next.t('button.confirm'),
-          action: () => {
-            this._updateArrivalNotice({ status: ORDER_STATUS.PENDING_RECIEVE.value }, () => {
+          action: async () => {
+            try {
+              await this._confirmArrivalNotice()
               this._showToast({ message: i18next.t('text.gan_confirmed') })
               navigate('arrival_notices')
-            })
+            } catch (e) {
+              this._showToast(e)
+            }
           }
         }
       ]
     } else if (this._status === ORDER_STATUS.EDITING.value) {
       navigate(`create_arrival_notice/${this._ganNo}`)
-    } else if (this._status === ORDER_STATUS.PENDING_RECIEVE.value) {
-      actions = [
-        {
-          title: i18next.t('button.decline'),
-          action: () => {
-            console.log('todo decline')
-          }
-        },
-        {
-          title: i18next.t('button.accept'),
-          action: () => {
-            console.log('todo accept')
-          }
-        }
-      ]
     }
 
     actions = [...actions, { title: i18next.t('button.back'), action: () => navigate('arrival_notices') }]

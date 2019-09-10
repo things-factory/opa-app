@@ -113,17 +113,20 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           />
 
           <!-- Show when userOwnTransport is true -->
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.picking_date')}</label>
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.collection_date_time')}</label>
           <input
             ?hidden="${this._ownTransport}"
             ?required="${!this._ownTransport}"
-            name="pickingDateTime"
+            name="collectionDateTime"
             type="datetime-local"
             min="${this._getStdDatetime()}"
           />
 
           <label ?hidden="${this._ownTransport}">${i18next.t('label.from')}</label>
           <input ?hidden="${this._ownTransport}" ?required="${!this._ownTransport}" name="from" />
+
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.to')}</label>
+          <input ?hidden="${this._ownTransport}" ?required="${!this._ownTransport}" name="to" />
 
           <label ?hidden="${this._ownTransport}">${i18next.t('label.loadType')}</label>
           <select ?hidden="${this._ownTransport}" ?required="${!this._ownTransport}" name="loadType">
@@ -335,8 +338,8 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
 
   _clearPage() {
     this.form.reset()
-    this.productData = {}
-    this.vasGrist.data = {}
+    this.productGrist.data = Object.assign({ records: [] })
+    this.vasGrist.data = Object.assign({ records: [] })
   }
 
   async fetchGAN() {
@@ -350,9 +353,10 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
             name
             containerNo
             ownTransport
-            pickingDateTime
+            collectionDateTime
             eta
             from
+            to
             loadType
             truckNo
             deliveryOrderNo
@@ -362,7 +366,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
               name
               description
             }
-            arrivalNoticeProducts {
+            orderProducts {
               id
               batchId
               product {
@@ -376,8 +380,9 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
               unit
               packQty
               totalWeight
+              palletQty
             }
-            arrivalNoticeVass {
+            orderVass {
               vas {
                 id
                 name
@@ -397,12 +402,12 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
       this._fillupForm(response.data.arrivalNotice)
       this.productData = {
         ...this.productData,
-        records: response.data.arrivalNotice.arrivalNoticeProducts
+        records: response.data.arrivalNotice.orderProducts
       }
 
       this.vasData = {
         ...this.vasData,
-        records: response.data.arrivalNotice.arrivalNoticeVass
+        records: response.data.arrivalNotice.orderVass
       }
     }
   }
@@ -413,9 +418,9 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = arrivalNotice[key]
         } else if (field.name === key && field.type === 'datetime-local') {
-          let date = new Date(Number(arrivalNotice[key]))
-          date = date.toISOString()
-          field.value = date.substr(0, date.length - 1)
+          const datetime = Number(arrivalNotice[key])
+          const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
+          field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
         } else if (field.name === key) {
           field.value = arrivalNotice[key]
         }

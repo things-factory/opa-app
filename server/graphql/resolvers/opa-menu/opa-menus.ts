@@ -52,7 +52,10 @@ export const opaMenusResolver = {
     return menus.map((menu: Menu) => {
       return {
         ...menu,
-        childrens: menu.childrens.filter((subMenu: Menu) => userRoles.includes(subMenu.category) || !subMenu.category)
+        childrens: menu.childrens.filter(
+          (subMenu: Menu) =>
+            (!subMenu.hiddenFlag && userRoles.includes(subMenu.category)) || (!subMenu.hiddenFlag && !subMenu.category)
+        )
       }
     })
   }
