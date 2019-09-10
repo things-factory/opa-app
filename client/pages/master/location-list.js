@@ -268,16 +268,6 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  _openGenerate(locationId, locationName) {
-    openPopup(html`
-      <generate-list
-        style="width: 80vw; height: 80vh"
-        .locationId="${locationId}"
-        .locationName="${locationName}"
-      ></generate-list>
-    `)
-  }
-
   _conditionParser() {
     return this.searchForm
       .getFields()
@@ -373,13 +363,9 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _generateLocation(locationId, locationName) {
+  async _generateLocation() {
     openPopup(html`
-      <generate-list
-        style="width: 80vw; height: 80vh"
-        .locationId="${locationId}"
-        .locationName="${locationName}"
-      ></generate-list>
+      <generate-list style="width: 80vw; height: 80vh" .warehouseId="${this._warehouseId}"></generate-list>
     `)
   }
 

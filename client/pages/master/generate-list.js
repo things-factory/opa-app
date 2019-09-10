@@ -86,6 +86,12 @@ export class GenerateList extends localize(i18next)(LitElement) {
               const input = event.currentTarget
               this.zoneName = input.value
             }}"
+            @keypress="${event => {
+              if (event.keyCode === 13) {
+                event.preventDefault()
+                return false
+              }
+            }}"
           />
         </fieldset>
       </form>
@@ -156,7 +162,7 @@ export class GenerateList extends localize(i18next)(LitElement) {
           multiple: true
         },
         {
-          type: 'string',
+          type: 'number',
           name: 'start',
           record: {
             align: 'left',
@@ -166,7 +172,7 @@ export class GenerateList extends localize(i18next)(LitElement) {
           width: 250
         },
         {
-          type: 'string',
+          type: 'number',
           name: 'end',
           record: {
             align: 'left',
@@ -303,87 +309,94 @@ export class GenerateList extends localize(i18next)(LitElement) {
     let locationData = this.data.records
 
     if (locationData && locationData.length) {
-      locationData = locationData.map(locations => {
+      locationData = locationData.forEach(locations => {
         locations['zone'] = this.zoneName.toUpperCase()
+        if (locations.start <= locations.end) {
+          for (let i = locations.start; i <= locations.end; i++) {
+            for (let j = 1; j <= locations.column; j++) {
+              for (let k = 1; k <= locations.cell; k++) {
+                switch (k) {
+                  case 1:
+                    locations['cellInstance'] = 'A'
+                    break
+                  case 2:
+                    locations['cellInstance'] = 'B'
+                    break
+                  case 3:
+                    locations['cellInstance'] = 'C'
+                    break
+                  case 4:
+                    locations['cellInstance'] = 'D'
+                    break
+                  case 5:
+                    locations['cellInstance'] = 'E'
+                    break
+                  case 6:
+                    locations['cellInstance'] = 'F'
+                    break
+                  case 7:
+                    locations['cellInstance'] = 'G'
+                    break
+                  case 8:
+                    locations['cellInstance'] = 'H'
+                    break
+                  case 9:
+                    locations['cellInstance'] = 'I'
+                    break
+                  case 10:
+                    locations['cellInstance'] = 'J'
+                    break
+                  case 11:
+                    locations['cellInstance'] = 'K'
+                    break
+                  case 12:
+                    locations['cellInstance'] = 'L'
+                    break
+                  case 13:
+                    locations['cellInstance'] = 'M'
+                    break
+                  case 14:
+                    locations['cellInstance'] = 'N'
+                    break
+                  default:
+                    locations['cellInstance'] = 'NULL'
+                }
 
-        for (let i = locations.start; i <= locations.end; i++) {
-          for (let j = 1; j <= locations.column; j++) {
-            for (let k = 1; k <= locations.cell; k++) {
-              switch (k) {
-                case 1:
-                  locations['cellInstance'] = 'A'
-                  break
-                case 2:
-                  locations['cellInstance'] = 'B'
-                  break
-                case 3:
-                  locations['cellInstance'] = 'C'
-                  break
-                case 4:
-                  locations['cellInstance'] = 'D'
-                  break
-                case 5:
-                  locations['cellInstance'] = 'E'
-                  break
-                case 6:
-                  locations['cellInstance'] = 'F'
-                  break
-                case 7:
-                  locations['cellInstance'] = 'G'
-                  break
-                case 8:
-                  locations['cellInstance'] = 'H'
-                  break
-                case 9:
-                  locations['cellInstance'] = 'I'
-                  break
-                case 10:
-                  locations['cellInstance'] = 'J'
-                  break
-                case 11:
-                  locations['cellInstance'] = 'K'
-                  break
-                case 12:
-                  locations['cellInstance'] = 'L'
-                  break
-                case 13:
-                  locations['cellInstance'] = 'M'
-                  break
-                case 14:
-                  locations['cellInstance'] = 'N'
-                  break
-                default:
-                  locations['cellInstance'] = 'NULL'
+                locations['name'] =
+                  this.zoneName.toUpperCase() +
+                  '' +
+                  i.toString().padStart(2, '0') +
+                  '-' +
+                  j.toString().padStart(2, '0') +
+                  '-' +
+                  locations.cellInstance
+
+                const locationObj = {}
+                locationObj['name'] = locations.name.toString()
+                locationObj['zone'] = locations.zone.toString()
+                locationObj['row'] = i.toString().padStart(2, '0')
+                locationObj['column'] = j.toString().padStart(2, '0')
+                locationObj['shelf'] = locations.cellInstance.toString()
+                locationObj['status'] = 'Empty'
+                locationObj['warehouse'] = { id: this.warehouseId }
+                locationObj['cuFlag'] = '+'
+
+                this.tempLocationList.push(locationObj)
               }
-
-              locations['name'] =
-                this.zoneName.toUpperCase() +
-                '' +
-                i.toString().padStart(2, '0') +
-                '-' +
-                j.toString().padStart(2, '0') +
-                '-' +
-                locations.cellInstance
-
-              const locationObj = {}
-              locationObj['name'] = locations.name.toString()
-              locationObj['zone'] = locations.zone.toString()
-              locationObj['row'] = i.toString().padStart(2, '0')
-              locationObj['column'] = j.toString().padStart(2, '0')
-              locationObj['shelf'] = locations.cellInstance.toString()
-              locationObj['status'] = 'Empty'
-              locationObj['warehouse'] = { id: this.warehouseId }
-              locationObj['cuFlag'] = '+'
-
-              this.tempLocationList.push(locationObj)
             }
           }
+        } else {
+          document.dispatchEvent(
+            new CustomEvent('notify', {
+              detail: {
+                message: i18next.t('text.row_start_cannot_more_than_row_end')
+              }
+            })
+          )
         }
-        return locations
       })
       this.locationList = this.tempLocationList
       this.tempLocationList = []
-      console.log(this.locationList)
       this.dataGrist.fetch()
     }
   }
@@ -424,17 +437,15 @@ export class GenerateList extends localize(i18next)(LitElement) {
   }
 
   _deleteFromList() {
-    let state = window.history.state
-    console.log(this.warehouseId)
-    // const selections = []
-    // this.dataGrist.selected.forEach(selection => {
-    //   selections.push(selection.__seq__ - 1)
-    // })
+    const selections = []
+    this.dataGrist.selected.forEach(selection => {
+      selections.push(selection.__seq__ - 1)
+    })
 
-    // for (let i = selections.length - 1; i >= 0; i--) {
-    //   this.locationList.splice(selections[i], 1)
-    // }
-    // this.dataGrist.fetch()
+    for (let i = selections.length - 1; i >= 0; i--) {
+      this.locationList.splice(selections[i], 1)
+    }
+    this.dataGrist.fetch()
   }
 }
 
