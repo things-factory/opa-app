@@ -78,7 +78,7 @@ class VasList extends localize(i18next)(PageView) {
         data: this._exportableData.bind(this)
       },
       importable: {
-        handler: () => {}
+        handler: this._importableData.bind(this)
       }
     }
   }
