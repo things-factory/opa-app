@@ -135,6 +135,29 @@ class WarehouseList extends localize(i18next)(PageView) {
           width: 100
         },
         {
+          type: 'object',
+          name: 'bizplace',
+          record: {
+            align: 'center',
+            editable: true,
+            options: {
+              queryName: 'bizplaces'
+              // basicArgs: {
+              //   filters: [
+              //     {
+              //       name: 'name',
+              //       value: 'o',
+              //       operator: 'like',
+              //       dataType: 'string'
+              //     }
+              //   ]
+              // }
+            }
+          },
+          header: i18next.t('field.bizplace'),
+          width: 200
+        },
+        {
           type: 'string',
           name: 'type',
           header: i18next.t('field.type'),
@@ -203,6 +226,11 @@ class WarehouseList extends localize(i18next)(PageView) {
             items {
               id
               name
+              bizplace
+              {
+                id
+                name
+              }
               type
               description
               updatedAt
@@ -230,7 +258,7 @@ class WarehouseList extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
           mutation {
-            updateMultipleCompany(${gqlBuilder.buildArgs({
+            updateMultipleWarehouse(${gqlBuilder.buildArgs({
               patches
             })}) {
               name

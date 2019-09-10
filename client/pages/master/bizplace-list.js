@@ -287,7 +287,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
     const response = await client.query({
       query: gql`
           mutation {
-            updateMultipleCompany(${gqlBuilder.buildArgs({
+            updateMultipleBizplace(${gqlBuilder.buildArgs({
               patches
             })}) {
               name
@@ -382,25 +382,28 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _deleteBizplaces() {
-    const names = this.dataGrist.selected.map(record => record.name)
-    if (names && names.length > 0) {
-      const response = await client.query({
-        query: gql`
+    let confirmDelete = confirm('Are you sure?')
+    if (confirmDelete) {
+      const names = this.dataGrist.selected.map(record => record.name)
+      if (names && names.length > 0) {
+        const response = await client.query({
+          query: gql`
             mutation {
               deleteBizplaces(${gqlBuilder.buildArgs({ names })})
             }
           `
-      })
+        })
 
-      if (!response.errors) {
-        this.dataGrist.fetch()
-        document.dispatchEvent(
-          new CustomEvent('notify', {
-            detail: {
-              message: i18next.t('text.data_updated_successfully')
-            }
-          })
-        )
+        if (!response.errors) {
+          this.dataGrist.fetch()
+          document.dispatchEvent(
+            new CustomEvent('notify', {
+              detail: {
+                message: i18next.t('text.data_updated_successfully')
+              }
+            })
+          )
+        }
       }
     }
   }

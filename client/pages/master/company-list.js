@@ -358,25 +358,28 @@ class CompanyList extends localize(i18next)(PageView) {
   }
 
   async _deleteCompanies() {
-    const names = this.dataGrist.selected.map(record => record.name)
-    if (names && names.length > 0) {
-      const response = await client.query({
-        query: gql`
+    let confirmDelete = confirm('Are you sure?')
+    if (confirmDelete) {
+      const names = this.dataGrist.selected.map(record => record.name)
+      if (names && names.length > 0) {
+        const response = await client.query({
+          query: gql`
             mutation {
               deleteCompanies(${gqlBuilder.buildArgs({ names })})
             }
           `
-      })
+        })
 
-      if (!response.errors) {
-        this.dataGrist.fetch()
-        document.dispatchEvent(
-          new CustomEvent('notify', {
-            detail: {
-              message: i18next.t('text.data_deleted_successfully')
-            }
-          })
-        )
+        if (!response.errors) {
+          this.dataGrist.fetch()
+          document.dispatchEvent(
+            new CustomEvent('notify', {
+              detail: {
+                message: i18next.t('text.data_deleted_successfully')
+              }
+            })
+          )
+        }
       }
     }
   }

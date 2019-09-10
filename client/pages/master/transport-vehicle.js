@@ -117,11 +117,42 @@ class TransportVehicle extends localize(i18next)(PageView) {
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'string',
+          name: 'name',
+          header: i18next.t('field.name'),
+          record: { editable: true, align: 'center' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'string',
           name: 'regNumber',
           header: i18next.t('field.registration_number'),
           record: { editable: true, align: 'center' },
           sortable: true,
           width: 150
+        },
+        {
+          type: 'object',
+          name: 'bizplace',
+          record: {
+            align: 'center',
+            editable: true,
+            options: {
+              queryName: 'bizplaces'
+              // basicArgs: {
+              //   filters: [
+              //     {
+              //       name: 'name',
+              //       value: 'o',
+              //       operator: 'like',
+              //       dataType: 'string'
+              //     }
+              //   ]
+              // }
+            }
+          },
+          header: i18next.t('field.bizplace'),
+          width: 200
         },
         {
           type: 'string',
@@ -200,6 +231,10 @@ class TransportVehicle extends localize(i18next)(PageView) {
             items {
               id
               name
+              bizplace{
+                id
+                name
+              }
               regNumber
               description
               size
@@ -227,7 +262,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
           mutation {
-            updateMultipleCompany(${gqlBuilder.buildArgs({
+            updateMultipleTransportVehicle(${gqlBuilder.buildArgs({
               patches
             })}) {
               name

@@ -76,10 +76,10 @@ export class ContactPointList extends localize(i18next)(LitElement) {
         ></data-grist>
       </div>
 
-      <!-- <div class="button-container">
+      <div class="button-container">
         <mwc-button @click=${this._saveContactPoints}>${i18next.t('button.save')}</mwc-button>
         <mwc-button @click=${this._deleteContactPoints}>${i18next.t('button.delete')}</mwc-button>
-      </div> -->
+      </div>
     `
   }
 
@@ -103,6 +103,12 @@ export class ContactPointList extends localize(i18next)(LitElement) {
       importable: {
         handler: () => {}
       }
+    }
+  }
+
+  activated(active) {
+    if (JSON.parse(active) && this.dataGrist) {
+      this.dataGrist.fetch()
     }
   }
 
@@ -312,7 +318,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
     const response = await client.query({
       query: gql`
           mutation {
-            updateMultipleCompany(${gqlBuilder.buildArgs({
+            updateMultipleContactPoint(${gqlBuilder.buildArgs({
               patches
             })}) {
               name
@@ -395,25 +401,28 @@ export class ContactPointList extends localize(i18next)(LitElement) {
   }
 
   async _deleteContactPoints() {
-    const names = this.dataGrist.selected.map(record => record.name)
-    if (names && names.length > 0) {
-      const response = await client.query({
-        query: gql`
+    let confirmDelete = confirm('Are you sure?')
+    if (confirmDelete) {
+      const names = this.dataGrist.selected.map(record => record.name)
+      if (names && names.length > 0) {
+        const response = await client.query({
+          query: gql`
             mutation {
               deleteContactPoints(${gqlBuilder.buildArgs({ names })})
             }
           `
-      })
+        })
 
-      if (!response.errors) {
-        this.dataGrist.fetch()
-        document.dispatchEvent(
-          new CustomEvent('notify', {
-            detail: {
-              message: i18next.t('text.data_updated_successfully')
-            }
-          })
-        )
+        if (!response.errors) {
+          this.dataGrist.fetch()
+          document.dispatchEvent(
+            new CustomEvent('notify', {
+              detail: {
+                message: i18next.t('text.data_updated_successfully')
+              }
+            })
+          )
+        }
       }
     }
   }

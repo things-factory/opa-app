@@ -198,6 +198,10 @@ export class ProductOptionDetailList extends localize(i18next)(LitElement) {
             items {
               id
               name
+              productOption{
+                id
+                name
+              }
               description
               updatedAt
               updater{
@@ -222,7 +226,7 @@ export class ProductOptionDetailList extends localize(i18next)(LitElement) {
     const response = await client.query({
       query: gql`
           mutation {
-            updateMultipleCompany(${gqlBuilder.buildArgs({
+            updateMultipleProductOptionDetail(${gqlBuilder.buildArgs({
               patches
             })}) {
               name
@@ -305,10 +309,12 @@ export class ProductOptionDetailList extends localize(i18next)(LitElement) {
   }
 
   async _deleteProductOptionDetails() {
-    const names = this.dataGrist.selected.map(record => record.name)
-    if (names && names.length > 0) {
-      const response = await client.query({
-        query: gql`
+    let confirmDelete = confirm('Are you sure?')
+    if (confirmDelete) {
+      const names = this.dataGrist.selected.map(record => record.name)
+      if (names && names.length > 0) {
+        const response = await client.query({
+          query: gql`
             mutation {
               deleteProductOptionDetails(${gqlBuilder.buildArgs({
                 productOption: {
@@ -318,17 +324,18 @@ export class ProductOptionDetailList extends localize(i18next)(LitElement) {
               })})
             }
           `
-      })
+        })
 
-      if (!response.errors) {
-        this.dataGrist.fetch()
-        document.dispatchEvent(
-          new CustomEvent('notify', {
-            detail: {
-              message: i18next.t('text.data_updated_successfully')
-            }
-          })
-        )
+        if (!response.errors) {
+          this.dataGrist.fetch()
+          document.dispatchEvent(
+            new CustomEvent('notify', {
+              detail: {
+                message: i18next.t('text.data_updated_successfully')
+              }
+            })
+          )
+        }
       }
     }
   }

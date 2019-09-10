@@ -123,6 +123,29 @@ class TransportDriver extends localize(i18next)(PageView) {
           width: 150
         },
         {
+          type: 'object',
+          name: 'bizplace',
+          record: {
+            align: 'center',
+            editable: true,
+            options: {
+              queryName: 'bizplaces'
+              // basicArgs: {
+              //   filters: [
+              //     {
+              //       name: 'name',
+              //       value: 'o',
+              //       operator: 'like',
+              //       dataType: 'string'
+              //     }
+              //   ]
+              // }
+            }
+          },
+          header: i18next.t('field.bizplace'),
+          width: 200
+        },
+        {
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
@@ -191,6 +214,10 @@ class TransportDriver extends localize(i18next)(PageView) {
             items {
               id
               name
+              bizplace{
+                id
+                name
+              }
               driverCode
               description
               updatedAt
@@ -216,7 +243,7 @@ class TransportDriver extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
           mutation {
-            updateMultipleCompany(${gqlBuilder.buildArgs({
+            updateMultipleTransportDriver(${gqlBuilder.buildArgs({
               patches
             })}) {
               name
@@ -308,25 +335,28 @@ class TransportDriver extends localize(i18next)(PageView) {
   }
 
   async _deleteTransportDriver() {
-    const names = this.dataGrist.selected.map(record => record.name)
-    if (names && names.length > 0) {
-      const response = await client.query({
-        query: gql`
+    let confirmDelete = confirm('Are you sure?')
+    if (confirmDelete) {
+      const names = this.dataGrist.selected.map(record => record.name)
+      if (names && names.length > 0) {
+        const response = await client.query({
+          query: gql`
               mutation {
                 deleteTransportDrivers(${gqlBuilder.buildArgs({ names })})
               }
             `
-      })
+        })
 
-      if (!response.errors) {
-        this.dataGrist.fetch()
-        document.dispatchEvent(
-          new CustomEvent('notify', {
-            detail: {
-              message: i18next.t('text.data_updated_successfully')
-            }
-          })
-        )
+        if (!response.errors) {
+          this.dataGrist.fetch()
+          document.dispatchEvent(
+            new CustomEvent('notify', {
+              detail: {
+                message: i18next.t('text.data_updated_successfully')
+              }
+            })
+          )
+        }
       }
     }
   }
