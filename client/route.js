@@ -78,6 +78,10 @@ export default function route(page) {
     case 'create_transport_order':
       import('./pages/order/create-transport-order')
       return page
+
+    case 'vas_orders':
+      import('./pages/order/vas-order-list')
+      return page
     /**
      * Stock Menus Section
      */

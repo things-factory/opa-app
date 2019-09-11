@@ -79,6 +79,10 @@ export default {
       tagname: 'create-transport-order',
       page: 'create_transport_order'
     },
+    {
+      tagname: 'vas-order-list',
+      page: 'vas_orders'
+    },
 
     /**
      * Stock Menus Section
