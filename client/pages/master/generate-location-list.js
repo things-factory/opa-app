@@ -345,14 +345,22 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
               for (let k = 1; k <= locations.cell; k++) {
                 const locationObj = {}
 
-                if (this.rowSuffix === '') locationObj['row'] = i.toString().padStart(2, '0')
-                else locationObj['row'] = i.toString() + this.rowSuffix.toUpperCase()
-                if (this.columnSuffix === '') locationObj['column'] = j.toString().padStart(2, '0')
-                else locationObj['column'] = j.toString() + this.columnSuffix.toUpperCase()
+                locationObj['row'] =
+                  this.rowSuffix === ''
+                    ? (locationObj['row'] = i.toString().padStart(2, '0'))
+                    : i.toString() + this.rowSuffix.toUpperCase()
+
+                locationObj['column'] =
+                  this.columnSuffix === ''
+                    ? (locationObj['column'] = j.toString().padStart(2, '0'))
+                    : j.toString() + this.columnSuffix.toUpperCase()
+
                 locationObj['shelf'] = this._getCellInstance(k)
                 locationObj['zone'] = this.zoneName.toString().toUpperCase()
+
                 locationObj['name'] =
                   locationObj.zone + '' + locationObj.row + '-' + locationObj.column + '-' + locationObj.shelf
+
                 locationObj['status'] = 'Empty'
                 locationObj['warehouse'] = { id: this.warehouseId }
                 locationObj['cuFlag'] = '+'
