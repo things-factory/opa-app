@@ -1,16 +1,22 @@
+import { MultiColumnFormStyles } from '@things-factory/form-ui'
+import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, navigate } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
+import { connect } from 'pwa-helpers/connect-mixin.js'
+import { LOAD_TYPES, TRANSPORT_OPTIONS, ORDER_STATUS } from './constants/order'
 
-class CreateTransportOrder extends localize(i18next)(PageView) {
+class CreateTransportOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
-      productsConfig: Object,
-      servicesConfig: Object,
-      productsData: Object,
-      servicesData: Object
+      productGristConfig: Object,
+      _isDeliveryOrder: Boolean,
+      vasGristConfig: Object,
+      productData: Object,
+      vasData: Object,
+      _collectionNo: String,
+      _deliveryNo: String
     }
   }
 
@@ -19,17 +25,16 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
       MultiColumnFormStyles,
       css`
         :host {
-          flex: 1;
           display: flex;
           flex-direction: column;
-          overflow-x: overlay;
-          height: 100%;
+          overflow-x: auto;
         }
         .grist {
           background-color: var(--main-section-background-color);
           display: flex;
           flex-direction: column;
           flex: 1;
+          overflow-y: auto;
         }
         data-grist {
           overflow-y: hidden;
@@ -75,446 +80,464 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
 
   render() {
     return html`
-        <form class="multi-column-form">
-          <fieldset>
-            <legend>${i18next.t('title.transport_order')}</legend>
-            <label>${i18next.t('label.contact_point')}</label>
-            <input name="name" />
+      <form class="multi-column-form">
+        <fieldset>
+          <legend>${i18next.t('title.transport_order')}</legend>
+          <label>${i18next.t('label.transport_option')}</label>
+          <select
+            id="transportOptions"
+            name="transportOptions"
+            @change=${e => {
+              this._isDeliveryOrder = e.currentTarget.value === TRANSPORT_OPTIONS.DELIVERY_ORDER.value
+            }}
+          >
+            ${Object.keys(TRANSPORT_OPTIONS).map(key => {
+              return html`
+                <option value="${TRANSPORT_OPTIONS[key].value}"
+                  >${i18next.t(`label.${TRANSPORT_OPTIONS[key].name}`)}</option
+                >
+              `
+            })}
+          </select>
 
-            <label>${i18next.t('label.description')}</label>
-            <input name="description" />
+          <label>${i18next.t('label.from')}</label>
+          <input name="from" />
 
-            <label>${i18next.t('label.delivery_date')}</label>
-            <input name="when" type="date" />
+          <label>${i18next.t('label.to')}</label>
+          <input name="to" />
 
-            <label>${i18next.t('label.contact_no')}</label>
-            <input name="contact_no" />
+          <label ?hidden="${!this._isDeliveryOrder}">${i18next.t('label.delivery_date')}</label>
+          <input
+            name="deliveryDateTime"
+            ?hidden="${!this._isDeliveryOrder}"
+            type="datetime-local"
+            min="${this._getStdDatetime()}"
+          />
 
-            <label>${i18next.t('label.from')}</label>
-            <input name="from" />
+          <label>${i18next.t('label.loadType')}</label>
+          <select name="loadType" required>
+            ${LOAD_TYPES.map(
+              loadType => html`
+                <option value="${loadType.value}">${i18next.t(`label.${loadType.name}`)}</option>
+              `
+            )}
+          </select>
 
-            <label>${i18next.t('label.to')}</label>
-            <input name="to" />
+          <!-- Show when collection option is false-->
+          <label ?hidden="${this._isDeliveryOrder}">${i18next.t('label.collection_datetime')}</label>
+          <input
+            ?hidden="${this._isDeliveryOrder}"
+            name="collectionDateTime"
+            type="datetime-local"
+            min="${this._getStdDatetime()}"
+          />
 
-            <label>${i18next.t('label.load_type')}</label>
-            <input name="load_type" />
+          <label>${i18next.t('label.tel_no')}</label>
+          <input name="telNo" />
+        </fieldset>
+      </form>
 
-            
-            <input
-              name="from_warehouse"
-              type="checkbox"
-              checked
-              @change="${e => {
-                this.productsConfig = {
-                  columns: this.productsConfig.columns.map(column => {
-                    if (column.name === 'product') {
-                      column.type = e.currentTarget.checked ? 'object' : 'string'
-                    }
+      <div class="grist">
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product')}</h2>
 
-                    return { ...column }
-                  })
-                }
-
-                this.productsData = { records: [] }
-              }}"
-            />
-            <label>${i18next.t('label.from_warehouse')}</label>
-          </fieldset>
-        </form>
+        <data-grist
+          id="product-grist"
+          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+          .config=${this.productGristConfig}
+          .data="${this.productData}"
+          @record-change="${this._onProductChangeHandler.bind(this)}"
+        ></data-grist>
       </div>
 
       <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.products')}</h2>
-        <data-grist
-          id="products"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.productsConfig}
-          .data=${this.productsData}
-          @page-changed=${e => {
-            this.page = e.detail
-          }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
-          @record-change="${this._onProductChangeHandler.bind(this)}"
-        ></data-grist>
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
 
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas_request')}</h2>
         <data-grist
-          id="services"
+          id="vas-grist"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.servicesConfig}
-          .data=${this.servicesData}
-          @page-changed=${e => {
-            this.page = e.detail
-          }}
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
-          @record-change="${this._onServiceChangeHandler.bind(this)}"
+          .config=${this.vasGristConfig}
+          .data="${this.vasData}"
         ></data-grist>
       </div>
     `
   }
 
-  firstUpdated() {
-    this.productsData = { records: [] }
-    this.servicesData = { records: [] }
+  constructor() {
+    super()
+    this.productData = {}
+    this.vasData = {}
+    this._isDeliveryOrder = true
+  }
 
-    this.productsConfig = {
-      pagination: {
-        infinite: true
-      },
+  firstUpdated() {
+    this.productGristConfig = {
+      pagination: { infinite: true },
+      rows: { selectable: { multiple: true } },
       columns: [
-        {
-          type: 'gutter',
-          gutterName: 'sequence'
-        },
+        { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'gutter',
           gutterName: 'button',
-          icon: 'delete_outline',
+          icon: 'close',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              this.productsData.records.splice(rowIndex, 1)
-
-              this.productsData = {
-                ...this.productsData,
-                records: [...this.productsData.records]
+              this.productData = {
+                ...this.productData,
+                records: data.records.filter((record, idx) => idx !== rowIndex)
               }
+
+              this._updateBatchList()
             }
           }
+        },
+        {
+          type: 'string',
+          name: 'batchId',
+          header: i18next.t('field.batch_id'),
+          record: { editable: true, align: 'center', options: { queryName: 'products' } },
+          width: 150
         },
         {
           type: 'object',
           name: 'product',
-          header: i18next.t('field.product_name'),
-          record: {
-            editable: true,
-            align: 'center',
-            options: {
-              queryName: 'customerProducts'
-            }
-          },
-          width: 250
+          header: i18next.t('field.product'),
+          record: { editable: true, align: 'center', options: { queryName: 'products' } },
+          width: 180
         },
         {
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 250
+          record: { editable: true },
+          width: 180
         },
         {
           type: 'string',
-          name: 'container_no',
-          header: i18next.t('field.container_no'),
-          record: {
-            align: 'center',
-            editable: true
-          },
-          width: 120
+          name: 'packingType',
+          header: i18next.t('field.packing_type'),
+          record: { editable: true, align: 'center' },
+          width: 150
         },
         {
-          type: 'string',
-          name: 'batch_no',
-          header: i18next.t('field.batch_no'),
-          record: {
-            align: 'center',
-            editable: true
-          },
-          width: 120
+          type: 'float',
+          name: 'weight',
+          header: i18next.t('field.weight'),
+          record: { editable: true, align: 'right' },
+          width: 80
         },
         {
-          type: 'string',
+          type: 'select',
           name: 'unit',
           header: i18next.t('field.unit'),
-          record: {
-            align: 'center',
-            editable: true
-          },
+          record: { editable: true, align: 'center', options: ['kg', 'g'] },
+          width: 80
+        },
+        {
+          type: 'integer',
+          name: 'packQty',
+          header: i18next.t('field.pack_qty'),
+          record: { editable: true, align: 'right' },
+          width: 80
+        },
+        {
+          type: 'integer',
+          name: 'totalWeight',
+          header: i18next.t('field.total_weight'),
+          record: { align: 'center' },
           width: 120
         },
         {
-          type: 'float',
-          name: 'pack_in_qty',
-          header: i18next.t('field.pack_in_qty'),
-          record: {
-            align: 'right',
-            editable: true
-          },
-          width: 80
-        },
-        {
-          type: 'float',
-          name: 'pack_qty',
-          header: i18next.t('field.qty'),
-          record: {
-            align: 'right',
-            editable: true
-          },
-          width: 80
-        },
-        {
-          type: 'float',
-          name: 'total_qty',
-          header: i18next.t('field.total_qty'),
-          record: {
-            align: 'right'
-          },
+          type: 'integer',
+          name: 'palletQty',
+          header: i18next.t('field.pallet_qty'),
+          record: { editable: true, align: 'center' },
           width: 80
         }
       ]
     }
 
-    this.servicesConfig = {
-      pagination: {
-        infinite: true
-      },
+    this.vasGristConfig = {
+      pagination: { infinite: true },
+      rows: { selectable: { multiple: true } },
       columns: [
-        {
-          type: 'gutter',
-          gutterName: 'sequence'
-        },
+        { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'gutter',
           gutterName: 'button',
-          icon: 'delete_outline',
+          icon: 'close',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              this.servicesData.records.splice(rowIndex, 1)
-
-              this.servicesData = {
-                ...this.servicesData,
-                records: [...this.servicesData.records]
+              this.vasData = {
+                ...this.vasData,
+                records: data.records.filter((record, idx) => idx !== rowIndex)
               }
             }
           }
         },
         {
           type: 'object',
-          name: 'service',
-          header: i18next.t('field.service'),
-          record: {
-            align: 'center',
-            editable: true,
-            options: {
-              queryName: 'ownerProducts'
-            }
-          },
+          name: 'vas',
+          header: i18next.t('field.vas'),
+          record: { editable: true, align: 'center', options: { queryName: 'vass' } },
           width: 250
         },
         {
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
-          record: {
-            align: 'left',
-            editable: true
-          },
-          width: 200
+          record: { editable: true },
+          width: 180
+        },
+        {
+          type: 'select',
+          name: 'batchId',
+          header: i18next.t('field.batch_id'),
+          record: { editable: true, align: 'center', options: [i18next.t('label.all')] },
+          width: 150
         },
         {
           type: 'string',
-          name: 'unit',
-          header: i18next.t('field.unit'),
-          record: {
-            align: 'center'
-          },
-          width: 120
-        },
-        {
-          type: 'float',
-          name: 'unit_price',
-          header: i18next.t('field.unit_price'),
-          record: {
-            align: 'right'
-          },
-          width: 100
-        },
-        {
-          type: 'float',
-          name: 'qty',
-          header: i18next.t('field.qty'),
-          record: {
-            align: 'right',
-            editable: true
-          },
-          width: 100
-        },
-        {
-          type: 'string',
-          name: 'total_price',
-          header: i18next.t('field.price'),
-          record: {
-            align: 'right'
-          },
-          width: 100
+          name: 'remark',
+          header: i18next.t('field.remark'),
+          record: { editable: true },
+          width: 350
         }
       ]
     }
   }
 
-  async _onProductChangeHandler(e) {
-    const before = e.detail.before || {}
-    const after = e.detail.after
-    const needObjValue = this.shadowRoot.querySelector('input[name=from_warehouse]').checked
-
-    if (needObjValue && (before.product && before.product.id) != (after.product && after.product.id)) {
-      const productMaster = await this.getMasterInfo(after.product.id)
-      const productUnit = productMaster.unit.split(' ')
-
-      this.productsData.records[e.detail.row].pack_in_qty = productUnit[0]
-      this.productsData.records[e.detail.row].unit = productUnit[1]
-      this.productsData.records[e.detail.row].description = productMaster.description
-
-      this.productsData = {
-        ...this.productsData,
-        records: [...this.productsData.records]
-      }
-    }
-
-    if ((after.unit && before.pack_qty != after.pack_qty) || (after.unit && before.pack_in_qty != after.pack_in_qty)) {
-      this.productsData.records[e.detail.row].total_qty = after.pack_in_qty * after.pack_qty
-
-      this.productsData = {
-        ...this.productsData,
-        records: [...this.productsData.records]
-      }
-    }
+  get selectTransportOrder() {
+    return this.shadowRoot.querySelector('select#transportOptions')
   }
 
-  async _onServiceChangeHandler(e) {
-    const before = e.detail.before || {}
-    const after = e.detail.after
-
-    if ((before.service && before.service.id) != (after.service && after.service.id)) {
-      const serviceMaster = await this.getMasterInfo(after.service.id)
-
-      this.servicesData.records[e.detail.row].unit = serviceMaster.unit
-      this.servicesData.records[e.detail.row].unit_price = 5
-      this.servicesData.records[e.detail.row].description = serviceMaster.description
-
-      this.servicesData = {
-        ...this.servicesData,
-        records: [...this.servicesData.records]
-      }
-    }
-
-    if (after.unit_price && before.qty != after.qty) {
-      this.servicesData.records[e.detail.row].total_price = 'RM ' + after.unit_price * after.qty
-
-      this.servicesData = {
-        ...this.servicesData,
-        records: [...this.servicesData.records]
-      }
-    }
+  get form() {
+    return this.shadowRoot.querySelector('form')
   }
 
-  async getMasterInfo(id) {
-    const response = await client.query({
-      query: gql`
-        query {
-          product: productById(${gqlBuilder.buildArgs({ id })}) {
-            id
-            name
-            yourName
-            description
-            unit
-          }
-        }
-      `
-    })
+  get productGrist() {
+    return this.shadowRoot.querySelector('data-grist#product-grist')
+  }
 
-    return response.data.product
+  get vasGrist() {
+    return this.shadowRoot.querySelector('data-grist#vas-grist')
+  }
+
+  _getStdDatetime() {
+    let date = new Date()
+    date.setDate(date.getDate() + 1)
+    return `${date.toISOString().substr(0, 11)}00:00:00`
+  }
+
+  _onProductChangeHandler(event) {
+    const changeRecord = event.detail.after
+    const changedColumn = event.detail.column.name
+
+    if (changedColumn === 'weight' || changedColumn === 'unit' || changedColumn === 'packQty') {
+      changeRecord.totalWeight = this._calcTotalWeight(changeRecord.weight, changeRecord.unit, changeRecord.packQty)
+    }
+
+    this._updateBatchList()
+  }
+
+  _calcTotalWeight(weight, unit, packQty) {
+    if (weight && unit && packQty) {
+      return `${(weight * packQty).toFixed(2)} ${unit}`
+    } else {
+      return null
+    }
   }
 
   async _createTransportOrder() {
     try {
-      const formData = this._serializeForm()
-      await client.query({
-        query: gql`
-          mutation {
-            orders: createTransportOrder(${gqlBuilder.buildArgs({
-              transportOrder: {
-                name: formData.name,
-                description: JSON.stringify({
-                  orderNo: this._generateDONo(),
-                  description: formData.description,
-                  contactNo: formData.contact_no,
-                  products: this._getProducts(),
-                  services: this._getServices()
-                }),
-                when: new Date(formData.when).getTime().toString(),
-                from: formData.from,
-                to: formData.to,
-                loadType: formData.load_type,
-                orderType: 'TO',
-                state: 'Pending'
-              }
-            })}) {
-              name
-            }
-          }
-        `
-      })
+      this._validateForm()
+      this._validateProducts()
+      this._validateVas()
 
-      navigate('confirm_transport')
+      if (this.selectTransportOrder.value === TRANSPORT_OPTIONS.DELIVERY_ORDER.value) {
+        const response = await client.query({
+          query: gql`
+            mutation {
+              generateDeliveryOrder(${gqlBuilder.buildArgs({
+                deliveryOrder: this._getTransportOrder()
+              })}) {
+                id
+                name
+              }
+            }
+          `
+        })
+        if (!response.errors) {
+          navigate(`transport_order_detail/${response.data.generateDeliveryOrder.name}`)
+          this._showToast({ message: i18next.t('transport_order_for_delivery_created') })
+        }
+      } else if (this.selectTransportOrder.value === TRANSPORT_OPTIONS.COLLECTION_ORDER.value) {
+        const response = await client.query({
+          query: gql`
+            mutation {
+              generateCollectionOrder(${gqlBuilder.buildArgs({
+                collectionOrder: this._getTransportOrder()
+              })}) {
+                id
+                name
+              }
+            }
+          `
+        })
+        if (!response.errors) {
+          navigate(`transport_order_detail/${response.data.generateCollectionOrder.name}`)
+          this._showToast({ message: i18next.t('transport_order_for_collection_created') })
+        }
+      }
     } catch (e) {
-      this._notify(e.message)
+      this._showToast(e)
     }
   }
 
-  _generateDONo() {
-    return `D-ORD-${new Date().getTime().toString()}`
+  _validateForm() {
+    const elements = Array.from(this.form.querySelectorAll('input, select'))
+
+    if (!elements.filter(e => !e.hasAttribute('hidden')).every(e => e.checkValidity()))
+      throw new Error(i18next.t('text.invalid_form'))
   }
 
-  get _getInputs() {
-    return Array.from(this.shadowRoot.querySelectorAll('form input'))
+  _validateProducts() {
+    this.productGrist.commit()
+    // no records
+    if (!this.productGrist.data.records || !this.productGrist.data.records.length)
+      throw new Error(i18next.t('text.no_products'))
+
+    // required field (batchId, packingType, weight, unit, packQty)
+    if (
+      this.productGrist.data.records.filter(
+        record => !record.batchId || !record.packingType || !record.weight || !record.unit || !record.packQty
+      ).length
+    )
+      throw new Error(i18next.t('text.empty_value_in_list'))
+
+    // duplication of batch id
+    const batchIds = this.productGrist.data.records.map(product => product.batchId)
+    if (batchIds.filter((batchId, idx, batchIds) => batchIds.indexOf(batchId) !== idx).length)
+      throw new Error(i18next.t('text.batch_id_is_duplicated'))
   }
 
-  _serializeForm() {
-    try {
-      let tempObj = {}
+  _validateVas() {
+    this.vasGrist.commit()
+    if (this.vasGrist.data.records && this.vasGrist.data.records.length) {
+      // required field (vas && remark)
+      if (this.vasGrist.data.records.filter(record => !record.vas || !record.remark).length)
+        throw new Error(i18next.t('text.empty_value_in_list'))
 
-      this._getInputs.map(input => {
-        if (input.value) {
-          tempObj[input.name] = input.value
-        } else {
-          throw new Error(i18next.t('text.form_is_not_completed'))
+      // duplication of vas for same batch
+      const vasBatches = this.vasGrist.data.records.map(vas => `${vas.vas.id}-${vas.batchId}`)
+      if (vasBatches.filter((vasBatch, idx, vasBatches) => vasBatches.indexOf(vasBatch) !== idx).length)
+        throw new Error(i18next.t('text.duplicated_vas_on_same_batch'))
+    }
+  }
+
+  _updateBatchList() {
+    // TODO: 시점 문제...
+    setTimeout(() => {
+      this.productGrist.commit()
+      this.productData = this.productGrist.data
+      const batchIds = (this.productGrist.data.records || []).map(record => record.batchId)
+
+      this.vasGrist.commit()
+      this.vasData = {
+        ...this.vasGrist.data,
+        records: this.vasGrist.data.records.map(record => {
+          return {
+            ...record,
+            batchId: batchIds.includes(record.batchId) ? record.batchId : null
+          }
+        })
+      }
+
+      this.vasGristConfig = {
+        ...this.vasGristConfig,
+        columns: this.vasGristConfig.columns.map(column => {
+          if (column.name === 'batchId') column.record.options = [i18next.t('label.all'), ...batchIds]
+
+          return column
+        })
+      }
+    }, 300)
+  }
+
+  _getTransportOrder() {
+    if (this.selectTransportOrder.value === TRANSPORT_OPTIONS.DELIVERY_ORDER.value) {
+      let deliveryOrder = { status: ORDER_STATUS.PENDING.value }
+      Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
+        if (!field.hasAttribute('hidden') && field.value) {
+          deliveryOrder[field.name] = field.value
+          delete [field.id] == 'transportOptions'
         }
       })
-      return tempObj
-    } catch (e) {
-      this._notify(e.message)
+
+      const products = this.productGrist.data.records.map((record, idx) => {
+        const seq = idx + 1
+        delete record.id
+        delete record.__typename
+        delete record.product.__typename
+
+        return { ...record, seq }
+      })
+
+      const vass = this.vasGrist.data.records.map(record => {
+        delete record.id
+        delete record.__typename
+        delete record.vas.__typename
+
+        return { ...record, name }
+      })
+
+      return { deliveryOrder, products, vass }
+    } else if (this.selectTransportOrder.value === TRANSPORT_OPTIONS.COLLECTION_ORDER.value) {
+      let collectionOrder = { status: ORDER_STATUS.PENDING.value }
+      Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
+        if (!field.hasAttribute('hidden') && field.value) {
+          collectionOrder[field.name] = field.value
+        }
+      })
+      delete collectionOrder.transportOptions
+
+      const products = this.productGrist.data.records.map((record, idx) => {
+        const seq = idx + 1
+        delete record.id
+        delete record.__typename
+        delete record.product.__typename
+
+        return { ...record, seq }
+      })
+
+      const vass = this.vasGrist.data.records.map(record => {
+        delete record.id
+        delete record.__typename
+        delete record.vas.__typename
+
+        return { ...record, name }
+      })
+
+      return { collectionOrder, products, vass }
     }
   }
 
-  _clearForm() {
-    this._getInputs.forEach(input => (input.value = ''))
+  _clearPage() {
+    this.form.reset()
+    this.productData = {}
+    this.vasGrist.data = {}
   }
 
-  _getProducts() {
-    const products = this.shadowRoot.querySelector('#products').dirtyRecords
-    if (products.length === 0) {
-      throw new Error(i18next.t('text.list_is_not_completed'))
-    } else {
-      return products
+  stateChanged(state) {
+    if (this.active) {
+      this._transportOrderNo = state && state.route && state.route.resourceId
     }
   }
 
-  _getServices() {
-    return this.shadowRoot.querySelector('#services').dirtyRecords
-  }
-
-  _notify(message, level = '') {
+  _showToast({ type, message }) {
     document.dispatchEvent(
       new CustomEvent('notify', {
         detail: {
-          level,
+          type,
           message
         }
       })
