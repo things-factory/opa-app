@@ -6,7 +6,7 @@ import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } 
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
-import './generate-list'
+import './generate-location-list'
 import { USBPrinter } from '@things-factory/barcode-base'
 
 class LocationList extends connect(store)(localize(i18next)(PageView)) {
@@ -365,7 +365,10 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
 
   async _generateLocation() {
     openPopup(html`
-      <generate-list style="width: 80vw; height: 80vh" .warehouseId="${this._warehouseId}"></generate-list>
+      <generate-location-list
+        style="width: 80vw; height: 80vh"
+        .warehouseId="${this._warehouseId}"
+      ></generate-location-list>
     `)
   }
 

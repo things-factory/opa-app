@@ -6,11 +6,14 @@ import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 
-export class GenerateList extends localize(i18next)(LitElement) {
+export class GenerateLocationList extends localize(i18next)(LitElement) {
   constructor() {
     super()
     this.locationList = []
     this.tempLocationList = []
+    this.zoneName = ''
+    this.rowSuffix = ''
+    this.columnSuffix = ''
   }
 
   static get styles() {
@@ -80,11 +83,37 @@ export class GenerateList extends localize(i18next)(LitElement) {
           <legend>${i18next.t('title.generate_location_list')}</legend>
           <label>${i18next.t('label.zone_name')}</label>
           <input
-            id="zone_name"
-            name="zone_name"
             @input="${event => {
               const input = event.currentTarget
               this.zoneName = input.value
+            }}"
+            @keypress="${event => {
+              if (event.keyCode === 13) {
+                event.preventDefault()
+                return false
+              }
+            }}"
+          />
+          <label>${i18next.t('label.row_suffix')}</label>
+          <input
+            placeholder="${i18next.t('label.enter_row_suffix_if_any')}"
+            @input="${event => {
+              const input = event.currentTarget
+              this.rowSuffix = input.value
+            }}"
+            @keypress="${event => {
+              if (event.keyCode === 13) {
+                event.preventDefault()
+                return false
+              }
+            }}"
+          />
+          <label>${i18next.t('label.column_suffix')}</label>
+          <input
+            placeholder="${i18next.t('label.column_suffix_if_any')}"
+            @input="${event => {
+              const input = event.currentTarget
+              this.columnSuffix = input.value
             }}"
             @keypress="${event => {
               if (event.keyCode === 13) {
@@ -310,73 +339,20 @@ export class GenerateList extends localize(i18next)(LitElement) {
 
     if (locationData && locationData.length) {
       locationData = locationData.forEach(locations => {
-        locations['zone'] = this.zoneName.toUpperCase()
         if (locations.start <= locations.end) {
           for (let i = locations.start; i <= locations.end; i++) {
             for (let j = 1; j <= locations.column; j++) {
               for (let k = 1; k <= locations.cell; k++) {
-                switch (k) {
-                  case 1:
-                    locations['cellInstance'] = 'A'
-                    break
-                  case 2:
-                    locations['cellInstance'] = 'B'
-                    break
-                  case 3:
-                    locations['cellInstance'] = 'C'
-                    break
-                  case 4:
-                    locations['cellInstance'] = 'D'
-                    break
-                  case 5:
-                    locations['cellInstance'] = 'E'
-                    break
-                  case 6:
-                    locations['cellInstance'] = 'F'
-                    break
-                  case 7:
-                    locations['cellInstance'] = 'G'
-                    break
-                  case 8:
-                    locations['cellInstance'] = 'H'
-                    break
-                  case 9:
-                    locations['cellInstance'] = 'I'
-                    break
-                  case 10:
-                    locations['cellInstance'] = 'J'
-                    break
-                  case 11:
-                    locations['cellInstance'] = 'K'
-                    break
-                  case 12:
-                    locations['cellInstance'] = 'L'
-                    break
-                  case 13:
-                    locations['cellInstance'] = 'M'
-                    break
-                  case 14:
-                    locations['cellInstance'] = 'N'
-                    break
-                  default:
-                    locations['cellInstance'] = 'NULL'
-                }
-
-                locations['name'] =
-                  this.zoneName.toUpperCase() +
-                  '' +
-                  i.toString().padStart(2, '0') +
-                  '-' +
-                  j.toString().padStart(2, '0') +
-                  '-' +
-                  locations.cellInstance
-
                 const locationObj = {}
-                locationObj['name'] = locations.name.toString()
-                locationObj['zone'] = locations.zone.toString()
-                locationObj['row'] = i.toString().padStart(2, '0')
-                locationObj['column'] = j.toString().padStart(2, '0')
-                locationObj['shelf'] = locations.cellInstance.toString()
+
+                if (this.rowSuffix === '') locationObj['row'] = i.toString().padStart(2, '0')
+                else locationObj['row'] = i.toString() + this.rowSuffix.toUpperCase()
+                if (this.columnSuffix === '') locationObj['column'] = j.toString().padStart(2, '0')
+                else locationObj['column'] = j.toString() + this.columnSuffix.toUpperCase()
+                locationObj['shelf'] = this._getCellInstance(k)
+                locationObj['zone'] = this.zoneName.toString().toUpperCase()
+                locationObj['name'] =
+                  locationObj.zone + '' + locationObj.row + '-' + locationObj.column + '-' + locationObj.shelf
                 locationObj['status'] = 'Empty'
                 locationObj['warehouse'] = { id: this.warehouseId }
                 locationObj['cuFlag'] = '+'
@@ -386,9 +362,11 @@ export class GenerateList extends localize(i18next)(LitElement) {
             }
           }
         } else {
+          this.tempLocationList = []
           document.dispatchEvent(
             new CustomEvent('notify', {
               detail: {
+                level: 'error',
                 message: i18next.t('text.row_start_cannot_more_than_row_end')
               }
             })
@@ -399,6 +377,96 @@ export class GenerateList extends localize(i18next)(LitElement) {
       this.tempLocationList = []
       this.dataGrist.fetch()
     }
+  }
+
+  _getCellInstance(column) {
+    var cellInstance = ''
+    switch (column) {
+      case 1:
+        cellInstance = 'A'
+        break
+      case 2:
+        cellInstance = 'B'
+        break
+      case 3:
+        cellInstance = 'C'
+        break
+      case 4:
+        cellInstance = 'D'
+        break
+      case 5:
+        cellInstance = 'E'
+        break
+      case 6:
+        cellInstance = 'F'
+        break
+      case 7:
+        cellInstance = 'G'
+        break
+      case 8:
+        cellInstance = 'H'
+        break
+      case 9:
+        cellInstance = 'I'
+        break
+      case 10:
+        cellInstance = 'J'
+        break
+      case 11:
+        cellInstance = 'K'
+        break
+      case 12:
+        cellInstance = 'L'
+        break
+      case 13:
+        cellInstance = 'M'
+        break
+      case 14:
+        cellInstance = 'N'
+        break
+      case 15:
+        cellInstance = 'O'
+        break
+      case 16:
+        cellInstance = 'P'
+        break
+      case 17:
+        cellInstance = 'Q'
+        break
+      case 18:
+        cellInstance = 'R'
+        break
+      case 19:
+        cellInstance = 'S'
+        break
+      case 20:
+        cellInstance = 'T'
+        break
+      case 21:
+        cellInstance = 'U'
+        break
+      case 22:
+        cellInstance = 'V'
+        break
+      case 23:
+        cellInstance = 'W'
+        break
+      case 24:
+        cellInstance = 'X'
+        break
+      case 25:
+        cellInstance = 'Y'
+        break
+      case 26:
+        cellInstance = 'Z'
+        break
+      case 14:
+        cellInstance = 'N'
+        break
+      default:
+        cellInstance = column.toString()
+    }
+    return cellInstance
   }
 
   async _saveGeneratedLocation() {
@@ -449,4 +517,4 @@ export class GenerateList extends localize(i18next)(LitElement) {
   }
 }
 
-window.customElements.define('generate-list', GenerateList)
+window.customElements.define('generate-location-list', GenerateLocationList)
