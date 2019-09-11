@@ -212,5 +212,13 @@
   "field.number_of_cell": "number of cell",
   "field.email": "email",
   "field.fax": "fax",
-  "field.phone": "phone"
+  "field.phone": "phone",
+  "text.zone_name_cannot_be_empty": "zone name cannot be empty",
+  "text.row_end_must_greater_than_row_start": "row end must greater than row start",
+  "text.enter_column_suffix_if_any": "enter column suffix if any",
+  "text.enter_row_suffix_if_any": "enter row suffix if any",
+  "text.enter_zone_name": "enter zone name",
+  "label.row_suffix": "row suffix",
+  "label.column_suffix": "column suffix",
+  "button.preview": "preview"
 }

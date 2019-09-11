@@ -376,7 +376,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
             new CustomEvent('notify', {
               detail: {
                 level: 'error',
-                message: i18next.t('text.row_start_cannot_greater_than_row_end')
+                message: i18next.t('text.row_end_must_greater_than_row_start')
               }
             })
           )
