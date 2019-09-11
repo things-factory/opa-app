@@ -83,6 +83,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           <legend>${i18next.t('title.generate_location_list')}</legend>
           <label>${i18next.t('label.zone_name')}</label>
           <input
+            placeholder="text.enter_zone_name"
             @input="${event => {
               const input = event.currentTarget
               this.zoneName = input.value
@@ -96,7 +97,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           />
           <label>${i18next.t('label.row_suffix')}</label>
           <input
-            placeholder="${i18next.t('label.enter_row_suffix_if_any')}"
+            placeholder="${i18next.t('text.enter_row_suffix_if_any')}"
             @input="${event => {
               const input = event.currentTarget
               this.rowSuffix = input.value
@@ -110,7 +111,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           />
           <label>${i18next.t('label.column_suffix')}</label>
           <input
-            placeholder="${i18next.t('label.column_suffix_if_any')}"
+            placeholder="${i18next.t('text.enter_column_suffix_if_any')}"
             @input="${event => {
               const input = event.currentTarget
               this.columnSuffix = input.value
@@ -142,7 +143,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
       </div>
 
       <div class="button-container">
-        <mwc-button @click=${this._generateLocationList}>${i18next.t('button.generate')}</mwc-button>
+        <mwc-button @click=${this._generateLocationList}>${i18next.t('button.preview')}</mwc-button>
         <mwc-button @click=${this._saveGeneratedLocation}>${i18next.t('button.save')}</mwc-button>
         <mwc-button @click=${this._deleteFromList}>${i18next.t('button.delete')}</mwc-button>
       </div>
@@ -337,7 +338,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
   _generateLocationList() {
     let locationData = this.data.records
 
-    if (locationData && locationData.length) {
+    if (this.zoneName !== '' && locationData && locationData.length) {
       locationData = locationData.forEach(locations => {
         if (locations.start <= locations.end) {
           for (let i = locations.start; i <= locations.end; i++) {
@@ -375,7 +376,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
             new CustomEvent('notify', {
               detail: {
                 level: 'error',
-                message: i18next.t('text.row_start_cannot_more_than_row_end')
+                message: i18next.t('text.row_start_cannot_greater_than_row_end')
               }
             })
           )
@@ -384,6 +385,15 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
       this.locationList = this.tempLocationList
       this.tempLocationList = []
       this.dataGrist.fetch()
+    } else if (this.zoneName === '') {
+      document.dispatchEvent(
+        new CustomEvent('notify', {
+          detail: {
+            level: 'error',
+            message: i18next.t('text.zone_name_cannot_be_empty')
+          }
+        })
+      )
     }
   }
 
@@ -492,7 +502,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
         `
       })
 
-      if (!response.errors) history.back()
+      if (!response.errors) location.replace(`locations/${this.warehouseId}`)
     } catch (e) {
       document.dispatchEvent(
         new CustomEvent('notify', {
