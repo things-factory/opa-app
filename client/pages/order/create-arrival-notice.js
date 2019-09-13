@@ -102,7 +102,6 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           <label>${i18next.t('label.container_no')}</label>
           <input name="containerNo" />
 
-          <label>${i18next.t('label.use_own_transport')}</label>
           <input
             type="checkbox"
             name="ownTransport"
@@ -111,6 +110,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
               this._ownTransport = e.currentTarget.checked
             }}
           />
+          <label>${i18next.t('label.use_own_transport')}</label>
 
           <!-- Show when userOwnTransport is true -->
           <label ?hidden="${this._ownTransport}">${i18next.t('label.collection_date_time')}</label>
@@ -478,7 +478,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       navigate(`arrival_notice_detail/${response.data.editArrivalNotice.name}`)
-      this._showToast({ message: i18next.t('arrival_notice_created') })
+      this._showToast({ message: i18next.t('arrival_notice_updated') })
     }
   }
 

@@ -367,7 +367,7 @@ class CreateTransportOrder extends connect(store)(localize(i18next)(PageView)) {
           `
         })
         if (!response.errors) {
-          navigate(`transport_order_detail/${response.data.generateDeliveryOrder.name}`)
+          navigate(`transport_order_detail/${response.data.generateDeliveryOrder.name}?type=delivery_order`)
           this._showToast({ message: i18next.t('transport_order_for_delivery_created') })
         }
       } else if (this.selectTransportOrder.value === TRANSPORT_OPTIONS.COLLECTION_ORDER.value) {
@@ -384,7 +384,7 @@ class CreateTransportOrder extends connect(store)(localize(i18next)(PageView)) {
           `
         })
         if (!response.errors) {
-          navigate(`transport_order_detail/${response.data.generateCollectionOrder.name}`)
+          navigate(`transport_order_detail/${response.data.generateCollectionOrder.name}?type=collection_order`)
           this._showToast({ message: i18next.t('transport_order_for_collection_created') })
         }
       }
@@ -469,9 +469,9 @@ class CreateTransportOrder extends connect(store)(localize(i18next)(PageView)) {
       Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
         if (!field.hasAttribute('hidden') && field.value) {
           deliveryOrder[field.name] = field.value
-          delete [field.id] == 'transportOptions'
         }
       })
+      delete deliveryOrder.transportOptions
 
       const products = this.productGrist.data.records.map((record, idx) => {
         const seq = idx + 1

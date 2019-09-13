@@ -1,19 +1,21 @@
+import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
+import { LOAD_TYPES, TRANSPORT_OPTIONS, ORDER_STATUS } from './constants/order'
 
 class TransportOrderDetail extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
-      orderName: Object,
-      productsConfig: Object,
-      servicesConfig: Object,
-      productsData: Object,
-      servicesData: Object
+      _ganNo: String,
+      _status: String,
+      productGristConfig: Object,
+      vasGristConfig: Object,
+      productData: Object,
+      vasData: Object
     }
   }
 
@@ -24,20 +26,18 @@ class TransportOrderDetail extends connect(store)(localize(i18next)(PageView)) {
         :host {
           display: flex;
           flex-direction: column;
-          overflow-x: overlay;
+          overflow-x: auto;
         }
         .grist {
+          background-color: var(--main-section-background-color);
           display: flex;
           flex-direction: column;
           flex: 1;
+          overflow-y: auto;
         }
         data-grist {
           overflow-y: hidden;
           flex: 1;
-        }
-        .button-container {
-          display: flex;
-          margin-left: auto;
         }
         h2 {
           padding: var(--subtitle-padding);
@@ -45,13 +45,29 @@ class TransportOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           color: var(--subtitle-text-color);
           border-bottom: var(--subtitle-border-bottom);
         }
+        .grist h2 {
+          margin: var(--grist-title-margin);
+          border: var(--grist-title-border);
+          color: var(--secondary-color);
+        }
+
+        .grist h2 mwc-icon {
+          vertical-align: middle;
+          margin: var(--grist-title-icon-margin);
+          font-size: var(--grist-title-icon-size);
+          color: var(--grist-title-icon-color);
+        }
+
+        h2 + data-grist {
+          padding-top: var(--grist-title-with-grid-padding);
+        }
       `
     ]
   }
 
   get context() {
     return {
-      title: i18next.t('title.create_arrival_notice')
+      title: i18next.t('title.transport_order_detail')
     }
   }
 
@@ -61,26 +77,57 @@ class TransportOrderDetail extends connect(store)(localize(i18next)(PageView)) {
         <form class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.transport_order')}</legend>
-            <label>${i18next.t('label.contact_point')}</label>
-            <input name="name" readonly />
-
-            <label>${i18next.t('label.description')}</label>
-            <input name="description" readonly />
-
-            <label>${i18next.t('label.delivery_date')}</label>
-            <input name="when" type="date" readonly />
-
-            <label>${i18next.t('label.contact_no')}</label>
-            <input name="contact_no" readonly />
+            <label>${i18next.t('label.transport_option')}</label>
+            <select
+              id="transportOptions"
+              name="transportOptions"
+              @change=${e => {
+                this._isDeliveryOrder = e.currentTarget.value === TRANSPORT_OPTIONS.DELIVERY_ORDER.value
+              }}
+            >
+              ${Object.keys(TRANSPORT_OPTIONS).map(key => {
+                return html`
+                  <option value="${TRANSPORT_OPTIONS[key].value}"
+                    >${i18next.t(`label.${TRANSPORT_OPTIONS[key].name}`)}</option
+                  >
+                `
+              })}
+            </select>
 
             <label>${i18next.t('label.from')}</label>
-            <input name="from" readonly />
+            <input name="from" />
 
             <label>${i18next.t('label.to')}</label>
-            <input name="to" readonly />
+            <input name="to" />
 
-            <label>${i18next.t('label.load_type')}</label>
-            <input name="load_type" readonly />
+            <label ?hidden="${!this._isDeliveryOrder}">${i18next.t('label.delivery_date')}</label>
+            <input
+              name="deliveryDateTime"
+              ?hidden="${!this._isDeliveryOrder}"
+              type="datetime-local"
+              min="${this._getStdDatetime()}"
+            />
+
+            <label>${i18next.t('label.loadType')}</label>
+            <select name="loadType" required>
+              ${LOAD_TYPES.map(
+                loadType => html`
+                  <option value="${loadType.value}">${i18next.t(`label.${loadType.name}`)}</option>
+                `
+              )}
+            </select>
+
+            <!-- Show when collection option is false-->
+            <label ?hidden="${this._isDeliveryOrder}">${i18next.t('label.collection_datetime')}</label>
+            <input
+              ?hidden="${this._isDeliveryOrder}"
+              name="collectionDateTime"
+              type="datetime-local"
+              min="${this._getStdDatetime()}"
+            />
+
+            <label>${i18next.t('label.tel_no')}</label>
+            <input name="telNo" />
           </fieldset>
         </form>
       </div>

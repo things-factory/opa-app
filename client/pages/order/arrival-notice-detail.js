@@ -98,8 +98,8 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           <label>${i18next.t('label.container_no')}</label>
           <input name="containerNo" disabled />
 
-          <label>${i18next.t('label.use_own_transport')}</label>
           <input type="checkbox" name="ownTransport" ?checked="${this._ownTransport}" disabled />
+          <label>${i18next.t('label.use_own_transport')}</label>
 
           <!-- Show when userOwnTransport is true -->
           <label ?hidden="${this._ownTransport}">${i18next.t('label.collection_date_time')}</label>

@@ -78,10 +78,21 @@ export const ORDER_VAS_STATUS = {
 export const LOAD_TYPES = [
   {
     name: 'full_container_load',
-    value: 'fcl'
+    value: 'FCL'
   },
   {
     name: 'low_container_load',
-    value: 'lcl'
+    value: 'LCL'
   }
 ]
+
+export const TRANSPORT_OPTIONS = {
+  DELIVERY_ORDER: {
+    name: 'delivery_order',
+    value: 'DELIVERY_ORDER'
+  },
+  COLLECTION_ORDER: {
+    name: 'collection_order',
+    value: 'COLLECTION_ORDER'
+  }
+}
