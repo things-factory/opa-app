@@ -1,7 +1,7 @@
 {
-  "name": "Tutorial App",
-  "short_name": "Tutorial App",
-  "description": "Tutorial App",
+  "name": "OPAONE",
+  "short_name": "OPAONE",
+  "description": "OPAONE",
   "icons": [
     {
       "src": "assets/manifest/icon-192x192.png",
@@ -16,6 +16,6 @@
   ],
   "start_url": "/",
   "display": "standalone",
-  "theme_color": "#3f51b5",
-  "background_color": "#3f51b5"
+  "theme_color": "#22a6a7",
+  "background_color": "#22a6a7"
 }
