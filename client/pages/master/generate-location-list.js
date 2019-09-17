@@ -14,6 +14,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
     this.zoneName = ''
     this.rowSuffix = ''
     this.columnSuffix = ''
+    this.caseSensitive = false
   }
 
   static get styles() {
@@ -84,7 +85,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           <legend>${i18next.t('title.generate_location_list')}</legend>
           <label>${i18next.t('label.zone_name')}</label>
           <input
-            placeholder="text.enter_zone_name"
+            placeholder="${i18next.t('text.enter_zone_name')}"
             @input="${event => {
               const input = event.currentTarget
               this.zoneName = input.value
@@ -124,6 +125,20 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
               }
             }}"
           />
+          <label>${i18next.t('label.case_sensitive')}</label>
+          <input
+            type="checkbox"
+            @input="${event => {
+              const field = event.currentTarget
+              this.caseSensitive = field.checked
+            }}"
+            @keypress="${event => {
+              if (event.keyCode === 13) {
+                event.preventDefault()
+                return false
+              }
+            }}"
+          />
         </fieldset>
       </form>
 
@@ -142,6 +157,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           .fetchHandler="${this.fetchHandler.bind(this)}"
           @limit-changed=${e => {
             this.limit = e.detail
+          }}
         ></data-grist>
       </div>
 
@@ -178,18 +194,9 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
       columns: [
-          type: 'gutter',
-          gutterName: 'dirty'
-        },
-        {
-          type: 'gutter',
-          gutterName: 'sequence'
-        },
-        {
-          type: 'gutter',
-          gutterName: 'row-selector',
-          multiple: true
-        },
+        { type: 'gutter', gutterName: 'dirty' },
+        { type: 'gutter', gutterName: 'sequence' },
+        { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'number',
           name: 'start',
