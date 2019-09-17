@@ -1,7 +1,7 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, ScrollbarStyles, navigate } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
@@ -72,7 +72,8 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
     return {
       warehouseId: String,
       _searchFields: Array,
-      config: Object
+      config: Object,
+      previewConfig: Object
     }
   }
 
@@ -139,6 +140,8 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.previewConfig}
           .fetchHandler="${this.fetchHandler.bind(this)}"
+          @limit-changed=${e => {
+            this.limit = e.detail
         ></data-grist>
       </div>
 
@@ -172,13 +175,9 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
   async firstUpdated() {
     this.data = { records: [] }
     this.config = {
-      rows: {
-        selectable: {
-          multiple: true
-        }
-      },
+      pagination: { infinite: true },
+      rows: { selectable: { multiple: true } },
       columns: [
-        {
           type: 'gutter',
           gutterName: 'dirty'
         },
@@ -235,25 +234,11 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
     }
 
     this.previewConfig = {
-      rows: {
-        selectable: {
-          multiple: true
-        }
-      },
+      rows: { selectable: { multiple: true } },
       columns: [
-        {
-          type: 'gutter',
-          gutterName: 'dirty'
-        },
-        {
-          type: 'gutter',
-          gutterName: 'sequence'
-        },
-        {
-          type: 'gutter',
-          gutterName: 'row-selector',
-          multiple: true
-        },
+        { type: 'gutter', gutterName: 'dirty' },
+        { type: 'gutter', gutterName: 'sequence' },
+        { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'string',
           name: 'name',
@@ -360,9 +345,9 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
                 locationObj['zone'] = this.zoneName.toString().toUpperCase()
 
                 locationObj['name'] =
-                  locationObj.zone + '' + locationObj.row + '-' + locationObj.column + '-' + locationObj.shelf
+                  locationObj.zone + '-' + locationObj.row + '-' + locationObj.column + '-' + locationObj.shelf
 
-                locationObj['status'] = 'Empty'
+                locationObj['status'] = 'empty'
                 locationObj['warehouse'] = { id: this.warehouseId }
                 locationObj['cuFlag'] = '+'
 

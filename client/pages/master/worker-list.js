@@ -14,7 +14,6 @@ class WorkerList extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-
           overflow: hidden;
         }
 
@@ -23,6 +22,7 @@ class WorkerList extends localize(i18next)(PageView) {
         }
         .grist {
           display: flex;
+          overflow-y: auto;
           flex-direction: column;
           flex: 1;
         }

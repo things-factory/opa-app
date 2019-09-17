@@ -17,14 +17,13 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
         :host {
           display: flex;
           flex-direction: column;
-
           overflow: hidden;
         }
-
         search-form {
           overflow: visible;
         }
         .grist {
+          background-color: var(--main-section-background-color);
           display: flex;
           flex-direction: column;
           flex: 1;
@@ -42,8 +41,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     return {
       _warehouseId: String,
       _searchFields: Array,
-      config: Object,
-      data: Object
+      config: Object
     }
   }
 
