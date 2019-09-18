@@ -90,6 +90,10 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
+  languageUpdated() {
+    this.dataGrist.refresh()
+  }
+
   async firstUpdated() {
     this._searchFields = [
       {
@@ -141,7 +145,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'name',
-          header: i18next.t('field.name'),
+          header: 'field.name',
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 100
@@ -149,7 +153,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'description',
-          header: i18next.t('field.description'),
+          header: 'field.description',
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 150
@@ -157,7 +161,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'address',
-          header: i18next.t('field.address'),
+          header: 'field.address',
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 150
@@ -165,7 +169,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'postalCode',
-          header: i18next.t('field.postal_code'),
+          header: 'field.postal_code',
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 120
@@ -173,7 +177,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'latlng',
-          header: i18next.t('field.latlng'),
+          header: 'field.latlng',
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 100
@@ -181,7 +185,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'status',
-          header: i18next.t('field.status'),
+          header: 'field.status',
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 80
@@ -189,7 +193,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'datetime',
           name: 'updatedAt',
-          header: i18next.t('field.updated_at'),
+          header: 'field.updated_at',
           record: { editable: false, align: 'left' },
           sortable: true,
           width: 150
@@ -197,7 +201,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'object',
           name: 'updater',
-          header: i18next.t('field.updater'),
+          header: 'field.updater',
           record: { editable: false, align: 'left' },
           sortable: true,
           width: 150

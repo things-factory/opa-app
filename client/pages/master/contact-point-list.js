@@ -112,6 +112,10 @@ export class ContactPointList extends localize(i18next)(LitElement) {
     }
   }
 
+  languageUpdated() {
+    this.dataGrist.refresh()
+  }
+
   async firstUpdated() {
     this._searchFields = [
       {
@@ -183,7 +187,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
             align: 'left',
             editable: true
           },
-          header: i18next.t('field.name'),
+          header: 'field.name',
           width: 120
         },
         {
@@ -193,7 +197,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
             align: 'left',
             editable: true
           },
-          header: i18next.t('field.description'),
+          header: 'field.description',
           width: 220
         },
         {
@@ -203,7 +207,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
             align: 'left',
             editable: true
           },
-          header: i18next.t('field.email'),
+          header: 'field.email',
           width: 120
         },
         {
@@ -213,7 +217,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
             align: 'left',
             editable: true
           },
-          header: i18next.t('field.fax'),
+          header: 'field.fax',
           width: 120
         },
         {
@@ -223,7 +227,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
             align: 'left',
             editable: true
           },
-          header: i18next.t('field.phone'),
+          header: 'field.phone',
           width: 120
         },
         {
@@ -233,7 +237,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
             align: 'left',
             editable: false
           },
-          header: i18next.t('field.updater'),
+          header: 'field.updater',
           width: 150
         },
         {
@@ -242,7 +246,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
           record: {
             align: 'left'
           },
-          header: i18next.t('field.updated_at'),
+          header: 'field.updated_at',
           width: 150
         }
       ]

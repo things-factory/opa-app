@@ -4,8 +4,13 @@ import { client, store, UPDATE_BASE_URL } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { html } from 'lit-html'
 import './viewparts/label-setting-let'
+import { i18next } from '@things-factory/i18n-base'
+import { DataGrist } from '@things-factory/grist-ui'
 
 export default function bootstrap() {
+  /* global setting for DataGrist */
+  DataGrist.translator = x => i18next.t(x)
+
   /*
    * things-board 기능을 메뉴에서 지원하기 위해서, VIEWER, PLAYER routing type을 추가함.
    */
