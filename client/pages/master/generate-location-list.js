@@ -100,43 +100,25 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           <input
             placeholder="${i18next.t('text.enter_row_suffix_if_any')}"
             @input="${event => {
-              const input = event.currentTarget
-              this.rowSuffix = input.value
+              this.rowSuffix = event.currentTarget.value
             }}"
-            @keypress="${event => {
-              if (event.keyCode === 13) {
-                event.preventDefault()
-                return false
-              }
-            }}"
+            @keypress="${this._keyPressHandler.bind(this)}"
           />
           <label>${i18next.t('label.column_suffix')}</label>
           <input
             placeholder="${i18next.t('text.enter_column_suffix_if_any')}"
             @input="${event => {
-              const input = event.currentTarget
-              this.columnSuffix = input.value
+              this.columnSuffix = event.currentTarget.value
             }}"
-            @keypress="${event => {
-              if (event.keyCode === 13) {
-                event.preventDefault()
-                return false
-              }
-            }}"
+            @keypress="${this._keyPressHandler.bind(this)}"
           />
           <label>${i18next.t('label.case_sensitive')}</label>
           <input
             type="checkbox"
             @input="${event => {
-              const field = event.currentTarget
-              this.caseSensitive = field.checked
+              this.caseSensitive = event.currentTarget.checked
             }}"
-            @keypress="${event => {
-              if (event.keyCode === 13) {
-                event.preventDefault()
-                return false
-              }
-            }}"
+            @keypress="${this._keyPressHandler.bind(this)}"
           />
         </fieldset>
       </form>
@@ -323,6 +305,13 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
       this.data.records.push(record)
     } else if (record !== after) {
       record = Object.assign(record, after)
+    }
+  }
+
+  _keyPressHandler(event) {
+    if (event.keyCode === 13) {
+      event.preventDefault()
+      return false
     }
   }
 
