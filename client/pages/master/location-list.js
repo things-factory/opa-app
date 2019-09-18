@@ -109,6 +109,11 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
         props: { searchOper: 'like', placeholder: i18next.t('label.name') }
       },
       {
+        name: 'type',
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.type') }
+      },
+      {
         name: 'zone',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.zone') }
@@ -149,7 +154,14 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           sortable: true,
           width: 150
         },
-
+        {
+          type: 'string',
+          name: 'type',
+          header: i18next.t('field.type'),
+          record: { editable: true, align: 'string' },
+          sortable: true,
+          width: 150
+        },
         {
           type: 'string',
           name: 'zone',
@@ -187,7 +199,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'status',
           header: i18next.t('field.status'),
-          record: { editable: true, align: 'left' },
+          record: { editable: true, align: 'center' },
           sortable: true,
           width: 80
         },
