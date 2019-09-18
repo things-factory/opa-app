@@ -75,6 +75,14 @@ export default function route(page) {
       import('./pages/order/receive-arrival-notice')
       return page
 
+    case 'check_arrived_notice':
+      import('./pages/order/check-arrived-notice')
+      return page
+
+    case 'assign_buffer_location':
+      import('./pages/order/assign-buffer-location')
+      return page
+
     case 'create_transport_order':
       import('./pages/order/create-transport-order')
       return page
@@ -138,6 +146,10 @@ export default function route(page) {
 
     case 'settings':
       import('./pages/system/system-setting')
+      return page
+
+    case 'codes':
+      import('./pages/system/system-code')
       return page
 
     /**

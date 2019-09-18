@@ -2,6 +2,8 @@ import { LitElement, html, css } from 'lit-element'
 
 import { localize, i18next } from '@things-factory/i18n-base'
 import '@things-factory/setting-base'
+import { openPopup } from '@things-factory/layout-base'
+import './label-selector-popup'
 
 export class LabelSettingLet extends localize(i18next)(LitElement) {
   static get styles() {
@@ -10,10 +12,35 @@ export class LabelSettingLet extends localize(i18next)(LitElement) {
         div.field {
           display: flex;
           flex-direction: row;
-          align-items: center;
+          align-items: flex-start;
           max-width: 100%;
-
           padding: 5px 0;
+          overflow: hidden;
+        }
+
+        div.field > * {
+          flex: none;
+        }
+
+        div.field > div {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          max-width: 100%;
+        }
+
+        div.field > div > img {
+          max-height: 250px;
+          max-width: 100%;
+        }
+
+        div.field > div > .name {
+        }
+
+        div.field > div > .description {
+          font-size: 0.9rem;
+          opacity: 0.8;
         }
 
         label {
@@ -44,8 +71,27 @@ export class LabelSettingLet extends localize(i18next)(LitElement) {
         button {
           text-transform: uppercase;
         }
+
+        setting-let > form {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+        }
       `
     ]
+  }
+
+  static get properties() {
+    return {
+      locationLabel: Object,
+      palletLabel: Object
+    }
+  }
+
+  constructor() {
+    super()
+
+    this.locationLabel = {}
+    this.palletLabel = {}
   }
 
   render() {
@@ -56,31 +102,59 @@ export class LabelSettingLet extends localize(i18next)(LitElement) {
         <form slot="content" @submit=${e => this._handleSubmit(e)}>
           <div class="field">
             <label>location</label>
-            <input
-              type="text"
-              name="location_label"
-              placeholder=${i18next.t('field.label_id_for_location')}
-              .value=${localStorage.getItem('label_id_for_location')}
-              @change=${e => {
-                localStorage.setItem('label_id_for_location', e.target.value)
-              }}
-            />
+            <div>
+              <div class="name">${this.locationLabel.name}</div>
+              <span class="description">${this.locationLabel.description}</span>
+              <mwc-icon
+                @click=${e => {
+                  var popup = openPopup(html`
+                    <label-selector-popup
+                      @label-selected=${e => {
+                        var label = e.detail.label
+                        this.locationLabel = label
+                        popup.close()
+                        this.requestUpdate()
+                      }}
+                    ></label-selector-popup>
+                  `)
+                }}
+              >
+                more_horiz
+              </mwc-icon>
+              <img src=${this.locationLabel.thumbnail} ?hidden="${this.locationLabel.thumbnail ? false : true}" />
+            </div>
           </div>
           <div class="field">
             <label>pallet</label>
-            <input
-              type="text"
-              name="location_label"
-              placeholder=${i18next.t('field.label_id_for_pallet')}
-              .value=${localStorage.getItem('label_id_for_pallet')}
-              @change=${e => {
-                localStorage.setItem('label_id_for_pallet', e.target.value)
-              }}
-            />
+            <div>
+              <div class="name">${this.palletLabel.name}</div>
+              <span class="description">${this.palletLabel.description}</span>
+              <mwc-icon
+                @click=${e => {
+                  var popup = openPopup(html`
+                    <label-selector-popup
+                      @label-selected=${e => {
+                        var label = e.detail.label
+                        this.palletLabel = label
+                        popup.close()
+                        this.requestUpdate()
+                      }}
+                    ></label-selector-popup>
+                  `)
+                }}
+              >
+                more_horiz
+              </mwc-icon>
+              <img src=${this.palletLabel.thumbnail} ?hidden="${this.palletLabel.thumbnail ? false : true}" />
+            </div>
           </div>
         </form>
       </setting-let>
     `
+  }
+
+  firstUpdated() {
+    console.log('first!!!')
   }
 }
 
