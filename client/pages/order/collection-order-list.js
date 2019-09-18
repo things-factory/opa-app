@@ -62,6 +62,7 @@ class CollectionOrderList extends localize(i18next)(PageView) {
 
   get context() {
     return {
+      actions: [],
       title: i18next.t('title.collection_orders'),
       exportable: {
         name: i18next.t('title.collection_orders'),
@@ -87,9 +88,9 @@ class CollectionOrderList extends localize(i18next)(PageView) {
         props: { searchOper: 'like', placeholder: i18next.t('label.name') }
       },
       {
-        name: 'deliveryDateTime',
+        name: 'collectionDateTime',
         type: 'datetime-local',
-        props: { searchOper: 'like', placeholder: i18next.t('label.delivery_date_time') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.collection_date_time') }
       },
       {
         name: 'status',
@@ -116,7 +117,7 @@ class CollectionOrderList extends localize(i18next)(PageView) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              if (record.id) navigate(`transport_order_detail/${record.name}?type=collection_order`)
+              if (record.id) navigate(`collection_order_detail/${record.name}`)
             }
           }
         },
@@ -162,8 +163,8 @@ class CollectionOrderList extends localize(i18next)(PageView) {
         },
         {
           type: 'datetime',
-          name: 'deliveryDateTime',
-          header: i18next.t('field.delivery_date_time'),
+          name: 'collectionDateTime',
+          header: i18next.t('field.collection_date_time'),
           record: { align: 'center' },
           sortable: true,
           width: 160

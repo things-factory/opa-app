@@ -1,18 +1,16 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
 
-class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
+class ReceiveDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
-      _ganNo: String,
-      _ownTransport: Boolean,
-      _status: String,
+      _orderName: String,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -68,13 +66,19 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.arrival_notice_detail')
+      title: i18next.t('title.receive_delivery_order'),
+      actions: [
+        {
+          title: i18next.t('button.receive'),
+          action: this._receiveDeliveryOrder.bind(this)
+        }
+      ]
     }
   }
 
   activated(active) {
     if (JSON.parse(active)) {
-      this.fetchGAN()
+      this.fetchDeliveryOrder()
     }
   }
 
@@ -82,37 +86,31 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('form')
   }
 
-  get productGrist() {
-    return this.shadowRoot.querySelector('data-grist#product-grist')
-  }
-
-  get vasGrist() {
-    return this.shadowRoot.querySelector('data-grist#vas-grist')
-  }
-
   render() {
     return html`
       <form class="multi-column-form">
         <fieldset>
-          <legend>${i18next.t('title.gan')}: ${this._ganNo}</legend>
-          <label>${i18next.t('label.container_no')}</label>
-          <input name="containerNo" disabled />
+          <legend ?hidden="${this._isDeliveryOrder}">
+            ${i18next.t('title.doNo')}: ${this._orderName}
+          </legend>
+          <legend ?hidden="${!this._isDeliveryOrder}">
+            ${i18next.t('title.coNo')}: ${this._orderName}
+          </legend>
 
-          <input type="checkbox" name="ownTransport" ?checked="${this._ownTransport}" disabled />
-          <label>${i18next.t('label.use_own_transport')}</label>
+          <label>${i18next.t('label.from')}</label>
+          <input name="from" disabled />
 
-          <!-- Show when userOwnTransport is true -->
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.collection_date_time')}</label>
-          <input ?hidden="${this._ownTransport}" name="collectionDateTime" type="datetime-local" disabled />
+          <label>${i18next.t('label.to')}</label>
+          <input name="to" disabled />
 
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.from')}</label>
-          <input ?hidden="${this._ownTransport}" name="from" disabled />
+          <label>${i18next.t('label.truck_no')}</label>
+          <input name="truckNo" />
 
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.to')}</label>
-          <input ?hidden="${this._ownTransport}" name="to" disabled />
+          <label ?hidden="${this._isDeliveryOrder}">${i18next.t('label.delivery_date')}</label>
+          <input name="deliveryDateTime" ?hidden="${this._isDeliveryOrder}" type="datetime-local" disabled />
 
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.loadType')}</label>
-          <select ?hidden="${this._ownTransport}" name="loadType" disabled>
+          <label>${i18next.t('label.loadType')}</label>
+          <select name="loadType" disabled>
             ${LOAD_TYPES.map(
               loadType => html`
                 <option value="${loadType.value}">${i18next.t(`label.${loadType.name}`)}</option>
@@ -120,21 +118,12 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
             )}
           </select>
 
-          <!-- Show when userOwnTransport option is false-->
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
-          <input ?hidden="${!this._ownTransport}" ?required="${this._ownTransport}" name="truckNo" disabled />
+          <!-- Show when collection option is false-->
+          <label ?hidden="${!this._isDeliveryOrder}">${i18next.t('label.collection_datetime')}</label>
+          <input ?hidden="${!this._isDeliveryOrder}" name="collectionDateTime" type="datetime-local" disabled />
 
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.delivery_order_no')}</label>
-          <input ?hidden="${!this._ownTransport}" name="deliveryOrderNo" disabled />
-
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.eta_date')}</label>
-          <input
-            ?hidden="${!this._ownTransport}"
-            ?required="${this._ownTransport}"
-            name="eta"
-            type="datetime-local"
-            disabled
-          />
+          <label>${i18next.t('label.tel_no')}</label>
+          <input name="telNo" disabled />
 
           <label>${i18next.t('label.status')}</label>
           <select name="status" disabled
@@ -170,12 +159,6 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
         ></data-grist>
       </div>
     `
-  }
-
-  constructor() {
-    super()
-    this.productData = {}
-    this.vasData = {}
   }
 
   firstUpdated() {
@@ -297,35 +280,27 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
   }
 
   updated(changedProps) {
-    if (changedProps.has('_ganNo')) {
-      this.fetchGAN()
+    if (changedProps.has('_orderName')) {
+      this.fetchDeliveryOrder()
     }
   }
 
-  async fetchGAN() {
+  async fetchDeliveryOrder() {
+    if (!this._orderName) return
     const response = await client.query({
       query: gql`
         query {
           arrivalNotice(${gqlBuilder.buildArgs({
-            name: this._ganNo
+            name: this._orderName
           })}) {
             id
             name
-            containerNo
-            ownTransport
-            collectionDateTime
-            eta
+            deliveryDateTime
             from
             to
             loadType
             truckNo
-            deliveryOrderNo
             status
-            collectionOrder {
-              id
-              name
-              description
-            }
             orderProducts {
               id
               batchId
@@ -358,65 +333,39 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      this._ownTransport = response.data.arrivalNotice.ownTransport
-      this._status = response.data.arrivalNotice.status
-      this._actionsHandler()
-      this._fillupForm(response.data.arrivalNotice)
+      this._fillupForm(response.data.deliveryOrder)
       this.productData = {
         ...this.productData,
-        records: response.data.arrivalNotice.orderProducts
+        records: response.data.deliveryOrder.orderProducts
       }
 
       this.vasData = {
         ...this.vasData,
-        records: response.data.arrivalNotice.orderVass
+        records: response.data.deliveryOrder.orderVass
       }
     }
   }
 
-  _fillupForm(arrivalNotice) {
-    for (let key in arrivalNotice) {
+  _fillupForm(deliveryOrder) {
+    for (let key in deliveryOrder) {
       Array.from(this.form.querySelectorAll('input')).forEach(field => {
-        if (field.name === key && field.type === 'checkbox') {
-          field.checked = arrivalNotice[key]
-        } else if (field.name === key && field.type === 'datetime-local') {
-          const datetime = Number(arrivalNotice[key])
+        if (field.name === key && field.type === 'datetime-local') {
+          const datetime = Number(deliveryOrder[key])
           const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
           field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
         } else if (field.name === key) {
-          field.value = arrivalNotice[key]
+          field.value = deliveryOrder[key]
         }
       })
     }
   }
 
-  async _updateArrivalNotice(patch) {
+  async _receiveDeliveryOrder() {
     const response = await client.query({
       query: gql`
         mutation {
-          updateArrivalNotice(${gqlBuilder.buildArgs({
-            name: this._ganNo,
-            patch
-          })}) {
-            name 
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      this.fetchGAN()
-    } else {
-      throw new Error(response.errors[0])
-    }
-  }
-
-  async _confirmArrivalNotice() {
-    const response = await client.query({
-      query: gql`
-        mutation {
-          confirmArrivalNotice(${gqlBuilder.buildArgs({
-            name: this._ganNo
+          receiveDeliveryOrder(${gqlBuilder.buildArgs({
+            name: this._orderName
           })}) {
             name
           }
@@ -424,58 +373,15 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
       `
     })
 
-    if (response.errors) {
-      throw new Error(response.errors[0])
+    if (!response.errors) {
+      history.back()
+      this._showToast({ message: i18next.t('text.delivery_order_received') })
     }
-  }
-
-  _actionsHandler() {
-    let actions = []
-
-    if (this._status === ORDER_STATUS.PENDING.value) {
-      actions = [
-        {
-          title: i18next.t('button.edit'),
-          action: async () => {
-            try {
-              await this._updateArrivalNotice({ status: ORDER_STATUS.EDITING.value })
-              this._showToast({ message: i18next.t('text.gan_now_editable') })
-            } catch (e) {
-              this._showToast(e)
-            }
-          }
-        },
-        {
-          title: i18next.t('button.confirm'),
-          action: async () => {
-            try {
-              await this._confirmArrivalNotice()
-              this._showToast({ message: i18next.t('text.gan_confirmed') })
-              navigate('arrival_notices')
-            } catch (e) {
-              this._showToast(e)
-            }
-          }
-        }
-      ]
-    } else if (this._status === ORDER_STATUS.EDITING.value) {
-      navigate(`create_arrival_notice/${this._ganNo}`)
-    }
-
-    actions = [...actions, { title: i18next.t('button.back'), action: () => navigate('arrival_notices') }]
-
-    store.dispatch({
-      type: UPDATE_CONTEXT,
-      context: {
-        ...this.context,
-        actions
-      }
-    })
   }
 
   stateChanged(state) {
-    if (this.active) {
-      this._ganNo = state && state.route && state.route.resourceId
+    if (JSON.parse(this.active)) {
+      this._orderName = state && state.route && state.route.resourceId
     }
   }
 
@@ -491,4 +397,4 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
   }
 }
 
-window.customElements.define('arrival-notice-detail', ArrivalNoticeDetail)
+window.customElements.define('receive-delivery-order', ReceiveDeliveryOrder)

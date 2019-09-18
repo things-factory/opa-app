@@ -116,7 +116,7 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              if (record.id) navigate(`transport_order_detail/${record.name}?type=delivery_order`)
+              if (record.id) navigate(`delivery_order_detail/${record.name}`)
             }
           }
         },

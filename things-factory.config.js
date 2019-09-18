@@ -80,8 +80,12 @@ export default {
       page: 'create_transport_order'
     },
     {
-      tagname: 'transport-order-detail',
-      page: 'transport_order_detail'
+      tagname: 'delivery-order-detail',
+      page: 'delivery_order_detail'
+    },
+    {
+      tagname: 'collection-order-detail',
+      page: 'collection_order_detail'
     },
     {
       tagname: 'delivery-order-list',

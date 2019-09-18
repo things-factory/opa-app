@@ -190,13 +190,13 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
   updated(changedProps) {
     if (changedProps.has('_ganNo') && this._ganNo) {
       this.fetchGAN()
-      this._contextHandler()
       this._updateBatchList()
     } else if (changedProps.has('_ganNo') && !this._ganNo) {
       this._clearPage()
-      this._contextHandler()
       this._updateBatchList()
     }
+
+    this._contextHandler()
   }
 
   firstUpdated() {
@@ -252,7 +252,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           type: 'float',
           name: 'weight',
           header: i18next.t('field.weight'),
-          record: { editable: true, align: 'right' },
+          record: { editable: true, align: 'center' },
           width: 80
         },
         {
@@ -266,7 +266,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           type: 'integer',
           name: 'packQty',
           header: i18next.t('field.pack_qty'),
-          record: { editable: true, align: 'right' },
+          record: { editable: true, align: 'center' },
           width: 80
         },
         {
