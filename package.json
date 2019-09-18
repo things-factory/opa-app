@@ -53,6 +53,7 @@
     "@things-factory/system-ui": "*",
     "@things-factory/transport-base": "*",
     "@things-factory/warehouse-base": "*",
+    "@things-factory/worksheet-base": "*",
     "pg": "*"
   },
   "devDependencies": {

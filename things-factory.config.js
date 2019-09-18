@@ -76,6 +76,15 @@ export default {
       page: 'receive_arrival_notice'
     },
     {
+      tagname: 'check-arrival-notice',
+      page: 'check_arrival_notice'
+    },
+    {
+      tagname: 'assign-buffer-location',
+      page: 'assign_buffer_location'
+    },
+
+    {
       tagname: 'create-transport-order',
       page: 'create_transport_order'
     },
@@ -135,6 +144,11 @@ export default {
       tagname: 'system-setting',
       page: 'settings'
     },
+    {
+      tagname: 'system-code',
+      page: 'codes'
+    },
+
     /**
      * Inbound Menus Section
      */
