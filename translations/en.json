@@ -220,5 +220,7 @@
   "text.enter_zone_name": "enter zone name",
   "label.row_suffix": "row suffix",
   "label.column_suffix": "column suffix",
-  "button.preview": "preview"
+  "label.case_sensitive": "case sensitive",
+  "button.preview": "preview",
+  "text.already_existed": "row {state.text} is already existed"
 }

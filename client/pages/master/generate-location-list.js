@@ -162,7 +162,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
       </div>
 
       <div class="button-container">
-        <mwc-button @click=${this._generateLocationList}>${i18next.t('button.preview')}</mwc-button>
+        <mwc-button @click=${this._validateGenerator}>${i18next.t('button.preview')}</mwc-button>
         <mwc-button @click=${this._saveGeneratedLocation}>${i18next.t('button.save')}</mwc-button>
         <mwc-button @click=${this._deleteFromList}>${i18next.t('button.delete')}</mwc-button>
       </div>
@@ -201,7 +201,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           type: 'number',
           name: 'start',
           record: {
-            align: 'left',
+            align: 'center',
             editable: true
           },
           header: i18next.t('field.row_start'),
@@ -211,7 +211,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           type: 'number',
           name: 'end',
           record: {
-            align: 'left',
+            align: 'center',
             editable: true
           },
           header: i18next.t('field.row_end'),
@@ -221,7 +221,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           type: 'string',
           name: 'column',
           record: {
-            align: 'left',
+            align: 'center',
             editable: true
           },
           header: i18next.t('field.number_of_column'),
@@ -231,7 +231,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           type: 'string',
           name: 'cell',
           record: {
-            align: 'left',
+            align: 'center',
             editable: true
           },
           header: i18next.t('field.number_of_cell'),
@@ -250,7 +250,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           type: 'string',
           name: 'name',
           record: {
-            align: 'left',
+            align: 'center',
             editable: true
           },
           header: i18next.t('field.name'),
@@ -260,7 +260,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           type: 'string',
           name: 'zone',
           record: {
-            align: 'left',
+            align: 'center',
             editable: true
           },
           header: i18next.t('field.zone'),
@@ -270,7 +270,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           type: 'string',
           name: 'row',
           record: {
-            align: 'left',
+            align: 'center',
             editable: true
           },
           header: i18next.t('field.row'),
@@ -280,7 +280,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           type: 'string',
           name: 'column',
           record: {
-            align: 'left',
+            align: 'center',
             editable: true
           },
           header: i18next.t('field.column'),
@@ -290,7 +290,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           type: 'string',
           name: 'shelf',
           record: {
-            align: 'left',
+            align: 'center',
             editable: true
           },
           header: i18next.t('field.shelf'),
@@ -300,7 +300,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           type: 'string',
           name: 'status',
           record: {
-            align: 'left',
+            align: 'center',
             editable: true
           },
           header: i18next.t('field.status'),
@@ -327,29 +327,66 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
     }
   }
 
+  _validateGenerator() {
+    let dataFromGrist = this.data.records
+    let validationError = false
+    for (let x = 1; x < dataFromGrist.length; x++) {
+      if (dataFromGrist[x].start <= dataFromGrist[x - 1].end) {
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              level: 'error',
+              message: i18next.t('text.already_existed', {
+                state: {
+                  text: dataFromGrist[x].start
+                }
+              })
+            }
+          })
+        )
+        validationError = true
+      }
+    }
+
+    if (this.zoneName === '') {
+      document.dispatchEvent(
+        new CustomEvent('notify', {
+          detail: {
+            level: 'error',
+            message: i18next.t('text.zone_name_cannot_be_empty')
+          }
+        })
+      )
+      validationError = true
+    }
+
+    if (!validationError) this._generateLocationList()
+  }
+
   _generateLocationList() {
     let locationData = this.data.records
+    let validationError = false
 
-    if (this.zoneName !== '' && locationData && locationData.length) {
+    if (locationData && locationData.length) {
       locationData = locationData.forEach(locations => {
         if (locations.start <= locations.end) {
           for (let i = locations.start; i <= locations.end; i++) {
             for (let j = 1; j <= locations.column; j++) {
               for (let k = 1; k <= locations.cell; k++) {
                 const locationObj = {}
+                const row = this.caseSensitive ? this.rowSuffix : this.rowSuffix.toUpperCase()
+                const column = this.caseSensitive ? this.columnSuffix : this.columnSuffix.toUpperCase()
 
                 locationObj['row'] =
-                  this.rowSuffix === ''
-                    ? (locationObj['row'] = i.toString().padStart(2, '0'))
-                    : i.toString() + this.rowSuffix.toUpperCase()
+                  this.rowSuffix === '' ? (locationObj['row'] = i.toString().padStart(2, '0')) : i.toString() + row
 
                 locationObj['column'] =
                   this.columnSuffix === ''
                     ? (locationObj['column'] = j.toString().padStart(2, '0'))
-                    : j.toString() + this.columnSuffix.toUpperCase()
+                    : j.toString() + column
 
                 locationObj['shelf'] = this._getCellInstance(k)
-                locationObj['zone'] = this.zoneName.toString().toUpperCase()
+                locationObj['zone'] = this.caseSensitive ? this.zoneName : this.zoneName.toString().toUpperCase()
 
                 locationObj['name'] =
                   locationObj.zone + '-' + locationObj.row + '-' + locationObj.column + '-' + locationObj.shelf
@@ -363,7 +400,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
             }
           }
         } else {
-          this.tempLocationList = []
+          validationError = true
           document.dispatchEvent(
             new CustomEvent('notify', {
               detail: {
@@ -374,18 +411,12 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           )
         }
       })
-      this.locationList = this.tempLocationList
-      this.tempLocationList = []
-      this.dataGrist.fetch()
-    } else if (this.zoneName === '') {
-      document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            level: 'error',
-            message: i18next.t('text.zone_name_cannot_be_empty')
-          }
-        })
-      )
+
+      if (!validationError) {
+        this.locationList = this.tempLocationList
+        this.tempLocationList = []
+        this.dataGrist.fetch()
+      }
     }
   }
 
