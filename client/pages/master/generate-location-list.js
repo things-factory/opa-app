@@ -10,7 +10,6 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
   constructor() {
     super()
     this.locationList = []
-    this.tempLocationList = []
     this.zoneName = ''
     this.rowSuffix = ''
     this.columnSuffix = ''
@@ -251,7 +250,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           name: 'name',
           record: {
             align: 'center',
-            editable: true
+            editable: false
           },
           header: i18next.t('field.name'),
           width: 250
@@ -261,7 +260,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           name: 'zone',
           record: {
             align: 'center',
-            editable: true
+            editable: false
           },
           header: i18next.t('field.zone'),
           width: 250
@@ -271,7 +270,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           name: 'row',
           record: {
             align: 'center',
-            editable: true
+            editable: false
           },
           header: i18next.t('field.row'),
           width: 250
@@ -281,7 +280,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           name: 'column',
           record: {
             align: 'center',
-            editable: true
+            editable: false
           },
           header: i18next.t('field.column'),
           width: 250
@@ -291,7 +290,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           name: 'shelf',
           record: {
             align: 'center',
-            editable: true
+            editable: false
           },
           header: i18next.t('field.shelf'),
           width: 250
@@ -301,7 +300,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           name: 'status',
           record: {
             align: 'center',
-            editable: true
+            editable: false
           },
           header: i18next.t('field.status'),
           width: 250
@@ -366,6 +365,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
   _generateLocationList() {
     let locationData = this.data.records
     let validationError = false
+    let tempLocationList = []
 
     if (locationData && locationData.length) {
       locationData = locationData.forEach(locations => {
@@ -378,12 +378,10 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
                 const column = this.caseSensitive ? this.columnSuffix : this.columnSuffix.toUpperCase()
 
                 locationObj['row'] =
-                  this.rowSuffix === '' ? (locationObj['row'] = i.toString().padStart(2, '0')) : i.toString() + row
+                  this.rowSuffix === '' ? i.toString().padStart(2, '0') : i.toString().padStart(2, '0') + row
 
                 locationObj['column'] =
-                  this.columnSuffix === ''
-                    ? (locationObj['column'] = j.toString().padStart(2, '0'))
-                    : j.toString() + column
+                  this.columnSuffix === '' ? j.toString().padStart(2, '0') : j.toString().padStart(2, '0') + column
 
                 locationObj['shelf'] = this._getCellInstance(k)
                 locationObj['zone'] = this.caseSensitive ? this.zoneName : this.zoneName.toString().toUpperCase()
@@ -395,12 +393,14 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
                 locationObj['warehouse'] = { id: this.warehouseId }
                 locationObj['cuFlag'] = '+'
 
-                this.tempLocationList.push(locationObj)
+                tempLocationList.push(locationObj)
               }
             }
           }
         } else {
           validationError = true
+          tempLocationList = []
+
           document.dispatchEvent(
             new CustomEvent('notify', {
               detail: {
@@ -413,8 +413,8 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
       })
 
       if (!validationError) {
-        this.locationList = this.tempLocationList
-        this.tempLocationList = []
+        this.locationList = tempLocationList
+        tempLocationList = []
         this.dataGrist.fetch()
       }
     }
