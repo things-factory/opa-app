@@ -117,7 +117,7 @@ class VasOrderList extends connect(store)(localize(i18next)(PageView)) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              if (record.id) navigate(`arrival_notice_detail/${record.name}`)
+              if (record.id) navigate(`arrival_notices/${record.name}`)
             }
           }
         },

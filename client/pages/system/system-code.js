@@ -225,7 +225,7 @@ class SystemCode extends localize(i18next)(PageView) {
       const response = await client.query({
         query: gql`
           mutation {
-            updateMultipleCode(${gqlBuilder.buildArgs({
+            updateMultipleCommonCode(${gqlBuilder.buildArgs({
               patches
             })}) {
               name
