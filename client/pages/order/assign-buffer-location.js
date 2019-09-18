@@ -1,13 +1,15 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import { openPopup } from '@things-factory/layout-base'
 import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
+import './location-selector'
 
-class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
+class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _ganNo: String,
@@ -67,14 +69,22 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.receive_arrival_notice'),
+      title: i18next.t('title.assign_buffer_location'),
       actions: [
         {
-          title: i18next.t('button.receive'),
-          action: this._receiveArrivalNotice.bind(this)
+          title: i18next.t('button.back'),
+          action: () => history.back()
+        },
+        {
+          title: i18next.t('button.assign_buffer_location'),
+          action: this._assignBufferLocation.bind(this)
         }
       ]
     }
+  }
+
+  get bufferLocationField() {
+    return this.shadowRoot.querySelector('input#buffer-location')
   }
 
   activated(active) {
@@ -142,6 +152,9 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
               `
             })}</select
           >
+
+          <label>${i18next.t('label.buffer_location')}</label>
+          <input id="buffer-location" name="buffer-location" readonly @focus="${this._openBufferSelector.bind(this)}" />
         </fieldset>
       </form>
 
@@ -350,6 +363,7 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
+      this._arrivalNoticeId = response.data.arrivalNotice.id
       this._ownTransport = response.data.arrivalNotice.ownTransport
       this._fillupForm(response.data.arrivalNotice)
       this.productData = {
@@ -380,23 +394,46 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _receiveArrivalNotice() {
-    const response = await client.query({
-      query: gql`
-        mutation {
-          receiveArrivalNotice(${gqlBuilder.buildArgs({
-            name: this._ganNo
-          })}) {
-            name
+  async _assignBufferLocation() {
+    try {
+      this._validateBufferLocation()
+      const response = await client.query({
+        query: gql`
+          mutation {
+            generateArrivalNoticeWorksheet(${gqlBuilder.buildArgs({
+              arrivalNotice: { id: this._arrivalNoticeId, name: this._ganNo },
+              bufferLocation: { id: this.bufferLocationField.getAttribute('location-id') }
+            })}) {
+              name
+            }
           }
-        }
-      `
-    })
+        `
+      })
 
-    if (!response.errors) {
-      history.back()
-      this._showToast({ message: i18next.t('text.arrival_notice_received') })
+      if (!response.errors) {
+        console.log('move to page for work sheet work sheet detail')
+        this._showToast({ message: i18next.t('text.buffer_location_assigned') })
+      }
+    } catch (e) {
+      this._showToast(e)
     }
+  }
+
+  _validateBufferLocation() {
+    if (!this.bufferLocationField.getAttribute('location-id'))
+      throw new Error(i18next.t('text.buffer_location_is_not_assigned'))
+  }
+
+  _openBufferSelector() {
+    openPopup(html`
+      <location-selector
+        style="width: 80vw; height: 80vh"
+        @selected="${e => {
+          this.bufferLocationField.value = `${e.detail.name} ${e.detail.description ? `(${e.detail.description})` : ''}`
+          this.bufferLocationField.setAttribute('location-id', e.detail.id)
+        }}"
+      ></location-selector>
+    `)
   }
 
   stateChanged(state) {
@@ -417,4 +454,4 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
   }
 }
 
-window.customElements.define('receive-arrival-notice', ReceiveArrivalNotice)
+window.customElements.define('assign-buffer-location', AssignBufferLocation)

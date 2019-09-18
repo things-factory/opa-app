@@ -122,16 +122,12 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               const status = record.status
-              console.log(ORDER_STATUS)
               if (status === ORDER_STATUS.PENDING_RECEIVE.value) {
-                // 1. move to order receiving page
-                navigate(`receive_arrival_notice/${record.name}`)
+                navigate(`receive_arrival_notice/${record.name}`) // 1. move to order receiving page
               } else if (status === ORDER_STATUS.INTRANSIT.value) {
-                // 2. move to order arriving check page
-                console.log('2. move to order arriving check page')
+                navigate(`check_arrived_notice/${record.name}`) // 2. move to order arriving check page
               } else if (status === ORDER_STATUS.ARRIVED.value) {
-                // 3. move to generate work sheet page
-                console.log('3. move to generate work sheet page')
+                navigate(`assign_buffer_location/${record.name}`) // 3. move to assign buffer location
               }
             }
           }
