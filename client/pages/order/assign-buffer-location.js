@@ -2,7 +2,7 @@ import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, store, navigate } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
@@ -411,7 +411,7 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!response.errors) {
-        console.log('move to page for work sheet work sheet detail')
+        navigate(`worksheet_unloading/${response.data.generateArrivalNoticeWorksheet.name}`)
         this._showToast({ message: i18next.t('text.buffer_location_assigned') })
       }
     } catch (e) {
