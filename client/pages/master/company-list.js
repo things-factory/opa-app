@@ -122,7 +122,15 @@ class CompanyList extends localize(i18next)(PageView) {
       }
     ]
 
-    this.config = {
+    this.config = this.gristConfig
+  }
+
+  languageUpdated() {
+    this.dataGrist.refresh()
+  }
+
+  get gristConfig() {
+    return {
       rows: { selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
@@ -212,10 +220,6 @@ class CompanyList extends localize(i18next)(PageView) {
         }
       ]
     }
-  }
-
-  languageUpdated() {
-    this.dataGrist.refresh()
   }
 
   get searchForm() {
