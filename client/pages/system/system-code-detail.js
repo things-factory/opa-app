@@ -163,7 +163,7 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
           width: 220
         },
         {
-          type: 'int',
+          type: 'integer',
           name: 'rank',
           record: {
             align: 'left',
@@ -219,7 +219,7 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
     let filters = []
     if (this.commonCodeId) {
       filters.push({
-        name: 'id',
+        name: 'common_code_id',
         operator: 'eq',
         value: this.commonCodeId
       })
