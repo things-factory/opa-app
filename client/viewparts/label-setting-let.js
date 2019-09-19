@@ -80,6 +80,13 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
           display: grid;
           grid-template-columns: 1fr 1fr;
         }
+
+        @media screen and (max-width: 460px) {
+          setting-let > form {
+            display: inline-grid;
+            grid-template-columns: 1fr;
+          }
+        }
       `
     ]
   }
@@ -105,7 +112,7 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
 
         <form slot="content" @submit=${e => this._handleSubmit(e)}>
           <div class="field">
-            <label>location</label>
+            <label><i18n-msg msgid="title.location"></i18n-msg></label>
             <div>
               <div class="name">${this.locationLabel.name}</div>
               <span class="description">${this.locationLabel.description}</span>
@@ -145,7 +152,7 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
             </div>
           </div>
           <div class="field">
-            <label>pallet</label>
+            <label><i18n-msg msgid="title.pallet"></i18n-msg></label>
             <div>
               <div class="name">${this.palletLabel.name}</div>
               <span class="description">${this.palletLabel.description}</span>

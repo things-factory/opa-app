@@ -42,10 +42,6 @@ export class LabelSelectorPopup extends InfiniteScrollable(localize(i18next)(Lit
           display: grid;
           grid-template-rows: auto auto 1fr;
           overflow: hidden;
-          min-width: 320px;
-          max-width: 90vw;
-          min-height: 300px;
-          max-height: 80vh;
           background-color: #fff;
         }
 
