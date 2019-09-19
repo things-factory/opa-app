@@ -107,6 +107,7 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
 
     this.config = {
       rows: { selectable: { multiple: true } },
+      pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },

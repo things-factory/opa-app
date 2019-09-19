@@ -241,20 +241,20 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async fetchHandler({ page, limit, sorters = [] }) {
-    let filters = []
-    if (this._companyId) {
-      filters.push({
+    if (!this._companyId) return
+    let filters = [
+      {
         name: 'company_id',
         operator: 'eq',
         value: this._companyId
-      })
-    }
+      }
+    ]
 
     const response = await client.query({
       query: gql`
         query {
           bizplaces(${gqlBuilder.buildArgs({
-            filters: this._conditionParser(),
+            filters: [...filters, ...this._conditionParser()],
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -454,7 +454,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   stateChanged(state) {
-    if (this.active) {
+    if (JSON.parse(this.active)) {
       this._companyId = state && state.route && state.route.resourceId
     }
   }
