@@ -85,14 +85,3 @@ export const LOAD_TYPES = [
     value: 'LCL'
   }
 ]
-
-export const TRANSPORT_OPTIONS = {
-  DELIVERY_ORDER: {
-    name: 'delivery_order',
-    value: 'DELIVERY_ORDER'
-  },
-  COLLECTION_ORDER: {
-    name: 'collection_order',
-    value: 'COLLECTION_ORDER'
-  }
-}

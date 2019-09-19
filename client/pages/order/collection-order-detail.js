@@ -420,7 +420,7 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
         }
       ]
     } else if (this._status === ORDER_STATUS.EDITING.value) {
-      navigate(`create_transport_order/${this._orderName}?type=collection_order`)
+      navigate(`create_collection_order/${this._orderName}`)
     }
 
     actions = [...actions, { title: i18next.t('button.back'), action: () => navigate('collection_orders') }]

@@ -422,7 +422,7 @@ class DeliveryOrderDetail extends connect(store)(localize(i18next)(PageView)) {
         }
       ]
     } else if (this._status === ORDER_STATUS.EDITING.value) {
-      navigate(`create_transport_order/${this._orderName}?type=delivery_order`)
+      navigate(`create_delivery_order/${this._orderName}`)
     }
 
     actions = [...actions, { title: i18next.t('button.back'), action: () => navigate('delivery_orders') }]

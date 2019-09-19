@@ -5,18 +5,17 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_C
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES, TRANSPORT_OPTIONS, ORDER_STATUS } from './constants/order'
+import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
 
-class CreateTransportOrder extends connect(store)(localize(i18next)(PageView)) {
+class CreateDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
+      _orderName: String,
       productGristConfig: Object,
       currentOrderType: String,
-      _isEditingStatus: Boolean,
       vasGristConfig: Object,
       productData: Object,
       vasData: Object,
-      _orderName: String,
       _orderStatus: String
     }
   }
@@ -69,11 +68,11 @@ class CreateTransportOrder extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.create_transport_order'),
+      title: i18next.t('title.create_delivery_order'),
       actions: [
         {
           title: i18next.t('button.save'),
-          action: this._createTransportOrder.bind(this)
+          action: this._generateDeliveryOrder.bind(this)
         }
       ]
     }
@@ -84,40 +83,14 @@ class CreateTransportOrder extends connect(store)(localize(i18next)(PageView)) {
       <form class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.transport_order')}</legend>
-          <label ?hidden="${(this._isEditingStatus = this._orderStatus === ORDER_STATUS.EDITING.value)}"
-            >${i18next.t('label.transport_option')}</label
-          >
-          <select
-            id="transportOptions"
-            name="transportOptions"
-            @change=${e => (this.currentOrderType = e.currentTarget.value)}
-            ?hidden="${(this._isEditingStatus = this._orderStatus === ORDER_STATUS.EDITING.value)}"
-          >
-            ${Object.keys(TRANSPORT_OPTIONS).map(key => {
-              return html`
-                <option
-                  value="${TRANSPORT_OPTIONS[key].value}"
-                  ?selected="${this.currentOrderType &&
-                    this.currentOrderType.toUpperCase() === TRANSPORT_OPTIONS[key].value}"
-                  >${i18next.t(`label.${TRANSPORT_OPTIONS[key].name}`)}</option
-                >
-              `
-            })}
-          </select>
-
           <label>${i18next.t('label.from')}</label>
           <input name="from" />
 
           <label>${i18next.t('label.to')}</label>
           <input name="to" />
 
-          <label ?hidden="${!this._isDeliveryOrder}">${i18next.t('label.delivery_date')}</label>
-          <input
-            name="deliveryDateTime"
-            ?hidden="${!this._isDeliveryOrder}"
-            type="datetime-local"
-            min="${this._getStdDatetime()}"
-          />
+          <label>${i18next.t('label.delivery_date')}</label>
+          <input name="deliveryDateTime" type="datetime-local" min="${this._getStdDatetime()}" />
 
           <label>${i18next.t('label.loadType')}</label>
           <select name="loadType" required>
@@ -127,15 +100,6 @@ class CreateTransportOrder extends connect(store)(localize(i18next)(PageView)) {
               `
             )}
           </select>
-
-          <!-- Show when collection option is false-->
-          <label ?hidden="${this._isDeliveryOrder}">${i18next.t('label.collection_datetime')}</label>
-          <input
-            ?hidden="${this._isDeliveryOrder}"
-            name="collectionDateTime"
-            type="datetime-local"
-            min="${this._getStdDatetime()}"
-          />
 
           <label>${i18next.t('label.tel_no')}</label>
           <input name="telNo" />
@@ -169,22 +133,14 @@ class CreateTransportOrder extends connect(store)(localize(i18next)(PageView)) {
 
   constructor() {
     super()
-    debugger
-    this.currentOrderType = TRANSPORT_OPTIONS.DELIVERY_ORDER.value
-    this._isEditingStatus = true
     this.productData = {}
     this.vasData = {}
   }
 
   updated(changedProps) {
     if (changedProps.has('_orderName') && this._orderName) {
-      if (this.currentOrderType.toUpperCase() === 'DELIVERY_ORDER') {
-        this.fetchDeliveryOrder()
-        this._updateBatchList()
-      } else if (this.currentOrderType.toUpperCase() === 'COLLECTION_ORDER') {
-        this.fetchCollectionOrder()
-        this._updateBatchList()
-      }
+      this.fetchDeliveryOrder()
+      this._updateBatchList()
     } else if (changedProps.has('_orderName') && !this._orderName) {
       this._clearPage()
       this._updateBatchList()
@@ -330,16 +286,6 @@ class CreateTransportOrder extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  get _isDeliveryOrder() {
-    if (this.currentOrderType) {
-      return this.currentOrderType.toUpperCase() === TRANSPORT_OPTIONS.DELIVERY_ORDER.value
-    }
-  }
-
-  get selectTransportOrder() {
-    return this.shadowRoot.querySelector('select#transportOptions')
-  }
-
   get form() {
     return this.shadowRoot.querySelector('form')
   }
@@ -377,52 +323,28 @@ class CreateTransportOrder extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _createTransportOrder() {
+  async _generateDeliveryOrder() {
     try {
       this._validateForm()
       this._validateProducts()
       this._validateVas()
 
-      if (
-        this.selectTransportOrder.value === TRANSPORT_OPTIONS.DELIVERY_ORDER.value ||
-        this.currentOrderType.toUpperCase() === 'DELIVERY_ORDER'
-      ) {
-        const response = await client.query({
-          query: gql`
-            mutation {
-              generateDeliveryOrder(${gqlBuilder.buildArgs({
-                deliveryOrder: this._getTransportOrder()
-              })}) {
-                id
-                name
-              }
+      const response = await client.query({
+        query: gql`
+          mutation {
+            generateDeliveryOrder(${gqlBuilder.buildArgs({
+              deliveryOrder: this._getDeliveryOrder()
+            })}) {
+              id
+              name
             }
-          `
-        })
-        if (!response.errors) {
-          navigate(`delivery_order_detail/${response.data.generateDeliveryOrder.name}`)
-          this._showToast({ message: i18next.t('delivery_order_created') })
-        }
-      } else if (
-        this.selectTransportOrder.value === TRANSPORT_OPTIONS.COLLECTION_ORDER.value ||
-        this.currentOrderType.toUpperCase() === 'COLLECTION_ORDER'
-      ) {
-        const response = await client.query({
-          query: gql`
-            mutation {
-              generateCollectionOrder(${gqlBuilder.buildArgs({
-                collectionOrder: this._getTransportOrder()
-              })}) {
-                id
-                name
-              }
-            }
-          `
-        })
-        if (!response.errors) {
-          navigate(`collection_order_detail/${response.data.generateCollectionOrder.name}`)
-          this._showToast({ message: i18next.t('collection_order_created') })
-        }
+          }
+        `
+      })
+
+      if (!response.errors) {
+        navigate(`delivery_order_detail/${response.data.generateDeliveryOrder.name}`)
+        this._showToast({ message: i18next.t('delivery_order_created') })
       }
     } catch (e) {
       this._showToast(e)
@@ -499,130 +421,38 @@ class CreateTransportOrder extends connect(store)(localize(i18next)(PageView)) {
     }, 300)
   }
 
-  _getTransportOrder() {
-    if (this.selectTransportOrder.value === TRANSPORT_OPTIONS.DELIVERY_ORDER.value) {
-      let deliveryOrder = { status: ORDER_STATUS.PENDING.value }
-      Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
-        if (!field.hasAttribute('hidden') && field.value) {
-          deliveryOrder[field.name] = field.value
-        }
-      })
-      delete deliveryOrder.transportOptions
+  _getDeliveryOrder() {
+    let deliveryOrder = { status: ORDER_STATUS.PENDING.value }
+    Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
+      if (!field.hasAttribute('hidden') && field.value) {
+        deliveryOrder[field.name] = field.type === 'checkbox' ? field.checked : field.value
+      }
+    })
 
-      const products = this.productGrist.data.records.map((record, idx) => {
-        const seq = idx + 1
-        delete record.id
-        delete record.__typename
-        delete record.product.__typename
+    const products = this.productGrist.data.records.map((record, idx) => {
+      const seq = idx + 1
+      delete record.id
+      delete record.__typename
+      delete record.product.__typename
 
-        return { ...record, seq }
-      })
+      return { ...record, seq }
+    })
 
-      const vass = this.vasGrist.data.records.map(record => {
-        delete record.id
-        delete record.__typename
-        delete record.vas.__typename
+    const vass = this.vasGrist.data.records.map(record => {
+      delete record.id
+      delete record.__typename
+      delete record.vas.__typename
 
-        return { ...record, name }
-      })
+      return { ...record, name }
+    })
 
-      return { deliveryOrder, products, vass }
-    } else if (this.selectTransportOrder.value === TRANSPORT_OPTIONS.COLLECTION_ORDER.value) {
-      let collectionOrder = { status: ORDER_STATUS.PENDING.value }
-      Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
-        if (!field.hasAttribute('hidden') && field.value) {
-          collectionOrder[field.name] = field.value
-        }
-      })
-      delete collectionOrder.transportOptions
-
-      const products = this.productGrist.data.records.map((record, idx) => {
-        const seq = idx + 1
-        delete record.id
-        delete record.__typename
-        delete record.product.__typename
-
-        return { ...record, seq }
-      })
-
-      const vass = this.vasGrist.data.records.map(record => {
-        delete record.id
-        delete record.__typename
-        delete record.vas.__typename
-
-        return { ...record, name }
-      })
-
-      return { collectionOrder, products, vass }
-    }
+    return { deliveryOrder, products, vass }
   }
 
   _clearPage() {
     this.form.reset()
     this.productData = {}
     this.vasGrist.data = {}
-  }
-
-  async fetchCollectionOrder() {
-    const response = await client.query({
-      query: gql`
-      query {
-        collectionOrder(${gqlBuilder.buildArgs({
-          name: this._orderName
-        })}) {
-          id
-              name
-              collectionDateTime
-              from
-              to
-              loadType
-              truckNo
-              telNo
-              status
-              orderProducts {
-                id
-                batchId
-                product {
-                  id
-                  name
-                  description
-                }
-                description
-                packingType
-                weight
-                unit
-                packQty
-                totalWeight
-                palletQty
-              }
-              orderVass {
-                vas {
-                  id
-                  name
-                  description
-                }
-                description
-                batchId
-                remark
-              }
-        }
-      }
-      `
-    })
-
-    if (!response.errors) {
-      this._fillupForm(response.data.collectionOrder)
-      this._orderStatus = response.data.collectionOrder.status
-      this.productData = {
-        ...this.productData,
-        records: response.data.collectionOrder.orderProducts
-      }
-
-      this.vasData = {
-        ...this.vasData,
-        records: response.data.collectionOrder.orderVass
-      }
-    }
   }
 
   async fetchDeliveryOrder() {
@@ -716,11 +546,7 @@ class CreateTransportOrder extends connect(store)(localize(i18next)(PageView)) {
                   this._validateProducts()
                   this._validateVas()
 
-                  if (this.currentOrderType.toUpperCase() === 'DELIVERY_ORDER') {
-                    this._editDeliveryOrder(this._getTransportOrder())
-                  } else if (this.currentOrderType.toUpperCase() === 'COLLECTION_ORDER') {
-                    this._editCollectionOrder(this._getTransportOrder())
-                  }
+                  this._editDeliveryOrder(this._getDeliveryOrder())
                 } catch (e) {
                   this._showToast(e)
                 }
@@ -736,26 +562,6 @@ class CreateTransportOrder extends connect(store)(localize(i18next)(PageView)) {
           ...this.context
         }
       })
-    }
-  }
-
-  async _editCollectionOrder(collectionOrder) {
-    const response = await client.query({
-      query: gql`
-        mutation {
-          editCollectionOrder(${gqlBuilder.buildArgs({
-            name: this._orderName,
-            collectionOrder
-          })}) {
-            name 
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      navigate(`collection_order_detail/${response.data.editCollectionOrder.name}`)
-      this._showToast({ message: i18next.t('collection_order_updated') })
     }
   }
 
@@ -782,7 +588,6 @@ class CreateTransportOrder extends connect(store)(localize(i18next)(PageView)) {
   stateChanged(state) {
     if (JSON.parse(this.active)) {
       this._orderName = state && state.route && state.route.resourceId
-      this.currentOrderType = state && state.route && state.route.params.type
     }
   }
 
@@ -798,4 +603,4 @@ class CreateTransportOrder extends connect(store)(localize(i18next)(PageView)) {
   }
 }
 
-window.customElements.define('create-transport-order', CreateTransportOrder)
+window.customElements.define('create-delivery-order', CreateDeliveryOrder)
