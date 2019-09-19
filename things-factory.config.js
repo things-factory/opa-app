@@ -76,8 +76,8 @@ export default {
       page: 'receive_arrival_notice'
     },
     {
-      tagname: 'check-arrival-notice',
-      page: 'check_arrival_notice'
+      tagname: 'check-arrived-notice',
+      page: 'check_arrived_notice'
     },
     {
       tagname: 'assign-buffer-location',
