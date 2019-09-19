@@ -171,8 +171,20 @@ export default function route(page) {
       import('./pages/inbound/vas-work-order')
       return page
 
+    case 'worksheets':
+      import('./pages/inbound/worksheet-list')
+      return page
+
+    case 'worksheet_unloading':
+      import('./pages/inbound/worksheet-unloading')
+      return page
+
+    case 'unloading':
+      import('./pages/inbound/unload-product')
+      return page
+
     /**
-     * Inbound Menus Section
+     * Outbound Menus Section
      */
     case 'outbound':
       import('./pages/outbound/outbound-work-order')
