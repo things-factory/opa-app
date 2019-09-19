@@ -111,27 +111,32 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
               <span class="description">${this.locationLabel.description}</span>
               <mwc-icon
                 @click=${e => {
-                  var popup = openPopup(html`
-                    <label-selector-popup
-                      @label-selected=${async e => {
-                        var label = e.detail.label
+                  var popup = openPopup(
+                    html`
+                      <label-selector-popup
+                        @label-selected=${async e => {
+                          var label = e.detail.label
 
-                        await this.saveSettings({
-                          key: LOCATION_LABEL_SETTING_KEY,
-                          value: label.id
-                        })
+                          await this.saveSettings({
+                            key: LOCATION_LABEL_SETTING_KEY,
+                            value: label.id
+                          })
 
-                        store.dispatch({
-                          type: UPDATE_LABEL_SETTINGS,
-                          locationLabel: label,
-                          palletLabel: this.palletLabel
-                        })
+                          store.dispatch({
+                            type: UPDATE_LABEL_SETTINGS,
+                            locationLabel: label,
+                            palletLabel: this.palletLabel
+                          })
 
-                        popup.close()
-                        this.requestUpdate()
-                      }}
-                    ></label-selector-popup>
-                  `)
+                          popup.close()
+                          this.requestUpdate()
+                        }}
+                      ></label-selector-popup>
+                    `,
+                    {
+                      size: 'large'
+                    }
+                  )
                 }}
               >
                 more_horiz
@@ -146,27 +151,32 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
               <span class="description">${this.palletLabel.description}</span>
               <mwc-icon
                 @click=${e => {
-                  var popup = openPopup(html`
-                    <label-selector-popup
-                      @label-selected=${async e => {
-                        var label = e.detail.label
+                  var popup = openPopup(
+                    html`
+                      <label-selector-popup
+                        @label-selected=${async e => {
+                          var label = e.detail.label
 
-                        await this.saveSettings({
-                          key: PALLET_LABEL_SETTING_KEY,
-                          value: label.id
-                        })
+                          await this.saveSettings({
+                            key: PALLET_LABEL_SETTING_KEY,
+                            value: label.id
+                          })
 
-                        store.dispatch({
-                          type: UPDATE_LABEL_SETTINGS,
-                          locationLabel: this.locationLabel,
-                          palletLabel: label
-                        })
+                          store.dispatch({
+                            type: UPDATE_LABEL_SETTINGS,
+                            locationLabel: this.locationLabel,
+                            palletLabel: label
+                          })
 
-                        popup.close()
-                        this.requestUpdate()
-                      }}
-                    ></label-selector-popup>
-                  `)
+                          popup.close()
+                          this.requestUpdate()
+                        }}
+                      ></label-selector-popup>
+                    `,
+                    {
+                      size: 'large'
+                    }
+                  )
                 }}
               >
                 more_horiz
