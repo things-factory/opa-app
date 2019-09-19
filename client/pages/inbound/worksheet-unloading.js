@@ -5,7 +5,7 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { WORKSHEET_STATUS, WORKSHEET_TYPE } from './constatns/worksheet'
+import { WORKSHEET_STATUS, WORKSHEET_TYPE } from './constants/worksheet'
 
 class WorksheetUnloading extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
