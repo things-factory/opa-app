@@ -257,11 +257,7 @@ class SystemCode extends localize(i18next)(PageView) {
 
   _openMenuDetail(commonCodeId, commonCodeName) {
     openPopup(html`
-      <system-code-detail
-        style="width: 80vw; height: 80vh"
-        .commonCodeId="${commonCodeId}"
-        .commonCodeName="${commonCodeName}"
-      ></system-code-detail>
+      <system-code-detail .commonCodeId="${commonCodeId}" .commonCodeName="${commonCodeName}"></system-code-detail>
     `)
   }
 }

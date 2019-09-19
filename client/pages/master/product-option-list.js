@@ -178,7 +178,6 @@ class ProductOptionList extends connect(store)(localize(i18next)(PageView)) {
     setTimeout(() => {
       openPopup(html`
         <import-pop-up
-          style="width: 80vw; height: 80vh"
           .records=${records}
           .config=${this.config}
           .importHandler="${this.importHandler.bind(this)}"
@@ -259,7 +258,6 @@ class ProductOptionList extends connect(store)(localize(i18next)(PageView)) {
   _openProductOptionDetails(productOptionId, productOptionName) {
     openPopup(html`
       <product-option-detail-list
-        style="width: 80vw; height: 80vh"
         .productOptionId="${productOptionId}"
         .productOptionName="${productOptionName}"
       ></product-option-detail-list>

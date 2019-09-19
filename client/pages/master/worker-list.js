@@ -167,7 +167,6 @@ class WorkerList extends localize(i18next)(PageView) {
     setTimeout(() => {
       openPopup(html`
         <import-pop-up
-          style="width: 80vw; height: 80vh"
           .records=${records}
           .config=${this.config}
           .importHandler="${this.importHandler.bind(this)}"

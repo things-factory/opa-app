@@ -193,7 +193,6 @@ class TransportDriver extends localize(i18next)(PageView) {
     setTimeout(() => {
       openPopup(html`
         <import-pop-up
-          style="width: 80vw; height: 80vh"
           .records=${records}
           .config=${this.config}
           .importHandler="${this.importHandler.bind(this)}"
@@ -267,11 +266,7 @@ class TransportDriver extends localize(i18next)(PageView) {
 
   _openContactPoints(bizplaceId, bizplaceName) {
     openPopup(html`
-      <contact-point-list
-        style="width: 80vw; height: 80vh"
-        .bizplaceId="${bizplaceId}"
-        .bizplaceName="${bizplaceName}"
-      ></contact-point-list>
+      <contact-point-list .bizplaceId="${bizplaceId}" .bizplaceName="${bizplaceName}"></contact-point-list>
     `)
   }
 

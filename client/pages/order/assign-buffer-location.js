@@ -427,7 +427,6 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
   _openBufferSelector() {
     openPopup(html`
       <location-selector
-        style="width: 80vw; height: 80vh"
         @selected="${e => {
           this.bufferLocationField.value = `${e.detail.name} ${e.detail.description ? `(${e.detail.description})` : ''}`
           this.bufferLocationField.setAttribute('location-id', e.detail.id)

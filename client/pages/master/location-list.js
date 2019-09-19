@@ -375,10 +375,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
 
   async _generateLocation() {
     openPopup(html`
-      <generate-location-list
-        style="width: 80vw; height: 80vh"
-        .warehouseId="${this._warehouseId}"
-      ></generate-location-list>
+      <generate-location-list .warehouseId="${this._warehouseId}"></generate-location-list>
     `)
   }
 
