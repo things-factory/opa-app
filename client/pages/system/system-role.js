@@ -133,7 +133,6 @@ class SystemRole extends localize(i18next)(PageView) {
                     }}"
                     .roleId="${record.id}"
                     .name="${record.name}"
-                    style="width: 90vw; height: 70vh;"
                   ></system-role-detail>
                 `
               )
@@ -265,7 +264,6 @@ class SystemRole extends localize(i18next)(PageView) {
               })
             )
           }}"
-          style="width: 90vw; height: 70vh;"
         >
         </system-create-role>
       `

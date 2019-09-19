@@ -273,11 +273,7 @@ class SystemMenu extends localize(i18next)(PageView) {
 
   _openMenuDetail(menuId, menuName) {
     openPopup(html`
-      <system-menu-detail
-        style="width: 80vw; height: 80vh"
-        .menuId="${menuId}"
-        .menuName="${menuName}"
-      ></system-menu-detail>
+      <system-menu-detail .menuId="${menuId}" .menuName="${menuName}"></system-menu-detail>
     `)
   }
 }
