@@ -5,13 +5,13 @@ import { openPopup } from '@things-factory/layout-base'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import './system-menu-detail'
 import './system-code-detail'
 import '../components/import-pop-up'
 
 class SystemCode extends localize(i18next)(PageView) {
   static get properties() {
     return {
+      _searchFields: Array,
       config: Object,
       data: Object
     }
@@ -213,13 +213,13 @@ class SystemCode extends localize(i18next)(PageView) {
   async _saveCodes() {
     let patches = this.dataGrist.dirtyRecords
     if (patches && patches.length) {
-      patches = patches.map(menu => {
-        let patchField = menu.id ? { id: menu.id } : {}
-        const dirtyFields = menu.__dirtyfields__
+      patches = patches.map(commonCode => {
+        let patchField = commonCode.id ? { id: commonCode.id } : {}
+        const dirtyFields = commonCode.__dirtyfields__
         for (let key in dirtyFields) {
           patchField[key] = dirtyFields[key].after
         }
-        patchField.cuFlag = menu.__dirty__
+        patchField.cuFlag = commonCode.__dirty__
 
         return patchField
       })
@@ -255,12 +255,12 @@ class SystemCode extends localize(i18next)(PageView) {
     }
   }
 
-  _openMenuDetail(menuId, menuName) {
+  _openMenuDetail(commonCodeId, commonCodeName) {
     openPopup(html`
       <system-code-detail
         style="width: 80vw; height: 80vh"
-        .menuId="${menuId}"
-        .menuName="${menuName}"
+        .commonCodeId="${commonCodeId}"
+        .commonCodeName="${commonCodeName}"
       ></system-code-detail>
     `)
   }

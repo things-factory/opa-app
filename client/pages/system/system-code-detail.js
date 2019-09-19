@@ -50,8 +50,8 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
 
   static get properties() {
     return {
-      menuId: String,
-      menuName: String,
+      commonCodeId: String,
+      commonCodeName: String,
       _searchFields: Array,
       config: Object,
       importHandler: Object
@@ -60,7 +60,7 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
 
   render() {
     return html`
-      <h2>${i18next.t('title.system-code-details')} ${this.menuName}</h2>
+      <h2>${i18next.t('title.system-code-details')} ${this.comonCodeName}</h2>
 
       <search-form
         id="search-form"
@@ -217,11 +217,11 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
 
   async fetchHandler({ page, limit, sorters = [] }) {
     let filters = []
-    if (this.menuId) {
+    if (this.commonCodeId) {
       filters.push({
-        name: 'menu_id',
+        name: 'id',
         operator: 'eq',
-        value: this.menuId
+        value: this.commonCodeId
       })
     }
 
@@ -251,9 +251,11 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
       `
     })
 
-    return {
-      total: response.data.commonCodeDetails.total || 0,
-      records: response.data.commonCodeDetails.items || []
+    if (!response.errors) {
+      return {
+        total: response.data.commonCodeDetails.total || 0,
+        records: response.data.commonCodeDetails.items || []
+      }
     }
   }
 
@@ -306,14 +308,14 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
   async _saveCommonCodeDetails() {
     let patches = this.dataGrist.dirtyRecords
     if (patches && patches.length) {
-      patches = patches.map(commonCodeDetails => {
-        let patchField = commonCodeDetails.id ? { id: commonCodeDetails.id } : {}
-        const dirtyFields = commonCodeDetails.__dirtyfields__
+      patches = patches.map(commonCodeDetail => {
+        let patchField = commonCodeDetail.id ? { id: commonCodeDetail.id } : {}
+        const dirtyFields = commonCodeDetail.__dirtyfields__
         for (let key in dirtyFields) {
           patchField[key] = dirtyFields[key].after
         }
-        patchField.menu = { id: this.menuId }
-        patchField.cuFlag = commonCodeDetails.__dirty__
+        patchField.commonCode = { id: this.commonCodeId }
+        patchField.cuFlag = commonCodeDetail.__dirty__
 
         return patchField
       })
