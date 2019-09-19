@@ -50,8 +50,8 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
 
   static get properties() {
     return {
-      bizplaceId: String,
-      bizplaceName: String,
+      menuId: String,
+      menuName: String,
       _searchFields: Array,
       config: Object,
       importHandler: Object
@@ -185,10 +185,9 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
         {
           type: 'datetime',
           name: 'updatedAt',
-          record: {
-            align: 'left'
-          },
-          header: 'field.updated_at',
+          header: i18next.t('field.updated_at'),
+          record: { editable: false, align: 'center' },
+          sortable: true,
           width: 150
         }
       ]
@@ -218,11 +217,11 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
 
   async fetchHandler({ page, limit, sorters = [] }) {
     let filters = []
-    if (this.bizplaceId) {
+    if (this.menuId) {
       filters.push({
-        name: 'bizplace_id',
+        name: 'menu_id',
         operator: 'eq',
-        value: this.bizplaceId
+        value: this.menuId
       })
     }
 
@@ -238,6 +237,7 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
               id
               name
               description
+              rank
               updatedAt
               updater{
                 id
