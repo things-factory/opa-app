@@ -6,6 +6,8 @@ import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import './system-menu-detail'
+import './system-code-detail'
+import '../components/import-pop-up'
 
 class SystemCode extends localize(i18next)(PageView) {
   static get properties() {
@@ -244,7 +246,7 @@ class SystemCode extends localize(i18next)(PageView) {
       const response = await client.query({
         query: gql`
               mutation {
-                deleteCodes(${gqlBuilder.buildArgs({ names })})
+                deleteCommonCodes(${gqlBuilder.buildArgs({ names })})
               }
             `
       })

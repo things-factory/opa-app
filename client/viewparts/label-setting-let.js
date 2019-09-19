@@ -1,8 +1,10 @@
-import { LitElement, html, css } from 'lit-element'
-
-import { localize, i18next } from '@things-factory/i18n-base'
-import '@things-factory/setting-base'
+import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
+import '@things-factory/setting-base'
+import { client, gqlBuilder } from '@things-factory/shell'
+import gql from 'graphql-tag'
+import { css, html, LitElement } from 'lit-element'
+import { LOCATION_LABEL_SETTING_KEY, PALLET_LABEL_SETTING_KEY } from '../label-setting-constants'
 import './label-selector-popup'
 
 export class LabelSettingLet extends localize(i18next)(LitElement) {
@@ -109,8 +111,14 @@ export class LabelSettingLet extends localize(i18next)(LitElement) {
                 @click=${e => {
                   var popup = openPopup(html`
                     <label-selector-popup
-                      @label-selected=${e => {
+                      @label-selected=${async e => {
                         var label = e.detail.label
+
+                        await this.saveSettings({
+                          key: LOCATION_LABEL_SETTING_KEY,
+                          value: label.id
+                        })
+
                         this.locationLabel = label
                         popup.close()
                         this.requestUpdate()
@@ -133,8 +141,14 @@ export class LabelSettingLet extends localize(i18next)(LitElement) {
                 @click=${e => {
                   var popup = openPopup(html`
                     <label-selector-popup
-                      @label-selected=${e => {
+                      @label-selected=${async e => {
                         var label = e.detail.label
+
+                        await this.saveSettings({
+                          key: PALLET_LABEL_SETTING_KEY,
+                          value: label.id
+                        })
+
                         this.palletLabel = label
                         popup.close()
                         this.requestUpdate()
@@ -154,7 +168,58 @@ export class LabelSettingLet extends localize(i18next)(LitElement) {
   }
 
   firstUpdated() {
-    console.log('first!!!')
+    ;(async () => {
+      var settings = await this.getLabelSettings()
+      settings.forEach(setting => {
+        if (setting.name == LOCATION_LABEL_SETTING_KEY) {
+          this.locationLabel = setting.board
+        } else if (setting.name == PALLET_LABEL_SETTING_KEY) {
+          this.palletLabel = setting.board
+        }
+      })
+      this.requestUpdate()
+    })()
+  }
+
+  async getLabelSettings() {
+    var labelSettings = await client.query({
+      query: gql`
+        {
+          labelSettings(names:["${LOCATION_LABEL_SETTING_KEY}", "${PALLET_LABEL_SETTING_KEY}"]) {
+            name
+            value
+            board {
+              id
+              name
+              description
+              thumbnail
+            }
+          }
+        }
+      `
+    })
+
+    if (!labelSettings || !labelSettings.data) return
+    return labelSettings.data.labelSettings
+  }
+
+  async saveSettings({ key, value }) {
+    if (!(key && value)) return
+
+    client.query({
+      query: gql`
+      mutation {
+        updateSetting(${gqlBuilder.buildArgs({
+          name: key,
+          patch: {
+            value
+          }
+        })}) {
+          name
+          value
+        }
+      }`
+    })
   }
 }
 

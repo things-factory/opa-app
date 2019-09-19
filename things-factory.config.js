@@ -175,6 +175,18 @@ export default {
       tagname: 'vas-work-order',
       page: 'vas-work-order'
     },
+    {
+      tagname: 'worksheet-list',
+      page: 'worksheets'
+    },
+    {
+      tagname: 'worksheet-unloading',
+      page: 'worksheet_unloading'
+    },
+    {
+      tagname: 'unload-product',
+      page: 'unloading'
+    },
     /**
      * Outbound Menus Section
      */
