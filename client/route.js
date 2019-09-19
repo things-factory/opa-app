@@ -83,8 +83,12 @@ export default function route(page) {
       import('./pages/order/assign-buffer-location')
       return page
 
-    case 'create_transport_order':
-      import('./pages/order/create-transport-order')
+    case 'create_delivery_order':
+      import('./pages/order/create-delivery-order')
+      return page
+
+    case 'create_collection_order':
+      import('./pages/order/create-collection-order')
       return page
 
     case 'delivery_order_detail':

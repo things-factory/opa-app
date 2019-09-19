@@ -83,10 +83,13 @@ export default {
       tagname: 'assign-buffer-location',
       page: 'assign_buffer_location'
     },
-
     {
-      tagname: 'create-transport-order',
-      page: 'create_transport_order'
+      tagname: 'create-delivery-order',
+      page: 'create_delivery_order'
+    },
+    {
+      tagname: 'create-collection-order',
+      page: 'create_collection_order'
     },
     {
       tagname: 'delivery-order-detail',
