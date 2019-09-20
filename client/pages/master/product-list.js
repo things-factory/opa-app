@@ -96,6 +96,7 @@ class ProductList extends localize(i18next)(PageView) {
   async firstUpdated() {
     this._searchFields = [
       {
+        label: i18next.t('label.name'),
         name: 'name',
         props: {
           searchOper: 'like',
@@ -103,6 +104,7 @@ class ProductList extends localize(i18next)(PageView) {
         }
       },
       {
+        label: i18next.t('label.type'),
         name: 'type',
         props: {
           searchOper: 'like',

@@ -86,6 +86,7 @@ export class ProductOptionDetailList extends localize(i18next)(LitElement) {
   async firstUpdated() {
     this._searchFields = [
       {
+        label: i18next.t('label.name'),
         name: 'name',
         type: 'text',
         props: {
@@ -94,6 +95,7 @@ export class ProductOptionDetailList extends localize(i18next)(LitElement) {
         }
       },
       {
+        label: i18next.t('label.description'),
         name: 'description',
         type: 'text',
         props: {
