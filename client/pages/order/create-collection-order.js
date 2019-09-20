@@ -6,6 +6,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
+import Swal from 'sweetalert2'
 
 class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -344,7 +345,14 @@ class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) 
 
       if (!response.errors) {
         navigate(`collection_order_detail/${response.data.generateCollectionOrder.name}`)
-        this._showToast({ message: i18next.t('collection_order_created') })
+        Swal.fire({
+          // position: 'top-end',
+          type: 'success',
+          title: 'Order created',
+          // showConfirmButton: false,
+          timer: 1500
+        })
+        // this._showToast({ message: i18next.t('collection_order_created') })
       }
     } catch (e) {
       this._showToast(e)
@@ -355,14 +363,28 @@ class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) 
     const elements = Array.from(this.form.querySelectorAll('input, select'))
 
     if (!elements.filter(e => !e.hasAttribute('hidden')).every(e => e.checkValidity()))
-      throw new Error(i18next.t('text.invalid_form'))
+      Swal.fire({
+        // position: 'top-end',
+        type: 'error',
+        title: 'Invalid form',
+        // showConfirmButton: false,
+        timer: 1500
+      })
+    //throw new Error(i18next.t('text.invalid_form'))
   }
 
   _validateProducts() {
     this.productGrist.commit()
     // no records
     if (!this.productGrist.data.records || !this.productGrist.data.records.length)
-      throw new Error(i18next.t('text.no_products'))
+      Swal.fire({
+        // position: 'top-end',
+        type: 'error',
+        title: 'No products',
+        // showConfirmButton: false,
+        timer: 1500
+      })
+    // throw new Error(i18next.t('text.no_products'))
 
     // required field (batchId, packingType, weight, unit, packQty)
     if (
@@ -370,12 +392,26 @@ class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) 
         record => !record.batchId || !record.packingType || !record.weight || !record.unit || !record.packQty
       ).length
     )
-      throw new Error(i18next.t('text.empty_value_in_list'))
+      Swal.fire({
+        // position: 'top-end',
+        type: 'error',
+        title: 'Empty value in list',
+        // showConfirmButton: false,
+        timer: 1500
+      })
+    // throw new Error(i18next.t('text.empty_value_in_list'))
 
     // duplication of batch id
     const batchIds = this.productGrist.data.records.map(product => product.batchId)
     if (batchIds.filter((batchId, idx, batchIds) => batchIds.indexOf(batchId) !== idx).length)
-      throw new Error(i18next.t('text.batch_id_is_duplicated'))
+      Swal.fire({
+        // position: 'top-end',
+        type: 'error',
+        title: 'Batch id is duplicated',
+        // showConfirmButton: false,
+        timer: 1500
+      })
+    // throw new Error(i18next.t('text.batch_id_is_duplicated'))
   }
 
   _validateVas() {
@@ -581,7 +617,14 @@ class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) 
 
     if (!response.errors) {
       navigate(`collection_order_detail/${response.data.editCollectionOrder.name}`)
-      this._showToast({ message: i18next.t('collection_order_updated') })
+      Swal.fire({
+        // position: 'top-end',
+        type: 'success',
+        title: 'Collection order updated',
+        // showConfirmButton: false,
+        timer: 1500
+      })
+      //this._showToast({ message: i18next.t('collection_order_updated') })
     }
   }
 

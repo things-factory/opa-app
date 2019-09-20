@@ -6,6 +6,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
+import Swal from 'sweetalert2'
 
 class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -400,7 +401,14 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
           action: async () => {
             try {
               await this._updateCollectionOrder({ status: ORDER_STATUS.EDITING.value })
-              this._showToast({ message: i18next.t('text.collection_order_now_editable') })
+              Swal.fire({
+                // position: 'top-end',
+                type: 'info',
+                title: 'Collection order now editable',
+                // showConfirmButton: false,
+                timer: 1500
+              })
+              // this._showToast({ message: i18next.t('text.collection_order_now_editable') })
             } catch (e) {
               this._showToast(e)
             }
@@ -411,7 +419,14 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
           action: async () => {
             try {
               await this._confirmCollectionOrder()
-              this._showToast({ message: i18next.t('text.collection_order_confirmed') })
+              Swal.fire({
+                // position: 'top-end',
+                type: 'info',
+                title: 'Collection order confirmed',
+                // showConfirmButton: false,
+                timer: 1500
+              })
+              // this._showToast({ message: i18next.t('text.collection_order_confirmed') })
               navigate('collection_orders')
             } catch (e) {
               this._showToast(e)

@@ -5,6 +5,7 @@ import { client, gqlBuilder, isMobileDevice, ScrollbarStyles } from '@things-fac
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
+import Swal from 'sweetalert2'
 
 export class GenerateLocationList extends localize(i18next)(LitElement) {
   constructor() {
@@ -338,12 +339,19 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
 
     if (this.zoneName === '') {
       document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            level: 'error',
-            message: i18next.t('text.zone_name_cannot_be_empty')
-          }
+        Swal.fire({
+          // position: 'top-end',
+          type: 'error',
+          title: 'Zone name cannot be empty',
+          // showConfirmButton: false,
+          timer: 1500
         })
+        // new CustomEvent('notify', {
+        //   detail: {
+        //     level: 'error',
+        //     message: i18next.t('text.zone_name_cannot_be_empty')
+        //   }
+        // })
       )
       validationError = true
     }
@@ -391,12 +399,19 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           tempLocationList = []
 
           document.dispatchEvent(
-            new CustomEvent('notify', {
-              detail: {
-                level: 'error',
-                message: i18next.t('text.row_end_must_greater_than_row_start')
-              }
+            Swal.fire({
+              // position: 'top-end',
+              type: 'success',
+              title: 'Row end must greater than row start',
+              showConfirmButton: false,
+              timer: 1500
             })
+            // new CustomEvent('notify', {
+            //   detail: {
+            //     level: 'error',
+            //     message: i18next.t('text.row_end_must_greater_than_row_start')
+            //   }
+            // })
           )
         }
       })

@@ -6,6 +6,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
+import Swal from 'sweetalert2'
 
 class DeliveryOrderDetail extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -402,7 +403,14 @@ class DeliveryOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           action: async () => {
             try {
               await this._updateDeliveryOrder({ status: ORDER_STATUS.EDITING.value })
-              this._showToast({ message: i18next.t('text.delivery_order_now_editable') })
+              Swal.fire({
+                // position: 'top-end',
+                type: 'info',
+                title: 'Delivery order now editable',
+                // showConfirmButton: false,
+                timer: 1500
+              })
+              // this._showToast({ message: i18next.t('text.delivery_order_now_editable') })
             } catch (e) {
               this._showToast(e)
             }
@@ -413,7 +421,14 @@ class DeliveryOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           action: async () => {
             try {
               await this._confirmDeliveryOrder()
-              this._showToast({ message: i18next.t('text.delivery_order_confirmed') })
+              Swal.fire({
+                // position: 'top-end',
+                type: 'info',
+                title: 'Delivery order confirmed',
+                // showConfirmButton: false,
+                timer: 1500
+              })
+              // this._showToast({ message: i18next.t('text.delivery_order_confirmed') })
               navigate('delivery_orders')
             } catch (e) {
               this._showToast(e)

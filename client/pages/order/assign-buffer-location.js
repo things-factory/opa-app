@@ -8,6 +8,7 @@ import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
 import './location-selector'
+import Swal from 'sweetalert2'
 
 class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -412,7 +413,14 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
 
       if (!response.errors) {
         navigate(`worksheet_unloading/${response.data.generateArrivalNoticeWorksheet.name}`)
-        this._showToast({ message: i18next.t('text.buffer_location_assigned') })
+        Swal.fire({
+          // position: 'top-end',
+          type: 'info',
+          title: 'Buffer location assigned',
+          // showConfirmButton: false,
+          timer: 1500
+        })
+        // this._showToast({ message: i18next.t('text.buffer_location_assigned') })
       }
     } catch (e) {
       this._showToast(e)
@@ -421,7 +429,14 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
 
   _validateBufferLocation() {
     if (!this.bufferLocationField.getAttribute('location-id'))
-      throw new Error(i18next.t('text.buffer_location_is_not_assigned'))
+      Swal.fire({
+        // position: 'top-end',
+        type: 'error',
+        title: 'Buffer location is not assigned',
+        // showConfirmButton: false,
+        timer: 1500
+      })
+    //throw new Error(i18next.t('text.buffer_location_is_not_assigned'))
   }
 
   _openBufferSelector() {
