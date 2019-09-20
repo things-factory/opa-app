@@ -87,13 +87,7 @@ class CompanyList extends localize(i18next)(PageView) {
     }
   }
 
-  activated(active) {
-    if (JSON.parse(active) && this.dataGrist) {
-      this.dataGrist.fetch()
-    }
-  }
-
-  async firstUpdated() {
+  async pageInitialized() {
     this._searchFields = [
       {
         name: 'name',
@@ -123,10 +117,10 @@ class CompanyList extends localize(i18next)(PageView) {
     ]
 
     this.config = this.gristConfig
-  }
 
-  languageUpdated() {
-    this.dataGrist.refresh()
+    await this.updateComplete
+
+    this.dataGrist.fetch()
   }
 
   get gristConfig() {
@@ -149,7 +143,7 @@ class CompanyList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'name',
-          header: 'field.name',
+          header: i18next.t('field.name'),
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 200
@@ -157,7 +151,7 @@ class CompanyList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'description',
-          header: 'field.description',
+          header: i18next.t('field.description'),
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 150
@@ -165,7 +159,7 @@ class CompanyList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'countryCode',
-          header: 'field.country_code',
+          header: i18next.t('field.country_code'),
           record: { editable: true, align: 'center' },
           sortable: true,
           width: 80
@@ -173,7 +167,7 @@ class CompanyList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'brn',
-          header: 'field.brn',
+          header: i18next.t('field.brn'),
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 100
@@ -181,7 +175,7 @@ class CompanyList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'postalCode',
-          header: 'field.postal_code',
+          header: i18next.t('field.postal_code'),
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 150
@@ -189,7 +183,7 @@ class CompanyList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'address',
-          header: 'field.address',
+          header: i18next.t('field.address'),
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 250
@@ -197,7 +191,7 @@ class CompanyList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'status',
-          header: 'field.status',
+          header: i18next.t('field.status'),
           record: { editable: true, align: 'center' },
           sortable: true,
           width: 80
@@ -205,7 +199,7 @@ class CompanyList extends localize(i18next)(PageView) {
         {
           type: 'datetime',
           name: 'updatedAt',
-          header: 'field.updated_at',
+          header: i18next.t('field.updated_at'),
           record: { editable: false, align: 'center' },
           sortable: true,
           width: 150
@@ -213,7 +207,7 @@ class CompanyList extends localize(i18next)(PageView) {
         {
           type: 'object',
           name: 'updater',
-          header: 'field.updater',
+          header: i18next.t('field.updater'),
           record: { editable: false, align: 'center' },
           sortable: true,
           width: 150

@@ -54,14 +54,14 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         id="search-form"
         .fields=${this._searchFields}
         initFocus="description"
-        @submit=${async () => this.dataGrist.fetch()}
+        @submit=${e => this.dataGrist.fetch()}
       ></search-form>
 
       <div class="grist">
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
-          .fetchHandler="${this.fetchHandler.bind(this)}"
+          .fetchHandler=${this.fetchHandler.bind(this)}
         ></data-grist>
       </div>
     `
@@ -90,11 +90,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  languageUpdated() {
-    this.dataGrist.refresh()
-  }
-
-  async firstUpdated() {
+  async pageInitialized() {
     this._searchFields = [
       {
         name: 'name',
@@ -208,16 +204,10 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         }
       ]
     }
-  }
 
-  activated(active) {
-    if (JSON.parse(active) && this.dataGrist) {
-      this.dataGrist.fetch()
-    }
-  }
+    await this.updateComplete
 
-  get searchForm() {
-    return this.shadowRoot.querySelector('search-form')
+    this.dataGrist.fetch()
   }
 
   get searchForm() {

@@ -1,5 +1,3 @@
-import { DataGrist } from '@things-factory/grist-ui'
-import { i18next } from '@things-factory/i18n-base'
 import { addRoutingType, updateMenuProvider } from '@things-factory/menu-base'
 import { ADD_SETTING } from '@things-factory/setting-base'
 import { client, store, UPDATE_BASE_URL } from '@things-factory/shell'
@@ -13,7 +11,7 @@ import './viewparts/label-setting-let'
 
 export default function bootstrap() {
   /* global setting for DataGrist */
-  DataGrist.translator = x => i18next.t(x)
+  // DataGrist.translator = x => i18next.t(x)  // We don't use DataGrist.translator
 
   store.addReducers({
     labelSettings: reducerLabelSettings
