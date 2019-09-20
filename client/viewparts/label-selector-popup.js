@@ -47,6 +47,9 @@ export class LabelSelectorPopup extends InfiniteScrollable(localize(i18next)(Lit
 
         #main {
           overflow: auto;
+          display: grid;
+          grid-template-columns: var(--card-list-template);
+          grid-auto-rows: 200px;
         }
 
         #main .card {
