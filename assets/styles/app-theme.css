@@ -372,6 +372,7 @@ body {
     --grist-padding: 0;
     --grist-input-zoom: 1.4;
     --record-view-footer-height: 50px;
+    --record-view-footer-button-height: var(--record-view-footer-height);
     --record-view-footer-iconbutton-size: 35px;
     --record-view-footer-iconbutton-margin: -2px;
     --record-view-footer-iconbutton-display: block;
@@ -387,6 +388,7 @@ body {
     --grist-padding: 0;
     --grist-input-zoom: 1.4;
     --record-view-footer-height: 50px;
+    --record-view-footer-button-height: var(--record-view-footer-height);
     --record-view-footer-iconbutton-size: 35px;
     --record-view-footer-iconbutton-margin: -2px;
     --record-view-footer-iconbutton-display: block;
