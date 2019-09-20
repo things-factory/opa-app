@@ -8,6 +8,7 @@ import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
 import './contact-point-list'
 import '../components/import-pop-up'
+import Swal from 'sweetalert2'
 
 class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -54,14 +55,14 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         id="search-form"
         .fields=${this._searchFields}
         initFocus="description"
-        @submit=${async () => this.dataGrist.fetch()}
+        @submit=${e => this.dataGrist.fetch()}
       ></search-form>
 
       <div class="grist">
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
-          .fetchHandler="${this.fetchHandler.bind(this)}"
+          .fetchHandler=${this.fetchHandler.bind(this)}
         ></data-grist>
       </div>
     `
@@ -90,11 +91,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  languageUpdated() {
-    this.dataGrist.refresh()
-  }
-
-  async firstUpdated() {
+  async pageInitialized() {
     this._searchFields = [
       {
         name: 'name',
@@ -208,16 +205,10 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         }
       ]
     }
-  }
 
-  activated(active) {
-    if (JSON.parse(active) && this.dataGrist) {
-      this.dataGrist.fetch()
-    }
-  }
+    await this.updateComplete
 
-  get searchForm() {
-    return this.shadowRoot.querySelector('search-form')
+    this.dataGrist.fetch()
   }
 
   get searchForm() {
@@ -394,41 +385,67 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
       if (!response.errors) {
         this.dataGrist.fetch()
         document.dispatchEvent(
-          new CustomEvent('notify', {
-            detail: {
-              message: i18next.t('text.data_updated_successfully')
-            }
+          Swal.fire({
+            // position: 'top-end',
+            type: 'success',
+            title: 'Your work has been saved',
+            showConfirmButton: false,
+            timer: 1500
           })
+
+          // new CustomEvent('notify', {
+          //   detail: {
+          //     message: i18next.t('text.data_updated_successfully')
+          //   }
+          // })
         )
       }
     }
   }
 
   async _deleteBizplaces() {
-    let confirmDelete = confirm('Are you sure?')
-    if (confirmDelete) {
-      const names = this.dataGrist.selected.map(record => record.name)
-      if (names && names.length > 0) {
-        const response = await client.query({
-          query: gql`
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      type: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!'
+    }).then(async result => {
+      if (result.value) {
+        Swal.fire('Deleted!', 'Your file has been deleted.', 'success')
+
+        const names = this.dataGrist.selected.map(record => record.name)
+        if (names && names.length > 0) {
+          const response = await client.query({
+            query: gql`
             mutation {
               deleteBizplaces(${gqlBuilder.buildArgs({ names })})
             }
           `
-        })
+          })
 
-        if (!response.errors) {
-          this.dataGrist.fetch()
-          document.dispatchEvent(
-            new CustomEvent('notify', {
-              detail: {
-                message: i18next.t('text.data_updated_successfully')
-              }
-            })
-          )
+          if (!response.errors) {
+            this.dataGrist.fetch()
+            document.dispatchEvent(
+              Swal.fire({
+                // position: 'top-end',
+                type: 'info',
+                title: 'Your work has been deleted',
+                showConfirmButton: false,
+                timer: 1500
+              })
+              // new CustomEvent('notify', {
+              //   detail: {
+              //     message: i18next.t('text.data_updated_successfully')
+              //   }
+              // })
+            )
+          }
         }
       }
-    }
+    })
   }
 
   get _columns() {
