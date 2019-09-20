@@ -5,6 +5,7 @@ import { client, gqlBuilder, isMobileDevice, ScrollbarStyles } from '@things-fac
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import '../components/import-pop-up'
+import Swal from 'sweetalert2'
 
 export class ContactPointList extends localize(i18next)(LitElement) {
   static get styles() {
@@ -393,41 +394,65 @@ export class ContactPointList extends localize(i18next)(LitElement) {
       if (!response.errors) {
         this.dataGrist.fetch()
         document.dispatchEvent(
-          new CustomEvent('notify', {
-            detail: {
-              message: i18next.t('text.data_updated_successfully')
-            }
+          Swal.fire({
+            // position: 'top-end',
+            type: 'success',
+            title: 'Your work has been saved',
+            showConfirmButton: false,
+            timer: 1500
           })
+          // new CustomEvent('notify', {
+          //   detail: {
+          //     message: i18next.t('text.data_updated_successfully')
+          //   }
+          // })
         )
       }
     }
   }
 
   async _deleteContactPoints() {
-    let confirmDelete = confirm('Are you sure?')
-    if (confirmDelete) {
-      const names = this.dataGrist.selected.map(record => record.name)
-      if (names && names.length > 0) {
-        const response = await client.query({
-          query: gql`
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      type: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!'
+    }).then(async result => {
+      if (result.value) {
+        Swal.fire('Deleted!', 'Your file has been deleted.', 'success')
+        const names = this.dataGrist.selected.map(record => record.name)
+        if (names && names.length > 0) {
+          const response = await client.query({
+            query: gql`
             mutation {
               deleteContactPoints(${gqlBuilder.buildArgs({ names })})
             }
           `
-        })
+          })
 
-        if (!response.errors) {
-          this.dataGrist.fetch()
-          document.dispatchEvent(
-            new CustomEvent('notify', {
-              detail: {
-                message: i18next.t('text.data_updated_successfully')
-              }
-            })
-          )
+          if (!response.errors) {
+            this.dataGrist.fetch()
+            document.dispatchEvent(
+              Swal.fire({
+                // position: 'top-end',
+                type: 'info',
+                title: 'Your work has been deleted',
+                showConfirmButton: false,
+                timer: 1500
+              })
+              // new CustomEvent('notify', {
+              //   detail: {
+              //     message: i18next.t('text.data_updated_successfully')
+              //   }
+              // })
+            )
+          }
         }
       }
-    }
+    })
   }
 
   get _columns() {
