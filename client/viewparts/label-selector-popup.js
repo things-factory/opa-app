@@ -98,7 +98,7 @@ export class LabelSelectorPopup extends InfiniteScrollable(localize(i18next)(Lit
     this._page = 1
     this._total = 0
 
-    this._infiniteScrollOptions.limit = 3
+    this._infiniteScrollOptions.limit = 20
   }
 
   render() {
