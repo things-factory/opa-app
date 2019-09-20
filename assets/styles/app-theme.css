@@ -290,6 +290,7 @@ body {
   --board-list-star-active-color: var(--primary-color);
 
   --card-list-template: repeat(3, minmax(auto, 100%));
+  --card-list-rows-height: 200px;
 
   /* board modeler page style */
   --edit-toolbar-background-color: var(--primary-color);
@@ -379,6 +380,7 @@ body {
     --profile-wrap-max-width: 85vw;
 
     --card-list-template: repeat(1, minmax(auto, 100%));
+    --card-list-rows-height: 240px;
   }
 }
 @media (min-width: 461px) and (max-width: 1024px) {
@@ -398,5 +400,6 @@ body {
     --overlay-center-large-height: 80%;
 
     --card-list-template: repeat(2, minmax(auto, 100%));
+    --card-list-rows-height: 160px;
   }
 }
