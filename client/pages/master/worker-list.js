@@ -168,13 +168,19 @@ class WorkerList extends localize(i18next)(PageView) {
 
   _importableData(records) {
     setTimeout(() => {
-      openPopup(html`
-        <import-pop-up
-          .records=${records}
-          .config=${this.config}
-          .importHandler="${this.importHandler.bind(this)}"
-        ></import-pop-up>
-      `)
+      openPopup(
+        html`
+          <import-pop-up
+            .records=${records}
+            .config=${this.config}
+            .importHandler="${this.importHandler.bind(this)}"
+          ></import-pop-up>
+        `,
+        {
+          backdrop: true,
+          size: 'large'
+        }
+      )
     }, 500)
   }
 

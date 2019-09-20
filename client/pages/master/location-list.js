@@ -381,9 +381,15 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _generateLocation() {
-    openPopup(html`
-      <generate-location-list .warehouseId="${this._warehouseId}"></generate-location-list>
-    `)
+    openPopup(
+      html`
+        <generate-location-list .warehouseId="${this._warehouseId}"></generate-location-list>
+      `,
+      {
+        backdrop: true,
+        size: 'large'
+      }
+    )
   }
 
   get _columns() {

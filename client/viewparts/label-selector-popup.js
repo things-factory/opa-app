@@ -47,16 +47,19 @@ export class LabelSelectorPopup extends InfiniteScrollable(localize(i18next)(Lit
 
         #main {
           overflow: auto;
+          padding: 10px 20px;
+          display: grid;
+          grid-template-columns: var(--card-list-template);
+          grid-auto-rows: var(--card-list-rows-height);
+          grid-gap: 20px;
         }
 
         #main .card {
           display: flex;
           flex-direction: column;
           align-items: center;
-          margin: 1rem;
-          border-radius: 0.5rem;
           overflow: hidden;
-          box-shadow: rgba(0, 0, 0, 0.3) 0 0 0.5rem;
+          border-radius: var(--border-radius);
         }
 
         #main .card:hover {
@@ -64,12 +67,26 @@ export class LabelSelectorPopup extends InfiniteScrollable(localize(i18next)(Lit
         }
 
         #main .card > .name {
+          background-color: rgba(1, 126, 127, 0.8);
+          margin-top: -35px;
+          width: 100%;
+          color: #fff;
           font-weight: bolder;
+          font-size: 13px;
+          text-indent: 7px;
         }
 
         #main .card > .description {
-          opacity: 0.7;
-          font-size: 0.8rem;
+          background-color: rgba(0, 0, 0, 0.7);
+          width: 100%;
+          min-height: 15px;
+          font-size: 0.6rem;
+          color: #fff;
+          text-indent: 7px;
+        }
+        #main .card img {
+          max-height: 100%;
+          min-height: 100%;
         }
 
         select {
