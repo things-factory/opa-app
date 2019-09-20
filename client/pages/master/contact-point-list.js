@@ -346,11 +346,18 @@ export class ContactPointList extends localize(i18next)(LitElement) {
       history.back()
       this.dataGrist.fetch()
       document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            message: i18next.t('text.data_imported_successfully')
-          }
+        Swal.fire({
+          // position: 'top-end',
+          type: 'success',
+          title: 'Data imported successfully',
+          showConfirmButton: false,
+          timer: 1500
         })
+        // new CustomEvent('notify', {
+        //   detail: {
+        //     message: i18next.t('text.data_imported_successfully')
+        //   }
+        // })
       )
     }
   }

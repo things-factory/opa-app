@@ -479,7 +479,14 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       navigate(`arrival_notice_detail/${response.data.editArrivalNotice.name}`)
-      this._showToast({ message: i18next.t('arrival_notice_updated') })
+      Swal.fire({
+        // position: 'top-end',
+        type: 'success',
+        title: 'Arrival notice updated',
+        // showConfirmButton: false,
+        timer: 1500
+      })
+      // this._showToast({ message: i18next.t('arrival_notice_updated') })
     }
   }
 

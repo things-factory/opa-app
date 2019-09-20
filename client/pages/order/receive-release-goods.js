@@ -4,6 +4,7 @@ import { client, gqlBuilder, isMobileDevice, PageView, navigate } from '@things-
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
+import Swal from 'sweetalert2'
 
 class ReceiveReleaseGoods extends localize(i18next)(PageView) {
   static get properties() {
@@ -284,7 +285,14 @@ class ReceiveReleaseGoods extends localize(i18next)(PageView) {
       await this._updateOrder(selectedOrder)
       this.data = await this.getReleaseGoods()
     } else {
-      this._notify(i18next.t('text.there_no_selected'))
+      Swal.fire({
+        // position: 'top-end',
+        type: 'info',
+        title: 'There no selected',
+        // showConfirmButton: false,
+        timer: 1500
+      })
+      //this._notify(i18next.t('text.there_no_selected'))
     }
   }
 
