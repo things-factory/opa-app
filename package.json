@@ -54,7 +54,8 @@
     "@things-factory/transport-base": "*",
     "@things-factory/warehouse-base": "*",
     "@things-factory/worksheet-base": "*",
-    "pg": "*"
+    "pg": "*",
+    "sweetalert2": "*"
   },
   "devDependencies": {
     "@things-factory/board-test": "*",
