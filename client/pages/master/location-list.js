@@ -104,36 +104,43 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
   async firstUpdated() {
     this._searchFields = [
       {
+        label: i18next.t('label.name'),
         name: 'name',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.name') }
       },
       {
+        label: i18next.t('label.type'),
         name: 'type',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.type') }
       },
       {
+        label: i18next.t('label.zone'),
         name: 'zone',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.zone') }
       },
       {
+        label: i18next.t('label.row'),
         name: 'row',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.row') }
       },
       {
+        label: i18next.t('label.column'),
         name: 'column',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.column') }
       },
       {
+        label: i18next.t('label.shelf'),
         name: 'shelf',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.shelf') }
       },
       {
+        label: i18next.t('label.status'),
         name: 'status',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.status') }

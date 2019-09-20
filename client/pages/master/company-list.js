@@ -91,26 +91,31 @@ class CompanyList extends localize(i18next)(PageView) {
   async pageInitialized() {
     this._searchFields = [
       {
+        label: i18next.t('label.name'),
         name: 'name',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.name') }
       },
       {
+        label: i18next.t('label.country_code'),
         name: 'country_code',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.country_code') }
       },
       {
+        label: i18next.t('label.brn'),
         name: 'brn',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.brn') }
       },
       {
+        label: i18next.t('label.address'),
         name: 'address',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.address') }
       },
       {
+        label: i18next.t('label.status'),
         name: 'status',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.status') }

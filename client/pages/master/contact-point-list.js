@@ -120,43 +120,48 @@ export class ContactPointList extends localize(i18next)(LitElement) {
   async firstUpdated() {
     this._searchFields = [
       {
+        label: i18next.t('label.name'),
         name: 'name',
         type: 'text',
         props: {
           searchOper: 'like',
-          placeholder: i18next.t('field.name')
+          placeholder: i18next.t('label.name')
         }
       },
       {
+        label: i18next.t('label.email'),
         name: 'email',
         type: 'text',
         props: {
           searchOper: 'like',
-          placeholder: i18next.t('field.email')
+          placeholder: i18next.t('label.email')
         }
       },
       {
+        label: i18next.t('label.name'),
         name: 'fax',
         type: 'text',
         props: {
           searchOper: 'like',
-          placeholder: i18next.t('field.fax')
+          placeholder: i18next.t('label.fax')
         }
       },
       {
+        label: i18next.t('label.phone'),
         name: 'phone',
         type: 'text',
         props: {
           searchOper: 'like',
-          placeholder: i18next.t('field.phone')
+          placeholder: i18next.t('label.phone')
         }
       },
       {
+        label: i18next.t('label.description'),
         name: 'description',
         type: 'text',
         props: {
           searchOper: 'like',
-          placeholder: i18next.t('field.description')
+          placeholder: i18next.t('label.description')
         }
       }
     ]

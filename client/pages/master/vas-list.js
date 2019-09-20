@@ -93,11 +93,13 @@ class VasList extends localize(i18next)(PageView) {
   async firstUpdated() {
     this._searchFields = [
       {
+        label: i18next.t('label.name'),
         name: 'name',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.name') }
       },
       {
+        label: i18next.t('label.description'),
         name: 'description',
         type: 'text',
         props: { searchOper: 'eq', placeholder: i18next.t('label.description') }

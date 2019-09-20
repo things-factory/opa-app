@@ -94,16 +94,19 @@ class TransportVehicle extends localize(i18next)(PageView) {
   async firstUpdated() {
     this._searchFields = [
       {
+        label: i18next.t('label.reg_number'),
         name: 'regNumber',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.reg_number') }
       },
       {
+        label: i18next.t('label.size'),
         name: 'size',
         type: 'text',
         props: { searchOper: 'eq', placeholder: i18next.t('label.size') }
       },
       {
+        label: i18next.t('label.status'),
         name: 'status',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.status') }
