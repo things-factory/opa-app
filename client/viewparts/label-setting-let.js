@@ -138,6 +138,7 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
                       ></label-selector-popup>
                     `,
                     {
+                      backdrop: true,
                       size: 'large'
                     }
                   )
@@ -178,6 +179,7 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
                       ></label-selector-popup>
                     `,
                     {
+                      backdrop: true,
                       size: 'large'
                     }
                   )

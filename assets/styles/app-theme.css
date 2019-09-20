@@ -334,7 +334,6 @@ body {
   --profile-wrap-max-width: 550px;
 
   /* setting style */
-
   --setting-title-font: var(--subtitle-font);
   --setting-title-color: var(--subtitle-text-color);
   --setting-content-padding: 15px;

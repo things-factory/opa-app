@@ -192,13 +192,19 @@ class TransportDriver extends localize(i18next)(PageView) {
 
   _importableData(records) {
     setTimeout(() => {
-      openPopup(html`
-        <import-pop-up
-          .records=${records}
-          .config=${this.config}
-          .importHandler="${this.importHandler.bind(this)}"
-        ></import-pop-up>
-      `)
+      openPopup(
+        html`
+          <import-pop-up
+            .records=${records}
+            .config=${this.config}
+            .importHandler="${this.importHandler.bind(this)}"
+          ></import-pop-up>
+        `,
+        {
+          backdrop: true,
+          size: 'large'
+        }
+      )
     }, 500)
   }
 
@@ -266,9 +272,15 @@ class TransportDriver extends localize(i18next)(PageView) {
   }
 
   _openContactPoints(bizplaceId, bizplaceName) {
-    openPopup(html`
-      <contact-point-list .bizplaceId="${bizplaceId}" .bizplaceName="${bizplaceName}"></contact-point-list>
-    `)
+    openPopup(
+      html`
+        <contact-point-list .bizplaceId="${bizplaceId}" .bizplaceName="${bizplaceName}"></contact-point-list>
+      `,
+      {
+        backdrop: true,
+        size: 'large'
+      }
+    )
   }
 
   _conditionParser() {
