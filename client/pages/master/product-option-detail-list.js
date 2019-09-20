@@ -91,7 +91,7 @@ export class ProductOptionDetailList extends localize(i18next)(LitElement) {
         type: 'text',
         props: {
           searchOper: 'like',
-          placeholder: i18next.t('field.name')
+          placeholder: i18next.t('label.name')
         }
       },
       {
@@ -100,7 +100,7 @@ export class ProductOptionDetailList extends localize(i18next)(LitElement) {
         type: 'text',
         props: {
           searchOper: 'like',
-          placeholder: i18next.t('field.description')
+          placeholder: i18next.t('label.description')
         }
       }
     ]
