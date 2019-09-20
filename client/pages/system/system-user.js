@@ -144,7 +144,11 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
                     .userId="${record.id}"
                     .email="${record.email}"
                   ></system-user-detail>
-                `
+                `,
+                {
+                  backdrop: true,
+                  size: 'large'
+                }
               )
             }
           }
@@ -296,7 +300,11 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
             )
           }}"
         ></system-create-user>
-      `
+      `,
+      {
+        backdrop: true,
+        size: 'large'
+      }
     )
   }
 

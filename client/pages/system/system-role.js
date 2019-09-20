@@ -134,7 +134,11 @@ class SystemRole extends localize(i18next)(PageView) {
                     .roleId="${record.id}"
                     .name="${record.name}"
                   ></system-role-detail>
-                `
+                `,
+                {
+                  backdrop: true,
+                  size: 'large'
+                }
               )
             }
           }

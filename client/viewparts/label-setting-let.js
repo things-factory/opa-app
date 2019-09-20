@@ -18,7 +18,7 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
           flex-direction: row;
           align-items: flex-start;
           max-width: 100%;
-          padding: 5px 0;
+          margin-bottom: 20px;
           overflow: hidden;
         }
 
@@ -39,46 +39,43 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
           max-width: 100%;
         }
 
-        div.field > div > .name {
+        .name {
+          color: var(--secondary-color, #394e64);
         }
 
-        div.field > div > .description {
-          font-size: 0.9rem;
-          opacity: 0.8;
+        .description {
+          font-size: 0.7rem;
+          opacity: 0.7;
+          color: var(--secondary-text-color);
         }
 
         label {
-          width: 100px;
+          width: 80px;
           text-align: right;
           padding-right: 10px;
 
           font-size: 1em;
           text-transform: capitalize;
-          color: rgba(0, 0, 0, 0.6);
-        }
-
-        input {
-          flex: auto;
-          border-top: none;
-          border-left: none;
-          border-right: none;
-          border-bottom-color: #32526a;
-          border-bottom-width: 1px;
-          height: 30px;
-        }
-
-        ::placeholder {
-          font-size: 0.8rem;
-          text-transform: capitalize;
-        }
-
-        button {
-          text-transform: uppercase;
+          color: #666;
         }
 
         setting-let > form {
           display: grid;
           grid-template-columns: 1fr 1fr;
+        }
+        mwc-icon {
+          background-color: var(--secondary-color, #394e64);
+          margin: 2px 2px 5px 2px;
+          padding: 0 5px;
+          color: var(--button-color, #fff);
+          border-radius: var(--button-radius, 5px);
+          border: var(--button-border, 1px solid transparent);
+          font-size: 18px;
+        }
+        mwc-icon:hover,
+        mwc-icon:active {
+          background-color: var(--button-active-background-color, #22a6a7);
+          border: var(--button-active-border);
         }
 
         @media screen and (max-width: 460px) {
@@ -141,6 +138,7 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
                       ></label-selector-popup>
                     `,
                     {
+                      backdrop: true,
                       size: 'large'
                     }
                   )
@@ -181,6 +179,7 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
                       ></label-selector-popup>
                     `,
                     {
+                      backdrop: true,
                       size: 'large'
                     }
                   )

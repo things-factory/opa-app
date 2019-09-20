@@ -94,11 +94,13 @@ class ProductOptionList extends connect(store)(localize(i18next)(PageView)) {
   async firstUpdated() {
     this._searchFields = [
       {
+        label: i18next.t('label.name'),
         name: 'name',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.name') }
       },
       {
+        label: i18next.t('label.description'),
         name: 'description',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.description') }
@@ -177,13 +179,19 @@ class ProductOptionList extends connect(store)(localize(i18next)(PageView)) {
 
   _importableData(records) {
     setTimeout(() => {
-      openPopup(html`
-        <import-pop-up
-          .records=${records}
-          .config=${this.config}
-          .importHandler="${this.importHandler.bind(this)}"
-        ></import-pop-up>
-      `)
+      openPopup(
+        html`
+          <import-pop-up
+            .records=${records}
+            .config=${this.config}
+            .importHandler="${this.importHandler.bind(this)}"
+          ></import-pop-up>
+        `,
+        {
+          backdrop: true,
+          size: 'large'
+        }
+      )
     }, 500)
   }
 
@@ -265,12 +273,18 @@ class ProductOptionList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _openProductOptionDetails(productOptionId, productOptionName) {
-    openPopup(html`
-      <product-option-detail-list
-        .productOptionId="${productOptionId}"
-        .productOptionName="${productOptionName}"
-      ></product-option-detail-list>
-    `)
+    openPopup(
+      html`
+        <product-option-detail-list
+          .productOptionId="${productOptionId}"
+          .productOptionName="${productOptionName}"
+        ></product-option-detail-list>
+      `,
+      {
+        backdrop: true,
+        size: 'large'
+      }
+    )
   }
 
   _conditionParser() {

@@ -111,7 +111,11 @@ class SystemUserBizplaces extends connect(store)(localize(i18next)(PageView)) {
               openPopup(
                 html`
                   <system-user-bizplaces-detail .email="${record.email}"></system-user-bizplaces-detail>
-                `
+                `,
+                {
+                  backdrop: true,
+                  size: 'large'
+                }
               )
             }
           }

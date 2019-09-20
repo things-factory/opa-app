@@ -94,21 +94,25 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
   async pageInitialized() {
     this._searchFields = [
       {
+        label: i18next.t('label.name'),
         name: 'name',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.name') }
       },
       {
+        label: i18next.t('label.address'),
         name: 'address',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.address') }
       },
       {
+        label: i18next.t('label.postal_code'),
         name: 'postal_code',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.postal_code') }
       },
       {
+        label: i18next.t('label.status'),
         name: 'status',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.status') }
@@ -142,7 +146,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'name',
-          header: 'field.name',
+          header: i18next.t('field.name'),
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 100
@@ -150,7 +154,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'description',
-          header: 'field.description',
+          header: i18next.t('field.description'),
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 150
@@ -158,7 +162,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'address',
-          header: 'field.address',
+          header: i18next.t('field.address'),
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 150
@@ -166,7 +170,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'postalCode',
-          header: 'field.postal_code',
+          header: i18next.t('field.postal_code'),
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 120
@@ -174,7 +178,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'latlng',
-          header: 'field.latlng',
+          header: i18next.t('field.latlng'),
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 100
@@ -182,7 +186,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'status',
-          header: 'field.status',
+          header: i18next.t('field.status'),
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 80
@@ -190,7 +194,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'datetime',
           name: 'updatedAt',
-          header: 'field.updated_at',
+          header: i18next.t('field.updated_at'),
           record: { editable: false, align: 'left' },
           sortable: true,
           width: 150
@@ -198,7 +202,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'object',
           name: 'updater',
-          header: 'field.updater',
+          header: i18next.t('field.updater'),
           record: { editable: false, align: 'left' },
           sortable: true,
           width: 150
@@ -221,13 +225,19 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
 
   _importableData(records) {
     setTimeout(() => {
-      openPopup(html`
-        <import-pop-up
-          .records=${records}
-          .config=${this.config}
-          .importHandler="${this.importHandler.bind(this)}"
-        ></import-pop-up>
-      `)
+      openPopup(
+        html`
+          <import-pop-up
+            .records=${records}
+            .config=${this.config}
+            .importHandler="${this.importHandler.bind(this)}"
+          ></import-pop-up>
+        `,
+        {
+          backdrop: true,
+          size: 'large'
+        }
+      )
     }, 500)
   }
 
@@ -335,9 +345,15 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _openContactPoints(bizplaceId, bizplaceName) {
-    openPopup(html`
-      <contact-point-list .bizplaceId="${bizplaceId}" .bizplaceName="${bizplaceName}"></contact-point-list>
-    `)
+    openPopup(
+      html`
+        <contact-point-list .bizplaceId="${bizplaceId}" .bizplaceName="${bizplaceName}"></contact-point-list>
+      `,
+      {
+        backdrop: true,
+        size: 'large'
+      }
+    )
   }
 
   _conditionParser() {
