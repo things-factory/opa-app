@@ -93,16 +93,19 @@ class TransportDriver extends localize(i18next)(PageView) {
   async firstUpdated() {
     this._searchFields = [
       {
+        label: i18next.t('label.name'),
         name: 'name',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.name') }
       },
       {
+        label: i18next.t('label.driver_code'),
         name: 'driverCode',
         type: 'text',
         props: { searchOper: 'eq', placeholder: i18next.t('label.driver_code') }
       },
       {
+        label: i18next.t('label.description'),
         name: 'description',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.description') }
@@ -192,13 +195,19 @@ class TransportDriver extends localize(i18next)(PageView) {
 
   _importableData(records) {
     setTimeout(() => {
-      openPopup(html`
-        <import-pop-up
-          .records=${records}
-          .config=${this.config}
-          .importHandler="${this.importHandler.bind(this)}"
-        ></import-pop-up>
-      `)
+      openPopup(
+        html`
+          <import-pop-up
+            .records=${records}
+            .config=${this.config}
+            .importHandler="${this.importHandler.bind(this)}"
+          ></import-pop-up>
+        `,
+        {
+          backdrop: true,
+          size: 'large'
+        }
+      )
     }, 500)
   }
 
@@ -256,19 +265,32 @@ class TransportDriver extends localize(i18next)(PageView) {
       history.back()
       this.dataGrist.fetch()
       document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            message: i18next.t('text.data_imported_successfully')
-          }
+        Swal.fire({
+          // position: 'top-end',
+          type: 'success',
+          title: 'Data imported successfully',
+          showConfirmButton: false,
+          timer: 1500
         })
+        // new CustomEvent('notify', {
+        //   detail: {
+        //     message: i18next.t('text.data_imported_successfully')
+        //   }
+        // })
       )
     }
   }
 
   _openContactPoints(bizplaceId, bizplaceName) {
-    openPopup(html`
-      <contact-point-list .bizplaceId="${bizplaceId}" .bizplaceName="${bizplaceName}"></contact-point-list>
-    `)
+    openPopup(
+      html`
+        <contact-point-list .bizplaceId="${bizplaceId}" .bizplaceName="${bizplaceName}"></contact-point-list>
+      `,
+      {
+        backdrop: true,
+        size: 'large'
+      }
+    )
   }
 
   _conditionParser() {

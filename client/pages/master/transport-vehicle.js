@@ -94,16 +94,19 @@ class TransportVehicle extends localize(i18next)(PageView) {
   async firstUpdated() {
     this._searchFields = [
       {
+        label: i18next.t('label.reg_number'),
         name: 'regNumber',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.reg_number') }
       },
       {
+        label: i18next.t('label.size'),
         name: 'size',
         type: 'text',
         props: { searchOper: 'eq', placeholder: i18next.t('label.size') }
       },
       {
+        label: i18next.t('label.status'),
         name: 'status',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.status') }
@@ -209,13 +212,19 @@ class TransportVehicle extends localize(i18next)(PageView) {
 
   _importableData(records) {
     setTimeout(() => {
-      openPopup(html`
-        <import-pop-up
-          .records=${records}
-          .config=${this.config}
-          .importHandler="${this.importHandler.bind(this)}"
-        ></import-pop-up>
-      `)
+      openPopup(
+        html`
+          <import-pop-up
+            .records=${records}
+            .config=${this.config}
+            .importHandler="${this.importHandler.bind(this)}"
+          ></import-pop-up>
+        `,
+        {
+          backdrop: true,
+          size: 'large'
+        }
+      )
     }, 500)
   }
 
@@ -275,11 +284,18 @@ class TransportVehicle extends localize(i18next)(PageView) {
       history.back()
       this.dataGrist.fetch()
       document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            message: i18next.t('text.data_imported_successfully')
-          }
+        Swal.fire({
+          // position: 'top-end',
+          type: 'success',
+          title: 'Data imported successfully',
+          showConfirmButton: false,
+          timer: 1500
         })
+        // new CustomEvent('notify', {
+        //   detail: {
+        //     message: i18next.t('text.data_imported_successfully')
+        //   }
+        // })
       )
     }
   }

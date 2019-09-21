@@ -120,43 +120,48 @@ export class ContactPointList extends localize(i18next)(LitElement) {
   async firstUpdated() {
     this._searchFields = [
       {
+        label: i18next.t('label.name'),
         name: 'name',
         type: 'text',
         props: {
           searchOper: 'like',
-          placeholder: i18next.t('field.name')
+          placeholder: i18next.t('label.name')
         }
       },
       {
+        label: i18next.t('label.email'),
         name: 'email',
         type: 'text',
         props: {
           searchOper: 'like',
-          placeholder: i18next.t('field.email')
+          placeholder: i18next.t('label.email')
         }
       },
       {
+        label: i18next.t('label.name'),
         name: 'fax',
         type: 'text',
         props: {
           searchOper: 'like',
-          placeholder: i18next.t('field.fax')
+          placeholder: i18next.t('label.fax')
         }
       },
       {
+        label: i18next.t('label.phone'),
         name: 'phone',
         type: 'text',
         props: {
           searchOper: 'like',
-          placeholder: i18next.t('field.phone')
+          placeholder: i18next.t('label.phone')
         }
       },
       {
+        label: i18next.t('label.description'),
         name: 'description',
         type: 'text',
         props: {
           searchOper: 'like',
-          placeholder: i18next.t('field.description')
+          placeholder: i18next.t('label.description')
         }
       }
     ]
@@ -264,13 +269,19 @@ export class ContactPointList extends localize(i18next)(LitElement) {
 
   _importableData(records) {
     setTimeout(() => {
-      openPopup(html`
-        <import-pop-up
-          .records=${records}
-          .config=${this.config}
-          .importHandler="${this.importHandler.bind(this)}"
-        ></import-pop-up>
-      `)
+      openPopup(
+        html`
+          <import-pop-up
+            .records=${records}
+            .config=${this.config}
+            .importHandler="${this.importHandler.bind(this)}"
+          ></import-pop-up>
+        `,
+        {
+          backdrop: true,
+          size: 'large'
+        }
+      )
     }, 500)
   }
 
@@ -335,11 +346,18 @@ export class ContactPointList extends localize(i18next)(LitElement) {
       history.back()
       this.dataGrist.fetch()
       document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            message: i18next.t('text.data_imported_successfully')
-          }
+        Swal.fire({
+          // position: 'top-end',
+          type: 'success',
+          title: 'Data imported successfully',
+          showConfirmButton: false,
+          timer: 1500
         })
+        // new CustomEvent('notify', {
+        //   detail: {
+        //     message: i18next.t('text.data_imported_successfully')
+        //   }
+        // })
       )
     }
   }

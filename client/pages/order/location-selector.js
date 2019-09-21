@@ -6,6 +6,7 @@ import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import '../components/import-pop-up'
 import { LOCATION_TYPE } from './constants/location'
+import Swal from 'sweetalert2'
 
 export class LocationSelector extends localize(i18next)(LitElement) {
   static get styles() {
@@ -331,7 +332,14 @@ export class LocationSelector extends localize(i18next)(LitElement) {
       history.back()
     } else {
       document.dispatchEvent(
-        new CustomEvent('notify', { detail: { message: i18next.t('text.location_is_not_selected') } })
+        Swal.fire({
+          // position: 'top-end',
+          type: 'error',
+          title: 'Text location is not selected',
+          // showConfirmButton: false,
+          timer: 1500
+        })
+        //new CustomEvent('notify', { detail: { message: i18next.t('text.location_is_not_selected') } })
       )
     }
   }

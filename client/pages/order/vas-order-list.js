@@ -6,6 +6,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { ORDER_STATUS } from './constants/order'
+import Swal from 'sweetalert2'
 
 class VasOrderList extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -278,41 +279,66 @@ class VasOrderList extends connect(store)(localize(i18next)(PageView)) {
       if (!response.errors) {
         this.vasGrist.fetch()
         document.dispatchEvent(
-          new CustomEvent('notify', {
-            detail: {
-              message: i18next.t('text.data_updated_successfully')
-            }
+          Swal.fire({
+            // position: 'top-end',
+            type: 'success',
+            title: 'Your work has been saved',
+            showConfirmButton: false,
+            timer: 1500
           })
+
+          // new CustomEvent('notify', {
+          //   detail: {
+          //     message: i18next.t('text.data_updated_successfully')
+          //   }
+          // })
         )
       }
     }
   }
 
   async _deleteorderVass() {
-    let confirmDelete = confirm('Are you sure?')
-    if (confirmDelete) {
-      const names = this.vasGrist.selected.map(record => record.name)
-      if (names && names.length > 0) {
-        const response = await client.query({
-          query: gql`
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      type: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!'
+    }).then(async result => {
+      if (result.value) {
+        Swal.fire('Deleted!', 'Your file has been deleted.', 'success')
+        const names = this.vasGrist.selected.map(record => record.name)
+        if (names && names.length > 0) {
+          const response = await client.query({
+            query: gql`
             mutation {
               deleteOrderVass(${gqlBuilder.buildArgs({ names })})
             }
           `
-        })
+          })
 
-        if (!response.errors) {
-          this.vasGrist.fetch()
-          document.dispatchEvent(
-            new CustomEvent('notify', {
-              detail: {
-                message: i18next.t('text.data_deleted_successfully')
-              }
-            })
-          )
+          if (!response.errors) {
+            this.vasGrist.fetch()
+            document.dispatchEvent(
+              Swal.fire({
+                // position: 'top-end',
+                type: 'info',
+                title: 'Your work has been deleted',
+                showConfirmButton: false,
+                timer: 1500
+              })
+              // new CustomEvent('notify', {
+              //   detail: {
+              //     message: i18next.t('text.data_deleted_successfully')
+              //   }
+              // })
+            )
+          }
         }
       }
-    }
+    })
   }
 
   get _columns() {

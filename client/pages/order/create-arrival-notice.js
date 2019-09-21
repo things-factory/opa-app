@@ -6,6 +6,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
+import Swal from 'sweetalert2'
 
 class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -478,7 +479,14 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       navigate(`arrival_notice_detail/${response.data.editArrivalNotice.name}`)
-      this._showToast({ message: i18next.t('arrival_notice_updated') })
+      Swal.fire({
+        // position: 'top-end',
+        type: 'success',
+        title: 'Arrival notice updated',
+        // showConfirmButton: false,
+        timer: 1500
+      })
+      // this._showToast({ message: i18next.t('arrival_notice_updated') })
     }
   }
 
@@ -528,7 +536,14 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
 
       if (!response.errors) {
         navigate(`arrival_notice_detail/${response.data.generateArrivalNotice.name}`)
-        this._showToast({ message: i18next.t('arrival_notice_created') })
+        // this._showToast({ message: i18next.t('arrival_notice_created') })
+        Swal.fire({
+          // position: 'top-end',
+          type: 'success',
+          title: 'Arrival notice created',
+          showConfirmButton: false,
+          timer: 1500
+        })
       }
     } catch (e) {
       this._showToast(e)

@@ -6,6 +6,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
+import Swal from 'sweetalert2'
 
 class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -439,7 +440,14 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           action: async () => {
             try {
               await this._updateArrivalNotice({ status: ORDER_STATUS.EDITING.value })
-              this._showToast({ message: i18next.t('text.gan_now_editable') })
+              Swal.fire({
+                // position: 'top-end',
+                type: 'info',
+                title: 'GAN now editable',
+                // showConfirmButton: false,
+                timer: 1500
+              })
+              //  this._showToast({ message: i18next.t('text.gan_now_editable') })
             } catch (e) {
               this._showToast(e)
             }
@@ -450,7 +458,14 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           action: async () => {
             try {
               await this._confirmArrivalNotice()
-              this._showToast({ message: i18next.t('text.gan_confirmed') })
+              Swal.fire({
+                // position: 'top-end',
+                type: 'info',
+                title: 'GAN confirmed',
+                // showConfirmButton: false,
+                timer: 1500
+              })
+              // this._showToast({ message: i18next.t('text.gan_confirmed') })
               navigate('arrival_notices')
             } catch (e) {
               this._showToast(e)
