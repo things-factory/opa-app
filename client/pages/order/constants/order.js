@@ -26,6 +26,18 @@ export const ORDER_STATUS = {
   DONE: {
     name: 'order_status_done',
     value: 'DONE'
+  },
+  COLLECTING: {
+    name: 'order_status_collecting',
+    value: 'COLLECTING'
+  },
+  DELIVERING: {
+    name: 'order_status_delivering',
+    value: 'DELIVERING'
+  },
+  READY_TO_DISPATCH: {
+    name: 'order_status_ready_to_dispatch',
+    value: 'READY_TO_DISPATCH'
   }
 }
 
@@ -57,6 +69,22 @@ export const ORDER_PRODUCT_STATUS = {
   STORED: {
     name: 'product_status_stored',
     value: 'STORED'
+  },
+  READY_TO_COLLECT: {
+    name: 'product_status_ready_to_collect',
+    value: 'READY_TO_COLLECT'
+  },
+  READY_TO_DELIVER: {
+    name: 'product_status_ready_to_deliver',
+    value: 'READY_TO_DELIVER'
+  },
+  COLLECTED: {
+    name: 'product_status_collected',
+    value: 'COLLECTED'
+  },
+  DELIVERED: {
+    name: 'product_status_delivered',
+    value: 'DELIVERED'
   }
 }
 
