@@ -6,7 +6,6 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
-import Swal from 'sweetalert2'
 
 class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -200,7 +199,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
     this._contextHandler()
   }
 
-  firstUpdated() {
+  pageInitialized() {
     this.productGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
@@ -260,7 +259,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           type: 'select',
           name: 'unit',
           header: i18next.t('field.unit'),
-          record: { editable: true, align: 'center', options: ['kg', 'g'] },
+          record: { editable: true, align: 'center', options: ['', 'kg', 'g'] },
           width: 80
         },
         {
@@ -323,7 +322,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           type: 'select',
           name: 'batchId',
           header: i18next.t('field.batch_id'),
-          record: { editable: true, align: 'center', options: [i18next.t('label.all')] },
+          record: { editable: true, align: 'center', options: ['', i18next.t('label.all')] },
           width: 150
         },
         {
@@ -479,14 +478,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       navigate(`arrival_notice_detail/${response.data.editArrivalNotice.name}`)
-      Swal.fire({
-        // position: 'top-end',
-        type: 'success',
-        title: 'Arrival notice updated',
-        // showConfirmButton: false,
-        timer: 1500
-      })
-      // this._showToast({ message: i18next.t('arrival_notice_updated') })
+      this._showToast({ message: i18next.t('arrival_notice_updated') })
     }
   }
 
@@ -536,14 +528,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
 
       if (!response.errors) {
         navigate(`arrival_notice_detail/${response.data.generateArrivalNotice.name}`)
-        // this._showToast({ message: i18next.t('arrival_notice_created') })
-        Swal.fire({
-          // position: 'top-end',
-          type: 'success',
-          title: 'Arrival notice created',
-          showConfirmButton: false,
-          timer: 1500
-        })
+        this._showToast({ message: i18next.t('arrival_notice_created') })
       }
     } catch (e) {
       this._showToast(e)
@@ -612,7 +597,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
       this.vasGristConfig = {
         ...this.vasGristConfig,
         columns: this.vasGristConfig.columns.map(column => {
-          if (column.name === 'batchId') column.record.options = [i18next.t('label.all'), ...batchIds]
+          if (column.name === 'batchId') column.record.options = ['', i18next.t('label.all'), ...batchIds]
 
           return column
         })

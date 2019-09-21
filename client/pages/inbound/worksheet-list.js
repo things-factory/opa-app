@@ -87,11 +87,6 @@ class WorksheetList extends localize(i18next)(PageView) {
         props: { searchOper: 'like', placeholder: i18next.t('label.name') }
       },
       {
-        name: 'description',
-        type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.description') }
-      },
-      {
         name: 'type',
         type: 'select',
         options: [
@@ -133,6 +128,12 @@ class WorksheetList extends localize(i18next)(PageView) {
                 record.status === WORKSHEET_STATUS.DEACTIVATED.value
               ) {
                 navigate(`worksheet_unloading/${record.name}`)
+              } else if (
+                record.id &&
+                record.type === WORKSHEET_TYPE.VAS.value &&
+                record.status === WORKSHEET_STATUS.DEACTIVATED.value
+              ) {
+                navigate(`worksheet_vas/${record.name}`)
               } else if (record.id && record.status === WORKSHEET_STATUS.EXECUTING.value) {
                 document.dispatchEvent(
                   new CustomEvent('notify', {
@@ -144,20 +145,28 @@ class WorksheetList extends localize(i18next)(PageView) {
           }
         },
         {
+          type: 'object',
+          name: 'arrivalNotice',
+          header: i18next.t('field.arrival_notice'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'object',
+          name: 'bizplace',
+          header: i18next.t('field.bizplace'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 200
+        },
+        {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),
           record: { align: 'left' },
           sortable: true,
           width: 180
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: { align: 'left' },
-          sortable: true,
-          width: 240
         },
         {
           type: 'string',
@@ -214,8 +223,17 @@ class WorksheetList extends localize(i18next)(PageView) {
           })}) {
             items {
               id
+              arrivalNotice {
+                id
+                name
+                description
+              }
+              bizplace {
+                id
+                name
+                description
+              }
               name
-              description
               type
               status
               startedAt

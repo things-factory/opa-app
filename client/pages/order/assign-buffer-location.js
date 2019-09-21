@@ -2,18 +2,17 @@ import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store, navigate } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
 import './location-selector'
-import Swal from 'sweetalert2'
 
 class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
-      _ganNo: String,
+      _arrivalNoticeNo: String,
       _ownTransport: Boolean,
       productGristConfig: Object,
       vasGristConfig: Object,
@@ -102,7 +101,7 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
     return html`
       <form class="multi-column-form">
         <fieldset>
-          <legend>${i18next.t('title.gan')}: ${this._ganNo}</legend>
+          <legend>${i18next.t('title.gan')}: ${this._arrivalNoticeNo}</legend>
           <label>${i18next.t('label.container_no')}</label>
           <input name="containerNo" disabled />
 
@@ -302,18 +301,18 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
   }
 
   updated(changedProps) {
-    if (changedProps.has('_ganNo')) {
+    if (changedProps.has('_arrivalNoticeNo')) {
       this.fetchGAN()
     }
   }
 
   async fetchGAN() {
-    if (!this._ganNo) return
+    if (!this._arrivalNoticeNo) return
     const response = await client.query({
       query: gql`
         query {
           arrivalNotice(${gqlBuilder.buildArgs({
-            name: this._ganNo
+            name: this._arrivalNoticeNo
           })}) {
             id
             name
@@ -402,25 +401,20 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
         query: gql`
           mutation {
             generateArrivalNoticeWorksheet(${gqlBuilder.buildArgs({
-              arrivalNotice: { id: this._arrivalNoticeId, name: this._ganNo },
+              arrivalNoticeNo: this._arrivalNoticeNo,
               bufferLocation: { id: this.bufferLocationField.getAttribute('location-id') }
             })}) {
-              name
+              unloadingWorksheet {
+                name
+              }
             }
           }
         `
       })
 
       if (!response.errors) {
-        navigate(`worksheet_unloading/${response.data.generateArrivalNoticeWorksheet.name}`)
-        Swal.fire({
-          // position: 'top-end',
-          type: 'info',
-          title: 'Buffer location assigned',
-          // showConfirmButton: false,
-          timer: 1500
-        })
-        // this._showToast({ message: i18next.t('text.buffer_location_assigned') })
+        navigate(`worksheets`)
+        this._showToast({ message: i18next.t('text.buffer_location_assigned') })
       }
     } catch (e) {
       this._showToast(e)
@@ -429,38 +423,23 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
 
   _validateBufferLocation() {
     if (!this.bufferLocationField.getAttribute('location-id'))
-      Swal.fire({
-        // position: 'top-end',
-        type: 'error',
-        title: 'Buffer location is not assigned',
-        // showConfirmButton: false,
-        timer: 1500
-      })
-    //throw new Error(i18next.t('text.buffer_location_is_not_assigned'))
+      throw new Error(i18next.t('text.buffer_location_is_not_assigned'))
   }
 
   _openBufferSelector() {
-    openPopup(
-      html`
-        <location-selector
-          @selected="${e => {
-            this.bufferLocationField.value = `${e.detail.name} ${
-              e.detail.description ? `(${e.detail.description})` : ''
-            }`
-            this.bufferLocationField.setAttribute('location-id', e.detail.id)
-          }}"
-        ></location-selector>
-      `,
-      {
-        backdrop: true,
-        size: 'large'
-      }
-    )
+    openPopup(html`
+      <location-selector
+        @selected="${e => {
+          this.bufferLocationField.value = `${e.detail.name} ${e.detail.description ? `(${e.detail.description})` : ''}`
+          this.bufferLocationField.setAttribute('location-id', e.detail.id)
+        }}"
+      ></location-selector>
+    `)
   }
 
   stateChanged(state) {
     if (this.active) {
-      this._ganNo = state && state.route && state.route.resourceId
+      this._arrivalNoticeNo = state && state.route && state.route.resourceId
     }
   }
 

@@ -5,7 +5,7 @@ import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/sh
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 
-class UnloadProduct extends localize(i18next)(PageView) {
+class ExecuteVas extends localize(i18next)(PageView) {
   static get properties() {
     return {
       config: Object,
@@ -363,4 +363,4 @@ class UnloadProduct extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('unload-product', UnloadProduct)
+window.customElements.define('execute-vas', ExecuteVas)
