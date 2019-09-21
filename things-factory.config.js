@@ -88,8 +88,24 @@ export default {
       page: 'create_delivery_order'
     },
     {
+      tagname: 'delivery-order-requests',
+      page: 'delivery_order_requests'
+    },
+    {
+      tagname: 'receive-delivery-order',
+      page: 'receive_delivery_order'
+    },
+    {
+      tagname: 'receive-collection-order',
+      page: 'receive_collection_order'
+    },
+    {
       tagname: 'create-collection-order',
       page: 'create_collection_order'
+    },
+    {
+      tagname: 'collection-order-requests',
+      page: 'collection_order_requests'
     },
     {
       tagname: 'delivery-order-detail',

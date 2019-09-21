@@ -95,8 +95,16 @@ export default function route(page) {
       import('./pages/order/delivery-order-detail')
       return page
 
+    case 'delivery_order_requests':
+      import('./pages/order/delivery-order-requests')
+      return page
+
     case 'collection_order_detail':
       import('./pages/order/collection-order-detail')
+      return page
+
+    case 'collection_order_requests':
+      import('./pages/order/collection-order-requests')
       return page
 
     case 'delivery_orders':
@@ -109,6 +117,10 @@ export default function route(page) {
 
     case 'receive_delivery_order':
       import('./pages/order/receive-delivery-order')
+      return page
+
+    case 'receive_collection_order':
+      import('./pages/order/receive-collection-order')
       return page
 
     case 'vas_orders':
