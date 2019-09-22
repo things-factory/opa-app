@@ -100,12 +100,28 @@ export default {
       page: 'execute_delivery_order'
     },
     {
+      tagname: 'complete-delivery-order',
+      page: 'complete_delivery_order'
+    },
+    {
+      tagname: 'completed-delivery-order',
+      page: 'completed_delivery_order'
+    },
+    {
       tagname: 'receive-collection-order',
       page: 'receive_collection_order'
     },
     {
       tagname: 'execute-collection-order',
       page: 'execute_collection_order'
+    },
+    {
+      tagname: 'complete-collection-order',
+      page: 'complete_collection_order'
+    },
+    {
+      tagname: 'completed-collection-order',
+      page: 'completed_collection_order'
     },
     {
       tagname: 'create-collection-order',

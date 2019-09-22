@@ -123,12 +123,28 @@ export default function route(page) {
       import('./pages/order/execute-delivery-order')
       return page
 
+    case 'complete_delivery_order':
+      import('./pages/order/complete-delivery-order')
+      return page
+
+    case 'completed_delivery_order':
+      import('./pages/order/completed-delivery-order')
+      return page
+
     case 'receive_collection_order':
       import('./pages/order/receive-collection-order')
       return page
 
     case 'execute_collection_order':
       import('./pages/order/execute-collection-order')
+      return page
+
+    case 'complete_collection_order':
+      import('./pages/order/complete-collection-order')
+      return page
+
+    case 'completed_collection_order':
+      import('./pages/order/completed-collection-order')
       return page
 
     case 'vas_orders':

@@ -86,7 +86,7 @@ class ExecuteDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           title: i18next.t('button.back'),
-          action: history.back
+          action: () => history.back()
         }
       ]
     }

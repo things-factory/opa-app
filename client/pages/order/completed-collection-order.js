@@ -5,10 +5,9 @@ import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-fac
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import Swal from 'sweetalert2'
 import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
 
-class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView)) {
+class CompletedCollectionOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _orderName: String,
@@ -19,8 +18,8 @@ class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView))
       vasGristConfig: Object,
       productData: Object,
       vasData: Object,
-      drivers: Array,
-      vehicles: Array
+      vehicles: Array,
+      drivers: Array
     }
   }
 
@@ -70,26 +69,22 @@ class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView))
     ]
   }
 
-  constructor() {
-    super()
-    this.drivers = []
-    this.vehicles = []
-  }
-
   get context() {
     return {
-      title: i18next.t('title.execute_collection_order'),
+      title: i18next.t('title.completed_collection_order'),
       actions: [
-        {
-          title: i18next.t('button.dispatch'),
-          action: this._checkDriverVehicle.bind(this)
-        },
         {
           title: i18next.t('button.back'),
           action: () => history.back()
         }
       ]
     }
+  }
+
+  constructor() {
+    super()
+    this.drivers = []
+    this.vehicles = []
   }
 
   activated(active) {
@@ -102,14 +97,6 @@ class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView))
 
   get form() {
     return this.shadowRoot.querySelector('form')
-  }
-
-  get driver() {
-    return this.shadowRoot.querySelector('select#driver')
-  }
-
-  get vehicle() {
-    return this.shadowRoot.querySelector('select#vehicle')
   }
 
   render() {
@@ -142,7 +129,7 @@ class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView))
           <input name="telNo" disabled />
 
           <label>${i18next.t('label.assign_driver')}</label>
-          <select name="driver" id="driver" required>
+          <select name="driver" id="driver" disabled>
             ${this.drivers.map(
               driver => html`
                 <option
@@ -156,7 +143,7 @@ class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView))
           >
 
           <label>${i18next.t('label.assign_vehicle')}</label>
-          <select name="vehicle" id="vehicle" required>
+          <select name="vehicle" id="vehicle" disabled>
             ${this.vehicles.map(
               vehicle => html`
                 <option
@@ -474,59 +461,6 @@ class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView))
     }
   }
 
-  async _checkDriverVehicle() {
-    if (this._prevDriverName !== this.driver.value || this._prevVehicleName !== this.vehicle.value) {
-      Swal.fire({
-        title: 'There is a change in driver/vehicle assignment, do you want to continue dispatch?',
-        text: "You won't be able to revert this!",
-        type: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, confirm & dispatch!'
-      }).then(async result => {
-        if (result.value) {
-          Swal.fire('Delivering team has been dispatched!', 'Order status updated to Delivering', 'success')
-          this._executeCollectionOrder(this._getDriverVehicle())
-        }
-      })
-    } else {
-      this._executeCollectionOrder()
-    }
-  }
-
-  async _executeCollectionOrder(patch) {
-    const response = await client.query({
-      query: gql`
-        mutation {
-          dispatchCollectionOrder(${gqlBuilder.buildArgs({
-            name: this._orderName,
-            patch
-          })}) {
-            name
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      history.back()
-    } else {
-      throw new Error(response.errors[0])
-    }
-  }
-
-  _getDriverVehicle() {
-    if (this.driver.value && this.vehicle.value) {
-      return {
-        transportDriver: { id: this.driver.selectedOptions[0].getAttribute('driver-id'), name: this.driver.value },
-        transportVehicle: { id: this.vehicle.selectedOptions[0].getAttribute('vehicle-id'), name: this.vehicle.value }
-      }
-    } else {
-      throw new Error(i18next.t('text.invalid_form'))
-    }
-  }
-
   stateChanged(state) {
     if (this.active) {
       this._orderName = state && state.route && state.route.resourceId
@@ -545,4 +479,4 @@ class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView))
   }
 }
 
-window.customElements.define('execute-collection-order', ExecuteCollectionOrder)
+window.customElements.define('completed-collection-order', CompletedCollectionOrder)

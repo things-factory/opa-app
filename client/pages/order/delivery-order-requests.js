@@ -126,6 +126,8 @@ class DeliveryOrderRequests extends localize(i18next)(PageView) {
                 navigate(`execute_delivery_order/${record.name}`) // 2. move to execeuting delivery page
               } else if (status === ORDER_STATUS.DELIVERING.value) {
                 navigate(`complete_delivery_order/${record.name}`) // 3. move to complete delivery page
+              } else if (status === ORDER_STATUS.DONE.value) {
+                navigate(`completed_delivery_order/${record.name}`) // 4. move to completed delivery page
               }
             }
           }

@@ -124,8 +124,10 @@ class CollectionOrderRequests extends localize(i18next)(PageView) {
                 navigate(`receive_collection_order/${record.name}`) // 1. move to order collection page
               } else if (status === ORDER_STATUS.READY_TO_DISPATCH.value) {
                 navigate(`execute_collection_order/${record.name}`) // 2. move to execeuting collection page
-              } else if (status === ORDER_STATUS.DELIVERING.value) {
+              } else if (status === ORDER_STATUS.COLLECTING.value) {
                 navigate(`complete_collection_order/${record.name}`) // 3. move to complete collection page
+              } else if (status === ORDER_STATUS.DONE.value) {
+                navigate(`completed_collection_order/${record.name}`) // 4. move to completed collection page
               }
             }
           }
