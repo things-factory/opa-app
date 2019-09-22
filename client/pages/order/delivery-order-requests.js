@@ -225,6 +225,16 @@ class DeliveryOrderRequests extends localize(i18next)(PageView) {
                 id
                 name
               }
+              transportDriver {
+                id
+                name
+                driverCode
+              }
+              transportVehicle {
+                id
+                name
+                regNumber
+              }
               deliveryDateTime
               status
               updatedAt

@@ -119,8 +119,16 @@ export default function route(page) {
       import('./pages/order/receive-delivery-order')
       return page
 
+    case 'execute_delivery_order':
+      import('./pages/order/execute-delivery-order')
+      return page
+
     case 'receive_collection_order':
       import('./pages/order/receive-collection-order')
+      return page
+
+    case 'execute_collection_order':
+      import('./pages/order/execute-collection-order')
       return page
 
     case 'vas_orders':

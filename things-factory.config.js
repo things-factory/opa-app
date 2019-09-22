@@ -96,8 +96,16 @@ export default {
       page: 'receive_delivery_order'
     },
     {
+      tagname: 'execute-delivery-order',
+      page: 'execute_delivery_order'
+    },
+    {
       tagname: 'receive-collection-order',
       page: 'receive_collection_order'
+    },
+    {
+      tagname: 'execute-collection-order',
+      page: 'execute_collection_order'
     },
     {
       tagname: 'create-collection-order',
