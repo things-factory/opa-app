@@ -1,29 +1,23 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
+import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
+import Swal from 'sweetalert2'
 
-class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView)) {
+class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _orderName: String,
+      _status: String,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
-      vasData: Object,
-      drivers: Array,
-      vehicles: Array
+      vasData: Object
     }
-  }
-
-  constructor() {
-    super()
-    this.drivers = []
-    this.vehicles = []
   }
 
   static get styles() {
@@ -74,21 +68,13 @@ class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView))
 
   get context() {
     return {
-      title: i18next.t('title.receive_collection_order'),
-      actions: [
-        {
-          title: i18next.t('button.receive'),
-          action: this._receiveCollectionOrder.bind(this)
-        }
-      ]
+      title: i18next.t('title.collection_order_detail')
     }
   }
 
   activated(active) {
     if (JSON.parse(active)) {
       this.fetchCollectionOrder()
-      this.fetchTransportDriver()
-      this.fetchTransportVehicle()
     }
   }
 
@@ -96,12 +82,12 @@ class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView))
     return this.shadowRoot.querySelector('form')
   }
 
-  get driver() {
-    return this.shadowRoot.querySelector('select#driver')
+  get productGrist() {
+    return this.shadowRoot.querySelector('data-grist#product-grist')
   }
 
-  get vehicle() {
-    return this.shadowRoot.querySelector('select#vehicle')
+  get vasGrist() {
+    return this.shadowRoot.querySelector('data-grist#vas-grist')
   }
 
   render() {
@@ -109,7 +95,7 @@ class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView))
       <form class="multi-column-form">
         <fieldset>
           <legend>
-            ${i18next.t('title.coNo')}: ${this._orderName}
+            ${i18next.t('title.co_no')}: ${this._orderName}
           </legend>
 
           <label>${i18next.t('label.from')}</label>
@@ -121,7 +107,7 @@ class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView))
           <label>${i18next.t('label.collection_date')}</label>
           <input name="collectionDateTime" type="datetime-local" disabled />
 
-          <label>${i18next.t('label.load_type')}</label>
+          <label>${i18next.t('label.loadType')}</label>
           <select name="loadType" disabled>
             ${LOAD_TYPES.map(
               loadType => html`
@@ -132,36 +118,6 @@ class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView))
 
           <label>${i18next.t('label.tel_no')}</label>
           <input name="telNo" disabled />
-
-          <label>${i18next.t('label.assign_driver')}</label>
-          <select name="driver" id="driver">
-            <option>--CHOOSE DRIVER--</option>
-            ${this.drivers.map(
-              driver => html`
-                <option driver-id="${driver.id}" value="${driver.name}">${driver.driverCode}-${driver.name}</option>
-              `
-            )}</select
-          >
-
-          <label>${i18next.t('label.assign_vehicle')}</label>
-          <select name="vehicle" id="vehicle">
-            <option>--CHOOSE TRUCK--</option>
-            ${this.vehicles.map(
-              vehicle => html`
-                <option vehicle-id="${vehicle.id}" value="${vehicle.name}">${vehicle.regNumber}</option>
-              `
-            )}</select
-          >
-
-          <label>${i18next.t('label.status')}</label>
-          <select name="status" disabled
-            >${Object.keys(ORDER_STATUS).map(key => {
-              const status = ORDER_STATUS[key]
-              return html`
-                <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option>
-              `
-            })}</select
-          >
         </fieldset>
       </form>
 
@@ -187,6 +143,12 @@ class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView))
         ></data-grist>
       </div>
     `
+  }
+
+  constructor() {
+    super()
+    this.productData = {}
+    this.vasData = {}
   }
 
   firstUpdated() {
@@ -310,13 +272,10 @@ class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView))
   updated(changedProps) {
     if (changedProps.has('_orderName')) {
       this.fetchCollectionOrder()
-      this.fetchTransportDriver()
-      this.fetchTransportVehicle()
     }
   }
 
   async fetchCollectionOrder() {
-    if (!this._orderName) return
     const response = await client.query({
       query: gql`
         query {
@@ -364,6 +323,8 @@ class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView))
     })
 
     if (!response.errors) {
+      this._status = response.data.collectionOrder.status
+      this._actionsHandler()
       this._fillupForm(response.data.collectionOrder)
       this.productData = {
         ...this.productData,
@@ -377,65 +338,9 @@ class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView))
     }
   }
 
-  async fetchTransportDriver() {
-    if (!this._orderName) return
-    const response = await client.query({
-      query: gql`
-        query {
-          transportDrivers(${gqlBuilder.buildArgs({
-            filters: []
-          })}) {
-            items {
-              id
-              name
-              bizplace{
-                id
-                name
-              }
-              driverCode
-            }
-            total
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      this.drivers = response.data.transportDrivers.items
-    }
-  }
-
-  async fetchTransportVehicle() {
-    if (!this._orderName) return
-    const response = await client.query({
-      query: gql`
-        query {
-          transportVehicles(${gqlBuilder.buildArgs({
-            filters: []
-          })}) {
-            items {
-              id
-              name
-              bizplace{
-                id
-                name
-              }
-              regNumber
-            }
-            total
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      this.vehicles = response.data.transportVehicles.items
-    }
-  }
-
   _fillupForm(collectionOrder) {
     for (let key in collectionOrder) {
-      Array.from(this.form.querySelectorAll('input', 'select')).forEach(field => {
+      Array.from(this.form.querySelectorAll('input')).forEach(field => {
         if (field.name === key && field.type === 'datetime-local') {
           const datetime = Number(collectionOrder[key])
           const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
@@ -447,43 +352,105 @@ class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView))
     }
   }
 
-  async _receiveCollectionOrder() {
-    try {
-      const response = await client.query({
-        query: gql`
-          mutation {
-            receiveCollectionOrder(${gqlBuilder.buildArgs({
-              name: this._orderName,
-              patch: this._getDriverVehicle()
-            })}) {
-              name
-            }
+  async _updateCollectionOrder(patch) {
+    const response = await client.query({
+      query: gql`
+        mutation {
+          updateCollectionOrder(${gqlBuilder.buildArgs({
+            name: this._orderName,
+            patch
+          })}) {
+            name 
           }
-        `
-      })
+        }
+      `
+    })
 
-      if (!response.errors) {
-        history.back()
-        this._showToast({ message: i18next.t('text.collection_order_received') })
-      }
-    } catch (e) {
-      this._showToast({ message: e.message })
+    if (!response.errors) {
+      this.fetchCollectionOrder()
+    } else {
+      throw new Error(response.errors[0])
     }
   }
 
-  _getDriverVehicle() {
-    if (this.driver.value && this.vehicle.value) {
-      return {
-        transportDriver: { id: this.driver.selectedOptions[0].getAttribute('driver-id'), name: this.driver.value },
-        transportVehicle: { id: this.vehicle.selectedOptions[0].getAttribute('vehicle-id'), name: this.vehicle.value }
-      }
-    } else {
-      throw new Error(i18next.t('text.invalid_form'))
+  async _confirmCollectionOrder() {
+    const response = await client.query({
+      query: gql`
+        mutation {
+          confirmCollectionOrder(${gqlBuilder.buildArgs({
+            name: this._orderName
+          })}) {
+            name
+          }
+        }
+      `
+    })
+
+    if (response.errors) {
+      throw new Error(response.errors[0])
     }
+  }
+
+  _actionsHandler() {
+    let actions = []
+
+    if (this._status === ORDER_STATUS.PENDING.value) {
+      actions = [
+        {
+          title: i18next.t('button.edit'),
+          action: async () => {
+            try {
+              await this._updateCollectionOrder({ status: ORDER_STATUS.EDITING.value })
+              Swal.fire({
+                // position: 'top-end',
+                type: 'info',
+                title: 'Collection order now editable',
+                // showConfirmButton: false,
+                timer: 1500
+              })
+              // this._showToast({ message: i18next.t('text.collection_order_now_editable') })
+            } catch (e) {
+              this._showToast(e)
+            }
+          }
+        },
+        {
+          title: i18next.t('button.confirm'),
+          action: async () => {
+            try {
+              await this._confirmCollectionOrder()
+              Swal.fire({
+                // position: 'top-end',
+                type: 'info',
+                title: 'Collection order confirmed',
+                // showConfirmButton: false,
+                timer: 1500
+              })
+              // this._showToast({ message: i18next.t('text.collection_order_confirmed') })
+              navigate('collection_orders')
+            } catch (e) {
+              this._showToast(e)
+            }
+          }
+        }
+      ]
+    } else if (this._status === ORDER_STATUS.EDITING.value) {
+      navigate(`create_collection_order/${this._orderName}`)
+    }
+
+    actions = [...actions, { title: i18next.t('button.back'), action: () => navigate('collection_orders') }]
+
+    store.dispatch({
+      type: UPDATE_CONTEXT,
+      context: {
+        ...this.context,
+        actions
+      }
+    })
   }
 
   stateChanged(state) {
-    if (JSON.parse(this.active)) {
+    if (this.active) {
       this._orderName = state && state.route && state.route.resourceId
     }
   }
@@ -500,4 +467,4 @@ class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView))
   }
 }
 
-window.customElements.define('receive-collection-order', ReceiveCollectionOrder)
+window.customElements.define('collection-order-detail', CollectionOrderDetail)

@@ -1,14 +1,14 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
+import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
 import Swal from 'sweetalert2'
-import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
 
-class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView)) {
+class ExecuteDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _orderName: String,
@@ -78,7 +78,7 @@ class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView))
 
   get context() {
     return {
-      title: i18next.t('title.execute_collection_order'),
+      title: i18next.t('title.execute_delivery_order'),
       actions: [
         {
           title: i18next.t('button.dispatch'),
@@ -94,7 +94,7 @@ class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView))
 
   activated(active) {
     if (JSON.parse(active)) {
-      this.fetchCollectionOrder()
+      this.fetchDeliveryOrder()
       this.fetchTransportDriver()
       this.fetchTransportVehicle()
     }
@@ -116,7 +116,7 @@ class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView))
     return html`
       <form class="multi-column-form">
         <fieldset>
-          <legend>${i18next.t('title.co_no')}: ${this._orderName}</legend>
+          <legend>${i18next.t('title.do_no')}: ${this._orderName}</legend>
           <label>${i18next.t('label.from')}</label>
           <input name="from" disabled />
 
@@ -126,8 +126,8 @@ class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView))
           <label hidden>${i18next.t('label.truck_no')}</label>
           <input name="truckNo" hidden />
 
-          <label>${i18next.t('label.collection_date')}</label>
-          <input name="collectionDateTime" type="datetime-local" disabled />
+          <label>${i18next.t('label.delivery_date')}</label>
+          <input name="deliveryDateTime" type="datetime-local" disabled />
 
           <label>${i18next.t('label.load_type')}</label>
           <select name="loadType" disabled>
@@ -325,21 +325,21 @@ class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView))
 
   updated(changedProps) {
     if (changedProps.has('_orderName')) {
-      this.fetchCollectionOrder()
+      this.fetchDeliveryOrder()
     }
   }
 
-  async fetchCollectionOrder() {
+  async fetchDeliveryOrder() {
     if (!this._orderName) return
     const response = await client.query({
       query: gql`
         query {
-          collectionOrder(${gqlBuilder.buildArgs({
+          deliveryOrder(${gqlBuilder.buildArgs({
             name: this._orderName
           })}) {
             id
             name
-            collectionDateTime
+            deliveryDateTime
             from
             to
             loadType
@@ -387,19 +387,19 @@ class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView))
     })
 
     if (!response.errors) {
-      this._prevDriverName = response.data.collectionOrder.transportDriver.name
-      this._prevVehicleName = response.data.collectionOrder.transportVehicle.name
+      this._prevDriverName = response.data.deliveryOrder.transportDriver.name
+      this._prevVehicleName = response.data.deliveryOrder.transportVehicle.name
 
-      this._status = response.data.collectionOrder.status
-      this._fillupForm(response.data.collectionOrder)
+      this._status = response.data.deliveryOrder.status
+      this._fillupForm(response.data.deliveryOrder)
       this.productData = {
         ...this.productData,
-        records: response.data.collectionOrder.orderProducts
+        records: response.data.deliveryOrder.orderProducts
       }
 
       this.vasData = {
         ...this.vasData,
-        records: response.data.collectionOrder.orderVass
+        records: response.data.deliveryOrder.orderVass
       }
     }
   }
@@ -460,15 +460,15 @@ class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView))
     }
   }
 
-  _fillupForm(collectionOrder) {
-    for (let key in collectionOrder) {
+  _fillupForm(deliveryOrder) {
+    for (let key in deliveryOrder) {
       Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
         if (field.name === key && field.type === 'datetime-local') {
-          const datetime = Number(collectionOrder[key])
+          const datetime = Number(deliveryOrder[key])
           const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
           field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
         } else if (field.name === key) {
-          field.value = collectionOrder[key]
+          field.value = deliveryOrder[key]
         }
       })
     }
@@ -487,19 +487,19 @@ class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView))
       }).then(async result => {
         if (result.value) {
           Swal.fire('Delivering team has been dispatched!', 'Order status updated to Delivering', 'success')
-          this._executeCollectionOrder(this._getDriverVehicle())
+          this._executeDeliveryOrder(this._getDriverVehicle())
         }
       })
     } else {
-      this._executeCollectionOrder()
+      this._executeDeliveryOrder()
     }
   }
 
-  async _executeCollectionOrder(patch) {
+  async _executeDeliveryOrder(patch) {
     const response = await client.query({
       query: gql`
         mutation {
-          dispatchCollectionOrder(${gqlBuilder.buildArgs({
+          dispatchDeliveryOrder(${gqlBuilder.buildArgs({
             name: this._orderName,
             patch
           })}) {
@@ -545,4 +545,4 @@ class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView))
   }
 }
 
-window.customElements.define('execute-collection-order', ExecuteCollectionOrder)
+window.customElements.define('execute-delivery-order', ExecuteDeliveryOrder)

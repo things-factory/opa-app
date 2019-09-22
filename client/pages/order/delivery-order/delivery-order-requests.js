@@ -4,9 +4,9 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { ORDER_STATUS } from './constants/order'
+import { ORDER_STATUS } from '../constants/order'
 
-class CollectionOrderList extends localize(i18next)(PageView) {
+class DeliveryOrderRequests extends localize(i18next)(PageView) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -62,10 +62,9 @@ class CollectionOrderList extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      actions: [],
-      title: i18next.t('title.collection_orders'),
+      title: i18next.t('title.delivery_order_requests'),
       exportable: {
-        name: i18next.t('title.collection_orders'),
+        name: i18next.t('title.delivery_orders'),
         data: this._exportableData.bind(this)
       },
       importable: {
@@ -88,19 +87,22 @@ class CollectionOrderList extends localize(i18next)(PageView) {
         props: { searchOper: 'like', placeholder: i18next.t('label.name') }
       },
       {
-        name: 'collectionDateTime',
+        name: 'deliveryDateTime',
         type: 'datetime-local',
-        props: { searchOper: 'like', placeholder: i18next.t('label.collection_date_time') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.delivery_date_time') }
       },
       {
         name: 'status',
         type: 'select',
         options: [
           { value: '' },
-          ...Object.keys(ORDER_STATUS).map(key => {
-            const status = ORDER_STATUS[key]
-            return { name: i18next.t(`label.${status.name}`), value: status.value }
-          })
+          { name: i18next.t(`label.${ORDER_STATUS.PENDING_RECEIVE.name}`), value: ORDER_STATUS.PENDING_RECEIVE.value },
+          {
+            name: i18next.t(`label.${ORDER_STATUS.READY_TO_DISPATCH.name}`),
+            value: ORDER_STATUS.READY_TO_DISPATCH.value
+          },
+          { name: i18next.t(`label.${ORDER_STATUS.DELIVERING.name}`), value: ORDER_STATUS.DELIVERING.value },
+          { name: i18next.t(`label.${ORDER_STATUS.DONE.name}`), value: ORDER_STATUS.DONE.value }
         ],
         props: { searchOper: 'eq', placeholder: i18next.t('label.status') }
       }
@@ -117,58 +119,60 @@ class CollectionOrderList extends localize(i18next)(PageView) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              if (record.id) navigate(`collection_order_detail/${record.name}`)
+              const status = record.status
+              if (status === ORDER_STATUS.PENDING_RECEIVE.value) {
+                navigate(`receive_delivery_order/${record.name}`) // 1. move to order receiving page
+              } else if (status === ORDER_STATUS.READY_TO_DISPATCH.value) {
+                navigate(`execute_delivery_order/${record.name}`) // 2. move to execeuting delivery page
+              } else if (status === ORDER_STATUS.DELIVERING.value) {
+                navigate(`complete_delivery_order/${record.name}`) // 3. move to complete delivery page
+              } else if (status === ORDER_STATUS.DONE.value) {
+                navigate(`completed_delivery_order/${record.name}`) // 4. move to completed delivery page
+              }
             }
           }
         },
         {
           type: 'string',
           name: 'name',
-          header: i18next.t('field.name'),
+          header: i18next.t('field.do_no'),
           record: { align: 'left' },
           sortable: true,
           width: 180
         },
         {
-          type: 'string',
-          name: 'from',
-          header: i18next.t('field.from'),
-          record: { align: 'left' },
-          sortable: true,
-          width: 250
-        },
-        {
-          type: 'string',
-          name: 'to',
-          header: i18next.t('field.to'),
-          record: { align: 'left' },
-          sortable: true,
-          width: 250
-        },
-        {
-          type: 'string',
-          name: 'truckNo',
-          header: i18next.t('field.truck_no'),
+          type: 'object',
+          name: 'bizplace',
+          header: i18next.t('field.branch_name'),
           record: { align: 'center' },
           sortable: true,
-          width: 150
-        },
-        {
-          type: 'string',
-          name: 'telNo',
-          header: i18next.t('field.tel_no'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 150
+          width: 250
         },
         {
           type: 'datetime',
-          name: 'collectionDateTime',
-          header: i18next.t('field.collection_date_time'),
+          name: 'deliveryDateTime',
+          header: i18next.t('field.delivery_date_time'),
           record: { align: 'center' },
           sortable: true,
           width: 160
         },
+        {
+          type: 'object',
+          name: 'transportVehicle',
+          header: i18next.t('field.transport_vehicle'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 160
+        },
+        {
+          type: 'object',
+          name: 'transportDriver',
+          header: i18next.t('field.transport_driver'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 250
+        },
+
         {
           type: 'string',
           name: 'status',
@@ -209,7 +213,7 @@ class CollectionOrderList extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
         query {
-          collectionOrders(${gqlBuilder.buildArgs({
+          deliveryOrderRequests(${gqlBuilder.buildArgs({
             filters: this._conditionParser(),
             pagination: { page, limit },
             sortings: sorters
@@ -217,12 +221,23 @@ class CollectionOrderList extends localize(i18next)(PageView) {
             items {
               id
               name
-              from
-              to
               telNo
-              loadType
-              truckNo
-              collectionDateTime
+              description
+              bizplace {
+                id
+                name
+              }
+              transportDriver {
+                id
+                name
+                driverCode
+              }
+              transportVehicle {
+                id
+                name
+                regNumber
+              }
+              deliveryDateTime
               status
               updatedAt
               updater {
@@ -239,8 +254,8 @@ class CollectionOrderList extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       return {
-        total: response.data.collectionOrders.total || 0,
-        records: response.data.collectionOrders.items || []
+        total: response.data.deliveryOrderRequests.total || 0,
+        records: response.data.deliveryOrderRequests.items || []
       }
     }
   }
@@ -288,4 +303,4 @@ class CollectionOrderList extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('collection-order-list', CollectionOrderList)
+window.customElements.define('delivery-order-requests', DeliveryOrderRequests)

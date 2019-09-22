@@ -5,10 +5,10 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_C
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
+import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
 import Swal from 'sweetalert2'
 
-class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) {
+class DeliveryOrderDetail extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _orderName: String,
@@ -68,13 +68,13 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
 
   get context() {
     return {
-      title: i18next.t('title.collection_order_detail')
+      title: i18next.t('title.delivery_order_detail')
     }
   }
 
   activated(active) {
     if (JSON.parse(active)) {
-      this.fetchCollectionOrder()
+      this.fetchDeliveryOrder()
     }
   }
 
@@ -95,7 +95,7 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
       <form class="multi-column-form">
         <fieldset>
           <legend>
-            ${i18next.t('title.co_no')}: ${this._orderName}
+            ${i18next.t('title.do_no')}: ${this._orderName}
           </legend>
 
           <label>${i18next.t('label.from')}</label>
@@ -104,8 +104,8 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
           <label>${i18next.t('label.to')}</label>
           <input name="to" disabled />
 
-          <label>${i18next.t('label.collection_date')}</label>
-          <input name="collectionDateTime" type="datetime-local" disabled />
+          <label>${i18next.t('label.delivery_date')}</label>
+          <input name="deliveryDateTime" type="datetime-local" disabled />
 
           <label>${i18next.t('label.loadType')}</label>
           <select name="loadType" disabled>
@@ -271,20 +271,20 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
 
   updated(changedProps) {
     if (changedProps.has('_orderName')) {
-      this.fetchCollectionOrder()
+      this.fetchDeliveryOrder()
     }
   }
 
-  async fetchCollectionOrder() {
+  async fetchDeliveryOrder() {
     const response = await client.query({
       query: gql`
         query {
-          collectionOrder(${gqlBuilder.buildArgs({
+          deliveryOrder(${gqlBuilder.buildArgs({
             name: this._orderName
           })}) {
             id
             name
-            collectionDateTime
+            deliveryDateTime
             from
             to
             loadType
@@ -323,40 +323,40 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
     })
 
     if (!response.errors) {
-      this._status = response.data.collectionOrder.status
+      this._status = response.data.deliveryOrder.status
       this._actionsHandler()
-      this._fillupForm(response.data.collectionOrder)
+      this._fillupForm(response.data.deliveryOrder)
       this.productData = {
         ...this.productData,
-        records: response.data.collectionOrder.orderProducts
+        records: response.data.deliveryOrder.orderProducts
       }
 
       this.vasData = {
         ...this.vasData,
-        records: response.data.collectionOrder.orderVass
+        records: response.data.deliveryOrder.orderVass
       }
     }
   }
 
-  _fillupForm(collectionOrder) {
-    for (let key in collectionOrder) {
+  _fillupForm(deliveryOrder) {
+    for (let key in deliveryOrder) {
       Array.from(this.form.querySelectorAll('input')).forEach(field => {
         if (field.name === key && field.type === 'datetime-local') {
-          const datetime = Number(collectionOrder[key])
+          const datetime = Number(deliveryOrder[key])
           const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
           field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
         } else if (field.name === key) {
-          field.value = collectionOrder[key]
+          field.value = deliveryOrder[key]
         }
       })
     }
   }
 
-  async _updateCollectionOrder(patch) {
+  async _updateDeliveryOrder(patch) {
     const response = await client.query({
       query: gql`
         mutation {
-          updateCollectionOrder(${gqlBuilder.buildArgs({
+          updateDeliveryOrder(${gqlBuilder.buildArgs({
             name: this._orderName,
             patch
           })}) {
@@ -367,17 +367,17 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
     })
 
     if (!response.errors) {
-      this.fetchCollectionOrder()
+      this.fetchDeliveryOrder()
     } else {
       throw new Error(response.errors[0])
     }
   }
 
-  async _confirmCollectionOrder() {
+  async _confirmDeliveryOrder() {
     const response = await client.query({
       query: gql`
         mutation {
-          confirmCollectionOrder(${gqlBuilder.buildArgs({
+          confirmDeliveryOrder(${gqlBuilder.buildArgs({
             name: this._orderName
           })}) {
             name
@@ -386,7 +386,9 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
       `
     })
 
-    if (response.errors) {
+    if (!response.errors) {
+      this.fetchDeliveryOrder()
+    } else {
       throw new Error(response.errors[0])
     }
   }
@@ -400,15 +402,15 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
           title: i18next.t('button.edit'),
           action: async () => {
             try {
-              await this._updateCollectionOrder({ status: ORDER_STATUS.EDITING.value })
+              await this._updateDeliveryOrder({ status: ORDER_STATUS.EDITING.value })
               Swal.fire({
                 // position: 'top-end',
                 type: 'info',
-                title: 'Collection order now editable',
+                title: 'Delivery order now editable',
                 // showConfirmButton: false,
                 timer: 1500
               })
-              // this._showToast({ message: i18next.t('text.collection_order_now_editable') })
+              // this._showToast({ message: i18next.t('text.delivery_order_now_editable') })
             } catch (e) {
               this._showToast(e)
             }
@@ -418,16 +420,16 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
           title: i18next.t('button.confirm'),
           action: async () => {
             try {
-              await this._confirmCollectionOrder()
+              await this._confirmDeliveryOrder()
               Swal.fire({
                 // position: 'top-end',
                 type: 'info',
-                title: 'Collection order confirmed',
+                title: 'Delivery order confirmed',
                 // showConfirmButton: false,
                 timer: 1500
               })
-              // this._showToast({ message: i18next.t('text.collection_order_confirmed') })
-              navigate('collection_orders')
+              // this._showToast({ message: i18next.t('text.delivery_order_confirmed') })
+              navigate('delivery_orders')
             } catch (e) {
               this._showToast(e)
             }
@@ -435,10 +437,10 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
         }
       ]
     } else if (this._status === ORDER_STATUS.EDITING.value) {
-      navigate(`create_collection_order/${this._orderName}`)
+      navigate(`create_delivery_order/${this._orderName}`)
     }
 
-    actions = [...actions, { title: i18next.t('button.back'), action: () => navigate('collection_orders') }]
+    actions = [...actions, { title: i18next.t('button.back'), action: () => navigate('delivery_orders') }]
 
     store.dispatch({
       type: UPDATE_CONTEXT,
@@ -467,4 +469,4 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
   }
 }
 
-window.customElements.define('collection-order-detail', CollectionOrderDetail)
+window.customElements.define('delivery-order-detail', DeliveryOrderDetail)

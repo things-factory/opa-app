@@ -5,16 +5,12 @@ import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-fac
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
-import Swal from 'sweetalert2'
+import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
 
-class CompleteDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
+class ReceiveDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _orderName: String,
-      _status: String,
-      _prevDriverName: String,
-      _prevVehicleName: String,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -22,6 +18,12 @@ class CompleteDeliveryOrder extends connect(store)(localize(i18next)(PageView)) 
       drivers: Array,
       vehicles: Array
     }
+  }
+
+  constructor() {
+    super()
+    this.drivers = []
+    this.vehicles = []
   }
 
   static get styles() {
@@ -72,24 +74,14 @@ class CompleteDeliveryOrder extends connect(store)(localize(i18next)(PageView)) 
 
   get context() {
     return {
-      title: i18next.t('title.complete_delivery_order'),
+      title: i18next.t('title.receive_delivery_order'),
       actions: [
         {
-          title: i18next.t('button.completed'),
-          action: this._checkDeliveredOrder.bind(this)
-        },
-        {
-          title: i18next.t('button.back'),
-          action: history.back
+          title: i18next.t('button.receive'),
+          action: this._receiveDeliveryOrder.bind(this)
         }
       ]
     }
-  }
-
-  constructor() {
-    super()
-    this.drivers = []
-    this.vehicles = []
   }
 
   activated(active) {
@@ -104,11 +96,22 @@ class CompleteDeliveryOrder extends connect(store)(localize(i18next)(PageView)) 
     return this.shadowRoot.querySelector('form')
   }
 
+  get driver() {
+    return this.shadowRoot.querySelector('select#driver')
+  }
+
+  get vehicle() {
+    return this.shadowRoot.querySelector('select#vehicle')
+  }
+
   render() {
     return html`
       <form class="multi-column-form">
         <fieldset>
-          <legend>${i18next.t('title.do_no')}: ${this._orderName}</legend>
+          <legend>
+            ${i18next.t('title.doNo')}: ${this._orderName}
+          </legend>
+
           <label>${i18next.t('label.from')}</label>
           <input name="from" disabled />
 
@@ -134,29 +137,21 @@ class CompleteDeliveryOrder extends connect(store)(localize(i18next)(PageView)) 
           <input name="telNo" disabled />
 
           <label>${i18next.t('label.assign_driver')}</label>
-          <select name="driver" id="driver" disabled>
+          <select name="driver" id="driver" required>
+            <option>--CHOOSE DRIVER--</option>
             ${this.drivers.map(
               driver => html`
-                <option
-                  ?selected="${this._prevDriverName === driver.name}"
-                  driver-id="${driver.id}"
-                  value="${driver.name}"
-                  >${driver.driverCode}-${driver.name}</option
-                >
+                <option driver-id="${driver.id}" value="${driver.name}">${driver.driverCode}-${driver.name}</option>
               `
             )}</select
           >
 
           <label>${i18next.t('label.assign_vehicle')}</label>
-          <select name="vehicle" id="vehicle" disabled>
+          <select name="vehicle" id="vehicle" required>
+            <option>--CHOOSE TRUCK--</option>
             ${this.vehicles.map(
               vehicle => html`
-                <option
-                  ?selected="${this._prevVehicleName === vehicle.name}"
-                  vehicle-id="${vehicle.id}"
-                  value="${vehicle.name}"
-                  >${vehicle.regNumber}</option
-                >
+                <option vehicle-id="${vehicle.id}" value="${vehicle.name}">${vehicle.regNumber}</option>
               `
             )}</select
           >
@@ -318,6 +313,8 @@ class CompleteDeliveryOrder extends connect(store)(localize(i18next)(PageView)) 
   updated(changedProps) {
     if (changedProps.has('_orderName')) {
       this.fetchDeliveryOrder()
+      this.fetchTransportDriver()
+      this.fetchTransportVehicle()
     }
   }
 
@@ -335,18 +332,9 @@ class CompleteDeliveryOrder extends connect(store)(localize(i18next)(PageView)) 
             from
             to
             loadType
+            truckNo
             telNo
             status
-            transportDriver {
-              id
-              name
-              driverCode
-            }
-            transportVehicle {
-              id
-              name
-              regNumber
-            }
             orderProducts {
               id
               batchId
@@ -379,10 +367,6 @@ class CompleteDeliveryOrder extends connect(store)(localize(i18next)(PageView)) 
     })
 
     if (!response.errors) {
-      this._prevDriverName = response.data.deliveryOrder.transportDriver.name
-      this._prevVehicleName = response.data.deliveryOrder.transportVehicle.name
-
-      this._status = response.data.deliveryOrder.status
       this._fillupForm(response.data.deliveryOrder)
       this.productData = {
         ...this.productData,
@@ -454,7 +438,7 @@ class CompleteDeliveryOrder extends connect(store)(localize(i18next)(PageView)) 
 
   _fillupForm(deliveryOrder) {
     for (let key in deliveryOrder) {
-      Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
+      Array.from(this.form.querySelectorAll('input', 'select')).forEach(field => {
         if (field.name === key && field.type === 'datetime-local') {
           const datetime = Number(deliveryOrder[key])
           const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
@@ -466,45 +450,43 @@ class CompleteDeliveryOrder extends connect(store)(localize(i18next)(PageView)) 
     }
   }
 
-  async _checkDeliveredOrder() {
-    Swal.fire({
-      title: 'Are you sure to change the order status to Done?',
-      text: "You won't be able to revert this!",
-      type: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, order completed!'
-    }).then(async result => {
-      if (result.value) {
-        const response = await client.query({
-          query: gql`
-            mutation {
-              checkDeliveredOrder(${gqlBuilder.buildArgs({
-                name: this._orderName
-              })}) {
-                name
-              }
+  async _receiveDeliveryOrder() {
+    try {
+      const response = await client.query({
+        query: gql`
+          mutation {
+            receiveDeliveryOrder(${gqlBuilder.buildArgs({
+              name: this._orderName,
+              patch: this._getDriverVehicle()
+            })}) {
+              name
             }
-          `
-        })
+          }
+        `
+      })
 
-        if (!response.errors) {
-          history.back()
-          new CustomEvent('notify', {
-            detail: {
-              message: i18next.t('text.order_status_has_been_updated')
-            }
-          })
-        } else {
-          throw new Error(response.errors[0])
-        }
+      if (!response.errors) {
+        history.back()
+        this._showToast({ message: i18next.t('text.delivery_order_received') })
       }
-    })
+    } catch (e) {
+      this._showToast({ message: e.message })
+    }
+  }
+
+  _getDriverVehicle() {
+    if (this.driver.value && this.vehicle.value) {
+      return {
+        transportDriver: { id: this.driver.selectedOptions[0].getAttribute('driver-id'), name: this.driver.value },
+        transportVehicle: { id: this.vehicle.selectedOptions[0].getAttribute('vehicle-id'), name: this.vehicle.value }
+      }
+    } else {
+      throw new Error(i18next.t('text.invalid_form'))
+    }
   }
 
   stateChanged(state) {
-    if (this.active) {
+    if (JSON.parse(this.active)) {
       this._orderName = state && state.route && state.route.resourceId
     }
   }
@@ -521,4 +503,4 @@ class CompleteDeliveryOrder extends connect(store)(localize(i18next)(PageView)) 
   }
 }
 
-window.customElements.define('complete-delivery-order', CompleteDeliveryOrder)
+window.customElements.define('receive-delivery-order', ReceiveDeliveryOrder)

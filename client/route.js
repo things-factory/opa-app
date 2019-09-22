@@ -84,67 +84,67 @@ export default function route(page) {
       return page
 
     case 'create_delivery_order':
-      import('./pages/order/create-delivery-order')
+      import('./pages/order/delivery-order/create-delivery-order')
       return page
 
     case 'create_collection_order':
-      import('./pages/order/create-collection-order')
+      import('./pages/order/collection-order/create-collection-order')
       return page
 
     case 'delivery_order_detail':
-      import('./pages/order/delivery-order-detail')
+      import('./pages/order/delivery-order/delivery-order-detail')
       return page
 
     case 'delivery_order_requests':
-      import('./pages/order/delivery-order-requests')
+      import('./pages/order/delivery-order/delivery-order-requests')
       return page
 
     case 'collection_order_detail':
-      import('./pages/order/collection-order-detail')
+      import('./pages/order/collection-order/collection-order-detail')
       return page
 
     case 'collection_order_requests':
-      import('./pages/order/collection-order-requests')
+      import('./pages/order/collection-order/collection-order-requests')
       return page
 
     case 'delivery_orders':
-      import('./pages/order/delivery-order-list')
+      import('./pages/order/delivery-order/delivery-order-list')
       return page
 
     case 'collection_orders':
-      import('./pages/order/collection-order-list')
+      import('./pages/order/collection-order/collection-order-list')
       return page
 
     case 'receive_delivery_order':
-      import('./pages/order/receive-delivery-order')
+      import('./pages/order/delivery-order/receive-delivery-order')
       return page
 
     case 'execute_delivery_order':
-      import('./pages/order/execute-delivery-order')
+      import('./pages/order/delivery-order/execute-delivery-order')
       return page
 
     case 'complete_delivery_order':
-      import('./pages/order/complete-delivery-order')
+      import('./pages/order/delivery-order/complete-delivery-order')
       return page
 
     case 'completed_delivery_order':
-      import('./pages/order/completed-delivery-order')
+      import('./pages/order/delivery-order/completed-delivery-order')
       return page
 
     case 'receive_collection_order':
-      import('./pages/order/receive-collection-order')
+      import('./pages/order/collection-order/receive-collection-order')
       return page
 
     case 'execute_collection_order':
-      import('./pages/order/execute-collection-order')
+      import('./pages/order/collection-order/execute-collection-order')
       return page
 
     case 'complete_collection_order':
-      import('./pages/order/complete-collection-order')
+      import('./pages/order/collection-order/complete-collection-order')
       return page
 
     case 'completed_collection_order':
-      import('./pages/order/completed-collection-order')
+      import('./pages/order/collection-order/completed-collection-order')
       return page
 
     case 'vas_orders':

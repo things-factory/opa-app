@@ -5,7 +5,7 @@ import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-fac
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
+import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
 
 class CompletedDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
