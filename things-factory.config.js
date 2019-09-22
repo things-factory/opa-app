@@ -208,8 +208,16 @@ export default {
       page: 'worksheet_unloading'
     },
     {
+      tagname: 'worksheet-vas',
+      page: 'worksheet_vas'
+    },
+    {
       tagname: 'unload-product',
       page: 'unloading'
+    },
+    {
+      tagname: 'execute-vas',
+      page: 'execute_vas'
     },
     /**
      * Outbound Menus Section

@@ -10,9 +10,6 @@ import { fetchLabelSettings } from './viewparts/fetch-label-settings'
 import './viewparts/label-setting-let'
 
 export default function bootstrap() {
-  /* global setting for DataGrist */
-  // DataGrist.translator = x => i18next.t(x)  // We don't use DataGrist.translator
-
   store.addReducers({
     labelSettings: reducerLabelSettings
   })

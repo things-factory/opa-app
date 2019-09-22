@@ -133,6 +133,14 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           }
         },
         {
+          type: 'object',
+          name: 'bizplace',
+          header: i18next.t('field.bizplace'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 200
+        },
+        {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),
@@ -219,6 +227,11 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           })}) {
             items {
               id
+              bizplace {
+                id
+                name
+                description
+              }
               name
               eta
               collectionDateTime

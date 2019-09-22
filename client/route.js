@@ -203,8 +203,16 @@ export default function route(page) {
       import('./pages/inbound/worksheet-unloading')
       return page
 
+    case 'worksheet_vas':
+      import('./pages/inbound/worksheet-vas')
+      return page
+
     case 'unloading':
       import('./pages/inbound/unload-product')
+      return page
+
+    case 'execute_vas':
+      import('./pages/inbound/execute-vas')
       return page
 
     /**

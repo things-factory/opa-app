@@ -7,7 +7,7 @@ import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { WORKSHEET_STATUS } from './constants/worksheet'
 
-class WorksheetUnloading extends connect(store)(localize(i18next)(PageView)) {
+class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _worksheetNo: String,
@@ -330,4 +330,4 @@ class WorksheetUnloading extends connect(store)(localize(i18next)(PageView)) {
   }
 }
 
-window.customElements.define('worksheet-unloading', WorksheetUnloading)
+window.customElements.define('worksheet-vas', WorksheetVas)
