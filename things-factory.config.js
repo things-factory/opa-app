@@ -92,6 +92,10 @@ export default {
       page: 'delivery_order_requests'
     },
     {
+      tagname: 'rejected-delivery-order',
+      page: 'rejected_delivery_order'
+    },
+    {
       tagname: 'receive-delivery-order',
       page: 'receive_delivery_order'
     },
@@ -110,6 +114,10 @@ export default {
     {
       tagname: 'receive-collection-order',
       page: 'receive_collection_order'
+    },
+    {
+      tagname: 'rejected-collection-order',
+      page: 'rejected_collection_order'
     },
     {
       tagname: 'execute-collection-order',

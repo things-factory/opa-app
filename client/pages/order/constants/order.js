@@ -7,6 +7,10 @@ export const ORDER_STATUS = {
     name: 'order_status_editing',
     value: 'EDITING'
   },
+  REJECTED: {
+    name: 'order_status_rejected',
+    value: 'REJECTED'
+  },
   PENDING_RECEIVE: {
     name: 'order_status_pending_receive',
     value: 'PENDING_RECEIVE'
@@ -111,5 +115,36 @@ export const LOAD_TYPES = [
   {
     name: 'low_container_load',
     value: 'LCL'
+  }
+]
+
+export const PACKING_TYPES = [
+  {
+    name: 'corrugated_box_packing',
+    value: 'CORRUGARED_BOX'
+  },
+  {
+    name: 'carton_packing',
+    value: 'CARTON'
+  },
+  {
+    name: 'drum_packing',
+    value: 'DRUM'
+  },
+  {
+    name: 'bottle_packing',
+    value: 'BOTTLE'
+  },
+  {
+    name: 'sacks_packing',
+    value: 'SACKS'
+  },
+  {
+    name: 'boxboard_packing',
+    value: 'BOXBOARD'
+  },
+  {
+    name: 'can_packing',
+    value: 'CAN'
   }
 ]

@@ -95,12 +95,20 @@ export default function route(page) {
       import('./pages/order/delivery-order/delivery-order-detail')
       return page
 
+    case 'rejected_delivery_order':
+      import('./pages/order/delivery-order/rejected-delivery-order')
+      return page
+
     case 'delivery_order_requests':
       import('./pages/order/delivery-order/delivery-order-requests')
       return page
 
     case 'collection_order_detail':
       import('./pages/order/collection-order/collection-order-detail')
+      return page
+
+    case 'rejected_collection_order':
+      import('./pages/order/collection-order/rejected-collection-order')
       return page
 
     case 'collection_order_requests':

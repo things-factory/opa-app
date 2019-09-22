@@ -79,6 +79,10 @@ class ReceiveDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
         {
           title: i18next.t('button.receive'),
           action: this._receiveDeliveryOrder.bind(this)
+        },
+        {
+          title: i18next.t('button.reject'),
+          action: this._rejectDeliveryOrder.bind(this)
         }
       ]
     }
@@ -165,6 +169,9 @@ class ReceiveDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
               `
             })}</select
           >
+
+          <label>${i18next.t('label.remark')}</label>
+          <textarea name="remark"></textarea>
         </fieldset>
       </form>
 
@@ -471,6 +478,45 @@ class ReceiveDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
       }
     } catch (e) {
       this._showToast({ message: e.message })
+    }
+  }
+
+  async _rejectDeliveryOrder() {
+    try {
+      const patch = this._getRemark()
+      if (patch) {
+        const response = await client.query({
+          query: gql`
+              mutation {
+                rejectDeliveryOrder(${gqlBuilder.buildArgs({
+                  name: this._orderName,
+                  patch
+                })}) {
+                  name
+                }
+              }
+            `
+        })
+
+        if (!response.errors) {
+          history.back()
+          this._showToast({ message: i18next.t('text.delivery_order_rejected') })
+        }
+      } else {
+        return this._showToast({ message: i18next.t('text.remark_is_empty') })
+      }
+    } catch (e) {
+      this._showToast({ message: e.message })
+    }
+  }
+
+  _getTextAreaByName(name) {
+    return this.shadowRoot.querySelector(`textarea[name=${name}]`)
+  }
+
+  _getRemark() {
+    return {
+      remark: this._getTextAreaByName('remark').value
     }
   }
 

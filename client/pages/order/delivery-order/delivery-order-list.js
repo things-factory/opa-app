@@ -116,7 +116,12 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              if (record.id) navigate(`delivery_order_detail/${record.name}`)
+              const status = record.status
+              if (status === ORDER_STATUS.REJECTED.value) {
+                navigate(`rejected_delivery_order/${record.name}`) // 1. move to rejected detail page
+              } else {
+                navigate(`delivery_order_detail/${record.name}`) // 2. move to order detail page
+              }
             }
           }
         },
@@ -145,13 +150,22 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
           width: 250
         },
         {
-          type: 'string',
-          name: 'loadType',
-          header: i18next.t('field.load_type'),
+          type: 'object',
+          name: 'transportVehicle',
+          header: i18next.t('field.assigned_truck'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'object',
+          name: 'transportDriver',
+          header: i18next.t('field.assigned_driver'),
           record: { align: 'center' },
           sortable: true,
           width: 250
         },
+
         {
           type: 'string',
           name: 'telNo',
@@ -220,7 +234,14 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
               to
               telNo
               loadType
-              truckNo
+              transportDriver {
+                id
+                name
+              }
+              transportVehicle {
+                id
+                name
+              }
               deliveryDateTime
               status
               updatedAt

@@ -210,7 +210,7 @@ class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) 
           type: 'select',
           name: 'unit',
           header: i18next.t('field.unit'),
-          record: { editable: true, align: 'center', options: ['kg', 'g'] },
+          record: { editable: true, align: 'center', options: ['', 'kg', 'g'] },
           width: 80
         },
         {
