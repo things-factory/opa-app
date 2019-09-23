@@ -158,6 +158,7 @@
   "label.work_order_goods_master": "work order goods master",
   "label.work_order_no": "work order no",
   "label.zone_name": "zone name",
+  "label.create_claim_chit": "create claim chit",
   "text.already_existed": "row {state.text} is already existed",
   "text.buffer_location_is_not_selected": "buffer location is not selected",
   "text.enter_column_suffix_if_any": "enter column suffix if any",
@@ -224,5 +225,6 @@
   "title.vas_work_order": "VAS work order",
   "title.view_setting": "view setting",
   "title.warehouse": "warehouse",
-  "title.worker": "worker"
+  "title.worker": "worker",
+  "title.create_claim_chit": "create claim chit"
 }
