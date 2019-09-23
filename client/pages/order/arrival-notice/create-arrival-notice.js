@@ -5,7 +5,7 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_C
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
+import { LOAD_TYPES, ORDER_STATUS, PACKING_TYPES } from '../constants/order'
 
 class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -113,7 +113,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           <label>${i18next.t('label.use_own_transport')}</label>
 
           <!-- Show when userOwnTransport is true -->
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.collection_date_time')}</label>
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.collection_date')}</label>
           <input
             ?hidden="${this._ownTransport}"
             ?required="${!this._ownTransport}"
@@ -128,7 +128,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           <label ?hidden="${this._ownTransport}">${i18next.t('label.to')}</label>
           <input ?hidden="${this._ownTransport}" ?required="${!this._ownTransport}" name="to" />
 
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.loadType')}</label>
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.load_type')}</label>
           <select ?hidden="${this._ownTransport}" ?required="${!this._ownTransport}" name="loadType">
             ${LOAD_TYPES.map(
               loadType => html`
@@ -141,7 +141,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
           <input ?hidden="${!this._ownTransport}" ?required="${this._ownTransport}" name="truckNo" />
 
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.delivery_order_no')}</label>
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
           <input ?hidden="${!this._ownTransport}" name="deliveryOrderNo" />
 
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.eta_date')}</label>
@@ -232,7 +232,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           name: 'product',
           header: i18next.t('field.product'),
           record: { editable: true, align: 'center', options: { queryName: 'products' } },
-          width: 180
+          width: 350
         },
         {
           type: 'string',
@@ -245,7 +245,11 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
-          record: { editable: true, align: 'center' },
+          record: {
+            editable: true,
+            align: 'center',
+            options: ['', ...Object.keys(PACKING_TYPES).map(key => PACKING_TYPES[key].value)]
+          },
           width: 150
         },
         {

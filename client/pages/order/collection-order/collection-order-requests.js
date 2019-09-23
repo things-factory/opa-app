@@ -82,16 +82,19 @@ class CollectionOrderRequests extends localize(i18next)(PageView) {
   async firstUpdated() {
     this._searchFields = [
       {
+        label: i18next.t('label.co_no'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.co_no') }
       },
       {
+        label: i18next.t('label.collection_date'),
         name: 'collectionDateTime',
         type: 'datetime-local',
-        props: { searchOper: 'like', placeholder: i18next.t('label.collection_date_time') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.collection_date') }
       },
       {
+        label: i18next.t('label.status'),
         name: 'status',
         type: 'select',
         options: [
@@ -136,14 +139,14 @@ class CollectionOrderRequests extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.co_no'),
-          record: { align: 'left' },
+          record: { align: 'center' },
           sortable: true,
           width: 180
         },
         {
           type: 'object',
           name: 'bizplace',
-          header: i18next.t('field.branch_name'),
+          header: i18next.t('field.customer'),
           record: { align: 'center' },
           sortable: true,
           width: 250
@@ -151,7 +154,7 @@ class CollectionOrderRequests extends localize(i18next)(PageView) {
         {
           type: 'datetime',
           name: 'collectionDateTime',
-          header: i18next.t('field.collection_date_time'),
+          header: i18next.t('field.collection_date'),
           record: { align: 'center' },
           sortable: true,
           width: 160

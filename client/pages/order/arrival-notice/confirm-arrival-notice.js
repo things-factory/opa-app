@@ -4,7 +4,6 @@ import { client, gqlBuilder, isMobileDevice, PageView, navigate } from '@things-
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
-import Swal from 'sweetalert2'
 
 class ConfirmArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
@@ -56,13 +55,13 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
       <form class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('label.gan')}</legend>
-          <label>${i18next.t('label.gan')}</label>
+          <label>${i18next.t('label.gan_no')}</label>
           <input name="gan" />
 
           <label>${i18next.t('label.eta')}</label>
           <input name="eta" />
 
-          <label>${i18next.t('label.delivery_no')}</label>
+          <label>${i18next.t('label.do_no')}</label>
           <input name="delivery_no" />
 
           <label>${i18next.t('label.company')}</label>
@@ -138,7 +137,7 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'gan',
-          header: i18next.t('field.gan'),
+          header: i18next.t('field.gan_no'),
           record: {
             align: 'left'
           },
@@ -148,7 +147,7 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'delivery_order_no',
-          header: i18next.t('field.delivery_order_no'),
+          header: i18next.t('field.do_no'),
           record: {
             align: 'left'
           },
@@ -283,14 +282,7 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
       await this._deleteOrder(selectedOrder)
       this.data = await this.getArrivalNotices()
     } else {
-      Swal.fire({
-        // position: 'top-end',
-        type: 'info',
-        title: 'There no selected',
-        // showConfirmButton: false,
-        timer: 1500
-      })
-      // this._notify(i18next.t('text.there_no_selected'))
+      this._notify(i18next.t('text.there_no_selected'))
     }
   }
 
@@ -300,14 +292,7 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
       await this._updateOrder(selectedOrder, false)
       this.data = await this.getArrivalNotices()
     } else {
-      Swal.fire({
-        // position: 'top-end',
-        type: 'info',
-        title: 'There no selected',
-        // showConfirmButton: false,
-        timer: 1500
-      })
-      // this._notify(i18next.t('text.there_no_selected'))
+      this._notify(i18next.t('text.there_no_selected'))
     }
   }
 
@@ -317,14 +302,7 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
       await this._updateOrder(selectedOrder, true)
       this.data = await this.getArrivalNotices()
     } else {
-      Swal.fire({
-        // position: 'top-end',
-        type: 'info',
-        title: 'There no selected',
-        // showConfirmButton: false,
-        timer: 1500
-      })
-      // this._notify(i18next.t('text.there_no_selected'))
+      this._notify(i18next.t('text.there_no_selected'))
     }
   }
 

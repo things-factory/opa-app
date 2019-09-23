@@ -5,8 +5,7 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_C
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
-import Swal from 'sweetalert2'
+import { LOAD_TYPES, ORDER_STATUS, PACKING_TYPES } from '../constants/order'
 
 class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -93,7 +92,7 @@ class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) 
           <label>${i18next.t('label.collection_date')}</label>
           <input name="collectionDateTime" type="datetime-local" min="${this._getStdDatetime()}" />
 
-          <label>${i18next.t('label.loadType')}</label>
+          <label>${i18next.t('label.load_type')}</label>
           <select name="loadType" required>
             ${LOAD_TYPES.map(
               loadType => html`
@@ -183,20 +182,24 @@ class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) 
           name: 'product',
           header: i18next.t('field.product'),
           record: { editable: true, align: 'center', options: { queryName: 'products' } },
-          width: 180
+          width: 350
         },
         {
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
-          record: { editable: true },
+          record: { editable: true, align: 'center' },
           width: 180
         },
         {
-          type: 'string',
+          type: 'select',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
-          record: { editable: true, align: 'center' },
+          record: {
+            editable: true,
+            align: 'center',
+            options: ['', ...Object.keys(PACKING_TYPES).map(key => PACKING_TYPES[key].value)]
+          },
           width: 150
         },
         {
@@ -266,7 +269,7 @@ class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) 
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
-          record: { editable: true },
+          record: { editable: true, align: 'center' },
           width: 180
         },
         {
@@ -280,7 +283,7 @@ class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) 
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
-          record: { editable: true },
+          record: { editable: true, align: 'center' },
           width: 350
         }
       ]
@@ -345,14 +348,7 @@ class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) 
 
       if (!response.errors) {
         navigate(`collection_order_detail/${response.data.generateCollectionOrder.name}`)
-        Swal.fire({
-          // position: 'top-end',
-          type: 'success',
-          title: 'Order created',
-          // showConfirmButton: false,
-          timer: 1500
-        })
-        // this._showToast({ message: i18next.t('collection_order_created') })
+        this._showToast({ message: i18next.t('collection_order_created') })
       }
     } catch (e) {
       this._showToast(e)
@@ -361,30 +357,15 @@ class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) 
 
   _validateForm() {
     const elements = Array.from(this.form.querySelectorAll('input, select'))
-
     if (!elements.filter(e => !e.hasAttribute('hidden')).every(e => e.checkValidity()))
-      Swal.fire({
-        // position: 'top-end',
-        type: 'error',
-        title: 'Invalid form',
-        // showConfirmButton: false,
-        timer: 1500
-      })
-    //throw new Error(i18next.t('text.invalid_form'))
+      throw new Error(i18next.t('text.invalid_form'))
   }
 
   _validateProducts() {
     this.productGrist.commit()
     // no records
     if (!this.productGrist.data.records || !this.productGrist.data.records.length)
-      Swal.fire({
-        // position: 'top-end',
-        type: 'error',
-        title: 'No products',
-        // showConfirmButton: false,
-        timer: 1500
-      })
-    // throw new Error(i18next.t('text.no_products'))
+      throw new Error(i18next.t('text.no_products'))
 
     // required field (batchId, packingType, weight, unit, packQty)
     if (
@@ -392,26 +373,12 @@ class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) 
         record => !record.batchId || !record.packingType || !record.weight || !record.unit || !record.packQty
       ).length
     )
-      Swal.fire({
-        // position: 'top-end',
-        type: 'error',
-        title: 'Empty value in list',
-        // showConfirmButton: false,
-        timer: 1500
-      })
-    // throw new Error(i18next.t('text.empty_value_in_list'))
+      throw new Error(i18next.t('text.empty_value_in_list'))
 
     // duplication of batch id
     const batchIds = this.productGrist.data.records.map(product => product.batchId)
     if (batchIds.filter((batchId, idx, batchIds) => batchIds.indexOf(batchId) !== idx).length)
-      Swal.fire({
-        // position: 'top-end',
-        type: 'error',
-        title: 'Batch id is duplicated',
-        // showConfirmButton: false,
-        timer: 1500
-      })
-    // throw new Error(i18next.t('text.batch_id_is_duplicated'))
+      throw new Error(i18next.t('text.batch_id_is_duplicated'))
   }
 
   _validateVas() {
@@ -617,14 +584,7 @@ class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) 
 
     if (!response.errors) {
       navigate(`collection_order_detail/${response.data.editCollectionOrder.name}`)
-      Swal.fire({
-        // position: 'top-end',
-        type: 'success',
-        title: 'Collection order updated',
-        // showConfirmButton: false,
-        timer: 1500
-      })
-      //this._showToast({ message: i18next.t('collection_order_updated') })
+      this._showToast({ message: i18next.t('collection_order_updated') })
     }
   }
 

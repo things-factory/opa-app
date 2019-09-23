@@ -4,9 +4,8 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
-import '../components/import-pop-up'
-import { LOCATION_TYPE } from './constants/location'
-import Swal from 'sweetalert2'
+import '../../components/import-pop-up'
+import { LOCATION_TYPE } from '../constants/location'
 
 export class LocationSelector extends localize(i18next)(LitElement) {
   static get styles() {
@@ -332,14 +331,7 @@ export class LocationSelector extends localize(i18next)(LitElement) {
       history.back()
     } else {
       document.dispatchEvent(
-        Swal.fire({
-          // position: 'top-end',
-          type: 'error',
-          title: 'Text location is not selected',
-          // showConfirmButton: false,
-          timer: 1500
-        })
-        //new CustomEvent('notify', { detail: { message: i18next.t('text.location_is_not_selected') } })
+        new CustomEvent('notify', { detail: { message: i18next.t('text.location_is_not_selected') } })
       )
     }
   }

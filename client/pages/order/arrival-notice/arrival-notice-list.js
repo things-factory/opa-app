@@ -4,7 +4,7 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { ORDER_STATUS } from './constants/order'
+import { ORDER_STATUS } from '../constants/order'
 
 class ArrivalNoticeList extends localize(i18next)(PageView) {
   static get styles() {
@@ -82,21 +82,25 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
   async firstUpdated() {
     this._searchFields = [
       {
+        label: i18next.t('label.name'),
         name: 'name',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.name') }
       },
       {
+        label: i18next.t('label.eta'),
         name: 'eta',
         type: 'datetime-local',
         props: { searchOper: 'like', placeholder: i18next.t('label.eta') }
       },
       {
+        label: i18next.t('label.collection_date'),
         name: 'collectionDateTime',
         type: 'datetime-local',
-        props: { searchOper: 'like', placeholder: i18next.t('label.collection_date_time') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.collection_date') }
       },
       {
+        label: i18next.t('label.status'),
         name: 'status',
         type: 'select',
         options: [
@@ -128,7 +132,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'name',
-          header: i18next.t('field.name'),
+          header: i18next.t('field.gan_no'),
           record: { align: 'left' },
           sortable: true,
           width: 180
@@ -160,7 +164,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'deliveryOrderNo',
-          header: i18next.t('field.delivery_order_no'),
+          header: i18next.t('field.do_no'),
           record: { align: 'center' },
           sortable: true,
           width: 200
@@ -168,7 +172,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
         {
           type: 'object',
           name: 'collectionOrder',
-          header: i18next.t('field.collection_order_id'),
+          header: i18next.t('field.co_no'),
           record: { align: 'center' },
           sortable: true,
           width: 200

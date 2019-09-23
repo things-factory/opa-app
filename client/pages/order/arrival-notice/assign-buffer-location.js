@@ -1,17 +1,18 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
+import { openPopup } from '@things-factory/layout-base'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
-import Swal from 'sweetalert2'
+import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
+import './location-selector'
 
-class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
+class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
-      _ganNo: String,
+      _arrivalNoticeNo: String,
       _ownTransport: Boolean,
       productGristConfig: Object,
       vasGristConfig: Object,
@@ -68,18 +69,22 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.check_arrived_notice'),
+      title: i18next.t('title.assign_buffer_location'),
       actions: [
         {
           title: i18next.t('button.back'),
           action: () => history.back()
         },
         {
-          title: i18next.t('button.arrived'),
-          action: this._checkArrivedNotice.bind(this)
+          title: i18next.t('button.assign_buffer_location'),
+          action: this._assignBufferLocation.bind(this)
         }
       ]
     }
+  }
+
+  get bufferLocationField() {
+    return this.shadowRoot.querySelector('input#buffer-location')
   }
 
   activated(active) {
@@ -96,7 +101,7 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
     return html`
       <form class="multi-column-form">
         <fieldset>
-          <legend>${i18next.t('title.gan')}: ${this._ganNo}</legend>
+          <legend>${i18next.t('title.gan_no')}: ${this._arrivalNoticeNo}</legend>
           <label>${i18next.t('label.container_no')}</label>
           <input name="containerNo" disabled />
 
@@ -113,7 +118,7 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
           <label ?hidden="${this._ownTransport}">${i18next.t('label.to')}</label>
           <input ?hidden="${this._ownTransport}" name="to" disabled />
 
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.loadType')}</label>
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.load_type')}</label>
           <select ?hidden="${this._ownTransport}" name="loadType" disabled>
             ${LOAD_TYPES.map(
               loadType => html`
@@ -126,7 +131,7 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
           <input ?hidden="${!this._ownTransport}" ?required="${this._ownTransport}" name="truckNo" disabled />
 
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.delivery_order_no')}</label>
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
           <input ?hidden="${!this._ownTransport}" name="deliveryOrderNo" disabled />
 
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.eta_date')}</label>
@@ -147,6 +152,9 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
               `
             })}</select
           >
+
+          <label>${i18next.t('label.buffer_location')}</label>
+          <input id="buffer-location" name="buffer-location" readonly @focus="${this._openBufferSelector.bind(this)}" />
         </fieldset>
       </form>
 
@@ -198,7 +206,7 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
             align: 'center',
             options: { queryName: 'products' }
           },
-          width: 180
+          width: 350
         },
         {
           type: 'string',
@@ -293,18 +301,18 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
   }
 
   updated(changedProps) {
-    if (changedProps.has('_ganNo')) {
+    if (changedProps.has('_arrivalNoticeNo')) {
       this.fetchGAN()
     }
   }
 
   async fetchGAN() {
-    if (!this._ganNo) return
+    if (!this._arrivalNoticeNo) return
     const response = await client.query({
       query: gql`
         query {
           arrivalNotice(${gqlBuilder.buildArgs({
-            name: this._ganNo
+            name: this._arrivalNoticeNo
           })}) {
             id
             name
@@ -355,6 +363,7 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
+      this._arrivalNoticeId = response.data.arrivalNotice.id
       this._ownTransport = response.data.arrivalNotice.ownTransport
       this._fillupForm(response.data.arrivalNotice)
       this.productData = {
@@ -385,35 +394,52 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _checkArrivedNotice() {
-    const response = await client.query({
-      query: gql`
-        mutation {
-          checkArrivedNotice(${gqlBuilder.buildArgs({
-            name: this._ganNo
-          })}) {
-            name
+  async _assignBufferLocation() {
+    try {
+      this._validateBufferLocation()
+      const response = await client.query({
+        query: gql`
+          mutation {
+            generateArrivalNoticeWorksheet(${gqlBuilder.buildArgs({
+              arrivalNoticeNo: this._arrivalNoticeNo,
+              bufferLocation: { id: this.bufferLocationField.getAttribute('location-id') }
+            })}) {
+              unloadingWorksheet {
+                name
+              }
+            }
           }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      history.back()
-      Swal.fire({
-        // position: 'top-end',
-        type: 'success',
-        title: 'Arrival notice is arrived',
-        // showConfirmButton: false,
-        timer: 1500
+        `
       })
-      //this._showToast({ message: i18next.t('text.arrival_notice_is_arrived') })
+
+      if (!response.errors) {
+        navigate(`worksheets`)
+        this._showToast({ message: i18next.t('text.buffer_location_assigned') })
+      }
+    } catch (e) {
+      this._showToast(e)
     }
+  }
+
+  _validateBufferLocation() {
+    if (!this.bufferLocationField.getAttribute('location-id'))
+      throw new Error(i18next.t('text.buffer_location_is_not_assigned'))
+  }
+
+  _openBufferSelector() {
+    openPopup(html`
+      <location-selector
+        @selected="${e => {
+          this.bufferLocationField.value = `${e.detail.name} ${e.detail.description ? `(${e.detail.description})` : ''}`
+          this.bufferLocationField.setAttribute('location-id', e.detail.id)
+        }}"
+      ></location-selector>
+    `)
   }
 
   stateChanged(state) {
     if (this.active) {
-      this._ganNo = state && state.route && state.route.resourceId
+      this._arrivalNoticeNo = state && state.route && state.route.resourceId
     }
   }
 
@@ -429,4 +455,4 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
   }
 }
 
-window.customElements.define('check-arrived-notice', CheckArrivedNotice)
+window.customElements.define('assign-buffer-location', AssignBufferLocation)

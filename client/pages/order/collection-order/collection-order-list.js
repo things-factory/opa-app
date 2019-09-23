@@ -83,16 +83,19 @@ class CollectionOrderList extends localize(i18next)(PageView) {
   async firstUpdated() {
     this._searchFields = [
       {
+        label: i18next.t('label.name'),
         name: 'name',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.name') }
       },
       {
+        label: i18next.t('label.collection_date'),
         name: 'collectionDateTime',
         type: 'datetime-local',
-        props: { searchOper: 'like', placeholder: i18next.t('label.collection_date_time') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.collection_date') }
       },
       {
+        label: i18next.t('label.status'),
         name: 'status',
         type: 'select',
         options: [
@@ -129,8 +132,8 @@ class CollectionOrderList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'name',
-          header: i18next.t('field.name'),
-          record: { align: 'left' },
+          header: i18next.t('field.co_no'),
+          record: { align: 'center' },
           sortable: true,
           width: 180
         },
@@ -138,7 +141,7 @@ class CollectionOrderList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'from',
           header: i18next.t('field.from'),
-          record: { align: 'left' },
+          record: { align: 'center' },
           sortable: true,
           width: 250
         },
@@ -146,7 +149,7 @@ class CollectionOrderList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'to',
           header: i18next.t('field.to'),
-          record: { align: 'left' },
+          record: { align: 'center' },
           sortable: true,
           width: 250
         },

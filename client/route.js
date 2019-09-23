@@ -56,31 +56,31 @@ export default function route(page) {
      * Order Menus Section
      */
     case 'create_arrival_notice':
-      import('./pages/order/create-arrival-notice')
+      import('./pages/order/arrival-notice/create-arrival-notice')
       return page
 
     case 'arrival_notices':
-      import('./pages/order/arrival-notice-list')
+      import('./pages/order/arrival-notice/arrival-notice-list')
       return page
 
     case 'arrival_notice_detail':
-      import('./pages/order/arrival-notice-detail')
+      import('./pages/order/arrival-notice/arrival-notice-detail')
       return page
 
     case 'arrival_notice_requests':
-      import('./pages/order/arrival-notice-requests')
+      import('./pages/order/arrival-notice/arrival-notice-requests')
       return page
 
     case 'receive_arrival_notice':
-      import('./pages/order/receive-arrival-notice')
+      import('./pages/order/arrival-notice/receive-arrival-notice')
       return page
 
     case 'check_arrived_notice':
-      import('./pages/order/check-arrived-notice')
+      import('./pages/order/arrival-notice/check-arrived-notice')
       return page
 
     case 'assign_buffer_location':
-      import('./pages/order/assign-buffer-location')
+      import('./pages/order/arrival-notice/assign-buffer-location')
       return page
 
     case 'create_delivery_order':
@@ -158,6 +158,14 @@ export default function route(page) {
     case 'vas_orders':
       import('./pages/order/vas-order-list')
       return page
+
+    /**
+     * Order Menus Section
+     */
+    case 'create_claim_chit':
+      import('./pages/billing/create-claim-chit')
+      return page
+
     /**
      * Stock Menus Section
      */
