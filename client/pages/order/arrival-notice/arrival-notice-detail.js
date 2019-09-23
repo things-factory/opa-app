@@ -1,17 +1,19 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
+import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
+import Swal from 'sweetalert2'
 
-class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
+class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _ganNo: String,
       _ownTransport: Boolean,
+      _status: String,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -67,17 +69,7 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.check_arrived_notice'),
-      actions: [
-        {
-          title: i18next.t('button.back'),
-          action: () => history.back()
-        },
-        {
-          title: i18next.t('button.arrived'),
-          action: this._checkArrivedNotice.bind(this)
-        }
-      ]
+      title: i18next.t('title.arrival_notice_detail')
     }
   }
 
@@ -89,6 +81,14 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
 
   get form() {
     return this.shadowRoot.querySelector('form')
+  }
+
+  get productGrist() {
+    return this.shadowRoot.querySelector('data-grist#product-grist')
+  }
+
+  get vasGrist() {
+    return this.shadowRoot.querySelector('data-grist#vas-grist')
   }
 
   render() {
@@ -103,7 +103,7 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
           <label>${i18next.t('label.use_own_transport')}</label>
 
           <!-- Show when userOwnTransport is true -->
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.collection_date')}</label>
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.collection_date_time')}</label>
           <input ?hidden="${this._ownTransport}" name="collectionDateTime" type="datetime-local" disabled />
 
           <label ?hidden="${this._ownTransport}">${i18next.t('label.from')}</label>
@@ -171,6 +171,12 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
         ></data-grist>
       </div>
     `
+  }
+
+  constructor() {
+    super()
+    this.productData = {}
+    this.vasData = {}
   }
 
   firstUpdated() {
@@ -298,7 +304,6 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async fetchGAN() {
-    if (!this._ganNo) return
     const response = await client.query({
       query: gql`
         query {
@@ -355,6 +360,8 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       this._ownTransport = response.data.arrivalNotice.ownTransport
+      this._status = response.data.arrivalNotice.status
+      this._actionsHandler()
       this._fillupForm(response.data.arrivalNotice)
       this.productData = {
         ...this.productData,
@@ -384,11 +391,32 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _checkArrivedNotice() {
+  async _updateArrivalNotice(patch) {
     const response = await client.query({
       query: gql`
         mutation {
-          checkArrivedNotice(${gqlBuilder.buildArgs({
+          updateArrivalNotice(${gqlBuilder.buildArgs({
+            name: this._ganNo,
+            patch
+          })}) {
+            name 
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      this.fetchGAN()
+    } else {
+      throw new Error(response.errors[0])
+    }
+  }
+
+  async _confirmArrivalNotice() {
+    const response = await client.query({
+      query: gql`
+        mutation {
+          confirmArrivalNotice(${gqlBuilder.buildArgs({
             name: this._ganNo
           })}) {
             name
@@ -397,11 +425,72 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
       `
     })
 
-    if (!response.errors) {
-      history.back()
-
-      this._showToast({ message: i18next.t('text.arrival_notice_is_arrived') })
+    if (response.errors) {
+      throw new Error(response.errors[0])
     }
+  }
+
+  _actionsHandler() {
+    let actions = []
+
+    if (this._status === ORDER_STATUS.PENDING.value) {
+      actions = [
+        {
+          title: i18next.t('button.edit'),
+          action: async () => {
+            try {
+              await this._updateArrivalNotice({ status: ORDER_STATUS.EDITING.value })
+              Swal.fire({
+                // position: 'top-end',
+                type: 'info',
+                title: 'GAN now editable',
+                // showConfirmButton: false,
+                timer: 1500
+              })
+              //  this._showToast({ message: i18next.t('text.gan_now_editable') })
+            } catch (e) {
+              this._showToast(e)
+            }
+          }
+        },
+        {
+          title: i18next.t('button.confirm'),
+          action: async () => {
+            try {
+              await this._confirmArrivalNotice()
+              Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, confirm it!'
+              }).then(result => {
+                if (result.value) {
+                  this._showToast({ message: i18next.t('text.gan_confirmed') })
+                  navigate('arrival_notices')
+                }
+              })
+            } catch (e) {
+              this._showToast(e)
+            }
+          }
+        }
+      ]
+    } else if (this._status === ORDER_STATUS.EDITING.value) {
+      navigate(`create_arrival_notice/${this._ganNo}`)
+    }
+
+    actions = [...actions, { title: i18next.t('button.back'), action: () => navigate('arrival_notices') }]
+
+    store.dispatch({
+      type: UPDATE_CONTEXT,
+      context: {
+        ...this.context,
+        actions
+      }
+    })
   }
 
   stateChanged(state) {
@@ -422,4 +511,4 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
   }
 }
 
-window.customElements.define('check-arrived-notice', CheckArrivedNotice)
+window.customElements.define('arrival-notice-detail', ArrivalNoticeDetail)

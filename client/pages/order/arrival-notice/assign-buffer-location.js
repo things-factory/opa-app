@@ -1,19 +1,19 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { openPopup } from '@things-factory/layout-base'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
-import Swal from 'sweetalert2'
+import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
+import './location-selector'
 
-class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
+class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
-      _ganNo: String,
+      _arrivalNoticeNo: String,
       _ownTransport: Boolean,
-      _status: String,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -69,8 +69,22 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.arrival_notice_detail')
+      title: i18next.t('title.assign_buffer_location'),
+      actions: [
+        {
+          title: i18next.t('button.back'),
+          action: () => history.back()
+        },
+        {
+          title: i18next.t('button.assign_buffer_location'),
+          action: this._assignBufferLocation.bind(this)
+        }
+      ]
     }
+  }
+
+  get bufferLocationField() {
+    return this.shadowRoot.querySelector('input#buffer-location')
   }
 
   activated(active) {
@@ -83,19 +97,11 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('form')
   }
 
-  get productGrist() {
-    return this.shadowRoot.querySelector('data-grist#product-grist')
-  }
-
-  get vasGrist() {
-    return this.shadowRoot.querySelector('data-grist#vas-grist')
-  }
-
   render() {
     return html`
       <form class="multi-column-form">
         <fieldset>
-          <legend>${i18next.t('title.gan_no')}: ${this._ganNo}</legend>
+          <legend>${i18next.t('title.gan_no')}: ${this._arrivalNoticeNo}</legend>
           <label>${i18next.t('label.container_no')}</label>
           <input name="containerNo" disabled />
 
@@ -146,6 +152,9 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
               `
             })}</select
           >
+
+          <label>${i18next.t('label.buffer_location')}</label>
+          <input id="buffer-location" name="buffer-location" readonly @focus="${this._openBufferSelector.bind(this)}" />
         </fieldset>
       </form>
 
@@ -171,12 +180,6 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
         ></data-grist>
       </div>
     `
-  }
-
-  constructor() {
-    super()
-    this.productData = {}
-    this.vasData = {}
   }
 
   firstUpdated() {
@@ -298,17 +301,18 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
   }
 
   updated(changedProps) {
-    if (changedProps.has('_ganNo')) {
+    if (changedProps.has('_arrivalNoticeNo')) {
       this.fetchGAN()
     }
   }
 
   async fetchGAN() {
+    if (!this._arrivalNoticeNo) return
     const response = await client.query({
       query: gql`
         query {
           arrivalNotice(${gqlBuilder.buildArgs({
-            name: this._ganNo
+            name: this._arrivalNoticeNo
           })}) {
             id
             name
@@ -359,9 +363,8 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
+      this._arrivalNoticeId = response.data.arrivalNotice.id
       this._ownTransport = response.data.arrivalNotice.ownTransport
-      this._status = response.data.arrivalNotice.status
-      this._actionsHandler()
       this._fillupForm(response.data.arrivalNotice)
       this.productData = {
         ...this.productData,
@@ -391,111 +394,52 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _updateArrivalNotice(patch) {
-    const response = await client.query({
-      query: gql`
-        mutation {
-          updateArrivalNotice(${gqlBuilder.buildArgs({
-            name: this._ganNo,
-            patch
-          })}) {
-            name 
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      this.fetchGAN()
-    } else {
-      throw new Error(response.errors[0])
-    }
-  }
-
-  async _confirmArrivalNotice() {
-    const response = await client.query({
-      query: gql`
-        mutation {
-          confirmArrivalNotice(${gqlBuilder.buildArgs({
-            name: this._ganNo
-          })}) {
-            name
-          }
-        }
-      `
-    })
-
-    if (response.errors) {
-      throw new Error(response.errors[0])
-    }
-  }
-
-  _actionsHandler() {
-    let actions = []
-
-    if (this._status === ORDER_STATUS.PENDING.value) {
-      actions = [
-        {
-          title: i18next.t('button.edit'),
-          action: async () => {
-            try {
-              await this._updateArrivalNotice({ status: ORDER_STATUS.EDITING.value })
-              Swal.fire({
-                // position: 'top-end',
-                type: 'info',
-                title: 'GAN now editable',
-                // showConfirmButton: false,
-                timer: 1500
-              })
-              //  this._showToast({ message: i18next.t('text.gan_now_editable') })
-            } catch (e) {
-              this._showToast(e)
+  async _assignBufferLocation() {
+    try {
+      this._validateBufferLocation()
+      const response = await client.query({
+        query: gql`
+          mutation {
+            generateArrivalNoticeWorksheet(${gqlBuilder.buildArgs({
+              arrivalNoticeNo: this._arrivalNoticeNo,
+              bufferLocation: { id: this.bufferLocationField.getAttribute('location-id') }
+            })}) {
+              unloadingWorksheet {
+                name
+              }
             }
           }
-        },
-        {
-          title: i18next.t('button.confirm'),
-          action: async () => {
-            try {
-              await this._confirmArrivalNotice()
-              Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                type: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, confirm it!'
-              }).then(result => {
-                if (result.value) {
-                  this._showToast({ message: i18next.t('text.gan_confirmed') })
-                  navigate('arrival_notices')
-                }
-              })
-            } catch (e) {
-              this._showToast(e)
-            }
-          }
-        }
-      ]
-    } else if (this._status === ORDER_STATUS.EDITING.value) {
-      navigate(`create_arrival_notice/${this._ganNo}`)
-    }
+        `
+      })
 
-    actions = [...actions, { title: i18next.t('button.back'), action: () => navigate('arrival_notices') }]
-
-    store.dispatch({
-      type: UPDATE_CONTEXT,
-      context: {
-        ...this.context,
-        actions
+      if (!response.errors) {
+        navigate(`worksheets`)
+        this._showToast({ message: i18next.t('text.buffer_location_assigned') })
       }
-    })
+    } catch (e) {
+      this._showToast(e)
+    }
+  }
+
+  _validateBufferLocation() {
+    if (!this.bufferLocationField.getAttribute('location-id'))
+      throw new Error(i18next.t('text.buffer_location_is_not_assigned'))
+  }
+
+  _openBufferSelector() {
+    openPopup(html`
+      <location-selector
+        @selected="${e => {
+          this.bufferLocationField.value = `${e.detail.name} ${e.detail.description ? `(${e.detail.description})` : ''}`
+          this.bufferLocationField.setAttribute('location-id', e.detail.id)
+        }}"
+      ></location-selector>
+    `)
   }
 
   stateChanged(state) {
     if (this.active) {
-      this._ganNo = state && state.route && state.route.resourceId
+      this._arrivalNoticeNo = state && state.route && state.route.resourceId
     }
   }
 
@@ -511,4 +455,4 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
   }
 }
 
-window.customElements.define('arrival-notice-detail', ArrivalNoticeDetail)
+window.customElements.define('assign-buffer-location', AssignBufferLocation)

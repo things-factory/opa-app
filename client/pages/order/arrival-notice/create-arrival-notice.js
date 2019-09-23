@@ -5,7 +5,7 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_C
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES, ORDER_STATUS, PACKING_TYPES } from './constants/order'
+import { LOAD_TYPES, ORDER_STATUS, PACKING_TYPES } from '../constants/order'
 
 class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {

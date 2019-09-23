@@ -5,9 +5,9 @@ import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-fac
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
+import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
 
-class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
+class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _ganNo: String,
@@ -67,11 +67,15 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.receive_arrival_notice'),
+      title: i18next.t('title.check_arrived_notice'),
       actions: [
         {
-          title: i18next.t('button.receive'),
-          action: this._receiveArrivalNotice.bind(this)
+          title: i18next.t('button.back'),
+          action: () => history.back()
+        },
+        {
+          title: i18next.t('button.arrived'),
+          action: this._checkArrivedNotice.bind(this)
         }
       ]
     }
@@ -121,7 +125,7 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
           <input ?hidden="${!this._ownTransport}" ?required="${this._ownTransport}" name="truckNo" disabled />
 
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.delivery_order_no')}</label>
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
           <input ?hidden="${!this._ownTransport}" name="deliveryOrderNo" disabled />
 
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.eta_date')}</label>
@@ -380,11 +384,11 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _receiveArrivalNotice() {
+  async _checkArrivedNotice() {
     const response = await client.query({
       query: gql`
         mutation {
-          receiveArrivalNotice(${gqlBuilder.buildArgs({
+          checkArrivedNotice(${gqlBuilder.buildArgs({
             name: this._ganNo
           })}) {
             name
@@ -396,7 +400,7 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
     if (!response.errors) {
       history.back()
 
-      this._showToast({ message: i18next.t('text.arrival_notice_received') })
+      this._showToast({ message: i18next.t('text.arrival_notice_is_arrived') })
     }
   }
 
@@ -418,4 +422,4 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
   }
 }
 
-window.customElements.define('receive-arrival-notice', ReceiveArrivalNotice)
+window.customElements.define('check-arrived-notice', CheckArrivedNotice)
