@@ -459,14 +459,19 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
             try {
               await this._confirmArrivalNotice()
               Swal.fire({
-                // position: 'top-end',
-                type: 'info',
-                title: 'GAN confirmed',
-                // showConfirmButton: false,
-                timer: 1500
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, confirm it!'
+              }).then(result => {
+                if (result.value) {
+                  this._showToast({ message: i18next.t('text.gan_confirmed') })
+                  navigate('arrival_notices')
+                }
               })
-              // this._showToast({ message: i18next.t('text.gan_confirmed') })
-              navigate('arrival_notices')
             } catch (e) {
               this._showToast(e)
             }

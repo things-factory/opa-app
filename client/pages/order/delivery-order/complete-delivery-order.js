@@ -477,7 +477,7 @@ class CompleteDeliveryOrder extends connect(store)(localize(i18next)(PageView)) 
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, order completed!'
+      confirmButtonText: 'Yes, confirm it!'
     }).then(async result => {
       if (result.value) {
         const response = await client.query({

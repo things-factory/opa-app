@@ -437,8 +437,20 @@ class DeliveryOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           action: async () => {
             try {
               await this._confirmDeliveryOrder()
-              this._showToast({ message: i18next.t('text.delivery_order_confirmed') })
-              navigate('delivery_orders')
+              Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, confirm it!'
+              }).then(result => {
+                if (result.value) {
+                  this._showToast({ message: i18next.t('text.delivery_order_confirmed') })
+                  navigate('delivery_orders')
+                }
+              })
             } catch (e) {
               this._showToast(e)
             }

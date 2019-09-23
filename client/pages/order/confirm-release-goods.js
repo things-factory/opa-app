@@ -4,7 +4,6 @@ import { client, gqlBuilder, isMobileDevice, PageView, navigate } from '@things-
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
-import Swal from 'sweetalert2'
 
 class ConfirmReleaseGoods extends localize(i18next)(PageView) {
   static get properties() {
@@ -293,14 +292,7 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
       await this._deleteOrder(selectedOrder)
       this.data = await this.getReleaseGoods()
     } else {
-      Swal.fire({
-        // position: 'top-end',
-        type: 'info',
-        title: 'There no selected',
-        // showConfirmButton: false,
-        timer: 1500
-      })
-      // this._notify(i18next.t('text.there_no_selected'))
+      this._notify(i18next.t('text.there_no_selected'))
     }
   }
 
@@ -310,13 +302,7 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
       await this._updateOrder(selectedOrder, true)
       this.data = await this.getReleaseGoods()
     } else {
-      Swal.fire({
-        // position: 'top-end',
-        type: 'info',
-        title: 'There no selected',
-        // showConfirmButton: false,
-        timer: 1500
-      }) // this._notify(i18next.t('text.there_no_selected'))
+      this._notify(i18next.t('text.there_no_selected'))
     }
   }
 
@@ -330,14 +316,7 @@ class ConfirmReleaseGoods extends localize(i18next)(PageView) {
       await this._updateOrder(selectedOrder, false)
       this.data = await this.getReleaseGoods()
     } else {
-      Swal.fire({
-        // position: 'top-end',
-        type: 'info',
-        title: 'There no selected',
-        // showConfirmButton: false,
-        timer: 1500
-      })
-      // this._notify(i18next.t('text.there_no_selected'))
+      this._notify(i18next.t('text.there_no_selected'))
     }
   }
 

@@ -263,18 +263,11 @@ class ProductList extends localize(i18next)(PageView) {
       history.back()
       this.dataGrist.fetch()
       document.dispatchEvent(
-        Swal.fire({
-          // position: 'top-end',
-          type: 'success',
-          title: 'Data imported successfully',
-          showConfirmButton: false,
-          timer: 1500
+        new CustomEvent('notify', {
+          detail: {
+            message: i18next.t('text.data_imported_successfully')
+          }
         })
-        // new CustomEvent('notify', {
-        //   detail: {
-        //     message: i18next.t('text.data_imported_successfully')
-        //   }
-        // })
       )
     }
   }
@@ -328,18 +321,11 @@ class ProductList extends localize(i18next)(PageView) {
       if (!response.errors) {
         this.dataGrist.fetch()
         document.dispatchEvent(
-          Swal.fire({
-            // position: 'top-end',
-            type: 'success',
-            title: 'Your work has been saved',
-            showConfirmButton: false,
-            timer: 1500
+          new CustomEvent('notify', {
+            detail: {
+              message: i18next.t('text.data_updated_successfully')
+            }
           })
-          // new CustomEvent('notify', {
-          //   detail: {
-          //     message: i18next.t('text.data_updated_successfully')
-          //   }
-          // })
         )
       }
     }
@@ -356,7 +342,6 @@ class ProductList extends localize(i18next)(PageView) {
       confirmButtonText: 'Yes, delete it!'
     }).then(async result => {
       if (result.value) {
-        Swal.fire('Deleted!', 'Your file has been deleted.', 'success')
         const names = this.dataGrist.selected.map(record => record.name)
         if (names && names.length > 0) {
           const response = await client.query({
@@ -370,18 +355,11 @@ class ProductList extends localize(i18next)(PageView) {
           if (!response.errors) {
             this.dataGrist.fetch()
             document.dispatchEvent(
-              Swal.fire({
-                // position: 'top-end',
-                type: 'info',
-                title: 'Your work has been deleted',
-                showConfirmButton: false,
-                timer: 1500
+              new CustomEvent('notify', {
+                detail: {
+                  message: i18next.t('text.data_updated_successfully')
+                }
               })
-              // new CustomEvent('notify', {
-              //   detail: {
-              //     message: i18next.t('text.data_updated_successfully')
-              //   }
-              // })
             )
           }
         }

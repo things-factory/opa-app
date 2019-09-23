@@ -432,11 +432,24 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
         },
         {
           title: i18next.t('button.confirm'),
+
           action: async () => {
             try {
               await this._confirmCollectionOrder()
-              this._showToast({ message: i18next.t('text.collection_order_confirmed') })
-              navigate('collection_orders')
+              Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, confirm it!'
+              }).then(result => {
+                if (result.value) {
+                  this._showToast({ message: i18next.t('text.collection_order_confirmed') })
+                  navigate('collection_orders')
+                }
+              })
             } catch (e) {
               this._showToast(e)
             }

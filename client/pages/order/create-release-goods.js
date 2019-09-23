@@ -4,7 +4,6 @@ import { client, gqlBuilder, isMobileDevice, PageView, navigate } from '@things-
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
-import Swal from 'sweetalert2'
 
 class CreateReleaseGoods extends localize(i18next)(PageView) {
   static get properties() {
@@ -486,14 +485,7 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
   _getProducts() {
     const products = this.shadowRoot.querySelector('#products').dirtyRecords
     if (products.length === 0) {
-      Swal.fire({
-        // position: 'top-end',
-        type: 'error',
-        title: 'List is not completed',
-        // showConfirmButton: false,
-        timer: 1500
-      })
-      // throw new Error(i18next.t('text.list_is_not_completed'))
+      throw new Error(i18next.t('text.list_is_not_completed'))
     } else {
       return products
     }
@@ -513,14 +505,7 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
       })
 
     if (inputs.length !== Object.keys(orderInfo).length) {
-      Swal.fire({
-        // position: 'top-end',
-        type: 'error',
-        title: 'Form is not completed',
-        // showConfirmButton: false,
-        timer: 1500
-      })
-      //  throw new Error(i18next.t('text.form_is_not_completed'))
+      throw new Error(i18next.t('text.form_is_not_completed'))
     } else {
       return orderInfo
     }
