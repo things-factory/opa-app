@@ -75,6 +75,10 @@ export default function route(page) {
       import('./pages/order/arrival-notice/receive-arrival-notice')
       return page
 
+    case 'rejected_arrival_notice':
+      import('./pages/order/arrival-notice/rejected-arrival-notice')
+      return page
+
     case 'check_arrived_notice':
       import('./pages/order/arrival-notice/check-arrived-notice')
       return page

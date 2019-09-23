@@ -80,6 +80,10 @@ export default {
       page: 'check_arrived_notice'
     },
     {
+      tagname: 'rejected-arrival-notice',
+      page: 'rejected_arrival_notice'
+    },
+    {
       tagname: 'assign-buffer-location',
       page: 'assign_buffer_location'
     },
