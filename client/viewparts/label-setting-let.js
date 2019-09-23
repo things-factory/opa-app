@@ -139,7 +139,8 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
                     `,
                     {
                       backdrop: true,
-                      size: 'large'
+                      size: 'large',
+                      title: i18next.t('title.label_setting')
                     }
                   )
                 }}
@@ -180,7 +181,8 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
                     `,
                     {
                       backdrop: true,
-                      size: 'large'
+                      size: 'large',
+                      title: i18next.t('title.label_setting')
                     }
                   )
                 }}

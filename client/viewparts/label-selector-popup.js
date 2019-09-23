@@ -120,9 +120,6 @@ export class LabelSelectorPopup extends InfiniteScrollable(localize(i18next)(Lit
 
   render() {
     return html`
-      <div id="header">
-        <i18n-msg msgid="title.label_setting"></i18n-msg>
-      </div>
       <div id="filter">
         <select
           @change=${e => {
