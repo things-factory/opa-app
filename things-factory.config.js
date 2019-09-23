@@ -240,6 +240,10 @@ export default {
       page: 'worksheet_unloading'
     },
     {
+      tagname: 'worksheet-putaway',
+      page: 'worksheet_putaway'
+    },
+    {
       tagname: 'worksheet-vas',
       page: 'worksheet_vas'
     },
