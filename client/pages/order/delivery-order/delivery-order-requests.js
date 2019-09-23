@@ -140,7 +140,7 @@ class DeliveryOrderRequests extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.do_no'),
-          record: { align: 'left' },
+          record: { align: 'center' },
           sortable: true,
           width: 180
         },

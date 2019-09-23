@@ -132,8 +132,8 @@ class CollectionOrderList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'name',
-          header: i18next.t('field.name'),
-          record: { align: 'left' },
+          header: i18next.t('field.co_no'),
+          record: { align: 'center' },
           sortable: true,
           width: 180
         },
@@ -141,7 +141,7 @@ class CollectionOrderList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'from',
           header: i18next.t('field.from'),
-          record: { align: 'left' },
+          record: { align: 'center' },
           sortable: true,
           width: 250
         },
@@ -149,7 +149,7 @@ class CollectionOrderList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'to',
           header: i18next.t('field.to'),
-          record: { align: 'left' },
+          record: { align: 'center' },
           sortable: true,
           width: 250
         },

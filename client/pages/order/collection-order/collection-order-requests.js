@@ -139,7 +139,7 @@ class CollectionOrderRequests extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.co_no'),
-          record: { align: 'left' },
+          record: { align: 'center' },
           sortable: true,
           width: 180
         },

@@ -226,6 +226,7 @@ class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView))
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
+          record: { align: 'center' },
           width: 180
         },
         {
@@ -239,7 +240,7 @@ class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView))
           type: 'float',
           name: 'weight',
           header: i18next.t('field.weight'),
-          record: { align: 'right' },
+          record: { align: 'center' },
           width: 80
         },
         {
@@ -253,7 +254,7 @@ class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView))
           type: 'integer',
           name: 'packQty',
           header: i18next.t('field.pack_qty'),
-          record: { align: 'right' },
+          record: { align: 'center' },
           width: 80
         },
         {
@@ -292,6 +293,7 @@ class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView))
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
+          record: { align: 'center' },
           width: 180
         },
         {
@@ -308,6 +310,7 @@ class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView))
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
+          record: { align: 'center' },
           width: 350
         }
       ]

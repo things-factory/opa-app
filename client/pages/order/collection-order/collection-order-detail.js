@@ -6,15 +6,14 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
-import Swal from 'sweetalert2'
 
 class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _orderName: String,
       _status: String,
-      _prevDriverName: String,
-      _prevVehicleName: String,
+      _assignedDriverName: String,
+      _assignedVehicleName: String,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -119,10 +118,10 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
           </select>
 
           <label>${i18next.t('label.assigned_truck')}</label>
-          <input name=${this._prevVehicleName} value=${this._prevVehicleName} disabled />
+          <input name=${this._assignedVehicleName} value=${this._assignedVehicleName} disabled />
 
           <label>${i18next.t('label.assigned_driver')}</label>
-          <input name=${this._prevDriverName} value=${this._prevDriverName} disabled />
+          <input name=${this._assignedDriverName} value=${this._assignedDriverName} disabled />
 
           <label>${i18next.t('label.tel_no')}</label>
           <input name="telNo" disabled />
@@ -189,6 +188,7 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
+          record: { align: 'center' },
           width: 180
         },
         {
@@ -202,7 +202,7 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
           type: 'float',
           name: 'weight',
           header: i18next.t('field.weight'),
-          record: { align: 'right' },
+          record: { align: 'center' },
           width: 80
         },
         {
@@ -216,7 +216,7 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
           type: 'integer',
           name: 'packQty',
           header: i18next.t('field.pack_qty'),
-          record: { align: 'right' },
+          record: { align: 'center' },
           width: 80
         },
         {
@@ -255,6 +255,7 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
+          record: { align: 'center' },
           width: 180
         },
         {
@@ -271,6 +272,7 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
+          record: { align: 'center' },
           width: 350
         }
       ]
@@ -339,8 +341,10 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
     })
 
     if (!response.errors) {
-      this._prevDriverName = response.data.collectionOrder.transportDriver.name
-      this._prevVehicleName = response.data.collectionOrder.transportVehicle.name
+      const driver = response.data.collectionOrder.transportDriver || { name: '' }
+      const vehicle = response.data.collectionOrder.transportVehicle || { name: '' }
+      this._assignedDriverName = driver.name
+      this._assignedVehicleName = vehicle.name
 
       this._status = response.data.collectionOrder.status
       this._actionsHandler()
@@ -420,14 +424,7 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
           action: async () => {
             try {
               await this._updateCollectionOrder({ status: ORDER_STATUS.EDITING.value })
-              Swal.fire({
-                // position: 'top-end',
-                type: 'info',
-                title: 'Collection order now editable',
-                // showConfirmButton: false,
-                timer: 1500
-              })
-              // this._showToast({ message: i18next.t('text.collection_order_now_editable') })
+              this._showToast({ message: i18next.t('text.collection_order_now_editable') })
             } catch (e) {
               this._showToast(e)
             }
@@ -438,14 +435,7 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
           action: async () => {
             try {
               await this._confirmCollectionOrder()
-              Swal.fire({
-                // position: 'top-end',
-                type: 'info',
-                title: 'Collection order confirmed',
-                // showConfirmButton: false,
-                timer: 1500
-              })
-              // this._showToast({ message: i18next.t('text.collection_order_confirmed') })
+              this._showToast({ message: i18next.t('text.collection_order_confirmed') })
               navigate('collection_orders')
             } catch (e) {
               this._showToast(e)

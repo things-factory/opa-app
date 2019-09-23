@@ -6,7 +6,6 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS, PACKING_TYPES } from '../constants/order'
-import Swal from 'sweetalert2'
 
 class CreateDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -83,7 +82,7 @@ class CreateDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
     return html`
       <form class="multi-column-form">
         <fieldset>
-          <legend>${i18next.t('title.transport_order')}</legend>
+          <legend>${i18next.t('title.delivery_order')}</legend>
           <label>${i18next.t('label.from')}</label>
           <input name="from" />
 
@@ -189,7 +188,7 @@ class CreateDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
-          record: { editable: true },
+          record: { editable: true, align: 'center' },
           width: 180
         },
         {
@@ -270,7 +269,7 @@ class CreateDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
-          record: { editable: true },
+          record: { editable: true, align: 'center' },
           width: 180
         },
         {
@@ -284,7 +283,7 @@ class CreateDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
-          record: { editable: true },
+          record: { editable: true, align: 'center' },
           width: 350
         }
       ]
@@ -349,14 +348,7 @@ class CreateDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
 
       if (!response.errors) {
         navigate(`delivery_order_detail/${response.data.generateDeliveryOrder.name}`)
-        Swal.fire({
-          // position: 'top-end',
-          type: 'success',
-          title: 'delivery order created',
-          // showConfirmButton: false,
-          timer: 1500
-        })
-        // this._showToast({ message: i18next.t('delivery_order_created') })
+        this._showToast({ message: i18next.t('delivery_order_created') })
       }
     } catch (e) {
       this._showToast(e)
@@ -367,28 +359,14 @@ class CreateDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
     const elements = Array.from(this.form.querySelectorAll('input, select'))
 
     if (!elements.filter(e => !e.hasAttribute('hidden')).every(e => e.checkValidity()))
-      Swal.fire({
-        // position: 'top-end',
-        type: 'error',
-        title: 'Invalid form',
-        // showConfirmButton: false,
-        timer: 1500
-      })
-    //throw new Error(i18next.t('text.invalid_form'))
+      throw new Error(i18next.t('text.invalid_form'))
   }
 
   _validateProducts() {
     this.productGrist.commit()
     // no records
     if (!this.productGrist.data.records || !this.productGrist.data.records.length)
-      Swal.fire({
-        // position: 'top-end',
-        type: 'error',
-        title: 'No products',
-        // showConfirmButton: false,
-        timer: 1500
-      })
-    //throw new Error(i18next.t('text.no_products'))
+      throw new Error(i18next.t('text.no_products'))
 
     // required field (batchId, packingType, weight, unit, packQty)
     if (
@@ -396,26 +374,12 @@ class CreateDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
         record => !record.batchId || !record.packingType || !record.weight || !record.unit || !record.packQty
       ).length
     )
-      Swal.fire({
-        // position: 'top-end',
-        type: 'success',
-        title: 'Empty value in list',
-        // showConfirmButton: false,
-        timer: 1500
-      })
-    // throw new Error(i18next.t('text.empty_value_in_list'))
+      throw new Error(i18next.t('text.empty_value_in_list'))
 
     // duplication of batch id
     const batchIds = this.productGrist.data.records.map(product => product.batchId)
     if (batchIds.filter((batchId, idx, batchIds) => batchIds.indexOf(batchId) !== idx).length)
-      Swal.fire({
-        // position: 'top-end',
-        type: 'error',
-        title: 'Batch id duplicated',
-        // showConfirmButton: false,
-        timer: 1500
-      })
-    // throw new Error(i18next.t('text.batch_id_is_duplicated'))
+      throw new Error(i18next.t('text.batch_id_is_duplicated'))
   }
 
   _validateVas() {
@@ -423,26 +387,12 @@ class CreateDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
     if (this.vasGrist.data.records && this.vasGrist.data.records.length) {
       // required field (vas && remark)
       if (this.vasGrist.data.records.filter(record => !record.vas || !record.remark).length)
-        Swal.fire({
-          // position: 'top-end',
-          type: 'error',
-          title: 'Empty value in list',
-          // showConfirmButton: false,
-          timer: 1500
-        })
-      // throw new Error(i18next.t('text.empty_value_in_list'))
+        throw new Error(i18next.t('text.empty_value_in_list'))
 
       // duplication of vas for same batch
       const vasBatches = this.vasGrist.data.records.map(vas => `${vas.vas.id}-${vas.batchId}`)
       if (vasBatches.filter((vasBatch, idx, vasBatches) => vasBatches.indexOf(vasBatch) !== idx).length)
-        Swal.fire({
-          // position: 'top-end',
-          type: 'error',
-          title: 'Vas on same batch',
-          // showConfirmButton: false,
-          timer: 1500
-        })
-      // throw new Error(i18next.t('text.duplicated_vas_on_same_batch'))
+        throw new Error(i18next.t('text.duplicated_vas_on_same_batch'))
     }
   }
 
@@ -635,14 +585,7 @@ class CreateDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       navigate(`delivery_order_detail/${response.data.editDeliveryOrder.name}`)
-      Swal.fire({
-        // position: 'top-end',
-        type: 'success',
-        title: 'Delivery order updated',
-        // showConfirmButton: false,
-        timer: 1500
-      })
-      // this._showToast({ message: i18next.t('delivery_order_updated') })
+      this._showToast({ message: i18next.t('delivery_order_updated') })
     }
   }
 
