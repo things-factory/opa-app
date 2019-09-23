@@ -161,6 +161,14 @@ export default {
     },
 
     /**
+     * Order Menus Section
+     */
+    {
+      tagname: 'create-claim-chit',
+      page: 'create_claim_chit'
+    },
+
+    /**
      * Stock Menus Section
      */
     {

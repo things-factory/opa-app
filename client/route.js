@@ -158,6 +158,14 @@ export default function route(page) {
     case 'vas_orders':
       import('./pages/order/vas-order-list')
       return page
+
+    /**
+     * Order Menus Section
+     */
+    case 'create_claim_chit':
+      import('./pages/billing/create-claim-chit')
+      return page
+
     /**
      * Stock Menus Section
      */
