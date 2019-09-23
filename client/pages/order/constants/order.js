@@ -1,3 +1,26 @@
+export const ORDER_TYPES = {
+  ARRIVAL_NOTICE: {
+    name: 'arrival_notice',
+    value: 'ARRIVAL_NOTICE'
+  },
+  SHIPPING: {
+    name: 'shipping_order',
+    value: 'SHIPPING_ORDER'
+  },
+  DELIVERY: {
+    name: 'delivery_order',
+    value: 'DELIVERY'
+  },
+  COLLECTION: {
+    name: 'collection_order',
+    value: 'COLLECTION'
+  },
+  RELEASE_OF_GOODS: {
+    name: 'release_of_goods',
+    value: 'RELEASE_OF_GOODS'
+  }
+}
+
 export const ORDER_STATUS = {
   PENDING: {
     name: 'order_status_pending',
