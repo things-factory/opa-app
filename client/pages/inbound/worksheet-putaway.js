@@ -1,17 +1,17 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import { openPopup } from '@things-factory/layout-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { WORKSHEET_STATUS } from './constants/worksheet'
-import { ORDER_TYPES } from '../order/constants/order'
+import { LOCATION_TYPE } from '../order/constants/location'
 
-class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
+class WorksheetPutaway extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
-      _orderType: String,
       _worksheetNo: String,
       config: Object,
       data: Object
@@ -66,7 +66,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.worksheet_vas'),
+      title: i18next.t('title.worksheet_putaway'),
       actions: [
         {
           title: i18next.t('button.back'),
@@ -84,19 +84,15 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
     return html`
       <form class="multi-column-form">
         <fieldset>
-          <legend>${i18next.t('title.vas')}: ${this._worksheetNo}</legend>
-          <label ?hidden="${this._orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}"
-            >${i18next.t('label.arrival_notice')}</label
-          >
-          <input ?hidden="${this._orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}" name="arrivalNotice" readonly />
-
-          <label ?hidden="${this._orderType !== ORDER_TYPES.SHIPPING.value}"
-            >${i18next.t('label.shipping_order')}</label
-          >
-          <input ?hidden="${this._orderType !== ORDER_TYPES.SHIPPING.value}" name="shipping_order" readonly />
+          <legend>${i18next.t('title.unloading')}: ${this._worksheetNo}</legend>
+          <label>${i18next.t('label.arrival_notice')}</label>
+          <input name="arrivalNotice" readonly />
 
           <label>${i18next.t('label.bizplace')}</label>
           <input name="bizplace" readonly />
+
+          <label>${i18next.t('label.buffer_location')}</label>
+          <input name="bufferLocation" readonly />
 
           <label>${i18next.t('label.status')}</label>
           <select name="status" disabled>
@@ -112,7 +108,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
       </form>
 
       <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product')}</h2>
 
         <data-grist
           id="grist"
@@ -144,14 +140,8 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'object',
-          name: 'vas',
+          name: 'product',
           header: i18next.t('field.product'),
-          width: 250
-        },
-        {
-          type: 'string',
-          name: 'remark',
-          header: i18next.t('field.remark'),
           width: 250
         },
         {
@@ -160,6 +150,66 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
           record: { editable: true },
           header: i18next.t('field.description'),
           width: 200
+        },
+        {
+          type: 'object',
+          name: 'toLocation',
+          record: {
+            editable: true,
+            align: 'center',
+            options: {
+              queryName: 'locations',
+              basicArgs: [
+                {
+                  name: 'warehouse_id',
+                  operator: 'eq',
+                  value: this.warehouseId
+                },
+                {
+                  name: 'type',
+                  operator: 'noteq',
+                  value: LOCATION_TYPE.BUFFER
+                }
+              ]
+            }
+          },
+          header: i18next.t('field.to_location'),
+          width: 300
+        },
+        {
+          type: 'string',
+          name: 'packingType',
+          header: i18next.t('field.packing_type'),
+          record: { align: 'center' },
+          width: 120
+        },
+        {
+          type: 'integer',
+          name: 'palletQty',
+          header: i18next.t('field.pallet_qty'),
+          record: { align: 'right' },
+          width: 60
+        },
+        {
+          type: 'integer',
+          name: 'packQty',
+          header: i18next.t('field.pack_qty'),
+          record: { align: 'right' },
+          width: 60
+        },
+        {
+          type: 'integer',
+          name: 'actualQty',
+          header: i18next.t('field.actual_qty'),
+          record: { aligh: 'right' },
+          width: 60
+        },
+        {
+          type: 'integer',
+          name: 'totalWeight',
+          header: i18next.t('field.total_weight'),
+          record: { align: 'right' },
+          width: 80
         }
       ]
     }
@@ -171,6 +221,10 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
 
   get grist() {
     return this.shadowRoot.querySelector('data-grist')
+  }
+
+  get toLocationField() {
+    return this.shadowRoot.querySelector('input[name=toLocation]')
   }
 
   async fetchWorksheet() {
@@ -189,11 +243,6 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
               name
               description
             }
-            shippingOrder {
-              id
-              name
-              description
-            }
             bizplace {
               id
               name
@@ -202,8 +251,17 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
             worksheetDetails {
               id
               name
-              targetVas {
-                vas {
+              fromLocation {
+                warehouse {
+                  id
+                  name
+                  description
+                }
+                name
+                description
+              }
+              targetProduct {
+                product {
                   id
                   name
                   description
@@ -211,7 +269,10 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
                 batchId
                 name
                 description
-                remark
+                packingType
+                packQty
+                totalWeight
+                palletQty
               }
             }
           }
@@ -220,25 +281,20 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      this._orderType = response.data.worksheet.arrivalNotice
-        ? ORDER_TYPES.ARRIVAL_NOTICE.value
-        : response.data.worksheet.shippingOrder
-        ? ORDER_TYPES.SHIPPING.value
-        : null
-
-      if (!this._orderType) return
-
-      const location = response.data.worksheet.worksheetDetails[0].toLocation
+      const location = response.data.worksheet.worksheetDetails[0].fromLocation
+      this.warehouseId = location.warehouse.id
+      this.warehouseName = location.warehouse.name
       const worksheet = {
         ...response.data.worksheet,
         arrivalNotice: response.data.worksheet.arrivalNotice.name,
-        bizplace: response.data.worksheet.bizplace.name
+        bizplace: response.data.worksheet.bizplace.name,
+        bufferLocation: location.name
       }
       this._fillupForm(worksheet)
       this.data = {
         ...this.data,
         records: response.data.worksheet.worksheetDetails.map(worksheetDetail => {
-          return { ...worksheetDetail.targetVas, name: worksheetDetail.name }
+          return { ...worksheetDetail.targetProduct, name: worksheetDetail.name }
         })
       }
     }
@@ -262,12 +318,13 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
 
   async _activateWorksheet() {
     try {
+      this._validateLocations()
       const response = await client.query({
         query: gql`
           mutation {
-            activateVas(${gqlBuilder.buildArgs({
+            activatePutaway(${gqlBuilder.buildArgs({
               name: this._worksheetNo,
-              vasWorksheetDetails: this._getVasWorksheetDetails()
+              putawayWorksheetDetails: this._getPutawayWorksheetDetails()
             })}) {
               name
             }
@@ -284,11 +341,18 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  _getVasWorksheetDetails() {
+  _validateLocations() {
+    if (!this.grist.dirtyRecords.every(worksheetDetail => worksheetDetail.toLocation)) {
+      throw new Error('text.location_is_not_selected')
+    }
+  }
+
+  _getPutawayWorksheetDetails() {
     return (this.grist.dirtyRecords || []).map(worksheetDetail => {
       return {
         name: worksheetDetail.name,
-        description: worksheetDetail.description
+        description: worksheetDetail.description,
+        toLocation: worksheetDetail.toLocation
       }
     })
   }
@@ -311,4 +375,4 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
   }
 }
 
-window.customElements.define('worksheet-vas', WorksheetVas)
+window.customElements.define('worksheet-putaway', WorksheetPutaway)

@@ -7,7 +7,7 @@ import { css, html, LitElement } from 'lit-element'
 import '../../components/import-pop-up'
 import { LOCATION_TYPE } from '../constants/location'
 
-export class LocationSelector extends localize(i18next)(LitElement) {
+export class BufferLocationSelector extends localize(i18next)(LitElement) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -63,8 +63,6 @@ export class LocationSelector extends localize(i18next)(LitElement) {
 
   render() {
     return html`
-      <h2>${i18next.t('title.location')}</h2>
-
       <search-form
         id="search-form"
         .fields=${this._searchFields}
@@ -337,4 +335,4 @@ export class LocationSelector extends localize(i18next)(LitElement) {
   }
 }
 
-window.customElements.define('location-selector', LocationSelector)
+window.customElements.define('buffer-location-selector', BufferLocationSelector)

@@ -7,7 +7,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
-import './location-selector'
+import './buffer-location-selector'
 
 class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -154,7 +154,7 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
           >
 
           <label>${i18next.t('label.buffer_location')}</label>
-          <input id="buffer-location" name="buffer-location" readonly @focus="${this._openBufferSelector.bind(this)}" />
+          <input id="buffer-location" name="buffer-location" readonly @click="${this._openBufferSelector.bind(this)}" />
         </fieldset>
       </form>
 
@@ -429,19 +429,19 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
   _openBufferSelector() {
     openPopup(
       html`
-        <location-selector
+        <buffer-location-selector
           @selected="${e => {
             this.bufferLocationField.value = `${e.detail.name} ${
               e.detail.description ? `(${e.detail.description})` : ''
             }`
             this.bufferLocationField.setAttribute('location-id', e.detail.id)
           }}"
-        ></location-selector>
+        ></buffer-location-selector>
       `,
       {
         backdrop: true,
         size: 'large',
-        title: i18next.t('title.select_location')
+        title: i18next.t('title.select_buffer_location')
       }
     )
   }
