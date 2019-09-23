@@ -8,6 +8,7 @@ import { css, html } from 'lit-element'
 class UnloadProduct extends localize(i18next)(PageView) {
   static get properties() {
     return {
+      arrivalNoticeNo: String,
       config: Object,
       data: Object
     }
@@ -99,6 +100,9 @@ class UnloadProduct extends localize(i18next)(PageView) {
         <fieldset>
           <legend>${`${i18next.t('title.arrival_notice')}: ${this.arrivalNoticeNo}`}</legend>
 
+          <label>${i18next.t('label.bizplace')}</label>
+          <input name="bizplaceName" readonly />
+
           <label>${i18next.t('label.container_no')}</label>
           <input name="containerNo" readonly />
 
@@ -107,9 +111,6 @@ class UnloadProduct extends localize(i18next)(PageView) {
 
           <label>${i18next.t('label.startedAt')}</label>
           <input name="startedAt" type="datetime-local" readonly />
-
-          <label>${i18next.t('label.bizplace')}</label>
-          <input name="bizplace" readonly />
         </fieldset>
       </form>
 
@@ -209,46 +210,28 @@ class UnloadProduct extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
         query {
-          unloadWorksheet(${gqlBuilder.buildArgs({
+          unloadingWorksheet(${gqlBuilder.buildArgs({
             arrivalNoticeNo
           })}) {
-            arrivalNotice {
-              name
+            worksheetInfo {
+              bizplaceName
               containerNo
-            }
-            unloadWorksheetInfo {
-              name
-              status
-              bufferLocation {
-                id
-                name
-                description
-              }
+              bufferLocation
               startedAt
-              bizplace {
+            }
+            worksheetDetailInfos {
+              product {
                 id
                 name
                 description
               }
-            }
-            unloadWorksheetDetails {
-              id
               name
+              targetName
               description
-              targetProduct {
-                name
-                packingType
-                weight
-                unit
-                packQty
-                totalWeight
-                palletQty
-                product {
-                  id
-                  name
-                  description
-                }
-              }
+              packingType
+              palletQty
+              packQty
+              remark
             }
           }
         }
@@ -256,22 +239,12 @@ class UnloadProduct extends localize(i18next)(PageView) {
     })
 
     if (!response.errors) {
-      this.arrivalNoticeNo = response.data.unloadWorksheet.arrivalNotice.name
-      this._fillUpForm({
-        ...response.data.unloadWorksheet.arrivalNotice,
-        ...response.data.unloadWorksheet.unloadWorksheetInfo,
-        bufferLocation: response.data.unloadWorksheet.unloadWorksheetInfo.bufferLocation.name,
-        bizplace: response.data.unloadWorksheet.unloadWorksheetInfo.bizplace.name
-      })
+      this.arrivalNoticeNo = arrivalNoticeNo
+      this._fillUpForm(response.data.unloadingWorksheet.worksheetInfo)
 
       this.data = {
         ...this.data,
-        records: response.data.unloadWorksheet.unloadWorksheetDetails.map(unloadingWorksheetDetail => {
-          return {
-            ...unloadingWorksheetDetail.targetProduct,
-            ...unloadingWorksheetDetail
-          }
-        })
+        records: response.data.unloadingWorksheet.worksheetDetailInfos
       }
     }
   }
@@ -345,6 +318,7 @@ class UnloadProduct extends localize(i18next)(PageView) {
         name: task.name,
         remark: task.remark ? task.remark : null,
         targetProduct: {
+          name: task.targetName,
           actualQty: task.actualQty
         }
       }

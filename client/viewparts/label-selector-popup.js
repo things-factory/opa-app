@@ -42,12 +42,12 @@ export class LabelSelectorPopup extends InfiniteScrollable(localize(i18next)(Lit
           display: grid;
           grid-template-rows: auto auto 1fr;
           overflow: hidden;
-          background-color: #fff;
+          background-color: var(--popup-content-background-color);
         }
 
         #main {
           overflow: auto;
-          padding: 10px 20px;
+          padding: var(--popup-content-padding);
           display: grid;
           grid-template-columns: var(--card-list-template);
           grid-auto-rows: var(--card-list-rows-height);
@@ -59,7 +59,8 @@ export class LabelSelectorPopup extends InfiniteScrollable(localize(i18next)(Lit
           flex-direction: column;
           align-items: center;
           overflow: hidden;
-          border-radius: var(--border-radius);
+          border-radius: var(--card-list-border-radius);
+          background-color: var(--card-list-background-color);
         }
 
         #main .card:hover {
@@ -89,8 +90,17 @@ export class LabelSelectorPopup extends InfiniteScrollable(localize(i18next)(Lit
           min-height: 100%;
         }
 
+        #filter {
+          padding: var(--popup-content-padding);
+          background-color: #fff;
+          box-shadow: var(--box-shadow);
+        }
+        #filter * {
+          font-size: 15px;
+        }
         select {
           text-transform: capitalize;
+          float: right;
         }
       `
     ]
@@ -120,9 +130,6 @@ export class LabelSelectorPopup extends InfiniteScrollable(localize(i18next)(Lit
 
   render() {
     return html`
-      <div id="header">
-        <i18n-msg msgid="title.label_setting"></i18n-msg>
-      </div>
       <div id="filter">
         <select
           @change=${e => {

@@ -214,7 +214,8 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
         `,
         {
           backdrop: true,
-          size: 'large'
+          size: 'large',
+          title: i18next.t('title.import')
         }
       )
     }, 500)
