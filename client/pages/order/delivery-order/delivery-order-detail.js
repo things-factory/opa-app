@@ -403,14 +403,8 @@ class DeliveryOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           action: async () => {
             try {
               await this._updateDeliveryOrder({ status: ORDER_STATUS.EDITING.value })
-              Swal.fire({
-                // position: 'top-end',
-                type: 'info',
-                title: 'Delivery order now editable',
-                // showConfirmButton: false,
-                timer: 1500
-              })
-              // this._showToast({ message: i18next.t('text.delivery_order_now_editable') })
+
+              this._showToast({ message: i18next.t('text.delivery_order_now_editable') })
             } catch (e) {
               this._showToast(e)
             }
@@ -422,14 +416,19 @@ class DeliveryOrderDetail extends connect(store)(localize(i18next)(PageView)) {
             try {
               await this._confirmDeliveryOrder()
               Swal.fire({
-                // position: 'top-end',
-                type: 'info',
-                title: 'Delivery order confirmed',
-                // showConfirmButton: false,
-                timer: 1500
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, confirm it!'
+              }).then(result => {
+                if (result.value) {
+                  this._showToast({ message: i18next.t('text.delivery_order_confirmed') })
+                  navigate('delivery_orders')
+                }
               })
-              // this._showToast({ message: i18next.t('text.delivery_order_confirmed') })
-              navigate('delivery_orders')
             } catch (e) {
               this._showToast(e)
             }

@@ -6,7 +6,6 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from './constants/order'
-import Swal from 'sweetalert2'
 
 class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -400,14 +399,8 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       history.back()
-      Swal.fire({
-        // position: 'top-end',
-        type: 'success',
-        title: 'Arrival notice is arrived',
-        // showConfirmButton: false,
-        timer: 1500
-      })
-      //this._showToast({ message: i18next.t('text.arrival_notice_is_arrived') })
+
+      this._showToast({ message: i18next.t('text.arrival_notice_is_arrived') })
     }
   }
 

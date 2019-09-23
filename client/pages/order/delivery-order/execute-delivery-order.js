@@ -483,7 +483,7 @@ class ExecuteDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, confirm & dispatch!'
+        confirmButtonText: 'Yes, confirm it!'
       }).then(async result => {
         if (result.value) {
           Swal.fire('Delivering team has been dispatched!', 'Order status updated to Delivering', 'success')
