@@ -356,7 +356,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
 
   async _printLocationLabel() {
     const records = this.dataGrist.selected
-    var labelId = localStorage.getItem('label_id_for_location')
+    var labelId = this._locationLabel && this._locationLabel.id
 
     for (var record of records) {
       var searchParams = new URLSearchParams()
@@ -418,6 +418,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
   stateChanged(state) {
     if (this.active) {
       this._warehouseId = state && state.route && state.route.resourceId
+      this._locationLabel = state.labelSettings.locationLabel
     }
   }
 }
