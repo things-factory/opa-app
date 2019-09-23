@@ -193,7 +193,7 @@ class RejectedDeliveryOrder extends connect(store)(localize(i18next)(PageView)) 
             align: 'center',
             options: { queryName: 'products' }
           },
-          width: 180
+          width: 350
         },
         {
           type: 'string',

@@ -82,21 +82,25 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
   async firstUpdated() {
     this._searchFields = [
       {
+        label: i18next.t('gan_no'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.gan_no') }
       },
       {
+        label: i18next.t('eta'),
         name: 'eta',
         type: 'datetime-local',
         props: { searchOper: 'like', placeholder: i18next.t('label.eta') }
       },
       {
+        label: i18next.t('collection_date'),
         name: 'collectionDateTime',
         type: 'datetime-local',
-        props: { searchOper: 'like', placeholder: i18next.t('label.collection_date_time') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.collection_date') }
       },
       {
+        label: i18next.t('status'),
         name: 'status',
         type: 'select',
         options: [
@@ -135,7 +139,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
         {
           type: 'object',
           name: 'bizplace',
-          header: i18next.t('field.bizplace'),
+          header: i18next.t('field.customer'),
           record: { align: 'center' },
           sortable: true,
           width: 200
@@ -143,7 +147,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'name',
-          header: i18next.t('field.name'),
+          header: i18next.t('field.gan_no'),
           record: { align: 'left' },
           sortable: true,
           width: 180
@@ -159,7 +163,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
         {
           type: 'datetime',
           name: 'collectionDateTime',
-          header: i18next.t('field.collection_date_time'),
+          header: i18next.t('field.collection_date'),
           record: { align: 'center' },
           sortable: true,
           width: 160
@@ -175,7 +179,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'deliveryOrderNo',
-          header: i18next.t('field.delivery_order_no'),
+          header: i18next.t('field.do_no'),
           record: { align: 'center' },
           sortable: true,
           width: 200
@@ -183,7 +187,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
         {
           type: 'object',
           name: 'collectionOrder',
-          header: i18next.t('field.collection_order_id'),
+          header: i18next.t('field.co_no'),
           record: { align: 'center' },
           sortable: true,
           width: 200

@@ -82,16 +82,19 @@ class DeliveryOrderRequests extends localize(i18next)(PageView) {
   async firstUpdated() {
     this._searchFields = [
       {
+        label: i18next.t('do_no'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.do_no') }
       },
       {
+        label: i18next.t('delivery_date'),
         name: 'deliveryDateTime',
         type: 'datetime-local',
-        props: { searchOper: 'like', placeholder: i18next.t('label.delivery_date_time') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.delivery_date') }
       },
       {
+        label: i18next.t('status'),
         name: 'status',
         type: 'select',
         options: [
@@ -102,7 +105,8 @@ class DeliveryOrderRequests extends localize(i18next)(PageView) {
             value: ORDER_STATUS.READY_TO_DISPATCH.value
           },
           { name: i18next.t(`label.${ORDER_STATUS.DELIVERING.name}`), value: ORDER_STATUS.DELIVERING.value },
-          { name: i18next.t(`label.${ORDER_STATUS.DONE.name}`), value: ORDER_STATUS.DONE.value }
+          { name: i18next.t(`label.${ORDER_STATUS.DONE.name}`), value: ORDER_STATUS.DONE.value },
+          { name: i18next.t(`label.${ORDER_STATUS.REJECTED.name}`), value: ORDER_STATUS.REJECTED.value }
         ],
         props: { searchOper: 'eq', placeholder: i18next.t('label.status') }
       }
@@ -143,7 +147,7 @@ class DeliveryOrderRequests extends localize(i18next)(PageView) {
         {
           type: 'object',
           name: 'bizplace',
-          header: i18next.t('field.branch_name'),
+          header: i18next.t('field.customer'),
           record: { align: 'center' },
           sortable: true,
           width: 250
@@ -151,7 +155,7 @@ class DeliveryOrderRequests extends localize(i18next)(PageView) {
         {
           type: 'datetime',
           name: 'deliveryDateTime',
-          header: i18next.t('field.delivery_date_time'),
+          header: i18next.t('field.delivery_date'),
           record: { align: 'center' },
           sortable: true,
           width: 160

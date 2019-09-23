@@ -261,6 +261,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
               name
               zone
               row
+              type
               column
               shelf
               status
