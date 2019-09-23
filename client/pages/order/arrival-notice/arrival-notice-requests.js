@@ -137,20 +137,20 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           }
         },
         {
+          type: 'string',
+          name: 'name',
+          header: i18next.t('field.gan_no'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 180
+        },
+        {
           type: 'object',
           name: 'bizplace',
           header: i18next.t('field.customer'),
           record: { align: 'center' },
           sortable: true,
           width: 200
-        },
-        {
-          type: 'string',
-          name: 'name',
-          header: i18next.t('field.gan_no'),
-          record: { align: 'left' },
-          sortable: true,
-          width: 180
         },
         {
           type: 'datetime',

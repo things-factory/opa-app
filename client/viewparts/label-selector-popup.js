@@ -3,7 +3,7 @@ import '@things-factory/setting-base'
 import { css, html, LitElement } from 'lit-element'
 
 import gql from 'graphql-tag'
-import { client, gqlBuilder, InfiniteScrollable } from '@things-factory/shell'
+import { client, gqlBuilder, InfiniteScrollable, ScrollbarStyles } from '@things-factory/shell'
 
 const FETCH_BOARD_LIST_GQL = listParam => {
   return gql`
@@ -37,6 +37,7 @@ const FETCH_GROUP_LIST_GQL = gql`
 export class LabelSelectorPopup extends InfiniteScrollable(localize(i18next)(LitElement)) {
   static get styles() {
     return [
+      ScrollbarStyles,
       css`
         :host {
           display: grid;

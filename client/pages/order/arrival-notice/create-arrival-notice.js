@@ -238,11 +238,11 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
-          record: { editable: true },
+          record: { editable: true, align: 'center' },
           width: 180
         },
         {
-          type: 'string',
+          type: 'select',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: {
@@ -319,7 +319,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
-          record: { editable: true },
+          record: { editable: true, align: 'center' },
           width: 180
         },
         {
@@ -333,7 +333,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
-          record: { editable: true },
+          record: { editable: true, align: 'center' },
           width: 350
         }
       ]
