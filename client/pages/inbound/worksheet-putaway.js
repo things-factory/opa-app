@@ -159,18 +159,7 @@ class WorksheetPutaway extends connect(store)(localize(i18next)(PageView)) {
             align: 'center',
             options: {
               queryName: 'locations',
-              basicArgs: [
-                {
-                  name: 'warehouse_id',
-                  operator: 'eq',
-                  value: this.warehouseId
-                },
-                {
-                  name: 'type',
-                  operator: 'noteq',
-                  value: LOCATION_TYPE.BUFFER
-                }
-              ]
+              basicArgs: { filters: [] }
             }
           },
           header: i18next.t('field.to_location'),
@@ -271,6 +260,7 @@ class WorksheetPutaway extends connect(store)(localize(i18next)(PageView)) {
                 description
                 packingType
                 packQty
+                actualQty
                 totalWeight
                 palletQty
               }
@@ -281,9 +271,7 @@ class WorksheetPutaway extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      const location = response.data.worksheet.worksheetDetails[0].fromLocation
-      this.warehouseId = location.warehouse.id
-      this.warehouseName = location.warehouse.name
+      this._setWarehouseFilter(response.data.worksheet.worksheetDetails[0].fromLocation.warehouse.id)
       const worksheet = {
         ...response.data.worksheet,
         arrivalNotice: response.data.worksheet.arrivalNotice.name,
@@ -298,6 +286,22 @@ class WorksheetPutaway extends connect(store)(localize(i18next)(PageView)) {
         })
       }
     }
+  }
+
+  _setWarehouseFilter(warehouseId) {
+    this.grist.config.columns.map(column => {
+      if (column.name === 'toLocation') {
+        column.record.options.basicArgs.filters = [
+          { name: 'warehouse_id', value: warehouseId, operator: 'eq' },
+          {
+            name: 'name',
+            value: 'BUFFER',
+            operator: 'noteq'
+          }
+        ]
+      }
+      return column
+    })
   }
 
   _fillupForm(arrivalNotice) {
