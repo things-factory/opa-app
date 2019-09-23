@@ -388,7 +388,8 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
       `,
       {
         backdrop: true,
-        size: 'large'
+        size: 'large',
+        title: i18next.t('title.generate_location_list')
       }
     )
   }

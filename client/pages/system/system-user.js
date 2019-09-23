@@ -147,7 +147,8 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
                 `,
                 {
                   backdrop: true,
-                  size: 'large'
+                  size: 'large',
+                  title: i18next.t('title.user_detail')
                 }
               )
             }
@@ -303,7 +304,8 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
       `,
       {
         backdrop: true,
-        size: 'large'
+        size: 'large',
+        title: i18next.t('title.create_user')
       }
     )
   }

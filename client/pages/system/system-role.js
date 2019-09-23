@@ -137,7 +137,8 @@ class SystemRole extends localize(i18next)(PageView) {
                 `,
                 {
                   backdrop: true,
-                  size: 'large'
+                  size: 'large',
+                  title: i18next.t('title.system_role_detail')
                 }
               )
             }
@@ -270,7 +271,12 @@ class SystemRole extends localize(i18next)(PageView) {
           }}"
         >
         </system-create-role>
-      `
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.system_create_role')
+      }
     ).name
   }
 
