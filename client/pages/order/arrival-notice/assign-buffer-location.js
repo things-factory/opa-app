@@ -427,14 +427,23 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _openBufferSelector() {
-    openPopup(html`
-      <location-selector
-        @selected="${e => {
-          this.bufferLocationField.value = `${e.detail.name} ${e.detail.description ? `(${e.detail.description})` : ''}`
-          this.bufferLocationField.setAttribute('location-id', e.detail.id)
-        }}"
-      ></location-selector>
-    `)
+    openPopup(
+      html`
+        <location-selector
+          @selected="${e => {
+            this.bufferLocationField.value = `${e.detail.name} ${
+              e.detail.description ? `(${e.detail.description})` : ''
+            }`
+            this.bufferLocationField.setAttribute('location-id', e.detail.id)
+          }}"
+        ></location-selector>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.select_location')
+      }
+    )
   }
 
   stateChanged(state) {
