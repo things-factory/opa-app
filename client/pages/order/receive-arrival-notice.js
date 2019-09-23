@@ -92,7 +92,7 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
     return html`
       <form class="multi-column-form">
         <fieldset>
-          <legend>${i18next.t('title.gan')}: ${this._ganNo}</legend>
+          <legend>${i18next.t('title.gan_no')}: ${this._ganNo}</legend>
           <label>${i18next.t('label.container_no')}</label>
           <input name="containerNo" disabled />
 
@@ -100,7 +100,7 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           <label>${i18next.t('label.use_own_transport')}</label>
 
           <!-- Show when userOwnTransport is true -->
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.collection_date_time')}</label>
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.collection_date')}</label>
           <input ?hidden="${this._ownTransport}" name="collectionDateTime" type="datetime-local" disabled />
 
           <label ?hidden="${this._ownTransport}">${i18next.t('label.from')}</label>
@@ -109,7 +109,7 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           <label ?hidden="${this._ownTransport}">${i18next.t('label.to')}</label>
           <input ?hidden="${this._ownTransport}" name="to" disabled />
 
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.loadType')}</label>
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.load_type')}</label>
           <select ?hidden="${this._ownTransport}" name="loadType" disabled>
             ${LOAD_TYPES.map(
               loadType => html`
@@ -194,7 +194,7 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
             align: 'center',
             options: { queryName: 'products' }
           },
-          width: 180
+          width: 350
         },
         {
           type: 'string',

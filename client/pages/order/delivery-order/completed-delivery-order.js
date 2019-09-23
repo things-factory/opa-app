@@ -103,7 +103,7 @@ class CompletedDeliveryOrder extends connect(store)(localize(i18next)(PageView))
     return html`
       <form class="multi-column-form">
         <fieldset>
-          <legend>${i18next.t('title.co_no')}: ${this._orderName}</legend>
+          <legend>${i18next.t('title.do_no')}: ${this._orderName}</legend>
           <label>${i18next.t('label.from')}</label>
           <input name="from" disabled />
 
@@ -216,7 +216,7 @@ class CompletedDeliveryOrder extends connect(store)(localize(i18next)(PageView))
             align: 'center',
             options: { queryName: 'products' }
           },
-          width: 180
+          width: 350
         },
         {
           type: 'string',

@@ -56,13 +56,13 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
       <form class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('label.gan')}</legend>
-          <label>${i18next.t('label.gan')}</label>
+          <label>${i18next.t('label.gan_no')}</label>
           <input name="gan" />
 
           <label>${i18next.t('label.eta')}</label>
           <input name="eta" />
 
-          <label>${i18next.t('label.delivery_no')}</label>
+          <label>${i18next.t('label.do_no')}</label>
           <input name="delivery_no" />
 
           <label>${i18next.t('label.company')}</label>
@@ -138,7 +138,7 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'gan',
-          header: i18next.t('field.gan'),
+          header: i18next.t('field.gan_no'),
           record: {
             align: 'left'
           },
@@ -148,7 +148,7 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'delivery_order_no',
-          header: i18next.t('field.delivery_order_no'),
+          header: i18next.t('field.do_no'),
           record: {
             align: 'left'
           },

@@ -13,6 +13,8 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
     return {
       _orderName: String,
       _status: String,
+      _prevDriverName: String,
+      _prevVehicleName: String,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -116,6 +118,12 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
             )}
           </select>
 
+          <label>${i18next.t('label.assigned_truck')}</label>
+          <input name=${this._prevVehicleName} value=${this._prevVehicleName} disabled />
+
+          <label>${i18next.t('label.assigned_driver')}</label>
+          <input name=${this._prevDriverName} value=${this._prevDriverName} disabled />
+
           <label>${i18next.t('label.tel_no')}</label>
           <input name="telNo" disabled />
         </fieldset>
@@ -175,7 +183,7 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
             align: 'center',
             options: { queryName: 'products' }
           },
-          width: 180
+          width: 350
         },
         {
           type: 'string',
@@ -291,6 +299,14 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
             truckNo
             telNo
             status
+            transportDriver {
+              id
+              name
+            }
+            transportVehicle {
+              id
+              name
+            }
             orderProducts {
               id
               batchId
@@ -323,6 +339,9 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
     })
 
     if (!response.errors) {
+      this._prevDriverName = response.data.collectionOrder.transportDriver.name
+      this._prevVehicleName = response.data.collectionOrder.transportVehicle.name
+
       this._status = response.data.collectionOrder.status
       this._actionsHandler()
       this._fillupForm(response.data.collectionOrder)

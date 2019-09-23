@@ -13,6 +13,8 @@ class DeliveryOrderDetail extends connect(store)(localize(i18next)(PageView)) {
     return {
       _orderName: String,
       _status: String,
+      _prevDriverName: String,
+      _prevVehicleName: String,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -107,7 +109,7 @@ class DeliveryOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           <label>${i18next.t('label.delivery_date')}</label>
           <input name="deliveryDateTime" type="datetime-local" disabled />
 
-          <label>${i18next.t('label.loadType')}</label>
+          <label>${i18next.t('label.load_type')}</label>
           <select name="loadType" disabled>
             ${LOAD_TYPES.map(
               loadType => html`
@@ -115,6 +117,12 @@ class DeliveryOrderDetail extends connect(store)(localize(i18next)(PageView)) {
               `
             )}
           </select>
+
+          <label>${i18next.t('label.assigned_truck')}</label>
+          <input name=${this._prevVehicleName} value=${this._prevVehicleName} disabled />
+
+          <label>${i18next.t('label.assigned_driver')}</label>
+          <input name=${this._prevDriverName} value=${this._prevDriverName} disabled />
 
           <label>${i18next.t('label.tel_no')}</label>
           <input name="telNo" disabled />
@@ -175,7 +183,7 @@ class DeliveryOrderDetail extends connect(store)(localize(i18next)(PageView)) {
             align: 'center',
             options: { queryName: 'products' }
           },
-          width: 180
+          width: 350
         },
         {
           type: 'string',
@@ -291,6 +299,14 @@ class DeliveryOrderDetail extends connect(store)(localize(i18next)(PageView)) {
             truckNo
             telNo
             status
+            transportDriver {
+              id
+              name
+            }
+            transportVehicle {
+              id
+              name
+            }
             orderProducts {
               id
               batchId
@@ -323,6 +339,9 @@ class DeliveryOrderDetail extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
+      this._prevDriverName = response.data.deliveryOrder.transportDriver.name
+      this._prevVehicleName = response.data.deliveryOrder.transportVehicle.name
+
       this._status = response.data.deliveryOrder.status
       this._actionsHandler()
       this._fillupForm(response.data.deliveryOrder)
@@ -340,7 +359,7 @@ class DeliveryOrderDetail extends connect(store)(localize(i18next)(PageView)) {
 
   _fillupForm(deliveryOrder) {
     for (let key in deliveryOrder) {
-      Array.from(this.form.querySelectorAll('input')).forEach(field => {
+      Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
         if (field.name === key && field.type === 'datetime-local') {
           const datetime = Number(deliveryOrder[key])
           const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000

@@ -101,7 +101,7 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
     return html`
       <form class="multi-column-form">
         <fieldset>
-          <legend>${i18next.t('title.gan')}: ${this._arrivalNoticeNo}</legend>
+          <legend>${i18next.t('title.gan_no')}: ${this._arrivalNoticeNo}</legend>
           <label>${i18next.t('label.container_no')}</label>
           <input name="containerNo" disabled />
 
@@ -118,7 +118,7 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
           <label ?hidden="${this._ownTransport}">${i18next.t('label.to')}</label>
           <input ?hidden="${this._ownTransport}" name="to" disabled />
 
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.loadType')}</label>
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.load_type')}</label>
           <select ?hidden="${this._ownTransport}" name="loadType" disabled>
             ${LOAD_TYPES.map(
               loadType => html`
@@ -131,7 +131,7 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
           <input ?hidden="${!this._ownTransport}" ?required="${this._ownTransport}" name="truckNo" disabled />
 
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.delivery_order_no')}</label>
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
           <input ?hidden="${!this._ownTransport}" name="deliveryOrderNo" disabled />
 
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.eta_date')}</label>
@@ -206,7 +206,7 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
             align: 'center',
             options: { queryName: 'products' }
           },
-          width: 180
+          width: 350
         },
         {
           type: 'string',

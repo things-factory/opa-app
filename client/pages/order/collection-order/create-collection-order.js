@@ -5,7 +5,7 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_C
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
+import { LOAD_TYPES, ORDER_STATUS, PACKING_TYPES } from '../constants/order'
 import Swal from 'sweetalert2'
 
 class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) {
@@ -93,7 +93,7 @@ class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) 
           <label>${i18next.t('label.collection_date')}</label>
           <input name="collectionDateTime" type="datetime-local" min="${this._getStdDatetime()}" />
 
-          <label>${i18next.t('label.loadType')}</label>
+          <label>${i18next.t('label.load_type')}</label>
           <select name="loadType" required>
             ${LOAD_TYPES.map(
               loadType => html`
@@ -183,7 +183,7 @@ class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) 
           name: 'product',
           header: i18next.t('field.product'),
           record: { editable: true, align: 'center', options: { queryName: 'products' } },
-          width: 180
+          width: 350
         },
         {
           type: 'string',
@@ -196,7 +196,11 @@ class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) 
           type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
-          record: { editable: true, align: 'center' },
+          record: {
+            editable: true,
+            align: 'center',
+            options: ['', ...Object.keys(PACKING_TYPES).map(key => PACKING_TYPES[key].value)]
+          },
           width: 150
         },
         {

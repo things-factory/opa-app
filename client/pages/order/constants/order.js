@@ -141,33 +141,33 @@ export const LOAD_TYPES = [
   }
 ]
 
-export const PACKING_TYPES = [
-  {
+export const PACKING_TYPES = {
+  CORRUGATED_BOX: {
     name: 'corrugated_box_packing',
-    value: 'CORRUGARED_BOX'
+    value: 'CORRUGATED_BOX'
   },
-  {
+  CARTON: {
     name: 'carton_packing',
     value: 'CARTON'
   },
-  {
+  DRUM: {
     name: 'drum_packing',
     value: 'DRUM'
   },
-  {
+  BOTTLE: {
     name: 'bottle_packing',
     value: 'BOTTLE'
   },
-  {
-    name: 'sacks_packing',
-    value: 'SACKS'
+  SACK: {
+    name: 'sack_packing',
+    value: 'SACK'
   },
-  {
+  BOXBOARD: {
     name: 'boxboard_packing',
     value: 'BOXBOARD'
   },
-  {
+  CAN: {
     name: 'can_packing',
     value: 'CAN'
   }
-]
+}
