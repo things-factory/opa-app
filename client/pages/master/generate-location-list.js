@@ -388,7 +388,8 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
                 locationObj['name'] =
                   locationObj.zone + '-' + locationObj.row + '-' + locationObj.column + '-' + locationObj.shelf
 
-                locationObj['status'] = 'empty'
+                locationObj['status'] = 'EMPTY'
+                locationObj['type'] = 'SHELF'
                 locationObj['warehouse'] = { id: this.warehouseId }
                 locationObj['cuFlag'] = '+'
 
