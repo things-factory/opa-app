@@ -148,6 +148,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     ]
 
     this.config = {
+      pagination: { pages: [20, 50, 100, 200] },
       rows: { selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
@@ -384,7 +385,10 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
   async _generateLocation() {
     openPopup(
       html`
-        <generate-location-list .warehouseId="${this._warehouseId}"></generate-location-list>
+        <generate-location-list
+          .warehouseId="${this._warehouseId}"
+          .callback="${this.dataGrist.fetch.bind(this.dataGrist)}"
+        ></generate-location-list>
       `,
       {
         backdrop: true,
