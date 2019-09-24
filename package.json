@@ -4,7 +4,7 @@
   "main": "dist-server/index.js",
   "browser": "client/index.js",
   "things-factory": true,
-  "license": "MIT",
+  "license": "Copyright &copy; hatiolab.com. All Rights Reserved.",
   "author": "chayeongrong",
   "scripts": {
     "serve": "things-factory",
