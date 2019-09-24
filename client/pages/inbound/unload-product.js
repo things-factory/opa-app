@@ -1,4 +1,4 @@
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
+import { SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
@@ -16,18 +16,19 @@ class UnloadProduct extends localize(i18next)(PageView) {
 
   static get styles() {
     return [
-      MultiColumnFormStyles,
+      SingleColumnFormStyles,
       css`
         :host {
           display: flex;
           flex-direction: column;
+          background-color: var(--main-section-background-color);
         }
 
         .grist {
-          background-color: var(--main-section-background-color);
           display: flex;
           flex-direction: column;
           flex: 1;
+          grid-column: span 12;
         }
 
         data-grist {
@@ -41,7 +42,7 @@ class UnloadProduct extends localize(i18next)(PageView) {
           border-bottom: var(--subtitle-border-bottom);
         }
         .grist h2 {
-          margin: var(--grist-title-margin);
+          margin: 0;
           border: var(--grist-title-border);
           color: var(--secondary-color);
         }
@@ -82,7 +83,7 @@ class UnloadProduct extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <form class="multi-column-form">
+      <form class="single-column-form">
         <fieldset>
           <legend>${i18next.t('title.scan_area')}</legend>
           <label>${i18next.t('label.arrival_notice_no')}</label>
@@ -114,7 +115,7 @@ class UnloadProduct extends localize(i18next)(PageView) {
         </fieldset>
       </form>
 
-      <div class="grist">
+      <div class="grist single-column-form">
         <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.unloading')}</h2>
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
