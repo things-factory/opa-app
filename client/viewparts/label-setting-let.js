@@ -7,7 +7,6 @@ import { connect } from 'pwa-helpers'
 import { UPDATE_LABEL_SETTINGS } from '../actions/label-settings'
 import { LOCATION_LABEL_SETTING_KEY, PALLET_LABEL_SETTING_KEY } from '../label-setting-constants'
 import './label-selector-popup'
-import { fetchLabelSettings } from './fetch-label-settings'
 
 export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement)) {
   static get styles() {
@@ -147,6 +146,11 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
               >
                 more_horiz
               </mwc-icon>
+              ${this.locationLabel.id
+                ? html`
+                    <a href=${`/board-modeller/${this.locationLabel.id}`}>modeller</a>
+                  `
+                : html``}
               <img src=${this.locationLabel.thumbnail} ?hidden="${this.locationLabel.thumbnail ? false : true}" />
             </div>
           </div>
@@ -189,6 +193,11 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
               >
                 more_horiz
               </mwc-icon>
+              ${this.palletLabel.id
+                ? html`
+                    <a href=${`/board-modeller/${this.palletLabel.id}`}>modeller</a>
+                  `
+                : html``}
               <img src=${this.palletLabel.thumbnail} ?hidden="${this.palletLabel.thumbnail ? false : true}" />
             </div>
           </div>

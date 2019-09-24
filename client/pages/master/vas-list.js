@@ -84,13 +84,7 @@ class VasList extends localize(i18next)(PageView) {
     }
   }
 
-  activated(active) {
-    if (JSON.parse(active) && this.dataGrist) {
-      this.dataGrist.fetch()
-    }
-  }
-
-  async firstUpdated() {
+  async pageInitialized() {
     this._searchFields = [
       {
         label: i18next.t('label.name'),
@@ -162,6 +156,10 @@ class VasList extends localize(i18next)(PageView) {
         }
       ]
     }
+
+    await this.updateComplete
+
+    this.dataGrist.fetch()
   }
 
   get searchForm() {

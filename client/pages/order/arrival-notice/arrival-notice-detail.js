@@ -209,6 +209,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
+          record: { align: 'center' },
           width: 180
         },
         {
@@ -222,7 +223,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           type: 'float',
           name: 'weight',
           header: i18next.t('field.weight'),
-          record: { align: 'right' },
+          record: { align: 'center' },
           width: 80
         },
         {
@@ -236,7 +237,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           type: 'integer',
           name: 'packQty',
           header: i18next.t('field.pack_qty'),
-          record: { align: 'right' },
+          record: { align: 'center' },
           width: 80
         },
         {
@@ -275,6 +276,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
+          record: { align: 'center' },
           width: 180
         },
         {
@@ -291,6 +293,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
+          record: { align: 'center' },
           width: 350
         }
       ]
@@ -440,14 +443,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           action: async () => {
             try {
               await this._updateArrivalNotice({ status: ORDER_STATUS.EDITING.value })
-              Swal.fire({
-                // position: 'top-end',
-                type: 'info',
-                title: 'GAN now editable',
-                // showConfirmButton: false,
-                timer: 1500
-              })
-              //  this._showToast({ message: i18next.t('text.gan_now_editable') })
+              this._showToast({ message: i18next.t('text.gan_now_editable') })
             } catch (e) {
               this._showToast(e)
             }
@@ -465,7 +461,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, confirm it!'
+                confirmButtonText: 'Yes, confirm!'
               }).then(result => {
                 if (result.value) {
                   this._showToast({ message: i18next.t('text.gan_confirmed') })

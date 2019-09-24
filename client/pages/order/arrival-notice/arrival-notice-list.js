@@ -82,22 +82,16 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
   async firstUpdated() {
     this._searchFields = [
       {
-        label: i18next.t('label.name'),
+        label: i18next.t('label.gan_no'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.gan_no') }
       },
       {
         label: i18next.t('label.eta'),
         name: 'eta',
         type: 'datetime-local',
         props: { searchOper: 'like', placeholder: i18next.t('label.eta') }
-      },
-      {
-        label: i18next.t('label.collection_date'),
-        name: 'collectionDateTime',
-        type: 'datetime-local',
-        props: { searchOper: 'like', placeholder: i18next.t('label.collection_date') }
       },
       {
         label: i18next.t('label.status'),
@@ -125,7 +119,12 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              if (record.id) navigate(`arrival_notice_detail/${record.name}`)
+              const status = record.status
+              if (status === ORDER_STATUS.REJECTED.value) {
+                navigate(`rejected_arrival_notice/${record.name}`) // 1. move to rejected detail page
+              } else {
+                navigate(`arrival_notice_detail/${record.name}`)
+              }
             }
           }
         },
@@ -133,7 +132,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.gan_no'),
-          record: { align: 'left' },
+          record: { align: 'center' },
           sortable: true,
           width: 180
         },

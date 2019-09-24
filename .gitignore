@@ -1,6 +1,7 @@
 dist-client/
 dist-server/
 node_modules/
+licenses/
 yarn*.*
 package-lock.json
 db.sqlite

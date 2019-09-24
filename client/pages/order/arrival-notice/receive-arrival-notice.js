@@ -72,6 +72,10 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
         {
           title: i18next.t('button.receive'),
           action: this._receiveArrivalNotice.bind(this)
+        },
+        {
+          title: i18next.t('button.reject'),
+          action: this._rejectArrivalNotice.bind(this)
         }
       ]
     }
@@ -132,6 +136,9 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
             type="datetime-local"
             disabled
           />
+
+          <label>${i18next.t('label.remark')}</label>
+          <textarea name="remark"></textarea>
 
           <label>${i18next.t('label.status')}</label>
           <select name="status" disabled
@@ -397,6 +404,45 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
       history.back()
 
       this._showToast({ message: i18next.t('text.arrival_notice_received') })
+    }
+  }
+
+  async _rejectArrivalNotice() {
+    const patch = this._getRemark()
+    if (!patch) {
+      return this._showToast({ message: i18next.t('text.remark_is_empty') })
+    } else {
+      try {
+        const response = await client.query({
+          query: gql`
+                mutation {
+                  rejectArrivalNotice(${gqlBuilder.buildArgs({
+                    name: this._ganNo,
+                    patch
+                  })}) {
+                    name
+                  }
+                }
+              `
+        })
+
+        if (!response.errors) {
+          history.back()
+          this._showToast({ message: i18next.t('text.arrival_notice_rejected') })
+        }
+      } catch (e) {
+        this._showToast({ message: e.message })
+      }
+    }
+  }
+
+  _getTextAreaByName(name) {
+    return this.shadowRoot.querySelector(`textarea[name=${name}]`)
+  }
+
+  _getRemark() {
+    return {
+      remark: this._getTextAreaByName('remark').value
     }
   }
 
