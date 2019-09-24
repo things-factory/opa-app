@@ -62,6 +62,7 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
           display: grid;
           grid-template-columns: 1fr 1fr;
         }
+
         mwc-icon {
           background-color: var(--secondary-color, #394e64);
           margin: 2px 2px 5px 2px;
@@ -71,6 +72,7 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
           border: var(--button-border, 1px solid transparent);
           font-size: 18px;
         }
+
         mwc-icon:hover,
         mwc-icon:active {
           background-color: var(--button-active-background-color, #22a6a7);
@@ -94,113 +96,49 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
     }
   }
 
-  constructor() {
-    super()
-
-    this.locationLabel = {}
-    this.palletLabel = {}
-  }
-
   render() {
     return html`
       <setting-let>
         <i18n-msg slot="title" msgid="title.label_setting"></i18n-msg>
 
         <form slot="content" @submit=${e => this._handleSubmit(e)}>
-          <div class="field">
-            <label><i18n-msg msgid="title.location"></i18n-msg></label>
-            <div>
-              <div class="name">${this.locationLabel.name}</div>
-              <span class="description">${this.locationLabel.description}</span>
-              <mwc-icon
-                @click=${e => {
-                  var popup = openPopup(
-                    html`
-                      <label-selector-popup
-                        @label-selected=${async e => {
-                          var label = e.detail.label
-
-                          await this.saveSettings({
-                            key: LOCATION_LABEL_SETTING_KEY,
-                            value: label.id
-                          })
-
-                          store.dispatch({
-                            type: UPDATE_LABEL_SETTINGS,
-                            locationLabel: label,
-                            palletLabel: this.palletLabel
-                          })
-
-                          popup.close()
-                          this.requestUpdate()
-                        }}
-                      ></label-selector-popup>
-                    `,
-                    {
-                      backdrop: true,
-                      size: 'large',
-                      title: i18next.t('title.label_setting')
-                    }
-                  )
-                }}
-              >
-                more_horiz
-              </mwc-icon>
-              ${this.locationLabel.id
-                ? html`
-                    <a href=${`/board-modeller/${this.locationLabel.id}`}>modeller</a>
-                  `
-                : html``}
-              <img src=${this.locationLabel.thumbnail} ?hidden="${this.locationLabel.thumbnail ? false : true}" />
-            </div>
-          </div>
-          <div class="field">
-            <label><i18n-msg msgid="title.pallet"></i18n-msg></label>
-            <div>
-              <div class="name">${this.palletLabel.name}</div>
-              <span class="description">${this.palletLabel.description}</span>
-              <mwc-icon
-                @click=${e => {
-                  var popup = openPopup(
-                    html`
-                      <label-selector-popup
-                        @label-selected=${async e => {
-                          var label = e.detail.label
-
-                          await this.saveSettings({
-                            key: PALLET_LABEL_SETTING_KEY,
-                            value: label.id
-                          })
-
-                          store.dispatch({
-                            type: UPDATE_LABEL_SETTINGS,
-                            locationLabel: this.locationLabel,
-                            palletLabel: label
-                          })
-
-                          popup.close()
-                          this.requestUpdate()
-                        }}
-                      ></label-selector-popup>
-                    `,
-                    {
-                      backdrop: true,
-                      size: 'large',
-                      title: i18next.t('title.label_setting')
-                    }
-                  )
-                }}
-              >
-                more_horiz
-              </mwc-icon>
-              ${this.palletLabel.id
-                ? html`
-                    <a href=${`/board-modeller/${this.palletLabel.id}`}>modeller</a>
-                  `
-                : html``}
-              <img src=${this.palletLabel.thumbnail} ?hidden="${this.palletLabel.thumbnail ? false : true}" />
-            </div>
-          </div>
+          ${[
+            {
+              title: i18next.t('title.location'),
+              label: this.locationLabel,
+              key: LOCATION_LABEL_SETTING_KEY
+            },
+            {
+              title: i18next.t('title.pallet'),
+              label: this.palletLabel,
+              key: PALLET_LABEL_SETTING_KEY
+            }
+          ].map(
+            field => html`
+              <div class="field">
+                <label>${field.title}</i18n-msg></label>
+                <div>
+                  <div class="name">${field.label.name}</div>
+                  <span class="description">${field.label.description}</span>
+                  <mwc-icon @click=${e => this.onClickLabelSelector(field.key)}>
+                    more_horiz
+                  </mwc-icon>
+                  ${
+                    field.label.id
+                      ? html`
+                          <a href=${`/board-modeller/${field.label.id}`}>
+                            <img
+                              src=${field.label.thumbnail ||
+                                'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'}
+                            />
+                          </a>
+                        `
+                      : html``
+                  }
+                </div>
+              </div>
+            `
+          )}
         </form>
       </setting-let>
     `
@@ -209,6 +147,37 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
   stateChanged(state) {
     this.locationLabel = state.labelSettings.locationLabel || {}
     this.palletLabel = state.labelSettings.palletLabel || {}
+  }
+
+  onClickLabelSelector(key) {
+    var popup = openPopup(
+      html`
+        <label-selector-popup
+          @label-selected=${async e => {
+            var label = e.detail.label
+
+            await this.saveSettings({
+              key,
+              value: label.id
+            })
+
+            store.dispatch({
+              type: UPDATE_LABEL_SETTINGS,
+              locationLabel: key == LOCATION_LABEL_SETTING_KEY ? label : this.locationLabel,
+              palletLabel: key == PALLET_LABEL_SETTING_KEY ? label : this.palletLabel
+            })
+
+            popup.close()
+            this.requestUpdate()
+          }}
+        ></label-selector-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.label_setting')
+      }
+    )
   }
 
   async saveSettings({ key, value }) {
