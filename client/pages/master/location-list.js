@@ -8,6 +8,7 @@ import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
 import './generate-location-list'
 import { USBPrinter } from '@things-factory/barcode-base'
+import Swal from 'sweetalert2'
 
 class LocationList extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -43,6 +44,11 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
       _searchFields: Array,
       config: Object
     }
+  }
+
+  constructor() {
+    super()
+    this.rawLocationData = []
   }
 
   render() {
@@ -83,6 +89,10 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
         {
           title: i18next.t('button.delete'),
           action: this._deleteLocation.bind(this)
+        },
+        {
+          title: i18next.t('button.delete_all'),
+          action: this._deleteAllLocations.bind(this)
         }
       ],
       exportable: {
@@ -119,25 +129,25 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
         label: i18next.t('label.zone'),
         name: 'zone',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.zone') }
+        props: { searchOper: 'eq', placeholder: i18next.t('label.zone') }
       },
       {
         label: i18next.t('label.row'),
         name: 'row',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.row') }
+        props: { searchOper: 'eq', placeholder: i18next.t('label.row') }
       },
       {
         label: i18next.t('label.column'),
         name: 'column',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.column') }
+        props: { searchOper: 'eq', placeholder: i18next.t('label.column') }
       },
       {
         label: i18next.t('label.shelf'),
         name: 'shelf',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.shelf') }
+        props: { searchOper: 'eq', placeholder: i18next.t('label.shelf') }
       },
       {
         label: i18next.t('label.status'),
@@ -353,6 +363,43 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
 
       if (!response.errors) this.dataGrist.fetch()
     }
+  }
+
+  async _deleteAllLocations() {
+    const id = this._warehouseId
+
+    const retrieve = await client.query({
+      query: gql`
+          query {
+            warehouse(${gqlBuilder.buildArgs({ id })}) {
+              id
+              name
+            }
+          }
+        `
+    })
+    let name = retrieve.data.warehouse.name
+
+    Swal.fire({
+      title: 'Delete all locations?',
+      text: 'This action cannot be undo!',
+      type: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#22a6a7',
+      cancelButtonColor: '#cfcfcf',
+      confirmButtonText: 'Delete all!'
+    }).then(async result => {
+      if (result.value && name !== '') {
+        const response = await client.query({
+          query: gql`
+                mutation {
+                  deleteAllLocations(${gqlBuilder.buildArgs({ name })})
+                }
+              `
+        })
+        if (!response.errors) this.dataGrist.fetch()
+      }
+    })
   }
 
   async _printLocationLabel() {

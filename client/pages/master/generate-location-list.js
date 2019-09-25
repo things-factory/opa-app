@@ -181,7 +181,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
-          type: 'number',
+          type: 'integer',
           name: 'start',
           record: {
             align: 'center',
@@ -191,7 +191,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           width: 250
         },
         {
-          type: 'number',
+          type: 'integer',
           name: 'end',
           record: {
             align: 'center',
@@ -201,7 +201,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           width: 250
         },
         {
-          type: 'string',
+          type: 'integer',
           name: 'column',
           record: {
             align: 'center',
@@ -211,7 +211,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           width: 250
         },
         {
-          type: 'string',
+          type: 'integer',
           name: 'cell',
           record: {
             align: 'center',
@@ -341,19 +341,12 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
 
     if (this.zoneName === '') {
       document.dispatchEvent(
-        Swal.fire({
-          // position: 'top-end',
-          type: 'error',
-          title: 'Zone name cannot be empty',
-          // showConfirmButton: false,
-          timer: 1500
+        new CustomEvent('notify', {
+          detail: {
+            level: 'error',
+            message: i18next.t('text.zone_name_cannot_be_empty')
+          }
         })
-        // new CustomEvent('notify', {
-        //   detail: {
-        //     level: 'error',
-        //     message: i18next.t('text.zone_name_cannot_be_empty')
-        //   }
-        // })
       )
       validationError = true
     }
@@ -402,20 +395,14 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           tempLocationList = []
 
           document.dispatchEvent(
-            Swal.fire({
-              // position: 'top-end',
-              type: 'success',
-              title: 'Row end must greater than row start',
-              showConfirmButton: false,
-              timer: 1500
+            new CustomEvent('notify', {
+              detail: {
+                level: 'error',
+                message: i18next.t('text.row_end_must_greater_than_row_start')
+              }
             })
-            // new CustomEvent('notify', {
-            //   detail: {
-            //     level: 'error',
-            //     message: i18next.t('text.row_end_must_greater_than_row_start')
-            //   }
-            // })
           )
+          return false
         }
       })
 
