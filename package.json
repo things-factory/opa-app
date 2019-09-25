@@ -1,6 +1,6 @@
 {
   "name": "@things-factory/opa-app",
-  "version": "0.0.81",
+  "version": "0.0.82",
   "main": "dist-server/index.js",
   "browser": "client/index.js",
   "things-factory": true,
@@ -46,6 +46,7 @@
     "@things-factory/print-proxy-service": "^1.0.0-beta",
     "@things-factory/print-service": "^1.0.0-beta",
     "@things-factory/print-ui": "*",
+    "@things-factory/product-base": "*",
     "@things-factory/resource-ui": "*",
     "@things-factory/sales-base": "*",
     "@things-factory/setting-ui": "*",
