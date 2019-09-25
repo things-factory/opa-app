@@ -3,6 +3,7 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
+import { EventEmitter } from 'events'
 
 class SystemUserBizplacesDetail extends localize(i18next)(LitElement) {
   static get properties() {
@@ -82,6 +83,7 @@ class SystemUserBizplacesDetail extends localize(i18next)(LitElement) {
           .config="${this.config}"
           .fetchHandler="${this.fetchHandler.bind(this)}"
           @record-change="${event => {
+            if (event.detail.column.name !== 'mainBizplace') return
             this.dataGrist.data = {
               ...this.dataGrist.data,
               records: this.dataGrist.data.records.map((record, idx) => {
