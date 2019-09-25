@@ -3,7 +3,16 @@ import { BILLING_MODE } from './constants/claim'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles, store } from '@things-factory/shell'
+import {
+  client,
+  gqlBuilder,
+  isMobileDevice,
+  navigate,
+  PageView,
+  ScrollbarStyles,
+  store,
+  flattenObject
+} from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { openPopup } from '@things-factory/layout-base'
@@ -59,10 +68,13 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
 
   static get properties() {
     return {
+      claimDetailsGristConfig: Object,
+      claimDetailsData: Object,
       config: Object,
       data: Object,
       importHandler: Object,
-      _orderNo: Object
+      _orderNo: Object,
+      _selectedOrderNo: String
     }
   }
 
@@ -70,32 +82,99 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
     return html`
       <form class="multi-column-form">
         <fieldset>
+          <legend>${i18next.t('title.create_claim_chit')}</legend>
+
           <label>${i18next.t('label.orderNo')}</label>
-          <select name="orderNo">
-            ${Object.keys(this._orderNo).map(key => {
-              const orderNo = this._orderNo[key]
+          <select name="orderNo" @change=${e => (this._selectedOrderNo = e.target.value)}>
+            <option value="">-- Please Select an Order --</option>
+
+            ${Object.keys(this.___orderNo.data.claimOrderList || {}).map(key => {
+              const orderNo = this.___orderNo.data.claimOrderList[key]
               return html`
-                <option value="${orderNo.value}">${i18next.t(`label.${orderNo.name}`)}</option>
+                <option value="${orderNo.orderNo}">${orderNo.name}</option>
               `
             })}</select
           >
+
+          <label>Billing Mode</label>
+          <input disabled name="billingMode" value="" data-name="billingMode"></label>
+
+          <label>Date</label>
+          <input disabled name="orderDate" value="" data-name="orderDate"></label>
+
+          <label>Lorry No</label>
+          <input disabled name="lorryNo" value="" data-name="transportVehicle|name"></label>
+
+          <label>Driver Code</label>
+          <input disabled name="driveCode" value="" data-name="transportDriver|name"></label>
+
+          <label>Customer</label>
+          <input disabled name="bizplace" value="" data-name="bizplace|name"></label>
+
+          <label>From</label>
+          <input disabled name="from" value="" data-name="from"></label>
+
+          <label>To</label>
+          <input disabled name="to" value="" data-name="to"></label>
         </fieldset>
       </form>
-      <!-- <search-form
-        id="search-form"
-        .fields=${this._searchFields}
-        initFocus="description"
-        @submit=${async () => this.dataGrist.fetch()}
-      ></search-form>
 
       <div class="grist">
+        <h2><mwc-icon>list_alt</mwc-icon>${'title.claim_chit_details'}</h2>
+
         <data-grist
+          id="claim-details-grist"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .fetchHandler="${this.fetchHandler.bind(this)}"
+          .config=${this.claimDetailsGristConfig}
+          .data="${this.claimDetailsData}"
         ></data-grist>
-      </div> -->
+      </div>
     `
+  }
+
+  firstUpdated() {
+    this.claimDetailsGristConfig = {
+      pagination: { infinite: true },
+      rows: { selectable: { multiple: true } },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'close'
+        },
+        {
+          type: 'select',
+          name: 'claimType',
+          header: i18next.t('field.claimType'),
+          width: 350
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.description'),
+          width: 180
+        },
+        {
+          type: 'string',
+          name: 'refNo',
+          header: i18next.t('field.receipt_reference_no'),
+          width: 150
+        },
+        {
+          type: 'float',
+          name: 'amount',
+          header: i18next.t('field.amount'),
+          width: 80
+        }
+      ]
+    }
+  }
+
+  updated(changes) {
+    if (changes.has('_selectedOrderNo') && this.___selectedOrderNo && this.___selectedOrderNo.trim() != '') {
+      this.fetchOrderDetail()
+    }
   }
 
   get context() {
@@ -104,152 +183,44 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
       actions: [
         {
           title: i18next.t('button.save'),
-          action: this._saveCompanies.bind(this)
+          action: this._createNewClaim.bind(this)
         }
       ]
     }
   }
 
   async pageInitialized() {
-    this._orderNo = BILLING_MODE
-    // this._searchFields = [
-    //   {
-    //     label: i18next.t('label.name'),
-    //     name: 'name',
-    //     type: 'text',
-    //     props: { searchOper: 'like', placeholder: i18next.t('label.name') }
-    //   },
-    //   {
-    //     label: i18next.t('label.country_code'),
-    //     name: 'country_code',
-    //     type: 'text',
-    //     props: { searchOper: 'like', placeholder: i18next.t('label.country_code') }
-    //   },
-    //   {
-    //     label: i18next.t('label.brn'),
-    //     name: 'brn',
-    //     type: 'text',
-    //     props: { searchOper: 'like', placeholder: i18next.t('label.brn') }
-    //   },
-    //   {
-    //     label: i18next.t('label.address'),
-    //     name: 'address',
-    //     type: 'text',
-    //     props: { searchOper: 'like', placeholder: i18next.t('label.address') }
-    //   },
-    //   {
-    //     label: i18next.t('label.status'),
-    //     name: 'status',
-    //     type: 'text',
-    //     props: { searchOper: 'like', placeholder: i18next.t('label.status') }
-    //   }
-    // ]
-    // this.config = this.gristConfig
-    // await this.updateComplete
-    // this.dataGrist.fetch()
+    var x = await this.fetchOrderList()
+    this._orderNo = x
   }
 
-  get gristConfig() {
-    return {
-      // rows: { selectable: { multiple: true } },
-      // columns: [
-      //   { type: 'gutter', gutterName: 'dirty' },
-      //   { type: 'gutter', gutterName: 'sequence' },
-      //   { type: 'gutter', gutterName: 'row-selector', multiple: true },
-      //   {
-      //     type: 'gutter',
-      //     gutterName: 'button',
-      //     icon: 'reorder',
-      //     handlers: {
-      //       click: (columns, data, column, record, rowIndex) => {
-      //         if (record.id) navigate(`bizplaces/${record.id}`)
-      //       }
-      //     }
-      //   },
-      //   {
-      //     type: 'string',
-      //     name: 'name',
-      //     header: i18next.t('field.name'),
-      //     record: { editable: true, align: 'left' },
-      //     sortable: true,
-      //     width: 200
-      //   },
-      //   {
-      //     type: 'string',
-      //     name: 'description',
-      //     header: i18next.t('field.description'),
-      //     record: { editable: true, align: 'left' },
-      //     sortable: true,
-      //     width: 150
-      //   },
-      //   {
-      //     type: 'string',
-      //     name: 'countryCode',
-      //     header: i18next.t('field.country_code'),
-      //     record: { editable: true, align: 'center' },
-      //     sortable: true,
-      //     width: 80
-      //   },
-      //   {
-      //     type: 'string',
-      //     name: 'brn',
-      //     header: i18next.t('field.brn'),
-      //     record: { editable: true, align: 'left' },
-      //     sortable: true,
-      //     width: 100
-      //   },
-      //   {
-      //     type: 'string',
-      //     name: 'postalCode',
-      //     header: i18next.t('field.postal_code'),
-      //     record: { editable: true, align: 'left' },
-      //     sortable: true,
-      //     width: 150
-      //   },
-      //   {
-      //     type: 'string',
-      //     name: 'address',
-      //     header: i18next.t('field.address'),
-      //     record: { editable: true, align: 'left' },
-      //     sortable: true,
-      //     width: 250
-      //   },
-      //   {
-      //     type: 'string',
-      //     name: 'status',
-      //     header: i18next.t('field.status'),
-      //     record: { editable: true, align: 'center' },
-      //     sortable: true,
-      //     width: 80
-      //   },
-      //   {
-      //     type: 'datetime',
-      //     name: 'updatedAt',
-      //     header: i18next.t('field.updated_at'),
-      //     record: { editable: false, align: 'center' },
-      //     sortable: true,
-      //     width: 150
-      //   },
-      //   {
-      //     type: 'object',
-      //     name: 'updater',
-      //     header: i18next.t('field.updater'),
-      //     record: { editable: false, align: 'center' },
-      //     sortable: true,
-      //     width: 150
-      //   }
-      // ]
+  async _fetchCODO() {
+    this._orderNo = BILLING_MODE
+  }
+
+  get _columns() {
+    return this.config.columns
+  }
+
+  async _createNewClaim() {
+    try {
+      //validation
+      //create new claim
+    } catch (e) {
+      this._showToast(e)
     }
   }
 
-  get searchForm() {
-    return this.shadowRoot.querySelector('search-form')
-  }
-
-  get dataGrist() {
-    return this.shadowRoot.querySelector('data-grist')
-  }
-
+<<<<<<< HEAD
+  async fetchOrderList() {
+    return await client.query({
+      query: gql`
+        query {
+          claimOrderList {
+            name
+            orderNo
+          }
+=======
   _importableData(records) {
     setTimeout(() => {
       openPopup(
@@ -262,109 +233,106 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
         `,
         {
           backdrop: true,
-          size: 'large'
+          size: 'large',
+          title: i18next.t('title.import')
+>>>>>>> 56196b784e9b5cdaf4d5087a37778e44f5bddeb3
         }
-      )
-    }, 500)
+      `
+    })
   }
 
-  async fetchHandler({ page, limit, sorters = [] }) {
-    const response = await client.query({
+  async fetchOrderDetail() {
+    var filters = [
+      {
+        ////order no = order name in order tables
+        name: 'orderNo',
+        value: this._selectedOrderNo
+      }
+    ]
+
+    var result = await client.query({
       query: gql`
         query {
-          companies(${gqlBuilder.buildArgs({
-            filters: this._conditionParser(),
-            pagination: { page, limit },
-            sortings: sorters
-          })}) {
-            items {
-              id
-              name
-              description
-              countryCode
-              postalCode
-              brn
-              address
-              status
-              updatedAt
-              updater{
+          claimOrderDetail (${gqlBuilder.buildArgs({
+            filters
+          })}){
+            name
+            deliveryOrder{
+              deliveryDateTime
+              from
+              to
+              loadType
+              transportDriver{
                 id
                 name
-                description
               }
-            }
-            total
+              transportVehicle{
+                id
+                name
+              }
+              bizplace{
+                name
+              }
+            }   
+            collectionOrder{
+              collectionDateTime
+              from
+              to
+              loadType
+              transportDriver{
+                id
+                name
+              }
+              transportVehicle{
+                id
+                name
+              }
+              bizplace{
+                name
+              }
+            }         
           }
         }
       `
     })
-
-    return {
-      total: response.data.companies.total || 0,
-      records: response.data.companies.items || []
-    }
+    this.fillOrderDetails(result)
   }
 
-  // _conditionParser() {
-  //   return this.searchForm
-  //     .getFields()
-  //     .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
-  //     .map(field => {
-  //       return {
-  //         name: field.name,
-  //         value:
-  //           field.type === 'text'
-  //             ? field.value
-  //             : field.type === 'checkbox'
-  //             ? field.checked
-  //             : field.type === 'number'
-  //             ? parseFloat(field.value)
-  //             : field.value,
-  //         operator: field.getAttribute('searchOper')
+  get form() {
+    return this.shadowRoot.querySelector('form')
+  }
+
+  fillOrderDetails(responseDate) {
+    debugger
+    let deliveryOrder = responseDate.data.claimOrderDetail.deliveryOrder
+    var obj = flattenObject(deliveryOrder)
+    Object.keys(obj).map(key => {
+      Array.from(this.form.querySelectorAll('input')).forEach(field => {
+        if (field.dataset.name === key && field.type === 'datetime-local') {
+          const datetime = Number(obj[key])
+          const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
+          field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
+        } else if (field.dataset.name === key) {
+          field.value = obj[key]
+        }
+      })
+    })
+  }
+
+  // flattenObject(obj, delimiter = '|') {
+  //   var objResult = {}
+  //   for (var items in obj) {
+  //     if (!!obj[items] && typeof obj[items] == 'object') {
+  //       var flatObject = this.flattenObject(obj[items], delimiter)
+  //       for (var x in flatObject) {
+  //         objResult[items + delimiter + x] = flatObject[x]
   //       }
-  //     })
+  //     } else {
+  //       objResult[items] = obj[items]
+  //     }
+  //   }
+  //   return objResult
   // }
-
-  async _saveCompanies() {
-    // let patches = this.dataGrist.dirtyRecords
-    // if (patches && patches.length) {
-    //   patches = patches.map(company => {
-    //     let patchField = company.id ? { id: company.id } : {}
-    //     const dirtyFields = company.__dirtyfields__
-    //     for (let key in dirtyFields) {
-    //       patchField[key] = dirtyFields[key].after
-    //     }
-    //     patchField.cuFlag = company.__dirty__
-    //     return patchField
-    //   })
-    //   const response = await client.query({
-    //     query: gql`
-    //         mutation {
-    //           updateMultipleCompany(${gqlBuilder.buildArgs({
-    //             patches
-    //           })}) {
-    //             name
-    //           }
-    //         }
-    //       `
-    //   })
-    //   if (!response.errors) {
-    //     this.dataGrist.fetch()
-    //     document.dispatchEvent(
-    //       Swal.fire({
-    //         type: 'success',
-    //         title: 'Your work has been saved',
-    //         showConfirmButton: false,
-    //         timer: 1500
-    //       })
-    //     )
-    //   }
-    // }
-  }
-
-  get _columns() {
-    return this.config.columns
-  }
 }
 
 window.customElements.define('create-claim-chit', CreateClaimChit)
