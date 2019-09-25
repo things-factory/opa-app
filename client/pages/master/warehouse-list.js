@@ -134,9 +134,17 @@ class WarehouseList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),
-          record: { editable: true, align: 'left' },
+          record: { editable: true, align: 'center' },
           sortable: true,
           width: 100
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.description'),
+          record: { editable: true, align: 'center' },
+          sortable: true,
+          width: 150
         },
         {
           type: 'object',
@@ -165,33 +173,25 @@ class WarehouseList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'type',
           header: i18next.t('field.type'),
-          record: { editable: true, align: 'left' },
+          record: { editable: true, align: 'center' },
           sortable: true,
           width: 100
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: { editable: true, align: 'left' },
-          sortable: true,
-          width: 150
         },
         {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
-          record: { editable: false, align: 'left' },
+          record: { editable: false, align: 'center' },
           sortable: true,
-          width: 100
+          width: 180
         },
         {
           type: 'object',
           name: 'updater',
           header: i18next.t('field.updater'),
-          record: { editable: false, align: 'left' },
+          record: { editable: false, align: 'center' },
           sortable: true,
-          width: 100
+          width: 180
         }
       ]
     }

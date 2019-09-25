@@ -120,7 +120,7 @@ class WorkerList extends localize(i18next)(PageView) {
           header: i18next.t('field.name'),
           record: { editable: true, align: 'left' },
           sortable: true,
-          width: 100
+          width: 250
         },
         {
           type: 'string',
@@ -136,7 +136,7 @@ class WorkerList extends localize(i18next)(PageView) {
           header: i18next.t('field.type'),
           record: { editable: true, align: 'left' },
           sortable: true,
-          width: 80
+          width: 150
         },
         {
           type: 'datetime',

@@ -157,7 +157,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),
-          record: { editable: true, align: 'left' },
+          record: { editable: true, align: 'center' },
           sortable: true,
           width: 150
         },
@@ -165,7 +165,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'type',
           header: i18next.t('field.type'),
-          record: { editable: true, align: 'string' },
+          record: { editable: true, align: 'center' },
           sortable: true,
           width: 150
         },
@@ -173,7 +173,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'zone',
           header: i18next.t('field.zone'),
-          record: { editable: true, align: 'left' },
+          record: { editable: true, align: 'center' },
           sortable: true,
           width: 80
         },
@@ -181,7 +181,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'row',
           header: i18next.t('field.row'),
-          record: { editable: true, align: 'left' },
+          record: { editable: true, align: 'center' },
           sortable: true,
           width: 80
         },
@@ -189,7 +189,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'column',
           header: i18next.t('field.column'),
-          record: { editable: true, align: 'left' },
+          record: { editable: true, align: 'center' },
           sortable: true,
           width: 80
         },
@@ -198,7 +198,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'shelf',
           header: i18next.t('field.shelf'),
-          record: { editable: true, align: 'left' },
+          record: { editable: true, align: 'center' },
           sortable: true,
           width: 80
         },
@@ -214,7 +214,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
-          record: { editable: false, align: 'left' },
+          record: { editable: false, align: 'center' },
           sortable: true,
           width: 150
         },
@@ -222,7 +222,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           type: 'object',
           name: 'updater',
           header: i18next.t('field.updater'),
-          record: { editable: false, align: 'left' },
+          record: { editable: false, align: 'center' },
           sortable: true,
           width: 150
         }

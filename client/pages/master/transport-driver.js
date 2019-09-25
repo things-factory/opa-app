@@ -124,7 +124,7 @@ class TransportDriver extends localize(i18next)(PageView) {
           header: i18next.t('field.name'),
           record: { editable: true, align: 'left' },
           sortable: true,
-          width: 150
+          width: 250
         },
         {
           type: 'object',
@@ -134,16 +134,6 @@ class TransportDriver extends localize(i18next)(PageView) {
             editable: true,
             options: {
               queryName: 'bizplaces'
-              // basicArgs: {
-              //   filters: [
-              //     {
-              //       name: 'name',
-              //       value: 'o',
-              //       operator: 'like',
-              //       dataType: 'string'
-              //     }
-              //   ]
-              // }
             }
           },
           header: i18next.t('field.bizplace'),
@@ -153,7 +143,7 @@ class TransportDriver extends localize(i18next)(PageView) {
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
-          record: { editable: true, align: 'left' },
+          record: { editable: true, align: 'center' },
           sortable: true,
           width: 200
         },
