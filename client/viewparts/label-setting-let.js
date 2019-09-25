@@ -153,6 +153,7 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
     var popup = openPopup(
       html`
         <board-selector
+          .creatable=${true}
           @board-selected=${async e => {
             var board = e.detail.board
 
