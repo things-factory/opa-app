@@ -1,3 +1,4 @@
+import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -7,7 +8,7 @@ import { css, html } from 'lit-element'
 import '../components/import-pop-up'
 import Swal from 'sweetalert2'
 
-class ProductList extends localize(i18next)(PageView) {
+class InventorySummaryReport extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _searchFields: Array,
@@ -19,7 +20,7 @@ class ProductList extends localize(i18next)(PageView) {
 
   static get styles() {
     return [
-      ScrollbarStyles,
+      MultiColumnFormStyles,
       css`
         :host {
           display: flex;
@@ -61,21 +62,31 @@ class ProductList extends localize(i18next)(PageView) {
           .fetchHandler="${this.fetchHandler.bind(this)}"
         ></data-grist>
       </div>
+
+      <form class="multi-column-form">
+        <fieldset>
+          <!-- <label>${i18next.t('label.balance')}</label>
+          <input name="balance" /> -->
+
+          <label>${i18next.t('label.total_price')}</label>
+          <input name="totalPrice" />
+        </fieldset>
+      </form>
     `
   }
 
   get context() {
     return {
-      title: i18next.t('title.product'),
+      title: i18next.t('title.inventory_warehouse'),
       actions: [
         {
-          title: i18next.t('button.save'),
-          action: this._saveProducts.bind(this)
-        },
-        {
-          title: i18next.t('button.delete'),
-          action: this._deleteProducts.bind(this)
+          title: i18next.t('button.toPdf')
+          // action: this._saveProducts.bind(this)
         }
+        // {
+        //   title: i18next.t('button.delete'),
+        //   action: this._deleteProducts.bind(this)
+        // }
       ],
       exportable: {
         name: i18next.t('title.product'),
@@ -96,20 +107,33 @@ class ProductList extends localize(i18next)(PageView) {
   async firstUpdated() {
     this._searchFields = [
       {
-        label: i18next.t('label.name'),
+        label: i18next.t('label.customer'),
         name: 'name',
         props: {
           searchOper: 'like',
-          placeholder: i18next.t('label.name')
+          placeholder: i18next.t('label.customer')
         }
       },
       {
-        label: i18next.t('label.type'),
+        label: i18next.t('label.product'),
         name: 'type',
+        type: 'select',
         props: {
           searchOper: 'like',
-          placeholder: i18next.t('label.type')
+          placeholder: i18next.t('label.product')
         }
+      },
+      {
+        label: i18next.t('start_date'),
+        name: 'startDate',
+        type: 'datetime-local',
+        props: { searchOper: 'like', placeholder: i18next.t('label.start_date') }
+      },
+      {
+        label: i18next.t('end_date'),
+        name: 'endDate',
+        type: 'datetime-local',
+        props: { searchOper: 'like', placeholder: i18next.t('label.end_date') }
       }
     ]
 
@@ -391,4 +415,4 @@ class ProductList extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('product-list', ProductList)
+window.customElements.define('inventory-summary-report', InventorySummaryReport)

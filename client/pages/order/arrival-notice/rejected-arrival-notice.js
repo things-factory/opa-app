@@ -1,18 +1,16 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
-import './buffer-location-selector'
 
-class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
+class RejectedArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
-      _arrivalNoticeNo: String,
+      _ganNo: String,
       _ownTransport: Boolean,
       productGristConfig: Object,
       vasGristConfig: Object,
@@ -69,22 +67,14 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.assign_buffer_location'),
+      title: i18next.t('title.rejected_arrival_notice_detail'),
       actions: [
         {
           title: i18next.t('button.back'),
           action: () => history.back()
-        },
-        {
-          title: i18next.t('button.assign_buffer_location'),
-          action: this._assignBufferLocation.bind(this)
         }
       ]
     }
-  }
-
-  get bufferLocationField() {
-    return this.shadowRoot.querySelector('input#buffer-location')
   }
 
   activated(active) {
@@ -101,7 +91,7 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
     return html`
       <form class="multi-column-form">
         <fieldset>
-          <legend>${i18next.t('title.gan_no')}: ${this._arrivalNoticeNo}</legend>
+          <legend>${i18next.t('title.gan_no')}: ${this._ganNo}</legend>
           <label>${i18next.t('label.container_no')}</label>
           <input name="containerNo" disabled />
 
@@ -109,7 +99,7 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
           <label>${i18next.t('label.use_own_transport')}</label>
 
           <!-- Show when userOwnTransport is true -->
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.collection_date_time')}</label>
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.collection_date')}</label>
           <input ?hidden="${this._ownTransport}" name="collectionDateTime" type="datetime-local" disabled />
 
           <label ?hidden="${this._ownTransport}">${i18next.t('label.from')}</label>
@@ -131,7 +121,7 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
           <input ?hidden="${!this._ownTransport}" ?required="${this._ownTransport}" name="truckNo" disabled />
 
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.delivery_order_no')}</label>
           <input ?hidden="${!this._ownTransport}" name="deliveryOrderNo" disabled />
 
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.eta_date')}</label>
@@ -143,6 +133,9 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
             disabled
           />
 
+          <label>${i18next.t('label.remark')}</label>
+          <textarea name="remark" disabled></textarea>
+
           <label>${i18next.t('label.status')}</label>
           <select name="status" disabled
             >${Object.keys(ORDER_STATUS).map(key => {
@@ -152,9 +145,6 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
               `
             })}</select
           >
-
-          <label>${i18next.t('label.buffer_location')}</label>
-          <input id="buffer-location" name="buffer-location" readonly @click="${this._openBufferSelector.bind(this)}" />
         </fieldset>
       </form>
 
@@ -301,18 +291,18 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
   }
 
   updated(changedProps) {
-    if (changedProps.has('_arrivalNoticeNo')) {
+    if (changedProps.has('_ganNo')) {
       this.fetchGAN()
     }
   }
 
   async fetchGAN() {
-    if (!this._arrivalNoticeNo) return
+    if (!this._ganNo) return
     const response = await client.query({
       query: gql`
         query {
           arrivalNotice(${gqlBuilder.buildArgs({
-            name: this._arrivalNoticeNo
+            name: this._ganNo
           })}) {
             id
             name
@@ -326,6 +316,7 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
             truckNo
             deliveryOrderNo
             status
+            remark
             collectionOrder {
               id
               name
@@ -363,7 +354,6 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      this._arrivalNoticeId = response.data.arrivalNotice.id
       this._ownTransport = response.data.arrivalNotice.ownTransport
       this._fillupForm(response.data.arrivalNotice)
       this.productData = {
@@ -380,7 +370,7 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
 
   _fillupForm(arrivalNotice) {
     for (let key in arrivalNotice) {
-      Array.from(this.form.querySelectorAll('input')).forEach(field => {
+      Array.from(this.form.querySelectorAll('input, textarea')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = arrivalNotice[key]
         } else if (field.name === key && field.type === 'datetime-local') {
@@ -394,61 +384,9 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _assignBufferLocation() {
-    try {
-      this._validateBufferLocation()
-      const response = await client.query({
-        query: gql`
-          mutation {
-            generateArrivalNoticeWorksheet(${gqlBuilder.buildArgs({
-              arrivalNoticeNo: this._arrivalNoticeNo,
-              bufferLocation: { id: this.bufferLocationField.getAttribute('location-id') }
-            })}) {
-              unloadingWorksheet {
-                name
-              }
-            }
-          }
-        `
-      })
-
-      if (!response.errors) {
-        navigate(`worksheets`)
-        this._showToast({ message: i18next.t('text.buffer_location_assigned') })
-      }
-    } catch (e) {
-      this._showToast(e)
-    }
-  }
-
-  _validateBufferLocation() {
-    if (!this.bufferLocationField.getAttribute('location-id'))
-      throw new Error(i18next.t('text.buffer_location_is_not_assigned'))
-  }
-
-  _openBufferSelector() {
-    openPopup(
-      html`
-        <buffer-location-selector
-          @selected="${e => {
-            this.bufferLocationField.value = `${e.detail.name} ${
-              e.detail.description ? `(${e.detail.description})` : ''
-            }`
-            this.bufferLocationField.setAttribute('location-id', e.detail.id)
-          }}"
-        ></buffer-location-selector>
-      `,
-      {
-        backdrop: true,
-        size: 'large',
-        title: i18next.t('title.select_buffer_location')
-      }
-    )
-  }
-
   stateChanged(state) {
     if (this.active) {
-      this._arrivalNoticeNo = state && state.route && state.route.resourceId
+      this._ganNo = state && state.route && state.route.resourceId
     }
   }
 
@@ -464,4 +402,4 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
   }
 }
 
-window.customElements.define('assign-buffer-location', AssignBufferLocation)
+window.customElements.define('rejected-arrival-notice', RejectedArrivalNotice)

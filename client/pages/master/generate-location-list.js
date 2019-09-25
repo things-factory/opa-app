@@ -1,10 +1,10 @@
 import '@things-factory/form-ui'
+import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import Swal from 'sweetalert2'
 
 export class GenerateLocationList extends localize(i18next)(LitElement) {
@@ -74,7 +74,8 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
       warehouseId: String,
       _searchFields: Array,
       config: Object,
-      previewConfig: Object
+      previewConfig: Object,
+      callback: Object
     }
   }
 
@@ -223,6 +224,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
     }
 
     this.previewConfig = {
+      pagination: { pages: [100, 200, 500] },
       rows: { selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
@@ -386,7 +388,8 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
                 locationObj['name'] =
                   locationObj.zone + '-' + locationObj.row + '-' + locationObj.column + '-' + locationObj.shelf
 
-                locationObj['status'] = 'empty'
+                locationObj['status'] = 'EMPTY'
+                locationObj['type'] = 'SHELF'
                 locationObj['warehouse'] = { id: this.warehouseId }
                 locationObj['cuFlag'] = '+'
 
@@ -516,9 +519,28 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
 
   async _saveGeneratedLocation() {
     let patches = this.locationList
-    try {
-      const response = await client.query({
-        query: gql`
+    if (patches === []) {
+      Swal.fire({
+        type: 'warning',
+        title: 'List not previewed',
+        text: 'Please hit preview button first!',
+        showConfirmButton: false,
+        timer: 1500
+      })
+    } else {
+      try {
+        Swal.fire({
+          title: 'Saving...',
+          text: 'Please wait',
+          allowEscapeKey: true,
+          allowOutsideClick: false,
+          showConfirmButton: false,
+          onOpen: () => {
+            Swal.showLoading()
+          }
+        })
+        const response = await client.query({
+          query: gql`
           mutation {
             updateMultipleLocation(${gqlBuilder.buildArgs({
               patches
@@ -527,18 +549,26 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
             }
           }
         `
-      })
-
-      if (!response.errors) location.replace(`locations/${this.warehouseId}`)
-    } catch (e) {
-      document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            level: 'error',
-            message: e.message
-          }
         })
-      )
+
+        if (!response.errors) {
+          Swal.close()
+          if (this.callback && typeof this.callback === 'function') this.callback()
+          history.back()
+        } else {
+          Swal.close()
+        }
+      } catch (e) {
+        Swal.close()
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              level: 'error',
+              message: e.message
+            }
+          })
+        )
+      }
     }
   }
 

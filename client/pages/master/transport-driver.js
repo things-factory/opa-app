@@ -30,11 +30,14 @@ class TransportDriver extends localize(i18next)(PageView) {
         search-form {
           overflow: visible;
         }
+
         .grist {
           display: flex;
           flex-direction: column;
           flex: 1;
+          overflow-y: auto;
         }
+
         data-grist {
           overflow-y: hidden;
           flex: 1;
@@ -205,7 +208,8 @@ class TransportDriver extends localize(i18next)(PageView) {
         `,
         {
           backdrop: true,
-          size: 'large'
+          size: 'large',
+          title: i18next.t('title.import')
         }
       )
     }, 500)
@@ -281,7 +285,8 @@ class TransportDriver extends localize(i18next)(PageView) {
       `,
       {
         backdrop: true,
-        size: 'large'
+        size: 'large',
+        title: i18next.t('title.contact_point_list')
       }
     )
   }

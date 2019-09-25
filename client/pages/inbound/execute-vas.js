@@ -4,10 +4,14 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import { ORDER_TYPES } from '../order/constants/order'
+import Swal from 'sweetalert2'
 
 class ExecuteVas extends localize(i18next)(PageView) {
   static get properties() {
     return {
+      orderNo: String,
+      orderType: String,
       config: Object,
       data: Object
     }
@@ -61,7 +65,7 @@ class ExecuteVas extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.unloading'),
+      title: i18next.t('title.vas'),
       actions: [
         {
           title: i18next.t('button.complete'),
@@ -84,37 +88,74 @@ class ExecuteVas extends localize(i18next)(PageView) {
       <form class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.scan_area')}</legend>
-          <label>${i18next.t('label.arrival_notice_no')}</label>
+          <label>${i18next.t('label.order_no')}</label>
           <input
-            name="arrivalNoticeNo"
+            name="orderNo"
             @keypress="${async e => {
               if (e.keyCode === 13) {
                 e.preventDefault()
-                if (e.currentTarget.value) this._getProducts(e.currentTarget.value)
+                this._getVass()
               }
             }}"
+          />
+
+          <label>${i18next.t('label.order_type')}</label>
+          <select
+            name="orderType"
+            @keypress="${async e => {
+              if (e.keyCode === 13) {
+                e.preventDefault()
+                this._getVass()
+              }
+            }}"
+          >
+            <option></option>
+            ${Object.keys(ORDER_TYPES).map(
+              key => html`
+                <option value="${ORDER_TYPES[key].value}">${i18next.t(`label.${ORDER_TYPES[key].name}`)}</option>
+              `
+            )}
+          </select>
+        </fieldset>
+
+        <fieldset>
+          <legend ?hidden="${this.orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}">
+            ${`${i18next.t('title.arrival_notice')}: ${this.orderNo}`}
+          </legend>
+
+          <label ?hidden="${this.orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}">${i18next.t('label.bizplace')}</label>
+          <input ?hidden="${this.orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}" name="bizplaceName" readonly />
+
+          <label ?hidden="${this.orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}"
+            >${i18next.t('label.container_no')}</label
+          >
+          <input ?hidden="${this.orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}" name="containerNo" readonly />
+
+          <label ?hidden="${this.orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}"
+            >${i18next.t('label.buffer_location')}</label
+          >
+          <input ?hidden="${this.orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}" name="bufferLocation" readonly />
+
+          <label ?hidden="${this.orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}"
+            >${i18next.t('label.startedAt')}</label
+          >
+          <input
+            ?hidden="${this.orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}"
+            name="startedAt"
+            type="datetime-local"
+            readonly
           />
         </fieldset>
 
         <fieldset>
-          <legend>${`${i18next.t('title.arrival_notice')}: ${this.arrivalNoticeNo}`}</legend>
-
-          <label>${i18next.t('label.container_no')}</label>
-          <input name="containerNo" readonly />
-
-          <label>${i18next.t('label.buffer_location')}</label>
-          <input name="bufferLocation" readonly />
-
-          <label>${i18next.t('label.startedAt')}</label>
-          <input name="startedAt" type="datetime-local" readonly />
-
-          <label>${i18next.t('label.bizplace')}</label>
-          <input name="bizplace" readonly />
+          <div ?hidden="${this._orderType !== ORDER_TYPES.SHIPPING.value}">
+            <legend>${`${i18next.t('title.shipping_order')}: ${this.shipping_order}`}</legend>
+          </div>
         </fieldset>
       </form>
 
       <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.unloading')}</h2>
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
@@ -147,10 +188,24 @@ class ExecuteVas extends localize(i18next)(PageView) {
           width: 60
         },
         {
+          type: 'string',
+          name: 'batchId',
+          header: i18next.t('field.batch_id'),
+          record: { align: 'center' },
+          width: 180
+        },
+        {
           type: 'object',
-          name: 'product',
-          header: i18next.t('field.product'),
+          name: 'vas',
+          header: i18next.t('field.vas'),
           width: 200
+        },
+        {
+          type: 'string',
+          name: 'remark',
+          header: i18next.t('field.remark'),
+          record: { align: 'center' },
+          width: 300
         },
         {
           type: 'string',
@@ -159,40 +214,20 @@ class ExecuteVas extends localize(i18next)(PageView) {
           record: { align: 'center' },
           width: 300
         },
+
         {
           type: 'string',
-          name: 'packingType',
-          header: i18next.t('field.packing_type'),
-          record: { align: 'center' },
-          width: 150
-        },
-        {
-          type: 'integer',
-          name: 'palletQty',
-          header: i18next.t('field.pallet_qty'),
-          record: { align: 'right' },
-          width: 80
-        },
-        {
-          type: 'integer',
-          name: 'packQty',
-          header: i18next.t('field.pack_qty'),
-          record: { align: 'right' },
-          width: 80
-        },
-        {
-          type: 'integer',
-          name: 'actualQty',
-          header: i18next.t('field.actual_qty'),
-          record: { editable: true, align: 'right' },
-          width: 80
-        },
-        {
-          type: 'string',
-          name: 'remark',
-          header: i18next.t('field.remark'),
-          record: { editable: true, align: 'center' },
+          name: 'issue',
+          header: i18next.t('field.issue'),
+          record: { editable: true },
           width: 300
+        },
+        {
+          type: 'boolean',
+          name: 'complete',
+          header: i18next.t('field.complete'),
+          record: { editable: true, align: 'center' },
+          width: 60
         }
       ]
     }
@@ -201,54 +236,47 @@ class ExecuteVas extends localize(i18next)(PageView) {
   }
 
   _focusOnBarcodField() {
-    this.shadowRoot.querySelector('input[name=arrivalNoticeNo]').focus()
+    this.shadowRoot.querySelector('input[name=orderNo]').focus()
   }
 
-  async _getProducts(arrivalNoticeNo) {
+  async _getVass() {
+    const orderNo = this.shadowRoot.querySelector('input[name=orderNo]').value
+    const orderType = this.shadowRoot.querySelector('select[name=orderType]').value
+    if (!orderNo) {
+      Swal.fire({ type: 'warn', title: i18next.t('text.order_type_is_empty'), timer: 1500 })
+      return
+    }
+
+    if (!orderType) {
+      Swal.fire({ type: 'warn', title: i18next.t('text.order_type_is_empty'), timer: 1500 })
+      return
+    }
+
     this._clearView()
     const response = await client.query({
       query: gql`
         query {
-          unloadWorksheet(${gqlBuilder.buildArgs({
-            arrivalNoticeNo
+          vasWorksheet(${gqlBuilder.buildArgs({
+            orderNo,
+            orderType
           })}) {
-            arrivalNotice {
-              name
+            worksheetInfo {
+              bizplaceName
               containerNo
-            }
-            unloadWorksheetInfo {
-              name
-              status
-              bufferLocation {
-                id
-                name
-                description
-              }
+              bufferLocation
               startedAt
-              bizplace {
+            }
+            worksheetDetailInfos {
+              batchId
+              name
+              targetName
+              vas {
                 id
                 name
                 description
               }
-            }
-            unloadWorksheetDetails {
-              id
-              name
               description
-              targetProduct {
-                name
-                packingType
-                weight
-                unit
-                packQty
-                totalWeight
-                palletQty
-                product {
-                  id
-                  name
-                  description
-                }
-              }
+              remark
             }
           }
         }
@@ -256,22 +284,13 @@ class ExecuteVas extends localize(i18next)(PageView) {
     })
 
     if (!response.errors) {
-      this.arrivalNoticeNo = response.data.unloadWorksheet.arrivalNotice.name
-      this._fillUpForm({
-        ...response.data.unloadWorksheet.arrivalNotice,
-        ...response.data.unloadWorksheet.unloadWorksheetInfo,
-        bufferLocation: response.data.unloadWorksheet.unloadWorksheetInfo.bufferLocation.name,
-        bizplace: response.data.unloadWorksheet.unloadWorksheetInfo.bizplace.name
-      })
+      this.orderNo = orderNo
+      this.orderType = orderType
+      this._fillUpForm(response.data.vasWorksheet.worksheetInfo)
 
       this.data = {
         ...this.data,
-        records: response.data.unloadWorksheet.unloadWorksheetDetails.map(unloadingWorksheetDetail => {
-          return {
-            ...unloadingWorksheetDetail.targetProduct,
-            ...unloadingWorksheetDetail
-          }
-        })
+        records: response.data.vasWorksheet.worksheetDetailInfos
       }
     }
   }
@@ -300,52 +319,46 @@ class ExecuteVas extends localize(i18next)(PageView) {
   _completeHandler() {
     try {
       this.validate()
-      this._completeUnloading()
+      this._completeVas()
     } catch (e) {
-      this._showToast({
-        message: e.message
-      })
+      this._showToast({ message: e.message })
     }
   }
 
   validate() {
     const tasks = this.grist.dirtyData.records
-    // 1. actualQty has to be typed.
-    if (!tasks.every(task => task.actualQty)) throw new Error(i18next.t('text.actual_qty_is_empty'))
-    // 2. actualQty has to be positive
-    if (!tasks.every(task => task.actualQty > 0)) throw new Error(i18next.t('text.actual_qty_has_to_be_positive'))
-    // 2. actualQty is mached with packQty?
-    // 2. 1) If No is there remark for that?
-    if (!tasks.filter(task => task.actualQty !== task.packQty).every(task => task.remark))
-      throw new Error(i18next.t('text.remark_is_empty'))
+    // 1. every task has to be completed. if it's not completed there should be issue
+    if (!tasks.every(task => (task.complete && !task.issue) || (!task.complete && task.issue))) {
+      throw new Error(i18next.t('text.theres_is_uncompleted_task'))
+    }
   }
 
-  async _completeUnloading() {
+  async _completeVas() {
     const response = await client.query({
       query: gql`
         mutation {
-          completeUnloading(${gqlBuilder.buildArgs({
-            arrivalNoticeNo: this.arrivalNoticeNo,
-            unloadingWorksheetDetails: this._getUnloadingWorksheetDetails()
+          completeVas(${gqlBuilder.buildArgs({
+            orderNo: this.orderNo,
+            orderType: this.orderType,
+            vasWorksheetDetails: this._getVasWorksheetDetails()
           })}) {
             name
           }
         }
       `
     })
-
     if (!response.errors) {
       this._clearView()
     }
   }
 
-  _getUnloadingWorksheetDetails() {
+  _getVasWorksheetDetails() {
     return this.grist.dirtyData.records.map(task => {
       return {
         name: task.name,
-        remark: task.remark ? task.remark : null,
-        targetProduct: {
-          actualQty: task.actualQty
+        issue: task.issue || null,
+        targetVas: {
+          name: task.targetName
         }
       }
     })

@@ -211,7 +211,6 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-<<<<<<< HEAD
   async fetchOrderList() {
     return await client.query({
       query: gql`
@@ -220,22 +219,6 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
             name
             orderNo
           }
-=======
-  _importableData(records) {
-    setTimeout(() => {
-      openPopup(
-        html`
-          <import-pop-up
-            .records=${records}
-            .config=${this.config}
-            .importHandler="${this.importHandler.bind(this)}"
-          ></import-pop-up>
-        `,
-        {
-          backdrop: true,
-          size: 'large',
-          title: i18next.t('title.import')
->>>>>>> 56196b784e9b5cdaf4d5087a37778e44f5bddeb3
         }
       `
     })

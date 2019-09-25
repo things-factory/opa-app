@@ -1,13 +1,14 @@
+import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../components/import-pop-up'
 import Swal from 'sweetalert2'
 
-class ProductList extends localize(i18next)(PageView) {
+class TransportSummaryReport extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _searchFields: Array,
@@ -19,7 +20,7 @@ class ProductList extends localize(i18next)(PageView) {
 
   static get styles() {
     return [
-      ScrollbarStyles,
+      MultiColumnFormStyles,
       css`
         :host {
           display: flex;
@@ -31,11 +32,13 @@ class ProductList extends localize(i18next)(PageView) {
         search-form {
           overflow: visible;
         }
+        search-form-total {
+          overflow: visible;
+        }
         .grist {
           display: flex;
           flex-direction: column;
           flex: 1;
-          overflow-y: auto;
         }
         data-grist {
           overflow-y: hidden;
@@ -61,29 +64,40 @@ class ProductList extends localize(i18next)(PageView) {
           .fetchHandler="${this.fetchHandler.bind(this)}"
         ></data-grist>
       </div>
+
+      
+        <fieldset>
+          <!-- <label>${i18next.t('label.balance')}</label>
+          <input name="balance" /> -->
+
+          <label>${i18next.t('label.total_price')}</label>
+          <input name="totalPrice" />
+        </fieldset>
+      </form>
     `
   }
 
   get context() {
     return {
-      title: i18next.t('title.product'),
+      title: i18next.t('title.transport_summary_report'),
       actions: [
+        // {
+        //   title: i18next.t('button.save'),
+        //   action: this._saveTransportDriver.bind(this)
+        // },
         {
-          title: i18next.t('button.save'),
-          action: this._saveProducts.bind(this)
-        },
-        {
-          title: i18next.t('button.delete'),
-          action: this._deleteProducts.bind(this)
+          title: i18next.t('button.print_to_pdf')
+          // action: this._printToPdf.bind(this)
         }
-      ],
-      exportable: {
-        name: i18next.t('title.product'),
-        data: this._exportableData.bind(this)
-      },
-      importable: {
-        handler: this._importableData.bind(this)
-      }
+      ]
+      // ],
+      // exportable: {
+      //   name: i18next.t('title.transport_driver'),
+      //   data: this._exportableData.bind(this)
+      // },
+      // importable: {
+      //   handler: this._importableData.bind(this)
+      // }
     }
   }
 
@@ -96,90 +110,118 @@ class ProductList extends localize(i18next)(PageView) {
   async firstUpdated() {
     this._searchFields = [
       {
-        label: i18next.t('label.name'),
+        label: i18next.t('driver_code'),
         name: 'name',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('label.name')
-        }
+        type: 'text',
+        props: { searchOper: 'like', placeholder: i18next.t('label.driver_code') }
       },
       {
-        label: i18next.t('label.type'),
-        name: 'type',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('label.type')
-        }
+        label: i18next.t('start_date'),
+        name: 'startDate',
+        type: 'datetime-local',
+        props: { searchOper: 'like', placeholder: i18next.t('label.start_date') }
+      },
+      {
+        label: i18next.t('end_date'),
+        name: 'endDate',
+        type: 'datetime-local',
+        props: { searchOper: 'like', placeholder: i18next.t('label.end_date') }
       }
     ]
 
     this.config = {
-      rows: {
-        selectable: {
-          multiple: true
-        }
-      },
+      rows: { selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
-        // {
-        //   type: 'gutter',
-        //   gutterName: 'button',
-        //   icon: 'reorder',
-        //   handlers: {
-        //     click: (columns, data, column, record, rowIndex) => {
-        //       if (record.id) navigate(`product_options/${record.id}`)
-        //     }
-        //   }
-        // },
         {
           type: 'string',
-          name: 'name',
+          name: 'driverCode',
+          header: i18next.t('field.driver_code'),
+          record: { editable: true, align: 'center' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'string',
+          name: 'truck number',
+          header: i18next.t('field.truck_number'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'object',
+          name: 'bizplace',
           record: {
-            editable: true
+            align: 'center',
+            editable: true,
+            options: {
+              queryName: 'bizplaces'
+              // basicArgs: {
+              //   filters: [
+              //     {
+              //       name: 'name',
+              //       value: 'o',
+              //       operator: 'like',
+              //       dataType: 'string'
+              //     }
+              //   ]
+              // }
+            }
           },
-          header: i18next.t('field.name'),
-          width: 180
+          header: i18next.t('field.bizplace'),
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'tolls',
+          header: i18next.t('field.tolls'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'parking',
+          header: i18next.t('field.parking'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 200
         },
         {
           type: 'string',
           name: 'description',
-          record: {
-            editable: true
-          },
-          header: i18next.t('field.description'),
-          width: 250
+          header: i18next.t('field.forklift_charge'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 200
         },
         {
           type: 'string',
-          name: 'type',
-          record: {
-            align: 'center',
-            editable: true
-          },
-          header: i18next.t('field.type'),
+          name: 'description',
+          header: i18next.t('field.description'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 200
+        },
+
+        {
+          type: 'datetime',
+          name: 'updatedAt',
+          header: i18next.t('field.updated_at'),
+          record: { editable: false, align: 'center' },
+          sortable: true,
           width: 150
         },
         {
           type: 'object',
           name: 'updater',
-          record: {
-            align: 'center',
-            editable: false
-          },
           header: i18next.t('field.updater'),
-          width: 250
-        },
-        {
-          type: 'datetime',
-          name: 'updatedAt',
-          record: {
-            align: 'center',
-            editable: false
-          },
-          header: i18next.t('field.updated_at'),
-          width: 180
+          record: { editable: false, align: 'center' },
+          sortable: true,
+          width: 150
         }
       ]
     }
@@ -189,6 +231,9 @@ class ProductList extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('search-form')
   }
 
+  get searchForm() {
+    return this.shadowRoot.querySelector('search-form-total')
+  }
   get dataGrist() {
     return this.shadowRoot.querySelector('data-grist')
   }
@@ -205,8 +250,7 @@ class ProductList extends localize(i18next)(PageView) {
         `,
         {
           backdrop: true,
-          size: 'large',
-          title: i18next.t('title.import')
+          size: 'large'
         }
       )
     }, 500)
@@ -216,7 +260,7 @@ class ProductList extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
         query {
-          products(${gqlBuilder.buildArgs({
+          transportDrivers(${gqlBuilder.buildArgs({
             filters: this._conditionParser(),
             pagination: { page, limit },
             sortings: sorters
@@ -224,26 +268,28 @@ class ProductList extends localize(i18next)(PageView) {
             items {
               id
               name
+              bizplace{
+                id
+                name
+              }
+              driverCode
               description
-              type
-              updater {
+              updatedAt
+              updater{
                 id
                 name
                 description
               }
-              updatedAt
             }
             total
           }
         }
-        `
+      `
     })
 
-    if (!response.errors) {
-      return {
-        total: response.data.products.total || 0,
-        records: response.data.products.items || []
-      }
+    return {
+      total: response.data.transportDrivers.total || 0,
+      records: response.data.transportDrivers.items || []
     }
   }
 
@@ -251,7 +297,7 @@ class ProductList extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
           mutation {
-            updateMultipleProduct(${gqlBuilder.buildArgs({
+            updateMultipleTransportDriver(${gqlBuilder.buildArgs({
               patches
             })}) {
               name
@@ -271,6 +317,18 @@ class ProductList extends localize(i18next)(PageView) {
         })
       )
     }
+  }
+
+  _openContactPoints(bizplaceId, bizplaceName) {
+    openPopup(
+      html`
+        <contact-point-list .bizplaceId="${bizplaceId}" .bizplaceName="${bizplaceName}"></contact-point-list>
+      `,
+      {
+        backdrop: true,
+        size: 'large'
+      }
+    )
   }
 
   _conditionParser() {
@@ -293,30 +351,30 @@ class ProductList extends localize(i18next)(PageView) {
       })
   }
 
-  async _saveProducts() {
+  async _saveTransportDriver() {
     let patches = this.dataGrist.dirtyRecords
     if (patches && patches.length) {
-      patches = patches.map(product => {
-        let patchField = product.id ? { id: product.id } : {}
-        const dirtyFields = product.__dirtyfields__
+      patches = patches.map(transportDriver => {
+        let patchField = transportDriver.id ? { id: transportDriver.id } : {}
+        const dirtyFields = transportDriver.__dirtyfields__
         for (let key in dirtyFields) {
           patchField[key] = dirtyFields[key].after
         }
-        patchField.cuFlag = product.__dirty__
+        patchField.cuFlag = transportDriver.__dirty__
 
         return patchField
       })
 
       const response = await client.query({
         query: gql`
-            mutation {
-              updateMultipleProduct(${gqlBuilder.buildArgs({
-                patches
-              })}) {
-                name
-              }
+          mutation {
+            updateMultipleTransportDriver(${gqlBuilder.buildArgs({
+              patches
+            })}) {
+              name
             }
-          `
+          }
+        `
       })
 
       if (!response.errors) {
@@ -332,7 +390,7 @@ class ProductList extends localize(i18next)(PageView) {
     }
   }
 
-  async _deleteProducts() {
+  async _deleteTransportDriver() {
     Swal.fire({
       title: 'Are you sure?',
       text: "You won't be able to revert this!",
@@ -347,10 +405,10 @@ class ProductList extends localize(i18next)(PageView) {
         if (names && names.length > 0) {
           const response = await client.query({
             query: gql`
-            mutation {
-              deleteProducts(${gqlBuilder.buildArgs({ names })})
-            }
-          `
+              mutation {
+                deleteTransportDrivers(${gqlBuilder.buildArgs({ names })})
+              }
+            `
           })
 
           if (!response.errors) {
@@ -391,4 +449,4 @@ class ProductList extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('product-list', ProductList)
+window.customElements.define('transport-summary-report', TransportSummaryReport)

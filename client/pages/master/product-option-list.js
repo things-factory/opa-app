@@ -189,7 +189,8 @@ class ProductOptionList extends connect(store)(localize(i18next)(PageView)) {
         `,
         {
           backdrop: true,
-          size: 'large'
+          size: 'large',
+          title: i18next.t('title.import')
         }
       )
     }, 500)
@@ -274,7 +275,8 @@ class ProductOptionList extends connect(store)(localize(i18next)(PageView)) {
       `,
       {
         backdrop: true,
-        size: 'large'
+        size: 'large',
+        title: i18next.t('title.product_option_detail_list')
       }
     )
   }

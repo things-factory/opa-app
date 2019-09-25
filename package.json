@@ -1,10 +1,10 @@
 {
   "name": "@things-factory/opa-app",
-  "version": "0.0.80",
+  "version": "0.0.81",
   "main": "dist-server/index.js",
   "browser": "client/index.js",
   "things-factory": true,
-  "license": "MIT",
+  "license": "Copyright © hatiolab.com. All Rights Reserved.",
   "author": "chayeongrong",
   "scripts": {
     "serve": "things-factory",
