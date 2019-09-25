@@ -1,17 +1,26 @@
+import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { openPopup } from '@things-factory/layout-base'
 import '../components/import-pop-up'
 import Swal from 'sweetalert2'
 
-class CompanyList extends localize(i18next)(PageView) {
+class TransportSummaryReport extends localize(i18next)(PageView) {
+  static get properties() {
+    return {
+      _searchFields: Array,
+      config: Object,
+      data: Object,
+      importHandler: Object
+    }
+  }
+
   static get styles() {
     return [
-      ScrollbarStyles,
+      MultiColumnFormStyles,
       css`
         :host {
           display: flex;
@@ -23,29 +32,20 @@ class CompanyList extends localize(i18next)(PageView) {
         search-form {
           overflow: visible;
         }
-
+        search-form-total {
+          overflow: visible;
+        }
         .grist {
           display: flex;
           flex-direction: column;
           flex: 1;
-          overflow-y: auto;
         }
-
         data-grist {
           overflow-y: hidden;
           flex: 1;
         }
       `
     ]
-  }
-
-  static get properties() {
-    return {
-      _searchFields: Array,
-      config: Object,
-      data: Object,
-      importHandler: Object
-    }
   }
 
   render() {
@@ -64,94 +64,136 @@ class CompanyList extends localize(i18next)(PageView) {
           .fetchHandler="${this.fetchHandler.bind(this)}"
         ></data-grist>
       </div>
+
+      
+        <fieldset>
+          <!-- <label>${i18next.t('label.balance')}</label>
+          <input name="balance" /> -->
+
+          <label>${i18next.t('label.total_price')}</label>
+          <input name="totalPrice" />
+        </fieldset>
+      </form>
     `
   }
 
   get context() {
     return {
-      title: i18next.t('title.company'),
+      title: i18next.t('title.transport_summary_report'),
       actions: [
+        // {
+        //   title: i18next.t('button.save'),
+        //   action: this._saveTransportDriver.bind(this)
+        // },
         {
-          title: i18next.t('button.save'),
-          action: this._saveCompanies.bind(this)
-        },
-        {
-          title: i18next.t('button.delete'),
-          action: this._deleteCompanies.bind(this)
+          title: i18next.t('button.print_to_pdf')
+          // action: this._printToPdf.bind(this)
         }
-      ],
-      exportable: {
-        name: i18next.t('title.company'),
-        data: this._exportableData.bind(this)
-      },
-      importable: {
-        handler: this._importableData.bind(this)
-      }
+      ]
+      // ],
+      // exportable: {
+      //   name: i18next.t('title.transport_driver'),
+      //   data: this._exportableData.bind(this)
+      // },
+      // importable: {
+      //   handler: this._importableData.bind(this)
+      // }
     }
   }
 
-  async pageInitialized() {
+  activated(active) {
+    if (JSON.parse(active) && this.dataGrist) {
+      this.dataGrist.fetch()
+    }
+  }
+
+  async firstUpdated() {
     this._searchFields = [
       {
-        label: i18next.t('label.name'),
+        label: i18next.t('driver_code'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like', placeholder: i18next.t('label.driver_code') }
       },
       {
-        label: i18next.t('label.country_code'),
-        name: 'country_code',
-        type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.country_code') }
+        label: i18next.t('start_date'),
+        name: 'startDate',
+        type: 'datetime-local',
+        props: { searchOper: 'like', placeholder: i18next.t('label.start_date') }
       },
       {
-        label: i18next.t('label.brn'),
-        name: 'brn',
-        type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.brn') }
-      },
-      {
-        label: i18next.t('label.address'),
-        name: 'address',
-        type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.address') }
-      },
-      {
-        label: i18next.t('label.status'),
-        name: 'status',
-        type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.status') }
+        label: i18next.t('end_date'),
+        name: 'endDate',
+        type: 'datetime-local',
+        props: { searchOper: 'like', placeholder: i18next.t('label.end_date') }
       }
     ]
 
-    this.config = this.gristConfig
-
-    await this.updateComplete
-
-    this.dataGrist.fetch()
-  }
-
-  get gristConfig() {
-    return {
+    this.config = {
       rows: { selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'reorder',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              if (record.id) navigate(`bizplaces/${record.id}`)
-            }
-          }
+          type: 'string',
+          name: 'driverCode',
+          header: i18next.t('field.driver_code'),
+          record: { editable: true, align: 'center' },
+          sortable: true,
+          width: 80
         },
         {
           type: 'string',
-          name: 'name',
-          header: i18next.t('field.name'),
+          name: 'truck number',
+          header: i18next.t('field.truck_number'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'object',
+          name: 'bizplace',
+          record: {
+            align: 'center',
+            editable: true,
+            options: {
+              queryName: 'bizplaces'
+              // basicArgs: {
+              //   filters: [
+              //     {
+              //       name: 'name',
+              //       value: 'o',
+              //       operator: 'like',
+              //       dataType: 'string'
+              //     }
+              //   ]
+              // }
+            }
+          },
+          header: i18next.t('field.bizplace'),
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'tolls',
+          header: i18next.t('field.tolls'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'parking',
+          header: i18next.t('field.parking'),
+          record: { editable: true, align: 'left' },
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.forklift_charge'),
           record: { editable: true, align: 'left' },
           sortable: true,
           width: 200
@@ -162,48 +204,9 @@ class CompanyList extends localize(i18next)(PageView) {
           header: i18next.t('field.description'),
           record: { editable: true, align: 'left' },
           sortable: true,
-          width: 150
+          width: 200
         },
-        {
-          type: 'string',
-          name: 'countryCode',
-          header: i18next.t('field.country_code'),
-          record: { editable: true, align: 'center' },
-          sortable: true,
-          width: 80
-        },
-        {
-          type: 'string',
-          name: 'brn',
-          header: i18next.t('field.brn'),
-          record: { editable: true, align: 'left' },
-          sortable: true,
-          width: 100
-        },
-        {
-          type: 'string',
-          name: 'postalCode',
-          header: i18next.t('field.postal_code'),
-          record: { editable: true, align: 'left' },
-          sortable: true,
-          width: 150
-        },
-        {
-          type: 'string',
-          name: 'address',
-          header: i18next.t('field.address'),
-          record: { editable: true, align: 'left' },
-          sortable: true,
-          width: 250
-        },
-        {
-          type: 'string',
-          name: 'status',
-          header: i18next.t('field.status'),
-          record: { editable: true, align: 'center' },
-          sortable: true,
-          width: 80
-        },
+
         {
           type: 'datetime',
           name: 'updatedAt',
@@ -228,6 +231,9 @@ class CompanyList extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('search-form')
   }
 
+  get searchForm() {
+    return this.shadowRoot.querySelector('search-form-total')
+  }
   get dataGrist() {
     return this.shadowRoot.querySelector('data-grist')
   }
@@ -244,8 +250,7 @@ class CompanyList extends localize(i18next)(PageView) {
         `,
         {
           backdrop: true,
-          size: 'large',
-          title: i18next.t('title.import')
+          size: 'large'
         }
       )
     }, 500)
@@ -255,7 +260,7 @@ class CompanyList extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
         query {
-          companies(${gqlBuilder.buildArgs({
+          transportDrivers(${gqlBuilder.buildArgs({
             filters: this._conditionParser(),
             pagination: { page, limit },
             sortings: sorters
@@ -263,12 +268,12 @@ class CompanyList extends localize(i18next)(PageView) {
             items {
               id
               name
+              bizplace{
+                id
+                name
+              }
+              driverCode
               description
-              countryCode
-              postalCode
-              brn
-              address
-              status
               updatedAt
               updater{
                 id
@@ -283,8 +288,8 @@ class CompanyList extends localize(i18next)(PageView) {
     })
 
     return {
-      total: response.data.companies.total || 0,
-      records: response.data.companies.items || []
+      total: response.data.transportDrivers.total || 0,
+      records: response.data.transportDrivers.items || []
     }
   }
 
@@ -292,7 +297,7 @@ class CompanyList extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
           mutation {
-            updateMultipleCompany(${gqlBuilder.buildArgs({
+            updateMultipleTransportDriver(${gqlBuilder.buildArgs({
               patches
             })}) {
               name
@@ -312,6 +317,18 @@ class CompanyList extends localize(i18next)(PageView) {
         })
       )
     }
+  }
+
+  _openContactPoints(bizplaceId, bizplaceName) {
+    openPopup(
+      html`
+        <contact-point-list .bizplaceId="${bizplaceId}" .bizplaceName="${bizplaceName}"></contact-point-list>
+      `,
+      {
+        backdrop: true,
+        size: 'large'
+      }
+    )
   }
 
   _conditionParser() {
@@ -334,30 +351,30 @@ class CompanyList extends localize(i18next)(PageView) {
       })
   }
 
-  async _saveCompanies() {
+  async _saveTransportDriver() {
     let patches = this.dataGrist.dirtyRecords
     if (patches && patches.length) {
-      patches = patches.map(company => {
-        let patchField = company.id ? { id: company.id } : {}
-        const dirtyFields = company.__dirtyfields__
+      patches = patches.map(transportDriver => {
+        let patchField = transportDriver.id ? { id: transportDriver.id } : {}
+        const dirtyFields = transportDriver.__dirtyfields__
         for (let key in dirtyFields) {
           patchField[key] = dirtyFields[key].after
         }
-        patchField.cuFlag = company.__dirty__
+        patchField.cuFlag = transportDriver.__dirty__
 
         return patchField
       })
 
       const response = await client.query({
         query: gql`
-            mutation {
-              updateMultipleCompany(${gqlBuilder.buildArgs({
-                patches
-              })}) {
-                name
-              }
+          mutation {
+            updateMultipleTransportDriver(${gqlBuilder.buildArgs({
+              patches
+            })}) {
+              name
             }
-          `
+          }
+        `
       })
 
       if (!response.errors) {
@@ -373,7 +390,7 @@ class CompanyList extends localize(i18next)(PageView) {
     }
   }
 
-  async _deleteCompanies() {
+  async _deleteTransportDriver() {
     Swal.fire({
       title: 'Are you sure?',
       text: "You won't be able to revert this!",
@@ -388,10 +405,10 @@ class CompanyList extends localize(i18next)(PageView) {
         if (names && names.length > 0) {
           const response = await client.query({
             query: gql`
-            mutation {
-              deleteCompanies(${gqlBuilder.buildArgs({ names })})
-            }
-          `
+              mutation {
+                deleteTransportDrivers(${gqlBuilder.buildArgs({ names })})
+              }
+            `
           })
 
           if (!response.errors) {
@@ -399,7 +416,7 @@ class CompanyList extends localize(i18next)(PageView) {
             document.dispatchEvent(
               new CustomEvent('notify', {
                 detail: {
-                  message: i18next.t('text.data_deleted_successfully')
+                  message: i18next.t('text.data_updated_successfully')
                 }
               })
             )
@@ -432,4 +449,4 @@ class CompanyList extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('company-list', CompanyList)
+window.customElements.define('transport-summary-report', TransportSummaryReport)

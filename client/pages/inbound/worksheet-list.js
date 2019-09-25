@@ -130,6 +130,12 @@ class WorksheetList extends localize(i18next)(PageView) {
                 navigate(`worksheet_unloading/${record.name}`)
               } else if (
                 record.id &&
+                record.type === WORKSHEET_TYPE.PUTAWAY.value &&
+                record.status === WORKSHEET_STATUS.DEACTIVATED.value
+              ) {
+                navigate(`worksheet_putaway/${record.name}`)
+              } else if (
+                record.id &&
                 record.type === WORKSHEET_TYPE.VAS.value &&
                 record.status === WORKSHEET_STATUS.DEACTIVATED.value
               ) {

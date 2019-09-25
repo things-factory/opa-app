@@ -1,4 +1,4 @@
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
+import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
@@ -9,6 +9,7 @@ class UnloadProduct extends localize(i18next)(PageView) {
   static get properties() {
     return {
       arrivalNoticeNo: String,
+      _productName: String,
       config: Object,
       data: Object
     }
@@ -17,6 +18,7 @@ class UnloadProduct extends localize(i18next)(PageView) {
   static get styles() {
     return [
       MultiColumnFormStyles,
+      SingleColumnFormStyles,
       css`
         :host {
           display: flex;
@@ -26,8 +28,17 @@ class UnloadProduct extends localize(i18next)(PageView) {
         .grist {
           background-color: var(--main-section-background-color);
           display: flex;
-          flex-direction: column;
           flex: 1;
+        }
+        .left-column {
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+        .rifhg-column {
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
         }
 
         data-grist {
@@ -72,8 +83,12 @@ class UnloadProduct extends localize(i18next)(PageView) {
     }
   }
 
-  get form() {
-    return this.shadowRoot.querySelector('form')
+  get infoForm() {
+    return this.shadowRoot.querySelector('form#info-form')
+  }
+
+  get inputForm() {
+    return this.shadowRoot.querySelector('form#input-form')
   }
 
   get grist() {
@@ -82,7 +97,7 @@ class UnloadProduct extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <form class="multi-column-form">
+      <form id="info-form" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.scan_area')}</legend>
           <label>${i18next.t('label.arrival_notice_no')}</label>
@@ -115,38 +130,81 @@ class UnloadProduct extends localize(i18next)(PageView) {
       </form>
 
       <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.unloading')}</h2>
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .data=${this.data}
-          @record-change="${e => {
-            e.detail.after.validity = e.detail.after.actualQty === e.detail.after.packQty
-          }}"
-        ></data-grist>
+        <div class="left-column">
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.unloading')}</h2>
+          <data-grist
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.config}
+            .data=${this.data}
+          ></data-grist>
+        </div>
+
+        <div class="right-column">
+          <form id="input-form" class="single-column-form">
+            <fieldset>
+              <legend>${i18next.t('title.product_batch')}: ${this._productName}</legend>
+
+              <label>${i18next.t('label.batch_id')}</label>
+              <input name="batchId" readonly />
+
+              <label>${i18next.t('label.description')}</label>
+              <input name="description" readonly />
+
+              <label>${i18next.t('label.packing_type')}</label>
+              <input name="packingType" readonly />
+
+              <label>${i18next.t('label.pallet_qty')}</label>
+              <input name="palletQty" type="number" readonly />
+
+              <label>${i18next.t('label.pack_qty')}</label>
+              <input name="packQty" type="number" readonly />
+            </fieldset>
+
+            <fieldset>
+              <legend>${i18next.t('title.input_section')}</legend>
+
+              <label>${i18next.t('label.actual_pallet_qty')}</label>
+              <input name="actualPalletQty" type="number" min="1" @change="${this._fillUpGrist.bind(this)}" required />
+
+              <label>${i18next.t('label.actual_qty')}</label>
+              <input name="actualQty" type="number" min="1" @change="${this._fillUpGrist.bind(this)}" required />
+
+              <label>${i18next.t('label.remark')}</label>
+              <textarea name="remark" @change="${this._fillUpGrist.bind(this)}"></textarea>
+            </fieldset>
+          </form>
+        </div>
       </div>
     `
   }
 
   constructor() {
     super()
+    this.arrivalNoticeNo = ''
+    this._productName = ''
     this.data = { records: [] }
   }
 
-  firstUpdated() {
+  pageInitialized() {
     this.config = {
+      rows: {
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            if (record) {
+              this._selectedWorksheetDetailName = record.name
+              this._productName = `${record.product.name} ${
+                record.product.description ? `(${record.product.description})` : ''
+              }`
+              this._fillUpInputForm(record)
+            }
+          }
+        }
+      },
       pagination: {
         infinite: true
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
-        {
-          type: 'boolean',
-          name: 'validity',
-          header: i18next.t('field.validity'),
-          records: { editable: false },
-          width: 60
-        },
         {
           type: 'object',
           name: 'product',
@@ -154,51 +212,42 @@ class UnloadProduct extends localize(i18next)(PageView) {
           width: 200
         },
         {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: { align: 'center' },
-          width: 300
-        },
-        {
-          type: 'string',
-          name: 'packingType',
-          header: i18next.t('field.packing_type'),
-          record: { align: 'center' },
-          width: 150
-        },
-        {
           type: 'integer',
           name: 'palletQty',
           header: i18next.t('field.pallet_qty'),
           record: { align: 'right' },
-          width: 80
+          width: 60
+        },
+        {
+          type: 'integer',
+          name: 'actualPalletQty',
+          header: i18next.t('field.actual_pallet_qty'),
+          record: { align: 'right' },
+          width: 60
         },
         {
           type: 'integer',
           name: 'packQty',
           header: i18next.t('field.pack_qty'),
           record: { align: 'right' },
-          width: 80
+          width: 60
         },
         {
           type: 'integer',
           name: 'actualQty',
           header: i18next.t('field.actual_qty'),
-          record: { editable: true, align: 'right' },
-          width: 80
-        },
-        {
-          type: 'string',
-          name: 'remark',
-          header: i18next.t('field.remark'),
-          record: { editable: true, align: 'center' },
-          width: 300
+          record: { align: 'right' },
+          width: 60
         }
       ]
     }
+  }
 
-    this._focusOnBarcodField()
+  async pageUpdated() {
+    if (this.active) {
+      await this.updateComplete
+      this._focusOnBarcodField()
+    }
   }
 
   _focusOnBarcodField() {
@@ -220,6 +269,7 @@ class UnloadProduct extends localize(i18next)(PageView) {
               startedAt
             }
             worksheetDetailInfos {
+              batchId
               product {
                 id
                 name
@@ -251,12 +301,13 @@ class UnloadProduct extends localize(i18next)(PageView) {
 
   _clearView() {
     this.data = { records: [] }
-    this.form.reset()
+    this.infoForm.reset()
+    this.inputForm.reset()
   }
 
   _fillUpForm(data) {
     for (let key in data) {
-      Array.from(this.form.querySelectorAll('input')).forEach(field => {
+      Array.from(this.infoForm.querySelectorAll('input')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
         } else if (field.name === key && field.type === 'datetime-local') {
@@ -267,6 +318,39 @@ class UnloadProduct extends localize(i18next)(PageView) {
           field.value = data[key]
         }
       })
+    }
+  }
+
+  _fillUpInputForm(data) {
+    this.inputForm.reset()
+    for (let key in data) {
+      Array.from(this.inputForm.querySelectorAll('input, textarea')).forEach(field => {
+        if (field.name === key && field.type === 'checkbox') {
+          field.checked = data[key]
+        } else if (field.name === key && field.type === 'datetime-local') {
+          const datetime = Number(data[key])
+          const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
+          field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
+        } else if (field.name === key) {
+          field.value = data[key]
+        }
+      })
+    }
+  }
+
+  _fillUpGrist(e) {
+    if (e.currentTarget.value) {
+      this.data = {
+        ...this.data,
+        records: this.data.records.map(record => {
+          if (record.name === this._selectedWorksheetDetailName) {
+            record[e.currentTarget.name] =
+              e.currentTarget.type === 'number' ? parseInt(e.currentTarget.value) : e.currentTarget.value
+          }
+
+          return record
+        })
+      }
     }
   }
 
@@ -282,13 +366,22 @@ class UnloadProduct extends localize(i18next)(PageView) {
   }
 
   validate() {
-    const tasks = this.grist.dirtyData.records
-    // 1. actualQty has to be typed.
+    const tasks = this.grist.data.records
+    // 1. actualPalletQty has to be typed.
+    if (!tasks.every(task => task.actualPalletQty)) throw new Error(i18next.t('text.actual_pallet_qty_is_empty'))
+    // 2. actualQty has to be typed.
     if (!tasks.every(task => task.actualQty)) throw new Error(i18next.t('text.actual_qty_is_empty'))
-    // 2. actualQty has to be positive
+    // 3. actualPalletQty has to be positive
+    if (!tasks.every(task => task.actualPalletQty > 0))
+      throw new Error(i18next.t('text.actual_pallet_qty_has_to_be_positive'))
+    // 4. actualQty has to be positive
     if (!tasks.every(task => task.actualQty > 0)) throw new Error(i18next.t('text.actual_qty_has_to_be_positive'))
-    // 2. actualQty is mached with packQty?
-    // 2. 1) If No is there remark for that?
+    // 5. actualPalletQty is matched with palletQty?
+    // 5. 1) If No is there remark for that?
+    if (!tasks.filter(task => task.actualPalletQty !== task.palletQty).every(task => task.remark))
+      throw new Error(i18next.t('text.remark_is_empty'))
+    // 6. actualQty is matched with packQty?
+    // 6. 1) If No is there remark for that?
     if (!tasks.filter(task => task.actualQty !== task.packQty).every(task => task.remark))
       throw new Error(i18next.t('text.remark_is_empty'))
   }
@@ -319,6 +412,7 @@ class UnloadProduct extends localize(i18next)(PageView) {
         remark: task.remark ? task.remark : null,
         targetProduct: {
           name: task.targetName,
+          actualPalletQty: task.actualPalletQty,
           actualQty: task.actualQty
         }
       }

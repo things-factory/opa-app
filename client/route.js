@@ -52,6 +52,14 @@ export default function route(page) {
       import('./pages/master/location-list')
       return page
 
+    case 'transport_summary_reports':
+      import('./pages/master/transport-summary-report')
+      return page
+
+    case 'inventory_summary_reports':
+      import('./pages/master/inventory-summary-report')
+      return page
+
     /**
      * Order Menus Section
      */
@@ -224,7 +232,7 @@ export default function route(page) {
       return page
 
     case 'putaway':
-      import('./pages/inbound/putaway-goods')
+      import('./pages/inbound/putaway-product')
       return page
 
     case 'vas-work-order':
@@ -237,6 +245,10 @@ export default function route(page) {
 
     case 'worksheet_unloading':
       import('./pages/inbound/worksheet-unloading')
+      return page
+
+    case 'worksheet_putaway':
+      import('./pages/inbound/worksheet-putaway')
       return page
 
     case 'worksheet_vas':
