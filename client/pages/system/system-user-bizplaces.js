@@ -70,7 +70,7 @@ class SystemUserBizplaces extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  firstUpdated() {
+  async pageInitialized() {
     this._searchFields = [
       {
         name: 'name',
@@ -168,6 +168,10 @@ class SystemUserBizplaces extends connect(store)(localize(i18next)(PageView)) {
         }
       ]
     }
+
+    await this.updateComplete
+
+    this.dataGrist.fetch()
   }
 
   get searchForm() {
