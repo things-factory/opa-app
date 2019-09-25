@@ -5,16 +5,13 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import '../components/import-pop-up'
-import Swal from 'sweetalert2'
 
 class InventorySummaryReport extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _searchFields: Array,
       config: Object,
-      data: Object,
-      importHandler: Object
+      data: Object
     }
   }
 
@@ -87,14 +84,7 @@ class InventorySummaryReport extends localize(i18next)(PageView) {
         //   title: i18next.t('button.delete'),
         //   action: this._deleteProducts.bind(this)
         // }
-      ],
-      exportable: {
-        name: i18next.t('title.product'),
-        data: this._exportableData.bind(this)
-      },
-      importable: {
-        handler: this._importableData.bind(this)
-      }
+      ]
     }
   }
 
@@ -115,14 +105,50 @@ class InventorySummaryReport extends localize(i18next)(PageView) {
         }
       },
       {
-        label: i18next.t('label.product'),
-        name: 'type',
         type: 'select',
-        props: {
-          searchOper: 'like',
-          placeholder: i18next.t('label.product')
-        }
+        name: 'bizplaces',
+        record: {
+          align: 'center',
+          editable: true,
+          options: {
+            queryName: 'bizplaces'
+            // basicArgs: {
+            //   filters: [
+            //     {
+            //       name: 'name',
+            //       value: 'o',
+            //       operator: 'like',
+            //       dataType: 'string'
+            //     }
+            //   ]
+            // }
+          }
+        },
+        width: 200
       },
+      {
+        type: 'select',
+        name: 'product',
+        record: {
+          align: 'center',
+          editable: true,
+          options: {
+            queryName: 'products'
+            // basicArgs: {
+            //   filters: [
+            //     {
+            //       name: 'name',
+            //       value: 'o',
+            //       operator: 'like',
+            //       dataType: 'string'
+            //     }
+            //   ]
+            // }
+          }
+        },
+        width: 200
+      },
+
       {
         label: i18next.t('start_date'),
         name: 'startDate',
@@ -147,16 +173,16 @@ class InventorySummaryReport extends localize(i18next)(PageView) {
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
-        // {
-        //   type: 'gutter',
-        //   gutterName: 'button',
-        //   icon: 'reorder',
-        //   handlers: {
-        //     click: (columns, data, column, record, rowIndex) => {
-        //       if (record.id) navigate(`product_options/${record.id}`)
-        //     }
-        //   }
-        // },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'reorder'
+          // handlers: {
+          //   click: (columns, data, column, record, rowIndex) => {
+          //     if (record.id) navigate(`product_options/${record.id}`)
+          //   }
+          // }
+        },
         {
           type: 'string',
           name: 'name',
@@ -166,6 +192,47 @@ class InventorySummaryReport extends localize(i18next)(PageView) {
           header: i18next.t('field.name'),
           width: 180
         },
+        // {
+        //   type: 'object',
+        //   name: 'bizplace',
+        //   record: {
+        //     align: 'center',
+        //     editable: true,
+        //     options: {
+        //       queryName: 'bizplaces'
+        //       // basicArgs: {
+        //       //   filters: [
+        //       //     {
+        //       //       name: 'name',
+        //       //       value: 'o',
+        //       //       operator: 'like',
+        //       //       dataType: 'string'
+        //       //     }
+        //       //   ]
+        //       // }
+        //     }
+        //   },
+        //   header: i18next.t('field.bizplace'),
+        //   width: 200
+        // },
+        {
+          type: 'integer',
+          name: 'inQty',
+          record: {
+            editable: true
+          },
+          header: i18next.t('field.in'),
+          width: 50
+        },
+        {
+          type: 'integer',
+          name: 'outQty',
+          record: {
+            editable: true
+          },
+          header: i18next.t('field.out'),
+          width: 50
+        },
         {
           type: 'string',
           name: 'description',
@@ -174,16 +241,6 @@ class InventorySummaryReport extends localize(i18next)(PageView) {
           },
           header: i18next.t('field.description'),
           width: 250
-        },
-        {
-          type: 'string',
-          name: 'type',
-          record: {
-            align: 'center',
-            editable: true
-          },
-          header: i18next.t('field.type'),
-          width: 150
         },
         {
           type: 'object',
@@ -217,39 +274,20 @@ class InventorySummaryReport extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  _importableData(records) {
-    setTimeout(() => {
-      openPopup(
-        html`
-          <import-pop-up
-            .records=${records}
-            .config=${this.config}
-            .importHandler="${this.importHandler.bind(this)}"
-          ></import-pop-up>
-        `,
-        {
-          backdrop: true,
-          size: 'large',
-          title: i18next.t('title.import')
-        }
-      )
-    }, 500)
-  }
-
   async fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
         query {
-          products(${gqlBuilder.buildArgs({
+          movements(${gqlBuilder.buildArgs({
             filters: this._conditionParser(),
             pagination: { page, limit },
             sortings: sorters
           })}) {
             items {
               id
-              name
               description
-              type
+              inQty
+              outQty
               updater {
                 id
                 name
@@ -265,35 +303,9 @@ class InventorySummaryReport extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       return {
-        total: response.data.products.total || 0,
-        records: response.data.products.items || []
+        total: response.data.movements.total || 0,
+        records: response.data.movements.items || []
       }
-    }
-  }
-
-  async importHandler(patches) {
-    const response = await client.query({
-      query: gql`
-          mutation {
-            updateMultipleProduct(${gqlBuilder.buildArgs({
-              patches
-            })}) {
-              name
-            }
-          }
-        `
-    })
-
-    if (!response.errors) {
-      history.back()
-      this.dataGrist.fetch()
-      document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            message: i18next.t('text.data_imported_successfully')
-          }
-        })
-      )
     }
   }
 
@@ -317,101 +329,8 @@ class InventorySummaryReport extends localize(i18next)(PageView) {
       })
   }
 
-  async _saveProducts() {
-    let patches = this.dataGrist.dirtyRecords
-    if (patches && patches.length) {
-      patches = patches.map(product => {
-        let patchField = product.id ? { id: product.id } : {}
-        const dirtyFields = product.__dirtyfields__
-        for (let key in dirtyFields) {
-          patchField[key] = dirtyFields[key].after
-        }
-        patchField.cuFlag = product.__dirty__
-
-        return patchField
-      })
-
-      const response = await client.query({
-        query: gql`
-            mutation {
-              updateMultipleProduct(${gqlBuilder.buildArgs({
-                patches
-              })}) {
-                name
-              }
-            }
-          `
-      })
-
-      if (!response.errors) {
-        this.dataGrist.fetch()
-        document.dispatchEvent(
-          new CustomEvent('notify', {
-            detail: {
-              message: i18next.t('text.data_updated_successfully')
-            }
-          })
-        )
-      }
-    }
-  }
-
-  async _deleteProducts() {
-    Swal.fire({
-      title: 'Are you sure?',
-      text: "You won't be able to revert this!",
-      type: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, delete it!'
-    }).then(async result => {
-      if (result.value) {
-        const names = this.dataGrist.selected.map(record => record.name)
-        if (names && names.length > 0) {
-          const response = await client.query({
-            query: gql`
-            mutation {
-              deleteProducts(${gqlBuilder.buildArgs({ names })})
-            }
-          `
-          })
-
-          if (!response.errors) {
-            this.dataGrist.fetch()
-            document.dispatchEvent(
-              new CustomEvent('notify', {
-                detail: {
-                  message: i18next.t('text.data_updated_successfully')
-                }
-              })
-            )
-          }
-        }
-      }
-    })
-  }
-
   get _columns() {
     return this.config.columns
-  }
-
-  _exportableData() {
-    let records = []
-    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
-      records = this.dataGrist.selected
-    } else {
-      records = this.dataGrist.data.records
-    }
-
-    return records.map(item => {
-      return this._columns
-        .filter(column => column.type !== 'gutter')
-        .reduce((record, column) => {
-          record[column.name] = item[column.name]
-          return record
-        }, {})
-    })
   }
 }
 

@@ -170,5 +170,7 @@
   "title.vas_work_order": "atur kerja VAS",
   "title.view_setting": "lihat tetapan",
   "title.warehouse": "gudang",
-  "title.worker": "pekerja"
+  "title.worker": "pekerja",
+  "field.in": "masuk",
+  "field.out": "keluar"
 }

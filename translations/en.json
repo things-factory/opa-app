@@ -226,5 +226,7 @@
   "title.view_setting": "view setting",
   "title.warehouse": "warehouse",
   "title.worker": "worker",
-  "title.create_claim_chit": "create claim chit"
+  "title.create_claim_chit": "create claim chit",
+  "field.in": "in",
+  "field.out": "out"
 }
