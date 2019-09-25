@@ -6,7 +6,7 @@ import { css, html, LitElement } from 'lit-element'
 import { connect } from 'pwa-helpers'
 import { UPDATE_LABEL_SETTINGS } from '../actions/label-settings'
 import { LOCATION_LABEL_SETTING_KEY, PALLET_LABEL_SETTING_KEY } from '../label-setting-constants'
-import './label-selector-popup'
+import '@things-factory/board-ui'
 
 export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement)) {
   static get styles() {
@@ -152,25 +152,25 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
   onClickLabelSelector(key) {
     var popup = openPopup(
       html`
-        <label-selector-popup
-          @label-selected=${async e => {
-            var label = e.detail.label
+        <board-selector
+          @board-selected=${async e => {
+            var board = e.detail.board
 
             await this.saveSettings({
               key,
-              value: label.id
+              value: board.id
             })
 
             store.dispatch({
               type: UPDATE_LABEL_SETTINGS,
-              locationLabel: key == LOCATION_LABEL_SETTING_KEY ? label : this.locationLabel,
-              palletLabel: key == PALLET_LABEL_SETTING_KEY ? label : this.palletLabel
+              locationLabel: key == LOCATION_LABEL_SETTING_KEY ? board : this.locationLabel,
+              palletLabel: key == PALLET_LABEL_SETTING_KEY ? board : this.palletLabel
             })
 
             popup.close()
             this.requestUpdate()
           }}
-        ></label-selector-popup>
+        ></board-selector>
       `,
       {
         backdrop: true,
