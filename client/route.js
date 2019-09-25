@@ -52,6 +52,14 @@ export default function route(page) {
       import('./pages/master/location-list')
       return page
 
+    case 'transport_summary_reports':
+      import('./pages/master/transport-summary-report')
+      return page
+
+    case 'inventory_summary_reports':
+      import('./pages/master/inventory-summary-report')
+      return page
+
     /**
      * Order Menus Section
      */
