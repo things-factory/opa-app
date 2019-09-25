@@ -5,7 +5,7 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_C
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES, ORDER_STATUS, PACKING_TYPES } from '../constants/order'
+import { LOAD_TYPES, ORDER_STATUS, PACKING_TYPES, ORDER_TYPES } from '../constants/order'
 
 class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -418,7 +418,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
 
   _fillupForm(arrivalNotice) {
     for (let key in arrivalNotice) {
-      Array.from(this.form.querySelectorAll('input')).forEach(field => {
+      Array.from(this.form.querySelectorAll('input, textarea, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = arrivalNotice[key]
         } else if (field.name === key && field.type === 'datetime-local') {
@@ -623,7 +623,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
       delete record.__typename
       delete record.product.__typename
 
-      return { ...record, seq }
+      return { ...record, seq, type: ORDER_TYPES.ARRIVAL_NOTICE.value }
     })
 
     const vass = this.vasGrist.data.records.map(record => {

@@ -380,7 +380,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
 
   _fillupForm(arrivalNotice) {
     for (let key in arrivalNotice) {
-      Array.from(this.form.querySelectorAll('input')).forEach(field => {
+      Array.from(this.form.querySelectorAll('input, textarea, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = arrivalNotice[key]
         } else if (field.name === key && field.type === 'datetime-local') {
