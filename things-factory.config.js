@@ -228,10 +228,6 @@ export default {
       page: 'receiving'
     },
     {
-      tagname: 'putaway-goods',
-      page: 'putaway'
-    },
-    {
       tagname: 'vas-work-order',
       page: 'vas-work-order'
     },
@@ -254,6 +250,10 @@ export default {
     {
       tagname: 'unload-product',
       page: 'unloading'
+    },
+    {
+      tagname: 'putaway-product',
+      page: 'putaway'
     },
     {
       tagname: 'execute-vas',

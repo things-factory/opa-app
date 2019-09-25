@@ -224,7 +224,7 @@ export default function route(page) {
       return page
 
     case 'putaway':
-      import('./pages/inbound/putaway-goods')
+      import('./pages/inbound/putaway-product')
       return page
 
     case 'vas-work-order':
