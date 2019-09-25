@@ -81,6 +81,17 @@ class SystemUserBizplacesDetail extends localize(i18next)(LitElement) {
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config="${this.config}"
           .fetchHandler="${this.fetchHandler.bind(this)}"
+          @record-change="${event => {
+            this.dataGrist.data = {
+              ...this.dataGrist.data,
+              records: this.dataGrist.data.records.map((record, idx) => {
+                return {
+                  ...record,
+                  mainBizplace: event.detail.row === idx
+                }
+              })
+            }
+          }}"
         ></data-grist>
       </div>
 
@@ -116,6 +127,12 @@ class SystemUserBizplacesDetail extends localize(i18next)(LitElement) {
           name: 'assigned',
           header: i18next.t('field.assigned'),
           width: 80
+        },
+        {
+          type: 'boolean',
+          name: 'mainBizplace',
+          header: i18next.t('field.main_bizplace'),
+          width: 80
         }
       ]
     }
@@ -147,6 +164,7 @@ class SystemUserBizplacesDetail extends localize(i18next)(LitElement) {
             name
             description
             assigned
+            mainBizplace
           }
         }
       `
@@ -205,7 +223,7 @@ class SystemUserBizplacesDetail extends localize(i18next)(LitElement) {
           mutation {
             updateUserBizplaces(${gqlBuilder.buildArgs({
               email: this.email,
-              bizplaces: this._getCheckedBizplaces()
+              bizplaceUsers: this._getCheckedBizplaces()
             })}) {
               id
               name
@@ -241,9 +259,12 @@ class SystemUserBizplacesDetail extends localize(i18next)(LitElement) {
   _getCheckedBizplaces() {
     this.grist.commit()
     return this.grist.data.records
-      .filter(bizplace => bizplace.assigned)
-      .map(bizplace => {
-        return { id: bizplace.id }
+      .filter(item => item.assigned)
+      .map(item => {
+        return {
+          bizplace: { id: item.id },
+          mainBizplace: item.mainBizplace
+        }
       })
   }
 }
