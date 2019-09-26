@@ -46,11 +46,6 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  constructor() {
-    super()
-    this.rawLocationData = []
-  }
-
   render() {
     return html`
       <search-form
@@ -105,13 +100,13 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  activated(active) {
-    if (JSON.parse(active) && this.dataGrist) {
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
       this.dataGrist.fetch()
     }
   }
 
-  async firstUpdated() {
+  pageInitialized() {
     this._searchFields = [
       {
         label: i18next.t('label.name'),
@@ -366,36 +361,49 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _deleteAllLocations() {
-    const id = this._warehouseId
+    let filters = []
+    if (this._warehouseId) {
+      filters.push({
+        name: 'id',
+        operator: 'eq',
+        value: this._warehouseId
+      })
+    }
 
     const retrieve = await client.query({
       query: gql`
           query {
-            warehouse(${gqlBuilder.buildArgs({ id })}) {
-              id
-              name
+            warehouses(${gqlBuilder.buildArgs({
+              filters: [...filters],
+              pagination: {},
+              sortings: []
+            })}) {
+              items {
+                id
+                name
+              }
             }
           }
         `
     })
-    let name = retrieve.data.warehouse.name
+    let name = retrieve.data.warehouses.items[0].name
 
     Swal.fire({
-      title: 'Delete all locations?',
-      text: 'This action cannot be undo!',
+      title: i18next.t('text.delete_all_locations?'),
+      text: i18next.t('text.you_wont_be_able_to_revert_this!'),
       type: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#22a6a7',
       cancelButtonColor: '#cfcfcf',
-      confirmButtonText: 'Delete all!'
+      confirmButtonText: i18next.t('button.delete_all')
     }).then(async result => {
       if (result.value && name !== '') {
         const response = await client.query({
           query: gql`
-                mutation {
-                  deleteAllLocations(${gqlBuilder.buildArgs({ name })})
-                }
-              `
+              mutation {
+                deleteAllLocations(${gqlBuilder.buildArgs({ name })})
+              }
+            `
         })
         if (!response.errors) this.dataGrist.fetch()
       }

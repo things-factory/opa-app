@@ -81,8 +81,8 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  activated(active) {
-    if (JSON.parse(active)) {
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
       this.fetchGAN()
     }
   }
@@ -173,7 +173,7 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
     `
   }
 
-  firstUpdated() {
+  pageInitialized() {
     this.productGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },

@@ -99,13 +99,13 @@ class VasOrderList extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  activated(active) {
-    if (JSON.parse(active) && this.vasGrist) {
+  pageUpdated(changed, lifecycle) {
+    if (this.active) {
       this.vasGrist.fetch()
     }
   }
 
-  async firstUpdated() {
+  pageInitialized() {
     this.config = {
       rows: { selectable: { multiple: true } },
       columns: [
@@ -291,13 +291,13 @@ class VasOrderList extends connect(store)(localize(i18next)(PageView)) {
 
   async _deleteorderVass() {
     Swal.fire({
-      title: 'Are you sure?',
-      text: "You won't be able to revert this!",
+      title: i18next.t('text.are_you_sure?'),
+      text: i18next.t('text.you_wont_be_able_to_revert_this!'),
       type: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, delete it!'
+      confirmButtonColor: '#22a6a7',
+      cancelButtonColor: '#cfcfcf',
+      confirmButtonText: i18next.t('button.delete')
     }).then(async result => {
       if (result.value) {
         const names = this.vasGrist.selected.map(record => record.name)

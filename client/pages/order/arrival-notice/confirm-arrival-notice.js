@@ -381,8 +381,8 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
     )
   }
 
-  async activated(active) {
-    if (active) {
+  async pageUpdated(changes, lifecycle) {
+    if (this.active) {
       this.data = await this.getArrivalNotices()
     }
   }

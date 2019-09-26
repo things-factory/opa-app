@@ -83,8 +83,8 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
     `
   }
 
-  activated(active) {
-    if (JSON.parse(active) && this.dataGrist) {
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
       this.dataGrist.fetch()
     }
   }
@@ -93,7 +93,7 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
     this.dataGrist.refresh()
   }
 
-  async firstUpdated() {
+  pageInitialized() {
     this._searchFields = [
       {
         name: 'name',

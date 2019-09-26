@@ -77,8 +77,8 @@ class RejectedCollectionOrder extends connect(store)(localize(i18next)(PageView)
     }
   }
 
-  activated(active) {
-    if (JSON.parse(active)) {
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
       this.fetchCollectionOrder()
     }
   }
@@ -169,7 +169,7 @@ class RejectedCollectionOrder extends connect(store)(localize(i18next)(PageView)
     this.vasData = {}
   }
 
-  firstUpdated() {
+  pageInitialized() {
     this.productGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
