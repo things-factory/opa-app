@@ -73,8 +73,8 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  activated(active) {
-    if (JSON.parse(active)) {
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
       this.fetchGAN()
     }
   }
@@ -179,7 +179,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
     this.vasData = {}
   }
 
-  firstUpdated() {
+  pageInitialized() {
     this.productGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
