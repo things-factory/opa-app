@@ -472,11 +472,11 @@ class CompleteDeliveryOrder extends connect(store)(localize(i18next)(PageView)) 
   async _checkDeliveredOrder() {
     Swal.fire({
       title: 'Are you sure to change the order status to Done?',
-      text: "You won't be able to revert this!",
+      text: i18next.t('text.you_wont_be_able_to_revert_this!'),
       type: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
+      confirmButtonColor: '#22a6a7',
+      cancelButtonColor: '#cfcfcf',
       confirmButtonText: 'Yes, confirm it!'
     }).then(async result => {
       if (result.value) {
