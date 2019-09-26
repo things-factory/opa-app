@@ -213,17 +213,19 @@ class WorksheetUnloading extends connect(store)(localize(i18next)(PageView)) {
               name
               description
             }
-            worksheetDetails {
+            bufferLocation {
               id
               name
-              toLocation {
-                warehouse {
-                  name
-                  description
-                }
+              description
+              warehouse {
+                id
                 name
                 description
               }
+            }
+            worksheetDetails {
+              id
+              name
               targetProduct {
                 product {
                   id
@@ -245,13 +247,12 @@ class WorksheetUnloading extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      const location = response.data.worksheet.worksheetDetails[0].toLocation
       const worksheet = {
         ...response.data.worksheet,
         arrivalNotice: response.data.worksheet.arrivalNotice.name,
         bizplace: response.data.worksheet.bizplace.name,
-        bufferLocation: location.name,
-        warehouse: location.warehouse.name
+        bufferLocation: response.data.worksheet.bufferLocation.name,
+        warehouse: response.data.worksheet.bufferLocation.warehouse.name
       }
       this._fillupForm(worksheet)
       this.data = {
