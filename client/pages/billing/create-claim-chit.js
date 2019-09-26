@@ -1,23 +1,12 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
-import { BILLING_MODE } from './constants/claim'
+import { TRIP_CLAIM } from './constants/claim'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import {
-  client,
-  gqlBuilder,
-  isMobileDevice,
-  navigate,
-  PageView,
-  ScrollbarStyles,
-  store,
-  flattenObject
-} from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, store, flattenObject } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { openPopup } from '@things-factory/layout-base'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import '../components/import-pop-up'
 
 class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -68,14 +57,90 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
 
   static get properties() {
     return {
-      claimDetailsGristConfig: Object,
-      claimDetailsData: Object,
       config: Object,
       data: Object,
-      importHandler: Object,
-      _orderNo: Object,
-      _selectedOrderNo: String
+      _claimDetailGristConfig: Object,
+      _orders: Object,
+      _selectedOrderNo: String,
+      _claimDetailsData: Object
     }
+  }
+
+  constructor() {
+    super()
+    this._claimDetailsData = {}
+  }
+
+  get context() {
+    return {
+      title: 'Create Claim Chit',
+      actions: [
+        {
+          title: i18next.t('button.save'),
+          action: this._createNewClaim.bind(this)
+        }
+      ]
+    }
+  }
+
+  get _columns() {
+    return this.config.columns
+  }
+
+  get _form() {
+    return this.shadowRoot.querySelector('form')
+  }
+
+  get _dataGrist() {
+    return this.shadowRoot.querySelector('data-grist')
+  }
+
+  async pageInitialized() {
+    this._orders = { ...(await this.fetchOrderList()) }
+    this._claimDetailGristConfig = {
+      pagination: { infinite: true },
+      rows: { selectable: { multiple: true } },
+      columns: [
+        { type: 'gutter', gutterName: 'dirty' },
+        { type: 'gutter', gutterName: 'sequence' },
+        { type: 'gutter', gutterName: 'row-selector', multiple: true },
+        {
+          type: 'select',
+          name: 'name',
+          header: i18next.t('field.claimType'),
+          record: {
+            editable: true,
+            align: 'center',
+            options: ['', ...Object.keys(TRIP_CLAIM).map(key => TRIP_CLAIM[key].value)]
+          },
+          width: 350
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.description'),
+          record: { editable: true, align: 'center' },
+          width: 600
+        },
+        {
+          type: 'string',
+          name: 'refNo',
+          header: i18next.t('field.receipt_reference_no'),
+          record: { editable: true, align: 'center' },
+          width: 500
+        },
+        {
+          type: 'float',
+          name: 'amount',
+          header: i18next.t('field.amount'),
+          record: { editable: true, align: 'center' },
+          width: 150
+        }
+      ]
+    }
+
+    await this.updateComplete
+    this._dataGrist.fetch()
   }
 
   render() {
@@ -85,13 +150,13 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
           <legend>${i18next.t('title.create_claim_chit')}</legend>
 
           <label>${i18next.t('label.orderNo')}</label>
-          <select name="orderNo" @change=${e => (this._selectedOrderNo = e.target.value)}>
+          <select name="orderNo" @change=${e => (this._selectedOrderNo = e.target.value)} data-name="name">
             <option value="">-- Please Select an Order --</option>
 
-            ${Object.keys(this.___orderNo.data.claimOrderList || {}).map(key => {
-              const orderNo = this.___orderNo.data.claimOrderList[key]
+            ${Object.keys(this.___orders.data.claimOrderList || {}).map(key => {
+              const orderNo = this.___orders.data.claimOrderList[key]
               return html`
-                <option value="${orderNo.orderNo}">${orderNo.name}</option>
+                <option value="${orderNo.name}">${orderNo.description}</option>
               `
             })}</select
           >
@@ -100,7 +165,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
           <input disabled name="billingMode" value="" data-name="billingMode"></label>
 
           <label>Date</label>
-          <input disabled name="orderDate" value="" data-name="orderDate"></label>
+          <input disabled name="orderDate" value="" type="datetime-local" data-name="orderDate"></label>
 
           <label>Lorry No</label>
           <input disabled name="lorryNo" value="" data-name="transportVehicle|name"></label>
@@ -125,89 +190,19 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
         <data-grist
           id="claim-details-grist"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.claimDetailsGristConfig}
-          .data="${this.claimDetailsData}"
+          .config=${this._claimDetailGristConfig}
+          .data="${this._claimDetailsData}"
         ></data-grist>
       </div>
     `
   }
 
-  firstUpdated() {
-    this.claimDetailsGristConfig = {
-      pagination: { infinite: true },
-      rows: { selectable: { multiple: true } },
-      columns: [
-        { type: 'gutter', gutterName: 'sequence' },
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'close'
-        },
-        {
-          type: 'select',
-          name: 'claimType',
-          header: i18next.t('field.claimType'),
-          width: 350
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          width: 180
-        },
-        {
-          type: 'string',
-          name: 'refNo',
-          header: i18next.t('field.receipt_reference_no'),
-          width: 150
-        },
-        {
-          type: 'float',
-          name: 'amount',
-          header: i18next.t('field.amount'),
-          width: 80
-        }
-      ]
-    }
-  }
-
   updated(changes) {
-    if (changes.has('_selectedOrderNo') && this.___selectedOrderNo && this.___selectedOrderNo.trim() != '') {
-      this.fetchOrderDetail()
-    }
-  }
-
-  get context() {
-    return {
-      title: 'Create Claim Chit',
-      actions: [
-        {
-          title: i18next.t('button.save'),
-          action: this._createNewClaim.bind(this)
-        }
-      ]
-    }
-  }
-
-  async pageInitialized() {
-    var x = await this.fetchOrderList()
-    this._orderNo = x
-  }
-
-  async _fetchCODO() {
-    this._orderNo = BILLING_MODE
-  }
-
-  get _columns() {
-    return this.config.columns
-  }
-
-  async _createNewClaim() {
-    try {
-      //validation
-      //create new claim
-    } catch (e) {
-      this._showToast(e)
+    if (changes.has('_selectedOrderNo') && this._selectedOrderNo !== '') {
+      Array.from(this._form.querySelectorAll('input')).map(field => {
+        field.value = ''
+      })
+      if (this.___selectedOrderNo && this.___selectedOrderNo.trim() != '') this.fetchOrderDetail()
     }
   }
 
@@ -217,7 +212,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
         query {
           claimOrderList {
             name
-            orderNo
+            description
           }
         }
       `
@@ -239,7 +234,6 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
           claimOrderDetail (${gqlBuilder.buildArgs({
             filters
           })}){
-            name
             deliveryOrder{
               deliveryDateTime
               from
@@ -278,20 +272,43 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
         }
       `
     })
-    this.fillOrderDetails(result)
+    this._fillOrderDetails(result.data.claimOrderDetail)
   }
 
-  get form() {
-    return this.shadowRoot.querySelector('form')
+  async _createNewClaim() {
+    try {
+      var result = this._getClaimData()
+      this._validateData(result)
+      const response = await client.query({
+        query: gql`
+          mutation {
+            createClaim(${gqlBuilder.buildArgs({
+              claim: result
+            })}) {
+              id
+              name
+            }
+          }
+        `
+      })
+      if (!response.errors) {
+        this._resetAll()
+        this._showToast({ message: i18next.t('new_claim_created') })
+      }
+    } catch (e) {
+      this._showToast(e)
+    }
   }
 
-  fillOrderDetails(responseDate) {
-    debugger
-    let deliveryOrder = responseDate.data.claimOrderDetail.deliveryOrder
-    var obj = flattenObject(deliveryOrder)
+  _fillOrderDetails(objData) {
+    var obj = flattenObject(objData.deliveryOrder || objData.collectionOrder)
     Object.keys(obj).map(key => {
-      Array.from(this.form.querySelectorAll('input')).forEach(field => {
-        if (field.dataset.name === key && field.type === 'datetime-local') {
+      Array.from(this._form.querySelectorAll('input')).forEach(field => {
+        if (
+          field.dataset.name === 'orderDate' &&
+          field.type === 'datetime-local' &&
+          (key === 'deliveryDateTime' || key === 'collectionDateTime')
+        ) {
           const datetime = Number(obj[key])
           const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
           field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
@@ -302,20 +319,54 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
     })
   }
 
-  // flattenObject(obj, delimiter = '|') {
-  //   var objResult = {}
-  //   for (var items in obj) {
-  //     if (!!obj[items] && typeof obj[items] == 'object') {
-  //       var flatObject = this.flattenObject(obj[items], delimiter)
-  //       for (var x in flatObject) {
-  //         objResult[items + delimiter + x] = flatObject[x]
-  //       }
-  //     } else {
-  //       objResult[items] = obj[items]
-  //     }
-  //   }
-  //   return objResult
-  // }
+  async _resetAll() {
+    this._form.reset()
+    this._selectedOrderNo = ''
+    this._claimDetailsData = {}
+    this._dataGrist.fetch()
+    this._orders = { ...(await this.fetchOrderList()) }
+  }
+
+  _validateData(data) {
+    let error = ''
+
+    if (data.name === '') error = error + 'Please choose the order for claim.'
+    if (data.claimDetails.length === 0) error = error + 'Please add at least one (1) claim to proceed.'
+
+    if (error.trim() !== '') throw new Error(error)
+  }
+
+  _getClaimData() {
+    let claim = {}
+    Array.from(this._form.querySelectorAll('select')).forEach(field => {
+      claim['description'] = field.options[field.selectedIndex].text
+      claim['name'] = field.value
+    })
+
+    let claimDetails = {}
+    claimDetails = this._dataGrist.dirtyRecords.map(claimDetail => {
+      let patchField = {}
+      const dirtyFields = claimDetail.__dirtyfields__
+      for (let key in dirtyFields) {
+        patchField[key] = dirtyFields[key].after
+      }
+
+      return { ...patchField }
+    })
+
+    return { ...claim, claimDetails }
+  }
+
+  _showToast({ type, message }) {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: {
+          type,
+          message
+        }
+      })
+    )
+  }
 }
 
 window.customElements.define('create-claim-chit', CreateClaimChit)
