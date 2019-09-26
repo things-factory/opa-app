@@ -225,8 +225,12 @@ class PutawayGoods extends localize(i18next)(PageView) {
         }
       ]
     }
+  }
 
-    this._focusOnBarcodField()
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
+      this._focusOnBarcodField()
+    }
   }
 
   _focusOnBarcodField() {
