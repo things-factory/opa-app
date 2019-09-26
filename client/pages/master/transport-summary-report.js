@@ -396,8 +396,8 @@ class TransportSummaryReport extends localize(i18next)(PageView) {
       text: "You won't be able to revert this!",
       type: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
+      confirmButtonColor: '#22a6a7',
+      cancelButtonColor: '#cfcfcf',
       confirmButtonText: 'Yes, delete it!'
     }).then(async result => {
       if (result.value) {

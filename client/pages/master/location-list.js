@@ -46,11 +46,6 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  constructor() {
-    super()
-    this.rawLocationData = []
-  }
-
   render() {
     return html`
       <search-form
@@ -366,19 +361,32 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _deleteAllLocations() {
-    const id = this._warehouseId
+    let filters = []
+    if (this._warehouseId) {
+      filters.push({
+        name: 'id',
+        operator: 'eq',
+        value: this._warehouseId
+      })
+    }
 
     const retrieve = await client.query({
       query: gql`
           query {
-            warehouse(${gqlBuilder.buildArgs({ id })}) {
-              id
-              name
+            warehouses(${gqlBuilder.buildArgs({
+              filters: [...filters],
+              pagination: {},
+              sortings: []
+            })}) {
+              items {
+                id
+                name
+              }
             }
           }
         `
     })
-    let name = retrieve.data.warehouse.name
+    let name = retrieve.data.warehouses.items[0].name
 
     Swal.fire({
       title: 'Delete all locations?',
@@ -392,10 +400,10 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
       if (result.value && name !== '') {
         const response = await client.query({
           query: gql`
-                mutation {
-                  deleteAllLocations(${gqlBuilder.buildArgs({ name })})
-                }
-              `
+              mutation {
+                deleteAllLocations(${gqlBuilder.buildArgs({ name })})
+              }
+            `
         })
         if (!response.errors) this.dataGrist.fetch()
       }
