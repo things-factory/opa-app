@@ -173,7 +173,7 @@ class ExecuteVas extends localize(i18next)(PageView) {
     this.data = { records: [] }
   }
 
-  firstUpdated() {
+  pageInitialized() {
     this.config = {
       pagination: {
         infinite: true

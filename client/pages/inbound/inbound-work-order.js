@@ -141,7 +141,7 @@ class InboundWorkOrder extends localize(i18next)(PageView) {
     `
   }
 
-  firstUpdated() {
+  pageInitialized() {
     this.productsConfig = {
       pagination: {
         infinite: true

@@ -124,7 +124,7 @@ class PutawayGoods extends localize(i18next)(PageView) {
     `
   }
 
-  firstUpdated() {
+  pageInitialized() {
     this.config = {
       pagination: {
         infinite: true

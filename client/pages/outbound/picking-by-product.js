@@ -135,7 +135,7 @@ class PickingByProduct extends localize(i18next)(PageView) {
     `
   }
 
-  firstUpdated() {
+  pageInitialized() {
     this.servicesConfig = {
       pagination: {
         infinite: true

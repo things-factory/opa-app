@@ -149,7 +149,7 @@ class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) 
     this._contextHandler()
   }
 
-  firstUpdated() {
+  pageInitialized() {
     this.productGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },

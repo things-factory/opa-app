@@ -88,7 +88,7 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
     `
   }
 
-  async firstUpdated() {
+  pageInitialized() {
     this.config = {
       pagination: {
         infinite: true
@@ -224,8 +224,12 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
         }
       }
     }
+  }
 
-    this.data = await this.getArrivalNotices()
+  async pageUpdated(changes, lifecycle) {
+    if (this.active) {
+      this.data = await this.getArrivalNotices()
+    }
   }
 
   async getArrivalNotices() {

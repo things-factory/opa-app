@@ -132,7 +132,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
     `
   }
 
-  firstUpdated() {
+  pageInitialized() {
     this.claimDetailsGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
@@ -189,9 +189,11 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async pageInitialized() {
-    var x = await this.fetchOrderList()
-    this._orderNo = x
+  async pageUpdated(changes, lifecycle) {
+    if (this.active) {
+      var x = await this.fetchOrderList()
+      this._orderNo = x
+    }
   }
 
   async _fetchCODO() {

@@ -108,7 +108,7 @@ class ReceiveGoods extends localize(i18next)(PageView) {
     `
   }
 
-  async firstUpdated() {
+  pageInitialized() {
     this.config = {
       pagination: {
         infinite: true

@@ -161,7 +161,7 @@ class CreateReleaseGoods extends localize(i18next)(PageView) {
     `
   }
 
-  firstUpdated() {
+  pageInitialized() {
     this.productsData = { records: [] }
     this.servicesData = { records: [] }
 
