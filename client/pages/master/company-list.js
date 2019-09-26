@@ -90,7 +90,7 @@ class CompanyList extends localize(i18next)(PageView) {
     }
   }
 
-  async pageInitialized() {
+  pageInitialized() {
     this._searchFields = [
       {
         label: i18next.t('label.name'),
@@ -125,10 +125,12 @@ class CompanyList extends localize(i18next)(PageView) {
     ]
 
     this.config = this.gristConfig
+  }
 
-    await this.updateComplete
-
-    this.dataGrist.fetch()
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
+      this.dataGrist.fetch()
+    }
   }
 
   get gristConfig() {

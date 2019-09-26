@@ -87,13 +87,13 @@ class TransportDriver extends localize(i18next)(PageView) {
     }
   }
 
-  activated(active) {
-    if (JSON.parse(active) && this.dataGrist) {
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
       this.dataGrist.fetch()
     }
   }
 
-  async firstUpdated() {
+  pageInitialized() {
     this._searchFields = [
       {
         label: i18next.t('label.name'),
