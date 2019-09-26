@@ -224,7 +224,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_id'),
-          record: { editable: true, align: 'center', options: { queryName: 'products' } },
+          record: { editable: true, align: 'center' },
           width: 150
         },
         {
@@ -233,13 +233,6 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.product'),
           record: { editable: true, align: 'center', options: { queryName: 'products' } },
           width: 350
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: { editable: true, align: 'center' },
-          width: 180
         },
         {
           type: 'select',
@@ -314,13 +307,6 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.vas'),
           record: { editable: true, align: 'center', options: { queryName: 'vass' } },
           width: 250
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: { editable: true, align: 'center' },
-          width: 180
         },
         {
           type: 'select',
