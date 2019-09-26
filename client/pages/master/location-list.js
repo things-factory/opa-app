@@ -102,6 +102,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
 
   pageUpdated(changes, lifecycle) {
     if (this.active) {
+      this._warehouseId = lifecycle.resourceId
       this.dataGrist.fetch()
     }
   }
@@ -492,10 +493,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   stateChanged(state) {
-    if (this.active) {
-      this._warehouseId = state && state.route && state.route.resourceId
-      this._locationLabel = state.labelSettings.locationLabel
-    }
+    this._locationLabel = state.labelSettings.locationLabel
   }
 }
 
