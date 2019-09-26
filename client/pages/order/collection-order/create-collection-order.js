@@ -438,7 +438,7 @@ class CreateCollectionOrder extends connect(store)(localize(i18next)(PageView)) 
       delete record.__typename
       delete record.product.__typename
 
-      return { ...record, seq, type: ORDER_TYPES.ARRIVAL_NOTICE.value }
+      return { ...record, seq, type: ORDER_TYPES.COLLECTION.value }
     })
 
     const vass = this.vasGrist.data.records.map(record => {
