@@ -92,8 +92,8 @@ class ExecuteDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  activated(active) {
-    if (JSON.parse(active)) {
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
       this.fetchDeliveryOrder()
       this.fetchTransportDriver()
       this.fetchTransportVehicle()
@@ -205,7 +205,7 @@ class ExecuteDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
     `
   }
 
-  firstUpdated() {
+  pageInitialized() {
     this.productGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
@@ -481,11 +481,11 @@ class ExecuteDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
     if (this._prevDriverName !== this.driver.value || this._prevVehicleName !== this.vehicle.value) {
       Swal.fire({
         title: 'There is a change in driver/vehicle assignment, do you want to continue dispatch?',
-        text: "You won't be able to revert this!",
+        text: i18next.t('text.you_wont_be_able_to_revert_this!'),
         type: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
+        confirmButtonColor: '#22a6a7',
+        cancelButtonColor: '#cfcfcf',
         confirmButtonText: 'Yes, confirm it!'
       }).then(async result => {
         if (result.value) {

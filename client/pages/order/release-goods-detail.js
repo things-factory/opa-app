@@ -140,7 +140,7 @@ class ReleaseGoodsDetail extends connect(store)(localize(i18next)(PageView)) {
     `
   }
 
-  firstUpdated() {
+  pageInitialized() {
     this.productsData = { records: [] }
     this.servicesData = { records: [] }
 
@@ -303,9 +303,9 @@ class ReleaseGoodsDetail extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  stateChanged(state) {
-    if (JSON.parse(this.active)) {
-      this.orderName = state.route.resourceId
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
+      this.orderName = lifecycle.resourceId
     }
   }
 

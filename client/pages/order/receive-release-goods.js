@@ -80,7 +80,7 @@ class ReceiveReleaseGoods extends localize(i18next)(PageView) {
     `
   }
 
-  async firstUpdated() {
+  pageInitialized() {
     this.config = {
       pagination: {
         infinite: true
@@ -216,8 +216,12 @@ class ReceiveReleaseGoods extends localize(i18next)(PageView) {
         }
       }
     }
+  }
 
-    this.data = await this.getReleaseGoods()
+  async pageUpdated(changes, lifecycle) {
+    if (this.active) {
+      this.data = await this.getReleaseGoods()
+    }
   }
 
   async getReleaseGoods() {

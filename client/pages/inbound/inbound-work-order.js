@@ -141,7 +141,7 @@ class InboundWorkOrder extends localize(i18next)(PageView) {
     `
   }
 
-  firstUpdated() {
+  pageInitialized() {
     this.productsConfig = {
       pagination: {
         infinite: true
@@ -264,8 +264,12 @@ class InboundWorkOrder extends localize(i18next)(PageView) {
         }
       ]
     }
+  }
 
-    this._focusOnBarcodField()
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
+      this._focusOnBarcodField()
+    }
   }
 
   _focusOnBarcodField() {

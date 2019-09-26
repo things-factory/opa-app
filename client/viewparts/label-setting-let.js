@@ -30,10 +30,18 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
           display: flex;
           flex-direction: column;
           align-items: flex-start;
-          max-width: 100%;
         }
 
-        div.field > div > img {
+        div.field a {
+          overflow: hidden;
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          border-radius: 4px;
+          background-color: rgba(0, 0, 0, 0.1);
+          min-width: 50px;
+          min-height: 50px;
+        }
+
+        div.field img {
           max-height: 250px;
           max-width: 100%;
         }

@@ -243,9 +243,8 @@ class UnloadProduct extends localize(i18next)(PageView) {
     }
   }
 
-  async pageUpdated() {
+  pageUpdated(changes, lifecycle) {
     if (this.active) {
-      await this.updateComplete
       this._focusOnBarcodField()
     }
   }

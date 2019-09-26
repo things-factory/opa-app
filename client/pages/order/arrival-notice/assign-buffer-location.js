@@ -87,8 +87,8 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('input#buffer-location')
   }
 
-  activated(active) {
-    if (JSON.parse(active)) {
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
       this.fetchGAN()
     }
   }
@@ -182,7 +182,7 @@ class AssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
     `
   }
 
-  firstUpdated() {
+  pageInitialized() {
     this.productGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },

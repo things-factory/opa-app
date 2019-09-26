@@ -173,7 +173,7 @@ class ExecuteVas extends localize(i18next)(PageView) {
     this.data = { records: [] }
   }
 
-  firstUpdated() {
+  pageInitialized() {
     this.config = {
       pagination: {
         infinite: true
@@ -231,8 +231,12 @@ class ExecuteVas extends localize(i18next)(PageView) {
         }
       ]
     }
+  }
 
-    this._focusOnBarcodField()
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
+      this._focusOnBarcodField()
+    }
   }
 
   _focusOnBarcodField() {

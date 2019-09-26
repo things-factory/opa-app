@@ -75,7 +75,7 @@ class OnhandStock extends localize(i18next)(PageView) {
     `
   }
 
-  async firstUpdated() {
+  pageInitialized() {
     this.config = {
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
@@ -156,8 +156,12 @@ class OnhandStock extends localize(i18next)(PageView) {
         { name: 'unit', descending: false }
       ]
     }
+  }
 
-    this.data = await this._getStocks()
+  async pageUpdated() {
+    if (this.active) {
+      this.data = await this._getStocks()
+    }
   }
 
   async _getStocks() {

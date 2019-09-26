@@ -2,7 +2,7 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
@@ -44,11 +44,6 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
       _searchFields: Array,
       config: Object
     }
-  }
-
-  constructor() {
-    super()
-    this.rawLocationData = []
   }
 
   render() {
@@ -105,13 +100,13 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  activated(active) {
-    if (JSON.parse(active) && this.dataGrist) {
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
       this.dataGrist.fetch()
     }
   }
 
-  async firstUpdated() {
+  pageInitialized() {
     this._searchFields = [
       {
         label: i18next.t('label.name'),
@@ -366,36 +361,50 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _deleteAllLocations() {
-    const id = this._warehouseId
+    let filters = []
+    if (this._warehouseId) {
+      filters.push({
+        name: 'id',
+        operator: 'eq',
+        value: this._warehouseId
+      })
+    }
 
     const retrieve = await client.query({
       query: gql`
           query {
-            warehouse(${gqlBuilder.buildArgs({ id })}) {
-              id
-              name
+            warehouses(${gqlBuilder.buildArgs({
+              filters: [...filters],
+              pagination: {},
+              sortings: []
+            })}) {
+              items {
+                id
+                name
+              }
             }
           }
         `
     })
-    let name = retrieve.data.warehouse.name
+    let name = retrieve.data.warehouses.items[0].name
 
     Swal.fire({
-      title: 'Delete all locations?',
-      text: 'This action cannot be undo!',
+      title: i18next.t('text.delete_all_locations?'),
+      text: i18next.t('text.you_wont_be_able_to_revert_this!'),
       type: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#22a6a7',
       cancelButtonColor: '#cfcfcf',
-      confirmButtonText: 'Delete all!'
+      confirmButtonText: i18next.t('button.delete_all'),
+      cancelButtonText: i18next.t('button.cancel')
     }).then(async result => {
       if (result.value && name !== '') {
         const response = await client.query({
           query: gql`
-                mutation {
-                  deleteAllLocations(${gqlBuilder.buildArgs({ name })})
-                }
-              `
+              mutation {
+                deleteAllLocations(${gqlBuilder.buildArgs({ name })})
+              }
+            `
         })
         if (!response.errors) this.dataGrist.fetch()
       }
@@ -406,25 +415,40 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     const records = this.dataGrist.selected
     var labelId = this._locationLabel && this._locationLabel.id
 
-    for (var record of records) {
-      var searchParams = new URLSearchParams()
-      searchParams.append('location', record.name)
-      searchParams.append('shelf', record.shelf)
-
-      const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
-        method: 'GET'
+    if (!labelId) {
+      Swal.fire({
+        title: i18next.t('text.no_label_setting_was_found'),
+        text: i18next.t('text.please_check_your_setting'),
+        type: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#22a6a7',
+        cancelButtonColor: '#cfcfcf',
+        confirmButtonText: i18next.t('button.setting'),
+        cancelButtonText: i18next.t('text.cancel')
+      }).then(nav => {
+        if (nav.value) navigate('setting')
       })
+    } else {
+      for (var record of records) {
+        var searchParams = new URLSearchParams()
+        searchParams.append('location', record.name)
+        searchParams.append('shelf', record.shelf)
 
-      var command = await response.text()
+        const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
+          method: 'GET'
+        })
 
-      try {
-        if (!this.printer) {
-          this.printer = new USBPrinter()
+        var command = await response.text()
+
+        try {
+          if (!this.printer) {
+            this.printer = new USBPrinter()
+          }
+
+          await this.printer.connectAndPrint(command)
+        } catch (e) {
+          throw new Error(e)
         }
-
-        await this.printer.connectAndPrint(command)
-      } catch (e) {
-        throw new Error(e)
       }
     }
   }

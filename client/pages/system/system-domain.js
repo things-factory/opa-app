@@ -85,7 +85,7 @@ class SystemDomain extends localize(i18next)(PageView) {
     `
   }
 
-  async firstUpdated() {
+  pageInitialized() {
     this.config = {
       pagination: {
         infinite: true
@@ -201,8 +201,12 @@ class SystemDomain extends localize(i18next)(PageView) {
         }
       }
     }
+  }
 
-    this.data = await this._getDomainData()
+  async pageUpdated(changes, lifecycle) {
+    if (this.active) {
+      this.data = await this._getDomainData()
+    }
   }
 
   async _getDomainData() {

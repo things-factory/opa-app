@@ -128,7 +128,7 @@ class OutboundWorkOrder extends localize(i18next)(PageView) {
     `
   }
 
-  firstUpdated() {
+  pageInitialized() {
     this.shippingNoticeConfig = {
       pagination: {
         infinite: true
@@ -279,6 +279,11 @@ class OutboundWorkOrder extends localize(i18next)(PageView) {
 
     this.servicesData = {
       records: new Array(20).fill().map(() => new Object())
+    }
+  }
+
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
     }
   }
 }
