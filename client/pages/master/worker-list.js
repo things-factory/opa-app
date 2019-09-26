@@ -303,13 +303,13 @@ class WorkerList extends localize(i18next)(PageView) {
 
   async _deleteWorker() {
     Swal.fire({
-      title: 'Are you sure?',
-      text: "You won't be able to revert this!",
+      title: i18next.t('text.are_you_sure?'),
+      text: i18next.t('text.you_wont_be_able_to_revert_this!'),
       type: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#22a6a7',
       cancelButtonColor: '#cfcfcf',
-      confirmButtonText: 'Yes, delete it!'
+      confirmButtonText: i18next.t('button.delete')
     }).then(async result => {
       if (result.value) {
         const names = this.dataGrist.selected.map(record => record.name)

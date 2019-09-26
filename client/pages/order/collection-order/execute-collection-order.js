@@ -481,7 +481,7 @@ class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView))
     if (this._prevDriverName !== this.driver.value || this._prevVehicleName !== this.vehicle.value) {
       Swal.fire({
         title: 'There is a change in driver/vehicle assignment, do you want to continue dispatch?',
-        text: "You won't be able to revert this!",
+        text: i18next.t('text.you_wont_be_able_to_revert_this!'),
         type: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#22a6a7',

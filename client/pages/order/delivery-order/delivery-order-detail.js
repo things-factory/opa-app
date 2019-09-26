@@ -438,8 +438,8 @@ class DeliveryOrderDetail extends connect(store)(localize(i18next)(PageView)) {
             try {
               await this._confirmDeliveryOrder()
               Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
+                title: i18next.t('text.are_you_sure?'),
+                text: i18next.t('text.you_wont_be_able_to_revert_this!'),
                 type: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#22a6a7',

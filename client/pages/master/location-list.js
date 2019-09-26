@@ -389,13 +389,13 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     let name = retrieve.data.warehouses.items[0].name
 
     Swal.fire({
-      title: 'Delete all locations?',
-      text: 'This action cannot be undo!',
+      title: i18next.t('text.delete_all_locations?'),
+      text: i18next.t('text.you_wont_be_able_to_revert_this!'),
       type: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#22a6a7',
       cancelButtonColor: '#cfcfcf',
-      confirmButtonText: 'Delete all!'
+      confirmButtonText: i18next.t('button.delete_all')
     }).then(async result => {
       if (result.value && name !== '') {
         const response = await client.query({
