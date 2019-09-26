@@ -108,7 +108,7 @@ class ReceiveGoods extends localize(i18next)(PageView) {
     `
   }
 
-  pageInitialized() {
+  async pageInitialized() {
     this.config = {
       pagination: {
         infinite: true
@@ -209,6 +209,8 @@ class ReceiveGoods extends localize(i18next)(PageView) {
         }
       ]
     }
+
+    await this.updateComplete
 
     this._focusOnBarcodField()
   }
