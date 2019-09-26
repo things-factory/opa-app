@@ -99,13 +99,13 @@ class VasOrderList extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  activated(active) {
-    if (JSON.parse(active) && this.vasGrist) {
+  pageUpdated(changed, lifecycle) {
+    if (this.active) {
       this.vasGrist.fetch()
     }
   }
 
-  async firstUpdated() {
+  pageInitialized() {
     this.config = {
       rows: { selectable: { multiple: true } },
       columns: [

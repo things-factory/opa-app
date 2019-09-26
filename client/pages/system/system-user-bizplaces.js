@@ -64,13 +64,13 @@ class SystemUserBizplaces extends connect(store)(localize(i18next)(PageView)) {
     `
   }
 
-  activated(active) {
-    if (JSON.parse(active) && this.dataGrist) {
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
       this.dataGrist.fetch()
     }
   }
 
-  async pageInitialized() {
+  pageInitialized() {
     this._searchFields = [
       {
         name: 'name',
@@ -168,10 +168,6 @@ class SystemUserBizplaces extends connect(store)(localize(i18next)(PageView)) {
         }
       ]
     }
-
-    await this.updateComplete
-
-    this.dataGrist.fetch()
   }
 
   get searchForm() {

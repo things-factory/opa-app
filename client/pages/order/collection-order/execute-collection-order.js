@@ -92,8 +92,8 @@ class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView))
     }
   }
 
-  activated(active) {
-    if (JSON.parse(active)) {
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
       this.fetchCollectionOrder()
       this.fetchTransportDriver()
       this.fetchTransportVehicle()
@@ -205,7 +205,7 @@ class ExecuteCollectionOrder extends connect(store)(localize(i18next)(PageView))
     `
   }
 
-  firstUpdated() {
+  pageInitialized() {
     this.productGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
