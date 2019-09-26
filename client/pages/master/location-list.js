@@ -2,7 +2,7 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
@@ -395,7 +395,8 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
       showCancelButton: true,
       confirmButtonColor: '#22a6a7',
       cancelButtonColor: '#cfcfcf',
-      confirmButtonText: i18next.t('button.delete_all')
+      confirmButtonText: i18next.t('button.delete_all'),
+      cancelButtonText: i18next.t('button.cancel')
     }).then(async result => {
       if (result.value && name !== '') {
         const response = await client.query({
@@ -414,25 +415,40 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     const records = this.dataGrist.selected
     var labelId = this._locationLabel && this._locationLabel.id
 
-    for (var record of records) {
-      var searchParams = new URLSearchParams()
-      searchParams.append('location', record.name)
-      searchParams.append('shelf', record.shelf)
-
-      const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
-        method: 'GET'
+    if (!labelId) {
+      Swal.fire({
+        title: i18next.t('text.no_label_setting_was_found'),
+        text: i18next.t('text.please_check_your_setting'),
+        type: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#22a6a7',
+        cancelButtonColor: '#cfcfcf',
+        confirmButtonText: i18next.t('button.setting'),
+        cancelButtonText: i18next.t('text.cancel')
+      }).then(nav => {
+        if (nav.value) navigate('setting')
       })
+    } else {
+      for (var record of records) {
+        var searchParams = new URLSearchParams()
+        searchParams.append('location', record.name)
+        searchParams.append('shelf', record.shelf)
 
-      var command = await response.text()
+        const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
+          method: 'GET'
+        })
 
-      try {
-        if (!this.printer) {
-          this.printer = new USBPrinter()
+        var command = await response.text()
+
+        try {
+          if (!this.printer) {
+            this.printer = new USBPrinter()
+          }
+
+          await this.printer.connectAndPrint(command)
+        } catch (e) {
+          throw new Error(e)
         }
-
-        await this.printer.connectAndPrint(command)
-      } catch (e) {
-        throw new Error(e)
       }
     }
   }
