@@ -167,10 +167,10 @@ class CompanyList extends localize(i18next)(PageView) {
           width: 150
         },
         {
-          type: 'string',
+          type: 'code',
           name: 'countryCode',
           header: i18next.t('field.country_code'),
-          record: { editable: true, align: 'center' },
+          record: { editable: true, align: 'center', codeName: 'COUNTRY' },
           sortable: true,
           width: 80
         },
