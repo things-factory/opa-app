@@ -86,7 +86,7 @@ export class BufferLocationSelector extends localize(i18next)(LitElement) {
             id="location"
             .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
             .config=${this.locationConfig}
-            .fetchHandler="${this.fetchLoacations.bind(this)}"
+            .fetchHandler="${this.fetchLocations.bind(this)}"
           ></data-grist>
         </div>
       </div>
@@ -257,7 +257,7 @@ export class BufferLocationSelector extends localize(i18next)(LitElement) {
     }
   }
 
-  async fetchLoacations({ page, limit, sorters = [] }) {
+  async fetchLocations({ page, limit, sorters = [] }) {
     if (!this._warehouseId) return
 
     const response = await client.query({
