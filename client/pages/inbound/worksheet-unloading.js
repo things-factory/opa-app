@@ -286,7 +286,7 @@ class WorksheetUnloading extends connect(store)(localize(i18next)(PageView)) {
         query: gql`
           mutation {
             activateUnloading(${gqlBuilder.buildArgs({
-              name: this._worksheetNo,
+              worksheetNo: this._worksheetNo,
               unloadingWorksheetDetails: this._getUnloadingWorksheetDetails()
             })}) {
               name
