@@ -5,6 +5,7 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import Swal from 'sweetalert2'
 
 class UnloadProduct extends localize(i18next)(PageView) {
   static get properties() {
@@ -378,12 +379,8 @@ class UnloadProduct extends localize(i18next)(PageView) {
 
   pageUpdated() {
     if (this.active) {
-      this._focusOnBarcodField()
+      this._focusOnArrivalNoticeField()
     }
-  }
-
-  _focusOnBarcodField() {
-    this.shadowRoot.querySelector('input[name=arrivalNoticeNo]').focus()
   }
 
   async _fetchProducts(arrivalNoticeNo) {
@@ -565,16 +562,16 @@ class UnloadProduct extends localize(i18next)(PageView) {
     }
   }
 
-  _completeHandler() {
+  async _completeHandler() {
     try {
-      this._validateComplete()
+      await this._validateComplete()
       this._completeUnloading()
     } catch (e) {
       this._showToast({ message: e.message })
     }
   }
 
-  _validateComplete() {
+  async _validateComplete() {
     // Existing of actual pallet qty value
     if (!this.orderProductData.records.every(task => task.actualPalletQty))
       throw new Error(i18next.t('text.actual_pallet_qty_is_empty'))
@@ -591,6 +588,21 @@ class UnloadProduct extends localize(i18next)(PageView) {
         .every(task => task.remark)
     )
       throw new Error(i18next.t('text.there_is_no_remark'))
+
+    // Show confirm message box when pallet qty is not match with actual pallet qty
+    if (!this.orderProductData.records.every(task => task.actualPalletQty === task.palletQty)) {
+      const result = await Swal.fire({
+        title: i18next.t('text.are_you_sure?'),
+        text: i18next.t('text.pallet_qty_is_not_match_with_actual!'),
+        type: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#22a6a7',
+        cancelButtonColor: '#cfcfcf',
+        confirmButtonText: 'Yes, confirm!'
+      })
+
+      if (!result.value) throw new Error('text.canceled')
+    }
   }
 
   async _completeUnloading() {
@@ -641,6 +653,12 @@ class UnloadProduct extends localize(i18next)(PageView) {
           qty: palletProduct.actualPackQty
         }
       })
+  }
+
+  _focusOnArrivalNoticeField() {
+    setTimeout(() => {
+      this.shadowRoot.querySelector('input[name=arrivalNoticeNo]').focus()
+    }, 100)
   }
 
   _focusOnPalletInput() {
