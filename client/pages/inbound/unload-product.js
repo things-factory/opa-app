@@ -1,3 +1,4 @@
+import '@things-factory/barcode-ui'
 import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -9,9 +10,13 @@ class UnloadProduct extends localize(i18next)(PageView) {
   static get properties() {
     return {
       arrivalNoticeNo: String,
+      _palletId: String,
       _productName: String,
-      config: Object,
-      data: Object
+      orderProductConfig: Object,
+      orderProductData: Object,
+      palletProductConfig: Object,
+      _displayPalletProductData: Object,
+      _selectedPalletIndex: Number
     }
   }
 
@@ -30,14 +35,11 @@ class UnloadProduct extends localize(i18next)(PageView) {
           display: flex;
           flex: 1;
         }
-        .left-column {
+        .left-column,
+        .right-column {
           overflow: hidden;
           display: flex;
-          flex-direction: column;
-        }
-        .rifhg-column {
-          overflow: hidden;
-          display: flex;
+          flex: 1;
           flex-direction: column;
         }
 
@@ -91,8 +93,24 @@ class UnloadProduct extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('form#input-form')
   }
 
-  get grist() {
-    return this.shadowRoot.querySelector('data-grist')
+  get orderProductGrist() {
+    return this.shadowRoot.querySelector('data-grist#order-product-grist')
+  }
+
+  get palletProductGrist() {
+    return this.shadowRoot.querySelector('data-grist#pallet-product-grist')
+  }
+
+  get palletInput() {
+    return this.shadowRoot.querySelector('barcode-scanable-input').shadowRoot.querySelector('input')
+  }
+
+  get actualQtyInput() {
+    return this.shadowRoot.querySelector('input[name=actualQty]')
+  }
+
+  get remarkTextarea() {
+    return this.shadowRoot.querySelector('textarea[name=remark]')
   }
 
   render() {
@@ -106,7 +124,7 @@ class UnloadProduct extends localize(i18next)(PageView) {
             @keypress="${async e => {
               if (e.keyCode === 13) {
                 e.preventDefault()
-                if (e.currentTarget.value) this._getProducts(e.currentTarget.value)
+                if (e.currentTarget.value) this._fetchProducts(e.currentTarget.value)
               }
             }}"
           />
@@ -133,9 +151,18 @@ class UnloadProduct extends localize(i18next)(PageView) {
         <div class="left-column">
           <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.unloading')}</h2>
           <data-grist
+            id="order-product-grist"
             .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-            .config=${this.config}
-            .data=${this.data}
+            .config=${this.orderProductConfig}
+            .data=${this.orderProductData}
+          ></data-grist>
+
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.unloaded')}</h2>
+          <data-grist
+            id="pallet-product-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.palletProductConfig}
+            .data=${this._displayPalletProductData}
           ></data-grist>
         </div>
 
@@ -153,24 +180,43 @@ class UnloadProduct extends localize(i18next)(PageView) {
               <label>${i18next.t('label.packing_type')}</label>
               <input name="packingType" readonly />
 
-              <label>${i18next.t('label.pallet_qty')}</label>
+              <label>${i18next.t('label.total_pallet_qty')}</label>
               <input name="palletQty" type="number" readonly />
 
-              <label>${i18next.t('label.pack_qty')}</label>
+              <label>${i18next.t('label.total_pack_qty')}</label>
               <input name="packQty" type="number" readonly />
+
+              <label>${i18next.t('label.remark')}</label>
+              <textarea
+                name="remark"
+                @change="${e => {
+                  if (this.selectedOrderProduct) {
+                    this.orderProductData = {
+                      records: this.orderProductData.records.map(orderProduct => {
+                        if (orderProduct.name === this.selectedOrderProduct.name) {
+                          orderProduct.remark = e.currentTarget.value
+                        }
+                        return orderProduct
+                      })
+                    }
+                  }
+                }}"
+              ></textarea>
             </fieldset>
 
             <fieldset>
               <legend>${i18next.t('title.input_section')}</legend>
 
-              <label>${i18next.t('label.actual_pallet_qty')}</label>
-              <input name="actualPalletQty" type="number" min="1" @change="${this._fillUpGrist.bind(this)}" required />
+              <label>${i18next.t('label.pallet_id')}</label>
+              <barcode-scanable-input
+                name="palletId"
+                .value=${this._palletId}
+                custom-input
+                @keypress="${this._unload.bind(this)}"
+              ></barcode-scanable-input>
 
               <label>${i18next.t('label.actual_qty')}</label>
-              <input name="actualQty" type="number" min="1" @change="${this._fillUpGrist.bind(this)}" required />
-
-              <label>${i18next.t('label.remark')}</label>
-              <textarea name="remark" @change="${this._fillUpGrist.bind(this)}"></textarea>
+              <input name="actualQty" type="number" min="1" @keypress="${this._unload.bind(this)}" required />
             </fieldset>
           </form>
         </div>
@@ -182,20 +228,31 @@ class UnloadProduct extends localize(i18next)(PageView) {
     super()
     this.arrivalNoticeNo = ''
     this._productName = ''
-    this.data = { records: [] }
+    this.orderProductData = { records: [] }
+    this._displayPalletProductData = { records: [] }
   }
 
   pageInitialized() {
-    this.config = {
+    this.orderProductConfig = {
       rows: {
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
             if (record) {
-              this._selectedWorksheetDetailName = record.name
+              this.selectedOrderProduct = record
+              this._selectedPalletIndex = null
               this._productName = `${record.product.name} ${
                 record.product.description ? `(${record.product.description})` : ''
               }`
+
+              this.inputForm.reset()
               this._fillUpInputForm(record)
+              this._focusOnPalletInput()
+              this._displayPalletProductData = {
+                records: this.orderProductData.records
+                  .filter(orderProduct => orderProduct.name === this.selectedOrderProduct.name)
+                  .map(orderProduct => orderProduct.palletProducts)
+                  .flat()
+              }
             }
           }
         }
@@ -205,6 +262,12 @@ class UnloadProduct extends localize(i18next)(PageView) {
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'string',
+          name: 'batchId',
+          header: i18next.t('field.batch_id'),
+          width: 200
+        },
         {
           type: 'object',
           name: 'product',
@@ -228,14 +291,78 @@ class UnloadProduct extends localize(i18next)(PageView) {
         {
           type: 'integer',
           name: 'packQty',
-          header: i18next.t('field.pack_qty'),
+          header: i18next.t('field.total_pack_qty'),
           record: { align: 'right' },
           width: 60
         },
         {
           type: 'integer',
-          name: 'actualQty',
-          header: i18next.t('field.actual_qty'),
+          name: 'actualPackQty',
+          header: i18next.t('field.actual_total_pack_qty'),
+          record: { align: 'right' },
+          width: 60
+        }
+      ]
+    }
+
+    this.palletProductConfig = {
+      rows: {
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            if (column.type === 'gutter') return
+            if (record && this.selectedOrderProduct) {
+              this._selectedPalletIndex = rowIndex
+              this.palletInput.value = record.palletId
+              this.actualQtyInput.value = record.actualPackQty
+            }
+          }
+        }
+      },
+      pagination: {
+        infinite: true
+      },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'close',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              this.orderProductData = {
+                records: [
+                  ...this.orderProductData.records.map(orderProduct => {
+                    if (orderProduct.name === this.selectedOrderProduct.name) {
+                      orderProduct.palletProducts = orderProduct.palletProducts.filter(
+                        palletProduct => palletProduct.palletId !== record.palletId
+                      )
+                      this._displayPalletProductData = { records: orderProduct.palletProducts }
+                    }
+
+                    if (orderProduct.palletProducts && orderProduct.palletProducts.length) {
+                      orderProduct.actualPalletQty = orderProduct.palletProducts.length
+                      orderProduct.actualPackQty = orderProduct.palletProducts
+                        .map(palletProduct => palletProduct.actualPackQty)
+                        .reduce((a, b) => a + b, 0)
+                    }
+
+                    return orderProduct
+                  })
+                ]
+              }
+            }
+          }
+        },
+        {
+          type: 'string',
+          name: 'palletId',
+          header: i18next.t('field.pallet'),
+          width: 180
+        },
+        {
+          type: 'integer',
+          name: 'actualPackQty',
+          header: i18next.t('field.actual_pack_qty'),
           record: { align: 'right' },
           width: 60
         }
@@ -243,7 +370,13 @@ class UnloadProduct extends localize(i18next)(PageView) {
     }
   }
 
-  pageUpdated(changes, lifecycle) {
+  updated(changedProps) {
+    if (changedProps.has('_selectedPalletIndex')) {
+      this.palletInput.disabled = this._selectedPalletIndex
+    }
+  }
+
+  pageUpdated() {
     if (this.active) {
       this._focusOnBarcodField()
     }
@@ -253,7 +386,7 @@ class UnloadProduct extends localize(i18next)(PageView) {
     this.shadowRoot.querySelector('input[name=arrivalNoticeNo]').focus()
   }
 
-  async _getProducts(arrivalNoticeNo) {
+  async _fetchProducts(arrivalNoticeNo) {
     this._clearView()
     const response = await client.query({
       query: gql`
@@ -289,22 +422,28 @@ class UnloadProduct extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       this.arrivalNoticeNo = arrivalNoticeNo
-      this._fillUpForm(response.data.unloadingWorksheet.worksheetInfo)
+      this._fillUpInfoForm(response.data.unloadingWorksheet.worksheetInfo)
 
-      this.data = {
-        ...this.data,
+      this.orderProductData = {
         records: response.data.unloadingWorksheet.worksheetDetailInfos
       }
     }
   }
 
   _clearView() {
-    this.data = { records: [] }
+    this.orderProductData = { records: [] }
+    this.palletProductData = { records: [] }
+    this._displayPalletProductData = { records: [] }
+    this.selectedOrderProduct = null
+    this._selectedPalletIndex = null
     this.infoForm.reset()
     this.inputForm.reset()
+    this._productName = ''
+    this.arrivalNoticeNo = ''
   }
 
-  _fillUpForm(data) {
+  _fillUpInfoForm(data) {
+    this.infoForm.reset()
     for (let key in data) {
       Array.from(this.infoForm.querySelectorAll('input')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
@@ -337,52 +476,121 @@ class UnloadProduct extends localize(i18next)(PageView) {
     }
   }
 
-  _fillUpGrist(e) {
-    if (e.currentTarget.value) {
-      this.data = {
-        ...this.data,
-        records: this.data.records.map(record => {
-          if (record.name === this._selectedWorksheetDetailName) {
-            record[e.currentTarget.name] =
-              e.currentTarget.type === 'number' ? parseInt(e.currentTarget.value) : e.currentTarget.value
-          }
+  _unload(e) {
+    if (e.keyCode === 13) {
+      try {
+        this._validateUnloading()
 
-          return record
-        })
+        this.orderProductData = {
+          records: [
+            ...this.orderProductData.records.map(orderProduct => {
+              if (orderProduct.name === this.selectedOrderProduct.name) {
+                if (!orderProduct.palletProducts || orderProduct.palletProducts.length == 0) {
+                  orderProduct.palletProducts = []
+                }
+
+                if (!this._selectedPalletIndex) {
+                  // If it's not for editing existing pallet data
+                  orderProduct.palletProducts.push({
+                    palletId: this.palletInput.value,
+                    actualPackQty: parseInt(this.actualQtyInput.value)
+                  })
+                } else {
+                  // If it's for editing existing pallet data
+                  orderProduct.palletProducts[this._selectedPalletIndex] = {
+                    palletId: this.palletInput.value,
+                    actualPackQty: parseInt(this.actualQtyInput.value)
+                  }
+                }
+
+                orderProduct.actualPalletQty = orderProduct.palletProducts.length
+                orderProduct.actualPackQty = orderProduct.palletProducts
+                  .map(palletProduct => palletProduct.actualPackQty)
+                  .reduce((a, b) => a + b, 0)
+
+                this._displayPalletProductData = { records: orderProduct.palletProducts }
+              }
+              return {
+                ...orderProduct
+              }
+            })
+          ]
+        }
+
+        this.palletInput.value = ''
+        this.actualQtyInput.value = ''
+        this.remarkTextarea.value = ''
+        this._selectedPalletIndex = null
+        this._focusOnPalletInput()
+      } catch (e) {
+        this._showToast({ message: e.message })
       }
+    }
+  }
+
+  _validateUnloading() {
+    // 1. validate for order selection
+    if (!this.selectedOrderProduct) throw new Error(i18next.t('text.target_doesnt_selected'))
+
+    // 2. pallet id existing
+    if (!this.palletInput.value) {
+      this._focusOnPalletInput()
+      throw new Error(i18next.t('text.pallet_id_is_empty'))
+    }
+
+    // 3. pallet id duplication (When add new records only)
+    if (
+      !this._selectedPalletIndex &&
+      !this.orderProductData.records
+        .filter(orderProduct => orderProduct.palletProducts && orderProduct.palletProducts.length)
+        .map(orderProduct => orderProduct.palletProducts)
+        .flat()
+        .every(palletProduct => palletProduct.palletId !== this.palletInput.value)
+    ) {
+      setTimeout(() => this.palletInput.select(), 100)
+
+      throw new Error(i18next.t('text.pallet_id_duplicated'))
+    }
+
+    // 4. qty value existing
+    if (!parseInt(this.actualQtyInput.value)) {
+      this._focusOnActualQtyInput()
+      throw new Error(i18next.t('text.qty_is_empty'))
+    }
+
+    // 5. qty value has to be positive
+    if (!(parseInt(this.actualQtyInput.value) > 0)) {
+      setTimeout(() => this.actualQtyInput.select(), 100)
+      throw new Error(i18next.t('text.qty_should_be_positive'))
     }
   }
 
   _completeHandler() {
     try {
-      this.validate()
+      this._validateComplete()
       this._completeUnloading()
     } catch (e) {
-      this._showToast({
-        message: e.message
-      })
+      this._showToast({ message: e.message })
     }
   }
 
-  validate() {
-    const tasks = this.grist.data.records
-    // 1. actualPalletQty has to be typed.
-    if (!tasks.every(task => task.actualPalletQty)) throw new Error(i18next.t('text.actual_pallet_qty_is_empty'))
-    // 2. actualQty has to be typed.
-    if (!tasks.every(task => task.actualQty)) throw new Error(i18next.t('text.actual_qty_is_empty'))
-    // 3. actualPalletQty has to be positive
-    if (!tasks.every(task => task.actualPalletQty > 0))
-      throw new Error(i18next.t('text.actual_pallet_qty_has_to_be_positive'))
-    // 4. actualQty has to be positive
-    if (!tasks.every(task => task.actualQty > 0)) throw new Error(i18next.t('text.actual_qty_has_to_be_positive'))
-    // 5. actualPalletQty is matched with palletQty?
-    // 5. 1) If No is there remark for that?
-    if (!tasks.filter(task => task.actualPalletQty !== task.palletQty).every(task => task.remark))
-      throw new Error(i18next.t('text.remark_is_empty'))
-    // 6. actualQty is matched with packQty?
-    // 6. 1) If No is there remark for that?
-    if (!tasks.filter(task => task.actualQty !== task.packQty).every(task => task.remark))
-      throw new Error(i18next.t('text.remark_is_empty'))
+  _validateComplete() {
+    // Existing of actual pallet qty value
+    if (!this.orderProductData.records.every(task => task.actualPalletQty))
+      throw new Error(i18next.t('text.actual_pallet_qty_is_empty'))
+
+    // Existing of actual pack qty value
+    if (!this.orderProductData.records.every(task => task.actualPackQty))
+      throw new Error(i18next.t('text.actual_qty_is_empty'))
+
+    // Matching with actual pallet qty & actual pack qty
+    // If not, there should be remark
+    if (
+      !this.orderProductData.records
+        .filter(task => task.actualPalletQty !== task.palletQty || task.actualPackQty !== task.packQty)
+        .every(task => task.remark)
+    )
+      throw new Error(i18next.t('text.there_is_no_remark'))
   }
 
   async _completeUnloading() {
@@ -391,7 +599,8 @@ class UnloadProduct extends localize(i18next)(PageView) {
         mutation {
           completeUnloading(${gqlBuilder.buildArgs({
             arrivalNoticeNo: this.arrivalNoticeNo,
-            unloadingWorksheetDetails: this._getUnloadingWorksheetDetails()
+            unloadingWorksheetDetails: this._getUnloadingWorksheetDetails(),
+            unloadedPallets: this._getUnloadedPallets()
           })}) {
             name
           }
@@ -405,17 +614,41 @@ class UnloadProduct extends localize(i18next)(PageView) {
   }
 
   _getUnloadingWorksheetDetails() {
-    return this.grist.dirtyData.records.map(task => {
+    return this.orderProductData.records.map(task => {
       return {
         name: task.name,
         remark: task.remark ? task.remark : null,
         targetProduct: {
           name: task.targetName,
           actualPalletQty: task.actualPalletQty,
-          actualQty: task.actualQty
+          actualPackQty: task.actualPackQty
         }
       }
     })
+  }
+
+  _getUnloadedPallets() {
+    return this.orderProductData.records
+      .map(orderProduct => {
+        orderProduct.palletProducts.forEach(palletProduct => (palletProduct.batchId = orderProduct.batchId))
+        return orderProduct.palletProducts
+      })
+      .flat()
+      .map(palletProduct => {
+        return {
+          batchId: palletProduct.batchId,
+          palletId: palletProduct.palletId,
+          qty: palletProduct.actualPackQty
+        }
+      })
+  }
+
+  _focusOnPalletInput() {
+    setTimeout(() => this.palletInput.focus(), 100)
+  }
+
+  _focusOnActualQtyInput() {
+    setTimeout(() => this.actualQtyInput.focus(), 100)
   }
 
   _showToast({ type, message }) {

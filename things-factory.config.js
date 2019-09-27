@@ -96,6 +96,30 @@ export default {
       page: 'assign_buffer_location'
     },
     {
+      tagname: 'create-release-order',
+      page: 'create_release_order'
+    },
+    {
+      tagname: 'release-order-list',
+      page: 'release_orders'
+    },
+    {
+      tagname: 'release-order-detail',
+      page: 'release_order_detail'
+    },
+    {
+      tagname: 'release-order-requests',
+      page: 'release_order_requests'
+    },
+    {
+      tagname: 'receive-release-order-request',
+      page: 'receive_release_order_request'
+    },
+    {
+      tagname: 'rejected-release-order',
+      page: 'rejected_release_order'
+    },
+    {
       tagname: 'create-delivery-order',
       page: 'create_delivery_order'
     },

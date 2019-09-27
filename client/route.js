@@ -95,6 +95,30 @@ export default function route(page) {
       import('./pages/order/arrival-notice/assign-buffer-location')
       return page
 
+    case 'create_release_order':
+      import('./pages/order/release-order/create-release-order')
+      return page
+
+    case 'release_orders':
+      import('./pages/order/release-order/release-order-list')
+      return page
+
+    case 'release_order_detail':
+      import('./pages/order/release-order/release-order-detail')
+      return page
+
+    case 'release_order_requests':
+      import('./pages/order/release-order/release-order-requests')
+      return page
+
+    case 'receive_release_order_request':
+      import('./pages/order/release-order/receive-release-order-request')
+      return page
+
+    case 'rejected_release_order':
+      import('./pages/order/release-order/rejected-release-order')
+      return page
+
     case 'create_delivery_order':
       import('./pages/order/delivery-order/create-delivery-order')
       return page

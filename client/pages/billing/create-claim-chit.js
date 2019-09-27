@@ -101,9 +101,21 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
       columns: [
-        { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
-        { type: 'gutter', gutterName: 'row-selector', multiple: true },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'close',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              this._claimDetailsData = {
+                ...this._claimDetailsData,
+                records: data.records.filter((record, idx) => idx !== rowIndex)
+              }
+              this._dataGrist.fetch()
+            }
+          }
+        },
         {
           type: 'select',
           name: 'name',
@@ -134,7 +146,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
           name: 'amount',
           header: i18next.t('field.amount'),
           record: { editable: true, align: 'center' },
-          width: 150
+          width: 180
         }
       ]
     }
@@ -161,25 +173,25 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
             })}</select
           >
 
-          <label>Billing Mode</label>
+          <label>${i18next.t('label.billingMode')}</label>
           <input disabled name="billingMode" value="" data-name="billingMode"></label>
 
-          <label>Date</label>
+          <label>${i18next.t('label.date')}</label>
           <input disabled name="orderDate" value="" type="datetime-local" data-name="orderDate"></label>
 
-          <label>Lorry No</label>
+          <label>${i18next.t('label.lorryNo')}</label>
           <input disabled name="lorryNo" value="" data-name="transportVehicle|name"></label>
 
-          <label>Driver Code</label>
+          <label>${i18next.t('label.driverCode')}</label>
           <input disabled name="driveCode" value="" data-name="transportDriver|name"></label>
 
-          <label>Customer</label>
+          <label>${i18next.t('label.customer')}</label>
           <input disabled name="bizplace" value="" data-name="bizplace|name"></label>
 
-          <label>From</label>
+          <label>${i18next.t('label.from')}</label>
           <input disabled name="from" value="" data-name="from"></label>
 
-          <label>To</label>
+          <label>${i18next.t('label.to')}</label>
           <input disabled name="to" value="" data-name="to"></label>
         </fieldset>
       </form>
