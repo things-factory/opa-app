@@ -5,7 +5,7 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_C
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { ORDER_STATUS } from './constants/order'
+import { ORDER_STATUS } from '../constants/order'
 import Swal from 'sweetalert2'
 
 class VasOrderList extends connect(store)(localize(i18next)(PageView)) {
@@ -118,18 +118,32 @@ class VasOrderList extends connect(store)(localize(i18next)(PageView)) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              if (record.id) navigate(`arrival_notices/${record.name}`)
+              const status = record.status
+              if (status === ORDER_STATUS.REJECTED.value) {
+                navigate(`rejected_vas_order/${record.name}`) // 1. move to rejected detail page
+              } else {
+                navigate(`vas_order_detail/${record.name}`)
+              }
             }
           }
         },
         {
           type: 'object',
           name: 'vas',
-          header: i18next.t('field.vas'),
+          header: i18next.t('field.vasssssssss'),
           record: { editable: true, align: 'center', options: { queryName: 'vass' } },
           sortable: true,
           width: 250
         },
+        {
+          type: 'string',
+          name: 'name',
+          header: i18next.t('field.name'),
+          record: { editable: true, align: 'center' },
+          sortable: true,
+          width: 180
+        },
+
         {
           type: 'string',
           name: 'description',
@@ -195,12 +209,16 @@ class VasOrderList extends connect(store)(localize(i18next)(PageView)) {
       query: gql`
         query {
           orderVass(${gqlBuilder.buildArgs({
-            filters: this.searchForm.queryFilters,
+            filters: this._conditionParser(),
             pagination: { page, limit },
             sortings: sorters
           })}) {
             items{
               id
+              name
+              bizplace {
+                id
+              }
               vas {
                 id
                 name
@@ -230,6 +248,26 @@ class VasOrderList extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
+  _conditionParser() {
+    return this.searchForm
+      .getFields()
+      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
+      .map(field => {
+        return {
+          name: field.name,
+          value:
+            field.type === 'text'
+              ? field.value
+              : field.type === 'checkbox'
+              ? field.checked
+              : field.type === 'number'
+              ? parseFloat(field.value)
+              : field.value,
+          operator: field.getAttribute('searchOper')
+        }
+      })
+  }
+
   async _saveorderVass() {
     let patches = this.vasGrist.dirtyRecords
     if (patches && patches.length) {
@@ -240,6 +278,7 @@ class VasOrderList extends connect(store)(localize(i18next)(PageView)) {
           patchField[key] = dirtyFields[key].after
         }
         patchField.cuFlag = orderVass.__dirty__
+        patchField['bizplace'] = { id: '45dcb2a1-bd51-4ae2-8568-6c6d7530fa64' }
 
         return patchField
       })
