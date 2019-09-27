@@ -416,20 +416,25 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _confirmArrivalNotice() {
-    const response = await client.query({
-      query: gql`
-        mutation {
-          confirmArrivalNotice(${gqlBuilder.buildArgs({
-            name: this._ganNo
-          })}) {
-            name
+    try {
+      const response = await client.query({
+        query: gql`
+          mutation {
+            confirmArrivalNotice(${gqlBuilder.buildArgs({
+              name: this._ganNo
+            })}) {
+              name
+            }
           }
-        }
-      `
-    })
+        `
+      })
 
-    if (response.errors) {
-      throw new Error(response.errors[0])
+      if (!response.errors) {
+        this._showToast({ message: i18next.t('text.gan_confirmed') })
+        navigate('arrival_notices')
+      }
+    } catch (e) {
+      this._showToast(e)
     }
   }
 
@@ -451,26 +456,16 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           title: i18next.t('button.confirm'),
-          action: async () => {
-            try {
-              await this._confirmArrivalNotice()
-              Swal.fire({
-                title: i18next.t('text.are_you_sure?'),
-                text: i18next.t('text.you_wont_be_able_to_revert_this!'),
-                type: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#22a6a7',
-                cancelButtonColor: '#cfcfcf',
-                confirmButtonText: 'Yes, confirm!'
-              }).then(result => {
-                if (result.value) {
-                  this._showToast({ message: i18next.t('text.gan_confirmed') })
-                  navigate('arrival_notices')
-                }
-              })
-            } catch (e) {
-              this._showToast(e)
-            }
+          action: () => {
+            Swal.fire({
+              title: i18next.t('text.are_you_sure?'),
+              text: i18next.t('text.you_wont_be_able_to_revert_this!'),
+              type: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#22a6a7',
+              cancelButtonColor: '#cfcfcf',
+              confirmButtonText: 'Yes, confirm!'
+            }).then(this._confirmArrivalNotice.bind(this))
           }
         }
       ]
