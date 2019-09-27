@@ -204,12 +204,6 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          width: 180
-        },
-        {
-          type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: { align: 'center' },
@@ -267,12 +261,6 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
             options: { queryName: 'vass' }
           },
           width: 250
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          width: 180
         },
         {
           type: 'select',
