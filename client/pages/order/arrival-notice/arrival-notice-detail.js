@@ -456,8 +456,8 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           title: i18next.t('button.confirm'),
-          action: () => {
-            Swal.fire({
+          action: async () => {
+            const result = await Swal.fire({
               title: i18next.t('text.are_you_sure?'),
               text: i18next.t('text.you_wont_be_able_to_revert_this!'),
               type: 'warning',
@@ -465,7 +465,9 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
               confirmButtonColor: '#22a6a7',
               cancelButtonColor: '#cfcfcf',
               confirmButtonText: 'Yes, confirm!'
-            }).then(this._confirmArrivalNotice.bind(this))
+            })
+
+            if (result.value) this._confirmArrivalNotice()
           }
         }
       ]
