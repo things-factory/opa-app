@@ -18,8 +18,9 @@ export const labelSettingsResolver = {
         'board.description as boardDescription',
         'board.thumbnail as boardThumbnail'
       ])
+      .where('setting.domain_id = :domain', { domain: context.state.domain.id })
 
-    if (names && names.length) qb.where('setting.name IN (:...names)', { names })
+    if (names && names.length) qb.andWhere('setting.name IN (:...names)', { names })
 
     var labelSettingList = await qb.getRawMany()
 
