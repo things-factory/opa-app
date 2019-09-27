@@ -14,10 +14,10 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     return {
       _ownTransport: Boolean,
       _shippingOption: Boolean,
-      productGristConfig: Object,
+      inventoryGristConfig: Object,
       currentOrderType: String,
       vasGristConfig: Object,
-      productData: Object,
+      inventoryData: Object,
       vasData: Object,
       _orderStatus: String
     }
@@ -73,7 +73,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     super()
     this._ownTransport = true
     this._shippingOption = true
-    this.productData = {}
+    this.inventoryData = {}
     this.vasData = {}
   }
 
@@ -151,10 +151,10 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
         <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.release_product_list')}</h2>
 
         <data-grist
-          id="product-grist"
+          id="inventory-grist"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.productGristConfig}
-          .data="${this.productData}"
+          .config=${this.inventoryGristConfig}
+          .data=${this.inventoryData}
           @record-change="${this._onProductChangeHandler.bind(this)}"
         ></data-grist>
       </div>
@@ -173,7 +173,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
   }
 
   firstUpdated() {
-    this.productGristConfig = {
+    this.inventoryGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
       columns: [
@@ -184,8 +184,8 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
           icon: 'close',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              this.productData = {
-                ...this.productData,
+              this.inventoryData = {
+                ...this.inventoryData,
                 records: data.records.filter((record, idx) => idx !== rowIndex)
               }
 
@@ -201,7 +201,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
           width: 150
         },
         {
-          type: 'string',
+          type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
           record: { editable: true, align: 'center' },
@@ -210,21 +210,28 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
               this._openInventoryProduct()
             }
           },
-          width: 350
+          width: 250
         },
         {
           type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
+          name: 'packingType',
+          header: i18next.t('field.packing_type'),
           record: { editable: true, align: 'center' },
-          width: 180
+          width: 150
         },
         {
           type: 'integer',
           name: 'qty',
-          header: i18next.t('field.qty'),
+          header: i18next.t('field.available_qty'),
           record: { editable: true, align: 'center' },
-          width: 80
+          width: 100
+        },
+        {
+          type: 'integer',
+          name: 'releaseQty',
+          header: i18next.t('field.release_qty'),
+          record: { editable: true, align: 'center', options: { min: 0 } },
+          width: 100
         }
       ]
     }
@@ -282,7 +289,13 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
   _openInventoryProduct() {
     openPopup(
       html`
-        <inventory-product-selector></inventory-product-selector>
+        <inventory-product-selector
+          @selected="${e => {
+            this.inventoryData = {
+              records: e.detail
+            }
+          }}"
+        ></inventory-product-selector>
       `,
       {
         backdrop: true,
@@ -296,8 +309,8 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('form')
   }
 
-  get productGrist() {
-    return this.shadowRoot.querySelector('data-grist#product-grist')
+  get inventoryGrist() {
+    return this.shadowRoot.querySelector('data-grist#inventory-grist')
   }
 
   get vasGrist() {
@@ -308,27 +321,34 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     const changeRecord = event.detail.after
     const changedColumn = event.detail.column.name
 
-    if (changedColumn === 'weight' || changedColumn === 'unit' || changedColumn === 'packQty') {
-      changeRecord.totalWeight = this._calcTotalWeight(changeRecord.weight, changeRecord.unit, changeRecord.packQty)
+    if (changedColumn === 'releaseQty' || changeColumn === 'qty') {
+      try {
+        this._validateReleaseQty(changeRecord.releaseQty, changeRecord.qty)
+      } catch (e) {
+        this._showToast(e)
+        delete event.detail.after.releaseQty
+      }
     }
 
     this._updateBatchList()
   }
 
-  _calcTotalWeight(weight, unit, packQty) {
-    if (weight && unit && packQty) {
-      return `${(weight * packQty).toFixed(2)} ${unit}`
+  _validateReleaseQty(releaseQty, qty) {
+    if (releaseQty > qty) {
+      throw new Error(i18next.t('text.available_quantity_insufficient'))
+    } else if (releaseQty <= 0) {
+      throw new Error(i18next.t('text.invalid_quantity_input'))
     } else {
-      return null
+      return
     }
   }
 
   _updateBatchList() {
     // TODO: 시점 문제...
     setTimeout(() => {
-      this.productGrist.commit()
-      this.productData = this.productGrist.data
-      const batchIds = (this.productGrist.data.records || []).map(record => record.batchId)
+      this.inventoryGrist.commit()
+      this.inventoryData = this.inventoryGrist.data
+      const batchIds = (this.inventoryGrist.data.records || []).map(record => record.batchId)
 
       this.vasGrist.commit()
       this.vasData = {
@@ -366,21 +386,21 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _validateProducts() {
-    this.productGrist.commit()
+    this.inventoryGrist.commit()
     // no records
-    if (!this.productGrist.data.records || !this.productGrist.data.records.length)
+    if (!this.inventoryGrist.data.records || !this.inventoryGrist.data.records.length)
       throw new Error(i18next.t('text.no_products'))
 
     // required field (batchId, packingType, weight, unit, packQty)
     if (
-      this.productGrist.data.records.filter(
+      this.inventoryGrist.data.records.filter(
         record => !record.batchId || !record.packingType || !record.weight || !record.unit || !record.packQty
       ).length
     )
       throw new Error(i18next.t('text.empty_value_in_list'))
 
     // duplication of batch id
-    const batchIds = this.productGrist.data.records.map(product => product.batchId)
+    const batchIds = this.inventoryGrist.data.records.map(product => product.batchId)
     if (batchIds.filter((batchId, idx, batchIds) => batchIds.indexOf(batchId) !== idx).length)
       throw new Error(i18next.t('text.batch_id_is_duplicated'))
   }
@@ -402,9 +422,9 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
   _updateBatchList() {
     // TODO: 시점 문제...
     setTimeout(() => {
-      this.productGrist.commit()
-      this.productData = this.productGrist.data
-      const batchIds = (this.productGrist.data.records || []).map(record => record.batchId)
+      this.inventoryGrist.commit()
+      this.inventoryData = this.inventoryGrist.data
+      const batchIds = (this.inventoryGrist.data.records || []).map(record => record.batchId)
 
       this.vasGrist.commit()
       this.vasData = {
@@ -426,6 +446,17 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
         })
       }
     }, 300)
+  }
+
+  _showToast({ type, message }) {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: {
+          type,
+          message
+        }
+      })
+    )
   }
 }
 
