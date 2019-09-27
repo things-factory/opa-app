@@ -192,7 +192,19 @@ export default function route(page) {
       return page
 
     case 'vas_orders':
-      import('./pages/order/vas-order-list')
+      import('./pages/order/vas-order/vas-order-list')
+      return page
+
+    case 'create_vas_order':
+      import('./pages/order/vas-order/create-vas-order')
+      return page
+
+    case 'confirm_vas_order':
+      import('./pages/order/vas-order/confirm-vas-order')
+      return page
+
+    case 'vas_order_detail':
+      import('./pages/order/vas-order/vas-order-detail')
       return page
 
     /**
