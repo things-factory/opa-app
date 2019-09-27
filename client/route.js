@@ -53,7 +53,7 @@ export default function route(page) {
       return page
 
     case 'transport_summary_reports':
-      import('./pages/master/transport-summary-report')
+      import('./pages/billing/transport-summary-report')
       return page
 
     case 'inventory_summary_reports':
