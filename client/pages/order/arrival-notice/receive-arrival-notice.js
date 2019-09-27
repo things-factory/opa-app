@@ -70,12 +70,12 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
       title: i18next.t('title.receive_arrival_notice'),
       actions: [
         {
-          title: i18next.t('button.receive'),
-          action: this._receiveArrivalNotice.bind(this)
-        },
-        {
           title: i18next.t('button.reject'),
           action: this._rejectArrivalNotice.bind(this)
+        },
+        {
+          title: i18next.t('button.receive'),
+          action: this._receiveArrivalNotice.bind(this)
         }
       ]
     }
