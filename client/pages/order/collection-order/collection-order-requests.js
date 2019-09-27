@@ -216,7 +216,7 @@ class CollectionOrderRequests extends localize(i18next)(PageView) {
       query: gql`
         query {
           collectionOrderRequests(${gqlBuilder.buildArgs({
-            filters: this._conditionParser(),
+            filters: this.searchForm.queryFilters,
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -258,26 +258,6 @@ class CollectionOrderRequests extends localize(i18next)(PageView) {
         records: response.data.collectionOrderRequests.items || []
       }
     }
-  }
-
-  _conditionParser() {
-    return this.searchForm
-      .getFields()
-      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
-      .map(field => {
-        return {
-          name: field.name,
-          value:
-            field.type === 'text'
-              ? field.value
-              : field.type === 'checkbox'
-              ? field.checked
-              : field.type === 'number'
-              ? parseFloat(field.value)
-              : field.value,
-          operator: field.getAttribute('searchOper')
-        }
-      })
   }
 
   get _columns() {

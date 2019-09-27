@@ -538,10 +538,16 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
     if (!this.productGrist.data.records || !this.productGrist.data.records.length)
       throw new Error(i18next.t('text.no_products'))
 
-    // required field (batchId, packingType, weight, unit, packQty)
+    // required field (batchId, packingType, weight, unit, packQty, palletQty)
     if (
       this.productGrist.data.records.filter(
-        record => !record.batchId || !record.packingType || !record.weight || !record.unit || !record.packQty
+        record =>
+          !record.batchId ||
+          !record.packingType ||
+          !record.weight ||
+          !record.unit ||
+          !record.packQty ||
+          !record.palletQty
       ).length
     )
       throw new Error(i18next.t('text.empty_value_in_list'))

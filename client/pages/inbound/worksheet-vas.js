@@ -266,7 +266,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
         query: gql`
           mutation {
             activateVas(${gqlBuilder.buildArgs({
-              name: this._worksheetNo,
+              worksheetNo: this._worksheetNo,
               vasWorksheetDetails: this._getVasWorksheetDetails()
             })}) {
               name

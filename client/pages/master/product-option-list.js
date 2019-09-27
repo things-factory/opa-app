@@ -210,7 +210,7 @@ class ProductOptionList extends connect(store)(localize(i18next)(PageView)) {
       query: gql`
         query {
           productOptions(${gqlBuilder.buildArgs({
-            filters: [...filters, ...this._conditionParser()],
+            filters: [...filters, ...this.searchForm.queryFilters],
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -279,26 +279,6 @@ class ProductOptionList extends connect(store)(localize(i18next)(PageView)) {
         title: i18next.t('title.product_option_detail_list')
       }
     )
-  }
-
-  _conditionParser() {
-    return this.searchForm
-      .getFields()
-      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
-      .map(field => {
-        return {
-          name: field.name,
-          value:
-            field.type === 'text'
-              ? field.value
-              : field.type === 'checkbox'
-              ? field.checked
-              : field.type === 'number'
-              ? parseFloat(field.value)
-              : field.value,
-          operator: field.getAttribute('searchOper')
-        }
-      })
   }
 
   async _saveProductOptions() {
