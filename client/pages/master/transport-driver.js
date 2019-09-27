@@ -4,6 +4,7 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import { openPopup } from '@things-factory/layout-base'
 import '../components/import-pop-up'
 import Swal from 'sweetalert2'
 
