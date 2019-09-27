@@ -157,7 +157,7 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
     this.palletLabel = state.labelSettings.palletLabel || {}
   }
 
-  onClickLabelSelector(key) {
+  onClickLabelSelector(name) {
     var popup = openPopup(
       html`
         <board-selector
@@ -166,14 +166,17 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
             var board = e.detail.board
 
             await this.saveSettings({
-              key,
-              value: board.id
+              name,
+              value: board.id,
+              category: 'opa-app',
+              description:
+                name == LOCATION_LABEL_SETTING_KEY ? 'board id for location label' : 'board id for pallet label'
             })
 
             store.dispatch({
               type: UPDATE_LABEL_SETTINGS,
-              locationLabel: key == LOCATION_LABEL_SETTING_KEY ? board : this.locationLabel,
-              palletLabel: key == PALLET_LABEL_SETTING_KEY ? board : this.palletLabel
+              locationLabel: name == LOCATION_LABEL_SETTING_KEY ? board : this.locationLabel,
+              palletLabel: name == PALLET_LABEL_SETTING_KEY ? board : this.palletLabel
             })
 
             popup.close()
@@ -189,15 +192,18 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
     )
   }
 
-  async saveSettings({ key, value }) {
-    if (!(key && value)) return
+  async saveSettings({ name, value, category, description }) {
+    if (!(name && value)) return
 
     client.query({
       query: gql`
       mutation {
         updateSetting(${gqlBuilder.buildArgs({
-          name: key,
+          name,
           patch: {
+            name,
+            description,
+            category,
             value
           }
         })}) {
