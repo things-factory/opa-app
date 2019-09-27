@@ -156,26 +156,6 @@ class LabelList extends connect(store)(localize(i18next)(PageView)) {
   get dataGrist() {
     return this.shadowRoot.querySelector('data-grist')
   }
-
-  _conditionParser() {
-    return this.searchForm
-      .getFields()
-      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
-      .map(field => {
-        return {
-          name: field.name,
-          value:
-            field.type === 'text'
-              ? field.value
-              : field.type === 'checkbox'
-              ? field.checked
-              : field.type === 'number'
-              ? parseFloat(field.value)
-              : field.value,
-          operator: field.getAttribute('searchOper')
-        }
-      })
-  }
 }
 
 window.customElements.define('label-list', LabelList)

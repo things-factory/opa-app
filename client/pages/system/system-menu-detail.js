@@ -223,7 +223,7 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
       query: gql`
         query {
           menus(${gqlBuilder.buildArgs({
-            filters: [...this._conditionParser(), { name: 'parent', operator: 'eq', value: this.menuId }],
+            filters: [...this.searchForm.queryFilters, { name: 'parent', operator: 'eq', value: this.menuId }],
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -258,26 +258,6 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
       total: response.data.menus.total || 0,
       records: response.data.menus.items || []
     }
-  }
-
-  _conditionParser() {
-    return this.searchForm
-      .getFields()
-      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
-      .map(field => {
-        return {
-          name: field.name,
-          value:
-            field.type === 'text'
-              ? field.value
-              : field.type === 'checkbox'
-              ? field.checked
-              : field.type === 'number'
-              ? parseFloat(field.value)
-              : field.value,
-          operator: field.getAttribute('searchOper')
-        }
-      })
   }
 
   async _saveMenus() {
