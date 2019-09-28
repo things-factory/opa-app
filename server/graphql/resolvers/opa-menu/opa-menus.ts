@@ -49,14 +49,19 @@ export const opaMenusResolver = {
       relations: ['domain', 'parent', 'childrens']
     })
 
-    return menus.map((menu: Menu) => {
-      return {
-        ...menu,
-        childrens: menu.childrens.filter(
-          (subMenu: Menu) =>
-            (!subMenu.hiddenFlag && userRoles.includes(subMenu.category)) || (!subMenu.hiddenFlag && !subMenu.category)
-        )
-      }
-    })
+    return menus
+      .map((groupMenu: Menu) => {
+        return {
+          ...groupMenu,
+          childrens: groupMenu.childrens
+            .filter(
+              (subMenu: Menu) =>
+                (!subMenu.hiddenFlag && userRoles.includes(subMenu.category)) ||
+                (!subMenu.hiddenFlag && !subMenu.category)
+            )
+            .sort((a: Menu, b: Menu) => a.rank - b.rank)
+        }
+      })
+      .filter((groupMenu: Menu) => groupMenu.childrens)
   }
 }
