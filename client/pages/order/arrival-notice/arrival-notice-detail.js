@@ -458,13 +458,13 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           title: i18next.t('button.confirm'),
           action: async () => {
             const result = await Swal.fire({
-              title: i18next.t('text.are_you_sure?'),
-              text: i18next.t('text.you_wont_be_able_to_revert_this!'),
+              title: i18next.t('text.confirm_arrival_notice'),
+              text: i18next.t('text.you_wont_be_able_to_revert_this'),
               type: 'warning',
               showCancelButton: true,
               confirmButtonColor: '#22a6a7',
               cancelButtonColor: '#cfcfcf',
-              confirmButtonText: 'Yes, confirm!'
+              confirmButtonText: i18next.t('buffon.confirm')
             })
 
             if (result.value) this._confirmArrivalNotice()
