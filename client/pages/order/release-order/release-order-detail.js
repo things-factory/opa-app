@@ -13,12 +13,12 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
       _releaseOrderNo: String,
       _ownTransport: Boolean,
       _shippingOption: Boolean,
-      productGristConfig: Object,
+      inventoryGristConfig: Object,
       currentOrderType: String,
       vasGristConfig: Object,
-      productData: Object,
+      inventoryData: Object,
       vasData: Object,
-      _orderStatus: String
+      _status: String
     }
   }
 
@@ -78,12 +78,12 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
     super()
     this._ownTransport = true
     this._shippingOption = true
-    this.productData = {}
+    this.inventoryData = {}
     this.vasData = {}
   }
 
-  activated(active) {
-    if (JSON.parse(active)) {
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
       this.fetchReleaseOrder()
     }
   }
@@ -92,8 +92,8 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('form')
   }
 
-  get productGrist() {
-    return this.shadowRoot.querySelector('data-grist#product-grist')
+  get inventoryGrist() {
+    return this.shadowRoot.querySelector('data-grist#inventory-grist')
   }
 
   get vasGrist() {
@@ -104,12 +104,9 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
     return html`
       <form class="multi-column-form">
         <fieldset>
-          <legend>
-            ${i18next.t('title.release_no')}: ${this._releaseOrderNo}
-          </legend>
-
+          <legend>${i18next.t('title.release_order')}</legend>
           <label>${i18next.t('label.release_date')}</label>
-          <input name="releaseDate" type="datetime-local" min="${this._getStdDatetime()}" disabled />
+          <input name="releaseDateTime" type="datetime-local" min="${this._getStdDatetime()}" disabled />
 
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
           <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" disabled />
@@ -129,10 +126,10 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           <label>${i18next.t('label.shipping_option')}</label>
 
           <label ?hidden="${!this._shippingOption}">${i18next.t('label.container_no')}</label>
-          <input name="container_no" ?hidden="${!this._shippingOption}" disabled />
+          <input shipping name="containerNo" ?hidden="${!this._shippingOption}" disabled />
 
-          <label ?hidden="${!this._shippingOption}">${i18next.t('label.container_load_type')}</label>
-          <select name="loadType" ?hidden="${!this._shippingOption}" disabled>
+          <label>${i18next.t('label.load_type')}</label>
+          <select name="loadType" disabled>
             ${LOAD_TYPES.map(
               loadType => html`
                 <option value="${loadType.value}">${i18next.t(`label.${loadType.name}`)}</option>
@@ -142,7 +139,8 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
 
           <label ?hidden="${!this._shippingOption}">${i18next.t('label.container_arrival_date')}</label>
           <input
-            name="conArrivalDate"
+            shipping
+            name="containerArrivalDate"
             type="datetime-local"
             min="${this._getStdDatetime()}"
             ?hidden="${!this._shippingOption}"
@@ -151,7 +149,8 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
 
           <label ?hidden="${!this._shippingOption}">${i18next.t('label.container_leaving_date')}</label>
           <input
-            name="conLeavingDate"
+            shipping
+            name="containerLeavingDate"
             type="datetime-local"
             min="${this._getStdDatetime()}"
             ?hidden="${!this._shippingOption}"
@@ -159,7 +158,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           />
 
           <label ?hidden="${!this._shippingOption}">${i18next.t('label.ship_name')}</label>
-          <input name="shipName" ?hidden="${!this._shippingOption}" disabled />
+          <input shipping name="shipName" ?hidden="${!this._shippingOption}" disabled />
 
           <input
             name="ownTransport"
@@ -171,23 +170,28 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
             disabled
           />
           <label>${i18next.t('label.own_transport')}</label>
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.delivery_date')}</label>
+          <input delivery name="deliveryDateTime" ?hidden="${this._ownTransport}" />
 
-          <label class="trs-input" ?hidden="${this._ownTransport}">${i18next.t('label.deliver_to')}</label>
-          <input name="to" class="trs-input" ?hidden="${this._ownTransport}" disabled />
+          <label>${i18next.t('label.release_from')}</label>
+          <input name="from" />
 
-          <label class="trs-input" ?hidden="${this._ownTransport}">${i18next.t('label.tel_no')}</label>
-          <input name="telNo" class="trs-input" ?hidden="${this._ownTransport}" disabled />
+          <label>${i18next.t('label.release_to')}</label>
+          <input name="to" />
+
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.tel_no')}</label>
+          <input delivery name="telNo" ?hidden="${this._ownTransport}" />
         </fieldset>
       </form>
 
       <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product')}</h2>
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.release_inventory')}</h2>
 
         <data-grist
-          id="product-grist"
+          id="inventory-grist"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.productGristConfig}
-          .data="${this.productData}"
+          .config=${this.inventoryGristConfig}
+          .data="${this.inventoryData}"
         ></data-grist>
       </div>
 
@@ -204,38 +208,40 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
     `
   }
 
-  firstUpdated() {
-    this.productGristConfig = {
+  pageInitialized() {
+    this.inventoryGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
-          type: 'string',
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'close',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              this.inventoryData = {
+                ...this.inventoryData,
+                records: data.records.filter((record, idx) => idx !== rowIndex)
+              }
+
+              this._updateBatchList()
+            }
+          }
+        },
+        {
+          type: 'object',
           name: 'batchId',
           header: i18next.t('field.batch_id'),
-          record: {
-            align: 'center',
-            options: { queryName: 'products' }
-          },
+          record: { align: 'center' },
           width: 150
         },
         {
           type: 'object',
           name: 'product',
-          header: i18next.t('field.product'),
-          record: {
-            align: 'center',
-            options: { queryName: 'products' }
-          },
-          width: 350
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
+          header: i18next.t('field.release_inventory_list'),
           record: { align: 'center' },
-          width: 180
+          width: 250
         },
         {
           type: 'string',
@@ -245,39 +251,18 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           width: 150
         },
         {
-          type: 'float',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          type: 'integer',
+          name: 'qty',
+          header: i18next.t('field.available_qty'),
           record: { align: 'center' },
-          width: 80
-        },
-        {
-          type: 'select',
-          name: 'unit',
-          header: i18next.t('field.unit'),
-          record: { align: 'center', options: ['kg', 'g'] },
-          width: 80
+          width: 100
         },
         {
           type: 'integer',
-          name: 'packQty',
-          header: i18next.t('field.pack_qty'),
-          record: { align: 'center' },
-          width: 80
-        },
-        {
-          type: 'integer',
-          name: 'totalWeight',
-          header: i18next.t('field.total_weight'),
-          record: { align: 'center' },
-          width: 120
-        },
-        {
-          type: 'integer',
-          name: 'palletQty',
-          header: i18next.t('field.pallet_qty'),
-          record: { align: 'center' },
-          width: 80
+          name: 'releaseQty',
+          header: i18next.t('field.release_qty'),
+          record: { align: 'center', options: { min: 0 } },
+          width: 100
         }
       ]
     }
@@ -335,41 +320,56 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
     const response = await client.query({
       query: gql`
         query {
-          releaseOrder(${gqlBuilder.buildArgs({
+          releaseGood(${gqlBuilder.buildArgs({
             name: this._releaseOrderNo
           })}) {
             id
             name
-            collectionDateTime
+            deliveryOrder {
+              id
+              name
+              deliveryDateTime
+              telNo
+              transportDriver {
+                id
+                name
+                driverCode
+              }
+              transportVehicle {
+                id
+                name
+                regNumber
+              }
+            }
+            shippingOrder {
+              name
+              containerNo
+              containerLeavingDate
+              containerArrivalDate
+              shipName
+            }
             from
             to
             loadType
             truckNo
-            telNo
             status
-            transportDriver {
+            ownTransport
+            shippingOption
+            releaseDateTime
+            orderInventories {
               id
-              name
-            }
-            transportVehicle {
-              id
-              name
-            }
-            orderProducts {
-              id
-              batchId
-              product {
+              releaseQty
+              inventory {
                 id
                 name
-                description
+                batchId
+                packingType
+                qty
+                product {
+                  name
+                  description
+                }
               }
-              description
-              packingType
-              weight
-              unit
-              packQty
-              totalWeight
-              palletQty
             }
             orderVass {
               vas {
@@ -387,37 +387,32 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      const driver = response.data.releaseOrder.transportDriver || { name: '' }
-      const vehicle = response.data.releaseOrder.transportVehicle || { name: '' }
-      this._assignedDriverName = driver.name
-      this._assignedVehicleName = vehicle.name
-
-      this._status = response.data.releaseOrder.status
+      this._status = response.data.releaseGood.status
       this._actionsHandler()
-      this._fillupForm(response.data.releaseOrder)
-      this.productData = {
-        ...this.productData,
-        records: response.data.releaseOrder.orderProducts
+      this._fillupForm(response.data.releaseGood)
+      this.inventoryData = {
+        ...this.inventoryData,
+        records: response.data.releaseGood.orderInventories
       }
 
       this.vasData = {
         ...this.vasData,
-        records: response.data.releaseOrder.orderVass
+        records: response.data.releaseGood.orderVass
       }
     }
   }
 
-  _fillupForm(releaseOrder) {
-    for (let key in releaseOrder) {
+  _fillupForm(releaseGood) {
+    for (let key in releaseGood) {
       Array.from(this.form.querySelectorAll('input, textarea, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
-          field.checked = releaseOrder[key]
+          field.checked = releaseGood[key]
         } else if (field.name === key && field.type === 'datetime-local') {
-          const datetime = Number(releaseOrder[key])
+          const datetime = Number(releaseGood[key])
           const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
           field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
         } else if (field.name === key) {
-          field.value = releaseOrder[key]
+          field.value = releaseGood[key]
         }
       })
     }
@@ -427,7 +422,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
     const response = await client.query({
       query: gql`
         mutation {
-          updateReleaseOrder(${gqlBuilder.buildArgs({
+          updateReleaseGood(${gqlBuilder.buildArgs({
             name: this._releaseOrderNo,
             patch
           })}) {
@@ -448,7 +443,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
     const response = await client.query({
       query: gql`
         mutation {
-          confirmReleaseOrder(${gqlBuilder.buildArgs({
+          confirmReleaseGood(${gqlBuilder.buildArgs({
             name: this._releaseOrderNo
           })}) {
             name
@@ -460,6 +455,12 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
     if (response.errors) {
       throw new Error(response.errors[0])
     }
+  }
+
+  _getStdDatetime() {
+    let date = new Date()
+    date.setDate(date.getDate() + 1)
+    return `${date.toISOString().substr(0, 11)}00:00:00`
   }
 
   _actionsHandler() {
