@@ -170,7 +170,7 @@ class UnloadProduct extends localize(i18next)(PageView) {
         <div class="right-column">
           <form id="input-form" class="single-column-form">
             <fieldset>
-              <legend>${i18next.t('title.product_batch')}: ${this._productName}</legend>
+              <legend>${i18next.t('title.product')}: ${this._productName}</legend>
 
               <label>${i18next.t('label.batch_id')}</label>
               <input name="batchId" readonly />
