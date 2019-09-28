@@ -8,7 +8,7 @@ export const labelSettingsResolver = {
     const queryBuilder = getRepository(Setting).createQueryBuilder()
 
     var qb = queryBuilder
-      .innerJoin(Board, 'Board', 'Setting.value = Board.id')
+      .innerJoin(Board, 'Board', 'Board.id = CAST(Setting.value AS uuid)')
       .select([
         'Setting.id',
         'Setting.name',
