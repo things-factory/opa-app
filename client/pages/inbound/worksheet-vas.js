@@ -1,18 +1,19 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { WORKSHEET_STATUS } from './constants/worksheet'
 import { ORDER_TYPES } from '../order/constants/order'
+import { WORKSHEET_STATUS } from './constants/worksheet'
 
 class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _orderType: String,
       _worksheetNo: String,
+      _worksheetStatus: String,
       config: Object,
       data: Object
     }
@@ -66,17 +67,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.worksheet_vas'),
-      actions: [
-        {
-          title: i18next.t('button.back'),
-          action: () => history.back()
-        },
-        {
-          title: i18next.t('button.activate'),
-          action: this._activateWorksheet.bind(this)
-        }
-      ]
+      title: i18next.t('title.worksheet_vas')
     }
   }
 
@@ -128,10 +119,15 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
     if (changedProps.has('_worksheetNo')) {
       this.fetchWorksheet()
     }
+
+    if (changedProps.has('_worksheetStatus') && this._worksheetStatus) {
+      this.updateContext()
+      this.updateGristConfig()
+    }
   }
 
   pageInitialized() {
-    this.config = {
+    this.preConfig = {
       pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -157,8 +153,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'description',
-          record: { editable: true },
-          header: i18next.t('field.description'),
+          header: i18next.t('field.comment'),
           width: 200
         }
       ]
@@ -202,6 +197,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
             worksheetDetails {
               id
               name
+              description
               targetVas {
                 vas {
                   id
@@ -213,6 +209,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
                 description
                 remark
               }
+              status
             }
           }
         }
@@ -220,41 +217,86 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      this._orderType = response.data.worksheet.arrivalNotice
+      const worksheet = response.data.worksheet
+      const worksheetDetails = worksheet.worksheetDetails
+
+      this._worksheetStatus = worksheet.status
+      this._orderType = worksheet.arrivalNotice
         ? ORDER_TYPES.ARRIVAL_NOTICE.value
-        : response.data.worksheet.shippingOrder
+        : worksheet.shippingOrder
         ? ORDER_TYPES.SHIPPING.value
         : null
 
       if (!this._orderType) return
 
-      const location = response.data.worksheet.worksheetDetails[0].toLocation
-      const worksheet = {
-        ...response.data.worksheet,
-        arrivalNotice: response.data.worksheet.arrivalNotice.name,
-        bizplace: response.data.worksheet.bizplace.name
-      }
       this._fillupForm(worksheet)
       this.data = {
-        ...this.data,
-        records: response.data.worksheet.worksheetDetails.map(worksheetDetail => {
-          return { ...worksheetDetail.targetVas, name: worksheetDetail.name }
+        records: worksheetDetails.map(worksheetDetail => {
+          return { ...worksheetDetail.targetVas, name: worksheetDetail.name, status: worksheetDetail.status }
         })
       }
     }
   }
 
-  _fillupForm(arrivalNotice) {
-    for (let key in arrivalNotice) {
-      Array.from(this.form.querySelectorAll('input')).forEach(field => {
+  updateContext() {
+    let actions = []
+
+    if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value) {
+      actions = [
+        { title: i18next.t('button.back'), action: () => history.back() },
+        { title: i18next.t('button.activate'), action: this._activateWorksheet.bind(this) }
+      ]
+    } else {
+      actions = [{ title: i18next.t('button.back'), action: () => history.back() }]
+    }
+
+    store.dispatch({
+      type: UPDATE_CONTEXT,
+      context: {
+        title: i18next.t('title.worksheet_vas'),
+        actions
+      }
+    })
+  }
+
+  updateGristConfig() {
+    const statusColumnConfig = {
+      type: 'string',
+      name: 'status',
+      header: i18next.t('field.status'),
+      record: { align: 'center' },
+      width: 100
+    }
+
+    this.preConfig.columns.map(column => {
+      if (column.name === 'description') {
+        column.record = { ...column.record, editable: this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value }
+      }
+    })
+
+    if (this._worksheetStatus !== WORKSHEET_STATUS.DEACTIVATED.value) {
+      this.preConfig.columns = [...this.preConfig.columns, statusColumnConfig]
+    }
+
+    this.config = this.preConfig
+  }
+
+  _fillupForm(data) {
+    for (let key in data) {
+      Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
-          field.checked = arrivalNotice[key]
+          field.checked = data[key]
         } else if (field.name === key && field.type === 'datetime-local') {
-          const datetime = Number(arrivalNotice[key])
+          const datetime = Number(data[key])
           const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
           field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
         } else if (field.name === key) {
-          field.value = arrivalNotice[key]
+          if (data[key] instanceof Object) {
+            const objectData = data[key]
+            field.value = `${objectData.name} ${objectData.description ? `(${objectData.description})` : ''}`
+          } else {
+            field.value = data[key]
+          }
         }
       })
     }

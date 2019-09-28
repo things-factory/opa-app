@@ -2,12 +2,12 @@ import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store, navigate } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
+import '../../popup-note'
 import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
-import './rejection-note'
 
 class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -397,7 +397,8 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
   async _rejectArrivalNotice() {
     openPopup(
       html`
-        <rejection-note
+        <popup-note
+          .title="${i18next.t('title.remark')}"
           @submit="${async e => {
             try {
               if (!e.detail.remark) throw new Error(i18next.t('text.remark_is_empty'))
@@ -406,7 +407,7 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
                 mutation {
                   rejectArrivalNotice(${gqlBuilder.buildArgs({
                     name: this._ganNo,
-                    patch: { remark: e.detail.remark }
+                    patch: { remark: e.detail.value }
                   })}) {
                     name
                   }
@@ -422,7 +423,7 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
               this._showToast(e)
             }
           }}"
-        ></rejection-note>
+        ></popup-note>
       `,
       {
         backdrop: true,
