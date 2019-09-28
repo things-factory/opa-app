@@ -10,9 +10,9 @@ export const labelSettingsResolver = {
     var qb = queryBuilder
       .innerJoin(Board, 'Board', 'Board.id = CAST(Setting.value AS uuid)')
       .select([
-        'Setting.id',
-        'Setting.name',
-        'Setting.value',
+        'Setting.id as id',
+        'Setting.name as name',
+        'Setting.value as value',
         'Board.id as boardId',
         'Board.name as boardName',
         'Board.description as boardDescription',
