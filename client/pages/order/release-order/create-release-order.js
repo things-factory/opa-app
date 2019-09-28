@@ -6,7 +6,7 @@ import gql from 'graphql-tag'
 import { openPopup } from '@things-factory/layout-base'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES, ORDER_STATUS, PACKING_TYPES } from '../constants/order'
+import { LOAD_TYPES, ORDER_STATUS, ORDER_TYPES } from '../constants/order'
 import './inventory-product-selector'
 
 class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
@@ -83,7 +83,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       actions: [
         {
           title: i18next.t('button.submit'),
-          action: ''
+          action: this._generateReleaseOrder.bind(this)
         }
       ]
     }
@@ -95,7 +95,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
           <fieldset>
             <legend>${i18next.t('title.release_order')}</legend>
             <label>${i18next.t('label.release_date')}</label>
-            <input name="releaseDate" type="datetime-local" min="${this._getStdDatetime()}" />
+            <input name="releaseDateTime" type="datetime-local" min="${this._getStdDatetime()}" />
 
             <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
             <input name="collectionOrderNo" ?hidden="${!this._ownTransport}"/>
@@ -110,10 +110,10 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
             <label>${i18next.t('label.shipping_option')}</label>
 
             <label ?hidden="${!this._shippingOption}">${i18next.t('label.container_no')}</label>
-            <input name="container_no" ?hidden="${!this._shippingOption}" />
+            <input shipping name="containerNo" ?hidden="${!this._shippingOption}" />
 
-            <label ?hidden="${!this._shippingOption}">${i18next.t('label.container_load_type')}</label>
-            <select name="loadType" ?hidden="${!this._shippingOption}">
+            <label>${i18next.t('label.load_type')}</label>
+            <select name="loadType">
             ${LOAD_TYPES.map(
               loadType => html`
                 <option value="${loadType.value}">${i18next.t(`label.${loadType.name}`)}</option>
@@ -122,27 +122,32 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
             </select>
 
             <label ?hidden="${!this._shippingOption}">${i18next.t('label.container_arrival_date')}</label>
-            <input name="conArrivalDate" type="datetime-local" min="${this._getStdDatetime()}"  
+            <input shipping name="containerArrivalDate" type="datetime-local" min="${this._getStdDatetime()}"  
             ?hidden="${!this._shippingOption}" />
 
             <label ?hidden="${!this._shippingOption}">${i18next.t('label.container_leaving_date')}</label>
-            <input name="conLeavingDate" type="datetime-local" min="${this._getStdDatetime()}" 
+            <input shipping name="containerLeavingDate" type="datetime-local" min="${this._getStdDatetime()}" 
             ?hidden="${!this._shippingOption}" />
 
             <label ?hidden="${!this._shippingOption}">${i18next.t('label.ship_name')}</label>
-            <input name="shipName" ?hidden="${!this._shippingOption}" />
+            <input shipping name="shipName" ?hidden="${!this._shippingOption}" />
 
             <input name="ownTransport" type="checkbox" ?checked="${this._ownTransport}"
             @change=${e => {
               this._ownTransport = e.currentTarget.checked
             }} />
             <label>${i18next.t('label.own_transport')}</label>
+            <label ?hidden="${this._ownTransport}">${i18next.t('label.delivery_date')}</label>
+            <input delivery name="deliveryDateTime" ?hidden="${this._ownTransport}"/>
 
-            <label ?hidden="${this._ownTransport}">${i18next.t('label.deliver_to')}</label>
-            <input name="to" ?hidden="${this._ownTransport}"/>
+            <label>${i18next.t('label.release_from')}</label>
+            <input name="from"/>
+
+            <label>${i18next.t('label.release_to')}</label>
+            <input name="to"/>
 
             <label ?hidden="${this._ownTransport}">${i18next.t('label.tel_no')}</label>
-            <input name="telNo" ?hidden="${this._ownTransport}"/>
+            <input delivery name="telNo" ?hidden="${this._ownTransport}"/>
           </fieldset>
         </form>
       </div>
@@ -197,13 +202,13 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_id'),
-          record: { editable: true, align: 'center', options: { queryName: 'products' } },
+          record: { editable: true, align: 'center' },
           width: 150
         },
         {
           type: 'object',
           name: 'product',
-          header: i18next.t('field.product'),
+          header: i18next.t('field.release_inventory_list'),
           record: { editable: true, align: 'center' },
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
@@ -378,6 +383,36 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     return `${date.toISOString().substr(0, 11)}00:00:00`
   }
 
+  async _generateReleaseOrder() {
+    try {
+      this._validateForm()
+      this._validateInventories()
+      this._validateVas()
+
+      const response = await client.query({
+        query: gql`
+          mutation {
+            generateReleaseGood(${gqlBuilder.buildArgs({
+              releaseGood: this._getReleaseOrder(),
+              shippingOrder: this._getShippingOrder(),
+              deliveryOrder: this._getDeliveryOrder()
+            })}) {
+              id
+              name
+            }
+          }
+        `
+      })
+
+      if (!response.errors) {
+        navigate(`release-order-detail/${response.data.generateReleaseGood.name}`)
+        this._showToast({ message: i18next.t('release_order_created') })
+      }
+    } catch (e) {
+      this._showToast(e)
+    }
+  }
+
   _validateForm() {
     const elements = Array.from(this.form.querySelectorAll('input, select'))
 
@@ -385,7 +420,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       throw new Error(i18next.t('text.invalid_form'))
   }
 
-  _validateProducts() {
+  _validateInventories() {
     this.inventoryGrist.commit()
     // no records
     if (!this.inventoryGrist.data.records || !this.inventoryGrist.data.records.length)
@@ -393,14 +428,13 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
 
     // required field (batchId, packingType, weight, unit, packQty)
     if (
-      this.inventoryGrist.data.records.filter(
-        record => !record.batchId || !record.packingType || !record.weight || !record.unit || !record.packQty
-      ).length
+      this.inventoryGrist.data.records.filter(record => !record.releaseQty || !record.batchId || !record.packingType)
+        .length
     )
       throw new Error(i18next.t('text.empty_value_in_list'))
 
     // duplication of batch id
-    const batchIds = this.inventoryGrist.data.records.map(product => product.batchId)
+    const batchIds = this.inventoryGrist.data.records.map(inventory => inventory.batchId)
     if (batchIds.filter((batchId, idx, batchIds) => batchIds.indexOf(batchId) !== idx).length)
       throw new Error(i18next.t('text.batch_id_is_duplicated'))
   }
@@ -446,6 +480,84 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
         })
       }
     }, 300)
+  }
+
+  _getReleaseOrder() {
+    let releaseGood = { status: ORDER_STATUS.PENDING.value }
+    Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
+      if (
+        !field.hasAttribute('hidden') &&
+        !field.hasAttribute('delivery') &&
+        !field.hasAttribute('shipping') &&
+        field.value
+      ) {
+        releaseGood[field.name] = field.type === 'checkbox' ? field.checked : field.value
+      }
+    })
+
+    const orderInventories = this.inventoryGrist.data.records.map((record, idx) => {
+      const seq = idx + 1
+      delete record.id
+      delete record.__typename
+      delete record.product.__typename
+      delete record.packingType
+      delete record.qty
+      delete record.batchId
+      delete record.warehouse
+      delete record.location
+      delete record.product
+
+      return { ...record, seq, type: ORDER_TYPES.RELEASE_OF_GOODS.value }
+    })
+
+    const orderVass = this.vasGrist.data.records.map(record => {
+      delete record.id
+      delete record.__typename
+      delete record.vas.__typename
+
+      return { ...record, name }
+    })
+
+    return {
+      ...releaseGood,
+      orderInventories,
+      orderVass
+    }
+  }
+
+  _getShippingOrder() {
+    if (this._shippingOption) {
+      let shippingOrder = { status: ORDER_STATUS.PENDING.value }
+      Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
+        if (field.hasAttribute('shipping') && !field.hasAttribute('hidden') && field.value) {
+          shippingOrder[field.name] = field.type === 'checkbox' ? field.checked : field.value
+        }
+      })
+      return { ...shippingOrder }
+    } else {
+      return null
+    }
+  }
+
+  _getDeliveryOrder() {
+    if (!this._ownTransport) {
+      let deliveryOrder = { status: ORDER_STATUS.PENDING.value }
+      Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
+        if (field.hasAttribute('delivery') && !field.hasAttribute('hidden') && field.value) {
+          deliveryOrder[field.name] = field.type === 'checkbox' ? field.checked : field.value
+        }
+      })
+
+      return { ...deliveryOrder }
+    } else {
+      return null
+    }
+  }
+
+  _clearPage() {
+    this.form.reset()
+    this.inventoryGrist.data = Object.assign({ records: [] })
+    this.vasGrist.data = Object.assign({ records: [] })
   }
 
   _showToast({ type, message }) {
