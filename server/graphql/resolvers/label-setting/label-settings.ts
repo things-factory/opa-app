@@ -8,19 +8,19 @@ export const labelSettingsResolver = {
     const queryBuilder = getRepository(Setting).createQueryBuilder()
 
     var qb = queryBuilder
-      .innerJoin(Board, 'board', 'setting.value = board.id')
+      .innerJoin(Board, 'Board', 'Setting.value = Board.id')
       .select([
-        'setting.id',
-        'setting.name',
-        'setting.value',
-        'board.id as boardId',
-        'board.name as boardName',
-        'board.description as boardDescription',
-        'board.thumbnail as boardThumbnail'
+        'Setting.id',
+        'Setting.name',
+        'Setting.value',
+        'Board.id as boardId',
+        'Board.name as boardName',
+        'Board.description as boardDescription',
+        'Board.thumbnail as boardThumbnail'
       ])
-      .where('setting.domain_id = :domain', { domain: context.state.domain.id })
+      .where('Setting.domain_id = :domain', { domain: context.state.domain.id })
 
-    if (names && names.length) qb.andWhere('setting.name IN (:...names)', { names })
+    if (names && names.length) qb.andWhere('Setting.name IN (:...names)', { names })
 
     var labelSettingList = await qb.getRawMany()
 
