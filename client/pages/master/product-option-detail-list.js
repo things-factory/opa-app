@@ -87,21 +87,19 @@ export class ProductOptionDetailList extends localize(i18next)(LitElement) {
   async firstUpdated() {
     this._searchFields = [
       {
-        label: i18next.t('label.name'),
+        label: i18next.t('field.name'),
         name: 'name',
         type: 'text',
         props: {
-          searchOper: 'like',
-          placeholder: i18next.t('label.name')
+          searchOper: 'like'
         }
       },
       {
-        label: i18next.t('label.description'),
+        label: i18next.t('field.description'),
         name: 'description',
         type: 'text',
         props: {
-          searchOper: 'like',
-          placeholder: i18next.t('label.description')
+          searchOper: 'like'
         }
       }
     ]

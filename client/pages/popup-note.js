@@ -1,13 +1,10 @@
 import { i18next, localize } from '@things-factory/i18n-base'
 import { css, html, LitElement } from 'lit-element'
 
-class RejectionNote extends localize(i18next)(LitElement) {
+class PopupNote extends localize(i18next)(LitElement) {
   static get properties() {
     return {
-      userId: String,
-      email: String,
-      userInfo: Object,
-      roleConfig: Object
+      title: String
     }
   }
 
@@ -54,7 +51,7 @@ class RejectionNote extends localize(i18next)(LitElement) {
   render() {
     return html`
       <div class="container">
-        <h2>${i18next.t('title.remark')}</h2>
+        <h2>${this.title}</h2>
         <textarea></textarea>
       </div>
 
@@ -64,10 +61,12 @@ class RejectionNote extends localize(i18next)(LitElement) {
             this.dispatchEvent(
               new CustomEvent('submit', {
                 detail: {
-                  remark: this.remarkTextarea.value
+                  value: this.remarkTextarea.value
                 }
               })
             )
+
+            history.back()
           }}"
           >${i18next.t('button.confirm')}</mwc-button
         >
@@ -76,4 +75,4 @@ class RejectionNote extends localize(i18next)(LitElement) {
   }
 }
 
-window.customElements.define('rejection-note', RejectionNote)
+window.customElements.define('popup-note', PopupNote)

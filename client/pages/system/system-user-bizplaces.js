@@ -74,25 +74,25 @@ class SystemUserBizplaces extends connect(store)(localize(i18next)(PageView)) {
     this._searchFields = [
       {
         name: 'name',
+        label: i18next.t('field.name'),
         type: 'text',
         props: {
-          placeholder: i18next.t('field.name'),
           searchOper: 'like'
         }
       },
       {
         name: 'description',
+        label: i18next.t('field.description'),
         type: 'text',
         props: {
-          placeholder: i18next.t('field.description'),
           searchOper: 'like'
         }
       },
       {
         name: 'email',
+        label: i18next.t('field.email'),
         type: 'text',
         props: {
-          placeholder: i18next.t('field.email'),
           searchOper: 'like'
         }
       }

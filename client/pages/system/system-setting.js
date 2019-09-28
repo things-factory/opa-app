@@ -92,18 +92,21 @@ class SystemSetting extends localize(i18next)(PageView) {
     this._searchFields = [
       {
         name: 'name',
+        label: i18next.t('field.name'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like' }
       },
       {
         name: 'description',
+        label: i18next.t('field.description'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.description') }
+        props: { searchOper: 'like' }
       },
       {
         name: 'category',
+        label: i18next.t('field.category'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.category') }
+        props: { searchOper: 'like' }
       }
     ]
 

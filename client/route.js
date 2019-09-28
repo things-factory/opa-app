@@ -313,12 +313,5 @@ export default function route(page) {
     case 'picking_unit':
       import('./pages/outbound/picking-by-unit')
       return page
-
-    /**
-     * Label Menus Section
-     */
-    case 'label_list':
-      import('./pages/label/label-list')
-      return page
   }
 }

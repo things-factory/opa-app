@@ -107,18 +107,18 @@ export class BufferLocationSelector extends localize(i18next)(LitElement) {
     this._searchFields = [
       {
         name: 'name',
+        label: i18next.t('field.name'),
         type: 'text',
         props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.name')
+          searchOper: 'like'
         }
       },
       {
         name: 'description',
+        label: i18next.t('field.description'),
         type: 'text',
         props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.description')
+          searchOper: 'like'
         }
       }
     ]

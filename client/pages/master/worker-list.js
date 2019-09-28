@@ -90,16 +90,16 @@ class WorkerList extends localize(i18next)(PageView) {
   pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('label.name'),
+        label: i18next.t('field.name'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.type'),
+        label: i18next.t('field.type'),
         name: 'type',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.type') }
+        props: { searchOper: 'like' }
       }
     ]
 

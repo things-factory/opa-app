@@ -82,25 +82,25 @@ class VasOrderRequests extends localize(i18next)(PageView) {
   pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('gan_no'),
+        label: i18next.t('field.gan'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.gan_no') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('eta'),
+        label: i18next.t('field.eta'),
         name: 'eta',
         type: 'datetime-local',
-        props: { searchOper: 'like', placeholder: i18next.t('label.eta') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('collection_date'),
+        label: i18next.t('field.collection_date'),
         name: 'collectionDateTime',
         type: 'datetime-local',
-        props: { searchOper: 'like', placeholder: i18next.t('label.collection_date') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('status'),
+        label: i18next.t('field.status'),
         name: 'status',
         type: 'select',
         options: [
@@ -110,7 +110,7 @@ class VasOrderRequests extends localize(i18next)(PageView) {
           { name: i18next.t(`label.${ORDER_STATUS.ARRIVED.name}`), value: ORDER_STATUS.ARRIVED.value },
           { name: i18next.t(`label.${ORDER_STATUS.PROCESSING.name}`), value: ORDER_STATUS.PROCESSING.value }
         ],
-        props: { searchOper: 'eq', placeholder: i18next.t('label.status') }
+        props: { searchOper: 'eq' }
       }
     ]
 
@@ -139,7 +139,7 @@ class VasOrderRequests extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'name',
-          header: i18next.t('field.gan_no'),
+          header: i18next.t('field.gan'),
           record: { align: 'center' },
           sortable: true,
           width: 180

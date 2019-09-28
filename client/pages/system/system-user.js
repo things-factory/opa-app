@@ -47,7 +47,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.user'),
+      title: i18next.t('title.user_management'),
       actions: [
         {
           title: i18next.t('button.add'),
@@ -85,33 +85,41 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
     this._searchFields = [
       {
         name: 'domain',
+        label: i18next.t('field.domain'),
         type: 'text',
         props: {
-          placeholder: i18next.t('field.domain'),
           searchOper: 'like'
         }
       },
       {
         name: 'name',
+        label: i18next.t('field.name'),
         type: 'text',
         props: {
-          placeholder: i18next.t('field.name'),
           searchOper: 'like'
         }
       },
       {
         name: 'description',
+        label: i18next.t('field.description'),
         type: 'text',
         props: {
-          placeholder: i18next.t('field.description'),
           searchOper: 'like'
         }
       },
       {
         name: 'email',
+        name: i18next.t('field.email'),
         type: 'text',
         props: {
-          placeholder: i18next.t('field.email'),
+          searchOper: 'like'
+        }
+      },
+      {
+        name: 'userType',
+        label: i18next.t('field.user_type'),
+        type: 'text',
+        props: {
           searchOper: 'like'
         }
       }
@@ -148,7 +156,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
                 {
                   backdrop: true,
                   size: 'large',
-                  title: i18next.t('title.user_detail')
+                  title: `${i18next.t('title.user_detail')} - ${record.name}`
                 }
               )
             }
@@ -188,6 +196,16 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.description'),
           record: {
             editable: false
+          },
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'userType',
+          header: i18next.t('field.user_type'),
+          record: {
+            editable: false,
+            align: 'center'
           },
           width: 200
         },
@@ -240,6 +258,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
               name
               description
               email
+              userType
               updater {
                 id
                 name

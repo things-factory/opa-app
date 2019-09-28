@@ -90,19 +90,19 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
   pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('label.release_order_no'),
+        label: i18next.t('field.release_order_no'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.release_order_no') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.release_date'),
+        label: i18next.t('field.release_date'),
         name: 'releaseDateTime',
         type: 'datetime-local',
-        props: { searchOper: 'like', placeholder: i18next.t('label.release_date') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.status'),
+        label: i18next.t('field.status'),
         name: 'status',
         type: 'select',
         options: [
@@ -112,7 +112,7 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
             return { name: i18next.t(`label.${status.name}`), value: status.value }
           })
         ],
-        props: { searchOper: 'eq', placeholder: i18next.t('label.status') }
+        props: { searchOper: 'eq' }
       }
     ]
 

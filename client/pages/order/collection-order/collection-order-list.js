@@ -83,19 +83,19 @@ class CollectionOrderList extends localize(i18next)(PageView) {
   pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('label.name'),
+        label: i18next.t('field.name'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.collection_date'),
+        label: i18next.t('field.collection_date'),
         name: 'collectionDateTime',
         type: 'datetime-local',
-        props: { searchOper: 'like', placeholder: i18next.t('label.collection_date') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.status'),
+        label: i18next.t('field.status'),
         name: 'status',
         type: 'select',
         options: [
@@ -105,7 +105,7 @@ class CollectionOrderList extends localize(i18next)(PageView) {
             return { name: i18next.t(`label.${status.name}`), value: status.value }
           })
         ],
-        props: { searchOper: 'eq', placeholder: i18next.t('label.status') }
+        props: { searchOper: 'eq' }
       }
     ]
 

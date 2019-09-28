@@ -66,7 +66,7 @@ class SystemRole extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.role'),
+      title: i18next.t('title.role_management'),
       actions: [
         {
           title: i18next.t('button.add'),
@@ -90,17 +90,17 @@ class SystemRole extends localize(i18next)(PageView) {
     this._searchFields = [
       {
         name: 'name',
+        label: i18next.t('field.name'),
         type: 'text',
         props: {
-          placeholder: i18next.t('field.name'),
           searchOper: 'like'
         }
       },
       {
         name: 'description',
+        label: i18next.t('field.description'),
         type: 'text',
         props: {
-          placeholder: i18next.t('field.description'),
           searchOper: 'like'
         }
       }
@@ -138,7 +138,7 @@ class SystemRole extends localize(i18next)(PageView) {
                 {
                   backdrop: true,
                   size: 'large',
-                  title: i18next.t('title.system_role_detail')
+                  title: `${i18next.t('title.system_role_detail')} - ${record.name}`
                 }
               )
             }

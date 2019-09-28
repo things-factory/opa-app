@@ -97,22 +97,22 @@ class TransportDriver extends localize(i18next)(PageView) {
   pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('label.name'),
+        label: i18next.t('field.name'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.driver_code'),
+        label: i18next.t('field.driver_code'),
         name: 'driverCode',
         type: 'text',
-        props: { searchOper: 'eq', placeholder: i18next.t('label.driver_code') }
+        props: { searchOper: 'eq' }
       },
       {
-        label: i18next.t('label.description'),
+        label: i18next.t('field.description'),
         name: 'description',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.description') }
+        props: { searchOper: 'like' }
       }
     ]
 

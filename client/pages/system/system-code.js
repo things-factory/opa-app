@@ -64,7 +64,7 @@ class SystemCode extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.code'),
+      title: i18next.t('title.code_management'),
       actions: [
         {
           title: i18next.t('button.save'),
@@ -88,13 +88,15 @@ class SystemCode extends localize(i18next)(PageView) {
     this._searchFields = [
       {
         name: 'name',
+        label: i18next.t('field.name'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like' }
       },
       {
         name: 'description',
+        label: i18next.t('field.description'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.description') }
+        props: { searchOper: 'like' }
       }
     ]
 
@@ -238,12 +240,12 @@ class SystemCode extends localize(i18next)(PageView) {
   _openMenuDetail(commonCodeId, commonCodeName) {
     openPopup(
       html`
-        <system-code-detail .commonCodeId="${commonCodeId}" .commonCodeName="${commonCodeName}"></system-code-detail>
+        <system-code-detail .commonCodeId=${commonCodeId} .commonCodeName=${commonCodeName}></system-code-detail>
       `,
       {
         backdrop: true,
         size: 'large',
-        title: i18next.t('title.system_code_detail')
+        title: `${i18next.t('title.system_code_detail')} - ${commonCodeName}`
       }
     )
   }

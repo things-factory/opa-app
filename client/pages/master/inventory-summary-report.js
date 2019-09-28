@@ -97,11 +97,10 @@ class InventorySummaryReport extends localize(i18next)(PageView) {
   pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('label.customer'),
+        label: i18next.t('field.customer'),
         name: 'name',
         props: {
-          searchOper: 'like',
-          placeholder: i18next.t('label.customer')
+          searchOper: 'like'
         }
       },
       {
@@ -150,16 +149,16 @@ class InventorySummaryReport extends localize(i18next)(PageView) {
       },
 
       {
-        label: i18next.t('start_date'),
+        label: i18next.t('field.start_date'),
         name: 'startDate',
         type: 'datetime-local',
-        props: { searchOper: 'like', placeholder: i18next.t('label.start_date') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('end_date'),
+        label: i18next.t('field.end_date'),
         name: 'endDate',
         type: 'datetime-local',
-        props: { searchOper: 'like', placeholder: i18next.t('label.end_date') }
+        props: { searchOper: 'like' }
       }
     ]
 

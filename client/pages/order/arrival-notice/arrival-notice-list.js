@@ -82,19 +82,19 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
   pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('label.gan_no'),
+        label: i18next.t('field.gan'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.gan_no') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.eta'),
+        label: i18next.t('field.eta'),
         name: 'eta',
         type: 'datetime-local',
-        props: { searchOper: 'like', placeholder: i18next.t('label.eta') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.status'),
+        label: i18next.t('field.status'),
         name: 'status',
         type: 'select',
         options: [
@@ -104,7 +104,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
             return { name: i18next.t(`label.${status.name}`), value: status.value }
           })
         ],
-        props: { searchOper: 'eq', placeholder: i18next.t('label.status') }
+        props: { searchOper: 'eq' }
       }
     ]
 
@@ -131,7 +131,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'name',
-          header: i18next.t('field.gan_no'),
+          header: i18next.t('field.gan'),
           record: { align: 'center' },
           sortable: true,
           width: 180
