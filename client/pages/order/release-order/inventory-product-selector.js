@@ -96,21 +96,19 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
   async firstUpdated() {
     this._searchFields = [
       {
-        label: i18next.t('label.warehouse_name'),
+        label: i18next.t('field.warehouse_name'),
         name: 'warehouse',
         type: 'text',
         props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.warehouse_name')
+          searchOper: 'like'
         }
       },
       {
-        label: i18next.t('label.product_name'),
+        label: i18next.t('field.product_name'),
         name: 'product_id',
         type: 'text',
         props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.product_name')
+          searchOper: 'like'
         }
       }
     ]

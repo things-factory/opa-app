@@ -94,28 +94,28 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
   pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('label.name'),
+        label: i18next.t('field.name'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.address'),
+        label: i18next.t('field.address'),
         name: 'address',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.address') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.postal_code'),
+        label: i18next.t('field.postal_code'),
         name: 'postal_code',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.postal_code') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.status'),
+        label: i18next.t('field.status'),
         name: 'status',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.status') }
+        props: { searchOper: 'like' }
       }
     ]
 

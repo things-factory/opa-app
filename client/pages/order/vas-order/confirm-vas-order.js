@@ -55,19 +55,19 @@ class ConfirmVasOrder extends localize(i18next)(PageView) {
       <form class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('label.gan')}</legend>
-          <label>${i18next.t('label.gan_no')}</label>
+          <label>${i18next.t('field.gan')}</label>
           <input name="gan" />
 
-          <label>${i18next.t('label.eta')}</label>
+          <label>${i18next.t('field.eta')}</label>
           <input name="eta" />
 
-          <label>${i18next.t('label.do_no')}</label>
+          <label>${i18next.t('field.do_no')}</label>
           <input name="delivery_no" />
 
-          <label>${i18next.t('label.company')}</label>
+          <label>${i18next.t('field.company')}</label>
           <input name="company" />
 
-          <label>${i18next.t('label.supplier_name')}</label>
+          <label>${i18next.t('field.supplier_name')}</label>
           <input name="supplier_name" />
         </fieldset>
       </form>
@@ -137,7 +137,7 @@ class ConfirmVasOrder extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'gan',
-          header: i18next.t('field.gan_no'),
+          header: i18next.t('field.gan'),
           record: {
             align: 'left'
           },

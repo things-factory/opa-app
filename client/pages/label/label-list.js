@@ -43,7 +43,7 @@ class LabelList extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.user'),
+      title: i18next.t('title.user_management'),
       printable: {
         options: {}
       }
@@ -70,17 +70,17 @@ class LabelList extends connect(store)(localize(i18next)(PageView)) {
     this._searchFields = [
       {
         name: 'name',
+        label: i18next.t('field.product_name'),
         type: 'text',
         props: {
-          placeholder: i18next.t('field.product_name'),
           searchOper: 'like'
         }
       },
       {
         name: 'batchNo',
+        label: i18next.t('field.batch_no'),
         type: 'text',
         props: {
-          placeholder: i18next.t('field.batch_no'),
           searchOper: 'like'
         }
       }

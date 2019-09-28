@@ -83,11 +83,13 @@ class WorksheetList extends localize(i18next)(PageView) {
     this._searchFields = [
       {
         name: 'name',
+        label: i18next.t('field.name'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like' }
       },
       {
         name: 'type',
+        label: i18next.t('label.type'),
         type: 'select',
         options: [
           { value: '' },
@@ -96,10 +98,11 @@ class WorksheetList extends localize(i18next)(PageView) {
             return { name: i18next.t(`label.${types.name}`), value: types.value }
           })
         ],
-        props: { searchOper: 'eq', placeholder: i18next.t('label.type') }
+        props: { searchOper: 'eq' }
       },
       {
         name: 'status',
+        label: i18next.t('label.status'),
         type: 'select',
         options: [
           { value: '' },
@@ -108,7 +111,7 @@ class WorksheetList extends localize(i18next)(PageView) {
             return { name: i18next.t(`label.${status.name}`), value: status.value }
           })
         ],
-        props: { searchOper: 'eq', placeholder: i18next.t('label.status') }
+        props: { searchOper: 'eq' }
       }
     ]
 

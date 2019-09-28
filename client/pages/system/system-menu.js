@@ -86,13 +86,15 @@ class SystemMenu extends localize(i18next)(PageView) {
     this._searchFields = [
       {
         name: 'name',
+        label: i18next.t('label.name'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like' }
       },
       {
         name: 'description',
+        label: i18next.t('label.description'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.description') }
+        props: { searchOper: 'like' }
       }
     ]
 
@@ -254,12 +256,12 @@ class SystemMenu extends localize(i18next)(PageView) {
   _openMenuDetail(menuId, menuName) {
     openPopup(
       html`
-        <system-menu-detail .menuId="${menuId}" .menuName="${menuName}"></system-menu-detail>
+        <system-menu-detail .menuId=${menuId} .menuName=${menuName}></system-menu-detail>
       `,
       {
         backdrop: true,
         size: 'large',
-        title: i18next.t('title.system_menu_detail')
+        title: `${i18next.t('title.system_menu_detail')} - ${menuName}`
       }
     )
   }

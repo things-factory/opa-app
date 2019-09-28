@@ -58,14 +58,14 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
 
   render() {
     return html`
-      <h2>${i18next.t('title.menu')} ${this.menuName}</h2>
-
+      <h2>${i18next.t('title.menu')}</h2>
       <search-form
         id="search-form"
         .fields=${this._searchFields}
         @submit=${async () => this.dataGrist.fetch()}
       ></search-form>
 
+      <h2>${i18next.t('title.submenus')}</h2>
       <div class="grist">
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
@@ -85,23 +85,27 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
     this._searchFields = [
       {
         name: 'name',
+        label: i18next.t('label.name'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like' }
       },
       {
         name: 'description',
+        label: i18next.t('label.description'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.description') }
+        props: { searchOper: 'like' }
       },
       {
         name: 'template',
+        label: i18next.t('label.template'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.template') }
+        props: { searchOper: 'like' }
       },
       {
         name: 'resourceUrl',
+        label: i18next.t('label.resource_url'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.resource_url') }
+        props: { searchOper: 'like' }
       }
     ]
 
