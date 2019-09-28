@@ -197,6 +197,22 @@ class WorksheetList extends localize(i18next)(PageView) {
           record: { align: 'center' },
           sortable: true,
           width: 160
+        },
+        {
+          type: 'datetime',
+          name: 'updatedAt',
+          header: i18next.t('field.updated_at'),
+          record: { editable: false, align: 'center' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'object',
+          name: 'updater',
+          header: i18next.t('field.updater'),
+          record: { editable: false, align: 'center' },
+          sortable: true,
+          width: 150
         }
       ]
     }
@@ -236,6 +252,11 @@ class WorksheetList extends localize(i18next)(PageView) {
               status
               startedAt
               endedAt
+              updatedAt
+              updater {
+                name
+                description
+              }
             }
             total
           }

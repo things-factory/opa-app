@@ -2,7 +2,7 @@ import '@things-factory/barcode-ui'
 import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, store, UPDATE_CONTEXT, navigate } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { WORKSHEET_STATUS } from './constants/worksheet'
@@ -278,19 +278,11 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
   updateContext() {
     let actions = []
     if (this.completed) {
-      store.dispatch({
-        type: UPDATE_CONTEXT,
-        context: {
-          title: i18next.t('title.vas'),
-          actions: [{ title: i18next.t('button.complete'), action: this._complete.bind(this) }]
-        }
-      })
-
-      return
+      actions = [{ title: i18next.t('button.complete'), action: this._complete.bind(this) }]
     }
 
     if (this.cancelable) {
-      actions = [{ title: i18next.t('button.undo'), action: this._undoPutaway.bind(this) }]
+      actions = [...actions, { title: i18next.t('button.undo'), action: this._undoPutaway.bind(this) }]
     }
 
     store.dispatch({
@@ -516,6 +508,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
         text: i18next.t('text.unexpected_location'),
         type: 'warning',
         showCancelButton: true,
+        allowOutsideClick: false,
         confirmButtonColor: '#22a6a7',
         cancelButtonColor: '#cfcfcf',
         confirmButtonText: i18next.t('button.confirm')
@@ -541,6 +534,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       title: i18next.t('text.putaway'),
       text: i18next.t('text.do_you_want_to_complete?'),
       type: 'warning',
+      allowOutsideClick: false,
       showCancelButton: true,
       confirmButtonColor: '#22a6a7',
       cancelButtonColor: '#cfcfcf',
@@ -563,6 +557,16 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       this._clearView()
+      await Swal.fire({
+        title: i18next.t('text.putaway'),
+        text: i18next.t('text.put_work_is_completed'),
+        type: 'info',
+        allowOutsideClick: false,
+        confirmButtonColor: '#22a6a7',
+        confirmButtonText: i18next.t('text.confirm')
+      })
+
+      navigate('worksheets')
     }
   }
 

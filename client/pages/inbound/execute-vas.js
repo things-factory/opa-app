@@ -1,14 +1,15 @@
 import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { openPopup } from '@things-factory/layout-base'
+import { client, gqlBuilder, isMobileDevice, PageView, store, UPDATE_CONTEXT, navigate } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { ORDER_TYPES } from '../order/constants/order'
-import { openPopup } from '@things-factory/layout-base'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { WORKSHEET_STATUS } from './constants/worksheet'
+import Swal from 'sweetalert2'
+import { ORDER_TYPES } from '../order/constants/order'
 import '../popup-note'
+import { WORKSHEET_STATUS } from './constants/worksheet'
 
 class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -109,7 +110,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   }
 
   get completed() {
-    return this.data.records.every(record => record.completed)
+    return this.data.records.length && this.data.records.every(record => record.completed)
   }
 
   render() {
@@ -219,7 +220,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
     this.data = { records: [] }
     this._vasName = ''
     this.orderNo = ''
-    this.selectedVas = null
+    this._selectedVas = null
     this._selectedTaskStatus = null
   }
 
@@ -235,7 +236,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
             if (data.records.length && record) {
-              this.selectedVas = record
+              this._selectedVas = record
               this._selectedTaskStatus = null
               this._selectedTaskStatus = record.status
               this._vasName = `${record.vas.name} ${record.vas.description ? `(${record.vas.description})` : ''}`
@@ -291,29 +292,17 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   updateContext() {
     let actions = []
     if (this.completed) {
-      store.dispatch({
-        type: UPDATE_CONTEXT,
-        context: {
-          title: i18next.t('title.vas'),
-          actions: [{ title: i18next.t('button.complete'), action: this._complete.bind(this) }]
-        }
-      })
-
-      return
+      actions = [{ title: i18next.t('button.complete'), action: this._complete.bind(this) }]
     }
 
     if (this._selectedTaskStatus === WORKSHEET_STATUS.EXECUTING.value) {
       actions = [
+        ...actions,
         { title: i18next.t('button.issue'), action: this._openIssueEditor.bind(this) },
-        { title: i18next.t('button.complete'), action: this._executeVas.bind(this) }
+        { title: i18next.t('button.done'), action: this._executeVas.bind(this) }
       ]
     } else if (this._selectedTaskStatus === WORKSHEET_STATUS.DONE.value) {
-      actions = [
-        {
-          title: i18next.t('button.undo'),
-          action: this._undoVas.bind(this)
-        }
-      ]
+      actions = [...actions, { title: i18next.t('button.undo'), action: this._undoVas.bind(this) }]
     }
 
     store.dispatch({
@@ -331,7 +320,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
 
   async _fetchVass(orderNo, orderType) {
     if (!orderNo) {
-      this._showToast({ message: i18next.t('text.order_type_is_empty') })
+      this._showToast({ message: i18next.t('text.order_no_is_empty') })
       return
     }
 
@@ -393,6 +382,11 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   _clearView() {
     this.data = { records: [] }
     this.infoForm.reset()
+    this.inputForm.reset()
+    this._orderNo = null
+    this._orderType = null
+    this._selectedVas = null
+    this._selectedTaskStatus = null
   }
 
   _fillUpInfoForm(data) {
@@ -445,7 +439,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
           @submit="${async e => {
             this.data = {
               records: this.data.records.map(record => {
-                if (record.name === this.selectedVas.name) record.issue = e.detail.value
+                if (record.name === this._selectedVas.name) record.issue = e.detail.value
                 return record
               })
             }
@@ -474,7 +468,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!response.errors) {
-        this.selectedVas = null
+        this._selectedVas = null
         this._selectedTaskStatus = null
         this.infoForm.reset()
         this.inputForm.reset()
@@ -492,14 +486,14 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
         query: gql`
           mutation {
             undoVas(${gqlBuilder.buildArgs({
-              worksheetDetail: { name: this.selectedVas.name }
+              worksheetDetail: { name: this._selectedVas.name }
             })})
           }
         `
       })
 
       if (!response.errors) {
-        this.selectedVas = null
+        this._selectedVas = null
         this._selectedTaskStatus = null
         this.infoForm.reset()
         this.inputForm.reset()
@@ -512,7 +506,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
 
   _validate() {
     // 1. validate for vas selection
-    if (!this.selectedVas) throw new Error(i18next.t('text.target_doesnt_selected'))
+    if (!this._selectedVas) throw new Error(i18next.t('text.target_doesnt_selected'))
   }
 
   async _completeHandler() {
@@ -521,6 +515,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       title: i18next.t('text.vas'),
       text: i18next.t('text.do_you_want_to_complete?'),
       type: 'warning',
+      allowOutsideClick: false,
       showCancelButton: true,
       confirmButtonColor: '#22a6a7',
       cancelButtonColor: '#cfcfcf',
@@ -541,10 +536,47 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _getVasWorksheetDetail() {
-    const worksheetDetail = this.grist.dirtyData.records.filter(record => record.name === this.selectedVas.name)[0]
+    const worksheetDetail = this.grist.dirtyData.records.filter(record => record.name === this._selectedVas.name)[0]
     let vasWorkseetDetail = { name: worksheetDetail.name }
     if (worksheetDetail.issue) vasWorkseetDetail.issue
     return vasWorkseetDetail
+  }
+
+  async _complete() {
+    try {
+      this._validateComplete()
+      const response = await client.query({
+        query: gql`
+          mutation {
+            completeVas(${gqlBuilder.buildArgs({
+              orderNo: this.orderNo,
+              orderType: this.orderType
+            })})
+          }
+        `
+      })
+
+      if (!response.errors) {
+        this._clearView()
+        await Swal.fire({
+          title: i18next.t('text.vas'),
+          text: i18next.t('text.vas_work_is_completed'),
+          type: 'info',
+          allowOutsideClick: false,
+          confirmButtonColor: '#22a6a7',
+          confirmButtonText: i18next.t('text.confirm')
+        })
+
+        navigate('worksheets')
+      }
+    } catch (e) {
+      this._showToast(e)
+    }
+  }
+
+  _validateComplete() {
+    if (!this.orderNo) throw new Error(i18next.t('text.order_no_is_empty'))
+    if (!this.orderType) throw new Error(i18next.t('text.order_type_is_empty'))
   }
 
   _showToast({ type, message }) {

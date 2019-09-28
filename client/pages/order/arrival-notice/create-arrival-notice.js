@@ -5,7 +5,7 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_C
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES, ORDER_STATUS, PACKING_TYPES, ORDER_TYPES } from '../constants/order'
+import { LOAD_TYPES, ORDER_STATUS, ORDER_TYPES } from '../constants/order'
 
 class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -235,13 +235,13 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           width: 350
         },
         {
-          type: 'select',
+          type: 'code',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: {
             editable: true,
             align: 'center',
-            options: ['', ...Object.keys(PACKING_TYPES).map(key => PACKING_TYPES[key].value)]
+            codeName: 'PACKING_TYPES'
           },
           width: 150
         },
@@ -253,10 +253,10 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           width: 80
         },
         {
-          type: 'select',
+          type: 'code',
           name: 'unit',
           header: i18next.t('field.unit'),
-          record: { editable: true, align: 'center', options: ['', 'kg', 'g'] },
+          record: { editable: true, align: 'center', codeName: 'WEIGHT_UNITS' },
           width: 80
         },
         {
@@ -314,13 +314,6 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.batch_id'),
           record: { editable: true, align: 'center', options: ['', i18next.t('label.all')] },
           width: 150
-        },
-        {
-          type: 'string',
-          name: 'remark',
-          header: i18next.t('field.remark'),
-          record: { editable: true, align: 'center' },
-          width: 350
         }
       ]
     }
