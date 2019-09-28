@@ -4,6 +4,7 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import { getRenderer, getEditor } from '@things-factory/grist-ui'
 
 class SystemSetting extends localize(i18next)(PageView) {
   static get styles() {
@@ -133,10 +134,10 @@ class SystemSetting extends localize(i18next)(PageView) {
           width: 200
         },
         {
-          type: 'string',
+          type: 'code',
           name: 'category',
           header: i18next.t('field.category'),
-          record: { editable: true, align: 'left' },
+          record: { editable: true, align: 'center', codeName: 'SETTING_CATEGORIES' },
           sortable: true,
           width: 150
         },
@@ -144,11 +145,19 @@ class SystemSetting extends localize(i18next)(PageView) {
           type: 'string',
           name: 'value',
           header: i18next.t('field.value'),
-          record: { editable: true, align: 'left' },
+          record: {
+            editor: function(value, column, record, rowIndex, field) {
+              return getEditor(record.category)(value, column, record, rowIndex, field)
+            },
+            renderer: function(value, column, record, rowIndex, field) {
+              return getRenderer(record.category)(value, column, record, rowIndex, field)
+            },
+            editable: true,
+            align: 'left'
+          },
           sortable: true,
           width: 180
         },
-
         {
           type: 'datetime',
           name: 'updatedAt',
