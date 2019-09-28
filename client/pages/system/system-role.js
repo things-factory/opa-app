@@ -66,7 +66,7 @@ class SystemRole extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.role'),
+      title: i18next.t('title.role_management'),
       actions: [
         {
           title: i18next.t('button.add'),

@@ -62,7 +62,7 @@ class SystemMenu extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.menu'),
+      title: i18next.t('title.menu_management'),
       actions: [
         {
           title: i18next.t('button.save'),
