@@ -47,7 +47,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.user'),
+      title: i18next.t('title.user_management'),
       actions: [
         {
           title: i18next.t('button.add'),
