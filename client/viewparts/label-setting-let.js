@@ -4,9 +4,10 @@ import { client, gqlBuilder, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import { connect } from 'pwa-helpers'
-import { UPDATE_LABEL_SETTINGS } from '../actions/label-settings'
-import { LOCATION_LABEL_SETTING_KEY, PALLET_LABEL_SETTING_KEY } from '../label-setting-constants'
+import { UPDATE_OPA_APP_SETTINGS } from '../actions/opa-app-settings'
+import { LOCATION_LABEL_SETTING_KEY, PALLET_LABEL_SETTING_KEY } from '../setting-constants'
 import '@things-factory/board-ui'
+import { fetchBoardSettings } from './fetch-board-settings'
 
 export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement)) {
   static get styles() {
@@ -153,8 +154,11 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
   }
 
   stateChanged(state) {
-    this.locationLabel = state.labelSettings.locationLabel || {}
-    this.palletLabel = state.labelSettings.palletLabel || {}
+    var locationLabel = state.opaApp[LOCATION_LABEL_SETTING_KEY]
+    var palletLabel = state.opaApp[PALLET_LABEL_SETTING_KEY]
+
+    this.locationLabel = (locationLabel ? locationLabel.board : {}) || {}
+    this.palletLabel = (palletLabel ? palletLabel.board : {}) || {}
   }
 
   onClickLabelSelector(name) {
@@ -168,15 +172,19 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
             await this.saveSettings({
               name,
               value: board.id,
-              category: 'opa-app',
+              category: 'board',
               description:
                 name == LOCATION_LABEL_SETTING_KEY ? 'board id for location label' : 'board id for pallet label'
             })
 
+            var settings = await fetchBoardSettings()
+
             store.dispatch({
-              type: UPDATE_LABEL_SETTINGS,
-              locationLabel: name == LOCATION_LABEL_SETTING_KEY ? board : this.locationLabel,
-              palletLabel: name == PALLET_LABEL_SETTING_KEY ? board : this.palletLabel
+              type: UPDATE_OPA_APP_SETTINGS,
+              settings: settings.reduce((settings, setting) => {
+                settings[setting.name] = setting
+                return settings
+              }, {})
             })
 
             popup.close()

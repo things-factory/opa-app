@@ -1,20 +1,20 @@
 import { MigrationInterface, QueryRunner, getRepository } from 'typeorm'
 import { Setting } from '@things-factory/setting-base'
 import { Domain } from '@things-factory/shell'
-// import { LOCATION_LABEL_SETTING_KEY, PALLET_LABEL_SETTING_KEY } from '../../client/label-setting-constants' <-- not work
+import { LOCATION_LABEL_SETTING_KEY, PALLET_LABEL_SETTING_KEY } from '..//opa-app-setting-constants'
 
 const SEED_SETTINGS = [
   {
-    name: 'opa-app:location-label',
+    name: LOCATION_LABEL_SETTING_KEY,
     description: 'Location label ID',
     value: '',
-    category: 'opa-app'
+    category: 'board'
   },
   {
-    name: 'opa-app:pallet-label',
+    name: PALLET_LABEL_SETTING_KEY,
     description: 'Pallet label ID',
     value: '',
-    category: 'opa-app'
+    category: 'board'
   }
 ]
 

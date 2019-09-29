@@ -3,7 +3,11 @@ import { isMobileDevice } from '@things-factory/shell'
 export default function route(page) {
   switch (page) {
     case '':
-      return isMobileDevice() ? '/menu-list' : '/board-viewer/872a1e69-7acb-45a1-a914-87dfb0d295b4' //'/opa-home'
+      return isMobileDevice() ? '/menu-list' : '/dashboard'
+
+    case 'dashboard':
+      import('./pages/dashboard')
+      return page
 
     /**
      * Master Menus Section
