@@ -308,7 +308,7 @@ class SystemSetting extends localize(i18next)(PageView) {
     })
   }
 
-  _loadOpaAppSettings() {
+  async _loadOpaAppSettings() {
     var settings = await fetchBoardSettings()
 
     store.dispatch({
