@@ -4,6 +4,8 @@ import { client, gqlBuilder, navigate, isMobileDevice, PageView, ScrollbarStyles
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { getRenderer, getEditor } from '@things-factory/grist-ui'
+import { fetchBoardSettings } from '../../viewparts/fetch-board-settings'
+import { UPDATE_OPA_APP_SETTINGS } from '../../actions/opa-app-settings'
 
 class SystemSetting extends localize(i18next)(PageView) {
   static get styles() {
@@ -259,7 +261,10 @@ class SystemSetting extends localize(i18next)(PageView) {
           `
       })
 
-      if (!response.errors) this.dataGrist.fetch()
+      if (!response.errors) {
+        this.dataGrist.fetch()
+        this._loadOpaAppSettings()
+      }
     }
   }
 
@@ -274,7 +279,10 @@ class SystemSetting extends localize(i18next)(PageView) {
           `
       })
 
-      if (!response.errors) this.dataGrist.fetch()
+      if (!response.errors) {
+        this.dataGrist.fetch()
+        this._loadOpaAppSettings()
+      }
     }
   }
 
@@ -297,6 +305,18 @@ class SystemSetting extends localize(i18next)(PageView) {
           record[column.name] = item[column.name]
           return record
         }, {})
+    })
+  }
+
+  _loadOpaAppSettings() {
+    var settings = await fetchBoardSettings()
+
+    store.dispatch({
+      type: UPDATE_OPA_APP_SETTINGS,
+      settings: settings.reduce((settings, setting) => {
+        settings[setting.name] = setting
+        return settings
+      }, {})
     })
   }
 }
