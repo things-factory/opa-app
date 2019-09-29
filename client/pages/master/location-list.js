@@ -398,18 +398,14 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     var labelId = this._locationLabel && this._locationLabel.id
 
     if (!labelId) {
-      Swal.fire({
-        title: i18next.t('text.no_label_setting_was_found'),
-        text: i18next.t('text.please_check_your_setting'),
-        type: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#22a6a7',
-        cancelButtonColor: '#cfcfcf',
-        confirmButtonText: i18next.t('button.setting'),
-        cancelButtonText: i18next.t('text.cancel')
-      }).then(nav => {
-        if (nav.value) navigate('setting')
-      })
+      document.dispatchEvent(
+        new CustomEvent('notify', {
+          detail: {
+            level: 'error',
+            message: `${i18next.t('text.no_label_setting_was_found')}. ${i18next.t('text.please_check_your_setting')}`
+          }
+        })
+      )
     } else {
       for (var record of records) {
         var searchParams = new URLSearchParams()
@@ -428,8 +424,17 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           }
 
           await this.printer.connectAndPrint(command)
-        } catch (e) {
-          throw new Error(e)
+        } catch (ex) {
+          document.dispatchEvent(
+            new CustomEvent('notify', {
+              detail: {
+                level: 'error',
+                message: ex,
+                ex
+              }
+            })
+          )
+          break
         }
       }
     }
