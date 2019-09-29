@@ -169,7 +169,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
             </fieldset>
 
             <fieldset>
-              <legend>${i18next.t('title.input_section')}</legend>
+              <legend style="display: ${this.scannable ? 'flex' : 'none'}">${i18next.t('title.input_section')}</legend>
 
               <label style="display: ${this.scannable ? 'flex' : 'none'}">${i18next.t('label.pallet_barcode')}</label>
               <barcode-scanable-input
@@ -228,6 +228,10 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
             if (data.records.length && record) {
+              if (this.selectedOrderProduct && this.selectedOrderProduct.name === record) {
+                return
+              }
+
               this.selectedOrderProduct = record
               this._selectedTaskStatus = null
               this._selectedTaskStatus = record.status
@@ -455,7 +459,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
   async _undoPutaway() {
     try {
       this._validateUndoPutaway()
-      const response = client.query({
+      const response = await client.query({
         query: gql`
           mutation {
             undoPutaway(${gqlBuilder.buildArgs({
@@ -559,13 +563,14 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       this._clearView()
       await Swal.fire({
         title: i18next.t('text.putaway'),
-        text: i18next.t('text.put_work_is_completed'),
+        text: i18next.t('text.your_working_is_completed'),
         type: 'info',
         allowOutsideClick: false,
         confirmButtonColor: '#22a6a7',
         confirmButtonText: i18next.t('text.confirm')
       })
 
+      this._clearView()
       navigate('worksheets')
     }
   }

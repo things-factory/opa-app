@@ -7,6 +7,7 @@ import { client, gqlBuilder, isMobileDevice, PageView, store, flattenObject } fr
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
+import jsPDF from 'jspdf'
 
 class TransportSummaryReport extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -235,6 +236,7 @@ class TransportSummaryReport extends connect(store)(localize(i18next)(PageView))
           <label>${i18next.t('label.total_amount')}</label>
           <input name="totalPrice" />
         </fieldset>
+        <script src="https://unpkg.com/jspdf@latest/dist/jspdf.min.js"></script>
       </form>
     `
   }

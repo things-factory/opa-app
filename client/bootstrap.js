@@ -1,47 +1,34 @@
 import { addRoutingType, updateMenuProvider } from '@things-factory/menu-base'
-import { ADD_SETTING } from '@things-factory/setting-base'
 import { client, store, UPDATE_BASE_URL } from '@things-factory/shell'
 import gql from 'graphql-tag'
-import { html } from 'lit-html'
-import { UPDATE_LABEL_SETTINGS } from './actions/label-settings'
-import { LOCATION_LABEL_SETTING_KEY, PALLET_LABEL_SETTING_KEY } from './label-setting-constants'
-import reducerLabelSettings from './reducers/label-settings'
-import { fetchLabelSettings } from './viewparts/fetch-label-settings'
+import { UPDATE_OPA_APP_SETTINGS, CLEAR_OPA_APP_SETTINGS } from './actions/opa-app-settings'
+import opaApp from './reducers/opa-app-settings'
+import { fetchBoardSettings } from './viewparts/fetch-board-settings'
 import { auth } from '@things-factory/auth-base'
-
-import './viewparts/label-setting-let'
 
 export default function bootstrap() {
   store.addReducers({
-    labelSettings: reducerLabelSettings
+    opaApp
   })
 
-  /* 사용자 signin/signout 에 따라서, labelSetting 변경 */
+  /* 사용자 signin/signout 에 따라서, setting 변경 */
   auth.on('signin', async () => {
-    // fetch labelSettings
-    var labelSettings = await fetchLabelSettings()
-    var labels = {}
-    labelSettings.forEach(setting => {
-      if (setting.name == LOCATION_LABEL_SETTING_KEY) {
-        labels.locationLabel = setting.board
-      } else if (setting.name == PALLET_LABEL_SETTING_KEY) {
-        labels.palletLabel = setting.board
-      }
-    })
+    // fetch opa-app settings
+    var settings = await fetchBoardSettings()
 
     store.dispatch({
-      type: UPDATE_LABEL_SETTINGS,
-      locationLabel: labels.locationLabel,
-      palletLabel: labels.palletLabel
+      type: UPDATE_OPA_APP_SETTINGS,
+      settings: settings.reduce((settings, setting) => {
+        settings[setting.name] = setting
+        return settings
+      }, {})
     })
   })
 
   auth.on('signout', async () => {
-    // clear labelSettings
+    // clear opa-app settings
     store.dispatch({
-      type: UPDATE_LABEL_SETTINGS,
-      locationLabel: null,
-      palletLabel: null
+      type: CLEAR_OPA_APP_SETTINGS
     })
   })
 
@@ -59,15 +46,15 @@ export default function bootstrap() {
     // baseUrl: 'http://opaone.com'
   })
 
-  store.dispatch({
-    type: ADD_SETTING,
-    setting: {
-      seq: 100,
-      template: html`
-        <label-setting-let></label-setting-let>
-      `
-    }
-  })
+  // store.dispatch({
+  //   type: ADD_SETTING,
+  //   setting: {
+  //     seq: 100,
+  //     template: html`
+  //       <label-setting-let></label-setting-let>
+  //     `
+  //   }
+  // })
 
   store.dispatch(
     updateMenuProvider(async () => {

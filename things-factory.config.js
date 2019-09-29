@@ -8,6 +8,10 @@ export default {
      * Master Menus Section
      */
     {
+      tagname: 'opa-dashboard',
+      page: 'dashboard'
+    },
+    {
       tagname: 'company-list',
       page: 'companies'
     },

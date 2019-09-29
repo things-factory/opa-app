@@ -235,6 +235,7 @@ class WorksheetUnloading extends connect(store)(localize(i18next)(PageView)) {
                 palletQty
               }
               status
+              issue
             }
           }
         }
@@ -351,7 +352,7 @@ class WorksheetUnloading extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _getUnloadingWorksheetDetails() {
-    return (this.grist.dirtyRecords || []).map(worksheetDetail => {
+    return (this.grist.dirtyData.records || []).map(worksheetDetail => {
       return {
         name: worksheetDetail.name,
         description: worksheetDetail.description

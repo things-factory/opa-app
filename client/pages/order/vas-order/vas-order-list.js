@@ -130,7 +130,7 @@ class VasOrderList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'object',
           name: 'vas',
-          header: i18next.t('field.vasssssssss'),
+          header: i18next.t('field.vas'),
           record: { editable: true, align: 'center', options: { queryName: 'vass' } },
           sortable: true,
           width: 250

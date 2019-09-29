@@ -1,4 +1,8 @@
 {
+  "button.delete_all": "전체 삭제",
+  "button.generate": "생성",
+  "button.print_label": "라벨 출력",
+  "button.preview": "미리보기",
   "field.batch_no": "배치 번호",
   "field.buffer_location": "버퍼 위치",
   "field.check_box": "체크박스",

@@ -1,4 +1,4 @@
 import * as OpaMenu from './opa-menu'
-import * as LabelSetting from './label-setting'
+import * as BoardSetting from './board-setting'
 
-export const queries = [OpaMenu.Query, LabelSetting.Query]
+export const queries = [OpaMenu.Query, BoardSetting.Query]
