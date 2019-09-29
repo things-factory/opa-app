@@ -55,16 +55,13 @@
     "@things-factory/transport-base": "*",
     "@things-factory/warehouse-base": "*",
     "@things-factory/worksheet-base": "*",
-    "@things-scene/baidu-map": "*",
     "@things-scene/chartjs": "ThingsElements/things-scene-chartjs#for-things-factory",
     "@things-scene/clock": "*",
     "@things-scene/clone": "*",
     "@things-scene/compass": "*",
     "@things-scene/data-transform": "*",
-    "@things-scene/echart": "*",
     "@things-scene/excel": "*",
     "@things-scene/firebase": "*",
-    "@things-scene/forklift": "*",
     "@things-scene/form": "*",
     "@things-scene/gauge": "*",
     "@things-scene/google-map": "*",
@@ -79,19 +76,17 @@
     "@things-scene/progressbar": "*",
     "@things-scene/random": "*",
     "@things-scene/restful": "*",
-    "@things-scene/slam": "*",
-    "@things-scene/stomp": "*",
     "@things-scene/switch": "^1.0.0-beta.3",
     "@things-scene/tab": "*",
     "@things-scene/table": "*",
-    "@things-scene/traffic": "*",
     "@things-scene/visualizer": "ThingsElements/things-scene-visualizer#for-things-factory",
     "@things-scene/wheel-sorter": "*",
+    "jspdf": "^1.5.3",
+    "jspdf-autotable": "^3.2.4",
     "pg": "*",
     "sweetalert2": "*"
   },
   "devDependencies": {
-    "@things-factory/grist-test": "*",
     "@things-factory/opa-test": "*"
   }
 }

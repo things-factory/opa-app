@@ -1,9 +1,11 @@
 import '@things-factory/form-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { store, client, gqlBuilder, navigate, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { getRenderer, getEditor } from '@things-factory/grist-ui'
+import { fetchBoardSettings } from '../../viewparts/fetch-board-settings'
+import { UPDATE_OPA_APP_SETTINGS } from '../../actions/opa-app-settings'
 
 class SystemSetting extends localize(i18next)(PageView) {
   static get styles() {
@@ -158,6 +160,20 @@ class SystemSetting extends localize(i18next)(PageView) {
           width: 180
         },
         {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'edit',
+          handlers: {
+            click: function(columns, data, column, record, rowIndex, field) {
+              var { category, value } = record
+
+              if (category == 'board' && value) {
+                navigate(`board-modeller/${value}`)
+              }
+            }
+          }
+        },
+        {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
@@ -245,7 +261,10 @@ class SystemSetting extends localize(i18next)(PageView) {
           `
       })
 
-      if (!response.errors) this.dataGrist.fetch()
+      if (!response.errors) {
+        this.dataGrist.fetch()
+        this._loadOpaAppSettings()
+      }
     }
   }
 
@@ -260,7 +279,10 @@ class SystemSetting extends localize(i18next)(PageView) {
           `
       })
 
-      if (!response.errors) this.dataGrist.fetch()
+      if (!response.errors) {
+        this.dataGrist.fetch()
+        this._loadOpaAppSettings()
+      }
     }
   }
 
@@ -283,6 +305,18 @@ class SystemSetting extends localize(i18next)(PageView) {
           record[column.name] = item[column.name]
           return record
         }, {})
+    })
+  }
+
+  async _loadOpaAppSettings() {
+    var settings = await fetchBoardSettings()
+
+    store.dispatch({
+      type: UPDATE_OPA_APP_SETTINGS,
+      settings: settings.reduce((settings, setting) => {
+        settings[setting.name] = setting
+        return settings
+      }, {})
     })
   }
 }

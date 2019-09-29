@@ -298,7 +298,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
     return this.shadowRoot.querySelector('#preview_grist')
   }
 
-  async _onChangeHandler(e) {
+  _onChangeHandler(e) {
     const before = e.detail.before || {}
     const after = e.detail.after
 

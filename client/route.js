@@ -3,7 +3,11 @@ import { isMobileDevice } from '@things-factory/shell'
 export default function route(page) {
   switch (page) {
     case '':
-      return isMobileDevice() ? '/menu-list' : '/board-viewer/872a1e69-7acb-45a1-a914-87dfb0d295b4' //'/opa-home'
+      return isMobileDevice() ? '/menu-list' : '/dashboard'
+
+    case 'dashboard':
+      import('./pages/dashboard')
+      return page
 
     /**
      * Master Menus Section
@@ -187,21 +191,29 @@ export default function route(page) {
       import('./pages/order/collection-order/completed-collection-order')
       return page
 
-    case 'vas_orders':
-      import('./pages/order/vas-order/vas-order-list')
-      return page
-
-    case 'create_vas_order':
-      import('./pages/order/vas-order/create-vas-order')
-      return page
-
-    case 'confirm_vas_order':
-      import('./pages/order/vas-order/confirm-vas-order')
-      return page
-
-    case 'vas_order_detail':
-      import('./pages/order/vas-order/vas-order-detail')
-      return page
+      case 'vas_orders':
+        import('./pages/order/vas-order/vas-order-list')
+        return page
+  
+      case 'vas_requests':
+        import('./pages/order/vas-order/vas-order-requests')
+        return page
+  
+      case 'create_vas_order':
+        import('./pages/order/vas-order/create-vas-order')
+        return page
+  
+      case 'confirm_vas_order':
+        import('./pages/order/vas-order/confirm-vas-order')
+        return page
+  
+      case 'vas_order_detail':
+        import('./pages/order/vas-order/vas-order-detail')
+        return page
+  
+      case 'rejected_vas_order':
+        import('./pages/order/vas-order/rejected-vas-order')
+        return page
 
     /**
      * Billing Menus Section
@@ -211,14 +223,14 @@ export default function route(page) {
       return page
 
     /**
-     * Stock Menus Section
+     * Inventory Menus Section
      */
-    case 'onhand_stock':
-      import('./pages/stock/onhand-stock')
+    case 'onhand_inventory':
+      import('./pages/inventory/onhand-inventory')
       return page
 
-    case 'intransit_stock':
-      import('./pages/stock/intransit-stock')
+    case 'intransit_inventory':
+      import('./pages/inventory/intransit-inventory')
       return page
 
     /**

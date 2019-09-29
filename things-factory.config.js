@@ -8,6 +8,10 @@ export default {
      * Master Menus Section
      */
     {
+      tagname: 'opa-dashboard',
+      page: 'dashboard'
+    },
+    {
       tagname: 'company-list',
       page: 'companies'
     },
@@ -188,8 +192,8 @@ export default {
       page: 'collection_orders'
     },
     {
-      tagname: 'vas-order-list',
-      page: 'vas_orders'
+      tagname: 'vas-order-requests',
+      page: 'vas_requests'
     },
     {
       tagname: 'create-vas-order',
@@ -203,6 +207,10 @@ export default {
       tagname: 'vas-order-detail',
       page: 'vas_order_detail'
     },
+    {
+      tagname: 'rejected-vas-order',
+      page: 'rejected_vas_order'
+    },
 
     /**
      * Order Menus Section
@@ -213,15 +221,15 @@ export default {
     },
 
     /**
-     * Stock Menus Section
+     * inventory Menus Section
      */
     {
-      tagname: 'onhand-stock',
-      page: 'onhand_stock'
+      tagname: 'onhand-inventory',
+      page: 'onhand_inventory'
     },
     {
-      tagname: 'intransit-stock',
-      page: 'intransit_stock'
+      tagname: 'intransit-inventory',
+      page: 'intransit_inventory'
     },
 
     /**

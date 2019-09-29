@@ -62,9 +62,9 @@ class VasOrderRequests extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.arrival_notice_requests'),
+      title: i18next.t('title.vas_order_requests'),
       exportable: {
-        name: i18next.t('title.arrival_notice_requests'),
+        name: i18next.t('title.vas_order_requests'),
         data: this._exportableData.bind(this)
       },
       importable: {
@@ -88,27 +88,16 @@ class VasOrderRequests extends localize(i18next)(PageView) {
         props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('field.eta'),
-        name: 'eta',
-        type: 'datetime-local',
-        props: { searchOper: 'like' }
-      },
-      {
-        label: i18next.t('field.collection_date'),
-        name: 'collectionDateTime',
-        type: 'datetime-local',
-        props: { searchOper: 'like' }
-      },
-      {
         label: i18next.t('field.status'),
         name: 'status',
         type: 'select',
         options: [
           { value: '' },
-          { name: i18next.t(`label.${ORDER_STATUS.PENDING_RECEIVE.name}`), value: ORDER_STATUS.PENDING_RECEIVE.value },
-          { name: i18next.t(`label.${ORDER_STATUS.INTRANSIT.name}`), value: ORDER_STATUS.INTRANSIT.value },
-          { name: i18next.t(`label.${ORDER_STATUS.ARRIVED.name}`), value: ORDER_STATUS.ARRIVED.value },
-          { name: i18next.t(`label.${ORDER_STATUS.PROCESSING.name}`), value: ORDER_STATUS.PROCESSING.value }
+          { name: i18next.t(`label.${ORDER_STATUS.PENDING.name}`), value: ORDER_STATUS.PENDING.value },
+          { name: i18next.t(`label.${ORDER_STATUS.EDITING.name}`), value: ORDER_STATUS.EDITING.value },
+          { name: i18next.t(`label.${ORDER_STATUS.REJECTED.name}`), value: ORDER_STATUS.REJECTED.value },
+          { name: i18next.t(`label.${ORDER_STATUS.PROCESSING.name}`), value: ORDER_STATUS.PROCESSING.value },
+          { name: i18next.t(`label.${ORDER_STATUS.DONE.name}`), value: ORDER_STATUS.DONE.value }
         ],
         props: { searchOper: 'eq' }
       }
@@ -119,6 +108,7 @@ class VasOrderRequests extends localize(i18next)(PageView) {
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
+        { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'gutter',
           gutterName: 'button',
@@ -126,71 +116,62 @@ class VasOrderRequests extends localize(i18next)(PageView) {
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               const status = record.status
-              if (status === ORDER_STATUS.PENDING_RECEIVE.value) {
-                navigate(`receive_arrival_notice/${record.name}`) // 1. move to order receiving page
-              } else if (status === ORDER_STATUS.INTRANSIT.value) {
-                navigate(`check_arrived_notice/${record.name}`) // 2. move to order arriving check page
-              } else if (status === ORDER_STATUS.ARRIVED.value) {
-                navigate(`assign_buffer_location/${record.name}`) // 3. move to assign buffer location
+              if (status === ORDER_STATUS.REJECTED.value) {
+                navigate(`rejected_vas_order/${record.name}`) // 1. move to rejected detail page
+              } else {
+                navigate(`vas_order_detail/${record.name}`)
               }
             }
           }
         },
         {
+          type: 'object',
+          name: 'vas',
+          header: i18next.t('field.vas'),
+          record: { editable: true, align: 'center', options: { queryName: 'vass' } },
+          sortable: true,
+          width: 250
+        },
+        {
           type: 'string',
           name: 'name',
           header: i18next.t('field.gan'),
-          record: { align: 'center' },
+          record: { editable: true, align: 'center' },
+          sortable: true,
+          width: 180
+        },
+
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.description'),
+          record: { editable: true, align: 'center' },
           sortable: true,
           width: 180
         },
         {
-          type: 'object',
-          name: 'bizplace',
-          header: i18next.t('field.customer'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 200
-        },
-        {
-          type: 'datetime',
-          name: 'eta',
-          header: i18next.t('field.eta'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 160
-        },
-        {
-          type: 'datetime',
-          name: 'collectionDateTime',
-          header: i18next.t('field.collection_date'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 160
-        },
-        {
           type: 'string',
-          name: 'status',
-          header: i18next.t('field.status'),
-          record: { align: 'center' },
+          name: 'batchId',
+          header: i18next.t('field.batch_id'),
+          record: { editable: true, align: 'center' },
           sortable: true,
           width: 150
         },
         {
           type: 'string',
-          name: 'deliveryOrderNo',
-          header: i18next.t('field.do_no'),
-          record: { align: 'center' },
+          name: 'remark',
+          header: i18next.t('field.remark'),
+          record: { editable: true, align: 'center' },
           sortable: true,
-          width: 200
+          width: 350
         },
         {
-          type: 'object',
-          name: 'collectionOrder',
-          header: i18next.t('field.co_no'),
-          record: { align: 'center' },
+          type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: { editable: true, align: 'center' },
           sortable: true,
-          width: 200
+          width: 150
         },
         {
           type: 'datetime',
@@ -224,47 +205,64 @@ class VasOrderRequests extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
         query {
-          arrivalNoticeRequests(${gqlBuilder.buildArgs({
-            filters: this.searchForm.queryFilters,
+          orderVass(${gqlBuilder.buildArgs({
+            filters: this._conditionParser(),
             pagination: { page, limit },
             sortings: sorters
           })}) {
-            items {
+            items{
               id
+              name
               bizplace {
                 id
-                name
-                description
               }
-              name
-              eta
-              collectionDateTime
-              status
-              collectionOrder {
+              vas {
                 id
                 name
                 description
               }
-              deliveryOrderNo
+              status
+              description
+              batchId
+              remark
               updatedAt
               updater {
                 id
                 name
                 description
               }
-            }
+            }   
             total
           }
         }
       `
     })
-
     if (!response.errors) {
       return {
-        total: response.data.arrivalNoticeRequests.total || 0,
-        records: response.data.arrivalNoticeRequests.items || []
+        total: response.data.orderVass.total || 0,
+        records: response.data.orderVass.items || []
       }
     }
+  }
+
+  _conditionParser() {
+    return this.searchForm
+      .getFields()
+      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
+      .map(field => {
+        return {
+          name: field.name,
+          value:
+            field.type === 'text'
+              ? field.value
+              : field.type === 'checkbox'
+              ? field.checked
+              : field.type === 'number'
+              ? parseFloat(field.value)
+              : field.value,
+          operator: field.getAttribute('searchOper')
+        }
+      })
   }
 
   get _columns() {

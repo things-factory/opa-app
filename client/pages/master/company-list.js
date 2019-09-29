@@ -53,7 +53,6 @@ class CompanyList extends localize(i18next)(PageView) {
       <search-form
         id="search-form"
         .fields=${this._searchFields}
-        initFocus="description"
         @submit=${async () => this.dataGrist.fetch()}
       ></search-form>
 
