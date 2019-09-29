@@ -36,7 +36,7 @@ class ConfirmVasOrder extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.confirm_arrival_notice'),
+      title: i18next.t('title.confirm_vas_order'),
       actions: [
         {
           title: i18next.t('button.reject'),
@@ -52,26 +52,6 @@ class ConfirmVasOrder extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <form class="multi-column-form">
-        <fieldset>
-          <legend>${i18next.t('label.gan')}</legend>
-          <label>${i18next.t('field.gan')}</label>
-          <input name="gan" />
-
-          <label>${i18next.t('field.eta')}</label>
-          <input name="eta" />
-
-          <label>${i18next.t('field.do_no')}</label>
-          <input name="delivery_no" />
-
-          <label>${i18next.t('field.company')}</label>
-          <input name="company" />
-
-          <label>${i18next.t('field.supplier_name')}</label>
-          <input name="supplier_name" />
-        </fieldset>
-      </form>
-
       <div class="grist">
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
@@ -90,174 +70,96 @@ class ConfirmVasOrder extends localize(i18next)(PageView) {
 
   pageInitialized() {
     this.config = {
-      pagination: {
-        infinite: true
-      },
+      pagination: { infinite: true },
+      rows: { selectable: { multiple: true } },
       columns: [
-        {
-          type: 'gutter',
-          gutterName: 'sequence'
-        },
-        {
-          type: 'gutter',
-          gutterName: 'row-selector',
-          multiple: false
-        },
+        { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'gutter',
           gutterName: 'button',
-          icon: 'search',
+          icon: 'close',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              const selectedOrder = this.rawOrderData.find(orderData => orderData.name === record.name)
-              navigate(`arrival_notice_detail/${selectedOrder.name}`)
+              this.data = {
+                ...this.data,
+                records: data.records.filter((record, idx) => idx !== rowIndex)
+              }
             }
           }
         },
         {
-          type: 'string',
-          name: 'name',
-          header: i18next.t('field.purchase_order'),
-          record: {
-            align: 'left'
-          },
-          sortable: true,
-          width: 230
+          type: 'object',
+          name: 'vas',
+          header: i18next.t('field.vas'),
+          record: { editable: true, align: 'center', options: { queryName: 'vass' } },
+          width: 250
+        },
+        {
+          type: 'select',
+          name: 'batchId',
+          header: i18next.t('field.batch_id'),
+          record: { editable: true, align: 'center', options: ['', i18next.t('label.all')] },
+          width: 150
         },
         {
           type: 'string',
-          name: 'supplier_name',
-          header: i18next.t('field.supplier_name'),
-          record: {
-            align: 'left'
-          },
-          sortable: true,
-          width: 120
+          name: 'remark',
+          header: i18next.t('field.remark'),
+          record: { editable: true, align: 'center' },
+          width: 350
         },
         {
           type: 'string',
-          name: 'gan',
-          header: i18next.t('field.gan'),
-          record: {
-            align: 'left'
-          },
-          sortable: true,
-          width: 230
-        },
-        {
-          type: 'string',
-          name: 'delivery_order_no',
-          header: i18next.t('field.do_no'),
-          record: {
-            align: 'left'
-          },
-          sortable: true,
-          width: 230
-        },
-        {
-          type: 'datetime',
-          name: 'eta',
-          header: i18next.t('field.eta'),
-          record: {
-            align: 'center'
-          },
-          sortable: true,
-          width: 120
-        },
-        {
-          type: 'string',
-          name: 'status',
-          header: i18next.t('field.status'),
-          record: {
-            align: 'center'
-          },
-          sortable: true,
-          width: 120
-        },
-        {
-          type: 'datetime',
-          name: 'reject_date',
-          header: i18next.t('field.reject_date'),
-          record: {
-            align: 'center'
-          },
-          sortable: true,
-          width: 120
-        },
-        {
-          type: 'datetime',
-          name: 'request_date',
-          header: i18next.t('field.request_date'),
-          record: {
-            align: 'center'
-          },
-          sortable: true,
-          width: 120
-        },
-        {
-          type: 'datetime',
-          name: 'confirm_date',
-          header: i18next.t('field.confirm_date'),
-          record: {
-            align: 'center'
-          },
-          sortable: true,
-          width: 120
-        },
-        {
-          type: 'datetime',
-          name: 'receive_date',
-          header: i18next.t('field.receive_date'),
-          record: {
-            align: 'center'
-          },
-          sortable: true,
-          width: 120
+          name: 'description',
+          header: i18next.t('field.description'),
+          record: { editable: true, align: 'center' },
+          width: 350
         }
-      ],
-      rows: {
-        selectable: {
-          multiple: false
-        },
-        handlers: {
-          click: 'select-row'
-        }
-      }
+      ]
     }
   }
-
-  async pageUpdated(changes, lifecycle) {
-    if (this.active) {
-      this.data = await this.getArrivalNotices()
-    }
-  }
-
-  async getArrivalNotices() {
+  
+  async fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
         query {
-          orders: purchaseOrders(${gqlBuilder.buildArgs({
-            filters: []
+          orderVass(${gqlBuilder.buildArgs({
+            filters: this._conditionParser(),
+            pagination: { page, limit },
+            sortings: sorters
           })}) {
-            items {
+            items{
               id
               name
-              issuedOn
-              state
+              bizplace {
+                id
+              }
+              vas {
+                id
+                name
+                description
+              }
+              status
               description
+              batchId
+              remark
               updatedAt
-            }
+              updater {
+                id
+                name
+                description
+              }
+            }   
             total
           }
         }
       `
     })
-
-    this.rawOrderData = response.data.orders.items
-
-    return {
-      records: this._parseOrderData(response.data.orders.items),
-      total: response.data.orders.total
+    if (!response.errors) {
+      return {
+        total: response.data.orderVass.total || 0,
+        records: response.data.orderVass.items || []
+      }
     }
   }
 

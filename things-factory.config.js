@@ -196,8 +196,8 @@ export default {
       page: 'collection_orders'
     },
     {
-      tagname: 'vas-order-list',
-      page: 'vas_orders'
+      tagname: 'vas-order-requests',
+      page: 'vas_requests'
     },
     {
       tagname: 'create-vas-order',
@@ -210,6 +210,10 @@ export default {
     {
       tagname: 'vas-order-detail',
       page: 'vas_order_detail'
+    },
+    {
+      tagname: 'rejected-vas-order',
+      page: 'rejected_vas_order'
     },
 
     /**
