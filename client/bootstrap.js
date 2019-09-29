@@ -1,14 +1,14 @@
 import { addRoutingType, updateMenuProvider } from '@things-factory/menu-base'
-import { ADD_SETTING } from '@things-factory/setting-base'
+// import { ADD_SETTING } from '@things-factory/setting-base'
 import { client, store, UPDATE_BASE_URL } from '@things-factory/shell'
 import gql from 'graphql-tag'
-import { html } from 'lit-html'
+// import { html } from 'lit-html'
 import { UPDATE_OPA_APP_SETTINGS, CLEAR_OPA_APP_SETTINGS } from './actions/opa-app-settings'
 import opaApp from './reducers/opa-app-settings'
 import { fetchBoardSettings } from './viewparts/fetch-board-settings'
 import { auth } from '@things-factory/auth-base'
 
-import './viewparts/label-setting-let'
+// import './viewparts/label-setting-let'
 
 export default function bootstrap() {
   store.addReducers({
@@ -50,15 +50,15 @@ export default function bootstrap() {
     // baseUrl: 'http://opaone.com'
   })
 
-  store.dispatch({
-    type: ADD_SETTING,
-    setting: {
-      seq: 100,
-      template: html`
-        <label-setting-let></label-setting-let>
-      `
-    }
-  })
+  // store.dispatch({
+  //   type: ADD_SETTING,
+  //   setting: {
+  //     seq: 100,
+  //     template: html`
+  //       <label-setting-let></label-setting-let>
+  //     `
+  //   }
+  // })
 
   store.dispatch(
     updateMenuProvider(async () => {
