@@ -221,15 +221,15 @@ export default {
     },
 
     /**
-     * Stock Menus Section
+     * inventory Menus Section
      */
     {
-      tagname: 'onhand-stock',
-      page: 'onhand_stock'
+      tagname: 'onhand-inventory',
+      page: 'onhand_inventory'
     },
     {
-      tagname: 'intransit-stock',
-      page: 'intransit_stock'
+      tagname: 'intransit-inventory',
+      page: 'intransit_inventory'
     },
 
     /**

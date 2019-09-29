@@ -219,14 +219,14 @@ export default function route(page) {
       return page
 
     /**
-     * Stock Menus Section
+     * Inventory Menus Section
      */
-    case 'onhand_stock':
-      import('./pages/stock/onhand-stock')
+    case 'onhand_inventory':
+      import('./pages/inventory/onhand-inventory')
       return page
 
-    case 'intransit_stock':
-      import('./pages/stock/intransit-stock')
+    case 'intransit_inventory':
+      import('./pages/inventory/intransit-inventory')
       return page
 
     /**
