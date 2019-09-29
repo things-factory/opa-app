@@ -1,4 +1,7 @@
 {
+  "button.delete_all": "delete all",
+  "button.generate": "generate",
+  "button.print_label": "print label",
   "button.preview": "preview",
   "field.batch_no": "batch no",
   "field.brand_image": "brand image",

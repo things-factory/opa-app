@@ -1,4 +1,8 @@
 {
+  "button.delete_all": "delete all",
+  "button.generate": "generate",
+  "button.print_label": "print label",
+  "button.preview": "preview",
   "field.batch_no": "no kumpulan",
   "field.brand_image": "imej jenama",
   "field.buffer_location": "lokasi penampan",
