@@ -1,6 +1,6 @@
 import '@things-factory/form-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, navigate, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { store, client, gqlBuilder, navigate, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { getRenderer, getEditor } from '@things-factory/grist-ui'
