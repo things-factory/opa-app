@@ -87,7 +87,6 @@
     "sweetalert2": "*"
   },
   "devDependencies": {
-    "@things-factory/grist-test": "*",
     "@things-factory/opa-test": "*"
   }
 }
