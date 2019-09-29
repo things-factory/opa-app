@@ -5,7 +5,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 
-class ConfirmArrivalNotice extends localize(i18next)(PageView) {
+class ConfirmVasOrder extends localize(i18next)(PageView) {
   static get properties() {
     return {
       config: Object,
@@ -392,4 +392,4 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('confirm-arrival-notice', ConfirmArrivalNotice)
+window.customElements.define('confirm-vas-order', ConfirmVasOrder)

@@ -1,4 +1,6 @@
 {
+  "title.code_management": "code management",
+  "title.system_code_detail": "code detail",
   "title.transport_order": "运输单",
   "title.arrival_notice_master": "到货通知主单",
   "title.vas_request_and_materials": "增值服务及布料",
@@ -37,6 +39,7 @@
   "title.group_menu": "菜单组",
   "title.view_setting": "视图设置",
   "title.menu": "选单",
+  "title.menu_management": "menu management",
   "title.label_setting": "title.label_setting",
   "label.company_name": "公司名称",
   "label.name": "名字",

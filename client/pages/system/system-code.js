@@ -64,7 +64,7 @@ class SystemCode extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.code'),
+      title: i18next.t('title.code_management'),
       actions: [
         {
           title: i18next.t('button.save'),
@@ -88,13 +88,15 @@ class SystemCode extends localize(i18next)(PageView) {
     this._searchFields = [
       {
         name: 'name',
+        label: i18next.t('field.name'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like' }
       },
       {
         name: 'description',
+        label: i18next.t('field.description'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.description') }
+        props: { searchOper: 'like' }
       }
     ]
 
@@ -163,7 +165,7 @@ class SystemCode extends localize(i18next)(PageView) {
       query: gql`
         query {
           commonCodes(${gqlBuilder.buildArgs({
-            filters: this._conditionParser(),
+            filters: this.searchForm.queryFilters,
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -188,26 +190,6 @@ class SystemCode extends localize(i18next)(PageView) {
       total: response.data.commonCodes.total || 0,
       records: response.data.commonCodes.items || []
     }
-  }
-
-  _conditionParser() {
-    return this.searchForm
-      .getFields()
-      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
-      .map(field => {
-        return {
-          name: field.name,
-          value:
-            field.type === 'text'
-              ? field.value
-              : field.type === 'checkbox'
-              ? field.checked
-              : field.type === 'number'
-              ? parseFloat(field.value)
-              : field.value,
-          operator: field.getAttribute('searchOper')
-        }
-      })
   }
 
   async _saveCodes() {
@@ -258,12 +240,12 @@ class SystemCode extends localize(i18next)(PageView) {
   _openMenuDetail(commonCodeId, commonCodeName) {
     openPopup(
       html`
-        <system-code-detail .commonCodeId="${commonCodeId}" .commonCodeName="${commonCodeName}"></system-code-detail>
+        <system-code-detail .commonCodeId=${commonCodeId} .commonCodeName=${commonCodeName}></system-code-detail>
       `,
       {
         backdrop: true,
         size: 'large',
-        title: i18next.t('title.system_code_detail')
+        title: `${i18next.t('title.system_code_detail')} - ${commonCodeName}`
       }
     )
   }

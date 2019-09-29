@@ -6,7 +6,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { ORDER_STATUS } from '../constants/order'
 
-class CollectionOrderList extends localize(i18next)(PageView) {
+class VasOrderRequests extends localize(i18next)(PageView) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -62,10 +62,9 @@ class CollectionOrderList extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      actions: [],
-      title: i18next.t('title.collection_orders'),
+      title: i18next.t('title.arrival_notice_requests'),
       exportable: {
-        name: i18next.t('title.collection_orders'),
+        name: i18next.t('title.arrival_notice_requests'),
         data: this._exportableData.bind(this)
       },
       importable: {
@@ -83,9 +82,15 @@ class CollectionOrderList extends localize(i18next)(PageView) {
   pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('field.name'),
+        label: i18next.t('field.gan'),
         name: 'name',
         type: 'text',
+        props: { searchOper: 'like' }
+      },
+      {
+        label: i18next.t('field.eta'),
+        name: 'eta',
+        type: 'datetime-local',
         props: { searchOper: 'like' }
       },
       {
@@ -100,10 +105,10 @@ class CollectionOrderList extends localize(i18next)(PageView) {
         type: 'select',
         options: [
           { value: '' },
-          ...Object.keys(ORDER_STATUS).map(key => {
-            const status = ORDER_STATUS[key]
-            return { name: i18next.t(`label.${status.name}`), value: status.value }
-          })
+          { name: i18next.t(`label.${ORDER_STATUS.PENDING_RECEIVE.name}`), value: ORDER_STATUS.PENDING_RECEIVE.value },
+          { name: i18next.t(`label.${ORDER_STATUS.INTRANSIT.name}`), value: ORDER_STATUS.INTRANSIT.value },
+          { name: i18next.t(`label.${ORDER_STATUS.ARRIVED.name}`), value: ORDER_STATUS.ARRIVED.value },
+          { name: i18next.t(`label.${ORDER_STATUS.PROCESSING.name}`), value: ORDER_STATUS.PROCESSING.value }
         ],
         props: { searchOper: 'eq' }
       }
@@ -121,10 +126,12 @@ class CollectionOrderList extends localize(i18next)(PageView) {
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               const status = record.status
-              if (status === ORDER_STATUS.REJECTED.value) {
-                navigate(`rejected_collection_order/${record.name}`) // 1. move to rejected detail page
-              } else {
-                navigate(`collection_order_detail/${record.name}`) // 2. move to order detail page
+              if (status === ORDER_STATUS.PENDING_RECEIVE.value) {
+                navigate(`receive_arrival_notice/${record.name}`) // 1. move to order receiving page
+              } else if (status === ORDER_STATUS.INTRANSIT.value) {
+                navigate(`check_arrived_notice/${record.name}`) // 2. move to order arriving check page
+              } else if (status === ORDER_STATUS.ARRIVED.value) {
+                navigate(`assign_buffer_location/${record.name}`) // 3. move to assign buffer location
               }
             }
           }
@@ -132,55 +139,31 @@ class CollectionOrderList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'name',
-          header: i18next.t('field.co_no'),
+          header: i18next.t('field.gan'),
           record: { align: 'center' },
           sortable: true,
           width: 180
         },
         {
-          type: 'string',
-          name: 'from',
-          header: i18next.t('field.from'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 250
-        },
-        {
-          type: 'string',
-          name: 'to',
-          header: i18next.t('field.to'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 250
-        },
-        {
           type: 'object',
-          name: 'transportVehicle',
-          header: i18next.t('field.assigned_truck'),
+          name: 'bizplace',
+          header: i18next.t('field.customer'),
           record: { align: 'center' },
           sortable: true,
-          width: 150
+          width: 200
         },
         {
-          type: 'object',
-          name: 'transportDriver',
-          header: i18next.t('field.assigned_driver'),
+          type: 'datetime',
+          name: 'eta',
+          header: i18next.t('field.eta'),
           record: { align: 'center' },
           sortable: true,
-          width: 250
-        },
-        {
-          type: 'string',
-          name: 'telNo',
-          header: i18next.t('field.tel_no'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 150
+          width: 160
         },
         {
           type: 'datetime',
           name: 'collectionDateTime',
-          header: i18next.t('field.collection_date_time'),
+          header: i18next.t('field.collection_date'),
           record: { align: 'center' },
           sortable: true,
           width: 160
@@ -192,6 +175,22 @@ class CollectionOrderList extends localize(i18next)(PageView) {
           record: { align: 'center' },
           sortable: true,
           width: 150
+        },
+        {
+          type: 'string',
+          name: 'deliveryOrderNo',
+          header: i18next.t('field.do_no'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'object',
+          name: 'collectionOrder',
+          header: i18next.t('field.co_no'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 200
         },
         {
           type: 'datetime',
@@ -225,28 +224,28 @@ class CollectionOrderList extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
         query {
-          collectionOrders(${gqlBuilder.buildArgs({
+          arrivalNoticeRequests(${gqlBuilder.buildArgs({
             filters: this.searchForm.queryFilters,
             pagination: { page, limit },
             sortings: sorters
           })}) {
             items {
               id
+              bizplace {
+                id
+                name
+                description
+              }
               name
-              from
-              to
-              telNo
-              loadType
-              transportDriver {
-                id
-                name
-              }
-              transportVehicle {
-                id
-                name
-              }
+              eta
               collectionDateTime
               status
+              collectionOrder {
+                id
+                name
+                description
+              }
+              deliveryOrderNo
               updatedAt
               updater {
                 id
@@ -262,8 +261,8 @@ class CollectionOrderList extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       return {
-        total: response.data.collectionOrders.total || 0,
-        records: response.data.collectionOrders.items || []
+        total: response.data.arrivalNoticeRequests.total || 0,
+        records: response.data.arrivalNoticeRequests.items || []
       }
     }
   }
@@ -291,4 +290,4 @@ class CollectionOrderList extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('collection-order-list', CollectionOrderList)
+window.customElements.define('vas-order-requests', VasOrderRequests)

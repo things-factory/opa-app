@@ -38,8 +38,16 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
     return {
       _searchFields: Array,
       config: Object,
-      data: Object
+      data: Object,
+      _ownTransport: Boolean,
+      _shippingOption: Boolean
     }
+  }
+
+  constructor() {
+    super()
+    this._ownTransport = true
+    this._shippingOption = true
   }
 
   render() {
@@ -73,28 +81,28 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
     }
   }
 
-  activated(active) {
-    if (JSON.parse(active) && this.dataGrist) {
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
       this.dataGrist.fetch()
     }
   }
 
-  async firstUpdated() {
+  pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('label.release_order_no'),
+        label: i18next.t('field.release_order_no'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.release_order_no') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.release_date'),
+        label: i18next.t('field.release_date'),
         name: 'releaseDateTime',
         type: 'datetime-local',
-        props: { searchOper: 'like', placeholder: i18next.t('label.release_date') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.status'),
+        label: i18next.t('field.status'),
         name: 'status',
         type: 'select',
         options: [
@@ -104,7 +112,7 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
             return { name: i18next.t(`label.${status.name}`), value: status.value }
           })
         ],
-        props: { searchOper: 'eq', placeholder: i18next.t('label.status') }
+        props: { searchOper: 'eq' }
       }
     ]
 
@@ -200,8 +208,8 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
         query {
-          releaseOrder(${gqlBuilder.buildArgs({
-            filters: this._conditionParser(),
+          releaseGoods(${gqlBuilder.buildArgs({
+            filters: this.searchForm.queryFilters,
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -214,6 +222,7 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
               }
               ownTransport
               shippingOption
+              releaseDateTime
               status
               updatedAt
               updater {
@@ -229,34 +238,22 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
     })
 
     if (!response.errors) {
-      this._ownTransport = response.data.releaseOrder.ownTransport
-      this._shippingOption = response.data.releaseOrder.shippingOption
+      this._ownTransport = response.data.releaseGoods.ownTransport
+      this._shippingOption = response.data.releaseGoods.shippingOption
 
       return {
-        total: response.data.releaseOrder.total || 0,
-        records: response.data.releaseOrder.items || []
+        total: response.data.releaseGoods.total || 0,
+        records: response.data.releaseGoods.items || []
       }
     }
   }
 
-  _conditionParser() {
-    return this.searchForm
-      .getFields()
-      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
-      .map(field => {
-        return {
-          name: field.name,
-          value:
-            field.type === 'text'
-              ? field.value
-              : field.type === 'checkbox'
-              ? field.checked
-              : field.type === 'number'
-              ? parseFloat(field.value)
-              : field.value,
-          operator: field.getAttribute('searchOper')
-        }
-      })
+  get searchForm() {
+    return this.shadowRoot.querySelector('search-form')
+  }
+
+  get dataGrist() {
+    return this.shadowRoot.querySelector('data-grist')
   }
 
   get _columns() {

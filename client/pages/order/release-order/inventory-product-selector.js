@@ -56,14 +56,8 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
   static get properties() {
     return {
       _searchFields: Array,
-      config: Object,
+      inventoryConfig: Object,
       _productName: String
-    }
-  }
-
-  activated(active) {
-    if (JSON.parse(active)) {
-      this.fetchInventoryProduct()
     }
   }
 
@@ -72,7 +66,7 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
       <search-form
         id="search-form"
         .fields=${this._searchFields}
-        @submit=${() => this.inventoryGrist.fetch()}
+        @submit=${async () => this.inventoryGrist.fetch()}
       ></search-form>
 
       <div class="grist-container">
@@ -94,9 +88,7 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
           }}
           >${i18next.t('button.cancel')}</mwc-button
         >
-        <mwc-button .productName=${this._productName} .batchId=${this._batchId} .currentQty=${this._currentQty}
-          >${i18next.t('button.submit')}</mwc-button
-        >
+        <mwc-button @click="${this._confirm.bind(this)}">${i18next.t('button.confirm')}</mwc-button>
       </div>
     `
   }
@@ -104,23 +96,19 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
   async firstUpdated() {
     this._searchFields = [
       {
-        label: i18next.t('label.product'),
-        name: 'productName',
-        type: 'select',
-        options: [{ value: '--Select a Product--' }],
+        label: i18next.t('field.warehouse_name'),
+        name: 'warehouse',
+        type: 'text',
         props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.product')
+          searchOper: 'like'
         }
       },
       {
-        label: i18next.t('label.warehouse'),
-        name: 'warehouseName',
-        type: 'select',
-        options: [{ value: '--Select a Warehouse--' }],
+        label: i18next.t('field.product_name'),
+        name: 'product_id',
+        type: 'text',
         props: {
-          searchOper: 'like',
-          placeholder: i18next.t('field.warehouse')
+          searchOper: 'like'
         }
       }
     ]
@@ -141,7 +129,7 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
           width: 250
         },
         {
-          type: 'object',
+          type: 'string',
           name: 'batchId',
           record: { align: 'center' },
           header: i18next.t('field.batch_id'),
@@ -155,10 +143,17 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
           width: 180
         },
         {
-          type: 'ccfr4',
+          type: 'string',
+          name: 'packingType',
+          record: { align: 'center' },
+          header: i18next.t('field.packing_type'),
+          width: 200
+        },
+        {
+          type: 'string',
           name: 'qty',
           record: { align: 'center' },
-          header: i18next.t('field.current_qty'),
+          header: i18next.t('field.qty'),
           width: 120
         }
       ]
@@ -174,30 +169,49 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
   }
 
   async fetchInventoryProduct({ page, limit, sorters = [] }) {
-    // const response = await client.query({
-    //   query: gql`
-    //     query {
-    //       inventoryProducts(${gqlBuilder.buildArgs({
-    //         filters: this._conditionParser(),
-    //         pagination: { page, limit },
-    //         sortings: sorters
-    //       })}) {
-    //         items {
-    //           id
-    //           name
-    //           description
-    //         }
-    //         total
-    //       }
-    //     }
-    //   `
-    // })
-    // if (!response.errors) {
-    //   return {
-    //     total: response.data.inventoryProducts.total || 0,
-    //     records: response.data.inventoryProducts.items || []
-    //   }
-    // }
+    const response = await client.query({
+      query: gql`
+        query {
+          inventories(${gqlBuilder.buildArgs({
+            filters: this._conditionParser(),
+            pagination: { page, limit },
+            sortings: sorters
+          })}) {
+            items {
+              id
+              name
+              batchId
+              qty
+              packingType
+              product {
+                id
+                name
+              }
+              warehouse {
+                id
+                name
+                locations {
+                  id
+                  name
+                }
+              }
+              location {
+                id
+                name
+              }
+            }
+            total
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      return {
+        total: response.data.inventories.total || 0,
+        records: response.data.inventories.items || []
+      }
+    }
   }
 
   _conditionParser() {
@@ -218,6 +232,20 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
           operator: field.getAttribute('searchOper')
         }
       })
+  }
+
+  _confirm() {
+    // getting data that you want to provide outside.
+    // dispatch custom event for letting outside of componenet catch
+    const selectedInventory = this.inventoryGrist.selected
+    if (selectedInventory) {
+      this.dispatchEvent(new CustomEvent('selected', { detail: this.inventoryGrist.selected }))
+      history.back()
+    } else {
+      document.dispatchEvent(
+        new CustomEvent('notify', { detail: { message: i18next.t('text.inventory_is_not_selected') } })
+      )
+    }
   }
 }
 

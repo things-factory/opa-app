@@ -7,14 +7,18 @@ import { UPDATE_LABEL_SETTINGS } from './actions/label-settings'
 import { LOCATION_LABEL_SETTING_KEY, PALLET_LABEL_SETTING_KEY } from './label-setting-constants'
 import reducerLabelSettings from './reducers/label-settings'
 import { fetchLabelSettings } from './viewparts/fetch-label-settings'
+import { auth } from '@things-factory/auth-base'
+
 import './viewparts/label-setting-let'
 
 export default function bootstrap() {
   store.addReducers({
     labelSettings: reducerLabelSettings
   })
-  // labelSettings 초기값 조회
-  ;(async () => {
+
+  /* 사용자 signin/signout 에 따라서, labelSetting 변경 */
+  auth.on('signin', async () => {
+    // fetch labelSettings
     var labelSettings = await fetchLabelSettings()
     var labels = {}
     labelSettings.forEach(setting => {
@@ -30,7 +34,16 @@ export default function bootstrap() {
       locationLabel: labels.locationLabel,
       palletLabel: labels.palletLabel
     })
-  })()
+  })
+
+  auth.on('signout', async () => {
+    // clear labelSettings
+    store.dispatch({
+      type: UPDATE_LABEL_SETTINGS,
+      locationLabel: null,
+      palletLabel: null
+    })
+  })
 
   /*
    * things-board 기능을 메뉴에서 지원하기 위해서, VIEWER, PLAYER routing type을 추가함.

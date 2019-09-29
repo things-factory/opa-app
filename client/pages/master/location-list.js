@@ -110,46 +110,46 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
   pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('label.name'),
+        label: i18next.t('field.name'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.type'),
+        label: i18next.t('field.type'),
         name: 'type',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.type') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.zone'),
+        label: i18next.t('field.zone'),
         name: 'zone',
         type: 'text',
-        props: { searchOper: 'eq', placeholder: i18next.t('label.zone') }
+        props: { searchOper: 'eq' }
       },
       {
-        label: i18next.t('label.row'),
+        label: i18next.t('field.row'),
         name: 'row',
         type: 'text',
-        props: { searchOper: 'eq', placeholder: i18next.t('label.row') }
+        props: { searchOper: 'eq' }
       },
       {
-        label: i18next.t('label.column'),
+        label: i18next.t('field.column'),
         name: 'column',
         type: 'text',
-        props: { searchOper: 'eq', placeholder: i18next.t('label.column') }
+        props: { searchOper: 'eq' }
       },
       {
-        label: i18next.t('label.shelf'),
+        label: i18next.t('field.shelf'),
         name: 'shelf',
         type: 'text',
-        props: { searchOper: 'eq', placeholder: i18next.t('label.shelf') }
+        props: { searchOper: 'eq' }
       },
       {
-        label: i18next.t('label.status'),
+        label: i18next.t('field.status'),
         name: 'status',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.status') }
+        props: { searchOper: 'like' }
       }
     ]
 
@@ -259,7 +259,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
       query: gql`
         query {
           locations(${gqlBuilder.buildArgs({
-            filters: [...filters, ...this._conditionParser()],
+            filters: [...filters, ...this.searchForm.queryFilters],
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -291,26 +291,6 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
       total: response.data.locations.total || 0,
       records: response.data.locations.items || []
     }
-  }
-
-  _conditionParser() {
-    return this.searchForm
-      .getFields()
-      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
-      .map(field => {
-        return {
-          name: field.name,
-          value:
-            field.type === 'text'
-              ? field.value
-              : field.type === 'checkbox'
-              ? field.checked
-              : field.type === 'number'
-              ? parseFloat(field.value)
-              : field.value,
-          operator: field.getAttribute('searchOper')
-        }
-      })
   }
 
   async _saveLocation() {

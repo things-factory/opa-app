@@ -207,13 +207,6 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: { align: 'center' },
-          width: 180
-        },
-        {
-          type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: { align: 'center' },
@@ -273,13 +266,6 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           width: 250
         },
         {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: { align: 'center' },
-          width: 180
-        },
-        {
           type: 'select',
           name: 'batchId',
           header: i18next.t('field.batch_id'),
@@ -313,7 +299,6 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           arrivalNotice(${gqlBuilder.buildArgs({
             name: this._ganNo
           })}) {
-            id
             name
             containerNo
             ownTransport
@@ -326,19 +311,15 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
             deliveryOrderNo
             status
             collectionOrder {
-              id
               name
               description
             }
             orderProducts {
-              id
               batchId
               product {
-                id
                 name
                 description
               }
-              description
               packingType
               weight
               unit
@@ -348,11 +329,9 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
             }
             orderVass {
               vas {
-                id
                 name
                 description
               }
-              description
               batchId
               remark
             }
@@ -416,20 +395,25 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _confirmArrivalNotice() {
-    const response = await client.query({
-      query: gql`
-        mutation {
-          confirmArrivalNotice(${gqlBuilder.buildArgs({
-            name: this._ganNo
-          })}) {
-            name
+    try {
+      const response = await client.query({
+        query: gql`
+          mutation {
+            confirmArrivalNotice(${gqlBuilder.buildArgs({
+              name: this._ganNo
+            })}) {
+              name
+            }
           }
-        }
-      `
-    })
+        `
+      })
 
-    if (response.errors) {
-      throw new Error(response.errors[0])
+      if (!response.errors) {
+        this._showToast({ message: i18next.t('text.gan_confirmed') })
+        navigate('arrival_notices')
+      }
+    } catch (e) {
+      this._showToast(e)
     }
   }
 
@@ -452,25 +436,17 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
         {
           title: i18next.t('button.confirm'),
           action: async () => {
-            try {
-              await this._confirmArrivalNotice()
-              Swal.fire({
-                title: i18next.t('text.are_you_sure?'),
-                text: i18next.t('text.you_wont_be_able_to_revert_this!'),
-                type: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#22a6a7',
-                cancelButtonColor: '#cfcfcf',
-                confirmButtonText: 'Yes, confirm!'
-              }).then(result => {
-                if (result.value) {
-                  this._showToast({ message: i18next.t('text.gan_confirmed') })
-                  navigate('arrival_notices')
-                }
-              })
-            } catch (e) {
-              this._showToast(e)
-            }
+            const result = await Swal.fire({
+              title: i18next.t('text.confirm_arrival_notice'),
+              text: i18next.t('text.you_wont_be_able_to_revert_this'),
+              type: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#22a6a7',
+              cancelButtonColor: '#cfcfcf',
+              confirmButtonText: i18next.t('buffon.confirm')
+            })
+
+            if (result.value) this._confirmArrivalNotice()
           }
         }
       ]

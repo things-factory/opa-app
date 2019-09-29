@@ -1,15 +1,13 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import '../../popup-note'
 import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
 
-class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
+class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _ganNo: String,
@@ -69,15 +67,11 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.receive_arrival_notice'),
+      title: i18next.t('title.rejected_arrival_notice_detail'),
       actions: [
         {
-          title: i18next.t('button.reject'),
-          action: this._rejectArrivalNotice.bind(this)
-        },
-        {
-          title: i18next.t('button.receive'),
-          action: this._receiveArrivalNotice.bind(this)
+          title: i18next.t('button.back'),
+          action: () => history.back()
         }
       ]
     }
@@ -138,6 +132,9 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
             type="datetime-local"
             disabled
           />
+
+          <label>${i18next.t('label.remark')}</label>
+          <textarea name="remark" disabled></textarea>
 
           <label>${i18next.t('label.status')}</label>
           <select name="status" disabled
@@ -203,6 +200,12 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'string',
+          name: 'description',
+          header: i18next.t('field.description'),
+          width: 180
+        },
+        {
+          type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: { align: 'center' },
@@ -262,6 +265,12 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           width: 250
         },
         {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.description'),
+          width: 180
+        },
+        {
           type: 'select',
           name: 'batchId',
           header: i18next.t('field.batch_id'),
@@ -307,6 +316,7 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
             truckNo
             deliveryOrderNo
             status
+            remark
             collectionOrder {
               id
               name
@@ -360,7 +370,7 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
 
   _fillupForm(arrivalNotice) {
     for (let key in arrivalNotice) {
-      Array.from(this.form.querySelectorAll('input, textarea, select')).forEach(field => {
+      Array.from(this.form.querySelectorAll('input, select, textarea')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = arrivalNotice[key]
         } else if (field.name === key && field.type === 'datetime-local') {
@@ -372,69 +382,6 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
         }
       })
     }
-  }
-
-  async _receiveArrivalNotice() {
-    const response = await client.query({
-      query: gql`
-        mutation {
-          receiveArrivalNotice(${gqlBuilder.buildArgs({
-            name: this._ganNo
-          })}) {
-            name
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      history.back()
-
-      this._showToast({ message: i18next.t('text.arrival_notice_received') })
-    }
-  }
-
-  async _rejectArrivalNotice() {
-    openPopup(
-      html`
-        <popup-note
-          .title="${i18next.t('title.remark')}"
-          @submit="${async e => {
-            try {
-              if (!e.detail.remark) throw new Error(i18next.t('text.remark_is_empty'))
-              const response = await client.query({
-                query: gql`
-                mutation {
-                  rejectArrivalNotice(${gqlBuilder.buildArgs({
-                    name: this._ganNo,
-                    patch: { remark: e.detail.value }
-                  })}) {
-                    name
-                  }
-                }
-              `
-              })
-
-              if (!response.errors) {
-                navigate('arrival_notice_requests')
-                this._showToast({ message: i18next.t('text.arrival_notice_rejected') })
-              }
-            } catch (e) {
-              this._showToast(e)
-            }
-          }}"
-        ></popup-note>
-      `,
-      {
-        backdrop: true,
-        size: 'medium',
-        title: i18next.t('title.reject_arrival_notice')
-      }
-    )
-  }
-
-  _getTextAreaByName(name) {
-    return this.shadowRoot.querySelector(`textarea[name=${name}]`)
   }
 
   stateChanged(state) {
@@ -455,4 +402,4 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
   }
 }
 
-window.customElements.define('receive-arrival-notice', ReceiveArrivalNotice)
+window.customElements.define('rejected-vas-order', RejectedVasOrder)

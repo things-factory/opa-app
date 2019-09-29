@@ -1,19 +1,19 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import '../../popup-note'
 import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
+import Swal from 'sweetalert2'
 
-class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
+class VasOrderDetail extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _ganNo: String,
       _ownTransport: Boolean,
+      _status: String,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -69,17 +69,7 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.receive_arrival_notice'),
-      actions: [
-        {
-          title: i18next.t('button.reject'),
-          action: this._rejectArrivalNotice.bind(this)
-        },
-        {
-          title: i18next.t('button.receive'),
-          action: this._receiveArrivalNotice.bind(this)
-        }
-      ]
+      title: i18next.t('title.vas_order_detail')
     }
   }
 
@@ -91,6 +81,14 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
 
   get form() {
     return this.shadowRoot.querySelector('form')
+  }
+
+  get productGrist() {
+    return this.shadowRoot.querySelector('data-grist#product-grist')
+  }
+
+  get vasGrist() {
+    return this.shadowRoot.querySelector('data-grist#vas-grist')
   }
 
   render() {
@@ -105,7 +103,7 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           <label>${i18next.t('label.use_own_transport')}</label>
 
           <!-- Show when userOwnTransport is true -->
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.collection_date')}</label>
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.collection_date_time')}</label>
           <input ?hidden="${this._ownTransport}" name="collectionDateTime" type="datetime-local" disabled />
 
           <label ?hidden="${this._ownTransport}">${i18next.t('label.from')}</label>
@@ -127,7 +125,7 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
           <input ?hidden="${!this._ownTransport}" ?required="${this._ownTransport}" name="truckNo" disabled />
 
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.delivery_order_no')}</label>
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
           <input ?hidden="${!this._ownTransport}" name="deliveryOrderNo" disabled />
 
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.eta_date')}</label>
@@ -175,6 +173,12 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
     `
   }
 
+  constructor() {
+    super()
+    this.productData = {}
+    this.vasData = {}
+  }
+
   pageInitialized() {
     this.productGristConfig = {
       pagination: { infinite: true },
@@ -203,6 +207,13 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'string',
+          name: 'description',
+          header: i18next.t('field.description'),
+          record: { align: 'center' },
+          width: 180
+        },
+        {
+          type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: { align: 'center' },
@@ -212,7 +223,7 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           type: 'float',
           name: 'weight',
           header: i18next.t('field.weight'),
-          record: { align: 'right' },
+          record: { align: 'center' },
           width: 80
         },
         {
@@ -226,7 +237,7 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           type: 'integer',
           name: 'packQty',
           header: i18next.t('field.pack_qty'),
-          record: { align: 'right' },
+          record: { align: 'center' },
           width: 80
         },
         {
@@ -262,6 +273,13 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           width: 250
         },
         {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.description'),
+          record: { align: 'center' },
+          width: 180
+        },
+        {
           type: 'select',
           name: 'batchId',
           header: i18next.t('field.batch_id'),
@@ -275,6 +293,7 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
+          record: { align: 'center' },
           width: 350
         }
       ]
@@ -288,7 +307,6 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async fetchGAN() {
-    if (!this._ganNo) return
     const response = await client.query({
       query: gql`
         query {
@@ -345,6 +363,8 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       this._ownTransport = response.data.arrivalNotice.ownTransport
+      this._status = response.data.arrivalNotice.status
+      this._actionsHandler()
       this._fillupForm(response.data.arrivalNotice)
       this.productData = {
         ...this.productData,
@@ -374,67 +394,96 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _receiveArrivalNotice() {
+  async _updateArrivalNotice(patch) {
     const response = await client.query({
       query: gql`
         mutation {
-          receiveArrivalNotice(${gqlBuilder.buildArgs({
-            name: this._ganNo
+          updateArrivalNotice(${gqlBuilder.buildArgs({
+            name: this._ganNo,
+            patch
           })}) {
-            name
+            name 
           }
         }
       `
     })
 
     if (!response.errors) {
-      history.back()
-
-      this._showToast({ message: i18next.t('text.arrival_notice_received') })
+      this.fetchGAN()
+    } else {
+      throw new Error(response.errors[0])
     }
   }
 
-  async _rejectArrivalNotice() {
-    openPopup(
-      html`
-        <popup-note
-          .title="${i18next.t('title.remark')}"
-          @submit="${async e => {
-            try {
-              if (!e.detail.remark) throw new Error(i18next.t('text.remark_is_empty'))
-              const response = await client.query({
-                query: gql`
-                mutation {
-                  rejectArrivalNotice(${gqlBuilder.buildArgs({
-                    name: this._ganNo,
-                    patch: { remark: e.detail.value }
-                  })}) {
-                    name
-                  }
-                }
-              `
-              })
+  async _confirmArrivalNotice() {
+    try {
+      const response = await client.query({
+        query: gql`
+          mutation {
+            confirmArrivalNotice(${gqlBuilder.buildArgs({
+              name: this._ganNo
+            })}) {
+              name
+            }
+          }
+        `
+      })
 
-              if (!response.errors) {
-                navigate('arrival_notice_requests')
-                this._showToast({ message: i18next.t('text.arrival_notice_rejected') })
-              }
+      if (!response.errors) {
+        this._showToast({ message: i18next.t('text.gan_confirmed') })
+        navigate('vas_orders')
+      }
+    } catch (e) {
+      this._showToast(e)
+    }
+  }
+
+  _actionsHandler() {
+    let actions = []
+
+    if (this._status === ORDER_STATUS.PENDING.value) {
+      actions = [
+        {
+          title: i18next.t('button.edit'),
+          action: async () => {
+            try {
+              await this._updateArrivalNotice({ status: ORDER_STATUS.EDITING.value })
+              this._showToast({ message: i18next.t('text.gan_now_editable') })
             } catch (e) {
               this._showToast(e)
             }
-          }}"
-        ></popup-note>
-      `,
-      {
-        backdrop: true,
-        size: 'medium',
-        title: i18next.t('title.reject_arrival_notice')
-      }
-    )
-  }
+          }
+        },
+        {
+          title: i18next.t('button.confirm'),
+          action: async () => {
+            const result = await Swal.fire({
+              title: i18next.t('text.are_you_sure?'),
+              text: i18next.t('text.you_wont_be_able_to_revert_this!'),
+              type: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#22a6a7',
+              cancelButtonColor: '#cfcfcf',
+              confirmButtonText: 'Yes, confirm!'
+            })
 
-  _getTextAreaByName(name) {
-    return this.shadowRoot.querySelector(`textarea[name=${name}]`)
+            if (result.value) this._confirmArrivalNotice()
+          }
+        }
+      ]
+    } else if (this._status === ORDER_STATUS.EDITING.value) {
+      navigate(`create_vas_order/${this._ganNo}`)
+    }
+
+    actions = [...actions, { title: i18next.t('button.back'), action: () => navigate('vas_orders') }]
+
+    store.dispatch({
+      type: UPDATE_CONTEXT,
+      context: {
+        ...this.context,
+        actions
+      }
+    })
   }
 
   stateChanged(state) {
@@ -455,4 +504,4 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
   }
 }
 
-window.customElements.define('receive-arrival-notice', ReceiveArrivalNotice)
+window.customElements.define('vas-order-detail', VasOrderDetail)

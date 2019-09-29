@@ -4,6 +4,7 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import { openPopup } from '@things-factory/layout-base'
 import '../components/import-pop-up'
 import Swal from 'sweetalert2'
 
@@ -96,22 +97,22 @@ class TransportDriver extends localize(i18next)(PageView) {
   pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('label.name'),
+        label: i18next.t('field.name'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.driver_code'),
+        label: i18next.t('field.driver_code'),
         name: 'driverCode',
         type: 'text',
-        props: { searchOper: 'eq', placeholder: i18next.t('label.driver_code') }
+        props: { searchOper: 'eq' }
       },
       {
-        label: i18next.t('label.description'),
+        label: i18next.t('field.description'),
         name: 'description',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.description') }
+        props: { searchOper: 'like' }
       }
     ]
 
@@ -210,7 +211,7 @@ class TransportDriver extends localize(i18next)(PageView) {
       query: gql`
         query {
           transportDrivers(${gqlBuilder.buildArgs({
-            filters: this._conditionParser(),
+            filters: this.searchForm.queryFilters,
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -279,26 +280,6 @@ class TransportDriver extends localize(i18next)(PageView) {
         title: i18next.t('title.contact_point_list')
       }
     )
-  }
-
-  _conditionParser() {
-    return this.searchForm
-      .getFields()
-      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
-      .map(field => {
-        return {
-          name: field.name,
-          value:
-            field.type === 'text'
-              ? field.value
-              : field.type === 'checkbox'
-              ? field.checked
-              : field.type === 'number'
-              ? parseFloat(field.value)
-              : field.value,
-          operator: field.getAttribute('searchOper')
-        }
-      })
   }
 
   async _saveTransportDriver() {

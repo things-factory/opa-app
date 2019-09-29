@@ -87,21 +87,19 @@ export class ProductOptionDetailList extends localize(i18next)(LitElement) {
   async firstUpdated() {
     this._searchFields = [
       {
-        label: i18next.t('label.name'),
+        label: i18next.t('field.name'),
         name: 'name',
         type: 'text',
         props: {
-          searchOper: 'like',
-          placeholder: i18next.t('label.name')
+          searchOper: 'like'
         }
       },
       {
-        label: i18next.t('label.description'),
+        label: i18next.t('field.description'),
         name: 'description',
         type: 'text',
         props: {
-          searchOper: 'like',
-          placeholder: i18next.t('label.description')
+          searchOper: 'like'
         }
       }
     ]
@@ -200,7 +198,7 @@ export class ProductOptionDetailList extends localize(i18next)(LitElement) {
       query: gql`
         query {
           productOptionDetails(${gqlBuilder.buildArgs({
-            filters: [...filters, ...this._conditionParser()],
+            filters: [...filters, ...this.searchForm.queryFilters],
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -255,26 +253,6 @@ export class ProductOptionDetailList extends localize(i18next)(LitElement) {
         })
       )
     }
-  }
-
-  _conditionParser() {
-    return this.searchForm
-      .getFields()
-      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
-      .map(field => {
-        return {
-          name: field.name,
-          value:
-            field.type === 'text'
-              ? field.value
-              : field.type === 'checkbox'
-              ? field.checked
-              : field.type === 'number'
-              ? parseFloat(field.value)
-              : field.value,
-          operator: field.getAttribute('searchOper')
-        }
-      })
   }
 
   async _saveProductOptionDetails() {

@@ -5,9 +5,9 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_C
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES, ORDER_STATUS, ORDER_TYPES } from '../constants/order'
+import { LOAD_TYPES, ORDER_STATUS, PACKING_TYPES, ORDER_TYPES } from '../constants/order'
 
-class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
+class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       /**
@@ -72,11 +72,11 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.create_arrival_notice'),
+      title: i18next.t('title.create_vas_order'),
       actions: [
         {
           title: i18next.t('button.create'),
-          action: this._generateArrivalNotice.bind(this)
+          action: this._generateVasOrder.bind(this)
         }
       ]
     }
@@ -235,13 +235,13 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           width: 350
         },
         {
-          type: 'code',
+          type: 'select',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: {
             editable: true,
             align: 'center',
-            codeName: 'PACKING_TYPES'
+            options: ['', ...Object.keys(PACKING_TYPES).map(key => PACKING_TYPES[key].value)]
           },
           width: 150
         },
@@ -253,10 +253,10 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           width: 80
         },
         {
-          type: 'code',
+          type: 'select',
           name: 'unit',
           header: i18next.t('field.unit'),
-          record: { editable: true, align: 'center', codeName: 'WEIGHT_UNITS' },
+          record: { editable: true, align: 'center', options: ['', 'kg', 'g'] },
           width: 80
         },
         {
@@ -319,6 +319,20 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
+          record: { editable: true, align: 'center' },
+          width: 350
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.description'),
+          record: { editable: true, align: 'center' },
+          width: 350
+        },
+        {
+          type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
           record: { editable: true, align: 'center' },
           width: 350
         }
@@ -467,8 +481,8 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      navigate(`arrival_notice_detail/${response.data.editArrivalNotice.name}`)
-      this._showToast({ message: i18next.t('arrival_notice_updated') })
+      navigate(`vas_order_detail/${response.data.editArrivalNotice.name}`)
+      this._showToast({ message: i18next.t('vas_order_updated') })
     }
   }
 
@@ -497,7 +511,7 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _generateArrivalNotice() {
+  async _generateVasOrder() {
     try {
       this._validateForm()
       this._validateProducts()
@@ -517,8 +531,8 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!response.errors) {
-        navigate(`arrival_notice_detail/${response.data.generateArrivalNotice.name}`)
-        this._showToast({ message: i18next.t('arrival_notice_created') })
+        navigate(`vas_order_detail/${response.data.generateArrivalNotice.name}`)
+        this._showToast({ message: i18next.t('vas_order_created') })
       }
     } catch (e) {
       this._showToast(e)
@@ -647,4 +661,4 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
   }
 }
 
-window.customElements.define('create-arrival-notice', CreateArrivalNotice)
+window.customElements.define('create-vas-order', CreateVasOrder)

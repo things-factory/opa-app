@@ -3,6 +3,7 @@ import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
+import { openPopup } from '@things-factory/layout-base'
 import { css, html } from 'lit-element'
 import '../components/import-pop-up'
 import Swal from 'sweetalert2'
@@ -89,22 +90,22 @@ class WarehouseList extends localize(i18next)(PageView) {
   pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('label.name'),
+        label: i18next.t('field.name'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.description'),
+        label: i18next.t('field.description'),
         name: 'description',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.description') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.type'),
+        label: i18next.t('field.type'),
         name: 'type',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.type') }
+        props: { searchOper: 'like' }
       }
     ]
 
@@ -229,7 +230,7 @@ class WarehouseList extends localize(i18next)(PageView) {
       query: gql`
         query {
           warehouses(${gqlBuilder.buildArgs({
-            filters: this._conditionParser(),
+            filters: this.searchForm.queryFilters,
             pagination: { page, limit },
             sortings: sorters
           })}) {  
@@ -288,26 +289,6 @@ class WarehouseList extends localize(i18next)(PageView) {
         })
       )
     }
-  }
-
-  _conditionParser() {
-    return this.searchForm
-      .getFields()
-      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
-      .map(field => {
-        return {
-          name: field.name,
-          value:
-            field.type === 'text'
-              ? field.value
-              : field.type === 'checkbox'
-              ? field.checked
-              : field.type === 'number'
-              ? parseFloat(field.value)
-              : field.value,
-          operator: field.getAttribute('searchOper')
-        }
-      })
   }
 
   async _saveWarehouse() {

@@ -195,6 +195,18 @@ export default {
       tagname: 'vas-order-list',
       page: 'vas_orders'
     },
+    {
+      tagname: 'create-vas-order',
+      page: 'create_vas_order'
+    },
+    {
+      tagname: 'confirm-vas-order',
+      page: 'confirm_vas_order'
+    },
+    {
+      tagname: 'vas-order-detail',
+      page: 'vas_order_detail'
+    },
 
     /**
      * Order Menus Section
@@ -305,18 +317,6 @@ export default {
     {
       tagname: 'picking-by-unit',
       page: 'picking_unit'
-    },
-
-    /**
-     * Label Menus Section
-     */
-    {
-      tagname: 'label-list',
-      page: 'label_list'
-    },
-    {
-      tagname: 'relabel',
-      page: 'relabel'
     }
   ],
   bootstrap

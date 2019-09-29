@@ -82,19 +82,19 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
   async firstUpdated() {
     this._searchFields = [
       {
-        label: i18next.t('label.release_order_no'),
+        label: i18next.t('field.release_order_no'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.release_order_no') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.release_date'),
+        label: i18next.t('field.release_date'),
         name: 'releaseDateTime',
         type: 'datetime-local',
-        props: { searchOper: 'like', placeholder: i18next.t('label.release_date') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.status'),
+        label: i18next.t('field.status'),
         name: 'status',
         type: 'select',
         options: [
@@ -107,7 +107,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           { name: i18next.t(`label.${ORDER_STATUS.PICKING.name}`), value: ORDER_STATUS.DELIVERING.value },
           { name: i18next.t(`label.${ORDER_STATUS.DONE.name}`), value: ORDER_STATUS.DONE.value }
         ],
-        props: { searchOper: 'eq', placeholder: i18next.t('label.status') }
+        props: { searchOper: 'eq' }
       }
     ]
 
@@ -214,7 +214,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
       query: gql`
         query {
           releaseOrderRequests(${gqlBuilder.buildArgs({
-            filters: this._conditionParser(),
+            filters: this.searchForm.queryFilters,
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -249,26 +249,6 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
         records: response.data.releaseOrderRequests.items || []
       }
     }
-  }
-
-  _conditionParser() {
-    return this.searchForm
-      .getFields()
-      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
-      .map(field => {
-        return {
-          name: field.name,
-          value:
-            field.type === 'text'
-              ? field.value
-              : field.type === 'checkbox'
-              ? field.checked
-              : field.type === 'number'
-              ? parseFloat(field.value)
-              : field.value,
-          operator: field.getAttribute('searchOper')
-        }
-      })
   }
 
   get _columns() {
