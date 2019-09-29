@@ -38,16 +38,7 @@ class Dashboard extends connect(store)(PageView) {
 
   get context() {
     return {
-      title: this._board && this._board.name,
-      printable: {
-        accept: ['paper'],
-        name: this._board && this._board.name,
-        content: () => {
-          return this
-        },
-        options: {}
-      },
-      screencastable: true
+      title: this._board && this._board.name
     }
   }
 
