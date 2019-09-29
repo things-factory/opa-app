@@ -201,12 +201,6 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          width: 180
-        },
-        {
-          type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: { align: 'center' },
@@ -266,12 +260,6 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
           width: 250
         },
         {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          width: 180
-        },
-        {
           type: 'select',
           name: 'batchId',
           header: i18next.t('field.batch_id'),
@@ -305,7 +293,6 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
           arrivalNotice(${gqlBuilder.buildArgs({
             name: this._ganNo
           })}) {
-            id
             name
             containerNo
             ownTransport
@@ -318,19 +305,16 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
             deliveryOrderNo
             status
             collectionOrder {
-              id
               name
               description
             }
             orderProducts {
-              id
               batchId
               product {
                 id
                 name
                 description
               }
-              description
               packingType
               weight
               unit
@@ -340,11 +324,9 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
             }
             orderVass {
               vas {
-                id
                 name
                 description
               }
-              description
               batchId
               remark
             }

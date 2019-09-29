@@ -314,6 +314,13 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.batch_id'),
           record: { editable: true, align: 'center', options: ['', i18next.t('label.all')] },
           width: 150
+        },
+        {
+          type: 'string',
+          name: 'remark',
+          header: i18next.t('field.remark'),
+          record: { editable: true, align: 'center' },
+          width: 350
         }
       ]
     }
