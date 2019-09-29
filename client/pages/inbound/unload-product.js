@@ -558,16 +558,6 @@ class UnloadProduct extends localize(i18next)(PageView) {
   }
 
   async _validateComplete() {
-    // Existing of actual pallet qty value
-    if (!this.orderProductData.records.every(task => task.actualPalletQty))
-      throw new Error(i18next.t('text.actual_pallet_qty_is_empty'))
-
-    // Existing of actual pack qty value
-    if (!this.orderProductData.records.every(task => task.actualPackQty))
-      throw new Error(i18next.t('text.actual_qty_is_empty'))
-
-    // Matching with actual pallet qty & actual pack qty
-    // If not, there should be remark
     if (
       !this.orderProductData.records
         .filter(task => task.actualPalletQty !== task.palletQty || task.actualPackQty !== task.packQty)

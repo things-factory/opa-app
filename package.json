@@ -87,6 +87,8 @@
     "@things-scene/traffic": "*",
     "@things-scene/visualizer": "ThingsElements/things-scene-visualizer#for-things-factory",
     "@things-scene/wheel-sorter": "*",
+    "jspdf": "^1.5.3",
+    "jspdf-autotable": "^3.2.4",
     "pg": "*",
     "sweetalert2": "*"
   },
