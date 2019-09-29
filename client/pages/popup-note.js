@@ -4,7 +4,8 @@ import { css, html, LitElement } from 'lit-element'
 class PopupNote extends localize(i18next)(LitElement) {
   static get properties() {
     return {
-      title: String
+      title: String,
+      value: String
     }
   }
 
@@ -44,8 +45,18 @@ class PopupNote extends localize(i18next)(LitElement) {
     ]
   }
 
-  get remarkTextarea() {
+  get textarea() {
     return this.shadowRoot.querySelector('textarea')
+  }
+
+  firstUpdated() {
+    setTimeout(() => this.textarea.focus(), 100)
+  }
+
+  updated(changedProps) {
+    if (changedProps.has('value')) {
+      this.textarea.value = this.value
+    }
   }
 
   render() {
@@ -61,7 +72,7 @@ class PopupNote extends localize(i18next)(LitElement) {
             this.dispatchEvent(
               new CustomEvent('submit', {
                 detail: {
-                  value: this.remarkTextarea.value
+                  value: this.textarea.value
                 }
               })
             )

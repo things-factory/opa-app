@@ -235,6 +235,7 @@ class WorksheetUnloading extends connect(store)(localize(i18next)(PageView)) {
                 palletQty
               }
               status
+              issue
             }
           }
         }
