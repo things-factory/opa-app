@@ -9,6 +9,7 @@ import { connect } from 'pwa-helpers/connect-mixin'
 import './generate-location-list'
 import { USBPrinter } from '@things-factory/barcode-base'
 import Swal from 'sweetalert2'
+import { LOCATION_LABEL_SETTING_KEY } from '../../setting-constants'
 
 class LocationList extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -473,7 +474,8 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   stateChanged(state) {
-    this._locationLabel = state.labelSettings.locationLabel
+    var locationLabelSetting = state.opaApp[LOCATION_LABEL_SETTING_KEY]
+    this._locationLabel = (locationLabelSetting && locationLabelSetting.board) || {}
   }
 }
 
