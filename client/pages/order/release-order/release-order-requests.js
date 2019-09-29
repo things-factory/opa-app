@@ -73,13 +73,13 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
     }
   }
 
-  activated(active) {
-    if (JSON.parse(active) && this.dataGrist) {
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
       this.dataGrist.fetch()
     }
   }
 
-  async firstUpdated() {
+  pageInitialized() {
     this._searchFields = [
       {
         label: i18next.t('field.release_order_no'),
@@ -101,10 +101,10 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           { value: '' },
           { name: i18next.t(`label.${ORDER_STATUS.PENDING_RECEIVE.name}`), value: ORDER_STATUS.PENDING_RECEIVE.value },
           {
-            name: i18next.t(`label.${ORDER_STATUS.READY_TO_DISPATCH.name}`),
+            name: i18next.t(`label.${ORDER_STATUS.READY_TO_PICK.name}`),
             value: ORDER_STATUS.READY_TO_DISPATCH.value
           },
-          { name: i18next.t(`label.${ORDER_STATUS.PICKING.name}`), value: ORDER_STATUS.DELIVERING.value },
+          { name: i18next.t(`label.${ORDER_STATUS.INPROCESS.name}`), value: ORDER_STATUS.INPROCESS.value },
           { name: i18next.t(`label.${ORDER_STATUS.DONE.name}`), value: ORDER_STATUS.DONE.value }
         ],
         props: { searchOper: 'eq' }
@@ -124,8 +124,10 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
             click: (columns, data, column, record, rowIndex) => {
               const status = record.status
               if (status === ORDER_STATUS.PENDING_RECEIVE.value) {
-                navigate(`receive_release_order/${record.name}`) // 1. move to order receiving page
-              } else if (status === ORDER_STATUS.PICKING.value) {
+                navigate(`receive_release_order_request/${record.name}`) // 1. move to order receiving page
+              } else if (status === ORDER_STATUS.READY_TO_PICK.value) {
+                navigate(`execute_release_order/${record.name}`) // 2. move to order arriving check page
+              } else if (status === ORDER_STATUS.INPROCESS.value) {
                 navigate(`complete_release_order/${record.name}`) // 2. move to order arriving check page
               } else if (status === ORDER_STATUS.DONE.value) {
                 navigate(`completed_release_order/${record.name}`) // 3. move to assign buffer location
@@ -213,7 +215,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
         query {
-          releaseOrderRequests(${gqlBuilder.buildArgs({
+          releaseGoodRequests(${gqlBuilder.buildArgs({
             filters: this.searchForm.queryFilters,
             pagination: { page, limit },
             sortings: sorters
@@ -245,8 +247,8 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       return {
-        total: response.data.releaseOrderRequests.total || 0,
-        records: response.data.releaseOrderRequests.items || []
+        total: response.data.releaseGoodRequests.total || 0,
+        records: response.data.releaseGoodRequests.items || []
       }
     }
   }

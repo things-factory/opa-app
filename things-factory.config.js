@@ -51,14 +51,6 @@ export default {
       tagname: 'location-list',
       page: 'locations'
     },
-    {
-      tagname: 'transport-summary-report',
-      page: 'transport_summary_reports'
-    },
-    {
-      tagname: 'inventory-summary-report',
-      page: 'inventory_summary_reports'
-    },
 
     /**
      * Order Menus Section
@@ -114,6 +106,10 @@ export default {
     {
       tagname: 'receive-release-order-request',
       page: 'receive_release_order_request'
+    },
+    {
+      tagname: 'execute-release-order',
+      page: 'execute_release_order'
     },
     {
       tagname: 'rejected-release-order',

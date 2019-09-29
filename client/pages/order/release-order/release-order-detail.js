@@ -3,6 +3,7 @@ import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
+import Swal from 'sweetalert2'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
@@ -76,8 +77,6 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
 
   constructor() {
     super()
-    this._ownTransport = true
-    this._shippingOption = true
     this.inventoryData = {}
     this.vasData = {}
   }
@@ -106,7 +105,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
         <fieldset>
           <legend>${i18next.t('title.release_order')}</legend>
           <label>${i18next.t('label.release_date')}</label>
-          <input name="releaseDateTime" type="datetime-local" min="${this._getStdDatetime()}" disabled />
+          <input name="releaseDateTime" type="datetime-local" disabled />
 
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
           <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" disabled />
@@ -142,7 +141,6 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
             shipping
             name="containerArrivalDate"
             type="datetime-local"
-            min="${this._getStdDatetime()}"
             ?hidden="${!this._shippingOption}"
             disabled
           />
@@ -152,7 +150,6 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
             shipping
             name="containerLeavingDate"
             type="datetime-local"
-            min="${this._getStdDatetime()}"
             ?hidden="${!this._shippingOption}"
             disabled
           />
@@ -171,16 +168,16 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           />
           <label>${i18next.t('label.own_transport')}</label>
           <label ?hidden="${this._ownTransport}">${i18next.t('label.delivery_date')}</label>
-          <input delivery name="deliveryDateTime" ?hidden="${this._ownTransport}" />
+          <input delivery name="deliveryDateTime" type="datetime-local" ?hidden="${this._ownTransport}" disabled />
 
           <label>${i18next.t('label.release_from')}</label>
-          <input name="from" />
+          <input name="from" disabled />
 
           <label>${i18next.t('label.release_to')}</label>
-          <input name="to" />
+          <input name="to" disabled />
 
           <label ?hidden="${this._ownTransport}">${i18next.t('label.tel_no')}</label>
-          <input delivery name="telNo" ?hidden="${this._ownTransport}" />
+          <input delivery name="telNo" ?hidden="${this._ownTransport}" disabled />
         </fieldset>
       </form>
 
@@ -230,7 +227,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           }
         },
         {
-          type: 'object',
+          type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_id'),
           record: { align: 'center' },
@@ -262,6 +259,13 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           name: 'releaseQty',
           header: i18next.t('field.release_qty'),
           record: { align: 'center', options: { min: 0 } },
+          width: 100
+        },
+        {
+          type: 'object',
+          name: 'location',
+          header: i18next.t('field.location'),
+          record: { align: 'center' },
           width: 100
         }
       ]
@@ -320,34 +324,11 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
     const response = await client.query({
       query: gql`
         query {
-          releaseGood(${gqlBuilder.buildArgs({
+          releaseGoodDetail(${gqlBuilder.buildArgs({
             name: this._releaseOrderNo
           })}) {
             id
             name
-            deliveryOrder {
-              id
-              name
-              deliveryDateTime
-              telNo
-              transportDriver {
-                id
-                name
-                driverCode
-              }
-              transportVehicle {
-                id
-                name
-                regNumber
-              }
-            }
-            shippingOrder {
-              name
-              containerNo
-              containerLeavingDate
-              containerArrivalDate
-              shipName
-            }
             from
             to
             loadType
@@ -356,20 +337,27 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
             ownTransport
             shippingOption
             releaseDateTime
-            orderInventories {
-              id
-              releaseQty
-              inventory {
-                id
+            inventoryInfos {
+              name
+              batchId
+              product {
                 name
-                batchId
-                packingType
-                qty
-                product {
-                  name
-                  description
-                }
+                description
               }
+              location {
+                name
+              }
+              packingType
+              qty
+              releaseQty
+            }
+            releaseGoodInfo {
+              containerNo
+              containerLeavingDate
+              containerArrivalDate
+              shipName
+              deliveryDateTime
+              telNo
             }
             orderVass {
               vas {
@@ -387,32 +375,34 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      this._status = response.data.releaseGood.status
+      this._shippingOption = response.data.releaseGoodDetail.shippingOption
+      this._ownTransport = response.data.releaseGoodDetail.ownTransport
+      this._status = response.data.releaseGoodDetail.status
       this._actionsHandler()
-      this._fillupForm(response.data.releaseGood)
+      this._fillupForm(response.data.releaseGoodDetail)
+      this._fillupForm(response.data.releaseGoodDetail.releaseGoodInfo)
       this.inventoryData = {
-        ...this.inventoryData,
-        records: response.data.releaseGood.orderInventories
+        records: response.data.releaseGoodDetail.inventoryInfos
       }
 
       this.vasData = {
         ...this.vasData,
-        records: response.data.releaseGood.orderVass
+        records: response.data.releaseGoodDetail.orderVass
       }
     }
   }
 
-  _fillupForm(releaseGood) {
-    for (let key in releaseGood) {
+  _fillupForm(data) {
+    for (let key in data) {
       Array.from(this.form.querySelectorAll('input, textarea, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
-          field.checked = releaseGood[key]
+          field.checked = data[key]
         } else if (field.name === key && field.type === 'datetime-local') {
-          const datetime = Number(releaseGood[key])
+          const datetime = Number(data[key])
           const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
           field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
         } else if (field.name === key) {
-          field.value = releaseGood[key]
+          field.value = data[key]
         }
       })
     }
@@ -484,7 +474,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
 
           action: async () => {
             try {
-              await this._confirmReleaseGood()
+              await this._confirmReleaseOrder()
               Swal.fire({
                 title: 'Are you sure?',
                 text: "You won't be able to revert this!",

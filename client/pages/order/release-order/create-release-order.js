@@ -1,12 +1,12 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { openPopup } from '@things-factory/layout-base'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES, ORDER_STATUS, ORDER_TYPES } from '../constants/order'
+import { LOAD_TYPES, ORDER_STATUS, ORDER_PRODUCT_STATUS, ORDER_TYPES } from '../constants/order'
 import './inventory-product-selector'
 
 class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
@@ -19,7 +19,8 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       vasGristConfig: Object,
       inventoryData: Object,
       vasData: Object,
-      _orderStatus: String
+      _orderStatus: String,
+      _releaseOrderNo: String
     }
   }
 
@@ -138,7 +139,9 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
             }} />
             <label>${i18next.t('label.own_transport')}</label>
             <label ?hidden="${this._ownTransport}">${i18next.t('label.delivery_date')}</label>
-            <input delivery name="deliveryDateTime" ?hidden="${this._ownTransport}"/>
+            <input delivery name="deliveryDateTime" type="datetime-local" min="${this._getStdDatetime()}" ?hidden="${
+      this._ownTransport
+    }"/>
 
             <label>${i18next.t('label.release_from')}</label>
             <input name="from"/>
@@ -177,7 +180,19 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     `
   }
 
-  firstUpdated() {
+  updated(changedProps) {
+    if (changedProps.has('_releaseOrderNo') && this._releaseOrderNo) {
+      this.fetchReleaseOrder()
+      this._updateBatchList()
+    } else if (changedProps.has('_releaseOrderNo') && !this._releaseOrderNo) {
+      this._clearPage()
+      this._updateBatchList()
+    }
+
+    this._contextHandler()
+  }
+
+  pageInitialized() {
     this.inventoryGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
@@ -267,13 +282,6 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
           width: 250
         },
         {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: { editable: true, align: 'center' },
-          width: 180
-        },
-        {
           type: 'select',
           name: 'batchId',
           header: i18next.t('field.batch_id'),
@@ -297,6 +305,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
         <inventory-product-selector
           @selected="${e => {
             this.inventoryData = {
+              ...this.inventoryData,
               records: e.detail
             }
           }}"
@@ -320,6 +329,91 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
 
   get vasGrist() {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
+  }
+
+  async fetchReleaseOrder() {
+    const response = await client.query({
+      query: gql`
+        query {
+          releaseGoodDetail(${gqlBuilder.buildArgs({
+            name: this._releaseOrderNo
+          })}) {
+            id
+            name
+            from
+            to
+            loadType
+            truckNo
+            status
+            ownTransport
+            shippingOption
+            releaseDateTime
+            inventoryInfos {
+              name
+              batchId
+              inventoryName
+              product {
+                name
+                description
+              }
+              packingType
+              qty
+              releaseQty
+            }
+            releaseGoodInfo {
+              containerNo
+              containerLeavingDate
+              containerArrivalDate
+              shipName
+              deliveryDateTime
+              telNo
+            }
+            orderVass {
+              vas {
+                id
+                name
+                description
+              }
+              description
+              batchId
+              remark
+            }
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      this._shippingOption = response.data.releaseGoodDetail.shippingOption
+      this._ownTransport = response.data.releaseGoodDetail.ownTransport
+      this._status = response.data.releaseGoodDetail.status
+      this._fillupForm(response.data.releaseGoodDetail)
+      this._fillupForm(response.data.releaseGoodDetail.releaseGoodInfo)
+      this.inventoryData = {
+        records: response.data.releaseGoodDetail.inventoryInfos
+      }
+
+      this.vasData = {
+        ...this.vasData,
+        records: response.data.releaseGoodDetail.orderVass
+      }
+    }
+  }
+
+  _fillupForm(data) {
+    for (let key in data) {
+      Array.from(this.form.querySelectorAll('input, textarea, select')).forEach(field => {
+        if (field.name === key && field.type === 'checkbox') {
+          field.checked = data[key]
+        } else if (field.name === key && field.type === 'datetime-local') {
+          const datetime = Number(data[key])
+          const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
+          field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
+        } else if (field.name === key) {
+          field.value = data[key]
+        }
+      })
+    }
   }
 
   _onProductChangeHandler(event) {
@@ -405,7 +499,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!response.errors) {
-        navigate(`release-order-detail/${response.data.generateReleaseGood.name}`)
+        navigate(`release_order_detail/${response.data.generateReleaseGood.name}`)
         this._showToast({ message: i18next.t('release_order_created') })
       }
     } catch (e) {
@@ -482,6 +576,62 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     }, 300)
   }
 
+  _contextHandler() {
+    if (this._releaseOrderNo) {
+      store.dispatch({
+        type: UPDATE_CONTEXT,
+        context: {
+          ...this.context,
+          actions: [
+            {
+              title: i18next.t('button.update'),
+              action: () => {
+                try {
+                  this._validateForm()
+                  this._validateInventories()
+                  this._validateVas()
+
+                  this._editReleaseOrder(this._getReleaseOrder(), this._getShippingOrder(), this._getDeliveryOrder())
+                } catch (e) {
+                  this._showToast(e)
+                }
+              }
+            }
+          ]
+        }
+      })
+    } else {
+      store.dispatch({
+        type: UPDATE_CONTEXT,
+        context: {
+          ...this.context
+        }
+      })
+    }
+  }
+
+  async _editReleaseOrder(releaseGood, shippingOrder, deliveryOrder) {
+    const response = await client.query({
+      query: gql`
+        mutation {
+          editReleaseGood(${gqlBuilder.buildArgs({
+            name: this._releaseOrderNo,
+            releaseGood,
+            shippingOrder,
+            deliveryOrder
+          })}) {
+            name 
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      navigate(`release_order_detail/${response.data.editReleaseGood.name}`)
+      this._showToast({ message: i18next.t('release_order_updated') })
+    }
+  }
+
   _getReleaseOrder() {
     let releaseGood = { status: ORDER_STATUS.PENDING.value }
     Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
@@ -497,17 +647,18 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
 
     const orderInventories = this.inventoryGrist.data.records.map((record, idx) => {
       const seq = idx + 1
-      delete record.id
-      delete record.__typename
-      delete record.product.__typename
-      delete record.packingType
-      delete record.qty
-      delete record.batchId
-      delete record.warehouse
-      delete record.location
-      delete record.product
 
-      return { ...record, seq, type: ORDER_TYPES.RELEASE_OF_GOODS.value }
+      return {
+        name: record.name,
+        releaseQty: record.releaseQty,
+        seq,
+        inventory: {
+          id: '',
+          name: record.inventoryName
+        },
+        type: ORDER_TYPES.RELEASE_OF_GOODS.value,
+        status: ORDER_PRODUCT_STATUS.PENDING.value
+      }
     })
 
     const orderVass = this.vasGrist.data.records.map(record => {
@@ -558,6 +709,12 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     this.form.reset()
     this.inventoryGrist.data = Object.assign({ records: [] })
     this.vasGrist.data = Object.assign({ records: [] })
+  }
+
+  stateChanged(state) {
+    if (this.active) {
+      this._releaseOrderNo = state && state.route && state.route.resourceId
+    }
   }
 
   _showToast({ type, message }) {

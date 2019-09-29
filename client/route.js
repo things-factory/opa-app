@@ -52,14 +52,6 @@ export default function route(page) {
       import('./pages/master/location-list')
       return page
 
-    case 'transport_summary_reports':
-      import('./pages/billing/transport-summary-report')
-      return page
-
-    case 'inventory_summary_reports':
-      import('./pages/master/inventory-summary-report')
-      return page
-
     /**
      * Order Menus Section
      */
@@ -113,6 +105,10 @@ export default function route(page) {
 
     case 'receive_release_order_request':
       import('./pages/order/release-order/receive-release-order-request')
+      return page
+
+    case 'execute_release_order':
+      import('./pages/order/release-order/execute-release-order')
       return page
 
     case 'rejected_release_order':
@@ -208,7 +204,7 @@ export default function route(page) {
       return page
 
     /**
-     * Order Menus Section
+     * Billing Menus Section
      */
     case 'create_claim_chit':
       import('./pages/billing/create-claim-chit')

@@ -44,12 +44,6 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
     }
   }
 
-  constructor() {
-    super()
-    this._ownTransport = true
-    this._shippingOption = true
-  }
-
   render() {
     return html`
       <search-form

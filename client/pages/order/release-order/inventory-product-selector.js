@@ -158,6 +158,8 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
         }
       ]
     }
+
+    this.inventoryGrist.fetch()
   }
 
   get searchForm() {
