@@ -219,10 +219,10 @@ export default function route(page) {
      * Billing Menus Section
      */
     case 'create_claim_chit':
-      import('./pages/claim-chit/billing/create-claim-chit')
+      import('./pages/billing/claim-chit/create-claim-chit')
       return page
     case 'claim_chit_list':
-      import('./pages/claim-chit/billing/claim-chit-list')
+      import('./pages/billing/claim-chit/claim-chit-list')
       return page
 
     /**
