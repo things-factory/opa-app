@@ -5,20 +5,23 @@ import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-fac
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
+import Swal from 'sweetalert2'
 import { LOAD_TYPES } from '../constants/order'
 
-class RejectedReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
+class CompleteReleaseDelivery extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _releaseOrderNo: String,
       _ownTransport: Boolean,
       _shippingOption: Boolean,
-      productGristConfig: Object,
+      inventoryGristConfig: Object,
       currentOrderType: String,
       vasGristConfig: Object,
-      productData: Object,
+      inventoryData: Object,
+      _assignedDriverName: String,
+      _assignedVehicleName: String,
       vasData: Object,
-      _orderStatus: String
+      _status: String
     }
   }
 
@@ -70,18 +73,22 @@ class RejectedReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.rejected_release_order'),
+      title: i18next.t('title.complete_release_delivery'),
       actions: [
         {
+          title: i18next.t('button.completed'),
+          action: this._completeReleaseOrder.bind(this)
+        },
+        {
           title: i18next.t('button.back'),
-          action: () => history.back()
+          action: history.back
         }
       ]
     }
   }
 
-  activated(active) {
-    if (JSON.parse(active)) {
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
       this.fetchReleaseOrder()
     }
   }
@@ -421,6 +428,39 @@ class RejectedReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
+  async _completeReleaseOrder() {
+    Swal.fire({
+      title: 'Are you sure to change the order status to Done?',
+      text: i18next.t('text.you_wont_be_able_to_revert_this!'),
+      type: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#22a6a7',
+      cancelButtonColor: '#cfcfcf',
+      confirmButtonText: 'Yes, order completed!'
+    }).then(async result => {
+      if (result.value) {
+        const response = await client.query({
+          query: gql`
+            mutation {
+              checkReleaseGood(${gqlBuilder.buildArgs({
+                name: this._releaseOrderNo
+              })}) {
+                name
+              }
+            }
+          `
+        })
+
+        if (!response.errors) {
+          this._showToast({ message: i18next.t('text.order_has_been_completed') })
+          navigate('release_orders_requests')
+        } else {
+          throw new Error(response.errors[0])
+        }
+      }
+    })
+  }
+
   stateChanged(state) {
     if (this.active) {
       this._releaseOrderNo = state && state.route && state.route.resourceId
@@ -439,4 +479,4 @@ class RejectedReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
   }
 }
 
-window.customElements.define('rejected-release-order', RejectedReleaseOrder)
+window.customElements.define('complete-release-delivery', CompleteReleaseDelivery)

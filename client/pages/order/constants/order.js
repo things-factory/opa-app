@@ -62,9 +62,13 @@ export const ORDER_STATUS = {
     name: 'order_status_delivering',
     value: 'DELIVERING'
   },
+  DISPATCHING: {
+    name: 'order_status_dispatching',
+    value: 'DISPATCHING'
+  },
   INPROCESS: {
     name: 'order_status_in_process',
-    value: 'IN_PROCESS'
+    value: 'INPROCESS'
   },
   READY_TO_PICK: {
     name: 'order_status_ready_to_pick',

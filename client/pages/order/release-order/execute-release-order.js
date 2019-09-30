@@ -191,7 +191,7 @@ class ExecuteReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
 
           <label ?hidden="${this._ownTransport}">${i18next.t('label.assign_driver')}</label>
           <select name="driver" id="driver" ?hidden="${this._ownTransport}">
-            <option>--CHOOSE DRIVER--</option>
+            <option value="">--CHOOSE DRIVER--</option>
             ${this.drivers.map(
               driver => html`
                 <option driver-id="${driver.id}" value="${driver.name}">${driver.driverCode}-${driver.name}</option>
@@ -201,7 +201,7 @@ class ExecuteReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
 
           <label ?hidden="${this._ownTransport}">${i18next.t('label.assign_vehicle')}</label>
           <select name="vehicle" id="vehicle" ?hidden="${this._ownTransport}">
-            <option>--CHOOSE TRUCK--</option>
+            <option value="">--CHOOSE TRUCK--</option>
             ${this.vehicles.map(
               vehicle => html`
                 <option vehicle-id="${vehicle.id}" value="${vehicle.name}">${vehicle.regNumber}</option>
@@ -500,13 +500,14 @@ class ExecuteReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
 
   async _executeReleaseOrder() {
     try {
+      const args = { name: this._releaseOrderNo }
+      const _driverVehicle = this._getDriverVehicle()
+      if (_driverVehicle) args.deliveryOrderPatch = _driverVehicle
+
       const response = await client.query({
         query: gql`
           mutation {
-            executeReleaseGood(${gqlBuilder.buildArgs({
-              name: this._releaseOrderNo,
-              deliveryOrderPatch: this._getDriverVehicle()
-            })}) {
+            executeReleaseGood(${gqlBuilder.buildArgs(args)}) {
               name
             }
           }
@@ -523,13 +524,15 @@ class ExecuteReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _getDriverVehicle() {
-    if (this.driver.value && this.vehicle.value) {
-      return {
-        transportDriver: { id: this.driver.selectedOptions[0].getAttribute('driver-id'), name: this.driver.value },
-        transportVehicle: { id: this.vehicle.selectedOptions[0].getAttribute('vehicle-id'), name: this.vehicle.value }
+    if (!this._ownTransport) {
+      if (this.driver.value && this.vehicle.value) {
+        return {
+          transportDriver: { id: this.driver.selectedOptions[0].getAttribute('driver-id'), name: this.driver.value },
+          transportVehicle: { id: this.vehicle.selectedOptions[0].getAttribute('vehicle-id'), name: this.vehicle.value }
+        }
+      } else {
+        throw new Error(i18next.t('text.invalid_form'))
       }
-    } else {
-      throw new Error(i18next.t('text.invalid_form'))
     }
   }
 

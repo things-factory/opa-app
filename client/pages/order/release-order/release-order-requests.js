@@ -105,6 +105,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
             value: ORDER_STATUS.READY_TO_DISPATCH.value
           },
           { name: i18next.t(`label.${ORDER_STATUS.INPROCESS.name}`), value: ORDER_STATUS.INPROCESS.value },
+          { name: i18next.t(`label.${ORDER_STATUS.DISPATCHING.name}`), value: ORDER_STATUS.DISPATCHING.value },
           { name: i18next.t(`label.${ORDER_STATUS.DONE.name}`), value: ORDER_STATUS.DONE.value }
         ],
         props: { searchOper: 'eq' }
@@ -128,9 +129,11 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
               } else if (status === ORDER_STATUS.READY_TO_PICK.value) {
                 navigate(`execute_release_order/${record.name}`) // 2. move to order arriving check page
               } else if (status === ORDER_STATUS.INPROCESS.value) {
-                navigate(`complete_release_order/${record.name}`) // 2. move to order arriving check page
+                navigate(`complete_release_order/${record.name}`) // 3. move to order arriving check page
+              } else if (status === ORDER_STATUS.DELIVERING.value) {
+                navigate(`complete_release_delivery/${record.name}`) // 3. move to order arriving check page
               } else if (status === ORDER_STATUS.DONE.value) {
-                navigate(`completed_release_order/${record.name}`) // 3. move to assign buffer location
+                navigate(`completed_release_order/${record.name}`) // 4. move to assign buffer location
               }
             }
           }

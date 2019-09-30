@@ -115,6 +115,14 @@ export default function route(page) {
       import('./pages/order/release-order/execute-release-order')
       return page
 
+    case 'complete_release_order':
+      import('./pages/order/release-order/complete-release-order')
+      return page
+
+    case 'complete_release_delivery':
+      import('./pages/order/release-order/complete-release-delivery')
+      return page
+
     case 'rejected_release_order':
       import('./pages/order/release-order/rejected-release-order')
       return page
