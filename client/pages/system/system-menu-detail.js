@@ -190,7 +190,7 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
           type: 'boolean',
           name: 'hiddenFlag',
           header: i18next.t('field.hidden_flag'),
-          record: { editable: false, align: 'center' },
+          record: { editable: true, align: 'center' },
           sortable: true,
           width: 80
         },
