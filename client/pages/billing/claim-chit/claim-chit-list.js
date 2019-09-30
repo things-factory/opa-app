@@ -16,6 +16,7 @@ import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
 import Swal from 'sweetalert2'
 
+// TODO: To be continue, in-progress (ChrisLim - 30 Sept 2019)
 class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
     return [
