@@ -65,6 +65,8 @@
     "@things-scene/form": "*",
     "@things-scene/gauge": "*",
     "@things-scene/google-map": "*",
+    "@things-scene/graphql": "*",
+    "@things-scene/grist": "*",
     "@things-scene/half-roundrect": "*",
     "@things-scene/indoor-map": "ThingsElements/things-scene-indoor-map#for-things-factory",
     "@things-scene/label": "*",
