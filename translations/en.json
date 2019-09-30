@@ -1,5 +1,5 @@
 {
-"button.complete": "complete",
+  "button.complete": "complete",
   "button.delete_all": "delete all",
   "button.generate": "generate",
   "button.preview": "preview",
@@ -212,7 +212,7 @@
   "label.packing_no": "packing no",
   "label.packing_type": "packing type",
   "label.pallet": "pallet",
-  "label.pallet_barcode": "pallet barcode"
+  "label.pallet_barcode": "pallet barcode",
   "label.pallet_id": "pallet id",
   "label.phone_no": "phone no",
   "label.picking": "picking",
@@ -259,7 +259,7 @@
   "label.work_order_no": "work order no",
   "label.zone_name": "zone name",
   "text.already_existed": "row {state.text} is already existed",
-  "text.are_you_sure?": "are you sure",
+  "text.are_you_sure": "are you sure?",
   "text.buffer_location_is_not_selected": "buffer location is not selected",
   "text.data_updated_successfully": "data updated successfully",
   "text.delete_all_locations?": "delete all lolcations",

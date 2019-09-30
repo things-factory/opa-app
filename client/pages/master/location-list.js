@@ -41,7 +41,8 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
 
   static get properties() {
     return {
-      _warehouseId: String,
+      _warehouseName: String,
+      _warehouseName: String,
       _searchFields: Array,
       config: Object
     }
@@ -68,7 +69,11 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.location'),
+      title: i18next.t('title.location', {
+        state: {
+          text: this._warehouseName
+        }
+      }),
       actions: [
         {
           title: i18next.t('button.print_label'),
@@ -101,9 +106,24 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  pageUpdated(changes, lifecycle) {
+  async pageUpdated(changes, lifecycle) {
     if (this.active) {
       this._warehouseId = lifecycle.resourceId
+      const id = this._warehouseId
+
+      const response = await client.query({
+        query: gql`
+            query {
+              warehouse(${gqlBuilder.buildArgs({
+                id
+              })}) {
+                name
+              }
+            }
+          `
+      })
+
+      if (!response.errors) this._warehouseName = response.data.warehouse.name
       this.dataGrist.fetch()
     }
   }
@@ -323,23 +343,45 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           `
       })
 
-      if (!response.errors) this.dataGrist.fetch()
+      if (!response.errors) {
+        this.dataGrist.fetch()
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              message: i18next.t('text.data_updated_successfully')
+            }
+          })
+        )
+      }
     }
   }
 
   async _deleteLocation() {
-    const names = this.dataGrist.selected.map(record => record.name)
-    if (names && names.length > 0) {
-      const response = await client.query({
-        query: gql`
+    Swal.fire({
+      title: i18next.t('text.are_you_sure?'),
+      text: i18next.t('text.you_wont_be_able_to_revert_this!'),
+      type: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#22a6a7',
+      cancelButtonColor: '#cfcfcf',
+      confirmButtonText: i18next.t('button.delete_all'),
+      cancelButtonText: i18next.t('button.cancel')
+    }).then(async result => {
+      if (result.value && name !== '') {
+        const names = this.dataGrist.selected.map(record => record.name)
+        if (names && names.length > 0) {
+          const response = await client.query({
+            query: gql`
             mutation {
               deleteLocations(${gqlBuilder.buildArgs({ names })})
             }
           `
-      })
+          })
 
-      if (!response.errors) this.dataGrist.fetch()
-    }
+          if (!response.errors) this.dataGrist.fetch()
+        }
+      }
+    })
   }
 
   async _deleteAllLocations() {
