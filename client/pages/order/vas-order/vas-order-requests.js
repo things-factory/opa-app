@@ -1,55 +1,34 @@
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
+import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { connect } from 'pwa-helpers/connect-mixin.js'
-import { ORDER_STATUS } from './constants/order'
-import Swal from 'sweetalert2'
+import { ORDER_STATUS } from '../constants/order'
 
-class VasOrderList extends connect(store)(localize(i18next)(PageView)) {
+class VasOrderRequests extends localize(i18next)(PageView) {
   static get styles() {
     return [
-      MultiColumnFormStyles,
+      ScrollbarStyles,
       css`
         :host {
           display: flex;
           flex-direction: column;
-          overflow-x: auto;
+
+          overflow: hidden;
+        }
+
+        search-form {
+          overflow: visible;
         }
         .grist {
-          background-color: var(--main-section-background-color);
           display: flex;
           flex-direction: column;
           flex: 1;
-          overflow-y: auto;
         }
         data-grist {
           overflow-y: hidden;
           flex: 1;
-        }
-        h2 {
-          padding: var(--subtitle-padding);
-          font: var(--subtitle-font);
-          color: var(--subtitle-text-color);
-          border-bottom: var(--subtitle-border-bottom);
-        }
-        .grist h2 {
-          margin: var(--grist-title-margin);
-          border: var(--grist-title-border);
-          color: var(--secondary-color);
-        }
-
-        .grist h2 mwc-icon {
-          vertical-align: middle;
-          margin: var(--grist-title-icon-margin);
-          font-size: var(--grist-title-icon-size);
-          color: var(--grist-title-icon-color);
-        }
-
-        h2 + data-grist {
-          padding-top: var(--grist-title-with-grid-padding);
         }
       `
     ]
@@ -68,16 +47,14 @@ class VasOrderList extends connect(store)(localize(i18next)(PageView)) {
       <search-form
         id="search-form"
         .fields=${this._searchFields}
-        @submit=${async () => this.vasGrist.fetch()}
+        @submit=${async () => this.dataGrist.fetch()}
       ></search-form>
 
       <div class="grist">
         <data-grist
-          id="vas-grist"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
           .fetchHandler="${this.fetchHandler.bind(this)}"
-          .data="${this.vasData}"
         ></data-grist>
       </div>
     `
@@ -85,27 +62,47 @@ class VasOrderList extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.vas_orders'),
-      actions: [
-        {
-          title: i18next.t('button.save'),
-          action: this._saveorderVass.bind(this)
-        },
-        {
-          title: i18next.t('button.delete'),
-          action: this._deleteorderVass.bind(this)
-        }
-      ]
+      title: i18next.t('title.vas_order_requests'),
+      exportable: {
+        name: i18next.t('title.vas_order_requests'),
+        data: this._exportableData.bind(this)
+      },
+      importable: {
+        handler: () => {}
+      }
     }
   }
 
-  pageUpdated(changed, lifecycle) {
+  pageUpdated(changes, lifecycle) {
     if (this.active) {
-      this.vasGrist.fetch()
+      this.dataGrist.fetch()
     }
   }
 
   pageInitialized() {
+    this._searchFields = [
+      {
+        label: i18next.t('field.gan'),
+        name: 'name',
+        type: 'text',
+        props: { searchOper: 'like' }
+      },
+      {
+        label: i18next.t('field.status'),
+        name: 'status',
+        type: 'select',
+        options: [
+          { value: '' },
+          { name: i18next.t(`label.${ORDER_STATUS.PENDING.name}`), value: ORDER_STATUS.PENDING.value },
+          { name: i18next.t(`label.${ORDER_STATUS.EDITING.name}`), value: ORDER_STATUS.EDITING.value },
+          { name: i18next.t(`label.${ORDER_STATUS.REJECTED.name}`), value: ORDER_STATUS.REJECTED.value },
+          { name: i18next.t(`label.${ORDER_STATUS.PROCESSING.name}`), value: ORDER_STATUS.PROCESSING.value },
+          { name: i18next.t(`label.${ORDER_STATUS.DONE.name}`), value: ORDER_STATUS.DONE.value }
+        ],
+        props: { searchOper: 'eq' }
+      }
+    ]
+
     this.config = {
       rows: { selectable: { multiple: true } },
       columns: [
@@ -118,7 +115,12 @@ class VasOrderList extends connect(store)(localize(i18next)(PageView)) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              if (record.id) navigate(`arrival_notices/${record.name}`)
+              const status = record.status
+              if (status === ORDER_STATUS.REJECTED.value) {
+                navigate(`rejected_vas_order/${record.name}`) // 1. move to rejected detail page
+              } else {
+                navigate(`vas_order_detail/${record.name}`)
+              }
             }
           }
         },
@@ -130,6 +132,15 @@ class VasOrderList extends connect(store)(localize(i18next)(PageView)) {
           sortable: true,
           width: 250
         },
+        {
+          type: 'string',
+          name: 'name',
+          header: i18next.t('field.gan'),
+          record: { editable: true, align: 'center' },
+          sortable: true,
+          width: 180
+        },
+
         {
           type: 'string',
           name: 'description',
@@ -186,8 +197,8 @@ class VasOrderList extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('search-form')
   }
 
-  get vasGrist() {
-    return this.shadowRoot.querySelector('#vas-grist')
+  get dataGrist() {
+    return this.shadowRoot.querySelector('data-grist')
   }
 
   async fetchHandler({ page, limit, sorters = [] }) {
@@ -201,6 +212,10 @@ class VasOrderList extends connect(store)(localize(i18next)(PageView)) {
           })}) {
             items{
               id
+              name
+              bizplace {
+                id
+              }
               vas {
                 id
                 name
@@ -250,84 +265,27 @@ class VasOrderList extends connect(store)(localize(i18next)(PageView)) {
       })
   }
 
-  async _saveorderVass() {
-    let patches = this.vasGrist.dirtyRecords
-    if (patches && patches.length) {
-      patches = patches.map(orderVass => {
-        let patchField = orderVass.id ? { id: orderVass.id } : {}
-        const dirtyFields = orderVass.__dirtyfields__
-        for (let key in dirtyFields) {
-          patchField[key] = dirtyFields[key].after
-        }
-        patchField.cuFlag = orderVass.__dirty__
-
-        return patchField
-      })
-
-      const response = await client.query({
-        query: gql`
-            mutation {
-              updateMultipleOrderVas(${gqlBuilder.buildArgs({
-                patches
-              })}) {
-                name
-              }
-            }
-          `
-      })
-
-      if (!response.errors) {
-        this.vasGrist.fetch()
-        document.dispatchEvent(
-          new CustomEvent('notify', {
-            detail: {
-              message: i18next.t('text.data_updated_successfully')
-            }
-          })
-        )
-      }
-    }
-  }
-
-  async _deleteorderVass() {
-    Swal.fire({
-      title: i18next.t('text.are_you_sure?'),
-      text: i18next.t('text.you_wont_be_able_to_revert_this!'),
-      type: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#22a6a7',
-      cancelButtonColor: '#cfcfcf',
-      confirmButtonText: i18next.t('button.delete')
-    }).then(async result => {
-      if (result.value) {
-        const names = this.vasGrist.selected.map(record => record.name)
-        if (names && names.length > 0) {
-          const response = await client.query({
-            query: gql`
-            mutation {
-              deleteOrderVass(${gqlBuilder.buildArgs({ names })})
-            }
-          `
-          })
-
-          if (!response.errors) {
-            this.vasGrist.fetch()
-            document.dispatchEvent(
-              new CustomEvent('notify', {
-                detail: {
-                  message: i18next.t('text.data_deleted_successfully')
-                }
-              })
-            )
-          }
-        }
-      }
-    })
-  }
-
   get _columns() {
     return this.config.columns
   }
+
+  _exportableData() {
+    let records = []
+    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+      records = this.dataGrist.selected
+    } else {
+      records = this.dataGrist.data.records
+    }
+
+    return records.map(item => {
+      return this._columns
+        .filter(column => column.type !== 'gutter')
+        .reduce((record, column) => {
+          record[column.name] = item[column.name]
+          return record
+        }, {})
+    })
+  }
 }
 
-window.customElements.define('vas-order-list', VasOrderList)
+window.customElements.define('vas-order-requests', VasOrderRequests)

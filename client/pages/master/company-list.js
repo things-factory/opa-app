@@ -53,7 +53,6 @@ class CompanyList extends localize(i18next)(PageView) {
       <search-form
         id="search-form"
         .fields=${this._searchFields}
-        initFocus="description"
         @submit=${async () => this.dataGrist.fetch()}
       ></search-form>
 
@@ -93,34 +92,34 @@ class CompanyList extends localize(i18next)(PageView) {
   pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('label.name'),
+        label: i18next.t('field.name'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.country_code'),
+        label: i18next.t('field.country_code'),
         name: 'country_code',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.country_code') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.brn'),
+        label: i18next.t('field.brn'),
         name: 'brn',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.brn') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.address'),
+        label: i18next.t('field.address'),
         name: 'address',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.address') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.status'),
+        label: i18next.t('field.status'),
         name: 'status',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.status') }
+        props: { searchOper: 'like' }
       }
     ]
 
@@ -258,7 +257,7 @@ class CompanyList extends localize(i18next)(PageView) {
       query: gql`
         query {
           companies(${gqlBuilder.buildArgs({
-            filters: this._conditionParser(),
+            filters: this.searchForm.queryFilters,
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -314,26 +313,6 @@ class CompanyList extends localize(i18next)(PageView) {
         })
       )
     }
-  }
-
-  _conditionParser() {
-    return this.searchForm
-      .getFields()
-      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
-      .map(field => {
-        return {
-          name: field.name,
-          value:
-            field.type === 'text'
-              ? field.value
-              : field.type === 'checkbox'
-              ? field.checked
-              : field.type === 'number'
-              ? parseFloat(field.value)
-              : field.value,
-          operator: field.getAttribute('searchOper')
-        }
-      })
   }
 
   async _saveCompanies() {

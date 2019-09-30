@@ -2,6 +2,7 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { openPopup } from '@things-factory/layout-base'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../components/import-pop-up'
@@ -97,22 +98,22 @@ class TransportVehicle extends localize(i18next)(PageView) {
   pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('label.reg_number'),
+        label: i18next.t('field.reg_number'),
         name: 'regNumber',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.reg_number') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('label.size'),
+        label: i18next.t('field.size'),
         name: 'size',
         type: 'text',
-        props: { searchOper: 'eq', placeholder: i18next.t('label.size') }
+        props: { searchOper: 'eq' }
       },
       {
-        label: i18next.t('label.status'),
+        label: i18next.t('field.status'),
         name: 'status',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.status') }
+        props: { searchOper: 'like' }
       }
     ]
 
@@ -219,7 +220,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
       query: gql`
         query {
           transportVehicles(${gqlBuilder.buildArgs({
-            filters: this._conditionParser(),
+            filters: this.searchForm.queryFilters,
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -277,26 +278,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
         })
       )
     }
-  }
-
-  _conditionParser() {
-    return this.searchForm
-      .getFields()
-      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
-      .map(field => {
-        return {
-          name: field.name,
-          value:
-            field.type === 'text'
-              ? field.value
-              : field.type === 'checkbox'
-              ? field.checked
-              : field.type === 'number'
-              ? parseFloat(field.value)
-              : field.value,
-          operator: field.getAttribute('searchOper')
-        }
-      })
   }
 
   async _saveTransportVehicle() {

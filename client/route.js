@@ -3,7 +3,11 @@ import { isMobileDevice } from '@things-factory/shell'
 export default function route(page) {
   switch (page) {
     case '':
-      return isMobileDevice() ? '/menu-list' : '/board-viewer/872a1e69-7acb-45a1-a914-87dfb0d295b4' //'/opa-home'
+      return isMobileDevice() ? '/menu-list' : '/dashboard'
+
+    case 'dashboard':
+      import('./pages/dashboard')
+      return page
 
     /**
      * Master Menus Section
@@ -50,14 +54,6 @@ export default function route(page) {
 
     case 'locations':
       import('./pages/master/location-list')
-      return page
-
-    case 'transport_summary_reports':
-      import('./pages/billing/transport-summary-report')
-      return page
-
-    case 'inventory_summary_reports':
-      import('./pages/master/inventory-summary-report')
       return page
 
     /**
@@ -113,6 +109,10 @@ export default function route(page) {
 
     case 'receive_release_order_request':
       import('./pages/order/release-order/receive-release-order-request')
+      return page
+
+    case 'execute_release_order':
+      import('./pages/order/release-order/execute-release-order')
       return page
 
     case 'rejected_release_order':
@@ -191,26 +191,46 @@ export default function route(page) {
       import('./pages/order/collection-order/completed-collection-order')
       return page
 
-    case 'vas_orders':
-      import('./pages/order/vas-order-list')
-      return page
+      case 'vas_orders':
+        import('./pages/order/vas-order/vas-order-list')
+        return page
+  
+      case 'vas_requests':
+        import('./pages/order/vas-order/vas-order-requests')
+        return page
+  
+      case 'create_vas_order':
+        import('./pages/order/vas-order/create-vas-order')
+        return page
+  
+      case 'confirm_vas_order':
+        import('./pages/order/vas-order/confirm-vas-order')
+        return page
+  
+      case 'vas_order_detail':
+        import('./pages/order/vas-order/vas-order-detail')
+        return page
+  
+      case 'rejected_vas_order':
+        import('./pages/order/vas-order/rejected-vas-order')
+        return page
 
     /**
-     * Order Menus Section
+     * Billing Menus Section
      */
     case 'create_claim_chit':
       import('./pages/billing/create-claim-chit')
       return page
 
     /**
-     * Stock Menus Section
+     * Inventory Menus Section
      */
-    case 'onhand_stock':
-      import('./pages/stock/onhand-stock')
+    case 'onhand_inventory':
+      import('./pages/inventory/onhand-inventory')
       return page
 
-    case 'intransit_stock':
-      import('./pages/stock/intransit-stock')
+    case 'intransit_inventory':
+      import('./pages/inventory/intransit-inventory')
       return page
 
     /**
@@ -300,13 +320,6 @@ export default function route(page) {
 
     case 'picking_unit':
       import('./pages/outbound/picking-by-unit')
-      return page
-
-    /**
-     * Label Menus Section
-     */
-    case 'label_list':
-      import('./pages/label/label-list')
       return page
   }
 }

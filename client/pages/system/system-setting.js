@@ -1,9 +1,11 @@
 import '@things-factory/form-ui'
-import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { store, client, gqlBuilder, navigate, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import { getRenderer, getEditor } from '@things-factory/grist-ui'
+import { fetchBoardSettings } from '../../viewparts/fetch-board-settings'
+import { UPDATE_OPA_APP_SETTINGS } from '../../actions/opa-app-settings'
 
 class SystemSetting extends localize(i18next)(PageView) {
   static get styles() {
@@ -92,18 +94,21 @@ class SystemSetting extends localize(i18next)(PageView) {
     this._searchFields = [
       {
         name: 'name',
+        label: i18next.t('field.name'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like' }
       },
       {
         name: 'description',
+        label: i18next.t('field.description'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.description') }
+        props: { searchOper: 'like' }
       },
       {
         name: 'category',
+        label: i18next.t('field.category'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.category') }
+        props: { searchOper: 'like' }
       }
     ]
 
@@ -130,10 +135,10 @@ class SystemSetting extends localize(i18next)(PageView) {
           width: 200
         },
         {
-          type: 'string',
+          type: 'code',
           name: 'category',
           header: i18next.t('field.category'),
-          record: { editable: true, align: 'left' },
+          record: { editable: true, align: 'center', codeName: 'SETTING_CATEGORIES' },
           sortable: true,
           width: 150
         },
@@ -141,11 +146,33 @@ class SystemSetting extends localize(i18next)(PageView) {
           type: 'string',
           name: 'value',
           header: i18next.t('field.value'),
-          record: { editable: true, align: 'left' },
+          record: {
+            editor: function(value, column, record, rowIndex, field) {
+              return getEditor(record.category)(value, column, record, rowIndex, field)
+            },
+            renderer: function(value, column, record, rowIndex, field) {
+              return getRenderer(record.category)(value, column, record, rowIndex, field)
+            },
+            editable: true,
+            align: 'left'
+          },
           sortable: true,
           width: 180
         },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'edit',
+          handlers: {
+            click: function(columns, data, column, record, rowIndex, field) {
+              var { category, value } = record
 
+              if (category == 'board' && value) {
+                navigate(`board-modeller/${value}`)
+              }
+            }
+          }
+        },
         {
           type: 'datetime',
           name: 'updatedAt',
@@ -179,7 +206,7 @@ class SystemSetting extends localize(i18next)(PageView) {
       query: gql`
         query {
           settings(${gqlBuilder.buildArgs({
-            filters: this._conditionParser(),
+            filters: this.searchForm.queryFilters,
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -208,26 +235,6 @@ class SystemSetting extends localize(i18next)(PageView) {
     }
   }
 
-  _conditionParser() {
-    return this.searchForm
-      .getFields()
-      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
-      .map(field => {
-        return {
-          name: field.name,
-          value:
-            field.type === 'text'
-              ? field.value
-              : field.type === 'checkbox'
-              ? field.checked
-              : field.type === 'number'
-              ? parseFloat(field.value)
-              : field.value,
-          operator: field.getAttribute('searchOper')
-        }
-      })
-  }
-
   async _saveSetting() {
     let patches = this.dataGrist.dirtyRecords
     if (patches && patches.length) {
@@ -254,7 +261,10 @@ class SystemSetting extends localize(i18next)(PageView) {
           `
       })
 
-      if (!response.errors) this.dataGrist.fetch()
+      if (!response.errors) {
+        this.dataGrist.fetch()
+        this._loadOpaAppSettings()
+      }
     }
   }
 
@@ -269,7 +279,10 @@ class SystemSetting extends localize(i18next)(PageView) {
           `
       })
 
-      if (!response.errors) this.dataGrist.fetch()
+      if (!response.errors) {
+        this.dataGrist.fetch()
+        this._loadOpaAppSettings()
+      }
     }
   }
 
@@ -292,6 +305,18 @@ class SystemSetting extends localize(i18next)(PageView) {
           record[column.name] = item[column.name]
           return record
         }, {})
+    })
+  }
+
+  async _loadOpaAppSettings() {
+    var settings = await fetchBoardSettings()
+
+    store.dispatch({
+      type: UPDATE_OPA_APP_SETTINGS,
+      settings: settings.reduce((settings, setting) => {
+        settings[setting.name] = setting
+        return settings
+      }, {})
     })
   }
 }

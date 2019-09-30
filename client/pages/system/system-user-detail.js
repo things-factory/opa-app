@@ -57,17 +57,20 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
         <h2>${i18next.t('title.user')}</h2>
         <form class="multi-column-form">
           <fieldset>
-            <label>${i18next.t('label.domain')}</label>
+            <label>${i18next.t('field.domain')}</label>
             <input name="domain" readonly />
 
-            <label>${i18next.t('label.name')}</label>
+            <label>${i18next.t('field.name')}</label>
             <input name="name" required />
 
-            <label>${i18next.t('label.description')}</label>
+            <label>${i18next.t('field.description')}</label>
             <input name="description" />
 
-            <label>${i18next.t('label.email')}</label>
+            <label>${i18next.t('field.email')}</label>
             <input name="email" required />
+
+            <label>${i18next.t('field.user_type')}</label>
+            <input name="userType" required />
           </fieldset>
         </form>
       </div>
@@ -196,6 +199,7 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
             name
             description
             email
+            userType
             roles {
               id
               name
@@ -238,6 +242,7 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
               name
               description
               email
+              userType
               roles {
                 id
                 name
@@ -271,6 +276,7 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
         name: this._getInputByName('name').value,
         description: this._getInputByName('description').value,
         email: this._getInputByName('email').value,
+        userType: this._getInputByName('userType').value,
         roles: this._getCheckedRoles()
       }
     } else {

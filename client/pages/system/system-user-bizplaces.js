@@ -74,25 +74,25 @@ class SystemUserBizplaces extends connect(store)(localize(i18next)(PageView)) {
     this._searchFields = [
       {
         name: 'name',
+        label: i18next.t('field.name'),
         type: 'text',
         props: {
-          placeholder: i18next.t('field.name'),
           searchOper: 'like'
         }
       },
       {
         name: 'description',
+        label: i18next.t('field.description'),
         type: 'text',
         props: {
-          placeholder: i18next.t('field.description'),
           searchOper: 'like'
         }
       },
       {
         name: 'email',
+        label: i18next.t('field.email'),
         type: 'text',
         props: {
-          placeholder: i18next.t('field.email'),
           searchOper: 'like'
         }
       }
@@ -183,7 +183,7 @@ class SystemUserBizplaces extends connect(store)(localize(i18next)(PageView)) {
       query: gql`
         query {
           users(${gqlBuilder.buildArgs({
-            filters: this._conditionParser(),
+            filters: this.searchForm.queryFilters,
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -221,26 +221,6 @@ class SystemUserBizplaces extends connect(store)(localize(i18next)(PageView)) {
         records: []
       }
     }
-  }
-
-  _conditionParser() {
-    return this.searchForm
-      .getFields()
-      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
-      .map(field => {
-        return {
-          name: field.name,
-          value:
-            field.type === 'text'
-              ? field.value
-              : field.type === 'checkbox'
-              ? field.checked
-              : field.type === 'number'
-              ? parseFloat(field.value)
-              : field.value,
-          operator: field.getAttribute('searchOper')
-        }
-      })
   }
 }
 

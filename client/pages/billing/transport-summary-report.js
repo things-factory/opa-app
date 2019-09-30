@@ -7,6 +7,7 @@ import { client, gqlBuilder, isMobileDevice, PageView, store, flattenObject } fr
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
+import jsPDF from 'jspdf'
 
 class TransportSummaryReport extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -99,11 +100,10 @@ class TransportSummaryReport extends connect(store)(localize(i18next)(PageView))
     this._orders = { ...(await this.fetchOrderList()) }
     this._searchFields = [
       {
-        label: i18next.t('label.driver_name'),
+        label: i18next.t('field.driver_name'),
         name: 'driver_name',
         props: {
-          searchOper: 'like',
-          placeholder: i18next.t('label.driver_name')
+          searchOper: 'like'
         }
       },
       {
@@ -152,16 +152,16 @@ class TransportSummaryReport extends connect(store)(localize(i18next)(PageView))
       },
 
       {
-        label: i18next.t('start_date'),
+        label: i18next.t('field.start_date'),
         name: 'startDate',
         type: 'datetime-local',
-        props: { searchOper: 'like', placeholder: i18next.t('label.start_date') }
+        props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('end_date'),
+        label: i18next.t('field.end_date'),
         name: 'endDate',
         type: 'datetime-local',
-        props: { searchOper: 'like', placeholder: i18next.t('label.end_date') }
+        props: { searchOper: 'like' }
       }
     ]
     this._claimDetailGristConfig = {
@@ -236,6 +236,7 @@ class TransportSummaryReport extends connect(store)(localize(i18next)(PageView))
           <label>${i18next.t('label.total_amount')}</label>
           <input name="totalPrice" />
         </fieldset>
+        <script src="https://unpkg.com/jspdf@latest/dist/jspdf.min.js"></script>
       </form>
     `
   }

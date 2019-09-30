@@ -83,11 +83,13 @@ class WorksheetList extends localize(i18next)(PageView) {
     this._searchFields = [
       {
         name: 'name',
+        label: i18next.t('field.name'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like' }
       },
       {
         name: 'type',
+        label: i18next.t('label.type'),
         type: 'select',
         options: [
           { value: '' },
@@ -96,10 +98,11 @@ class WorksheetList extends localize(i18next)(PageView) {
             return { name: i18next.t(`label.${types.name}`), value: types.value }
           })
         ],
-        props: { searchOper: 'eq', placeholder: i18next.t('label.type') }
+        props: { searchOper: 'eq' }
       },
       {
         name: 'status',
+        label: i18next.t('label.status'),
         type: 'select',
         options: [
           { value: '' },
@@ -108,7 +111,7 @@ class WorksheetList extends localize(i18next)(PageView) {
             return { name: i18next.t(`label.${status.name}`), value: status.value }
           })
         ],
-        props: { searchOper: 'eq', placeholder: i18next.t('label.status') }
+        props: { searchOper: 'eq' }
       }
     ]
 
@@ -122,30 +125,19 @@ class WorksheetList extends localize(i18next)(PageView) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              if (
-                record.id &&
-                record.type === WORKSHEET_TYPE.UNLOADING.value &&
-                record.status === WORKSHEET_STATUS.DEACTIVATED.value
-              ) {
+              if (!record.id) return
+              const type = record.type
+
+              // Handle UNLOADING
+              if (type === WORKSHEET_TYPE.UNLOADING.value) {
                 navigate(`worksheet_unloading/${record.name}`)
-              } else if (
-                record.id &&
-                record.type === WORKSHEET_TYPE.PUTAWAY.value &&
-                record.status === WORKSHEET_STATUS.DEACTIVATED.value
-              ) {
+
+                // Handle PUTAWAY
+              } else if (type === WORKSHEET_TYPE.PUTAWAY.value) {
                 navigate(`worksheet_putaway/${record.name}`)
-              } else if (
-                record.id &&
-                record.type === WORKSHEET_TYPE.VAS.value &&
-                record.status === WORKSHEET_STATUS.DEACTIVATED.value
-              ) {
+                // Handle VAS
+              } else if (type === WORKSHEET_TYPE.VAS.value) {
                 navigate(`worksheet_vas/${record.name}`)
-              } else if (record.id && record.status === WORKSHEET_STATUS.EXECUTING.value) {
-                document.dispatchEvent(
-                  new CustomEvent('notify', {
-                    detail: { message: 'Showing status of current worksheet' }
-                  })
-                )
               }
             }
           }
@@ -205,6 +197,22 @@ class WorksheetList extends localize(i18next)(PageView) {
           record: { align: 'center' },
           sortable: true,
           width: 160
+        },
+        {
+          type: 'datetime',
+          name: 'updatedAt',
+          header: i18next.t('field.updated_at'),
+          record: { editable: false, align: 'center' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'object',
+          name: 'updater',
+          header: i18next.t('field.updater'),
+          record: { editable: false, align: 'center' },
+          sortable: true,
+          width: 150
         }
       ]
     }
@@ -223,7 +231,7 @@ class WorksheetList extends localize(i18next)(PageView) {
       query: gql`
         query {
           worksheets(${gqlBuilder.buildArgs({
-            filters: this._conditionParser(),
+            filters: this.searchForm.queryFilters,
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -244,6 +252,11 @@ class WorksheetList extends localize(i18next)(PageView) {
               status
               startedAt
               endedAt
+              updatedAt
+              updater {
+                name
+                description
+              }
             }
             total
           }
@@ -257,26 +270,6 @@ class WorksheetList extends localize(i18next)(PageView) {
         records: response.data.worksheets.items || []
       }
     }
-  }
-
-  _conditionParser() {
-    return this.searchForm
-      .getFields()
-      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
-      .map(field => {
-        return {
-          name: field.name,
-          value:
-            field.type === 'text'
-              ? field.value
-              : field.type === 'checkbox'
-              ? field.checked
-              : field.type === 'number'
-              ? parseFloat(field.value)
-              : field.value,
-          operator: field.getAttribute('searchOper')
-        }
-      })
   }
 
   get _columns() {

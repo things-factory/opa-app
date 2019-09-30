@@ -62,7 +62,7 @@ class SystemMenu extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.menu'),
+      title: i18next.t('title.menu_management'),
       actions: [
         {
           title: i18next.t('button.save'),
@@ -86,13 +86,15 @@ class SystemMenu extends localize(i18next)(PageView) {
     this._searchFields = [
       {
         name: 'name',
+        label: i18next.t('label.name'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like' }
       },
       {
         name: 'description',
+        label: i18next.t('label.description'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.description') }
+        props: { searchOper: 'like' }
       }
     ]
 
@@ -177,7 +179,7 @@ class SystemMenu extends localize(i18next)(PageView) {
       query: gql`
         query {
           menus(${gqlBuilder.buildArgs({
-            filters: [...this._conditionParser(), { name: 'menuType', operator: 'eq', value: 'MENU' }],
+            filters: [...this.searchForm.queryFilters, { name: 'menuType', operator: 'eq', value: 'MENU' }],
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -204,26 +206,6 @@ class SystemMenu extends localize(i18next)(PageView) {
       total: response.data.menus.total || 0,
       records: response.data.menus.items || []
     }
-  }
-
-  _conditionParser() {
-    return this.searchForm
-      .getFields()
-      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
-      .map(field => {
-        return {
-          name: field.name,
-          value:
-            field.type === 'text'
-              ? field.value
-              : field.type === 'checkbox'
-              ? field.checked
-              : field.type === 'number'
-              ? parseFloat(field.value)
-              : field.value,
-          operator: field.getAttribute('searchOper')
-        }
-      })
   }
 
   async _saveMenus() {
@@ -274,12 +256,12 @@ class SystemMenu extends localize(i18next)(PageView) {
   _openMenuDetail(menuId, menuName) {
     openPopup(
       html`
-        <system-menu-detail .menuId="${menuId}" .menuName="${menuName}"></system-menu-detail>
+        <system-menu-detail .menuId=${menuId} .menuName=${menuName}></system-menu-detail>
       `,
       {
         backdrop: true,
         size: 'large',
-        title: i18next.t('title.system_menu_detail')
+        title: `${i18next.t('title.system_menu_detail')} - ${menuName}`
       }
     )
   }

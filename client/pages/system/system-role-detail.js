@@ -53,7 +53,7 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
   render() {
     return html`
       <div>
-        <h2>${this.name}</h2>
+        <h2>${i18next.t('title.role')}</h2>
         <form class="multi-column-form">
           <fieldset>
             <label>${i18next.t('label.name')}</label>

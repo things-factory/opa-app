@@ -1,13 +1,11 @@
 import { i18next, localize } from '@things-factory/i18n-base'
 import { css, html, LitElement } from 'lit-element'
 
-class RejectionNote extends localize(i18next)(LitElement) {
+class PopupNote extends localize(i18next)(LitElement) {
   static get properties() {
     return {
-      userId: String,
-      email: String,
-      userInfo: Object,
-      roleConfig: Object
+      title: String,
+      value: String
     }
   }
 
@@ -47,14 +45,24 @@ class RejectionNote extends localize(i18next)(LitElement) {
     ]
   }
 
-  get remarkTextarea() {
+  get textarea() {
     return this.shadowRoot.querySelector('textarea')
+  }
+
+  firstUpdated() {
+    setTimeout(() => this.textarea.focus(), 100)
+  }
+
+  updated(changedProps) {
+    if (changedProps.has('value')) {
+      this.textarea.value = this.value
+    }
   }
 
   render() {
     return html`
       <div class="container">
-        <h2>${i18next.t('title.remark')}</h2>
+        <h2>${this.title}</h2>
         <textarea></textarea>
       </div>
 
@@ -64,10 +72,12 @@ class RejectionNote extends localize(i18next)(LitElement) {
             this.dispatchEvent(
               new CustomEvent('submit', {
                 detail: {
-                  remark: this.remarkTextarea.value
+                  value: this.textarea.value
                 }
               })
             )
+
+            history.back()
           }}"
           >${i18next.t('button.confirm')}</mwc-button
         >
@@ -76,4 +86,4 @@ class RejectionNote extends localize(i18next)(LitElement) {
   }
 }
 
-window.customElements.define('rejection-note', RejectionNote)
+window.customElements.define('popup-note', PopupNote)

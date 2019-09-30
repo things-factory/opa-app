@@ -58,14 +58,14 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
 
   render() {
     return html`
-      <h2>${i18next.t('title.menu')} ${this.menuName}</h2>
-
+      <h2>${i18next.t('title.menu')}</h2>
       <search-form
         id="search-form"
         .fields=${this._searchFields}
         @submit=${async () => this.dataGrist.fetch()}
       ></search-form>
 
+      <h2>${i18next.t('title.submenus')}</h2>
       <div class="grist">
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
@@ -85,23 +85,27 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
     this._searchFields = [
       {
         name: 'name',
+        label: i18next.t('field.name'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'like' }
       },
       {
         name: 'description',
+        label: i18next.t('field.description'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.description') }
+        props: { searchOper: 'like' }
       },
       {
         name: 'template',
+        label: i18next.t('field.template'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.template') }
+        props: { searchOper: 'like' }
       },
       {
         name: 'resourceUrl',
+        label: i18next.t('field.resource_url'),
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.resource_url') }
+        props: { searchOper: 'like' }
       }
     ]
 
@@ -223,7 +227,7 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
       query: gql`
         query {
           menus(${gqlBuilder.buildArgs({
-            filters: [...this._conditionParser(), { name: 'parent', operator: 'eq', value: this.menuId }],
+            filters: [...this.searchForm.queryFilters, { name: 'parent', operator: 'eq', value: this.menuId }],
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -258,26 +262,6 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
       total: response.data.menus.total || 0,
       records: response.data.menus.items || []
     }
-  }
-
-  _conditionParser() {
-    return this.searchForm
-      .getFields()
-      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
-      .map(field => {
-        return {
-          name: field.name,
-          value:
-            field.type === 'text'
-              ? field.value
-              : field.type === 'checkbox'
-              ? field.checked
-              : field.type === 'number'
-              ? parseFloat(field.value)
-              : field.value,
-          operator: field.getAttribute('searchOper')
-        }
-      })
   }
 
   async _saveMenus() {
