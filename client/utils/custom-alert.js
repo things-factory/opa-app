@@ -44,8 +44,9 @@ export function CustomAlert({
 }) {
   try {
     if (debug) {
+      let arrTypes = ['success', 'error', 'warning', 'info', 'question']
       let err = ''
-      if (!availableType.includes(type)) {
+      if (!arrTypes.includes(type)) {
         err = err + 'Invalid Alert Type.\n'
       }
 
