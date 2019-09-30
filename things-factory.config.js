@@ -215,10 +215,22 @@ export default {
     /**
      * Order Menus Section
      */
+
+    /**
+     * Billing Menus Section
+     */
     {
       tagname: 'create-claim-chit',
       page: 'create_claim_chit'
     },
+    {
+      tagname: 'claim-chit-list',
+      page: 'claim_chit_list'
+    },
+
+    /**
+     * Billing Menus Section
+     */
 
     /**
      * inventory Menus Section
