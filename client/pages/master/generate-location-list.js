@@ -126,12 +126,18 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
       </form>
 
       <div class="grist">
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.generator')}</h2>
+
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
           .data=${this.data}
           @record-change="${this._onChangeHandler.bind(this)}"
         ></data-grist>
+      </div>
+
+      <div class="grist">
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.preview')}</h2>
 
         <data-grist
           id="preview_grist"

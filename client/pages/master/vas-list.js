@@ -299,7 +299,7 @@ class VasList extends localize(i18next)(PageView) {
 
   async _deleteVas() {
     Swal.fire({
-      title: i18next.t('text.are_you_sure?'),
+      title: i18next.t('text.are_you_sure'),
       text: i18next.t('text.you_wont_be_able_to_revert_this!'),
       type: 'warning',
       showCancelButton: true,
