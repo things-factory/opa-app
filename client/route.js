@@ -191,35 +191,38 @@ export default function route(page) {
       import('./pages/order/collection-order/completed-collection-order')
       return page
 
-      case 'vas_orders':
-        import('./pages/order/vas-order/vas-order-list')
-        return page
-  
-      case 'vas_requests':
-        import('./pages/order/vas-order/vas-order-requests')
-        return page
-  
-      case 'create_vas_order':
-        import('./pages/order/vas-order/create-vas-order')
-        return page
-  
-      case 'confirm_vas_order':
-        import('./pages/order/vas-order/confirm-vas-order')
-        return page
-  
-      case 'vas_order_detail':
-        import('./pages/order/vas-order/vas-order-detail')
-        return page
-  
-      case 'rejected_vas_order':
-        import('./pages/order/vas-order/rejected-vas-order')
-        return page
+    case 'vas_orders':
+      import('./pages/order/vas-order/vas-order-list')
+      return page
+
+    case 'vas_requests':
+      import('./pages/order/vas-order/vas-order-requests')
+      return page
+
+    case 'create_vas_order':
+      import('./pages/order/vas-order/create-vas-order')
+      return page
+
+    case 'confirm_vas_order':
+      import('./pages/order/vas-order/confirm-vas-order')
+      return page
+
+    case 'vas_order_detail':
+      import('./pages/order/vas-order/vas-order-detail')
+      return page
+
+    case 'rejected_vas_order':
+      import('./pages/order/vas-order/rejected-vas-order')
+      return page
 
     /**
      * Billing Menus Section
      */
     case 'create_claim_chit':
-      import('./pages/billing/create-claim-chit')
+      import('./pages/claim-chit/billing/create-claim-chit')
+      return page
+    case 'claim_chit_list':
+      import('./pages/claim-chit/billing/claim-chit-list')
       return page
 
     /**
