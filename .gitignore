@@ -8,4 +8,6 @@ db.sqlite
 ormconfig.js
 .DS_Store
 .vscode
+.pid
 db.sqlite-journal
+nohup.out
