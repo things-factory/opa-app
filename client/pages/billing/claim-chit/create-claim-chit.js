@@ -1,5 +1,5 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
-import { TRIP_CLAIM } from './constants/claim'
+import { TRIP_CLAIM } from '../constants/claim'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -207,6 +207,12 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
         ></data-grist>
       </div>
     `
+  }
+
+  async pageUpdated(changes, lifecycle) {
+    if (this.active) {
+      this._orders = { ...(await this.fetchOrderList()) }
+    }
   }
 
   updated(changes) {

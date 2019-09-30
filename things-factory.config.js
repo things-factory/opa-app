@@ -8,6 +8,10 @@ export default {
      * Master Menus Section
      */
     {
+      tagname: 'opa-dashboard',
+      page: 'dashboard'
+    },
+    {
       tagname: 'company-list',
       page: 'companies'
     },
@@ -50,14 +54,6 @@ export default {
     {
       tagname: 'location-list',
       page: 'locations'
-    },
-    {
-      tagname: 'transport-summary-report',
-      page: 'transport_summary_reports'
-    },
-    {
-      tagname: 'inventory-summary-report',
-      page: 'inventory_summary_reports'
     },
 
     /**
@@ -114,6 +110,10 @@ export default {
     {
       tagname: 'receive-release-order-request',
       page: 'receive_release_order_request'
+    },
+    {
+      tagname: 'execute-release-order',
+      page: 'execute_release_order'
     },
     {
       tagname: 'rejected-release-order',
@@ -192,28 +192,56 @@ export default {
       page: 'collection_orders'
     },
     {
-      tagname: 'vas-order-list',
-      page: 'vas_orders'
+      tagname: 'vas-order-requests',
+      page: 'vas_requests'
+    },
+    {
+      tagname: 'create-vas-order',
+      page: 'create_vas_order'
+    },
+    {
+      tagname: 'confirm-vas-order',
+      page: 'confirm_vas_order'
+    },
+    {
+      tagname: 'vas-order-detail',
+      page: 'vas_order_detail'
+    },
+    {
+      tagname: 'rejected-vas-order',
+      page: 'rejected_vas_order'
     },
 
     /**
      * Order Menus Section
      */
+
+    /**
+     * Billing Menus Section
+     */
     {
       tagname: 'create-claim-chit',
       page: 'create_claim_chit'
     },
+    {
+      tagname: 'claim-chit-list',
+      page: 'claim_chit_list'
+    },
 
     /**
-     * Stock Menus Section
+     * Billing Menus Section
+     */
+
+    /**
+     * inventory Menus Section
      */
     {
-      tagname: 'onhand-stock',
-      page: 'onhand_stock'
+      tagname: 'onhand-inventory',
+      page: 'onhand_inventory'
     },
     {
-      tagname: 'intransit-stock',
-      page: 'intransit_stock'
+      tagname: 'intransit-inventory',
+      page: 'intransit_inventory'
     },
 
     /**
@@ -305,18 +333,6 @@ export default {
     {
       tagname: 'picking-by-unit',
       page: 'picking_unit'
-    },
-
-    /**
-     * Label Menus Section
-     */
-    {
-      tagname: 'label-list',
-      page: 'label_list'
-    },
-    {
-      tagname: 'relabel',
-      page: 'relabel'
     }
   ],
   bootstrap
