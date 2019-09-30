@@ -649,12 +649,11 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       const seq = idx + 1
 
       return {
-        name: record.name,
         releaseQty: record.releaseQty,
         seq,
         inventory: {
           id: '',
-          name: record.inventoryName
+          name: record.name
         },
         type: ORDER_TYPES.RELEASE_OF_GOODS.value,
         status: ORDER_PRODUCT_STATUS.PENDING.value
