@@ -1,10 +1,15 @@
 import { addRoutingType, updateMenuProvider } from '@things-factory/menu-base'
-import { client, store, UPDATE_BASE_URL } from '@things-factory/shell'
+import { client, store, navigate, isMobileDevice, UPDATE_BASE_URL } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { UPDATE_OPA_APP_SETTINGS, CLEAR_OPA_APP_SETTINGS } from './actions/opa-app-settings'
 import opaApp from './reducers/opa-app-settings'
 import { fetchBoardSettings } from './viewparts/fetch-board-settings'
 import { auth } from '@things-factory/auth-base'
+import { TOOL_POSITION } from '@things-factory/layout-base'
+import { APPEND_APP_TOOL } from '@things-factory/apptool-base'
+
+import { html } from 'lit-html'
+import '@material/mwc-icon'
 
 export default function bootstrap() {
   store.addReducers({
@@ -46,16 +51,6 @@ export default function bootstrap() {
     // baseUrl: 'http://opaone.com'
   })
 
-  // store.dispatch({
-  //   type: ADD_SETTING,
-  //   setting: {
-  //     seq: 100,
-  //     template: html`
-  //       <label-setting-let></label-setting-let>
-  //     `
-  //   }
-  // })
-
   store.dispatch(
     updateMenuProvider(async () => {
       const response = await client.query({
@@ -82,4 +77,16 @@ export default function bootstrap() {
       return response.data.menus
     })
   )
+
+  if (isMobileDevice()) {
+    store.dispatch({
+      type: APPEND_APP_TOOL,
+      tool: {
+        template: html`
+          <mwc-icon @click=${e => navigate('dashboard')}>insert_chart</mwc-icon>
+        `,
+        position: TOOL_POSITION.REAR
+      }
+    })
+  }
 }
