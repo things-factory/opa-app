@@ -126,7 +126,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
     ]
 
     this.config = {
-      rows: { selectable: { multiple: true } },
+      rows: { appendable: false, selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
