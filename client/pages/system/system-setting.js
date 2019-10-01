@@ -22,11 +22,14 @@ class SystemSetting extends localize(i18next)(PageView) {
         search-form {
           overflow: visible;
         }
+
         .grist {
           display: flex;
           flex-direction: column;
           flex: 1;
+          overflow-y: auto;
         }
+
         data-grist {
           overflow-y: hidden;
           flex: 1;

@@ -169,7 +169,7 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
           name: 'batchId',
           header: i18next.t('field.batch_id'),
           record: {
-            align: 'center',
+            align: 'left',
             options: { queryName: 'products' }
           },
           width: 150
@@ -179,7 +179,7 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
           name: 'product',
           header: i18next.t('field.product'),
           record: {
-            align: 'center',
+            align: 'left',
             options: { queryName: 'products' }
           },
           width: 350
@@ -255,7 +255,7 @@ class CollectionOrderDetail extends connect(store)(localize(i18next)(PageView)) 
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           width: 180
         },
         {

@@ -6,7 +6,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { openPopup } from '@things-factory/layout-base'
 import '../components/import-pop-up'
-import Swal from 'sweetalert2'
+import { CustomAlert } from '../../utils/custom-alert'
 
 class CompanyList extends localize(i18next)(PageView) {
   static get styles() {
@@ -355,35 +355,33 @@ class CompanyList extends localize(i18next)(PageView) {
   }
 
   async _deleteCompanies() {
-    Swal.fire({
+    CustomAlert({
       title: i18next.t('text.are_you_sure'),
       text: i18next.t('text.you_wont_be_able_to_revert_this!'),
       type: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#22a6a7',
-      cancelButtonColor: '#cfcfcf',
-      confirmButtonText: i18next.t('button.delete')
-    }).then(async result => {
-      if (result.value) {
-        const names = this.dataGrist.selected.map(record => record.name)
-        if (names && names.length > 0) {
-          const response = await client.query({
-            query: gql`
-            mutation {
-              deleteCompanies(${gqlBuilder.buildArgs({ names })})
-            }
-          `
-          })
-
-          if (!response.errors) {
-            this.dataGrist.fetch()
-            document.dispatchEvent(
-              new CustomEvent('notify', {
-                detail: {
-                  message: i18next.t('text.data_deleted_successfully')
+      confirmButton: { text: i18next.t('button.delete'), color: '#22a6a7' },
+      cancelButton: { text: 'cancel', color: '#cfcfcf' },
+      callback: async result => {
+        if (result.value) {
+          const names = this.dataGrist.selected.map(record => record.name)
+          if (names && names.length > 0) {
+            const response = await client.query({
+              query: gql`
+                mutation {
+                  deleteCompanies(${gqlBuilder.buildArgs({ names })})
                 }
-              })
-            )
+              `
+            })
+            if (!response.errors) {
+              this.dataGrist.fetch()
+              document.dispatchEvent(
+                new CustomEvent('notify', {
+                  detail: {
+                    message: i18next.t('text.data_deleted_successfully')
+                  }
+                })
+              )
+            }
           }
         }
       }
