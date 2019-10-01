@@ -157,7 +157,10 @@ class SystemSetting extends localize(i18next)(PageView) {
               return getRenderer(record.category)(value, column, record, rowIndex, field)
             },
             editable: true,
-            align: 'left'
+            align: 'left',
+            options: {
+              boardViewerPage: 'board'
+            }
           },
           sortable: true,
           width: 180
