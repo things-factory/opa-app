@@ -62,9 +62,9 @@ class VasOrderRequests extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.vas_order_requests'),
+      title: i18next.t('title.vas_orders'),
       exportable: {
-        name: i18next.t('title.vas_order_requests'),
+        name: i18next.t('title.vas_orders'),
         data: this._exportableData.bind(this)
       },
       importable: {
@@ -73,7 +73,7 @@ class VasOrderRequests extends localize(i18next)(PageView) {
     }
   }
 
-  pageUpdated(changes, lifecycle) {
+  pageUpdated(changed, lifecycle) {
     if (this.active) {
       this.dataGrist.fetch()
     }
@@ -82,7 +82,7 @@ class VasOrderRequests extends localize(i18next)(PageView) {
   pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('field.gan'),
+        label: i18next.t('field.vas_order_no'),
         name: 'name',
         type: 'text',
         props: { searchOper: 'like' }
@@ -93,10 +93,12 @@ class VasOrderRequests extends localize(i18next)(PageView) {
         type: 'select',
         options: [
           { value: '' },
-          { name: i18next.t(`label.${ORDER_STATUS.PENDING.name}`), value: ORDER_STATUS.PENDING.value },
-          { name: i18next.t(`label.${ORDER_STATUS.EDITING.name}`), value: ORDER_STATUS.EDITING.value },
-          { name: i18next.t(`label.${ORDER_STATUS.REJECTED.name}`), value: ORDER_STATUS.REJECTED.value },
-          { name: i18next.t(`label.${ORDER_STATUS.PROCESSING.name}`), value: ORDER_STATUS.PROCESSING.value },
+          { name: i18next.t(`label.${ORDER_STATUS.PENDING_RECEIVE.name}`), value: ORDER_STATUS.PENDING_RECEIVE.value },
+          {
+            name: i18next.t(`label.${ORDER_STATUS.RECEIVED.name}`),
+            value: ORDER_STATUS.READY_TO_EXECUTE.value
+          },
+          { name: i18next.t(`label.${ORDER_STATUS.EXECUTING.name}`), value: ORDER_STATUS.EXECUTING.value },
           { name: i18next.t(`label.${ORDER_STATUS.DONE.name}`), value: ORDER_STATUS.DONE.value }
         ],
         props: { searchOper: 'eq' }
@@ -108,7 +110,6 @@ class VasOrderRequests extends localize(i18next)(PageView) {
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
-        { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'gutter',
           gutterName: 'button',
@@ -116,60 +117,29 @@ class VasOrderRequests extends localize(i18next)(PageView) {
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               const status = record.status
-              if (status === ORDER_STATUS.REJECTED.value) {
-                navigate(`rejected_vas_order/${record.name}`) // 1. move to rejected detail page
-              } else {
-                navigate(`vas_order_detail/${record.name}`)
+              if (status === ORDER_STATUS.PENDING_RECEIVE.value) {
+                navigate(`receive_vas_order_request/${record.name}`) // 1. move to order receiving page
+              } else if (status === ORDER_STATUS.READY_TO_EXECUTE.value) {
+                navigate(`execute_vas_order/${record.name}`) // 2. move to execute page
+              } else if (status === ORDER_STATUS.DONE.value) {
+                navigate(`completed_vas_order/${record.name}`) // 4. move to completed page
               }
             }
           }
         },
         {
-          type: 'object',
-          name: 'vas',
-          header: i18next.t('field.vas'),
-          record: { editable: true, align: 'center', options: { queryName: 'vass' } },
-          sortable: true,
-          width: 250
-        },
-        {
           type: 'string',
           name: 'name',
-          header: i18next.t('field.gan'),
-          record: { editable: true, align: 'center' },
+          header: i18next.t('field.vas_order_no'),
+          record: { align: 'center' },
           sortable: true,
           width: 180
-        },
-
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: { editable: true, align: 'center' },
-          sortable: true,
-          width: 180
-        },
-        {
-          type: 'string',
-          name: 'batchId',
-          header: i18next.t('field.batch_id'),
-          record: { editable: true, align: 'center' },
-          sortable: true,
-          width: 150
-        },
-        {
-          type: 'string',
-          name: 'remark',
-          header: i18next.t('field.remark'),
-          record: { editable: true, align: 'center' },
-          sortable: true,
-          width: 350
         },
         {
           type: 'string',
           name: 'status',
           header: i18next.t('field.status'),
-          record: { editable: true, align: 'center' },
+          record: { align: 'center' },
           sortable: true,
           width: 150
         },
@@ -197,15 +167,19 @@ class VasOrderRequests extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('search-form')
   }
 
-  get dataGrist() {
-    return this.shadowRoot.querySelector('data-grist')
+  get vasGrist() {
+    return this.shadowRoot.querySelector('#vas-grist')
+  }
+
+  get _columns() {
+    return this.config.columns
   }
 
   async fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
         query {
-          orderVass(${gqlBuilder.buildArgs({
+          vasOrders(${gqlBuilder.buildArgs({
             filters: this._conditionParser(),
             pagination: { page, limit },
             sortings: sorters
@@ -213,18 +187,23 @@ class VasOrderRequests extends localize(i18next)(PageView) {
             items{
               id
               name
-              bizplace {
-                id
-              }
-              vas {
-                id
-                name
-                description
+              orderVass {
+                vas {
+                  id
+                  name
+                  description
+                }
+                inventory {
+                  id
+                  name
+                  batchId
+                  location {
+                    name
+                  }
+                }
               }
               status
               description
-              batchId
-              remark
               updatedAt
               updater {
                 id

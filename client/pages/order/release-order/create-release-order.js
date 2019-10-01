@@ -96,7 +96,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
           <fieldset>
             <legend>${i18next.t('title.release_order')}</legend>
             <label>${i18next.t('label.release_date')}</label>
-            <input name="releaseDateTime" type="datetime-local" min="${this._getStdDatetime()}" />
+            <input name="releaseDateTime" type="date" min="${this._getStdDate()}" />
 
             <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
             <input name="collectionOrderNo" ?hidden="${!this._ownTransport}"/>
@@ -108,7 +108,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
             @change=${e => {
               this._shippingOption = e.currentTarget.checked
             }} />
-            <label>${i18next.t('label.shipping_option')}</label>
+            <label>${i18next.t('label.export_option')}</label>
 
             <label ?hidden="${!this._shippingOption}">${i18next.t('label.container_no')}</label>
             <input shipping name="containerNo" ?hidden="${!this._shippingOption}" />
@@ -123,11 +123,11 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
             </select>
 
             <label ?hidden="${!this._shippingOption}">${i18next.t('label.container_arrival_date')}</label>
-            <input shipping name="containerArrivalDate" type="datetime-local" min="${this._getStdDatetime()}"  
+            <input shipping name="containerArrivalDate" type="date" min="${this._getStdDate()}"  
             ?hidden="${!this._shippingOption}" />
 
             <label ?hidden="${!this._shippingOption}">${i18next.t('label.container_leaving_date')}</label>
-            <input shipping name="containerLeavingDate" type="datetime-local" min="${this._getStdDatetime()}" 
+            <input shipping name="containerLeavingDate" type="date" min="${this._getStdDate()}" 
             ?hidden="${!this._shippingOption}" />
 
             <label ?hidden="${!this._shippingOption}">${i18next.t('label.ship_name')}</label>
@@ -139,7 +139,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
             }} />
             <label>${i18next.t('label.own_transport')}</label>
             <label ?hidden="${this._ownTransport}">${i18next.t('label.delivery_date')}</label>
-            <input delivery name="deliveryDateTime" type="datetime-local" min="${this._getStdDatetime()}" ?hidden="${
+            <input delivery name="deliveryDateTime" type="date" min="${this._getStdDate()}" ?hidden="${
       this._ownTransport
     }"/>
 
@@ -405,10 +405,9 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       Array.from(this.form.querySelectorAll('input, textarea, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
-        } else if (field.name === key && field.type === 'datetime-local') {
-          const datetime = Number(data[key])
-          const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
-          field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
+        } else if (field.name === key && field.type === 'date') {
+          const date = Number(data[key])
+          field.value = new Date(date).toISOString().slice(0, -1)
         } else if (field.name === key) {
           field.value = data[key]
         }
@@ -471,10 +470,10 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     }, 300)
   }
 
-  _getStdDatetime() {
+  _getStdDate() {
     let date = new Date()
     date.setDate(date.getDate() + 1)
-    return `${date.toISOString().substr(0, 11)}00:00:00`
+    return `${date.toISOString().substr(0, 11)}`
   }
 
   async _generateReleaseOrder() {

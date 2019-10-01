@@ -185,6 +185,9 @@ class RejectedReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
 
           <label ?hidden="${this._ownTransport}">${i18next.t('label.tel_no')}</label>
           <input delivery name="telNo" ?hidden="${this._ownTransport}" disabled />
+
+          <label>${i18next.t('label.remark')}</label>
+          <textarea name="remark" disabled></textarea>
         </fieldset>
       </form>
 
