@@ -343,7 +343,7 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
           document.dispatchEvent(
             new CustomEvent('notify', {
               detail: {
-                message: i18next.t('text.data_updated_successfully')
+                message: i18next.t('text.data_deleted_successfully')
               }
             })
           )
