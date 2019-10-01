@@ -90,14 +90,14 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
       {
         label: i18next.t('field.eta'),
         name: 'eta',
-        type: 'datetime-local',
-        props: { searchOper: 'like' }
+        type: 'text',
+        props: { searchOper: 'eq' }
       },
       {
         label: i18next.t('field.collection_date'),
-        name: 'collectionDateTime',
-        type: 'datetime-local',
-        props: { searchOper: 'like' }
+        name: 'collectionDate',
+        type: 'text',
+        props: { searchOper: 'eq' }
       },
       {
         label: i18next.t('field.status'),
@@ -153,20 +153,36 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           width: 200
         },
         {
-          type: 'datetime',
-          name: 'eta',
+          type: 'string',
+          name: 'etaDate',
           header: i18next.t('field.eta'),
           record: { align: 'center' },
           sortable: true,
           width: 160
         },
         {
-          type: 'datetime',
-          name: 'collectionDateTime',
-          header: i18next.t('field.collection_date'),
+          type: 'boolean',
+          name: 'ownTransport',
+          header: i18next.t('field.own_transport'),
           record: { align: 'center' },
           sortable: true,
-          width: 160
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'deliveryOrderNo',
+          header: i18next.t('field.delivery_order_no'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'truckNo',
+          header: i18next.t('field.truck_no'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 200
         },
         {
           type: 'string',
@@ -175,14 +191,6 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           record: { align: 'center' },
           sortable: true,
           width: 150
-        },
-        {
-          type: 'string',
-          name: 'deliveryOrderNo',
-          header: i18next.t('field.do_no'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 200
         },
         {
           type: 'object',
@@ -232,23 +240,23 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
             items {
               id
               bizplace {
-                id
                 name
                 description
               }
               name
-              eta
-              collectionDateTime
+              etaDate
               status
+              ownTransport
+              deliveryOrderNo
+              truckNo
               collectionOrder {
                 id
                 name
                 description
+                collectionDate
               }
-              deliveryOrderNo
               updatedAt
               updater {
-                id
                 name
                 description
               }

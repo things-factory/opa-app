@@ -4,26 +4,21 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_C
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES, ORDER_STATUS, PACKING_TYPES, ORDER_TYPES } from '../constants/order'
+import { ORDER_STATUS } from '../constants/order'
 
 class VasOrderDetail extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
-      /**
-       * @description
-       * flag for whether use transportation from warehouse or not.
-       * true =>
-       */
-      _ganNo: String,
-      _ownTransport: Boolean,
-      productGristConfig: Object,
-      config: Object,
-      data: Object
+      _vasNo: String,
+      vasGristConfig: Object,
+      vasData: Object,
+      _status: String
     }
   }
 
   static get styles() {
     return [
+      MultiColumnFormStyles,
       css`
         :host {
           display: flex;
@@ -69,18 +64,18 @@ class VasOrderDetail extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.vas_order_detail'),
-      actions: [
-        {
-          title: i18next.t('button.create'),
-          action: this._generateVasOrder.bind(this)
-        }
-      ]
+      title: i18next.t('title.vas_order_detail')
     }
   }
 
-  get grist() {
+  get vasGrist() {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
+  }
+
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
+      this.fetchVasOrder()
+    }
   }
 
   render() {
@@ -92,19 +87,18 @@ class VasOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           .config=${this.config}
           .data=${this.data}
           .fetchHandler="${this.fetchHandler.bind(this)}"
-          ></data-grist>
+        ></data-grist>
       </div>
     `
   }
 
   constructor() {
     super()
-    this.data = {}
-    this.config = {}
+    this.vasData = {}
   }
 
   pageInitialized() {
-    this.config = {
+    this.vasGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
       columns: [
@@ -115,8 +109,8 @@ class VasOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           icon: 'close',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              this.data = {
-                ...this.data,
+              this.vasData = {
+                ...this.vasData,
                 records: data.records.filter((record, idx) => idx !== rowIndex)
               }
             }
@@ -130,10 +124,24 @@ class VasOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           width: 250
         },
         {
-          type: 'select',
+          type: 'object',
+          name: 'product',
+          header: i18next.t('field.inventory_list'),
+          record: { editable: true, align: 'center' },
+          width: 250
+        },
+        {
+          type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_id'),
-          record: { editable: true, align: 'center', options: ['', i18next.t('label.all')] },
+          record: { align: 'center' },
+          width: 150
+        },
+        {
+          type: 'object',
+          name: 'location',
+          header: i18next.t('field.location'),
+          record: { align: 'center' },
           width: 150
         },
         {
@@ -142,81 +150,99 @@ class VasOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.remark'),
           record: { editable: true, align: 'center' },
           width: 350
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: { editable: true, align: 'center' },
-          width: 350
         }
       ]
     }
   }
-  
-  async fetchHandler({ page, limit, sorters = [] }) {
-    let filters = []
-    if(this._ganNo) {
-      filters.push({
-        name: 'name',
-        operator: 'eq',
-        value: this._ganNo
-      })
-    }
 
+  updated(changedProps) {
+    if (changedProps.has('_vasNo')) {
+      this.fetchVasOrder()
+    }
+  }
+
+  async fetchVasOrder() {
     const response = await client.query({
       query: gql`
         query {
-          orderVass(${gqlBuilder.buildArgs({
-            filters: filters,
-            pagination: { page, limit },
-            sortings: sorters
+          vasOrder(${gqlBuilder.buildArgs({
+            name: this._vasNo
           })}) {
-            items{
-              id
+            id
+            name
+            status
+            inventoryDetail {
               name
-              bizplace {
-                id
-              }
-              vas {
-                id
-                name
-                description
-              }
-              status
-              description
               batchId
-              remark
-              updatedAt
-              updater {
-                id
+              product {
                 name
                 description
               }
-            }   
-            total
+              location {
+                name
+              }
+            }
+            orderVass {
+              vas {
+                name
+                description
+              }
+              description
+              remark
+            }
           }
         }
       `
     })
+
     if (!response.errors) {
-      return {
-        total: response.data.orderVass.total || 0,
-        records: response.data.orderVass.items || []
+      this._status = response.data.vasOrder.status
+      this._actionsHandler()
+
+      this.vasData = {
+        ...this.vasData,
+        records: response.data.vasOrder.orderVass
       }
     }
   }
 
-  updated(changedProps) {
-    if (changedProps.has('_ganNo') && this._ganNo) {
-      this.fetchGAN()
-      this._updateBatchList()
-    } else if (changedProps.has('_ganNo') && !this._ganNo) {
-      this._clearPage()
-      this._updateBatchList()
-    }
+  async _updateVasOrder(patch) {
+    const response = await client.query({
+      query: gql`
+        mutation {
+          updateVasOrder(${gqlBuilder.buildArgs({
+            name: this._vasNo,
+            patch
+          })}) {
+            name 
+          }
+        }
+      `
+    })
 
-    this._contextHandler()
+    if (!response.errors) {
+      this.fetchVasOrder()
+    } else {
+      throw new Error(response.errors[0])
+    }
+  }
+
+  async _confirmVasOrder() {
+    const response = await client.query({
+      query: gql`
+        mutation {
+          confirmVasOrder(${gqlBuilder.buildArgs({
+            name: this._vasNo
+          })}) {
+            name
+          }
+        }
+      `
+    })
+
+    if (response.errors) {
+      throw new Error(response.errors[0])
+    }
   }
 
   _actionsHandler() {
@@ -228,8 +254,8 @@ class VasOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           title: i18next.t('button.edit'),
           action: async () => {
             try {
-              await this._updateArrivalNotice({ status: ORDER_STATUS.EDITING.value })
-              this._showToast({ message: i18next.t('text.gan_now_editable') })
+              await this._updateVasOrder({ status: ORDER_STATUS.EDITING.value })
+              this._showToast({ message: i18next.t('text.order_is_now_editable') })
             } catch (e) {
               this._showToast(e)
             }
@@ -238,25 +264,33 @@ class VasOrderDetail extends connect(store)(localize(i18next)(PageView)) {
         {
           title: i18next.t('button.confirm'),
           action: async () => {
-            const result = await Swal.fire({
-              title: i18next.t('text.confirm_vas_order'),
-              text: i18next.t('text.you_wont_be_able_to_revert_this'),
-              type: 'warning',
-              showCancelButton: true,
-              confirmButtonColor: '#22a6a7',
-              cancelButtonColor: '#cfcfcf',
-              confirmButtonText: i18next.t('buffon.confirm')
-            })
-
-            if (result.value) this._confirmArrivalNotice()
+            try {
+              await this._confirmVasOrder()
+              Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, confirm it!'
+              }).then(result => {
+                if (result.value) {
+                  this._showToast({ message: i18next.t('text.order_is_confirmed') })
+                  navigate('vas_orders')
+                }
+              })
+            } catch (e) {
+              this._showToast(e)
+            }
           }
         }
       ]
     } else if (this._status === ORDER_STATUS.EDITING.value) {
-      navigate(`create_vas_order/${this._ganNo}`)
+      navigate(`create_vas_order/${this._vasNo}`)
     }
 
-    actions = [...actions, { title: i18next.t('button.back'), action: () => navigate('arrival_notices') }]
+    actions = [...actions, { title: i18next.t('button.back'), action: () => navigate('vas_orders') }]
 
     store.dispatch({
       type: UPDATE_CONTEXT,
@@ -269,7 +303,7 @@ class VasOrderDetail extends connect(store)(localize(i18next)(PageView)) {
 
   stateChanged(state) {
     if (this.active) {
-      this._ganNo = state && state.route && state.route.resourceId
+      this._vasNo = state && state.route && state.route.resourceId
     }
   }
 

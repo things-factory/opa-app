@@ -1,12 +1,14 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
+import { openPopup } from '@things-factory/layout-base'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
+import '../../popup-note'
 
-class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
+class ReceiveVasOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _vasNo: String,
@@ -64,18 +66,22 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.rejected_vas_order'),
+      title: i18next.t('title.receive_vas_order'),
       actions: [
         {
-          title: i18next.t('button.back'),
-          action: () => history.back()
+          title: i18next.t('button.reject'),
+          action: this._rejectVasOrder.bind(this)
+        },
+        {
+          title: i18next.t('button.receive'),
+          action: this._receiveVasOrder.bind(this)
         }
       ]
     }
   }
 
-  activated(active) {
-    if (JSON.parse(active)) {
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
       this.fetchVasOrder()
     }
   }
@@ -86,24 +92,21 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
 
   render() {
     return html`
-      <form class="multi-column-form">
-        <fieldset>
-          <label>${i18next.t('label.remark')}</label>
-          <textarea name="remark" disabled></textarea>
-        </fieldset>
-      </form>
-
       <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas_order')}</h2>
-
         <data-grist
           id="vas-grist"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.vasGristConfig}
-          .data="${this.vasData}"
+          .config=${this.config}
+          .data=${this.data}
+          .fetchHandler="${this.fetchHandler.bind(this)}"
         ></data-grist>
       </div>
     `
+  }
+
+  constructor() {
+    super()
+    this.vasData = {}
   }
 
   pageInitialized() {
@@ -165,10 +168,11 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
   }
 
   updated(changedProps) {
-    if (changedProps.has('_releaseOrderNo')) {
+    if (changedProps.has('_vasNo')) {
       this.fetchVasOrder()
     }
   }
+
   async fetchVasOrder() {
     const response = await client.query({
       query: gql`
@@ -203,7 +207,7 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       this._status = response.data.vasOrder.status
-      this._fillupForm(response.data.vasOrder)
+      this._actionsHandler()
 
       const newData = response.data.vasOrder
 
@@ -214,14 +218,69 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  _fillupForm(vasOrder) {
-    for (let key in vasOrder) {
-      Array.from(this.form.querySelectorAll('textarea')).forEach(field => {
-        if (field.name === key) {
-          field.value = vasOrder[key]
-        }
-      })
+  async _receiveVasOrder() {
+    const response = await client.query({
+      query: gql`
+        mutation {
+          generateVasOrderWorksheet(${gqlBuilder.buildArgs({
+            vasNo: this._vasNo
+          })}) {
+              unloadingWorksheet {
+                name
+              }
+            }
+          }
+        `
+    })
+
+    if (!response.errors) {
+      navigate('worksheets')
+      history.back()
+      this._showToast({ message: i18next.t('text.vas_order_has_been_confirmed') })
     }
+  }
+
+  async _rejectVasOrder() {
+    openPopup(
+      html`
+        <popup-note
+          .title="${i18next.t('title.remark')}"
+          @submit="${async e => {
+            try {
+              if (!e.detail.remark) throw new Error(i18next.t('text.remark_is_empty'))
+              const response = await client.query({
+                query: gql`
+                mutation {
+                  rejectVasOrder(${gqlBuilder.buildArgs({
+                    name: this._vasNo,
+                    patch: { remark: e.detail.value }
+                  })}) {
+                    name
+                  }
+                }
+              `
+              })
+
+              if (!response.errors) {
+                navigate('vas_order_requests')
+                this._showToast({ message: i18next.t('text.vas_order_rejected') })
+              }
+            } catch (e) {
+              this._showToast(e)
+            }
+          }}"
+        ></popup-note>
+      `,
+      {
+        backdrop: true,
+        size: 'medium',
+        title: i18next.t('title.reject_vas_order')
+      }
+    )
+  }
+
+  _getTextAreaByName(name) {
+    return this.shadowRoot.querySelector(`textarea[name=${name}]`)
   }
 
   stateChanged(state) {
@@ -242,4 +301,4 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
   }
 }
 
-window.customElements.define('rejected-vas-order', RejectedVasOrder)
+window.customElements.define('receive-vas-order', ReceiveVasOrder)

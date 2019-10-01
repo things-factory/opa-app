@@ -478,7 +478,10 @@ class EditArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
-      if (!result.value) return
+      if (!result.value) {
+        cb()
+        return
+      }
 
       let args = { name: this._ganNo, arrivalNotice: this._getArrivalNotice() }
       if (!this._importedOrder && !this._ownTransport) args.collectionOrder = this._getCollectionOrder()

@@ -40,10 +40,12 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.reject'),
+          type: 'transaction',
           action: this._rejectOrder.bind(this)
         },
         {
           title: i18next.t('button.confirm'),
+          type: 'transaction',
           action: this._confirmOrder.bind(this)
         }
       ]
@@ -286,27 +288,33 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
       await this._deleteOrder(selectedOrder)
       this.data = await this.getArrivalNotices()
     } else {
-      this._notify(i18next.t('text.there_no_selected'))
+      this._showToast(i18next.t('text.there_no_selected'))
     }
   }
 
-  async _rejectOrder() {
-    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
-    if (selectedOrder) {
+  async _rejectOrder(cb) {
+    try {
+      const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
+      if (!selectedOrder) throw new Error(i18next.t('text.there_no_selected'))
       await this._updateOrder(selectedOrder, false)
       this.data = await this.getArrivalNotices()
-    } else {
-      this._notify(i18next.t('text.there_no_selected'))
+    } catch (e) {
+      this._showToast(e)
+    } finally {
+      cb()
     }
   }
 
-  async _confirmOrder() {
-    const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
-    if (selectedOrder) {
+  async _confirmOrder(cb) {
+    try {
+      const selectedOrder = this.rawOrderData.find(orderData => orderData.name === this._grist.selected[0].name)
+      if (!selectedOrder) throw new Error(i18next.t('text.there_no_selected'))
       await this._updateOrder(selectedOrder, true)
       this.data = await this.getArrivalNotices()
-    } else {
-      this._notify(i18next.t('text.there_no_selected'))
+    } catch (e) {
+      this._showToast(e)
+    } finally {
+      cb()
     }
   }
 
@@ -328,7 +336,7 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
         `
       })
     } catch (e) {
-      this._notify(e.message)
+      this._showToast(e.message)
     }
   }
 
@@ -370,11 +378,11 @@ class ConfirmArrivalNotice extends localize(i18next)(PageView) {
         `
       })
     } catch (e) {
-      this._notify(e.message)
+      this._showToast(e.message)
     }
   }
 
-  _notify(message, level = '') {
+  _showToast(message, level = '') {
     document.dispatchEvent(
       new CustomEvent('notify', {
         detail: {

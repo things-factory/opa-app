@@ -101,10 +101,15 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
         type: 'select',
         options: [
           { value: '' },
-          ...Object.keys(ORDER_STATUS).map(key => {
-            const status = ORDER_STATUS[key]
-            return { name: i18next.t(`label.${status.name}`), value: status.value }
-          })
+          { name: i18next.t(`label.${ORDER_STATUS.PENDING.name}`), value: ORDER_STATUS.PENDING.value },
+          { name: i18next.t(`label.${ORDER_STATUS.EDITING.name}`), value: ORDER_STATUS.EDITING.value },
+          { name: i18next.t(`label.${ORDER_STATUS.PENDING_RECEIVE.name}`), value: ORDER_STATUS.PENDING_RECEIVE.value },
+          {
+            name: i18next.t(`label.${ORDER_STATUS.READY_TO_PICK.name}`),
+            value: ORDER_STATUS.READY_TO_PICK.value
+          },
+          { name: i18next.t(`label.${ORDER_STATUS.PICKING.name}`), value: ORDER_STATUS.PICKING.value },
+          { name: i18next.t(`label.${ORDER_STATUS.DONE.name}`), value: ORDER_STATUS.DONE.value }
         ],
         props: { searchOper: 'eq' }
       }
@@ -198,6 +203,10 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
+  get _columns() {
+    return this.config.columns
+  }
+
   async fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
@@ -240,18 +249,6 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
         records: response.data.releaseGoods.items || []
       }
     }
-  }
-
-  get searchForm() {
-    return this.shadowRoot.querySelector('search-form')
-  }
-
-  get dataGrist() {
-    return this.shadowRoot.querySelector('data-grist')
-  }
-
-  get _columns() {
-    return this.config.columns
   }
 
   _exportableData() {

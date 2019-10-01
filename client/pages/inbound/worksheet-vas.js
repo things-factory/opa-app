@@ -184,6 +184,11 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
               name
               description
             }
+            vasOrder {
+              id
+              name
+              description
+            }
             shippingOrder {
               id
               name
