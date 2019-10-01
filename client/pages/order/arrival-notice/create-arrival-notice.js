@@ -349,12 +349,6 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     }
   }
 
-  _clearPage() {
-    this.arrivalNoticeForm.reset()
-    this.productGrist.data = Object.assign({ records: [] })
-    this.vasGrist.data = Object.assign({ records: [] })
-  }
-
   _getStdDate() {
     let date = new Date()
     date.setDate(date.getDate() + 1)
@@ -389,17 +383,16 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.create_arrival_notice'),
-        confirmButton: {
-          text: i18next.t('button.confirm')
-        }
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
       })
+      if (!result.value) return
 
-      if (result.value) {
-        let args = { arrivalNotice: this._getArrivalNotice() }
-        if (!this._importedOrder && !this._ownTransport) args.collectionOrder = this._getCollectionOrder()
+      let args = { arrivalNotice: this._getArrivalNotice() }
+      if (!this._importedOrder && !this._ownTransport) args.collectionOrder = this._getCollectionOrder()
 
-        const response = await client.query({
-          query: gql`
+      const response = await client.query({
+        query: gql`
             mutation {
               generateArrivalNotice(${gqlBuilder.buildArgs(args)}) {
                 id
@@ -407,12 +400,11 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
               }
             }
           `
-        })
+      })
 
-        if (!response.errors) {
-          navigate(`arrival_notice_detail/${response.data.generateArrivalNotice.name}`)
-          this._showToast({ message: i18next.t('arrival_notice_created') })
-        }
+      if (!response.errors) {
+        navigate(`arrival_notice_detail/${response.data.generateArrivalNotice.name}`)
+        this._showToast({ message: i18next.t('arrival_notice_created') })
       }
     } catch (e) {
       this._showToast(e)
