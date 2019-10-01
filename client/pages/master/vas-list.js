@@ -323,7 +323,7 @@ class VasList extends localize(i18next)(PageView) {
             document.dispatchEvent(
               new CustomEvent('notify', {
                 detail: {
-                  message: i18next.t('text.data_updated_successfully')
+                  message: i18next.t('text.data_deleted_successfully')
                 }
               })
             )

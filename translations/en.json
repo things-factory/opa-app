@@ -281,7 +281,7 @@
   "text.user_bizplaces_updated": "user bizplaces updated",
   "text.vehicle_or_driver_not_selected": "vehicle or driver not selected",
   "text.you.are.now.in": "you are now in {state.text}",
-  "text.you_wont_be_able_to_revert_this!": "you wont be able to revert this",
+  "text.you_wont_be_able_to_revert_this!": "you won't be able to revert this",
   "text.zone_name_cannot_be_empty": "zone name cannot be empty",
   "title.arrival_notice": "arrival notice",
   "title.arrival_notice_detail": "arrival notice detail",
@@ -379,5 +379,11 @@
   "title.view_setting": "view setting",
   "title.warehouse": "warehouse",
   "title.worker": "worker",
-  "title.worksheet": "worksheet"
+  "title.worksheet": "worksheet",
+ 
+  "label.collection_date": "collection date",
+  "label.order_status_dispatching": "order status dispatching",
+  "text.data_deleted_successfully": "data deleted successfully",
+  ""
+
 }

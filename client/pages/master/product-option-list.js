@@ -352,18 +352,11 @@ class ProductOptionList extends connect(store)(localize(i18next)(PageView)) {
           if (!response.errors) {
             this.dataGrist.fetch()
             document.dispatchEvent(
-              Swal.fire({
-                // position: 'top-end',
-                type: 'info',
-                title: 'Your work has been deleted',
-                showConfirmButton: false,
-                timer: 1500
+              new CustomEvent('notify', {
+                detail: {
+                  message: i18next.t('text.data_deleted_successfully')
+                }
               })
-              // new CustomEvent('notify', {
-              //   detail: {
-              //     message: i18next.t('text.data_updated_successfully')
-              //   }
-              // })
             )
           }
         }

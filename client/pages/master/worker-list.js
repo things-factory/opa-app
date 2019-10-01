@@ -310,7 +310,7 @@ class WorkerList extends localize(i18next)(PageView) {
             document.dispatchEvent(
               new CustomEvent('notify', {
                 detail: {
-                  message: i18next.t('text.data_updated_successfully')
+                  message: i18next.t('text.data_deleted_successfully')
                 }
               })
             )
@@ -318,11 +318,6 @@ class WorkerList extends localize(i18next)(PageView) {
         }
       }
     })
-
-    // let confirmDelete = confirm('Are you sure?')
-    // if (confirmDelete) {
-
-    // }
   }
 
   get _columns() {
