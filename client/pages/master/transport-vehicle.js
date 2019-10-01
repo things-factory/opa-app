@@ -107,7 +107,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
         label: i18next.t('field.size'),
         name: 'size',
         type: 'text',
-        props: { searchOper: 'eq' }
+        props: { searchOper: 'like' }
       },
       {
         label: i18next.t('field.status'),
@@ -123,6 +123,14 @@ class TransportVehicle extends localize(i18next)(PageView) {
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
+        {
+          type: 'string',
+          name: 'name',
+          header: i18next.t('field.name'),
+          record: { editable: true, align: 'center' },
+          sortable: true,
+          width: 150
+        },
         {
           type: 'string',
           name: 'regNumber',
