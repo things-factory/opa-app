@@ -107,7 +107,7 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
             name="ownTransport"
             ?checked="${this._ownTransport}"
             @change="${e => (this._ownTransport = e.currentTarget.checked)}"
-            readonly
+            disabled
           />
           <label>${i18next.t('label.own_transport')}</label>
 
