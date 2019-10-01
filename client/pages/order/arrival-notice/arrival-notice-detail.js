@@ -217,14 +217,14 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_id'),
-          record: { editable: true, align: 'center' },
+          record: { align: 'center' },
           width: 150
         },
         {
           type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
-          record: { editable: true, align: 'center', options: { queryName: 'products' } },
+          record: { align: 'center', options: { queryName: 'products' } },
           width: 350
         },
         {
@@ -232,7 +232,6 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: {
-            editable: true,
             align: 'center',
             codeName: 'PACKING_TYPES'
           },
@@ -242,21 +241,21 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           type: 'float',
           name: 'weight',
           header: i18next.t('field.weight'),
-          record: { editable: true, align: 'center' },
+          record: { align: 'center' },
           width: 80
         },
         {
           type: 'code',
           name: 'unit',
           header: i18next.t('field.unit'),
-          record: { editable: true, align: 'center', codeName: 'WEIGHT_UNITS' },
+          record: { align: 'center', codeName: 'WEIGHT_UNITS' },
           width: 80
         },
         {
           type: 'integer',
           name: 'packQty',
           header: i18next.t('field.pack_qty'),
-          record: { editable: true, align: 'center' },
+          record: { align: 'center' },
           width: 80
         },
         {
@@ -270,7 +269,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           type: 'integer',
           name: 'palletQty',
           header: i18next.t('field.pallet_qty'),
-          record: { editable: true, align: 'center' },
+          record: { align: 'center' },
           width: 80
         }
       ]
@@ -285,21 +284,21 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
-          record: { editable: true, align: 'center', options: { queryName: 'vass' } },
+          record: { align: 'center', options: { queryName: 'vass' } },
           width: 250
         },
         {
           type: 'select',
           name: 'batchId',
           header: i18next.t('field.batch_id'),
-          record: { editable: true, align: 'center', options: ['', i18next.t('label.all')] },
+          record: { align: 'center', options: ['', i18next.t('label.all')] },
           width: 150
         },
         {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
-          record: { editable: true, align: 'center' },
+          record: { align: 'center' },
           width: 350
         }
       ]
@@ -469,7 +468,10 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
       confirmButton: { text: i18next.t('button.confirm') },
       cancelButton: { text: i18next.t('button.cancel') }
     })
-    if (!result.value) return
+    if (!result.value) {
+      cb()
+      return
+    }
 
     try {
       const response = await client.query({
