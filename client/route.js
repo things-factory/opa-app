@@ -219,6 +219,10 @@ export default function route(page) {
       import('./pages/order/vas-order/vas-order-detail')
       return page
 
+    case 'receive_vas_order':
+      import('./pages/order/vas-order/receive-vas-order')
+      return page
+
     case 'rejected_vas_order':
       import('./pages/order/vas-order/rejected-vas-order')
       return page
