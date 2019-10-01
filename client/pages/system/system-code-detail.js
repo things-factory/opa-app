@@ -136,6 +136,7 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
             editable: true
           },
           header: i18next.t('field.name'),
+          sortable: true,
           width: 120
         },
         {
@@ -146,6 +147,7 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
             editable: true
           },
           header: i18next.t('field.description'),
+          sortable: true,
           width: 220
         },
         {
@@ -156,6 +158,7 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
             editable: true
           },
           header: i18next.t('field.rank'),
+          sortable: true,
           width: 120
         },
         {
@@ -166,6 +169,7 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
             editable: false
           },
           header: i18next.t('field.updater'),
+          sortable: true,
           width: 150
         },
         {

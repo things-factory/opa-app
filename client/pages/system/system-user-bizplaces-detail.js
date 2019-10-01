@@ -128,12 +128,14 @@ class SystemUserBizplacesDetail extends localize(i18next)(LitElement) {
           type: 'boolean',
           name: 'assigned',
           header: i18next.t('field.assigned'),
+          record: { editable: true },
           width: 80
         },
         {
           type: 'boolean',
           name: 'mainBizplace',
           header: i18next.t('field.main_bizplace'),
+          record: { editable: true },
           width: 80
         }
       ]
