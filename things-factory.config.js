@@ -76,6 +76,10 @@ export default {
       page: 'arrival_notice_detail'
     },
     {
+      tagname: 'edit-arrival-notice',
+      page: 'edit_arrival_notice'
+    },
+    {
       tagname: 'arrival-notice-requests',
       page: 'arrival_notice_requests'
     },
@@ -208,12 +212,20 @@ export default {
       page: 'vas_requests'
     },
     {
+      tagname: 'vas-order-list',
+      page: 'vas_orders'
+    },
+    {
       tagname: 'create-vas-order',
       page: 'create_vas_order'
     },
     {
       tagname: 'confirm-vas-order',
       page: 'confirm_vas_order'
+    },
+    {
+      tagname: 'receive-vas-order',
+      page: 'receive_vas_order'
     },
     {
       tagname: 'vas-order-detail',

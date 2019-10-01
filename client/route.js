@@ -75,6 +75,10 @@ export default function route(page) {
       import('./pages/order/arrival-notice/arrival-notice-detail')
       return page
 
+    case 'edit_arrival_notice':
+      import('./pages/order/arrival-notice/edit-arrival-notice')
+      return page
+
     case 'arrival_notice_requests':
       import('./pages/order/arrival-notice/arrival-notice-requests')
       return page
@@ -221,6 +225,10 @@ export default function route(page) {
 
     case 'vas_order_detail':
       import('./pages/order/vas-order/vas-order-detail')
+      return page
+
+    case 'receive_vas_order':
+      import('./pages/order/vas-order/receive-vas-order')
       return page
 
     case 'rejected_vas_order':

@@ -330,6 +330,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
             etaDate
             deliveryOrderNo
             status
+            truckNo
             orderProducts {
               batchId
               product {
