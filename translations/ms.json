@@ -282,7 +282,6 @@
   "text.vehicle_or_driver_not_selected": "kenderaan atau pemandu tidak dipilih",
   "text.you.are.now.in": "anda berada di {state.text}",
   "text.you_wont_be_able_to_revert_this!": "anda tidak boleh ubah kembali",
-  "text.zone_name_cannot_be_empty": "nama zon tidak boleh kosong",
   "title.arrival_notice": "notis ketibaan",
   "title.arrival_notice_detail": "butiran notis ketibaan",
   "title.arrival_notice_master": "notis ketibaan utama",

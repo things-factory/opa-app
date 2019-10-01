@@ -6,7 +6,11 @@ export default function route(page) {
       return isMobileDevice() ? '/menu-list' : '/dashboard'
 
     case 'dashboard':
-      import('./pages/dashboard')
+      import('./pages/board/dashboard')
+      return page
+
+    case 'board':
+      import('./pages/board/board')
       return page
 
     /**
@@ -69,6 +73,10 @@ export default function route(page) {
 
     case 'arrival_notice_detail':
       import('./pages/order/arrival-notice/arrival-notice-detail')
+      return page
+
+    case 'edit_arrival_notice':
+      import('./pages/order/arrival-notice/edit-arrival-notice')
       return page
 
     case 'arrival_notice_requests':

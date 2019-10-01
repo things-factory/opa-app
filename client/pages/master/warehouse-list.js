@@ -121,7 +121,7 @@ class WarehouseList extends localize(i18next)(PageView) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              if (record.id) navigate(`locations/${record.id}`)
+              if (record.id) navigate(`locations/${record.id}?name=${record.name}`)
             }
           }
         },

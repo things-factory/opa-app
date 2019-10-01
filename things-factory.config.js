@@ -12,6 +12,10 @@ export default {
       page: 'dashboard'
     },
     {
+      tagname: 'opa-board',
+      page: 'board'
+    },
+    {
       tagname: 'company-list',
       page: 'companies'
     },
@@ -70,6 +74,10 @@ export default {
     {
       tagname: 'arrival-notice-detail',
       page: 'arrival_notice_detail'
+    },
+    {
+      tagname: 'edit-arrival-notice',
+      page: 'edit_arrival_notice'
     },
     {
       tagname: 'arrival-notice-requests',

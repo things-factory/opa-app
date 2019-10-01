@@ -153,7 +153,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
       <div class="button-container">
         <mwc-button @click=${this._validateGenerator}>${i18next.t('button.preview')}</mwc-button>
         <mwc-button @click=${this._saveGeneratedLocation}>${i18next.t('button.save')}</mwc-button>
-        <mwc-button @click=${this._deleteFromList}>${i18next.t('button.delete')}</mwc-button>
+        <mwc-button @click=${this._deleteFromList}>${i18next.t('button.clear_list')}</mwc-button>
       </div>
     `
   }
@@ -435,6 +435,72 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
     }
   }
 
+  async _saveGeneratedLocation() {
+    let chunkPatches = this._chunkLocationList(this.locationList, 500)
+
+    if (chunkPatches === []) {
+      Swal.fire({
+        type: 'warning',
+        title: 'List not previewed',
+        text: 'Please hit preview button first!',
+        showConfirmButton: false,
+        timer: 1500
+      })
+    } else {
+      try {
+        Swal.fire({
+          title: i18next.t('text.please_wait'),
+          text: i18next.t('text.saving_locations'),
+          allowEscapeKey: true,
+          allowOutsideClick: false,
+          showConfirmButton: false,
+          onOpen: () => {
+            Swal.showLoading()
+          }
+        })
+        for (let x = 0; x < chunkPatches.length; x++) {
+          const patches = chunkPatches[x]
+          const response = await client.query({
+            query: gql`
+              mutation {
+                updateMultipleLocation(${gqlBuilder.buildArgs({
+                  patches
+                })}) {
+                  name
+                }
+              }
+              `
+          })
+        }
+
+        Swal.close()
+        if (this.callback && typeof this.callback === 'function') this.callback()
+        history.back()
+      } catch (e) {
+        Swal.close()
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              level: 'error',
+              message: e.message
+            }
+          })
+        )
+      }
+    }
+  }
+
+  _chunkLocationList(locationArray, chunk_size) {
+    let tempArray = []
+    let locationChunk = []
+
+    for (let i = 0; i < locationArray.length; i += chunk_size) {
+      locationChunk = locationArray.slice(i, i + chunk_size)
+      tempArray.push(locationChunk)
+    }
+    return tempArray
+  }
+
   _getCellInstance(column) {
     var cellInstance = ''
     switch (column) {
@@ -523,61 +589,6 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
         cellInstance = column.toString()
     }
     return cellInstance
-  }
-
-  async _saveGeneratedLocation() {
-    let patches = this.locationList
-    if (patches === []) {
-      Swal.fire({
-        type: 'warning',
-        title: 'List not previewed',
-        text: 'Please hit preview button first!',
-        showConfirmButton: false,
-        timer: 1500
-      })
-    } else {
-      try {
-        Swal.fire({
-          title: 'Saving...',
-          text: 'Please wait',
-          allowEscapeKey: true,
-          allowOutsideClick: false,
-          showConfirmButton: false,
-          onOpen: () => {
-            Swal.showLoading()
-          }
-        })
-        const response = await client.query({
-          query: gql`
-          mutation {
-            updateMultipleLocation(${gqlBuilder.buildArgs({
-              patches
-            })}) {
-              name
-            }
-          }
-        `
-        })
-
-        if (!response.errors) {
-          Swal.close()
-          if (this.callback && typeof this.callback === 'function') this.callback()
-          history.back()
-        } else {
-          Swal.close()
-        }
-      } catch (e) {
-        Swal.close()
-        document.dispatchEvent(
-          new CustomEvent('notify', {
-            detail: {
-              level: 'error',
-              message: e.message
-            }
-          })
-        )
-      }
-    }
   }
 
   fetchHandler() {

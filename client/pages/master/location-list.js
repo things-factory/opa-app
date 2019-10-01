@@ -42,7 +42,6 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _warehouseName: String,
-      _warehouseName: String,
       _searchFields: Array,
       config: Object
     }
@@ -69,7 +68,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.location', {
+      title: i18next.t('title.location' + (this._warehouseName ? ' (' + this._warehouseName + ')' : ''), {
         state: {
           text: this._warehouseName
         }
@@ -108,6 +107,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
 
   pageUpdated(changes, lifecycle) {
     if (this.active) {
+      this._warehouseName = lifecycle.params.name ? lifecycle.params.name : undefined
       this._warehouseId = lifecycle.resourceId
       this.dataGrist.fetch()
     }
