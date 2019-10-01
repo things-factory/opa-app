@@ -89,9 +89,9 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
       },
       {
         label: i18next.t('field.eta'),
-        name: 'eta',
-        type: 'datetime-local',
-        props: { searchOper: 'like' }
+        name: 'etaDate',
+        type: 'date',
+        props: { searchOper: 'eq' }
       },
       {
         label: i18next.t('field.status'),
@@ -137,17 +137,9 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           width: 180
         },
         {
-          type: 'datetime',
-          name: 'eta',
+          type: 'string',
+          name: 'etaDate',
           header: i18next.t('field.eta'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 160
-        },
-        {
-          type: 'datetime',
-          name: 'collectionDateTime',
-          header: i18next.t('field.collection_date_time'),
           record: { align: 'center' },
           sortable: true,
           width: 160
@@ -175,6 +167,14 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           record: { align: 'center' },
           sortable: true,
           width: 200
+        },
+        {
+          type: 'string',
+          name: 'collectionDate',
+          header: i18next.t('field.collection_date'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 160
         },
         {
           type: 'datetime',
@@ -216,13 +216,13 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
             items {
               id
               name
-              eta
-              collectionDateTime
+              etaDate
               status
               collectionOrder {
                 id
                 name
                 description
+                collectionDate
               }
               deliveryOrderNo
               updatedAt
@@ -241,7 +241,9 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
     if (!response.errors) {
       return {
         total: response.data.arrivalNotices.total || 0,
-        records: response.data.arrivalNotices.items || []
+        records: (response.data.arrivalNotices.items || []).map(item => {
+          return { ...item, collectionDate: (item.collectionOrder && item.collectionOrder.collectionDate) || '' }
+        })
       }
     }
   }

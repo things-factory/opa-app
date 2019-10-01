@@ -1,13 +1,13 @@
+import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES, ORDER_STATUS, ORDER_TYPES } from '../constants/order'
+import { CustomAlert } from '../../../utils/custom-alert'
 
-class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
+class CreateArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
     return {
       /**
@@ -16,7 +16,9 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
        * true =>
        */
       _ganNo: String,
+      _importedOrder: Boolean,
       _ownTransport: Boolean,
+      _loadTypes: Array,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -76,82 +78,62 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
       actions: [
         {
           title: i18next.t('button.create'),
+          type: 'transaction',
           action: this._generateArrivalNotice.bind(this)
         }
       ]
     }
   }
 
-  get form() {
-    return this.shadowRoot.querySelector('form')
-  }
-
-  get productGrist() {
-    return this.shadowRoot.querySelector('data-grist#product-grist')
-  }
-
-  get vasGrist() {
-    return this.shadowRoot.querySelector('data-grist#vas-grist')
-  }
-
   render() {
     return html`
-      <form class="multi-column-form">
+      <form name="arrivalNotice" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.arrival_notice')}</legend>
           <label>${i18next.t('label.container_no')}</label>
           <input name="containerNo" />
 
+          <label>${i18next.t('label.do_no')}</label>
+          <input name="deliveryOrderNo" />
+
+          <label>${i18next.t('label.eta_date')}</label>
           <input
+            name="etaDate"
+            type="date"
+            min="${this._getStdDate()}"
+            required
+            @change="${e => {
+              this._collectionDateInput.setAttribute('max', e.currentTarget.value)
+            }}"
+          />
+
+          <input
+            id="importedOrder"
+            type="checkbox"
+            name="importedOrder"
+            ?checked="${this._importedOrder}"
+            @change="${e => {
+              this._importedOrder = e.currentTarget.checked
+              if (this._importedOrder) {
+                this._ownTransportInput.checked = true
+                this._ownTransport = true
+              }
+            }}"
+          />
+          <label for="importedOrder">${i18next.t('label.imported')}</label>
+
+          <input
+            id="ownTransport"
             type="checkbox"
             name="ownTransport"
             ?checked="${this._ownTransport}"
-            @change=${e => {
-              this._ownTransport = e.currentTarget.checked
-            }}
+            @change="${e => (this._ownTransport = e.currentTarget.checked)}"
+            ?hidden="${this._importedOrder}"
           />
-          <label>${i18next.t('label.use_own_transport')}</label>
+          <label for="ownTransport" ?hidden="${this._importedOrder}">${i18next.t('label.own_transport')}</label>
 
-          <!-- Show when userOwnTransport is true -->
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.collection_date')}</label>
-          <input
-            ?hidden="${this._ownTransport}"
-            ?required="${!this._ownTransport}"
-            name="collectionDateTime"
-            type="datetime-local"
-            min="${this._getStdDatetime()}"
-          />
-
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.from')}</label>
-          <input ?hidden="${this._ownTransport}" ?required="${!this._ownTransport}" name="from" />
-
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.to')}</label>
-          <input ?hidden="${this._ownTransport}" ?required="${!this._ownTransport}" name="to" />
-
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.load_type')}</label>
-          <select ?hidden="${this._ownTransport}" ?required="${!this._ownTransport}" name="loadType">
-            ${LOAD_TYPES.map(
-              loadType => html`
-                <option value="${loadType.value}">${i18next.t(`label.${loadType.name}`)}</option>
-              `
-            )}
-          </select>
-
-          <!-- Show when userOwnTransport option is false-->
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
-          <input ?hidden="${!this._ownTransport}" ?required="${this._ownTransport}" name="truckNo" />
-
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
-          <input ?hidden="${!this._ownTransport}" name="deliveryOrderNo" />
-
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.eta_date')}</label>
-          <input
-            ?hidden="${!this._ownTransport}"
-            ?required="${this._ownTransport}"
-            name="eta"
-            type="datetime-local"
-            min="${this._getStdDatetime()}"
-          />
+          <input ?hidden="${!this._ownTransport}" name="truckNo" ?required="${this._ownTransport}" />
         </fieldset>
       </form>
 
@@ -177,26 +159,71 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           .data="${this.vasData}"
         ></data-grist>
       </div>
+
+      <div class="co-form-container" ?hidden="${this._importedOrder || (!this._importedOrder && this._ownTransport)}">
+        <form name="collectionOrder" class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.collection_order')}</legend>
+
+            <label>${i18next.t('label.collection_date')}</label>
+            <input name="collectionDate" type="date" min="${this._getStdDate()}" ?required="${!this._ownTransport}" />
+
+            <label>${i18next.t('label.destination')}</label>
+            <input name="from" ?required="${!this._ownTransport}" />
+
+            <label>${i18next.t('label.load_type')}</label>
+            <select name="loadType" ?required="${!this._ownTransport}">
+              <option value=""></option>
+              ${this._loadTypes.map(
+                loadType => html`
+                  <option value="${loadType.name}">${i18next.t(`label.${loadType.description}`)}</option>
+                `
+              )}
+            </select>
+
+            <!--label>${i18next.t('label.document')}</label>
+            <input name="attiachment" type="file" ?required="${!this._ownTransport}" /-->
+          </fieldset>
+        </form>
+      </div>
     `
   }
 
   constructor() {
     super()
+    this.productData = { records: [] }
+    this.vasData = { records: [] }
+    this._importedOrder = false
     this._ownTransport = true
-    this.productData = {}
-    this.vasData = {}
+    this._loadTypes = []
   }
 
-  updated(changedProps) {
-    if (changedProps.has('_ganNo') && this._ganNo) {
-      this.fetchGAN()
-      this._updateBatchList()
-    } else if (changedProps.has('_ganNo') && !this._ganNo) {
-      this._clearPage()
-      this._updateBatchList()
-    }
+  get arrivalNoticeForm() {
+    return this.shadowRoot.querySelector('form[name=arrivalNotice]')
+  }
 
-    this._contextHandler()
+  get collectionOrderForm() {
+    return this.shadowRoot.querySelector('form[name=collectionOrder]')
+  }
+
+  get _ownTransportInput() {
+    return this.shadowRoot.querySelector('input[name=ownTransport]')
+  }
+
+  get _collectionDateInput() {
+    return this.shadowRoot.querySelector('input[name=collectionDate]')
+  }
+
+  get productGrist() {
+    return this.shadowRoot.querySelector('data-grist#product-grist')
+  }
+
+  get vasGrist() {
+    return this.shadowRoot.querySelector('data-grist#vas-grist')
+  }
+
+  async firstUpdated() {
+    this._loadTypes = await getCodeByName('LOAD_TYPES')
   }
 
   pageInitialized() {
@@ -211,11 +238,9 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           icon: 'close',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              this.productData = {
-                ...this.productData,
-                records: data.records.filter((record, idx) => idx !== rowIndex)
-              }
-
+              const newData = data.records.filter((_, idx) => idx !== rowIndex)
+              this.productData = { ...this.productData, records: newData }
+              this.productGrist.dirtyData.records = newData
               this._updateBatchList()
             }
           }
@@ -294,10 +319,8 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
           icon: 'close',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              this.vasData = {
-                ...this.vasData,
-                records: data.records.filter((record, idx) => idx !== rowIndex)
-              }
+              const newData = data.records.filter((_, idx) => idx !== rowIndex)
+              this.vasData = { ...this.vasData, records: newData }
             }
           }
         },
@@ -326,156 +349,10 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  _clearPage() {
-    this.form.reset()
-    this.productGrist.data = Object.assign({ records: [] })
-    this.vasGrist.data = Object.assign({ records: [] })
-  }
-
-  async fetchGAN() {
-    const response = await client.query({
-      query: gql`
-        query {
-          arrivalNotice(${gqlBuilder.buildArgs({
-            name: this._ganNo
-          })}) {
-            id
-            name
-            containerNo
-            ownTransport
-            collectionDateTime
-            eta
-            from
-            to
-            loadType
-            truckNo
-            deliveryOrderNo
-            status
-            collectionOrder {
-              id
-              name
-              description
-            }
-            orderProducts {
-              id
-              batchId
-              product {
-                id
-                name
-                description
-              }
-              description
-              packingType
-              weight
-              unit
-              packQty
-              totalWeight
-              palletQty
-            }
-            orderVass {
-              vas {
-                id
-                name
-                description
-              }
-              description
-              batchId
-              remark
-            }
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      this._ownTransport = response.data.arrivalNotice.ownTransport
-      this._fillupForm(response.data.arrivalNotice)
-      this.productData = {
-        ...this.productData,
-        records: response.data.arrivalNotice.orderProducts
-      }
-
-      this.vasData = {
-        ...this.vasData,
-        records: response.data.arrivalNotice.orderVass
-      }
-    }
-  }
-
-  _fillupForm(arrivalNotice) {
-    for (let key in arrivalNotice) {
-      Array.from(this.form.querySelectorAll('input, textarea, select')).forEach(field => {
-        if (field.name === key && field.type === 'checkbox') {
-          field.checked = arrivalNotice[key]
-        } else if (field.name === key && field.type === 'datetime-local') {
-          const datetime = Number(arrivalNotice[key])
-          const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
-          field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
-        } else if (field.name === key) {
-          field.value = arrivalNotice[key]
-        }
-      })
-    }
-  }
-
-  _contextHandler() {
-    if (this._ganNo) {
-      store.dispatch({
-        type: UPDATE_CONTEXT,
-        context: {
-          ...this.context,
-          actions: [
-            {
-              title: i18next.t('button.update'),
-              action: () => {
-                try {
-                  this._validateForm()
-                  this._validateProducts()
-                  this._validateVas()
-
-                  this._editArrivalNotice(this._getArrivalNotice())
-                } catch (e) {
-                  this._showToast(e)
-                }
-              }
-            }
-          ]
-        }
-      })
-    } else {
-      store.dispatch({
-        type: UPDATE_CONTEXT,
-        context: {
-          ...this.context
-        }
-      })
-    }
-  }
-
-  async _editArrivalNotice(arrivalNotice) {
-    const response = await client.query({
-      query: gql`
-        mutation {
-          editArrivalNotice(${gqlBuilder.buildArgs({
-            name: this._ganNo,
-            arrivalNotice
-          })}) {
-            name 
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      navigate(`arrival_notice_detail/${response.data.editArrivalNotice.name}`)
-      this._showToast({ message: i18next.t('arrival_notice_updated') })
-    }
-  }
-
-  _getStdDatetime() {
+  _getStdDate() {
     let date = new Date()
     date.setDate(date.getDate() + 1)
-    return `${date.toISOString().substr(0, 11)}00:00:00`
+    return date.toISOString().split('T')[0]
   }
 
   _onProductChangeHandler(event) {
@@ -497,23 +374,32 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _generateArrivalNotice() {
+  async _generateArrivalNotice(cb) {
     try {
       this._validateForm()
       this._validateProducts()
       this._validateVas()
 
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.create_arrival_notice'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+      if (!result.value) return
+
+      let args = { arrivalNotice: this._getArrivalNotice() }
+      if (!this._importedOrder && !this._ownTransport) args.collectionOrder = this._getCollectionOrder()
+
       const response = await client.query({
         query: gql`
-          mutation {
-            generateArrivalNotice(${gqlBuilder.buildArgs({
-              arrivalNotice: this._getArrivalNotice()
-            })}) {
-              id
-              name
+            mutation {
+              generateArrivalNotice(${gqlBuilder.buildArgs(args)}) {
+                id
+                name
+              }
             }
-          }
-        `
+          `
       })
 
       if (!response.errors) {
@@ -522,14 +408,19 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
       }
     } catch (e) {
       this._showToast(e)
+    } finally {
+      cb()
     }
   }
 
   _validateForm() {
-    const elements = Array.from(this.form.querySelectorAll('input, select'))
+    if (!this.arrivalNoticeForm.checkValidity()) throw new Error('text.arrival_notice_form_invalid')
 
-    if (!elements.filter(e => !e.hasAttribute('hidden')).every(e => e.checkValidity()))
-      throw new Error(i18next.t('text.invalid_form'))
+    // arrival notice and collection order
+    //    - condition: not imported and not own transport
+    if (!this._importedOrder && !this._ownTransport) {
+      if (!this.collectionOrderForm.checkValidity()) throw new Error('text.collection_order_form_invalid')
+    }
   }
 
   _validateProducts() {
@@ -573,52 +464,40 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _updateBatchList() {
-    // TODO: 시점 문제...
-    setTimeout(() => {
-      this.productGrist.commit()
-      this.productData = this.productGrist.data
-      const batchIds = (this.productGrist.data.records || []).map(record => record.batchId)
+    const batchIds = ['', 'all', ...(this.productGrist.dirtyData.records || []).map(record => record.batchId)]
 
-      this.vasGrist.commit()
-      this.vasData = {
-        ...this.vasGrist.data,
-        records: this.vasGrist.data.records.map(record => {
-          return {
-            ...record,
-            batchId: batchIds.includes(record.batchId) ? record.batchId : null
-          }
-        })
-      }
+    this.vasGristConfig = {
+      ...this.vasGristConfig,
+      columns: this.vasGristConfig.columns.map(column => {
+        if (column.name === 'batchId') column.record.options = batchIds
+        return column
+      })
+    }
 
-      this.vasGristConfig = {
-        ...this.vasGristConfig,
-        columns: this.vasGristConfig.columns.map(column => {
-          if (column.name === 'batchId') column.record.options = ['', i18next.t('label.all'), ...batchIds]
-
-          return column
-        })
-      }
-    }, 300)
+    this.vasData = {
+      records: this.vasGrist.dirtyData.records.map(record => {
+        return {
+          ...record,
+          batchId: batchIds.includes(record.batchId) ? record.batchId : null
+        }
+      })
+    }
   }
 
   _getArrivalNotice() {
-    let arrivalNotice = { status: ORDER_STATUS.PENDING.value }
-    Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
-      if (!field.hasAttribute('hidden') && field.value) {
-        arrivalNotice[field.name] = field.type === 'checkbox' ? field.checked : field.value
-      }
-    })
+    let arrivalNotice = this._serializeForm(this.arrivalNoticeForm)
+    delete arrivalNotice.importedOrder
 
-    const products = this.productGrist.data.records.map((record, idx) => {
+    arrivalNotice.orderProducts = this.productGrist.data.records.map((record, idx) => {
       const seq = idx + 1
       delete record.id
       delete record.__typename
       delete record.product.__typename
 
-      return { ...record, seq, type: ORDER_TYPES.ARRIVAL_NOTICE.value }
+      return { ...record, seq }
     })
 
-    const vass = this.vasGrist.data.records.map(record => {
+    arrivalNotice.orderVass = this.vasGrist.data.records.map(record => {
       delete record.id
       delete record.__typename
       delete record.vas.__typename
@@ -626,13 +505,22 @@ class CreateArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
       return { ...record, name }
     })
 
-    return { arrivalNotice, products, vass }
+    return arrivalNotice
   }
 
-  stateChanged(state) {
-    if (this.active) {
-      this._ganNo = state && state.route && state.route.resourceId
-    }
+  _getCollectionOrder() {
+    return this._serializeForm(this.collectionOrderForm)
+  }
+
+  _serializeForm(form) {
+    let obj = {}
+    Array.from(form.querySelectorAll('input, select')).forEach(field => {
+      if (!field.hasAttribute('hidden') && field.value) {
+        obj[field.name] = field.type === 'checkbox' ? field.checked : field.value
+      }
+    })
+
+    return obj
   }
 
   _showToast({ type, message }) {
