@@ -12,6 +12,10 @@ export default {
       page: 'dashboard'
     },
     {
+      tagname: 'opa-board',
+      page: 'board'
+    },
+    {
       tagname: 'company-list',
       page: 'companies'
     },

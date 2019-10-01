@@ -163,20 +163,6 @@ class SystemSetting extends localize(i18next)(PageView) {
           width: 180
         },
         {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'edit',
-          handlers: {
-            click: function(columns, data, column, record, rowIndex, field) {
-              var { category, value } = record
-
-              if (category == 'board' && value) {
-                navigate(`board-modeller/${value}`)
-              }
-            }
-          }
-        },
-        {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
