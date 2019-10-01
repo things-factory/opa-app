@@ -125,14 +125,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'string',
-          name: 'name',
-          header: i18next.t('field.name'),
-          record: { editable: true, align: 'center' },
-          sortable: true,
-          width: 150
-        },
-        {
-          type: 'string',
           name: 'regNumber',
           header: i18next.t('field.registration_number'),
           record: { editable: true, align: 'center' },
@@ -298,6 +290,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
           patchField[key] = dirtyFields[key].after
         }
         patchField.cuFlag = transportVehicle.__dirty__
+        patchField.name = patchField.regNumber
 
         return patchField
       })
