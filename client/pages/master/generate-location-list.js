@@ -350,7 +350,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
         new CustomEvent('notify', {
           detail: {
             level: 'error',
-            message: i18next.t('text.zone_name_cannot_be_empty')
+            message: i18next.t('text.missing_zone_name')
           }
         })
       )
@@ -368,33 +368,48 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
     if (locationData && locationData.length) {
       locationData = locationData.forEach(locations => {
         if (locations.start <= locations.end) {
-          for (let i = locations.start; i <= locations.end; i++) {
-            for (let j = 1; j <= locations.column; j++) {
-              for (let k = 1; k <= locations.cell; k++) {
-                const locationObj = {}
-                const row = this.caseSensitive ? this.rowSuffix : this.rowSuffix.toUpperCase()
-                const column = this.caseSensitive ? this.columnSuffix : this.columnSuffix.toUpperCase()
+          if (locations.column && locations.cell) {
+            for (let i = locations.start; i <= locations.end; i++) {
+              for (let j = 1; j <= locations.column; j++) {
+                for (let k = 1; k <= locations.cell; k++) {
+                  const locationObj = {}
+                  const row = this.caseSensitive ? this.rowSuffix : this.rowSuffix.toUpperCase()
+                  const column = this.caseSensitive ? this.columnSuffix : this.columnSuffix.toUpperCase()
 
-                locationObj['row'] =
-                  this.rowSuffix === '' ? i.toString().padStart(2, '0') : i.toString().padStart(2, '0') + row
+                  locationObj['row'] =
+                    this.rowSuffix === '' ? i.toString().padStart(2, '0') : i.toString().padStart(2, '0') + row
 
-                locationObj['column'] =
-                  this.columnSuffix === '' ? j.toString().padStart(2, '0') : j.toString().padStart(2, '0') + column
+                  locationObj['column'] =
+                    this.columnSuffix === '' ? j.toString().padStart(2, '0') : j.toString().padStart(2, '0') + column
 
-                locationObj['shelf'] = this._getCellInstance(k)
-                locationObj['zone'] = this.caseSensitive ? this.zoneName : this.zoneName.toString().toUpperCase()
+                  locationObj['shelf'] = this._getCellInstance(k)
+                  locationObj['zone'] = this.caseSensitive ? this.zoneName : this.zoneName.toString().toUpperCase()
 
-                locationObj['name'] =
-                  locationObj.zone + '-' + locationObj.row + '-' + locationObj.column + '-' + locationObj.shelf
+                  locationObj['name'] =
+                    locationObj.zone + '-' + locationObj.row + '-' + locationObj.column + '-' + locationObj.shelf
 
-                locationObj['status'] = 'EMPTY'
-                locationObj['type'] = 'SHELF'
-                locationObj['warehouse'] = { id: this.warehouseId }
-                locationObj['cuFlag'] = '+'
+                  locationObj['status'] = 'EMPTY'
+                  locationObj['type'] = 'SHELF'
+                  locationObj['warehouse'] = { id: this.warehouseId }
+                  locationObj['cuFlag'] = '+'
 
-                tempLocationList.push(locationObj)
+                  tempLocationList.push(locationObj)
+                }
               }
             }
+          } else {
+            validationError = true
+            tempLocationList = []
+
+            document.dispatchEvent(
+              new CustomEvent('notify', {
+                detail: {
+                  level: 'error',
+                  message: i18next.t('text.missing_input')
+                }
+              })
+            )
+            return false
           }
         } else {
           validationError = true
