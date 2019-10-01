@@ -6,7 +6,11 @@ export default function route(page) {
       return isMobileDevice() ? '/menu-list' : '/dashboard'
 
     case 'dashboard':
-      import('./pages/dashboard')
+      import('./pages/board/dashboard')
+      return page
+
+    case 'board':
+      import('./pages/board/board')
       return page
 
     /**

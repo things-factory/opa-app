@@ -22,11 +22,14 @@ class SystemSetting extends localize(i18next)(PageView) {
         search-form {
           overflow: visible;
         }
+
         .grist {
           display: flex;
           flex-direction: column;
           flex: 1;
+          overflow-y: auto;
         }
+
         data-grist {
           overflow-y: hidden;
           flex: 1;
@@ -158,20 +161,6 @@ class SystemSetting extends localize(i18next)(PageView) {
           },
           sortable: true,
           width: 180
-        },
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'edit',
-          handlers: {
-            click: function(columns, data, column, record, rowIndex, field) {
-              var { category, value } = record
-
-              if (category == 'board' && value) {
-                navigate(`board-modeller/${value}`)
-              }
-            }
-          }
         },
         {
           type: 'datetime',

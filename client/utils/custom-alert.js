@@ -24,8 +24,8 @@ import Swal from 'sweetalert2'
  * @param {boolean} [debug = false] - Check all parameters are set properly. When set to 'true', simple checking will be done on the input parameters to verify the type.
  */
 
-export function CustomAlert({
-  type,
+export async function CustomAlert({
+  type = 'info',
   title,
   text,
   footer,
@@ -69,7 +69,7 @@ export function CustomAlert({
       if (err !== '') throw new Error(err)
     }
 
-    Swal.fire({
+    const result = await Swal.fire({
       type: type,
       title: title,
       text: text,
@@ -77,10 +77,10 @@ export function CustomAlert({
       position: position,
       showConfirmButton: Object.keys(confirmButton).length > 0 ? true : false,
       showCancelButton: Object.keys(cancelButton).length > 0 ? true : false,
-      confirmButtonText: confirmButton.hasOwnProperty('text') ? confirmButton.text : '',
-      cancelButtonText: cancelButton.hasOwnProperty('text') ? cancelButton.text : '',
-      confirmButtonColor: confirmButton.hasOwnProperty('color') ? confirmButton.color : '',
-      cancelButtonColor: cancelButton.hasOwnProperty('color') ? cancelButton.color : '',
+      confirmButtonText: confirmButton.hasOwnProperty('text') ? confirmButton.text : 'confirm',
+      cancelButtonText: cancelButton.hasOwnProperty('text') ? cancelButton.text : 'cancel',
+      confirmButtonColor: confirmButton.hasOwnProperty('color') ? confirmButton.color : '#22a6a7',
+      cancelButtonColor: cancelButton.hasOwnProperty('color') ? cancelButton.color : '#cfcfcf',
       toast: toast,
       reverseButtons: invertButton,
       onBeforeOpen: () => {
@@ -98,9 +98,13 @@ export function CustomAlert({
       onAfterClose: () => {
         onAfterClose ? onAfterClose() : undefined
       }
-    }).then(result => {
-      callback ? callback(result) : Promise.resolve(result)
     })
+
+    if (callback && typeof callback === 'function') {
+      callback(result)
+    } else {
+      return Promise.resolve(result)
+    }
   } catch (error) {
     console.log('%c(Custom-Alert)\n' + error, 'color:Red')
   }
