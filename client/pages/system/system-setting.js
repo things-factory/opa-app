@@ -157,24 +157,13 @@ class SystemSetting extends localize(i18next)(PageView) {
               return getRenderer(record.category)(value, column, record, rowIndex, field)
             },
             editable: true,
-            align: 'left'
+            align: 'left',
+            options: {
+              boardViewerPage: 'board'
+            }
           },
           sortable: true,
           width: 180
-        },
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'edit',
-          handlers: {
-            click: function(columns, data, column, record, rowIndex, field) {
-              var { category, value } = record
-
-              if (category == 'board' && value) {
-                navigate(`board-modeller/${value}`)
-              }
-            }
-          }
         },
         {
           type: 'datetime',
