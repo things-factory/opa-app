@@ -146,7 +146,7 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
           width: 180
         },
         {
-          type: 'string',
+          type: 'date',
           name: 'releaseDate',
           header: i18next.t('field.release_date'),
           record: { align: 'center' },

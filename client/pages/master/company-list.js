@@ -153,7 +153,7 @@ class CompanyList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),
-          record: { editable: true, align: 'left' },
+          record: { editable: true, align: 'center' },
           sortable: true,
           width: 200
         },

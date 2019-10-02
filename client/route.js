@@ -60,6 +60,10 @@ export default function route(page) {
       import('./pages/master/location-list')
       return page
 
+    case 'inventory_summary_reports':
+      import('./pages/master/inventory-summary-report')
+      return page
+
     /**
      * Order Menus Section
      */
@@ -101,6 +105,10 @@ export default function route(page) {
 
     case 'create_release_order':
       import('./pages/order/release-order/create-release-order')
+      return page
+
+    case 'edit_release_order':
+      import('./pages/order/release-order/edit-release-order')
       return page
 
     case 'release_orders':

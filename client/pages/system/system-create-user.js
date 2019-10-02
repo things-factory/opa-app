@@ -1,3 +1,4 @@
+import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice } from '@things-factory/shell'
@@ -8,8 +9,14 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
   static get properties() {
     return {
       bizplaces: Array,
-      roleConfig: Object
+      roleConfig: Object,
+      userTypes: Array
     }
+  }
+
+  constructor() {
+    super()
+    this.userTypes = []
   }
 
   static get styles() {
@@ -81,6 +88,19 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
 
             <label>${i18next.t('label.confirm_password')}</label>
             <input name="confirm_password" type="password" required />
+
+            <label>${i18next.t('label.user_type')}</label>
+            <select name="userType">
+              ${(this.userTypes || []).map(
+                userType =>
+                  html`
+                    <option value="${userType && userType.name}"
+                      >${userType && userType.name}
+                      ${userType && userType.description ? ` (${userType && userType.description})` : ''}</option
+                    >
+                  `
+              )}
+            </select>
           </fieldset>
         </form>
       </div>
@@ -102,6 +122,7 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
 
   async firstUpdated() {
     this.bizplaces = await this._fetchBizplaces()
+    this.userTypes = await getCodeByName('USER_TYPES')
 
     this.roleConfig = {
       columns: [
@@ -227,7 +248,8 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
         description: this._getInputByName('description').value,
         password: this._getInputByName('password').value,
         email: this._getInputByName('email').value,
-        roles: this._getCheckedRoles()
+        roles: this._getCheckedRoles(),
+        userType: this._getInputByName('userType').value
       }
     } else {
       throw new Error(i18next.t('text.user_info_not_valid'))

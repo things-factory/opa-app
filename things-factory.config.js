@@ -59,6 +59,10 @@ export default {
       tagname: 'location-list',
       page: 'locations'
     },
+    {
+      tagname: 'inventory-summary-report',
+      page: 'inventory_summary_reports'
+    },
 
     /**
      * Order Menus Section
@@ -102,6 +106,10 @@ export default {
     {
       tagname: 'create-release-order',
       page: 'create_release_order'
+    },
+    {
+      tagname: 'edit-release-order',
+      page: 'edit_release_order'
     },
     {
       tagname: 'release-order-list',

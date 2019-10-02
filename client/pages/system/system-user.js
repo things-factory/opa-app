@@ -1,10 +1,11 @@
-import '@things-factory/grist-ui'
+import { getCodeByName } from '@things-factory/code-base'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
+import '@things-factory/grist-ui'
 import './system-create-user'
 import './system-user-detail'
 
@@ -81,7 +82,9 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    this.userTypes = await getCodeByName('USER_TYPES')
+
     this._searchFields = [
       {
         name: 'domain',
@@ -116,12 +119,19 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
         }
       },
       {
-        name: 'userType',
+        name: 'user_type',
         label: i18next.t('field.user_type'),
-        type: 'text',
-        props: {
-          searchOper: 'like'
-        }
+        type: 'select',
+        options: [
+          { value: '' },
+          ...this.userTypes.map(userType => {
+            return {
+              name: userType.name,
+              value: userType.name
+            }
+          })
+        ],
+        props: { searchOper: 'eq' }
       }
     ]
 
@@ -240,6 +250,7 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async fetchHandler({ page, limit, sorters = [] }) {
+    console.log(this.searchForm.queryFilters)
     const response = await client.query({
       query: gql`
         query {
