@@ -85,6 +85,9 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
       pagination: {
         infinite: true
       },
+      rows: {
+        appendable: false
+      },
       columns: [
         {
           type: 'gutter',

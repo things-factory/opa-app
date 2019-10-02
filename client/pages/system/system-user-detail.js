@@ -93,6 +93,7 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
   async firstUpdated() {
     this.roleConfig = {
       pagination: { infinite: true },
+      rows: { appendable: false },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
