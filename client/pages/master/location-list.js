@@ -8,8 +8,8 @@ import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
 import './generate-location-list'
 import { USBPrinter } from '@things-factory/barcode-base'
-import Swal from 'sweetalert2'
 import { LOCATION_LABEL_SETTING_KEY } from '../../setting-constants'
+import { CustomAlert } from '../../utils/custom-alert'
 
 class LocationList extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -342,28 +342,26 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _deleteLocation() {
-    Swal.fire({
-      title: i18next.t('text.are_you_sure?'),
+    CustomAlert({
+      title: i18next.t('text.are_you_sure'),
       text: i18next.t('text.you_wont_be_able_to_revert_this!'),
       type: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#22a6a7',
-      cancelButtonColor: '#cfcfcf',
-      confirmButtonText: i18next.t('button.delete'),
-      cancelButtonText: i18next.t('button.cancel')
-    }).then(async result => {
-      if (result.value) {
-        const names = this.dataGrist.selected.map(record => record.name)
-        if (names && names.length > 0) {
-          const response = await client.query({
-            query: gql`
+      confirmButton: { text: i18next.t('button.delete'), color: '#22a6a7' },
+      cancelButton: { text: 'cancel', color: '#cfcfcf' },
+      callback: async result => {
+        if (result.value) {
+          const names = this.dataGrist.selected.map(record => record.name)
+          if (names && names.length > 0) {
+            const response = await client.query({
+              query: gql`
             mutation {
               deleteLocations(${gqlBuilder.buildArgs({ names })})
             }
           `
-          })
+            })
 
-          if (!response.errors) this.dataGrist.fetch()
+            if (!response.errors) this.dataGrist.fetch()
+          }
         }
       }
     })

@@ -6,7 +6,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
-import Swal from 'sweetalert2'
+import { CustomAlert } from '../../../utils/custom-alert'
 
 class CompleteCollectionOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -470,18 +470,16 @@ class CompleteCollectionOrder extends connect(store)(localize(i18next)(PageView)
   }
 
   async _checkCollectedOrder() {
-    Swal.fire({
-      title: 'Are you sure to change the order status to Done?',
+    CustomAlert({
+      title: i18next.t('text.are_you_sure'),
       text: i18next.t('text.you_wont_be_able_to_revert_this!'),
       type: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#22a6a7',
-      cancelButtonColor: '#cfcfcf',
-      confirmButtonText: 'Yes, order completed!'
-    }).then(async result => {
-      if (result.value) {
-        const response = await client.query({
-          query: gql`
+      confirmButton: { text: i18next.t('button.check'), color: '#22a6a7' },
+      cancelButton: { text: 'cancel', color: '#cfcfcf' },
+      callback: async result => {
+        if (result.value) {
+          const response = await client.query({
+            query: gql`
             mutation {
               checkCollectedOrder(${gqlBuilder.buildArgs({
                 name: this._orderName
@@ -490,17 +488,18 @@ class CompleteCollectionOrder extends connect(store)(localize(i18next)(PageView)
               }
             }
           `
-        })
-
-        if (!response.errors) {
-          history.back()
-          new CustomEvent('notify', {
-            detail: {
-              message: i18next.t('text.order_status_has_been_updated')
-            }
           })
-        } else {
-          throw new Error(response.errors[0])
+
+          if (!response.errors) {
+            history.back()
+            new CustomEvent('notify', {
+              detail: {
+                message: i18next.t('text.order_status_has_been_updated')
+              }
+            })
+          } else {
+            throw new Error(response.errors[0])
+          }
         }
       }
     })
