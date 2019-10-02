@@ -116,6 +116,9 @@ class SystemSetting extends localize(i18next)(PageView) {
     ]
 
     this.config = {
+      list: {
+        fields: ['name', 'description', 'value']
+      },
       rows: { selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
@@ -157,7 +160,7 @@ class SystemSetting extends localize(i18next)(PageView) {
               return getRenderer(record.category)(value, column, record, rowIndex, field)
             },
             editable: true,
-            align: 'left',
+            align: 'center',
             options: {
               boardViewerPage: 'board'
             }
