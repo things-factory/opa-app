@@ -2,13 +2,12 @@ import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { connect } from 'pwa-helpers/connect-mixin.js'
 import { CustomAlert } from '../../../utils/custom-alert'
 
-class EditArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
+class EditArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
     return {
       /**
@@ -227,8 +226,9 @@ class EditArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
     this._loadTypes = await getCodeByName('LOAD_TYPES')
   }
 
-  updated(changedProps) {
-    if (changedProps.has('_ganNo')) {
+  pageUpdated(changes) {
+    if (this.active && changes.resourceId) {
+      this._ganNo = changes.resourceId
       this._fetchGAN()
     }
   }
@@ -478,7 +478,10 @@ class EditArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
-      if (!result.value) return
+      if (!result.value) {
+        cb()
+        return
+      }
 
       let args = { name: this._ganNo, arrivalNotice: this._getArrivalNotice() }
       if (!this._importedOrder && !this._ownTransport) args.collectionOrder = this._getCollectionOrder()
@@ -621,12 +624,6 @@ class EditArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
     })
 
     return obj
-  }
-
-  stateChanged(state) {
-    if (this.active) {
-      this._ganNo = state && state.route && state.route.resourceId
-    }
   }
 
   _showToast({ type, message }) {

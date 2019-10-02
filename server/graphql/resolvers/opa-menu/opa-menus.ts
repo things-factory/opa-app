@@ -62,6 +62,6 @@ export const opaMenusResolver = {
             .sort((a: Menu, b: Menu) => a.rank - b.rank)
         }
       })
-      .filter((groupMenu: Menu) => groupMenu.childrens)
+      .filter((groupMenu: Menu) => groupMenu.childrens && groupMenu.childrens.length)
   }
 }

@@ -122,6 +122,8 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
               const status = record.status
               if (status === ORDER_STATUS.REJECTED.value) {
                 navigate(`rejected_arrival_notice/${record.name}`) // 1. move to rejected detail page
+              } else if (status === ORDER_STATUS.EDITING.value) {
+                navigate(`edit_arrival_notice/${record.name}`)
               } else {
                 navigate(`arrival_notice_detail/${record.name}`)
               }

@@ -18,6 +18,10 @@ export const ORDER_TYPES = {
   RELEASE_OF_GOODS: {
     name: 'release_of_goods',
     value: 'RELEASE_OF_GOODS'
+  },
+  VAS_ORDER: {
+    name: 'vas_order',
+    value: 'VAS_ORDER'
   }
 }
 
@@ -46,6 +50,10 @@ export const ORDER_STATUS = {
     name: 'order_status_arrived',
     value: 'ARRIVED'
   },
+  READY_TO_UNLOAD: {
+    name: 'ready_to_unload',
+    value: 'READY_TO_UNLOAD'
+  },
   PROCESSING: {
     name: 'order_status_processing',
     value: 'PROCESSING'
@@ -62,6 +70,10 @@ export const ORDER_STATUS = {
     name: 'order_status_delivering',
     value: 'DELIVERING'
   },
+  EXECUTING: {
+    name: 'order_status_executing',
+    value: 'EXECUTING'
+  },
   DISPATCHING: {
     name: 'order_status_dispatching',
     value: 'DISPATCHING'
@@ -77,6 +89,10 @@ export const ORDER_STATUS = {
   READY_TO_DISPATCH: {
     name: 'order_status_ready_to_dispatch',
     value: 'READY_TO_DISPATCH'
+  },
+  READY_TO_EXECUTE: {
+    name: 'order_status_ready_to_execute',
+    value: 'READY_TO_EXECUTE'
   }
 }
 
@@ -150,6 +166,10 @@ export const LOAD_TYPES = [
   {
     name: 'low_container_load',
     value: 'LCL'
+  },
+  {
+    name: 'tag_along',
+    value: 'TAG_ALONG'
   }
 ]
 
@@ -169,6 +189,10 @@ export const PACKING_TYPES = {
   BOTTLE: {
     name: 'bottle_packing',
     value: 'BOTTLE'
+  },
+  BAG: {
+    name: 'bag_packing',
+    value: 'BAG'
   },
   SACK: {
     name: 'sack_packing',
