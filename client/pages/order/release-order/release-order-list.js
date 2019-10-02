@@ -40,7 +40,7 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
       config: Object,
       data: Object,
       _ownTransport: Boolean,
-      _shippingOption: Boolean
+      _exportOption: Boolean
     }
   }
 
@@ -105,10 +105,10 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
           { name: i18next.t(`label.${ORDER_STATUS.EDITING.name}`), value: ORDER_STATUS.EDITING.value },
           { name: i18next.t(`label.${ORDER_STATUS.PENDING_RECEIVE.name}`), value: ORDER_STATUS.PENDING_RECEIVE.value },
           {
-            name: i18next.t(`label.${ORDER_STATUS.READY_TO_PICK.name}`),
-            value: ORDER_STATUS.READY_TO_PICK.value
+            name: i18next.t(`label.${ORDER_STATUS.READY_TO_EXECUTE.name}`),
+            value: ORDER_STATUS.READY_TO_EXECUTE.value
           },
-          { name: i18next.t(`label.${ORDER_STATUS.PICKING.name}`), value: ORDER_STATUS.PICKING.value },
+          { name: i18next.t(`label.${ORDER_STATUS.EXECUTING.name}`), value: ORDER_STATUS.EXECUTING.value },
           { name: i18next.t(`label.${ORDER_STATUS.DONE.name}`), value: ORDER_STATUS.DONE.value }
         ],
         props: { searchOper: 'eq' }
@@ -129,6 +129,8 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
               const status = record.status
               if (status === ORDER_STATUS.REJECTED.value) {
                 navigate(`rejected_release_order/${record.name}`) // 1. move to rejected detail page
+              } else if (status === ORDER_STATUS.EDITING.value) {
+                navigate(`edit_release_order/${record.name}`)
               } else {
                 navigate(`release_order_detail/${record.name}`)
               }
@@ -144,8 +146,8 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
           width: 180
         },
         {
-          type: 'datetime',
-          name: 'releaseDateTime',
+          type: 'string',
+          name: 'releaseDate',
           header: i18next.t('field.release_date'),
           record: { align: 'center' },
           sortable: true,
@@ -161,7 +163,7 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
         },
         {
           type: 'boolean',
-          name: 'shippingOption',
+          name: 'exportOption',
           header: i18next.t('field.shipping_option'),
           record: { align: 'center' },
           sortable: true,
@@ -224,8 +226,8 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
                 name
               }
               ownTransport
-              shippingOption
-              releaseDateTime
+              exportOption
+              releaseDate
               status
               updatedAt
               updater {
@@ -242,7 +244,7 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       this._ownTransport = response.data.releaseGoods.ownTransport
-      this._shippingOption = response.data.releaseGoods.shippingOption
+      this._exportOption = response.data.releaseGoods.exportOption
 
       return {
         total: response.data.releaseGoods.total || 0,
