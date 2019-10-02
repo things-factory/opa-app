@@ -89,8 +89,8 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
       },
       {
         label: i18next.t('field.release_date'),
-        name: 'releaseDateTime',
-        type: 'datetime-local',
+        name: 'releaseDate',
+        type: 'date',
         props: { searchOper: 'like' }
       },
       {
@@ -155,8 +155,8 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           width: 200
         },
         {
-          type: 'datetime',
-          name: 'releaseDateTime',
+          type: 'date',
+          name: 'releaseDate',
           header: i18next.t('field.release_date'),
           record: { align: 'center' },
           sortable: true,
@@ -172,8 +172,8 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
         },
         {
           type: 'boolean',
-          name: 'shippingOption',
-          header: i18next.t('field.shipping_option'),
+          name: 'exportOption',
+          header: i18next.t('field.export_option'),
           record: { align: 'center' },
           sortable: true,
           width: 100
@@ -231,10 +231,10 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
                 description
               }
               name
-              releaseDateTime
+              releaseDate
               status
               ownTransport
-              shippingOption
+              exportOption
               updatedAt
               updater {
                 id
