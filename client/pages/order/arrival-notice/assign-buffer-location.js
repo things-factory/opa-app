@@ -75,13 +75,13 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
       title: i18next.t('title.assign_buffer_location'),
       actions: [
         {
-          title: i18next.t('button.back'),
-          action: () => history.back()
-        },
-        {
           title: i18next.t('button.assign_buffer_location'),
           type: 'transaction',
           action: this._assignBufferLocation.bind(this)
+        },
+        {
+          title: i18next.t('button.back'),
+          action: () => history.back()
         }
       ]
     }

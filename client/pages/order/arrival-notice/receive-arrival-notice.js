@@ -74,10 +74,6 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       title: i18next.t('title.receive_arrival_notice'),
       actions: [
         {
-          title: i18next.t('button.back'),
-          action: () => history.back()
-        },
-        {
           title: i18next.t('button.reject'),
           type: 'transaction',
           action: this._rejectArrivalNotice.bind(this)
@@ -86,6 +82,10 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
           title: i18next.t('button.receive'),
           type: 'transaction',
           action: this._receiveArrivalNotice.bind(this)
+        },
+        {
+          title: i18next.t('button.back'),
+          action: () => history.back()
         }
       ]
     }

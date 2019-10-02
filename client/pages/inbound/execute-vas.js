@@ -2,7 +2,7 @@ import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/f
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store, UPDATE_CONTEXT, navigate } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
@@ -226,7 +226,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
 
   updated(changedProps) {
     if (changedProps.has('_selectedTaskStatus') && this._selectedTaskStatus) {
-      this.updateContext()
+      this._updateContext()
     }
   }
 
@@ -289,7 +289,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  updateContext() {
+  _updateContext() {
     let actions = []
     if (this.completed) {
       actions = [{ title: i18next.t('button.complete'), action: this._complete.bind(this) }]
@@ -299,10 +299,10 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       actions = [
         ...actions,
         { title: i18next.t('button.issue'), action: this._openIssueEditor.bind(this) },
-        { title: i18next.t('button.done'), action: this._executeVas.bind(this) }
+        { title: i18next.t('button.done'), type: 'transaction', action: this._executeVas.bind(this) }
       ]
     } else if (this._selectedTaskStatus === WORKSHEET_STATUS.DONE.value) {
-      actions = [...actions, { title: i18next.t('button.undo'), action: this._undoVas.bind(this) }]
+      actions = [...actions, { title: i18next.t('button.undo'), type: 'transaction', action: this._undoVas.bind(this) }]
     }
 
     store.dispatch({
@@ -454,7 +454,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
     )
   }
 
-  async _executeVas() {
+  async _executeVas(cb) {
     try {
       this._validate()
       const response = await client.query({
@@ -476,12 +476,27 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       }
     } catch (e) {
       this._showToast(e)
+    } finally {
+      cb()
     }
   }
 
-  async _undoVas() {
+  async _undoVas(cb) {
     try {
       this._validate()
+
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.undo_vas'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) {
+        cb()
+        return
+      }
+
       const response = await client.query({
         query: gql`
           mutation {
@@ -501,6 +516,8 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       }
     } catch (e) {
       this._showToast(e)
+    } finally {
+      cb()
     }
   }
 
@@ -522,7 +539,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       confirmButtonText: i18next.t('text.yes')
     })
 
-    this.updateContext()
+    this._updateContext()
 
     if (result.value) this._complete()
   }
