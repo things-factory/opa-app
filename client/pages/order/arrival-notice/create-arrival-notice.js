@@ -391,7 +391,9 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         return
       }
 
-      let args = { arrivalNotice: this._getArrivalNotice() }
+      let args = {
+        arrivalNotice: { ...this._getArrivalNotice(), ownTransport: this._importedOrder ? true : this._ownTransport }
+      }
       if (!this._importedOrder && !this._ownTransport) args.collectionOrder = this._getCollectionOrder()
 
       const response = await client.query({
@@ -406,6 +408,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       })
 
       if (!response.errors) {
+        this._clearView()
         navigate(`arrival_notice_detail/${response.data.generateArrivalNotice.name}`)
         this._showToast({ message: i18next.t('arrival_notice_created') })
       }
@@ -513,6 +516,11 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
   _getCollectionOrder() {
     return this._serializeForm(this.collectionOrderForm)
+  }
+
+  _clearView() {
+    this.arrivalNoticeForm.reset()
+    this.collectionOrderForm.reset()
   }
 
   _serializeForm(form) {
