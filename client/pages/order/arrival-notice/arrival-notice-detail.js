@@ -75,7 +75,8 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.arrival_notice_detail')
+      title: i18next.t('title.arrival_notice_detail'),
+      actions: this._actions
     }
   }
 
@@ -197,16 +198,11 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     this._loadTypes = await getCodeByName('LOAD_TYPES')
   }
 
-  updated(changedProps) {
-    if (changedProps.has('_status')) {
-      this._updateContext()
-    }
-  }
-
-  pageUpdated(changes) {
+  async pageUpdated(changes) {
     if (this.active && changes.resourceId) {
       this._ganNo = changes.resourceId
-      this._fetchGAN()
+      await this._fetchGAN()
+      this._updateContext()
     }
   }
 
@@ -371,10 +367,9 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
   }
 
   _updateContext() {
-    let actions = []
-
+    this._actions = []
     if (this._status === ORDER_STATUS.PENDING.value) {
-      actions = [
+      this._actions = [
         {
           title: i18next.t('button.edit'),
           type: 'transaction',
@@ -388,14 +383,11 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       ]
     }
 
-    actions = [...actions, { title: i18next.t('button.back'), action: () => history.back() }]
+    this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
 
     store.dispatch({
       type: UPDATE_CONTEXT,
-      context: {
-        ...this.context,
-        actions
-      }
+      context: this.context
     })
   }
 
