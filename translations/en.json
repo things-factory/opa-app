@@ -315,7 +315,7 @@
   "text.form_is_not_completed": "form is not completed",
   "text.gan_confirmed": "GAN confirmed",
   "text.gan_now_editable": "GAN now editable",
-  "text.info_created_successfully": "info created successfully"
+  "text.info_created_successfully": "info created successfully",
   "text.invalid_form": "invalid form",
   "text.invalid_quantity_input": "invalid quantity input",
   "text.inventory_is_not_selected": "inventory is not selected",
