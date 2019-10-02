@@ -2,16 +2,14 @@ import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { connect } from 'pwa-helpers/connect-mixin.js'
 import { CustomAlert } from '../../../utils/custom-alert'
 import '../../popup-note'
 import { ORDER_STATUS } from '../constants/order'
 
-class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
+class CheckArrivedNotice extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _ganNo: String,
@@ -147,33 +145,6 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
           .data="${this.vasData}"
         ></data-grist>
       </div>
-
-      <div class="co-form-container" ?hidden="${this._ownTransport}" readonly>
-        <form name="collectionOrder" class="multi-column-form">
-          <fieldset>
-            <legend>${i18next.t('title.collection_order')}</legend>
-
-            <label>${i18next.t('label.collection_date')}</label>
-            <input name="collectionDate" type="date" readonly />
-
-            <label>${i18next.t('label.destination')}</label>
-            <input name="from" readonly />
-
-            <label>${i18next.t('label.load_type')}</label>
-            <select name="loadType" disabled>
-              <option value=""></option>
-              ${this._loadTypes.map(
-                loadType => html`
-                  <option value="${loadType.name}">${i18next.t(`label.${loadType.description}`)}</option>
-                `
-              )}
-            </select>
-
-            <!--label>${i18next.t('label.document')}</label>
-            <input name="attiachment" type="file" ?required="${!this._ownTransport}" /-->
-          </fieldset>
-        </form>
-      </div>
     `
   }
 
@@ -181,7 +152,6 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
     super()
     this.productData = { records: [] }
     this.vasData = { records: [] }
-    this._importedOrder = false
     this._ownTransport = true
     this._loadTypes = []
   }
@@ -190,16 +160,8 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('form[name=arrivalNotice]')
   }
 
-  get collectionOrderForm() {
-    return this.shadowRoot.querySelector('form[name=collectionOrder]')
-  }
-
   get _ownTransportInput() {
     return this.shadowRoot.querySelector('input[name=ownTransport]')
-  }
-
-  get _collectionDateInput() {
-    return this.shadowRoot.querySelector('input[name=collectionDate]')
   }
 
   get productGrist() {
@@ -309,8 +271,9 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  updated(changedProps) {
-    if (changedProps.has('_ganNo')) {
+  pageUpdated(changes) {
+    if (this.active && changes.resourceId) {
+      this._ganNo = changes.resourceId
       this._fetchGAN()
     }
   }
@@ -351,11 +314,6 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
               batchId
               remark
             }
-            collectionOrder {
-              from
-              loadType
-              collectionDate
-            }   
           }
         }
       `
@@ -363,7 +321,6 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       const arrivalNotice = response.data.arrivalNotice
-      const collectionOrder = arrivalNotice.collectionOrder
       const orderProducts = arrivalNotice.orderProducts
       const orderVass = arrivalNotice.orderVass
 
@@ -371,7 +328,6 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
       this._status = arrivalNotice.status
       this._fillupANForm(arrivalNotice)
 
-      if (!this._ownTransport) this._fillupCOForm(collectionOrder)
       this.productData = { records: orderProducts }
       this.vasData = { records: orderVass }
     }
@@ -379,10 +335,6 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
 
   _fillupANForm(data) {
     this._fillupForm(this.arrivalNoticeForm, data)
-  }
-
-  _fillupCOForm(data) {
-    this._fillupForm(this.collectionOrderForm, data)
   }
 
   _fillupForm(form, data) {
@@ -395,37 +347,6 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
         }
       })
     }
-  }
-
-  _updateContext() {
-    let actions = []
-
-    if (this._status === ORDER_STATUS.PENDING.value) {
-      actions = [
-        {
-          title: i18next.t('button.edit'),
-          type: 'transaction',
-          action: this._changeToEditable.bind(this)
-        },
-        {
-          title: i18next.t('button.confirm'),
-          type: 'transaction',
-          action: this._confirmArrivalNotice.bind(this)
-        }
-      ]
-    } else if (this._status === ORDER_STATUS.EDITING.value) {
-      navigate(`edit_arrival_notice/${this._ganNo}`)
-    }
-
-    actions = [...actions, { title: i18next.t('button.back'), action: () => navigate('arrival_notices') }]
-
-    store.dispatch({
-      type: UPDATE_CONTEXT,
-      context: {
-        ...this.context,
-        actions
-      }
-    })
   }
 
   async _checkArrivedNotice(cb) {
@@ -454,7 +375,7 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!response.errors) {
-        history.back()
+        navigate(`assign_buffer_location/${this._ganNo}`)
 
         this._showToast({ message: i18next.t('text.arrival_notice_is_arrived') })
       }
@@ -462,12 +383,6 @@ class CheckArrivedNotice extends connect(store)(localize(i18next)(PageView)) {
       this._showToast(e)
     } finally {
       cb()
-    }
-  }
-
-  stateChanged(state) {
-    if (this.active) {
-      this._ganNo = state && state.route && state.route.resourceId
     }
   }
 

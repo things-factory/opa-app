@@ -50,6 +50,10 @@ export const ORDER_STATUS = {
     name: 'order_status_arrived',
     value: 'ARRIVED'
   },
+  READY_TO_UNLOAD: {
+    name: 'ready_to_unload',
+    value: 'READY_TO_UNLOAD'
+  },
   PROCESSING: {
     name: 'order_status_processing',
     value: 'PROCESSING'

@@ -3,15 +3,14 @@ import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { connect } from 'pwa-helpers/connect-mixin.js'
 import { CustomAlert } from '../../../utils/custom-alert'
 import '../../popup-note'
 import { ORDER_STATUS } from '../constants/order'
 
-class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
+class ReceiveArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _ganNo: String,
@@ -112,7 +111,7 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
             name="ownTransport"
             ?checked="${this._ownTransport}"
             @change="${e => (this._ownTransport = e.currentTarget.checked)}"
-            readonly
+            disabled
           />
           <label>${i18next.t('label.own_transport')}</label>
 
@@ -314,8 +313,9 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  updated(changedProps) {
-    if (changedProps.has('_ganNo')) {
+  pageUpdated(changes) {
+    if (this.active && changes.resourceId) {
+      this._ganNo = changes.resourceId
       this._fetchGAN()
     }
   }
@@ -400,37 +400,6 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
         }
       })
     }
-  }
-
-  _updateContext() {
-    let actions = []
-
-    if (this._status === ORDER_STATUS.PENDING.value) {
-      actions = [
-        {
-          title: i18next.t('button.edit'),
-          type: 'transaction',
-          action: this._changeToEditable.bind(this)
-        },
-        {
-          title: i18next.t('button.confirm'),
-          type: 'transaction',
-          action: this._confirmArrivalNotice.bind(this)
-        }
-      ]
-    } else if (this._status === ORDER_STATUS.EDITING.value) {
-      navigate(`edit_arrival_notice/${this._ganNo}`)
-    }
-
-    actions = [...actions, { title: i18next.t('button.back'), action: () => navigate('arrival_notices') }]
-
-    store.dispatch({
-      type: UPDATE_CONTEXT,
-      context: {
-        ...this.context,
-        actions
-      }
-    })
   }
 
   async _receiveArrivalNotice(cb) {
@@ -522,12 +491,6 @@ class ReceiveArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
     )
 
     popup.onclosed = cb
-  }
-
-  stateChanged(state) {
-    if (this.active) {
-      this._ganNo = state && state.route && state.route.resourceId
-    }
   }
 
   _showToast({ type, message }) {

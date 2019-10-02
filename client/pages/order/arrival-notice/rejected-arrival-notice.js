@@ -1,13 +1,12 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
 
-class RejectedArrivalNotice extends connect(store)(localize(i18next)(PageView)) {
+class RejectedArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _ganNo: String,
@@ -77,9 +76,10 @@ class RejectedArrivalNotice extends connect(store)(localize(i18next)(PageView)) 
     }
   }
 
-  pageUpdated(changes, lifecycle) {
-    if (this.active) {
-      this.fetchGAN()
+  pageUpdated(changes) {
+    if (this.active && changes.resourceId) {
+      this._ganNo = changes.resourceId
+      this._fetchGAN()
     }
   }
 
@@ -290,9 +290,9 @@ class RejectedArrivalNotice extends connect(store)(localize(i18next)(PageView)) 
     }
   }
 
-  updated(changedProps) {
-    if (changedProps.has('_ganNo')) {
-      this.fetchGAN()
+  pageUpdated(changes) {
+    if (this.active && changes.has('_ganNo')) {
+      this._fetchGAN()
     }
   }
 
@@ -381,12 +381,6 @@ class RejectedArrivalNotice extends connect(store)(localize(i18next)(PageView)) 
           field.value = arrivalNotice[key]
         }
       })
-    }
-  }
-
-  stateChanged(state) {
-    if (this.active) {
-      this._ganNo = state && state.route && state.route.resourceId
     }
   }
 

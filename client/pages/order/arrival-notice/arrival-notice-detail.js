@@ -5,11 +5,10 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { connect } from 'pwa-helpers/connect-mixin.js'
-import { ORDER_STATUS } from '../constants/order'
 import { CustomAlert } from '../../../utils/custom-alert'
+import { ORDER_STATUS } from '../constants/order'
 
-class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
+class ArrivalNoticeDetail extends localize(i18next)(PageView) {
   static get properties() {
     return {
       /**
@@ -100,7 +99,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
             name="ownTransport"
             ?checked="${this._ownTransport}"
             @change="${e => (this._ownTransport = e.currentTarget.checked)}"
-            readonly
+            disabled
           />
           <label>${i18next.t('label.own_transport')}</label>
 
@@ -174,7 +173,6 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
     super()
     this.productData = { records: [] }
     this.vasData = { records: [] }
-    this._importedOrder = false
     this._ownTransport = true
     this._loadTypes = []
   }
@@ -187,14 +185,6 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('form[name=collectionOrder]')
   }
 
-  get _ownTransportInput() {
-    return this.shadowRoot.querySelector('input[name=ownTransport]')
-  }
-
-  get _collectionDateInput() {
-    return this.shadowRoot.querySelector('input[name=collectionDate]')
-  }
-
   get productGrist() {
     return this.shadowRoot.querySelector('data-grist#product-grist')
   }
@@ -205,6 +195,19 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
 
   async firstUpdated() {
     this._loadTypes = await getCodeByName('LOAD_TYPES')
+  }
+
+  updated(changedProps) {
+    if (changedProps.has('_status')) {
+      this._updateContext()
+    }
+  }
+
+  pageUpdated(changes) {
+    if (this.active && changes.resourceId) {
+      this._ganNo = changes.resourceId
+      this._fetchGAN()
+    }
   }
 
   pageInitialized() {
@@ -305,16 +308,6 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  updated(changedProps) {
-    if (changedProps.has('_ganNo')) {
-      this._fetchGAN()
-    }
-
-    if (changedProps.has('_status')) {
-      this._updateContext()
-    }
-  }
-
   async _fetchGAN() {
     this._status = ''
     const response = await client.query({
@@ -377,6 +370,35 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
+  _updateContext() {
+    let actions = []
+
+    if (this._status === ORDER_STATUS.PENDING.value) {
+      actions = [
+        {
+          title: i18next.t('button.edit'),
+          type: 'transaction',
+          action: this._changeToEditable.bind(this)
+        },
+        {
+          title: i18next.t('button.confirm'),
+          type: 'transaction',
+          action: this._confirmArrivalNotice.bind(this)
+        }
+      ]
+    }
+
+    actions = [...actions, { title: i18next.t('button.back'), action: () => history.back() }]
+
+    store.dispatch({
+      type: UPDATE_CONTEXT,
+      context: {
+        ...this.context,
+        actions
+      }
+    })
+  }
+
   _fillupANForm(data) {
     this._fillupForm(this.arrivalNoticeForm, data)
   }
@@ -395,37 +417,6 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
         }
       })
     }
-  }
-
-  _updateContext() {
-    let actions = []
-
-    if (this._status === ORDER_STATUS.PENDING.value) {
-      actions = [
-        {
-          title: i18next.t('button.edit'),
-          type: 'transaction',
-          action: this._changeToEditable.bind(this)
-        },
-        {
-          title: i18next.t('button.confirm'),
-          type: 'transaction',
-          action: this._confirmArrivalNotice.bind(this)
-        }
-      ]
-    } else if (this._status === ORDER_STATUS.EDITING.value) {
-      navigate(`edit_arrival_notice/${this._ganNo}`)
-    }
-
-    actions = [...actions, { title: i18next.t('button.back'), action: () => navigate('arrival_notices') }]
-
-    store.dispatch({
-      type: UPDATE_CONTEXT,
-      context: {
-        ...this.context,
-        actions
-      }
-    })
   }
 
   async _changeToEditable(cb) {
@@ -452,7 +443,7 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
         })
 
         if (!response.errors) {
-          this._fetchGAN()
+          navigate(`edit_arrival_notice/${this._ganNo}`)
         }
       }
     } catch (e) {
@@ -494,12 +485,6 @@ class ArrivalNoticeDetail extends connect(store)(localize(i18next)(PageView)) {
       this._showToast(e)
     } finally {
       cb()
-    }
-  }
-
-  stateChanged(state) {
-    if (this.active) {
-      this._ganNo = state && state.route && state.route.resourceId
     }
   }
 
