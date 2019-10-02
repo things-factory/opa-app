@@ -3,7 +3,7 @@ import { connect } from 'pwa-helpers/connect-mixin.js'
 
 import '@material/mwc-icon'
 
-import { store } from '@things-factory/shell'
+import { navigate, store } from '@things-factory/shell'
 
 export class DashboardTool extends connect(store)(LitElement) {
   static get properties() {

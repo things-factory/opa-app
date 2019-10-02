@@ -1,5 +1,5 @@
 import { addRoutingType, updateMenuProvider } from '@things-factory/menu-base'
-import { client, store, navigate, isMobileDevice, UPDATE_BASE_URL } from '@things-factory/shell'
+import { client, store, isMobileDevice, UPDATE_BASE_URL } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { UPDATE_OPA_APP_SETTINGS, CLEAR_OPA_APP_SETTINGS } from './actions/opa-app-settings'
 import opaApp from './reducers/opa-app-settings'
