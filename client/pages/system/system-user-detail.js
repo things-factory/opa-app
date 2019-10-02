@@ -1,3 +1,4 @@
+import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice } from '@things-factory/shell'
@@ -10,8 +11,14 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
       userId: String,
       email: String,
       userInfo: Object,
-      roleConfig: Object
+      roleConfig: Object,
+      userTypes: Array
     }
+  }
+
+  constructor() {
+    super()
+    this.userTypes = []
   }
 
   static get styles() {
@@ -69,8 +76,18 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
             <label>${i18next.t('field.email')}</label>
             <input name="email" required />
 
-            <label>${i18next.t('field.user_type')}</label>
-            <input name="userType" required />
+            <label>${i18next.t('label.user_type')}</label>
+            <select name="userType">
+              ${(this.userTypes || []).map(
+                userType =>
+                  html`
+                    <option value="${userType && userType.name}"
+                      >${userType && userType.name}
+                      ${userType && userType.description ? ` (${userType && userType.description})` : ''}</option
+                    >
+                  `
+              )}
+            </select>
           </fieldset>
         </form>
       </div>
@@ -91,6 +108,8 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
   }
 
   async firstUpdated() {
+    this.userTypes = await getCodeByName('USER_TYPES')
+
     this.roleConfig = {
       pagination: { infinite: true },
       rows: { appendable: false },
@@ -286,7 +305,7 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
   }
 
   _getInputByName(name) {
-    return this.shadowRoot.querySelector(`input[name=${name}]`)
+    return this.shadowRoot.querySelector(`select[name=${name}], input[name=${name}]`)
   }
 
   _getCheckedRoles() {
