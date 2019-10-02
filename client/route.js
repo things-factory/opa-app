@@ -60,6 +60,10 @@ export default function route(page) {
       import('./pages/master/location-list')
       return page
 
+    case 'inventory_summary_reports':
+      import('./pages/master/inventory-summary-report')
+      return page
+
     /**
      * Order Menus Section
      */
