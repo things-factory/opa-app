@@ -6,6 +6,8 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
+import '../../popup-note'
+import { CustomAlert } from '../../../utils/custom-alert'
 
 class ReceiveDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -462,6 +464,16 @@ class ReceiveDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
 
   async _receiveDeliveryOrder() {
     try {
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i1next.t('text.receive_delivery_order'),
+        confirmButton: { text: i1next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+      if (!result.value) {
+        cb()
+        return
+      }
       const response = await client.query({
         query: gql`
           mutation {
@@ -484,12 +496,29 @@ class ReceiveDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _rejectDeliveryOrder() {
-    try {
-      const patch = this._getRemark()
-      if (patch) {
-        const response = await client.query({
-          query: gql`
+  async _rejectDeliveryOrder(cb) {
+    const popup = openPopup(
+      html`
+        <popup-note
+          .title="${i18next.t('title.remark')}"
+          @submit="${async e => {
+            try {
+              const patch = this._getRemark()
+              if (patch) throw new Error(i18next.t('text.remark_is_empty'))
+              const result = await CustomAlert({
+                title: i18next.t('title.are_you_sure'),
+                text: i18next.t('text.reject_collection_order'),
+                confirmButton: { text: i18next.t('button.confirm') },
+                cancelButton: { text: i18next.t('button.cancel') }
+              })
+
+              if (!result.value) {
+                cb()
+                return
+              }
+
+              const response = await client.query({
+                query: gql`
               mutation {
                 rejectDeliveryOrder(${gqlBuilder.buildArgs({
                   name: this._orderName,
@@ -499,18 +528,30 @@ class ReceiveDeliveryOrder extends connect(store)(localize(i18next)(PageView)) {
                 }
               }
             `
-        })
+              })
 
-        if (!response.errors) {
-          history.back()
-          this._showToast({ message: i18next.t('text.delivery_order_rejected') })
-        }
-      } else {
-        return this._showToast({ message: i18next.t('text.remark_is_empty') })
+              if (!response.errors) {
+                history.back()
+                this._showToast({ message: i18next.t('text.delivery_order_rejected') })
+              } else {
+                return this._showToast({ message: i18next.t('text.remark_is_empty') })
+              }
+            } catch (e) {
+              this._showToast(e)
+            } finally {
+              cb()
+            }
+          }}"
+        ></popup-note>
+      `,
+      {
+        backdrop: true,
+        size: 'medium',
+        title: i18next.t('title.reject_delivery_order')
       }
-    } catch (e) {
-      this._showToast({ message: e.message })
-    }
+    )
+
+    popup.onclosed = cb
   }
 
   _getTextAreaByName(name) {

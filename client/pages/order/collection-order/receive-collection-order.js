@@ -6,6 +6,8 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
+import '../../popup-note'
+import { CustomAlert } from '../../../utils/custom-alert'
 
 class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -459,6 +461,16 @@ class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView))
 
   async _receiveCollectionOrder() {
     try {
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i1next.t('text.receive_collection_order'),
+        confirmButton: { text: i1next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+      if (!result.value) {
+        cb()
+        return
+      }
       const response = await client.query({
         query: gql`
           mutation {
@@ -481,14 +493,29 @@ class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView))
     }
   }
 
-  async _rejectCollectionOrder() {
-    const patch = this._getRemark()
-    if (!patch) {
-      return this._showToast({ message: i18next.t('text.remark_is_empty') })
-    } else {
-      try {
-        const response = await client.query({
-          query: gql`
+  async _rejectCollectionOrder(cb) {
+    const popup = openPopup(
+      html`
+        <popup-note
+          .title="${i18next.t('title.remark')}"
+          @submit="${async e => {
+            try {
+              const patch = this._getRemark()
+              if (!patch) throw new Error(i18next.t('text.remark_is_empty'))
+              const result = await CustomAlert({
+                title: i18next.t('title.are_you_sure'),
+                text: i18next.t('text.reject_collection_order'),
+                confirmButton: { text: i18next.t('button.confirm') },
+                cancelButton: { text: i18next.t('button.cancel') }
+              })
+
+              if (!result.value) {
+                cb()
+                return
+              }
+
+              const response = await client.query({
+                query: gql`
                 mutation {
                   rejectCollectionOrder(${gqlBuilder.buildArgs({
                     name: this._orderName,
@@ -498,16 +525,28 @@ class ReceiveCollectionOrder extends connect(store)(localize(i18next)(PageView))
                   }
                 }
               `
-        })
+              })
 
-        if (!response.errors) {
-          history.back()
-          this._showToast({ message: i18next.t('text.collection_order_rejected') })
-        }
-      } catch (e) {
-        this._showToast({ message: e.message })
+              if (!response.errors) {
+                history.back()
+                this._showToast({ message: i18next.t('text.collection_order_rejected') })
+              }
+            } catch (e) {
+              this._showToast(e)
+            } finally {
+              cb()
+            }
+          }}"
+        ></popup-note>
+      `,
+      {
+        backdrop: true,
+        size: 'medium',
+        title: i18next.t('title.reject_collection_order')
       }
-    }
+    )
+
+    popup.onclosed = cb
   }
 
   _getTextAreaByName(name) {

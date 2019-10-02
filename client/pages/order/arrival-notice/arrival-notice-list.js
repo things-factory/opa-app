@@ -139,7 +139,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           width: 180
         },
         {
-          type: 'string',
+          type: 'date',
           name: 'etaDate',
           header: i18next.t('field.eta'),
           record: { align: 'center' },
@@ -171,7 +171,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           width: 200
         },
         {
-          type: 'string',
+          type: 'date',
           name: 'collectionDate',
           header: i18next.t('field.collection_date'),
           record: { align: 'center' },

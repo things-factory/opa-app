@@ -89,14 +89,14 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
       },
       {
         label: i18next.t('field.eta'),
-        name: 'eta',
-        type: 'text',
+        name: 'etaDate',
+        type: 'date',
         props: { searchOper: 'eq' }
       },
       {
         label: i18next.t('field.collection_date'),
         name: 'collectionDate',
-        type: 'text',
+        type: 'date',
         props: { searchOper: 'eq' }
       },
       {
@@ -153,7 +153,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           width: 200
         },
         {
-          type: 'string',
+          type: 'date',
           name: 'etaDate',
           header: i18next.t('field.eta'),
           record: { align: 'center' },

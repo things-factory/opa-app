@@ -1,5 +1,5 @@
 import { addRoutingType, updateMenuProvider } from '@things-factory/menu-base'
-import { client, store, navigate, isMobileDevice, UPDATE_BASE_URL } from '@things-factory/shell'
+import { client, store, isMobileDevice, UPDATE_BASE_URL } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { UPDATE_OPA_APP_SETTINGS, CLEAR_OPA_APP_SETTINGS } from './actions/opa-app-settings'
 import opaApp from './reducers/opa-app-settings'
@@ -9,7 +9,6 @@ import { TOOL_POSITION } from '@things-factory/layout-base'
 import { APPEND_APP_TOOL } from '@things-factory/apptool-base'
 
 import { html } from 'lit-html'
-import '@material/mwc-icon'
 
 export default function bootstrap() {
   store.addReducers({
@@ -79,14 +78,18 @@ export default function bootstrap() {
   )
 
   if (isMobileDevice()) {
-    store.dispatch({
-      type: APPEND_APP_TOOL,
-      tool: {
-        template: html`
-          <mwc-icon @click=${e => navigate('dashboard')}>insert_chart</mwc-icon>
-        `,
-        position: TOOL_POSITION.REAR
-      }
+    import('./apptools/dashboard-tool').then(({ DashboardTool }) => {
+      var dashboardTool = new DashboardTool()
+      /* menu-list page에서만 dashboard tool 이 보이도록 한다. */
+      dashboardTool.whiteList = ['menu-list']
+
+      store.dispatch({
+        type: APPEND_APP_TOOL,
+        tool: {
+          template: dashboardTool,
+          position: TOOL_POSITION.REAR
+        }
+      })
     })
   }
 }
