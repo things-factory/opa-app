@@ -483,7 +483,10 @@ class EditArrivalNotice extends localize(i18next)(PageView) {
         return
       }
 
-      let args = { name: this._ganNo, arrivalNotice: this._getArrivalNotice() }
+      let args = {
+        name: this._ganNo,
+        arrivalNotice: { ...this._getArrivalNotice(), ownTransport: this._importedOrder ? true : this._ownTransport }
+      }
       if (!this._importedOrder && !this._ownTransport) args.collectionOrder = this._getCollectionOrder()
 
       const response = await client.query({

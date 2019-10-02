@@ -11,7 +11,7 @@ import { ORDER_PRODUCT_STATUS, ORDER_TYPES } from '../constants/order'
 import { CustomAlert } from '../../../utils/custom-alert'
 import './inventory-product-selector'
 
-class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
+class EditReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _ownTransport: Boolean,
@@ -76,9 +76,9 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       title: i18next.t('title.create_release_order'),
       actions: [
         {
-          title: i18next.t('button.submit'),
+          title: i18next.t('button.confirm'),
           type: 'transaction',
-          action: this._generateReleaseOrder.bind(this)
+          action: this._editReleaseOrder.bind(this)
         }
       ]
     }
@@ -88,7 +88,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     return html`
         <form name="releaseOrder" class="multi-column-form">
           <fieldset>
-            <legend>${i18next.t('title.release_order')}</legend>
+          <legend>${i18next.t('title.release_order_no')}: ${this._releaseOrderNo}</legend>
             <label>${i18next.t('label.release_date')}</label>
             <input name="releaseDate" type="date" min="${this._getStdDate()}" />
 
@@ -252,6 +252,118 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     this._loadTypes = await getCodeByName('LOAD_TYPES')
   }
 
+  pageUpdated(changes) {
+    if (this.active && changes.resourceId) {
+      this._releaseOrderNo = changes.resourceId
+      this._fetchReleaseOrder()
+    }
+  }
+
+  async _fetchReleaseOrder() {
+    this._status = ''
+    const response = await client.query({
+      query: gql`
+        query {
+          releaseGoodDetail(${gqlBuilder.buildArgs({
+            name: this._releaseOrderNo
+          })}) {
+            id
+            name
+            truckNo
+            status
+            ownTransport
+            exportOption
+            releaseDate
+            collectionOrderNo
+            inventoryInfos {
+              name
+              batchId
+              packingType
+              qty
+              releaseQty
+              product {
+                name
+                description
+              }
+              location {
+                name
+              }              
+            }
+            shippingOrder {
+              containerNo
+              containerLeavingDate
+              containerArrivalDate
+              shipName
+            }
+            deliveryOrder {
+              to
+              loadType
+              deliveryDate
+              telNo
+            }
+            orderVass {
+              vas {
+                id
+                name
+                description
+              }
+              description
+              batchId
+              remark
+            }
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      const releaseOrder = response.data.releaseGoodDetail
+      const deliveryOrder = releaseOrder.deliveryOrder
+      const shippingOrder = releaseOrder.shippingOrder
+      const orderInventories = releaseOrder.inventoryInfos
+      const orderVass = releaseOrder.orderVass
+
+      this._exportOption = response.data.releaseGoodDetail.exportOption
+      if (this._exportOption) {
+        this._ownTransport = true
+      } else if (!this._exportOption) {
+        this._ownTransport = response.data.releaseGoodDetail.ownTransport
+      }
+      this._status = releaseOrder.status
+
+      this._fillupRGForm(response.data.releaseGoodDetail)
+      if (this._exportOption) this._fillupSOForm(shippingOrder)
+      if (!this._ownTransport) this._fillupDOForm(deliveryOrder)
+
+      this.inventoryData = { records: orderInventories }
+      this._updateBatchList(['', 'all', ...orderInventories.map(oi => oi.batchId)], orderVass)
+    }
+  }
+
+  _fillupRGForm(data) {
+    this._fillupForm(this.releaseOrderForm, data)
+  }
+
+  _fillupDOForm(data) {
+    this._fillupForm(this.deliveryOrderForm, data)
+  }
+
+  _fillupSOForm(data) {
+    this._fillupForm(this.shippingOrderForm, data)
+  }
+
+  _fillupForm(form, data) {
+    for (let key in data) {
+      Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
+        if (field.name === key && field.type === 'checkbox') {
+          field.checked = data[key]
+        } else if (field.name === key) {
+          field.value = data[key]
+        }
+      })
+    }
+  }
+
   pageInitialized() {
     this.inventoryGristConfig = {
       pagination: { infinite: true },
@@ -411,7 +523,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _generateReleaseOrder(cb) {
+  async _editReleaseOrder(cb) {
     try {
       this._validateForm()
       this._validateInventories()
@@ -419,7 +531,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
 
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
-        text: i18next.t('text.create_release_order'),
+        text: i18next.t('text.save_release_order'),
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
@@ -429,6 +541,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       }
 
       let args = {
+        name: this._releaseOrderNo,
         releaseGood: { ...this._getReleaseOrder(), ownTransport: this._exportOption ? true : this._ownTransport }
       }
       if (this._exportOption && this._ownTransport) args.shippingOrder = this._getShippingOrder()
@@ -437,7 +550,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       const response = await client.query({
         query: gql`
             mutation {
-              generateReleaseGood(${gqlBuilder.buildArgs(args)}) {
+              editReleaseGood(${gqlBuilder.buildArgs(args)}) {
                 id
                 name
               }
@@ -446,7 +559,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!response.errors) {
-        navigate(`release_order_detail/${response.data.generateReleaseGood.name}`)
+        navigate(`release_order_detail/${response.data.editReleaseGood.name}`)
         this._showToast({ message: i18next.t('release_order_created') })
       }
     } catch (e) {
@@ -460,7 +573,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     if (!this.releaseOrderForm.checkValidity()) throw new Error('text.release_order_form_invalid')
 
     //    - condition: export is ticked and own transport
-    if (this._exportOption && this._ownTransport) {
+    if (this._exportOption) {
       if (!this.shippingOrderForm.checkValidity()) throw new Error('text.shipping_order_form_invalid')
     }
 
@@ -504,8 +617,10 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  _updateBatchList() {
-    const batchIds = ['', 'all', ...(this.inventoryGrist.dirtyData.records || []).map(record => record.batchId)]
+  _updateBatchList(batchIds, vasData) {
+    if (!batchIds) {
+      batchIds = ['', 'all', ...(this.inventoryGrist.dirtyData.records || []).map(record => record.batchId)]
+    }
 
     this.vasGristConfig = {
       ...this.vasGristConfig,
@@ -515,8 +630,12 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       })
     }
 
+    if (!vasData) {
+      vasData = this.vasGrist.dirtyData.records
+    }
+
     this.vasData = {
-      records: this.vasGrist.dirtyData.records.map(record => {
+      records: vasData.map(record => {
         return {
           ...record,
           batchId: batchIds.includes(record.batchId) ? record.batchId : null
@@ -537,9 +656,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
         inventory: {
           id: '',
           name: record.name
-        },
-        type: ORDER_TYPES.RELEASE_OF_GOODS.value,
-        status: ORDER_PRODUCT_STATUS.PENDING.value
+        }
       }
     })
 
@@ -573,18 +690,6 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     return this._serializeForm(this.shippingOrderForm)
   }
 
-  _clearPage() {
-    this.form.reset()
-    this.inventoryGrist.data = Object.assign({ records: [] })
-    this.vasGrist.data = Object.assign({ records: [] })
-  }
-
-  stateChanged(state) {
-    if (this.active) {
-      this._releaseOrderNo = state && state.route && state.route.resourceId
-    }
-  }
-
   _showToast({ type, message }) {
     document.dispatchEvent(
       new CustomEvent('notify', {
@@ -597,4 +702,4 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
   }
 }
 
-window.customElements.define('create-release-order', CreateReleaseOrder)
+window.customElements.define('edit-release-order', EditReleaseOrder)

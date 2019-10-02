@@ -106,6 +106,7 @@ class SystemUserBizplacesDetail extends localize(i18next)(LitElement) {
   async firstUpdated() {
     this.config = {
       pagination: { infinite: true },
+      rows: { appendable: false },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
