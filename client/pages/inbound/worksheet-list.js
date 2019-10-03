@@ -1,10 +1,11 @@
+import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { WORKSHEET_STATUS, WORKSHEET_TYPE } from './constants/worksheet'
+import { WORKSHEET_TYPE } from './constants/worksheet'
 
 class WorksheetList extends localize(i18next)(PageView) {
   static get styles() {
@@ -79,7 +80,10 @@ class WorksheetList extends localize(i18next)(PageView) {
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    const _worksheetTypes = await getCodeByName('WORKSHEET_TYPES')
+    const _worksheetStatus = await getCodeByName('WORKSHEET_STATUS')
+
     this._searchFields = [
       {
         name: 'name',
@@ -93,9 +97,8 @@ class WorksheetList extends localize(i18next)(PageView) {
         type: 'select',
         options: [
           { value: '' },
-          ...Object.keys(WORKSHEET_TYPE).map(key => {
-            const types = WORKSHEET_TYPE[key]
-            return { name: i18next.t(`label.${types.name}`), value: types.value }
+          ..._worksheetTypes.map(type => {
+            return { name: i18next.t(`label.${type.description}`), value: type.name }
           })
         ],
         props: { searchOper: 'eq' }
@@ -106,9 +109,8 @@ class WorksheetList extends localize(i18next)(PageView) {
         type: 'select',
         options: [
           { value: '' },
-          ...Object.keys(WORKSHEET_STATUS).map(key => {
-            const status = WORKSHEET_STATUS[key]
-            return { name: i18next.t(`label.${status.name}`), value: status.value }
+          ..._worksheetStatus.map(status => {
+            return { name: i18next.t(`label.${status.description}`), value: status.name }
           })
         ],
         props: { searchOper: 'eq' }

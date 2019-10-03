@@ -4,7 +4,7 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { ORDER_STATUS } from '../constants/order'
+import { getCodeByName } from '@things-factory/code-base'
 
 class ArrivalNoticeRequests extends localize(i18next)(PageView) {
   static get styles() {
@@ -66,9 +66,6 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
       exportable: {
         name: i18next.t('title.arrival_notice_requests'),
         data: this._exportableData.bind(this)
-      },
-      importable: {
-        handler: () => {}
       }
     }
   }
@@ -79,7 +76,9 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    const _orderStatus = await getCodeByName('ORDER_STATUS')
+
     this._searchFields = [
       {
         label: i18next.t('field.gan'),
@@ -105,10 +104,9 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
         type: 'select',
         options: [
           { value: '' },
-          { name: i18next.t(`label.${ORDER_STATUS.PENDING_RECEIVE.name}`), value: ORDER_STATUS.PENDING_RECEIVE.value },
-          { name: i18next.t(`label.${ORDER_STATUS.INTRANSIT.name}`), value: ORDER_STATUS.INTRANSIT.value },
-          { name: i18next.t(`label.${ORDER_STATUS.ARRIVED.name}`), value: ORDER_STATUS.ARRIVED.value },
-          { name: i18next.t(`label.${ORDER_STATUS.PROCESSING.name}`), value: ORDER_STATUS.PROCESSING.value }
+          ..._orderStatus.map(status => {
+            return { name: i18next.t(`label.${status.description}`), value: status.name }
+          })
         ],
         props: { searchOper: 'eq' }
       }

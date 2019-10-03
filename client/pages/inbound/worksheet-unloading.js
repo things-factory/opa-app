@@ -1,15 +1,17 @@
+import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { connect } from 'pwa-helpers/connect-mixin.js'
+import { CustomAlert } from '../../utils/custom-alert'
 import { WORKSHEET_STATUS } from './constants/worksheet'
 
-class WorksheetUnloading extends connect(store)(localize(i18next)(PageView)) {
+class WorksheetUnloading extends localize(i18next)(PageView) {
   static get properties() {
     return {
+      _statusOptions: Array,
       _worksheetNo: String,
       _worksheetStatus: String,
       config: Object,
@@ -64,14 +66,14 @@ class WorksheetUnloading extends connect(store)(localize(i18next)(PageView)) {
   }
 
   get context() {
-    return { title: i18next.t('title.worksheet_unloading') }
+    return { title: i18next.t('title.worksheet_unloading'), actions: this._actions }
   }
 
   render() {
     return html`
       <form class="multi-column-form">
         <fieldset>
-          <legend>${i18next.t('title.unloading')}: ${this._worksheetNo}</legend>
+          <legend>${i18next.t('title.unloading')}</legend>
           <label>${i18next.t('label.arrival_notice')}</label>
           <input name="arrivalNotice" readonly />
 
@@ -86,11 +88,9 @@ class WorksheetUnloading extends connect(store)(localize(i18next)(PageView)) {
 
           <label>${i18next.t('label.status')}</label>
           <select name="status" disabled>
-            ${Object.keys(WORKSHEET_STATUS).map(
-              key => html`
-                <option value="${WORKSHEET_STATUS[key].value}"
-                  >${i18next.t(`label.${WORKSHEET_STATUS[key].name}`)}</option
-                >
+            ${this._statusOptions.map(
+              status => html`
+                <option value="${status.name}">${i18next.t(`label.${status.description}`)}</option>
               `
             )}
           </select>
@@ -110,18 +110,22 @@ class WorksheetUnloading extends connect(store)(localize(i18next)(PageView)) {
     `
   }
 
-  updated(changedProps) {
-    if (changedProps.has('_worksheetNo')) {
-      this.fetchWorksheet()
-    }
+  constructor() {
+    super()
+    this._statusOptions = []
+  }
 
-    if (changedProps.has('_worksheetStatus') && this._worksheetStatus) {
-      this.updateContext()
-      this.updateGristConfig()
+  async pageUpdated(changes) {
+    if (this.active && changes.resourceId) {
+      this._worksheetNo = changes.resourceId
+      await this.fetchWorksheet()
+      this._updateContext()
+      this._updateGristConfig()
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    this._statusOptions = await getCodeByName('WORKSHEET_STATUS')
     this.preConfig = {
       pagination: { infinite: true },
       columns: [
@@ -263,28 +267,23 @@ class WorksheetUnloading extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  updateContext() {
-    let actions
-
+  _updateContext() {
+    this._actions = []
     if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value) {
-      actions = [
-        { title: i18next.t('button.back'), action: () => history.back() },
-        { title: i18next.t('button.activate'), action: this._activateWorksheet.bind(this) }
+      this._actions = [
+        { title: i18next.t('button.activate'), type: 'transaction', action: this._activateWorksheet.bind(this) }
       ]
-    } else {
-      actions = [{ title: i18next.t('button.back'), action: () => history.back() }]
     }
+
+    this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
 
     store.dispatch({
       type: UPDATE_CONTEXT,
-      context: {
-        title: i18next.t('title.worksheet_unloading'),
-        actions
-      }
+      context: this.context
     })
   }
 
-  updateGristConfig() {
+  _updateGristConfig() {
     const statusColumnConfig = {
       type: 'string',
       name: 'status',
@@ -327,27 +326,55 @@ class WorksheetUnloading extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _activateWorksheet() {
+  async _activateWorksheet(cb) {
     try {
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.activate_unloading_worksheet'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) {
+        cb()
+        return
+      }
+
       const response = await client.query({
         query: gql`
-          mutation {
-            activateUnloading(${gqlBuilder.buildArgs({
-              worksheetNo: this._worksheetNo,
-              unloadingWorksheetDetails: this._getUnloadingWorksheetDetails()
-            })}) {
-              name
+            mutation {
+              activateUnloading(${gqlBuilder.buildArgs({
+                worksheetNo: this._worksheetNo,
+                unloadingWorksheetDetails: this._getUnloadingWorksheetDetails()
+              })}) {
+                name
+              }
             }
-          }
-        `
+          `
       })
+
       if (!response.errors) {
         this._showToast({ message: i18next.t('text.worksheet_activated') })
-        alert('Do you want to print out the worksheet?')
+        const result = await CustomAlert({
+          title: i18next.t('title.unloading_worksheet'),
+          text: i18next.t('text.do_you_want_to_print'),
+          confirmButton: { text: i18next.t('button.confirm') },
+          cancelButton: { text: i18next.t('button.cancel') }
+        })
+
+        if (result.value) {
+          console.warn('TODO: PRINT OUT WORKSHEET')
+          console.warn('TODO: PRINT OUT WORKSHEET')
+          console.warn('TODO: PRINT OUT WORKSHEET')
+        }
+
+        this._worksheetNo = ''
         navigate(`worksheets`)
       }
     } catch (e) {
       this._showToast(e)
+    } finally {
+      cb()
     }
   }
 
@@ -358,12 +385,6 @@ class WorksheetUnloading extends connect(store)(localize(i18next)(PageView)) {
         description: worksheetDetail.description
       }
     })
-  }
-
-  stateChanged(state) {
-    if (this.active) {
-      this._worksheetNo = state && state.route && state.route.resourceId
-    }
   }
 
   _showToast({ type, message }) {

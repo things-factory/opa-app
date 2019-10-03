@@ -73,13 +73,13 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
       title: i18next.t('title.check_arrived_notice'),
       actions: [
         {
-          title: i18next.t('button.back'),
-          action: () => history.back()
-        },
-        {
           title: i18next.t('button.arrived'),
           type: 'transaction',
           action: this._checkArrivedNotice.bind(this)
+        },
+        {
+          title: i18next.t('button.back'),
+          action: () => history.back()
         }
       ]
     }

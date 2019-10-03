@@ -9,6 +9,11 @@ import { WORKSHEET_STATUS } from './constants/worksheet'
 import Swal from 'sweetalert2'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 
+const OPERATION_TYPE = {
+  PUTAWAY: 'putaway',
+  TRANSFER: 'transfer'
+}
+
 class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
@@ -16,7 +21,8 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       config: Object,
       data: Object,
       _productName: String,
-      _selectedTaskStatus: String
+      _selectedTaskStatus: String,
+      _operationType: String
     }
   }
 
@@ -106,6 +112,14 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('barcode-scanable-input[name=locationCode]').shadowRoot.querySelector('input')
   }
 
+  get toPalletInput() {
+    return this.shadowRoot.querySelector('barcode-scanable-input[name=toPalletId]').shadowRoot.querySelector('input')
+  }
+
+  get qtyInput() {
+    return this.shadowRoot.querySelector('input[name=transferQty]')
+  }
+
   render() {
     return html`
       <form id="info-form" class="multi-column-form">
@@ -145,18 +159,36 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
         </div>
 
         <div class="right-column">
-          <form id="input-form" class="single-column-form">
+          <form class="multi-column-form">
             <fieldset>
-              <legend>${i18next.t('label.vas')}: ${this._productName}</legend>
+              <legend>${i18next.t('title.operation_type')}</legend>
+              <input
+                id="putaway-radio"
+                type="radio"
+                name="operationType"
+                value="${OPERATION_TYPE.PUTAWAY}"
+                checked
+                @change="${e => (this._operationType = e.currentTarget.value)}"
+              /><label for="putaway-radio">${i18next.t('label.putaway')}</label>
+              <input
+                id="transfer-radio"
+                type="radio"
+                name="operationType"
+                value="${OPERATION_TYPE.TRANSFER}"
+                @change="${e => (this._operationType = e.currentTarget.value)}"
+              /><label for="transfer-radio">${i18next.t('label.transfer')}</label>
+            </fieldset>
+          </form>
+
+          <form id="input-form" class="single-column-form" @keypress="${this._transactionHandler.bind(this)}">
+            <fieldset>
+              <legend>${i18next.t('label.product')}: ${this._productName}</legend>
 
               <label>${i18next.t('label.batch_id')}</label>
               <input name="batchId" readonly />
 
               <label>${i18next.t('label.packing_type')}</label>
               <input name="packingType" readonly />
-
-              <label>${i18next.t('label.to_location')}</label>
-              <input name="toLocation" readonly />
 
               <label>${i18next.t('label.comment')}</label>
               <input name="description" readonly />
@@ -170,24 +202,46 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
 
             <fieldset>
               <legend style="display: ${this.scannable ? 'flex' : 'none'}">${i18next.t('title.input_section')}</legend>
-
               <label style="display: ${this.scannable ? 'flex' : 'none'}">${i18next.t('label.pallet_barcode')}</label>
               <barcode-scanable-input
                 style="display: ${this.scannable ? 'flex' : 'none'}"
                 name="palletId"
                 .value=${this._pallet}
-                @keypress="${this._putaway.bind(this)}"
                 custom-input
               ></barcode-scanable-input>
 
-              <label style="display: ${this.scannable ? 'flex' : 'none'}">${i18next.t('label.location')}</label>
+              <label
+                style="display: ${this.scannable && this._operationType === OPERATION_TYPE.PUTAWAY ? 'flex' : 'none'}"
+                >${i18next.t('label.location')}</label
+              >
               <barcode-scanable-input
-                style="display: ${this.scannable ? 'flex' : 'none'}"
+                style="display: ${this.scannable && this._operationType === OPERATION_TYPE.PUTAWAY ? 'flex' : 'none'}"
                 name="locationCode"
                 .value=${this._location}
-                @keypress="${this._putaway.bind(this)}"
                 custom-input
               ></barcode-scanable-input>
+
+              <label
+                style="display: ${this.scannable && this._operationType === OPERATION_TYPE.TRANSFER ? 'flex' : 'none'}"
+                >${i18next.t('label.to_pallet_barcode')}</label
+              >
+              <barcode-scanable-input
+                style="display: ${this.scannable && this._operationType === OPERATION_TYPE.TRANSFER ? 'flex' : 'none'}"
+                name="toPalletId"
+                .value=${this._location}
+                custom-input
+              ></barcode-scanable-input>
+
+              <label
+                style="display: ${this.scannable && this._operationType === OPERATION_TYPE.TRANSFER ? 'flex' : 'none'}"
+                >${i18next.t('label.qty')}</label
+              >
+              <input
+                style="display: ${this.scannable && this._operationType === OPERATION_TYPE.TRANSFER ? 'flex' : 'none'}"
+                type="number"
+                min="1"
+                name="transferQty"
+              />
             </fieldset>
           </form>
         </div>
@@ -202,14 +256,11 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     this.arrivalNoticeNo = ''
     this.selectedOrderProduct = null
     this._selectedTaskStatus = null
+    this._operationType = OPERATION_TYPE.PUTAWAY
   }
 
   get scannable() {
     return this._selectedTaskStatus && this._selectedTaskStatus === WORKSHEET_STATUS.EXECUTING.value
-  }
-
-  get cancelable() {
-    return this._selectedTaskStatus && this._selectedTaskStatus === WORKSHEET_STATUS.DONE.value
   }
 
   get completed() {
@@ -218,7 +269,11 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
 
   updated(changedProps) {
     if (changedProps.has('_selectedTaskStatus') && this._selectedTaskStatus) {
-      this.updateContext()
+      this._updateContext()
+    }
+
+    if (changedProps.has('_operationType')) {
+      this._focusOnPalletInput()
     }
   }
 
@@ -239,8 +294,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
                 record.product.description ? `(${record.product.description})` : ''
               }`
 
-              this.inputForm.reset()
-              this._fillUpInputForm(record)
+              this._fillUpForm(this.inputForm, record)
               this._focusOnPalletInput()
             }
           }
@@ -261,13 +315,19 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
-          width: 200
+          width: 140
         },
         {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_id'),
-          width: 200
+          width: 140
+        },
+        {
+          type: 'integer',
+          name: 'qty',
+          header: i18next.t('field.qty'),
+          width: 80
         }
       ]
     }
@@ -279,20 +339,16 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  updateContext() {
+  _updateContext() {
     let actions = []
     if (this.completed) {
       actions = [{ title: i18next.t('button.complete'), action: this._complete.bind(this) }]
     }
 
-    if (this.cancelable) {
-      actions = [...actions, { title: i18next.t('button.undo'), action: this._undoPutaway.bind(this) }]
-    }
-
     store.dispatch({
       type: UPDATE_CONTEXT,
       context: {
-        title: i18next.t('title.vas'),
+        title: i18next.t('title.putaway'),
         actions
       }
     })
@@ -308,6 +364,14 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
 
   _focusOnLocationInput() {
     setTimeout(() => this.locationInput.focus(), 100)
+  }
+
+  _focusOnToPalletInput() {
+    setTimeout(() => this.toPalletInput.focus(), 100)
+  }
+
+  _focusOnQtyInput() {
+    setTimeout(() => this.qtyInput.focus(), 100)
   }
 
   async _fetchProducts(arrivalNoticeNo) {
@@ -330,15 +394,12 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
                 name
                 description
               }
+              qty
               status
               description
               targetName
               packingType
               location {
-                name
-                description
-              }
-              toLocation {
                 name
                 description
               }
@@ -350,7 +411,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       this.arrivalNoticeNo = arrivalNoticeNo
-      this._fillUpInfoForm(response.data.putawayWorksheet.worksheetInfo)
+      this._fillUpForm(this.infoForm, response.data.putawayWorksheet.worksheetInfo)
 
       this.data = {
         records: response.data.putawayWorksheet.worksheetDetailInfos.map(record => {
@@ -375,10 +436,10 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     this._selectedTaskStatus = null
   }
 
-  _fillUpInfoForm(data) {
-    this.infoForm.reset()
+  _fillUpForm(form, data) {
+    form.reset()
     for (let key in data) {
-      Array.from(this.infoForm.querySelectorAll('input')).forEach(field => {
+      Array.from(form.querySelectorAll('input')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
         } else if (field.name === key && field.type === 'datetime-local') {
@@ -397,78 +458,53 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  _fillUpInputForm(data) {
-    this.inputForm.reset()
-    for (let key in data) {
-      Array.from(this.inputForm.querySelectorAll('input')).forEach(field => {
-        if (field.name === key && field.type === 'checkbox') {
-          field.checked = data[key]
-        } else if (field.name === key && field.type === 'datetime-local') {
-          const datetime = Number(data[key])
-          const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
-          field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
-        } else if (field.name === key) {
-          if (data[key] instanceof Object) {
-            const objectData = data[key]
-            field.value = `${objectData.name} ${objectData.description ? `(${objectData.description})` : ''}`
-          } else {
-            field.value = data[key]
-          }
-        }
-      })
-    }
-  }
-
-  async _putaway(e) {
+  _transactionHandler(e) {
     if (e.keyCode === 13) {
-      try {
-        await this._validatePutaway()
-        const response = await client.query({
-          query: gql`
-            mutation {
-              putaway(${gqlBuilder.buildArgs({
-                worksheetDetail: {
-                  name: this.selectedOrderProduct.name,
-                  toLocation: {
-                    id: '',
-                    name: this.locationInput.value
-                  }
-                },
-                inventory: {
-                  palletId: this.palletInput.value
-                }
-              })})
-            }
-          `
-        })
-
-        if (!response.errors) {
-          this._fetchProducts(this.arrivalNoticeNo)
-          this._focusOnPalletInput()
-          this._selectedTaskStatus = null
-          this.selectedOrderProduct = null
-          this.palletInput.value = ''
-          this.locationInput.value = ''
-        }
-      } catch (e) {
-        this._showToast(e)
+      if (this._operationType === OPERATION_TYPE.PUTAWAY) {
+        this._putaway()
+      } else if (this._operationType === OPERATION_TYPE.TRANSFER) {
+        this._transfer()
       }
     }
   }
 
-  async _undoPutaway() {
+  async _putaway(e) {
     try {
-      this._validateUndoPutaway()
+      this._validatePutaway()
+      const response = await client.query({
+        query: gql`
+            mutation {
+              putaway(${gqlBuilder.buildArgs({
+                palletId: this.palletInput.value,
+                toLocation: this.locationInput.value
+              })})
+            }
+          `
+      })
+
+      if (!response.errors) {
+        this._fetchProducts(this.arrivalNoticeNo)
+        this._focusOnPalletInput()
+        this._selectedTaskStatus = null
+        this.selectedOrderProduct = null
+        this.palletInput.value = ''
+        this.locationInput.value = ''
+      }
+    } catch (e) {
+      this._showToast(e)
+    }
+  }
+
+  async _transfer() {
+    try {
+      this._validateTransfer()
       const response = await client.query({
         query: gql`
           mutation {
-            undoPutaway(${gqlBuilder.buildArgs({
-              worksheetDetail: {
-                name: this.selectedOrderProduct.name
-              },
-              inventory: {
-                palletId: this.selectedOrderProduct.palletId
-              }
+            transfer(${gqlBuilder.buildArgs({
+              palletId: this.palletInput.value,
+              toPalletId: this.toPalletInput.value,
+              qty: parseInt(this.qtyInput.value)
             })})
           }
         `
@@ -477,13 +513,18 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       if (!response.errors) {
         this._fetchProducts(this.arrivalNoticeNo)
         this._focusOnPalletInput()
+        this._selectedTaskStatus = null
+        this.selectedOrderProduct = null
+        this.palletInput.value = ''
+        this.toPalletInput.value = ''
+        this.qtyInput.value = ''
       }
     } catch (e) {
       this._showToast(e)
     }
   }
 
-  async _validatePutaway() {
+  _validatePutaway() {
     // 1. validate for order selection
     if (!this.selectedOrderProduct) throw new Error(i18next.t('text.target_doesnt_selected'))
 
@@ -504,36 +545,45 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       this._focusOnLocationInput()
       throw new Error(i18next.t('text.location_code_is_empty'))
     }
-
-    // 5. Equality of location code
-    if (this.selectedOrderProduct.toLocation.name !== this.locationInput.value) {
-      const result = await Swal.fire({
-        title: i18next.t('text.putaway'),
-        text: i18next.t('text.unexpected_location'),
-        type: 'warning',
-        showCancelButton: true,
-        allowOutsideClick: false,
-        confirmButtonColor: '#22a6a7',
-        cancelButtonColor: '#cfcfcf',
-        confirmButtonText: i18next.t('button.confirm')
-      })
-
-      if (!result.value) throw new Error(i18next.t('text.wrong_location_code'))
-    }
   }
 
-  _validateUndoPutaway() {
+  _validateTransfer() {
     // 1. validate for order selection
     if (!this.selectedOrderProduct) throw new Error(i18next.t('text.target_doesnt_selected'))
 
-    // 2. validate for status of selected order
-    if (this.selectedOrderProduct.status !== WORKSHEET_STATUS.DONE.value)
-      throw new Error(i18next.t('text.status_is_not_suitable'))
+    // 2. pallet id existing
+    if (!this.palletInput.value) {
+      this._focusOnPalletInput()
+      throw new Error(i18next.t('text.pallet_id_is_empty'))
+    }
+
+    // 3. Equality of pallet id
+    if (this.selectedOrderProduct.palletId !== this.palletInput.value) {
+      setTimeout(() => this.palletInput.select(), 100)
+      throw new Error(i18next.t('text.wrong_pallet_id'))
+    }
+
+    // 4. to pallet id existing
+    if (!this.toPalletInput.value) {
+      this._focusOnToPalletInput()
+      throw new Error(i18next.t('text.to_pallet_id_is_empty'))
+    }
+
+    // 5. qty existing
+    if (!this.qtyInput.value) {
+      this._focusOnQtyInput()
+      throw new Error(i18next.t('text.qty_is_empty'))
+    }
+
+    if (parseInt(this.qtyInput.value) > this.selectedOrderProduct.qty) {
+      this._focusOnQtyInput()
+      throw new Error(i18next.t('text.qty_exceed_limit'))
+    }
   }
 
   async _completeHandler() {
     if (!this.data.records.every(record => record.completed)) return
-    this.updateContext()
+    this._updateContext()
     const result = await Swal.fire({
       title: i18next.t('text.putaway'),
       text: i18next.t('text.do_you_want_to_complete?'),

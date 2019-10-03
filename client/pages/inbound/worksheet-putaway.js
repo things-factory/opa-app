@@ -4,10 +4,10 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { connect } from 'pwa-helpers/connect-mixin.js'
+import { CustomAlert } from '../../utils/custom-alert'
 import { WORKSHEET_STATUS } from './constants/worksheet'
 
-class WorksheetPutaway extends connect(store)(localize(i18next)(PageView)) {
+class WorksheetPutaway extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _worksheetNo: String,
@@ -65,7 +65,8 @@ class WorksheetPutaway extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.worksheet_putaway')
+      title: i18next.t('title.worksheet_putaway'),
+      actions: this._actions
     }
   }
 
@@ -73,7 +74,7 @@ class WorksheetPutaway extends connect(store)(localize(i18next)(PageView)) {
     return html`
       <form class="multi-column-form">
         <fieldset>
-          <legend>${i18next.t('title.unloading')}: ${this._worksheetNo}</legend>
+          <legend>${i18next.t('title.putaway')}</legend>
           <label>${i18next.t('label.arrival_notice')}</label>
           <input name="arrivalNotice" readonly />
 
@@ -109,14 +110,12 @@ class WorksheetPutaway extends connect(store)(localize(i18next)(PageView)) {
     `
   }
 
-  updated(changedProps) {
-    if (changedProps.has('_worksheetNo')) {
-      this.fetchWorksheet()
-    }
-
-    if (changedProps.has('_worksheetStatus') && this._worksheetStatus) {
-      this.updateContext()
-      this.updateGristConfig()
+  async pageUpdated(changes) {
+    if (this.active) {
+      this._worksheetNo = changes.resourceId
+      await this.fetchWorksheet()
+      this._updateContext()
+      this._updateGristConfig()
     }
   }
 
@@ -164,19 +163,6 @@ class WorksheetPutaway extends connect(store)(localize(i18next)(PageView)) {
           name: 'description',
           header: i18next.t('field.comment'),
           width: 300
-        },
-        {
-          type: 'object',
-          name: 'toLocation',
-          align: 'center',
-          record: {
-            options: {
-              queryName: 'locations',
-              basicArgs: { filters: [] }
-            }
-          },
-          header: i18next.t('field.to_location'),
-          width: 200
         }
       ]
     }
@@ -279,28 +265,24 @@ class WorksheetPutaway extends connect(store)(localize(i18next)(PageView)) {
     })
   }
 
-  updateContext() {
-    let actions
+  _updateContext() {
+    this._actions = []
 
     if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value) {
-      actions = [
-        { title: i18next.t('button.back'), action: () => history.back() },
-        { title: i18next.t('button.activate'), action: this._activateWorksheet.bind(this) }
+      this._actions = [
+        { title: i18next.t('button.activate'), type: 'transaction', action: this._activateWorksheet.bind(this) }
       ]
-    } else {
-      actions = [{ title: i18next.t('button.back'), action: () => history.back() }]
     }
+
+    this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
 
     store.dispatch({
       type: UPDATE_CONTEXT,
-      context: {
-        title: i18next.t('title.worksheet_putaway'),
-        actions
-      }
+      context: this.context
     })
   }
 
-  updateGristConfig() {
+  _updateGristConfig() {
     const currentLocationColumn = {
       type: 'object',
       name: 'location',
@@ -317,7 +299,7 @@ class WorksheetPutaway extends connect(store)(localize(i18next)(PageView)) {
     }
 
     this.preConfig.columns.map(column => {
-      if (column.name === 'description' || column.name === 'toLocation') {
+      if (column.name === 'description') {
         column.record = { ...column.record, editable: this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value }
       }
     })
@@ -334,10 +316,6 @@ class WorksheetPutaway extends connect(store)(localize(i18next)(PageView)) {
       Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
-        } else if (field.name === key && field.type === 'datetime-local') {
-          const datetime = Number(data[key])
-          const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
-          field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
         } else if (field.name === key) {
           if (data[key] instanceof Object) {
             const objectData = data[key]
@@ -350,9 +328,20 @@ class WorksheetPutaway extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _activateWorksheet() {
+  async _activateWorksheet(cb) {
     try {
-      this._validateLocations()
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.activate_putaway_worksheet'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) {
+        cb()
+        return
+      }
+
       const response = await client.query({
         query: gql`
           mutation {
@@ -367,17 +356,24 @@ class WorksheetPutaway extends connect(store)(localize(i18next)(PageView)) {
       })
       if (!response.errors) {
         this._showToast({ message: i18next.t('text.worksheet_activated') })
-        alert('Do you want to print out the worksheet?')
+        const result = await CustomAlert({
+          title: i18next.t('title.putaway_worksheet'),
+          text: i18next.t('text.do_you_want_to_print'),
+          confirmButton: { text: i18next.t('button.confirm') },
+          cancelButton: { text: i18next.t('button.cancel') }
+        })
+
+        if (result.value) {
+          console.warn('TODO: PRINT OUT WORKSHEET')
+          console.warn('TODO: PRINT OUT WORKSHEET')
+          console.warn('TODO: PRINT OUT WORKSHEET')
+        }
+
+        this._worksheetNo = ''
         navigate(`worksheets`)
       }
     } catch (e) {
       this._showToast(e)
-    }
-  }
-
-  _validateLocations() {
-    if (!this.grist.dirtyData.records.every(worksheetDetail => worksheetDetail.location)) {
-      throw new Error('text.location_is_not_selected')
     }
   }
 
@@ -389,12 +385,6 @@ class WorksheetPutaway extends connect(store)(localize(i18next)(PageView)) {
         toLocation: worksheetDetail.toLocation
       }
     })
-  }
-
-  stateChanged(state) {
-    if (this.active) {
-      this._worksheetNo = state && state.route && state.route.resourceId
-    }
   }
 
   _showToast({ type, message }) {
