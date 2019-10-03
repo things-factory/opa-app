@@ -227,8 +227,8 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
   }
 
   async pageUpdated(changes) {
-    if (this.active && changes.resourceId) {
-      this._releaseOrderNo = changes.resourceId
+    if (this.active) {
+      this._releaseOrderNo = changes.resourceId || this._releaseOrderNo || ''
       await this._fetchReleaseOrder()
       this._updateContext()
     }
@@ -336,6 +336,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
   }
 
   async _fetchReleaseOrder() {
+    if (!this._releaseOrderNo) return
     this._status = ''
     const response = await client.query({
       query: gql`
@@ -366,12 +367,18 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
               }              
             }
             shippingOrder {
+              id
+              name
+              description
               containerNo
               containerLeavingDate
               containerArrivalDate
               shipName
             }
             deliveryOrder {
+              id
+              name
+              description
               to
               loadType
               deliveryDate

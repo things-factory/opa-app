@@ -95,8 +95,8 @@ class VasOrderDetail extends localize(i18next)(PageView) {
   }
 
   async pageUpdated(changes) {
-    if (this.active && changes.resourceId) {
-      this._vasNo = changes.resourceId
+    if (this.active) {
+      this._vasNo = changes.resourceId || this._vasNo || ''
       await this.fetchVasOrder()
       this._updateContext()
     }
@@ -167,6 +167,7 @@ class VasOrderDetail extends localize(i18next)(PageView) {
   }
 
   async fetchVasOrder() {
+    if (!this._vasNo) return
     const response = await client.query({
       query: gql`
         query {
