@@ -114,7 +114,15 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
       _targetRows.forEach(async record => {
         for (let i = 1; i <= record.printQty; i++) {
           let searchParams = new URLSearchParams()
-          searchParams.append('pallet', uuid())
+          let batchId = record.batchId.replace(/[^a-zA-Z ]/g, '')
+          searchParams.append(
+            'pallet',
+            `${batchId.substring(batchId.length - 8)}${new Date()
+              .toISOString()
+              .split('T')[0]
+              .split('-')
+              .join('')}${i.toString().padStart(3, 0)}`
+          )
           searchParams.append('batch', record.batchId)
           searchParams.append('product', record.product.name)
 
