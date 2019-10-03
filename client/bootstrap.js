@@ -3,7 +3,7 @@ import { client, store, isMobileDevice, UPDATE_BASE_URL } from '@things-factory/
 import gql from 'graphql-tag'
 import { UPDATE_DASHBOARD_SETTINGS, CLEAR_DASHBOARD_SETTINGS } from './actions/dashboard-settings'
 import dashboard from './reducers/dashboard-settings'
-import { fetchBoardSettings } from './viewparts/fetch-board-settings'
+import { fetchBoardSettings } from './fetch-board-settings'
 import { auth } from '@things-factory/auth-base'
 import { TOOL_POSITION } from '@things-factory/layout-base'
 import { APPEND_APP_TOOL } from '@things-factory/apptool-base'
