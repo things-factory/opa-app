@@ -6,7 +6,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { ORDER_STATUS } from '../constants/order'
 
-class DeliveryOrderList extends localize(i18next)(PageView) {
+class CollectionOrderList extends localize(i18next)(PageView) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -62,9 +62,10 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.delivery_orders'),
+      actions: [],
+      title: i18next.t('title.collection_orders'),
       exportable: {
-        name: i18next.t('title.delivery_orders'),
+        name: i18next.t('title.collection_orders'),
         data: this._exportableData.bind(this)
       },
       importable: {
@@ -82,15 +83,15 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
   pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('field.do_no'),
+        label: i18next.t('field.name'),
         name: 'name',
         type: 'text',
         props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('field.delivery_date'),
-        name: 'deliveryDateTime',
-        type: 'datetime-local',
+        label: i18next.t('field.collection_date'),
+        name: 'collectionDate',
+        type: 'date',
         props: { searchOper: 'like' }
       },
       {
@@ -121,9 +122,11 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
             click: (columns, data, column, record, rowIndex) => {
               const status = record.status
               if (status === ORDER_STATUS.REJECTED.value) {
-                navigate(`rejected_delivery_order/${record.name}`) // 1. move to rejected detail page
+                navigate(`rejected_collection_order/${record.name}`) // 1. move to rejected detail page
+              } else if (status === ORDER_STATUS.EDITING.value) {
+                navigate(`edit_collection_order/${record.name}`)
               } else {
-                navigate(`delivery_order_detail/${record.name}`) // 2. move to order detail page
+                navigate(`collection_order_detail/${record.name}`) // 2. move to order detail page
               }
             }
           }
@@ -131,23 +134,23 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'name',
-          header: i18next.t('field.do_no'),
+          header: i18next.t('field.co_no'),
           record: { align: 'center' },
           sortable: true,
           width: 180
         },
         {
-          type: 'string',
-          name: 'from',
-          header: i18next.t('field.from'),
+          type: 'date',
+          name: 'collectionDate',
+          header: i18next.t('field.collection_date'),
           record: { align: 'center' },
           sortable: true,
-          width: 250
+          width: 160
         },
         {
           type: 'string',
-          name: 'to',
-          header: i18next.t('field.to'),
+          name: 'from',
+          header: i18next.t('field.collect_from'),
           record: { align: 'center' },
           sortable: true,
           width: 250
@@ -167,23 +170,6 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
           record: { align: 'center' },
           sortable: true,
           width: 250
-        },
-
-        {
-          type: 'string',
-          name: 'telNo',
-          header: i18next.t('field.tel_no'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 250
-        },
-        {
-          type: 'datetime',
-          name: 'deliveryDateTime',
-          header: i18next.t('field.delivery_date'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 160
         },
         {
           type: 'string',
@@ -225,7 +211,7 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
         query {
-          deliveryOrders(${gqlBuilder.buildArgs({
+          collectionOrders(${gqlBuilder.buildArgs({
             filters: this.searchForm.queryFilters,
             pagination: { page, limit },
             sortings: sorters
@@ -234,7 +220,6 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
               id
               name
               from
-              to
               telNo
               loadType
               transportDriver {
@@ -245,7 +230,7 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
                 id
                 name
               }
-              deliveryDateTime
+              collectionDate
               status
               updatedAt
               updater {
@@ -262,8 +247,8 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       return {
-        total: response.data.deliveryOrders.total || 0,
-        records: response.data.deliveryOrders.items || []
+        total: response.data.collectionOrders.total || 0,
+        records: response.data.collectionOrders.items || []
       }
     }
   }
@@ -291,4 +276,4 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('delivery-order-list', DeliveryOrderList)
+window.customElements.define('collection-order-list', CollectionOrderList)

@@ -143,78 +143,6 @@ export default function route(page) {
       import('./pages/order/release-order/rejected-release-order')
       return page
 
-    case 'create_delivery_order':
-      import('./pages/order/delivery-order/create-delivery-order')
-      return page
-
-    case 'create_collection_order':
-      import('./pages/order/collection-order/create-collection-order')
-      return page
-
-    case 'delivery_order_detail':
-      import('./pages/order/delivery-order/delivery-order-detail')
-      return page
-
-    case 'rejected_delivery_order':
-      import('./pages/order/delivery-order/rejected-delivery-order')
-      return page
-
-    case 'delivery_order_requests':
-      import('./pages/order/delivery-order/delivery-order-requests')
-      return page
-
-    case 'collection_order_detail':
-      import('./pages/order/collection-order/collection-order-detail')
-      return page
-
-    case 'rejected_collection_order':
-      import('./pages/order/collection-order/rejected-collection-order')
-      return page
-
-    case 'collection_order_requests':
-      import('./pages/order/collection-order/collection-order-requests')
-      return page
-
-    case 'delivery_orders':
-      import('./pages/order/delivery-order/delivery-order-list')
-      return page
-
-    case 'collection_orders':
-      import('./pages/order/collection-order/collection-order-list')
-      return page
-
-    case 'receive_delivery_order':
-      import('./pages/order/delivery-order/receive-delivery-order')
-      return page
-
-    case 'execute_delivery_order':
-      import('./pages/order/delivery-order/execute-delivery-order')
-      return page
-
-    case 'complete_delivery_order':
-      import('./pages/order/delivery-order/complete-delivery-order')
-      return page
-
-    case 'completed_delivery_order':
-      import('./pages/order/delivery-order/completed-delivery-order')
-      return page
-
-    case 'receive_collection_order':
-      import('./pages/order/collection-order/receive-collection-order')
-      return page
-
-    case 'execute_collection_order':
-      import('./pages/order/collection-order/execute-collection-order')
-      return page
-
-    case 'complete_collection_order':
-      import('./pages/order/collection-order/complete-collection-order')
-      return page
-
-    case 'completed_collection_order':
-      import('./pages/order/collection-order/completed-collection-order')
-      return page
-
     case 'vas_orders':
       import('./pages/order/vas-order/vas-order-list')
       return page
@@ -245,6 +173,82 @@ export default function route(page) {
 
     case 'rejected_vas_order':
       import('./pages/order/vas-order/rejected-vas-order')
+      return page
+
+    case 'create_transport_order':
+      import('./pages/order/transport-order/create-transport-order')
+      return page
+
+    case 'delivery_order_detail':
+      import('./pages/order/transport-order/delivery-order-detail')
+      return page
+
+    case 'collection_order_detail':
+      import('./pages/order/transport-order/collection-order-detail')
+      return page
+
+    case 'edit_delivery_order':
+      import('./pages/order/transport-order/edit-delivery-order')
+      return page
+
+    case 'edit_collection_order':
+      import('./pages/order/transport-order/edit-collection-order')
+      return page
+
+    case 'delivery_orders':
+      import('./pages/order/transport-order/delivery-order-list')
+      return page
+
+    case 'collection_orders':
+      import('./pages/order/transport-order/collection-order-list')
+      return page
+
+    case 'delivery_order_requests':
+      import('./pages/order/transport-order/delivery-order-requests')
+      return page
+
+    case 'collection_order_requests':
+      import('./pages/order/transport-order/collection-order-requests')
+      return page
+
+    case 'receive_collection_order':
+      import('./pages/order/transport-order/receive-collection-order')
+      return page
+
+    case 'receive_delivery_order':
+      import('./pages/order/transport-order/receive-delivery-order')
+      return page
+
+    case 'rejected_delivery_order':
+      import('./pages/order/transport-order/rejected-delivery-order')
+      return page
+
+    case 'rejected_collection_order':
+      import('./pages/order/transport-order/rejected-collection-order')
+      return page
+
+    case 'execute_delivery_order':
+      import('./pages/order/transport-order/execute-delivery-order')
+      return page
+
+    case 'execute_collection_order':
+      import('./pages/order/transport-order/execute-collection-order')
+      return page
+
+    case 'complete_delivery_order':
+      import('./pages/order/transport-order/complete-delivery-order')
+      return page
+
+    case 'complete_collection_order':
+      import('./pages/order/transport-order/complete-collection-order')
+      return page
+
+    case 'completed_delivery_order':
+      import('./pages/order/transport-order/completed-delivery-order')
+      return page
+
+    case 'completed_collection_order':
+      import('./pages/order/transport-order/completed-collection-order')
       return page
 
     /**

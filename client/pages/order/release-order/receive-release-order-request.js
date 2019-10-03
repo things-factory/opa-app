@@ -1,15 +1,14 @@
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import { getCodeByName } from '@things-factory/code-base'
+import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store, navigate } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import '../../popup-note'
 import { CustomAlert } from '../../../utils/custom-alert'
-import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
+import '../../popup-note'
 
 class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {

@@ -144,10 +144,6 @@ export default {
       page: 'rejected_release_order'
     },
     {
-      tagname: 'create-delivery-order',
-      page: 'create_delivery_order'
-    },
-    {
       tagname: 'delivery-order-requests',
       page: 'delivery_order_requests'
     },
@@ -192,10 +188,6 @@ export default {
       page: 'completed_collection_order'
     },
     {
-      tagname: 'create-collection-order',
-      page: 'create_collection_order'
-    },
-    {
       tagname: 'collection-order-requests',
       page: 'collection_order_requests'
     },
@@ -206,6 +198,14 @@ export default {
     {
       tagname: 'collection-order-detail',
       page: 'collection_order_detail'
+    },
+    {
+      tagname: 'edit-delivery-order',
+      page: 'edit_delivery_order'
+    },
+    {
+      tagname: 'edit-collection-order',
+      page: 'edit_collection_order'
     },
     {
       tagname: 'delivery-order-list',
@@ -246,6 +246,10 @@ export default {
     {
       tagname: 'rejected-vas-order',
       page: 'rejected_vas_order'
+    },
+    {
+      tagname: 'create-transport-order',
+      page: 'create_transport_order'
     },
 
     /**
