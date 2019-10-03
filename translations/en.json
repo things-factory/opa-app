@@ -489,5 +489,8 @@
   "title.view_setting": "view setting",
   "title.warehouse": "warehouse",
   "title.worker": "worker",
-  "title.worksheet": "worksheet"
+  "title.worksheet": "worksheet",
+
+  "text.turn_to_pdf_successfully": "turn to pdf successfully",
+  "field.stock_name": "stock name"
 }
