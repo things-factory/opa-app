@@ -1,11 +1,11 @@
 import '@things-factory/form-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { store, client, gqlBuilder, navigate, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { store, client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { getRenderer, getEditor } from '@things-factory/grist-ui'
-import { fetchBoardSettings } from '../../viewparts/fetch-board-settings'
-import { UPDATE_OPA_APP_SETTINGS } from '../../actions/opa-app-settings'
+import { fetchBoardSettings } from '../../fetch-board-settings'
+import { UPDATE_DASHBOARD_SETTINGS } from '../../actions/dashboard-settings'
 
 class SystemSetting extends localize(i18next)(PageView) {
   static get styles() {
@@ -160,10 +160,7 @@ class SystemSetting extends localize(i18next)(PageView) {
               return getRenderer(record.category)(value, column, record, rowIndex, field)
             },
             editable: true,
-            align: 'center',
-            options: {
-              boardViewerPage: 'board'
-            }
+            align: 'center'
           },
           sortable: true,
           width: 180
@@ -307,7 +304,7 @@ class SystemSetting extends localize(i18next)(PageView) {
     var settings = await fetchBoardSettings()
 
     store.dispatch({
-      type: UPDATE_OPA_APP_SETTINGS,
+      type: UPDATE_DASHBOARD_SETTINGS,
       settings: settings.reduce((settings, setting) => {
         settings[setting.name] = setting
         return settings

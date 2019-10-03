@@ -195,7 +195,7 @@ class InventorySummaryReport extends localize(i18next)(PageView) {
           record: {
             editable: true
           },
-          header: i18next.t('field.name'),
+          header: i18next.t('field.stock_name'),
           width: 180
         },
         // {
@@ -218,7 +218,7 @@ class InventorySummaryReport extends localize(i18next)(PageView) {
         //       // }
         //     }
         //   },
-        //   header: i18next.t('field.bizplace'),
+        //   header: i18next.t('field.customer'),
         //   width: 200
         // },
         {
@@ -316,30 +316,45 @@ class InventorySummaryReport extends localize(i18next)(PageView) {
   }
 
   _generatePDF(solihin) {
-    let columns = ['Name', 'In', 'Out', 'Description']
+    let columns = ['Stock Name', 'In', 'Out', 'Description']
 
     const doc = new jsPDF() // or let doc = new jsPDF.default();
     doc.autoTable(columns, solihin, {
-      margin: { top: 50, left: 20, right: 20, bottom: 0 },
-      createdHeaderCell: function(cell, data) {
-        if (cell.raw === 'Name') {
-          cell.styles.fontSize = 15
-          cell.styles.textColor = 111
-        } else {
-          //else rule for drawHeaderCell hook
-          cell.styles.textColor = 255
-          cell.styles.fontSize = 10
-        }
-      },
-      createdCell: function(cell, data) {
-        if (cell.raw === 'Description') {
-          cell.styles.fontSize = 15
-          cell.styles.textColor = 111
-        }
-      }
+      margin: { top: 40, left: 10, right: 10, bottom: 0 },
+      styles: { textColor: [0, 0, 0], fillColor: [500, 500, 500] },
+      // columnStyles: { 0: { halign: 'center', fillColor: [0, 0, 0] } },
+      // columnStyles: { 1: { halign: 'center', fillColor: [0, 0, 0] } }
+      rowStyles: { fillColor: [500, 500, 500] }
     })
-    doc.text('Opa App', 100, 5)
-    doc.text('Warehouse Opening Balance                                Stock Total Average Cost', 5, 20)
+    // doc.putTotalPages()
+
+    doc.setFontSize(10)
+    doc.text('Opa App.', 100, 10)
+    doc.setFontSize(15)
+    doc.text('Inventory Warehouse Detail', 75, 20)
+
+    doc.setLineWidth(1)
+
+    doc.line(8, 35, 200, 35)
+    doc.setFontSize(10)
+    doc.text(
+      'Warehouse Opening Balance                                                                                                          Stock Total Average Cost',
+      8,
+      30
+    )
+    doc.page = 1 // use this as a counter.
+
+    function pageNumber() {
+      doc.text(187, 20, 'Page ' + doc.page) //print number bottom right
+      doc.page++
+    }
+    pageNumber()
+
+    var today = new Date()
+    var newdat = '' + today
+    doc.text(167.9, 5, newdat)
+    // doc.text(107, 68, newdat)
+
     doc.save('inventory-summary-report')
   }
 
@@ -350,11 +365,6 @@ class InventorySummaryReport extends localize(i18next)(PageView) {
     if (patches && patches.length) {
       patches = patches.map(movement => {
         let patchField = movement.id ? { id: movement.id } : {}
-        const dirtyFields = movement.__dirtyfields__
-        for (let key in dirtyFields) {
-          patchField[key] = dirtyFields[key].after
-        }
-        patchField.cuFlag = movement.__dirty__
 
         const dataArray = []
         dataArray.push(movement.name)
@@ -366,28 +376,16 @@ class InventorySummaryReport extends localize(i18next)(PageView) {
 
         return patchField
       })
-      this._generatePDF(sol)
       this.testPdf = sol
-      const response = await client.query({
-        query: gql`
-            mutation {
-              updateMultipleMovement(${gqlBuilder.buildArgs({
-                patches
-              })}) {
-                name
-              }
-            }
-          `
-      })
+      const response = await sol.push({})
 
       if (!response.errors) {
-        this.dataGrist.fetch()
         this._generatePDF(sol)
 
         document.dispatchEvent(
           new CustomEvent('notify', {
             detail: {
-              message: i18next.t('text.data_updated_successfully')
+              message: i18next.t('text.turn_to_pdf_successfully')
             }
           })
         )

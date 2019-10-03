@@ -2,14 +2,14 @@ import { Board } from '@things-factory/board-service'
 import { Setting } from '@things-factory/setting-base'
 import { getRepository } from 'typeorm'
 import {
-  HOME_BOARD_PREFIX,
+  HOME_DASHBOARD_PREFIX,
   LOCATION_LABEL_SETTING_KEY,
   PALLET_LABEL_SETTING_KEY
 } from '../../../opa-app-setting-constants'
 
 export const boardSettingsResolver = {
   async boardSettings(_: any, params: any, context: any) {
-    const HOME_BOARD = `${HOME_BOARD_PREFIX}:${context.state.user.userType}`
+    const HOME_BOARD = `${HOME_DASHBOARD_PREFIX}:${context.state.user.userType}`
 
     const queryBuilder = getRepository(Setting).createQueryBuilder()
     const names = [LOCATION_LABEL_SETTING_KEY, PALLET_LABEL_SETTING_KEY, HOME_BOARD]
@@ -48,8 +48,8 @@ export const boardSettingsResolver = {
         }
       }
 
-      if (setting.name.indexOf(HOME_BOARD_PREFIX) == 0) {
-        setting.name = HOME_BOARD_PREFIX
+      if (setting.name.indexOf(HOME_DASHBOARD_PREFIX) == 0) {
+        setting.name = HOME_DASHBOARD_PREFIX
       }
 
       return setting

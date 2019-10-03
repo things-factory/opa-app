@@ -155,7 +155,7 @@ class WorksheetList extends localize(i18next)(PageView) {
         {
           type: 'object',
           name: 'bizplace',
-          header: i18next.t('field.bizplace'),
+          header: i18next.t('field.customer'),
           record: { align: 'center' },
           sortable: true,
           width: 200
