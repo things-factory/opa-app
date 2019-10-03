@@ -1,12 +1,14 @@
+import { CustomAlert } from '../../../utils/custom-alert'
 import '@things-factory/grist-ui'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, store, navigate } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { openPopup } from '@things-factory/layout-base'
 import '../release-order/inventory-product-selector'
+import { ORDER_STATUS } from '../constants/order'
 
 class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -70,14 +72,11 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
       actions: [
         {
           title: i18next.t('button.create'),
+          type: 'transaction',
           action: this._generateVasOrder.bind(this)
         }
       ]
     }
-  }
-
-  get grist() {
-    return this.shadowRoot.querySelector('data-grist#vas-grist')
   }
 
   render() {
@@ -97,7 +96,7 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
 
   constructor() {
     super()
-    this.vasData = {}
+    this.vasData = { records: [] }
   }
 
   get vasGrist() {
@@ -133,13 +132,6 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'object',
-          name: 'vas',
-          header: i18next.t('field.vas'),
-          record: { editable: true, align: 'center', options: { queryName: 'vass' } },
-          width: 250
-        },
-        {
-          type: 'object',
           name: 'product',
           header: i18next.t('field.inventory_list'),
           record: { editable: true, align: 'center' },
@@ -148,6 +140,13 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
               this._openInventoryProduct()
             }
           },
+          width: 250
+        },
+        {
+          type: 'object',
+          name: 'vas',
+          header: i18next.t('field.vas'),
+          record: { editable: true, align: 'center', options: { queryName: 'vass' } },
           width: 250
         },
         {
@@ -202,42 +201,75 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
   _validateVas() {
     this.vasGrist.commit()
     if (this.vasGrist.data.records && this.vasGrist.data.records.length) {
+      // required field (vas && remark)
       if (this.vasGrist.data.records.filter(record => !record.vas || !record.remark).length)
         throw new Error(i18next.t('text.empty_value_in_list'))
 
+      // duplication of vas for same batch
       const vasBatches = this.vasGrist.data.records.map(vas => `${vas.vas.id}-${vas.batchId}`)
       if (vasBatches.filter((vasBatch, idx, vasBatches) => vasBatches.indexOf(vasBatch) !== idx).length)
         throw new Error(i18next.t('text.duplicated_vas_on_same_batch'))
     }
   }
 
-  async _generateVasOrder() {
+  async _generateVasOrder(cb) {
     try {
       this._validateVas()
 
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.create_vas_order'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+      if (!result.value) {
+        cb()
+        return
+      }
+
+      let args = {
+        vasOrder: this._getVasOrder()
+      }
+
       const response = await client.query({
         query: gql`
-              mutation {
-                generateVasOrder(${gqlBuilder.buildArgs({
-                  vasOrder: this._getVasOrder()
-                })}) {
-                  id
-                  name
-                }
+            mutation {
+              generateVasOrder(${gqlBuilder.buildArgs(args)}) {
+                id
+                name
               }
-            `
+            }
+          `
       })
-      if (!response.errors) navigate(`vas_order_detail/${response.data.generateVasOrder.name}`)
-      this._showToast({ message: i18next.t('vas_order_created') })
+
+      if (!response.errors) {
+        navigate(`vas_order_detail/${response.data.generateVasOrder.name}`)
+        this._showToast({ message: i18next.t('vas_order_created') })
+      }
     } catch (e) {
       this._showToast(e)
+    } finally {
+      cb()
     }
   }
 
-  stateChanged(state) {
-    if (this.active) {
-      this._vasNo = state && state.route && state.route.resourceId
-    }
+  _getVasOrder() {
+    let vasOrder = {}
+
+    vasOrder.orderVass = this.vasGrist.data.records.map((record, idx) => {
+      delete record.__typename
+      delete record.vas.__typename
+      return {
+        batchId: record.batchId,
+        remark: record.remark,
+        inventory: {
+          id: record.id
+        },
+        vas: record.vas
+      }
+    })
+
+    return vasOrder
   }
 
   _showToast({ type, message }) {
