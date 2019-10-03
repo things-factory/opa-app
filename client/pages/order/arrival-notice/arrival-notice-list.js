@@ -5,6 +5,7 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { ORDER_STATUS } from '../constants/order'
+import { getCodeByName } from '@things-factory/code-base'
 
 class ArrivalNoticeList extends localize(i18next)(PageView) {
   static get styles() {
@@ -79,7 +80,8 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    const _orderStatus = await getCodeByName('ORDER_STATUS')
     this._searchFields = [
       {
         label: i18next.t('field.gan'),
@@ -99,9 +101,11 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
         type: 'select',
         options: [
           { value: '' },
-          ...Object.keys(ORDER_STATUS).map(key => {
-            const status = ORDER_STATUS[key]
-            return { name: i18next.t(`label.${status.name}`), value: status.value }
+          ..._orderStatus.map(status => {
+            return {
+              name: i18next.t(`label.${status.description}`),
+              value: status.name
+            }
           })
         ],
         props: { searchOper: 'eq' }

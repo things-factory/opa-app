@@ -7,7 +7,7 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_C
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import Swal from 'sweetalert2'
+import { CustomAlert } from '../../utils/custom-alert'
 import '../popup-note'
 
 class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
@@ -227,22 +227,28 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       changedProps.has('_selectedOrderProduct') ||
       changedProps.has('_selectedInventory')
     ) {
-      this.updateContext()
+      this._updateContext()
     }
   }
 
-  updateContext() {
+  _updateContext() {
     let actions = []
     if (this._selectedOrderProduct && !this._selectedOrderProduct.validity) {
       actions = [...actions, { title: i18next.t('button.issue'), action: this._openIssueNote.bind(this) }]
     }
 
     if (this._selectedInventory) {
-      actions = [...actions, { title: i18next.t('button.undo'), action: this._undoUnloading.bind(this) }]
+      actions = [
+        ...actions,
+        { title: i18next.t('button.undo'), type: 'transaction', action: this._undoUnloading.bind(this) }
+      ]
     }
 
     if (this._arrivalNoticeNo) {
-      actions = [...actions, { title: i18next.t('button.complete'), action: this._complete.bind(this) }]
+      actions = [
+        ...actions,
+        { title: i18next.t('button.complete'), type: 'transaction', action: this._complete.bind(this) }
+      ]
     }
 
     store.dispatch({
@@ -303,24 +309,28 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           type: 'integer',
           name: 'palletQty',
           header: i18next.t('field.pallet_qty'),
+          record: { align: 'center' },
           width: 60
         },
         {
           type: 'integer',
           name: 'actualPalletQty',
           header: i18next.t('field.actual_pallet_qty'),
+          record: { align: 'center' },
           width: 60
         },
         {
           type: 'integer',
           name: 'packQty',
           header: i18next.t('field.total_pack_qty'),
+          record: { align: 'center' },
           width: 60
         },
         {
           type: 'integer',
           name: 'actualPackQty',
           header: i18next.t('field.actual_total_pack_qty'),
+          record: { align: 'center' },
           width: 60
         },
         {
@@ -353,13 +363,14 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'palletId',
           header: i18next.t('field.pallet'),
-          width: 180
+          width: 240
         },
         {
           type: 'integer',
           name: 'qty',
           header: i18next.t('field.actual_pack_qty'),
-          width: 60
+          record: { align: 'center' },
+          width: 80
         }
       ]
     }
@@ -586,23 +597,23 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
     )
   }
 
-  async _undoUnloading() {
+  async _undoUnloading(cb) {
     try {
       this._validateUndo()
-      const result = await Swal.fire({
-        title: i18next.t('text.undo_unloading'),
-        text: i18next.t('text.are_you_sure'),
-        type: 'warning',
-        showCancelButton: true,
-        allowOutsideClick: false,
-        confirmButtonColor: '#22a6a7',
-        cancelButtonColor: '#cfcfcf',
-        confirmButtonText: i18next.t('button.yes')
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.undo_unloading'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
       })
 
-      if (result.value) {
-        const response = await client.query({
-          query: gql`
+      if (!result.value) {
+        cb()
+        return
+      }
+
+      const response = await client.query({
+        query: gql`
             mutation {
               undoUnloading(${gqlBuilder.buildArgs({
                 worksheetDetailName: this._selectedOrderProduct.name,
@@ -610,17 +621,20 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
               })})
             }
           `
-        })
+      })
 
-        if (!response.errors) {
-          this._selectedInventory = null
-          this.palletInput.value = ''
-          this.actualQtyInput.value = ''
-        }
-        this._fetchInvevtories()
+      if (!response.errors) {
+        this._selectedInventory = null
+        this.palletInput.value = ''
+        this.actualQtyInput.value = ''
       }
+      await this._fetchProducts(this._arrivalNoticeNo)
+      await this._fetchInvevtories()
+      this._focusOnPalletInput()
     } catch (e) {
       this._showToast(e)
+    } finally {
+      cb()
     }
   }
 
@@ -628,9 +642,21 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
     if (!this._selectedInventory) throw new Error('text.target_does_not_selected')
   }
 
-  async _complete() {
+  async _complete(cb) {
     try {
       this._validateComplete()
+
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.complete_unloading'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+      if (!result.value) {
+        cb()
+        return
+      }
+
       const response = await client.query({
         query: gql`
           mutation {
@@ -644,14 +670,11 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
         `
       })
 
-      if (response.errors) {
-        await Swal.fire({
-          title: i18next.t('text.unloading'),
-          text: i18next.t('text.your_working_is_completed'),
-          type: 'info',
-          allowOutsideClick: false,
-          confirmButtonColor: '#22a6a7',
-          confirmButtonText: i18next.t('text.confirm')
+      if (!response.errors) {
+        await CustomAlert({
+          title: i18next.t('title.completed'),
+          text: i18next.t('text.unloading_completed'),
+          confirmButton: { text: i18next.t('button.confirm') }
         })
 
         this._arrivalNoticeNo = null
@@ -660,6 +683,8 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       }
     } catch (e) {
       this._showToast(e)
+    } finally {
+      cb()
     }
   }
 

@@ -228,6 +228,10 @@ export default {
       page: 'create_vas_order'
     },
     {
+      tagname: 'edit-vas-order',
+      page: 'edit_vas_order'
+    },
+    {
       tagname: 'confirm-vas-order',
       page: 'confirm_vas_order'
     },
