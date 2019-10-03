@@ -199,8 +199,8 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
   }
 
   async pageUpdated(changes) {
-    if (this.active && changes.resourceId) {
-      this._ganNo = changes.resourceId
+    if (this.active) {
+      this._ganNo = changes.resourceId || this._ganNo || ''
       await this._fetchGAN()
       this._updateContext()
     }
@@ -305,6 +305,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
   }
 
   async _fetchGAN() {
+    if (!this._ganNo) return
     this._status = ''
     const response = await client.query({
       query: gql`
