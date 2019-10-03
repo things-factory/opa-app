@@ -359,6 +359,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
               remark
             }
             collectionOrder {
+              name
               from
               loadType
               collectionDate

@@ -389,6 +389,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
               shipName
             }
             deliveryOrder {
+              name
               to
               loadType
               deliveryDate

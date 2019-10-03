@@ -326,7 +326,7 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
       if (!response.errors) {
         history.back()
 
-        this._showToast({ message: i18next.t('text.collection_order_received') })
+        this._showToast({ message: i18next.t('text.collection_order_dispatched') })
       }
     } catch (e) {
       this._showToast(e)
