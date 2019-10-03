@@ -1,7 +1,6 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { openPopup } from '@things-factory/layout-base'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
@@ -95,7 +94,7 @@ class IntransitInventory extends localize(i18next)(PageView) {
         {
           type: 'object',
           name: 'bizplace',
-          header: i18next.t('field.bizplace'),
+          header: i18next.t('field.customer'),
           sortable: true,
           width: 200
         },
@@ -126,7 +125,7 @@ class IntransitInventory extends localize(i18next)(PageView) {
           name: 'zone',
           header: i18next.t('field.zone'),
           sortable: true,
-          width: 200
+          width: 80
         },
         {
           type: 'object',
@@ -154,7 +153,7 @@ class IntransitInventory extends localize(i18next)(PageView) {
 
     this._searchFields = [
       {
-        label: i18next.t('field.bizplace'),
+        label: i18next.t('field.customer'),
         name: 'bizplaceName',
         type: 'text',
         props: { searchOper: 'like' }
