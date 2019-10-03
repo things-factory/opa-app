@@ -105,7 +105,7 @@ class SystemUserBizplacesDetail extends localize(i18next)(LitElement) {
 
   async firstUpdated() {
     this.config = {
-      list: { fields: ['name', 'assigned', 'mainBizplace'] },
+      list: { fields: ['assigned', 'name'] },
       pagination: { infinite: true },
       rows: { appendable: false },
       columns: [

@@ -112,7 +112,7 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
 
     this.roleConfig = {
       pagination: { infinite: true },
-      list: { fields: ['name', 'description', 'assigned'] },
+      list: { fields: ['assigned', 'name', 'description'] },
       rows: { appendable: false },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
