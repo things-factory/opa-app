@@ -125,14 +125,14 @@ class VasOrderDetail extends localize(i18next)(PageView) {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
-          record: { editable: true, align: 'center', options: { queryName: 'vass' } },
+          record: { align: 'center', options: { queryName: 'vass' } },
           width: 250
         },
         {
           type: 'object',
           name: 'product',
           header: i18next.t('field.inventory_list'),
-          record: { editable: true, align: 'center' },
+          record: { align: 'center' },
           width: 250
         },
         {
@@ -153,7 +153,7 @@ class VasOrderDetail extends localize(i18next)(PageView) {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
-          record: { editable: true, align: 'center' },
+          record: { align: 'center' },
           width: 350
         }
       ]

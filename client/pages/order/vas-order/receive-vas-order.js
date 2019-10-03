@@ -1,14 +1,14 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { openPopup } from '@things-factory/layout-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { connect } from 'pwa-helpers/connect-mixin.js'
+import { CustomAlert } from '../../../utils/custom-alert'
+import { openPopup } from '@things-factory/layout-base'
 import '../../popup-note'
 
-class ReceiveVasOrder extends connect(store)(localize(i18next)(PageView)) {
+class ReceiveVasOrder extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _vasNo: String,
@@ -70,35 +70,39 @@ class ReceiveVasOrder extends connect(store)(localize(i18next)(PageView)) {
       actions: [
         {
           title: i18next.t('button.reject'),
+          type: 'transaction',
           action: this._rejectVasOrder.bind(this)
         },
         {
           title: i18next.t('button.receive'),
+          type: 'transaction',
           action: this._receiveVasOrder.bind(this)
+        },
+        {
+          title: i18next.t('button.back'),
+          action: () => history.back()
         }
       ]
     }
   }
 
-  pageUpdated(changes, lifecycle) {
-    if (this.active) {
-      this.fetchVasOrder()
+  pageUpdated(changes) {
+    if (this.active && changes.resourceId) {
+      this._vasNo = changes.resourceId
+      this._fetchVasOrder()
     }
-  }
-
-  get form() {
-    return this.shadowRoot.querySelector('form')
   }
 
   render() {
     return html`
       <div class="grist">
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas_no')}: ${this._vasNo}</h2>
+
         <data-grist
           id="vas-grist"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .data=${this.data}
-          .fetchHandler="${this.fetchHandler.bind(this)}"
+          .config=${this.vasGristConfig}
+          .data="${this.vasData}"
         ></data-grist>
       </div>
     `
@@ -106,7 +110,7 @@ class ReceiveVasOrder extends connect(store)(localize(i18next)(PageView)) {
 
   constructor() {
     super()
-    this.vasData = {}
+    this.vasData = { records: [] }
   }
 
   pageInitialized() {
@@ -132,15 +136,15 @@ class ReceiveVasOrder extends connect(store)(localize(i18next)(PageView)) {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
-          record: { editable: true, align: 'center', options: { queryName: 'vass' } },
-          width: 250
+          record: { align: 'center', options: { queryName: 'vass' } },
+          width: 350
         },
         {
           type: 'object',
           name: 'product',
           header: i18next.t('field.inventory_list'),
-          record: { editable: true, align: 'center' },
-          width: 250
+          record: { align: 'center' },
+          width: 300
         },
         {
           type: 'string',
@@ -160,20 +164,15 @@ class ReceiveVasOrder extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
-          record: { editable: true, align: 'center' },
+          record: { align: 'center' },
           width: 350
         }
       ]
     }
   }
 
-  updated(changedProps) {
-    if (changedProps.has('_vasNo')) {
-      this.fetchVasOrder()
-    }
-  }
-
-  async fetchVasOrder() {
+  async _fetchVasOrder() {
+    if (!this._vasNo) return
     const response = await client.query({
       query: gql`
         query {
@@ -185,19 +184,22 @@ class ReceiveVasOrder extends connect(store)(localize(i18next)(PageView)) {
             status
             inventoryDetail {
               vas {
+                id
                 name
+                description
               }
-              inventoryName
               batchId
+              name
               product {
+                id
                 name
                 description
               }
               location {
+                id
                 name
+                description
               }
-            }
-            orderVass {
               remark
             }
           }
@@ -206,48 +208,72 @@ class ReceiveVasOrder extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      this._status = response.data.vasOrder.status
-      this._actionsHandler()
+      const vasOrder = response.data.vasOrder
+      const orderVass = vasOrder.inventoryDetail
 
-      const newData = response.data.vasOrder
-
-      this.vasData = {
-        ...this.vasData,
-        records: [...newData, ...newData.inventoryDetail, ...newData.orderVass]
-      }
+      this._status = vasOrder.status
+      this.vasData = { records: orderVass }
     }
   }
 
-  async _receiveVasOrder() {
-    const response = await client.query({
-      query: gql`
-        mutation {
-          generateVasOrderWorksheet(${gqlBuilder.buildArgs({
-            vasNo: this._vasNo
-          })}) {
+  async _receiveVasOrder(cb) {
+    try {
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.receive_vas_order'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+      if (!result.value) {
+        cb()
+        return
+      }
+
+      const response = await client.query({
+        query: gql`
+          mutation {
+            generateVasOrderWorksheet(${gqlBuilder.buildArgs({
+              vasNo: this._vasNo
+            })}) {
               unloadingWorksheet {
                 name
               }
             }
           }
         `
-    })
+      })
 
-    if (!response.errors) {
-      navigate('worksheets')
-      history.back()
-      this._showToast({ message: i18next.t('text.vas_order_has_been_confirmed') })
+      if (!response.errors) {
+        navigate('worksheets')
+
+        this._showToast({ message: i18next.t('text.vas_order_has_been_confirmed') })
+      }
+    } catch (e) {
+      this._showToast(e)
+    } finally {
+      cb()
     }
   }
 
-  async _rejectVasOrder() {
-    openPopup(
+  async _rejectVasOrder(cb) {
+    const popup = openPopup(
       html`
         <popup-note
           .title="${i18next.t('title.remark')}"
           @submit="${async e => {
             try {
-              if (!e.detail.remark) throw new Error(i18next.t('text.remark_is_empty'))
+              if (!e.detail.value) throw new Error(i18next.t('text.remark_is_empty'))
+              const result = await CustomAlert({
+                title: i18next.t('title.are_you_sure'),
+                text: i18next.t('text.reject_vas_order'),
+                confirmButton: { text: i18next.t('button.confirm') },
+                cancelButton: { text: i18next.t('button.cancel') }
+              })
+              if (!result.value) {
+                cb()
+                return
+              }
+
               const response = await client.query({
                 query: gql`
                 mutation {
@@ -262,11 +288,13 @@ class ReceiveVasOrder extends connect(store)(localize(i18next)(PageView)) {
               })
 
               if (!response.errors) {
-                navigate('vas_order_requests')
+                navigate('vas_requests')
                 this._showToast({ message: i18next.t('text.vas_order_rejected') })
               }
             } catch (e) {
               this._showToast(e)
+            } finally {
+              cb()
             }
           }}"
         ></popup-note>
@@ -277,16 +305,8 @@ class ReceiveVasOrder extends connect(store)(localize(i18next)(PageView)) {
         title: i18next.t('title.reject_vas_order')
       }
     )
-  }
 
-  _getTextAreaByName(name) {
-    return this.shadowRoot.querySelector(`textarea[name=${name}]`)
-  }
-
-  stateChanged(state) {
-    if (this.active) {
-      this._vasNo = state && state.route && state.route.resourceId
-    }
+    popup.onclosed = cb
   }
 
   _showToast({ type, message }) {

@@ -74,19 +74,9 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  activated(active) {
-    if (JSON.parse(active)) {
-      this.fetchVasOrder()
-    }
-  }
-
-  get form() {
-    return this.shadowRoot.querySelector('form')
-  }
-
   render() {
     return html`
-      <form class="multi-column-form">
+      <form name="rejectForm" class="multi-column-form">
         <fieldset>
           <label>${i18next.t('label.remark')}</label>
           <textarea name="remark" disabled></textarea>
@@ -106,6 +96,21 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
     `
   }
 
+  constructor() {
+    super()
+    this.vasData = { records: [] }
+  }
+
+  get vasGrist() {
+    return this.shadowRoot.querySelector('data-grist#vas-grist')
+  }
+
+  async pageUpdated(changes) {
+    if (this.active) {
+      this._vasNo = changes.resourceId || this._vasNo || ''
+      this._fetchVasOrder()
+    }
+  }
   pageInitialized() {
     this.vasGristConfig = {
       pagination: { infinite: true },
@@ -129,14 +134,14 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
-          record: { editable: true, align: 'center', options: { queryName: 'vass' } },
+          record: { align: 'center', options: { queryName: 'vass' } },
           width: 250
         },
         {
           type: 'object',
           name: 'product',
           header: i18next.t('field.inventory_list'),
-          record: { editable: true, align: 'center' },
+          record: { align: 'center' },
           width: 250
         },
         {
@@ -157,7 +162,7 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
-          record: { editable: true, align: 'center' },
+          record: { align: 'center' },
           width: 350
         }
       ]
@@ -165,11 +170,11 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
   }
 
   updated(changedProps) {
-    if (changedProps.has('_releaseOrderNo')) {
-      this.fetchVasOrder()
+    if (changedProps.has('_vasNo')) {
+      this._fetchVasOrder()
     }
   }
-  async fetchVasOrder() {
+  async _fetchVasOrder() {
     const response = await client.query({
       query: gql`
         query {
@@ -179,21 +184,20 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
             id
             name
             status
+            remark
             inventoryDetail {
               vas {
                 name
+                description
               }
-              inventoryName
               batchId
+              name
               product {
                 name
-                description
               }
               location {
                 name
               }
-            }
-            orderVass {
               remark
             }
           }
@@ -203,7 +207,7 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       this._status = response.data.vasOrder.status
-      this._fillupForm(response.data.vasOrder)
+      this._fillupVOForm(response.data.vasOrder)
 
       const newData = response.data.vasOrder
 
@@ -214,19 +218,19 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  _fillupForm(vasOrder) {
-    for (let key in vasOrder) {
-      Array.from(this.form.querySelectorAll('textarea')).forEach(field => {
-        if (field.name === key) {
-          field.value = vasOrder[key]
-        }
-      })
-    }
+  get rejectForm() {
+    return this.shadowRoot.querySelector('form[name=rejectForm]')
   }
 
-  stateChanged(state) {
-    if (this.active) {
-      this._vasNo = state && state.route && state.route.resourceId
+  _fillupVOForm(data) {
+    this._fillupForm(this.rejectForm, data)
+  }
+
+  _fillupForm(form, data) {
+    for (let key in data) {
+      Array.from(form.querySelectorAll('textarea')).forEach(field => {
+        field.value = data[key]
+      })
     }
   }
 

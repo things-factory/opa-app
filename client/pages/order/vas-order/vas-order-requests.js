@@ -95,7 +95,7 @@ class VasOrderRequests extends localize(i18next)(PageView) {
           { value: '' },
           { name: i18next.t(`label.${ORDER_STATUS.PENDING_RECEIVE.name}`), value: ORDER_STATUS.PENDING_RECEIVE.value },
           {
-            name: i18next.t(`label.${ORDER_STATUS.RECEIVED.name}`),
+            name: i18next.t(`label.${ORDER_STATUS.READY_TO_EXECUTE.name}`),
             value: ORDER_STATUS.READY_TO_EXECUTE.value
           },
           { name: i18next.t(`label.${ORDER_STATUS.EXECUTING.name}`), value: ORDER_STATUS.EXECUTING.value },
@@ -118,9 +118,7 @@ class VasOrderRequests extends localize(i18next)(PageView) {
             click: (columns, data, column, record, rowIndex) => {
               const status = record.status
               if (status === ORDER_STATUS.PENDING_RECEIVE.value) {
-                navigate(`receive_vas_order_request/${record.name}`) // 1. move to order receiving page
-              } else if (status === ORDER_STATUS.READY_TO_EXECUTE.value) {
-                navigate(`execute_vas_order/${record.name}`) // 2. move to execute page
+                navigate(`receive_vas_order/${record.name}`) // 1. move to order receiving page
               } else if (status === ORDER_STATUS.DONE.value) {
                 navigate(`completed_vas_order/${record.name}`) // 4. move to completed page
               }
@@ -131,6 +129,14 @@ class VasOrderRequests extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.vas_order_no'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 180
+        },
+        {
+          type: 'object',
+          name: 'bizplace',
+          header: i18next.t('field.customer'),
           record: { align: 'center' },
           sortable: true,
           width: 180
@@ -167,8 +173,8 @@ class VasOrderRequests extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('search-form')
   }
 
-  get vasGrist() {
-    return this.shadowRoot.querySelector('#vas-grist')
+  get dataGrist() {
+    return this.shadowRoot.querySelector('data-grist')
   }
 
   get _columns() {
@@ -179,28 +185,18 @@ class VasOrderRequests extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
         query {
-          vasOrders(${gqlBuilder.buildArgs({
-            filters: this._conditionParser(),
+          vasOrderRequests(${gqlBuilder.buildArgs({
+            filters: this.searchForm.queryFilters,
             pagination: { page, limit },
             sortings: sorters
           })}) {
             items{
               id
               name
-              orderVass {
-                vas {
-                  id
-                  name
-                  description
-                }
-                inventory {
-                  id
-                  name
-                  batchId
-                  location {
-                    name
-                  }
-                }
+              bizplace {
+                id
+                name
+                description
               }
               status
               description
@@ -218,30 +214,10 @@ class VasOrderRequests extends localize(i18next)(PageView) {
     })
     if (!response.errors) {
       return {
-        total: response.data.orderVass.total || 0,
-        records: response.data.orderVass.items || []
+        total: response.data.vasOrderRequests.total || 0,
+        records: response.data.vasOrderRequests.items || []
       }
     }
-  }
-
-  _conditionParser() {
-    return this.searchForm
-      .getFields()
-      .filter(field => (field.type !== 'checkbox' && field.value && field.value !== '') || field.type === 'checkbox')
-      .map(field => {
-        return {
-          name: field.name,
-          value:
-            field.type === 'text'
-              ? field.value
-              : field.type === 'checkbox'
-              ? field.checked
-              : field.type === 'number'
-              ? parseFloat(field.value)
-              : field.value,
-          operator: field.getAttribute('searchOper')
-        }
-      })
   }
 
   get _columns() {
