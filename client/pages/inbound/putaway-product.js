@@ -280,6 +280,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
   pageInitialized() {
     this.config = {
       rows: {
+        appendable: false,
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
             if (data.records.length && record) {

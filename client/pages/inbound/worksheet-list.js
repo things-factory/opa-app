@@ -118,6 +118,7 @@ class WorksheetList extends localize(i18next)(PageView) {
     ]
 
     this.config = {
+      rows: { appendable: false },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },

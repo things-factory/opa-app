@@ -263,6 +263,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
   pageInitialized() {
     this.orderProductConfig = {
       rows: {
+        appendable: false,
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
             if (record && record.batchId) {
@@ -344,6 +345,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
 
     this.palletProductConfig = {
       rows: {
+        appendable: false,
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
             if (record && record.palletId && this._selectedOrderProduct) {

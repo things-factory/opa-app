@@ -114,7 +114,8 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
     ]
 
     this.config = {
-      rows: { selectable: { multiple: true } },
+      rows: { appendable: false, selectable: { multiple: true } },
+      pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
