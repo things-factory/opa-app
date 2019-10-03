@@ -140,7 +140,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
         <fieldset>
           <legend>${`${i18next.t('title.arrival_notice')}: ${this.arrivalNoticeNo}`}</legend>
 
-          <label>${i18next.t('label.bizplace')}</label>
+          <label>${i18next.t('label.customer')}</label>
           <input name="bizplaceName" readonly />
 
           <label>${i18next.t('label.startedAt')}</label>

@@ -62,7 +62,7 @@ class SystemCreateUser extends localize(i18next)(LitElement) {
         <h2>${i18next.t('title.create_user')}</h2>
         <form class="multi-column-form">
           <fieldset>
-            <label>${i18next.t('label.bizplace')}</label>
+            <label>${i18next.t('label.customer')}</label>
             <select name="bizplace">
               ${(this.bizplaces || []).map(
                 bizplace =>

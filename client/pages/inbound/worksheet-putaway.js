@@ -78,7 +78,7 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
           <label>${i18next.t('label.arrival_notice')}</label>
           <input name="arrivalNotice" readonly />
 
-          <label>${i18next.t('label.bizplace')}</label>
+          <label>${i18next.t('label.customer')}</label>
           <input name="bizplace" readonly />
 
           <label>${i18next.t('label.buffer_location')}</label>
