@@ -2,11 +2,13 @@ import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { openPopup } from '@things-factory/layout-base'
+import { client, gqlBuilder, isMobileDevice, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../utils/custom-alert'
 import { WORKSHEET_STATUS } from './constants/worksheet'
+import './pallet-label-popup'
 
 class WorksheetUnloading extends localize(i18next)(PageView) {
   static get properties() {
@@ -273,6 +275,10 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       this._actions = [
         { title: i18next.t('button.activate'), type: 'transaction', action: this._activateWorksheet.bind(this) }
       ]
+    } else if (this._worksheetStatus === WORKSHEET_STATUS.EXECUTING.value) {
+      this._actions = [
+        { title: i18next.t('button.pallet_label_print'), action: this._openPalletLabelPrintPopup.bind(this) }
+      ]
     }
 
     this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
@@ -368,8 +374,9 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
           console.warn('TODO: PRINT OUT WORKSHEET')
         }
 
-        this._worksheetNo = ''
-        navigate(`worksheets`)
+        await this.fetchWorksheet()
+        this._updateContext()
+        this._updateGristConfig()
       }
     } catch (e) {
       this._showToast(e)
@@ -385,6 +392,30 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
         description: worksheetDetail.description
       }
     })
+  }
+
+  _openPalletLabelPrintPopup() {
+    const _pallets = {
+      records: this.data.records.map(record => {
+        return {
+          palletId: record.palletId,
+          batchId: record.batchId,
+          product: record.product,
+          palletQty: record.palletQty,
+          printQty: record.palletQty
+        }
+      })
+    }
+    openPopup(
+      html`
+        <pallet-label-popup .pallets="${_pallets}"></pallet-label-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.pallet_label')
+      }
+    )
   }
 
   _showToast({ type, message }) {
