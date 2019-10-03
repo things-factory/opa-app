@@ -203,7 +203,7 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
   async saveSettings({ name, value, category, description }) {
     if (!(name && value)) return
 
-    client.query({
+    await client.query({
       query: gql`
       mutation {
         updateSetting(${gqlBuilder.buildArgs({
