@@ -141,7 +141,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
               queryName: 'bizplaces'
             }
           },
-          header: i18next.t('field.bizplace'),
+          header: i18next.t('field.customer'),
           width: 200
         },
         {

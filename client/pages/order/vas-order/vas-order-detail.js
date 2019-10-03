@@ -1,12 +1,13 @@
+import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { connect } from 'pwa-helpers/connect-mixin.js'
+import { CustomAlert } from '../../../utils/custom-alert'
 import { ORDER_STATUS } from '../constants/order'
 
-class VasOrderDetail extends connect(store)(localize(i18next)(PageView)) {
+class VasOrderDetail extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _vasNo: String,
@@ -64,29 +65,21 @@ class VasOrderDetail extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.vas_order_detail')
-    }
-  }
-
-  get vasGrist() {
-    return this.shadowRoot.querySelector('data-grist#vas-grist')
-  }
-
-  pageUpdated(changes, lifecycle) {
-    if (this.active) {
-      this.fetchVasOrder()
+      title: i18next.t('title.vas_order_detail'),
+      actions: this._actions
     }
   }
 
   render() {
     return html`
       <div class="grist">
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas_no')}: ${this._vasNo}</h2>
+
         <data-grist
           id="vas-grist"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .data=${this.data}
-          .fetchHandler="${this.fetchHandler.bind(this)}"
+          .config=${this.vasGristConfig}
+          .data="${this.vasData}"
         ></data-grist>
       </div>
     `
@@ -94,7 +87,19 @@ class VasOrderDetail extends connect(store)(localize(i18next)(PageView)) {
 
   constructor() {
     super()
-    this.vasData = {}
+    this.vasData = { records: [] }
+  }
+
+  get vasGrist() {
+    return this.shadowRoot.querySelector('data-grist#vas-grist')
+  }
+
+  async pageUpdated(changes) {
+    if (this.active) {
+      this._vasNo = changes.resourceId || this._vasNo || ''
+      await this.fetchVasOrder()
+      this._updateContext()
+    }
   }
 
   pageInitialized() {
@@ -120,14 +125,14 @@ class VasOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
-          record: { editable: true, align: 'center', options: { queryName: 'vass' } },
+          record: { align: 'center', options: { queryName: 'vass' } },
           width: 250
         },
         {
           type: 'object',
           name: 'product',
           header: i18next.t('field.inventory_list'),
-          record: { editable: true, align: 'center' },
+          record: { align: 'center' },
           width: 250
         },
         {
@@ -148,7 +153,7 @@ class VasOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
-          record: { editable: true, align: 'center' },
+          record: { align: 'center' },
           width: 350
         }
       ]
@@ -162,6 +167,7 @@ class VasOrderDetail extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async fetchVasOrder() {
+    if (!this._vasNo) return
     const response = await client.query({
       query: gql`
         query {
@@ -172,22 +178,18 @@ class VasOrderDetail extends connect(store)(localize(i18next)(PageView)) {
             name
             status
             inventoryDetail {
-              name
-              batchId
-              product {
-                name
-                description
-              }
-              location {
-                name
-              }
-            }
-            orderVass {
               vas {
                 name
                 description
               }
-              description
+              batchId
+              name
+              product {
+                name
+              }
+              location {
+                name
+              }
               remark
             }
           }
@@ -196,114 +198,106 @@ class VasOrderDetail extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      this._status = response.data.vasOrder.status
-      this._actionsHandler()
+      const vasOrder = response.data.vasOrder
+      const orderVass = vasOrder.inventoryDetail
 
-      this.vasData = {
-        ...this.vasData,
-        records: response.data.vasOrder.orderVass
-      }
+      this._status = vasOrder.status
+      this.vasData = { records: orderVass }
     }
   }
 
-  async _updateVasOrder(patch) {
-    const response = await client.query({
-      query: gql`
-        mutation {
-          updateVasOrder(${gqlBuilder.buildArgs({
-            name: this._vasNo,
-            patch
-          })}) {
-            name 
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      this.fetchVasOrder()
-    } else {
-      throw new Error(response.errors[0])
-    }
-  }
-
-  async _confirmVasOrder() {
-    const response = await client.query({
-      query: gql`
-        mutation {
-          confirmVasOrder(${gqlBuilder.buildArgs({
-            name: this._vasNo
-          })}) {
-            name
-          }
-        }
-      `
-    })
-
-    if (response.errors) {
-      throw new Error(response.errors[0])
-    }
-  }
-
-  _actionsHandler() {
-    let actions = []
-
+  _updateContext() {
+    this._actions = []
     if (this._status === ORDER_STATUS.PENDING.value) {
-      actions = [
+      this._actions = [
         {
           title: i18next.t('button.edit'),
-          action: async () => {
-            try {
-              await this._updateVasOrder({ status: ORDER_STATUS.EDITING.value })
-              this._showToast({ message: i18next.t('text.order_is_now_editable') })
-            } catch (e) {
-              this._showToast(e)
-            }
-          }
+          type: 'transaction',
+          action: this._changeToEditable.bind(this)
         },
         {
           title: i18next.t('button.confirm'),
-          action: async () => {
-            try {
-              await this._confirmVasOrder()
-              Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                type: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, confirm it!'
-              }).then(result => {
-                if (result.value) {
-                  this._showToast({ message: i18next.t('text.order_is_confirmed') })
-                  navigate('vas_orders')
-                }
-              })
-            } catch (e) {
-              this._showToast(e)
-            }
-          }
+          type: 'transaction',
+          action: this._confirmVasOrder.bind(this)
         }
       ]
-    } else if (this._status === ORDER_STATUS.EDITING.value) {
-      navigate(`create_vas_order/${this._vasNo}`)
     }
 
-    actions = [...actions, { title: i18next.t('button.back'), action: () => navigate('vas_orders') }]
+    this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
 
     store.dispatch({
       type: UPDATE_CONTEXT,
-      context: {
-        ...this.context,
-        actions
-      }
+      context: this.context
     })
   }
 
-  stateChanged(state) {
-    if (this.active) {
-      this._vasNo = state && state.route && state.route.resourceId
+  async _changeToEditable(cb) {
+    try {
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.change_to_editable'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (result.value) {
+        const response = await client.query({
+          query: gql`
+            mutation {
+              updateVasOrder(${gqlBuilder.buildArgs({
+                name: this._vasNo,
+                patch: { status: ORDER_STATUS.EDITING.value }
+              })}) {
+                name 
+              }
+            }
+          `
+        })
+
+        if (!response.errors) {
+          navigate(`edit_vas_order/${this._vasNo}`)
+        }
+      }
+    } catch (e) {
+      this._showToast(e)
+    } finally {
+      cb()
+    }
+  }
+
+  async _confirmVasOrder(cb) {
+    const result = await CustomAlert({
+      title: i18next.t('title.are_you_sure'),
+      text: i18next.t('text.confirm_vas_order'),
+      confirmButton: { text: i18next.t('button.confirm') },
+      cancelButton: { text: i18next.t('button.cancel') }
+    })
+    if (!result.value) {
+      cb()
+      return
+    }
+
+    try {
+      const response = await client.query({
+        query: gql`
+            mutation {
+              confirmVasOrder(${gqlBuilder.buildArgs({
+                name: this._vasNo
+              })}) {
+                name
+              }
+            }
+          `
+      })
+
+      if (!response.errors) {
+        this._showToast({ message: i18next.t('text.vas_order_confirmed') })
+        navigate('vas_orders')
+      }
+    } catch (e) {
+      this._showToast(e)
+    } finally {
+      cb()
     }
   }
 

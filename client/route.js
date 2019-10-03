@@ -9,10 +9,6 @@ export default function route(page) {
       import('./pages/board/dashboard')
       return page
 
-    case 'board':
-      import('./pages/board/board')
-      return page
-
     /**
      * Master Menus Section
      */
@@ -227,6 +223,10 @@ export default function route(page) {
       import('./pages/order/vas-order/create-vas-order')
       return page
 
+    case 'edit_vas_order':
+      import('./pages/order/vas-order/edit-vas-order')
+      return page
+
     case 'confirm_vas_order':
       import('./pages/order/vas-order/confirm-vas-order')
       return page
@@ -262,6 +262,10 @@ export default function route(page) {
 
     case 'intransit_inventory':
       import('./pages/inventory/intransit-inventory')
+      return page
+
+    case 'inventory_histories':
+      import('./pages/inventory/inventory-history')
       return page
 
     /**

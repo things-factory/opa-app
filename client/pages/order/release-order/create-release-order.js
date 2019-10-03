@@ -272,13 +272,6 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
           }
         },
         {
-          type: 'string',
-          name: 'batchId',
-          header: i18next.t('field.batch_id'),
-          record: { editable: true, align: 'center' },
-          width: 150
-        },
-        {
           type: 'object',
           name: 'product',
           header: i18next.t('field.release_inventory_list'),
@@ -289,6 +282,13 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
             }
           },
           width: 250
+        },
+        {
+          type: 'string',
+          name: 'batchId',
+          header: i18next.t('field.batch_id'),
+          record: { editable: true, align: 'center' },
+          width: 150
         },
         {
           type: 'code',
@@ -389,7 +389,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     const changeRecord = event.detail.after
     const changedColumn = event.detail.column.name
 
-    if (changedColumn === 'releaseQty' || changeColumn === 'qty') {
+    if (changedColumn === 'releaseQty' || changedColumn === 'qty') {
       try {
         this._validateReleaseQty(changeRecord.releaseQty, changeRecord.qty)
       } catch (e) {
@@ -446,6 +446,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!response.errors) {
+        this._clearView()
         navigate(`release_order_detail/${response.data.generateReleaseGood.name}`)
         this._showToast({ message: i18next.t('release_order_created') })
       }
@@ -573,16 +574,10 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     return this._serializeForm(this.shippingOrderForm)
   }
 
-  _clearPage() {
-    this.form.reset()
-    this.inventoryGrist.data = Object.assign({ records: [] })
-    this.vasGrist.data = Object.assign({ records: [] })
-  }
-
-  stateChanged(state) {
-    if (this.active) {
-      this._releaseOrderNo = state && state.route && state.route.resourceId
-    }
+  _clearView() {
+    this.releaseOrderForm.reset()
+    this.deliveryOrderForm.reset()
+    this.shippingOrderForm.reset()
   }
 
   _showToast({ type, message }) {

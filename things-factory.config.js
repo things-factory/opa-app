@@ -8,12 +8,8 @@ export default {
      * Master Menus Section
      */
     {
-      tagname: 'opa-dashboard',
+      tagname: 'home-dashboard',
       page: 'dashboard'
-    },
-    {
-      tagname: 'opa-board',
-      page: 'board'
     },
     {
       tagname: 'company-list',
@@ -228,6 +224,10 @@ export default {
       page: 'create_vas_order'
     },
     {
+      tagname: 'edit-vas-order',
+      page: 'edit_vas_order'
+    },
+    {
       tagname: 'confirm-vas-order',
       page: 'confirm_vas_order'
     },
@@ -274,6 +274,10 @@ export default {
     {
       tagname: 'intransit-inventory',
       page: 'intransit_inventory'
+    },
+    {
+      tagname: 'inventory-history',
+      page: 'inventory_histories'
     },
 
     /**

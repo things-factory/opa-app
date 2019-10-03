@@ -1,18 +1,17 @@
-import { CustomAlert } from '../../../utils/custom-alert'
-import '@things-factory/grist-ui'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
+import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store, navigate } from '@things-factory/shell'
+import { openPopup } from '@things-factory/layout-base'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { connect } from 'pwa-helpers/connect-mixin.js'
-import { openPopup } from '@things-factory/layout-base'
+import { CustomAlert } from '../../../utils/custom-alert'
 import '../release-order/inventory-product-selector'
-import { ORDER_STATUS } from '../constants/order'
 
-class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
+class EditVasOrder extends localize(i18next)(PageView) {
   static get properties() {
     return {
+      _id: String,
       _vasNo: String,
       vasGristConfig: Object,
       vasData: Object,
@@ -68,12 +67,16 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.create_vas_order'),
+      title: i18next.t('title.edit_vas_order'),
       actions: [
         {
-          title: i18next.t('button.create'),
+          title: i18next.t('button.confirm'),
           type: 'transaction',
-          action: this._generateVasOrder.bind(this)
+          action: this._editVasOrder.bind(this)
+        },
+        {
+          title: i18next.t('button.back'),
+          action: () => history.back()
         }
       ]
     }
@@ -82,7 +85,7 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
   render() {
     return html`
       <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas_order')}</h2>
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas_no')}: ${this._vasNo}</h2>
 
         <data-grist
           id="vas-grist"
@@ -103,11 +106,54 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
   }
 
-  updated(changedProps) {
-    if (changedProps.has('_vasNo') && this._vasNo) {
-      this.fetchVas()
-    } else if (changedProps.has('_vasNo') && !this._vasNo) {
-      this._clearPage()
+  pageUpdated(changes) {
+    if (this.active && changes.resourceId) {
+      this._vasNo = changes.resourceId
+      this._fetchVasOrder()
+    }
+  }
+
+  async _fetchVasOrder() {
+    const response = await client.query({
+      query: gql`
+        query {
+          vasOrder(${gqlBuilder.buildArgs({
+            name: this._vasNo
+          })}) {
+            id
+            name
+            status
+            inventoryDetail {
+              inventoryId
+              vas {
+                id
+                name
+                description
+              }
+              batchId
+              name
+              product {
+                id
+                name
+              }
+              location {
+                id
+                name
+              }
+              remark
+            }
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      const vasOrder = response.data.vasOrder
+      const orderVass = vasOrder.inventoryDetail
+
+      this._status = vasOrder.status
+      this._id = vasOrder.inventoryDetail.inventoryId
+      this.vasData = { records: orderVass }
     }
   }
 
@@ -194,8 +240,45 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
     )
   }
 
-  _clearPage() {
-    this.vasGrist.data = Object.assign({ records: [] })
+  async _editVasOrder(cb) {
+    try {
+      this._validateVas()
+
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.save_vas_order'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+      if (!result.value) {
+        cb()
+        return
+      }
+
+      let args = {
+        name: this._vasNo,
+        vasOrder: this._getVasOrder()
+      }
+
+      const response = await client.query({
+        query: gql`
+            mutation {
+              editVasOrder(${gqlBuilder.buildArgs(args)}) {
+                name
+              }
+            }
+          `
+      })
+
+      if (!response.errors) {
+        navigate(`vas_order_detail/${response.data.editVasOrder.name}`)
+        this._showToast({ message: i18next.t('vas_order_created') })
+      }
+    } catch (e) {
+      this._showToast(e)
+    } finally {
+      cb()
+    }
   }
 
   _validateVas() {
@@ -212,47 +295,6 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _generateVasOrder(cb) {
-    try {
-      this._validateVas()
-
-      const result = await CustomAlert({
-        title: i18next.t('title.are_you_sure'),
-        text: i18next.t('text.create_vas_order'),
-        confirmButton: { text: i18next.t('button.confirm') },
-        cancelButton: { text: i18next.t('button.cancel') }
-      })
-      if (!result.value) {
-        cb()
-        return
-      }
-
-      let args = {
-        vasOrder: this._getVasOrder()
-      }
-
-      const response = await client.query({
-        query: gql`
-            mutation {
-              generateVasOrder(${gqlBuilder.buildArgs(args)}) {
-                id
-                name
-              }
-            }
-          `
-      })
-
-      if (!response.errors) {
-        navigate(`vas_order_detail/${response.data.generateVasOrder.name}`)
-        this._showToast({ message: i18next.t('vas_order_created') })
-      }
-    } catch (e) {
-      this._showToast(e)
-    } finally {
-      cb()
-    }
-  }
-
   _getVasOrder() {
     let vasOrder = {}
 
@@ -263,7 +305,8 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
         batchId: record.batchId,
         remark: record.remark,
         inventory: {
-          id: record.id
+          id: '',
+          name: record.name
         },
         vas: record.vas
       }
@@ -284,4 +327,4 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
   }
 }
 
-window.customElements.define('create-vas-order', CreateVasOrder)
+window.customElements.define('edit-vas-order', EditVasOrder)

@@ -3,15 +3,13 @@ import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { connect } from 'pwa-helpers/connect-mixin.js'
-import { ORDER_PRODUCT_STATUS, ORDER_TYPES } from '../constants/order'
 import { CustomAlert } from '../../../utils/custom-alert'
 import './inventory-product-selector'
 
-class EditReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
+class EditReleaseOrder extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _ownTransport: Boolean,
@@ -73,7 +71,7 @@ class EditReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.create_release_order'),
+      title: i18next.t('title.edit_release_order'),
       actions: [
         {
           title: i18next.t('button.confirm'),
@@ -282,6 +280,7 @@ class EditReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
               qty
               releaseQty
               product {
+                id
                 name
                 description
               }
@@ -290,12 +289,18 @@ class EditReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
               }              
             }
             shippingOrder {
+              id
+              name
+              description
               containerNo
               containerLeavingDate
               containerArrivalDate
               shipName
             }
             deliveryOrder {
+              id
+              name
+              description
               to
               loadType
               deliveryDate

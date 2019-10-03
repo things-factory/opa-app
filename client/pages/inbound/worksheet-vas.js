@@ -90,7 +90,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
           >
           <input ?hidden="${this._orderType !== ORDER_TYPES.SHIPPING.value}" name="shipping_order" readonly />
 
-          <label>${i18next.t('label.bizplace')}</label>
+          <label>${i18next.t('label.customer')}</label>
           <input name="bizplace" readonly />
 
           <label>${i18next.t('label.status')}</label>
@@ -236,6 +236,8 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
         ? ORDER_TYPES.ARRIVAL_NOTICE.value
         : worksheet.shippingOrder
         ? ORDER_TYPES.SHIPPING.value
+        : worksheet.vasOrder
+        ? ORDER_TYPES.VAS_ORDER.value
         : null
 
       if (!this._orderType) return
