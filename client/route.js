@@ -9,10 +9,6 @@ export default function route(page) {
       import('./pages/board/dashboard')
       return page
 
-    case 'board':
-      import('./pages/board/board')
-      return page
-
     /**
      * Master Menus Section
      */

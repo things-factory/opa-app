@@ -3,26 +3,6 @@ import { BoardViewerPage } from '@things-factory/board-ui'
 import { HOME_DASHBOARD_SETTING_KEY } from '../../setting-constants'
 
 class Dashboard extends BoardViewerPage {
-  static get styles() {
-    return [
-      css`
-        oops-note {
-          display: block;
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          transform: translate(-50%, -50%);
-        }
-      `
-    ].concat(BoardViewerPage.styles)
-  }
-
-  get context() {
-    return {
-      title: super.context.title
-    }
-  }
-
   get oopsNote() {
     return {
       icon: 'insert_chart',

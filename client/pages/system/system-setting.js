@@ -160,10 +160,7 @@ class SystemSetting extends localize(i18next)(PageView) {
               return getRenderer(record.category)(value, column, record, rowIndex, field)
             },
             editable: true,
-            align: 'center',
-            options: {
-              boardViewerPage: 'board'
-            }
+            align: 'center'
           },
           sortable: true,
           width: 180
