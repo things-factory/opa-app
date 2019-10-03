@@ -286,6 +286,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       pagination: {
         infinite: true
       },
+      list: { fields: ['batchId', 'palletQty', 'actualPalletQty', 'packQty', 'actualPackQty'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -356,6 +357,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           }
         }
       },
+      list: { fields: ['palletId', 'qty'] },
       pagination: {
         infinite: true
       },

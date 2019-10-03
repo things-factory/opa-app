@@ -121,6 +121,8 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
 
   pageInitialized() {
     this.preConfig = {
+      rows: { appendable: false },
+      list: { fields: ['batchId', 'palletId', 'product'] },
       pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },

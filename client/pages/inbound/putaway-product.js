@@ -301,9 +301,8 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
           }
         }
       },
-      pagination: {
-        infinite: true
-      },
+      pagination: { infinite: true },
+      list: { fields: ['palletId', 'batchId', 'qty'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {

@@ -162,6 +162,9 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     this.config = {
       pagination: { pages: [20, 50, 100, 200] },
       rows: { selectable: { multiple: true } },
+      list: {
+        fields: ['name', 'type', 'status']
+      },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },

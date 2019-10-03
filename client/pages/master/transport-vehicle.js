@@ -119,6 +119,9 @@ class TransportVehicle extends localize(i18next)(PageView) {
 
     this.config = {
       rows: { selectable: { multiple: true } },
+      list: {
+        fields: ['regNumber', 'description', 'updatedAt']
+      },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
@@ -130,19 +133,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
           record: { editable: true, align: 'center' },
           sortable: true,
           width: 150
-        },
-        {
-          type: 'object',
-          name: 'bizplace',
-          record: {
-            align: 'center',
-            editable: true,
-            options: {
-              queryName: 'bizplaces'
-            }
-          },
-          header: i18next.t('field.customer'),
-          width: 200
         },
         {
           type: 'string',
@@ -227,10 +217,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
             items {
               id
               name
-              bizplace{
-                id
-                name
-              }
               regNumber
               description
               size

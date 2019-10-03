@@ -50,7 +50,8 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
   firstUpdated() {
     this.config = {
       pagination: { infinite: true },
-      rows: { selectable: { multiple: true } },
+      rows: { selectable: { multiple: true }, appendable: false },
+      list: { fields: ['batchId', 'palletQty', 'printQty'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },

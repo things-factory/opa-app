@@ -82,12 +82,9 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
 
   async firstUpdated() {
     this.priviledgeConfig = {
-      pagination: {
-        infinite: true
-      },
-      rows: {
-        appendable: false
-      },
+      list: { fields: ['description', 'category', 'assigned'] },
+      pagination: { infinite: true },
+      rows: { appendable: false },
       columns: [
         {
           type: 'gutter',

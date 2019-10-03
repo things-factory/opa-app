@@ -134,6 +134,8 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
   async pageInitialized() {
     this._statusOptions = await getCodeByName('WORKSHEET_STATUS')
     this.preConfig = {
+      rows: { appendable: false },
+      list: { fields: ['batchId', 'vas', 'remark'] },
       pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },

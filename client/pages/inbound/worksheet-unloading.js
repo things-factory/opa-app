@@ -129,6 +129,8 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
   async pageInitialized() {
     this._statusOptions = await getCodeByName('WORKSHEET_STATUS')
     this.preConfig = {
+      rows: { appendable: false },
+      list: { fields: ['batchId', 'product', 'palletQty'] },
       pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },

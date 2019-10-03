@@ -187,15 +187,10 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
 
   pageInitialized() {
     this.config = {
+      rows: { appendable: false },
+      list: { fields: ['product', 'location', 'updatedAt'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
-        {
-          type: 'object',
-          name: 'bizplace',
-          header: i18next.t('field.customer'),
-          sortable: true,
-          width: 200
-        },
         {
           type: 'object',
           name: 'product',

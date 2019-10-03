@@ -251,6 +251,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       pagination: {
         infinite: true
       },
+      list: { fields: ['batchId', 'vas', 'issue'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {

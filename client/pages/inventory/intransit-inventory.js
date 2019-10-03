@@ -75,6 +75,9 @@ class IntransitInventory extends localize(i18next)(PageView) {
 
   pageInitialized() {
     this.config = {
+      list: {
+        fields: ['palletId', 'product', 'bizplace', 'location']
+      },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
