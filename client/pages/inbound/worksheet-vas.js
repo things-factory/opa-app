@@ -236,6 +236,8 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
         ? ORDER_TYPES.ARRIVAL_NOTICE.value
         : worksheet.shippingOrder
         ? ORDER_TYPES.SHIPPING.value
+        : worksheet.vasOrder
+        ? ORDER_TYPES.VAS_ORDER.value
         : null
 
       if (!this._orderType) return

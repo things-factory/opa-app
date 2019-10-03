@@ -119,6 +119,8 @@ class VasOrderList extends localize(i18next)(PageView) {
               const status = record.status
               if (status === ORDER_STATUS.REJECTED.value) {
                 navigate(`rejected_vas_order/${record.name}`) // 1. move to rejected detail page
+              } else if (status === ORDER_STATUS.EDITING.value) {
+                navigate(`edit_vas_order/${record.name}`)
               } else {
                 navigate(`vas_order_detail/${record.name}`)
               }
