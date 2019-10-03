@@ -264,6 +264,10 @@ export default function route(page) {
       import('./pages/inventory/intransit-inventory')
       return page
 
+    case 'inventory_histories':
+      import('./pages/inventory/inventory-history')
+      return page
+
     /**
      * System Menus Section
      */

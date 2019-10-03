@@ -275,6 +275,10 @@ export default {
       tagname: 'intransit-inventory',
       page: 'intransit_inventory'
     },
+    {
+      tagname: 'inventory-history',
+      page: 'inventory_histories'
+    },
 
     /**
      * System Menus Section
