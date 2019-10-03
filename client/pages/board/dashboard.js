@@ -38,4 +38,4 @@ class Dashboard extends BoardViewerPage {
   }
 }
 
-customElements.define('opa-dashboard', Dashboard)
+customElements.define('home-dashboard', Dashboard)

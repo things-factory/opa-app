@@ -8,7 +8,7 @@ export default {
      * Master Menus Section
      */
     {
-      tagname: 'opa-dashboard',
+      tagname: 'home-dashboard',
       page: 'dashboard'
     },
     {
