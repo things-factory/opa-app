@@ -156,6 +156,8 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         <form name="collectionOrder" class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.collection_order')}</legend>
+            <label>${i18next.t('label.issued_co_no')}</label>
+            <input name="name" readonly />
 
             <label>${i18next.t('label.collection_date')}</label>
             <input name="collectionDate" type="date" readonly />

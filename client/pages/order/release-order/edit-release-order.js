@@ -181,6 +181,8 @@ class EditReleaseOrder extends localize(i18next)(PageView) {
         <form name="deliveryOrder" class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.delivery_order')}</legend>
+            <label>${i18next.t('label.issued_do_no')}</label>
+            <input name="name" ?required="${!this._ownTransport}" />
 
             <label>${i18next.t('label.delivery_date')}</label>
             <input name="deliveryDate" type="date" min="${this._getStdDate()}" ?required="${!this._ownTransport}" />
