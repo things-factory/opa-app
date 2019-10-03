@@ -5,7 +5,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { getRenderer, getEditor } from '@things-factory/grist-ui'
 import { fetchBoardSettings } from '../../viewparts/fetch-board-settings'
-import { UPDATE_OPA_APP_SETTINGS } from '../../actions/opa-app-settings'
+import { UPDATE_DASHBOARD_SETTINGS } from '../../actions/dashboard-settings'
 
 class SystemSetting extends localize(i18next)(PageView) {
   static get styles() {
@@ -307,7 +307,7 @@ class SystemSetting extends localize(i18next)(PageView) {
     var settings = await fetchBoardSettings()
 
     store.dispatch({
-      type: UPDATE_OPA_APP_SETTINGS,
+      type: UPDATE_DASHBOARD_SETTINGS,
       settings: settings.reduce((settings, setting) => {
         settings[setting.name] = setting
         return settings

@@ -504,7 +504,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   stateChanged(state) {
-    var locationLabelSetting = state.opaApp[LOCATION_LABEL_SETTING_KEY]
+    var locationLabelSetting = state.dashboard[LOCATION_LABEL_SETTING_KEY]
     this._locationLabel = (locationLabelSetting && locationLabelSetting.board) || {}
   }
 }

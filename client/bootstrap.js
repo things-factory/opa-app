@@ -1,27 +1,25 @@
 import { addRoutingType, updateMenuProvider } from '@things-factory/menu-base'
 import { client, store, isMobileDevice, UPDATE_BASE_URL } from '@things-factory/shell'
 import gql from 'graphql-tag'
-import { UPDATE_OPA_APP_SETTINGS, CLEAR_OPA_APP_SETTINGS } from './actions/opa-app-settings'
-import opaApp from './reducers/opa-app-settings'
+import { UPDATE_DASHBOARD_SETTINGS, CLEAR_DASHBOARD_SETTINGS } from './actions/dashboard-settings'
+import dashboard from './reducers/dashboard-settings'
 import { fetchBoardSettings } from './viewparts/fetch-board-settings'
 import { auth } from '@things-factory/auth-base'
 import { TOOL_POSITION } from '@things-factory/layout-base'
 import { APPEND_APP_TOOL } from '@things-factory/apptool-base'
 
-import { html } from 'lit-html'
-
 export default function bootstrap() {
   store.addReducers({
-    opaApp
+    dashboard
   })
 
   /* 사용자 signin/signout 에 따라서, setting 변경 */
   auth.on('signin', async () => {
-    // fetch opa-app settings
+    // fetch dashboard settings
     var settings = await fetchBoardSettings()
 
     store.dispatch({
-      type: UPDATE_OPA_APP_SETTINGS,
+      type: UPDATE_DASHBOARD_SETTINGS,
       settings: settings.reduce((settings, setting) => {
         settings[setting.name] = setting
         return settings
@@ -30,9 +28,9 @@ export default function bootstrap() {
   })
 
   auth.on('signout', async () => {
-    // clear opa-app settings
+    // clear dashboard settings
     store.dispatch({
-      type: CLEAR_OPA_APP_SETTINGS
+      type: CLEAR_DASHBOARD_SETTINGS
     })
   })
 

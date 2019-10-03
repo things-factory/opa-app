@@ -4,7 +4,7 @@ import { client, gqlBuilder, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import { connect } from 'pwa-helpers'
-import { UPDATE_OPA_APP_SETTINGS } from '../actions/opa-app-settings'
+import { UPDATE_DASHBOARD_SETTINGS } from '../actions/dashboard-settings'
 import { LOCATION_LABEL_SETTING_KEY, PALLET_LABEL_SETTING_KEY } from '../setting-constants'
 import '@things-factory/board-ui'
 import { fetchBoardSettings } from './fetch-board-settings'
@@ -154,8 +154,8 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
   }
 
   stateChanged(state) {
-    var locationLabel = state.opaApp[LOCATION_LABEL_SETTING_KEY]
-    var palletLabel = state.opaApp[PALLET_LABEL_SETTING_KEY]
+    var locationLabel = state.dashboard[LOCATION_LABEL_SETTING_KEY]
+    var palletLabel = state.dashboard[PALLET_LABEL_SETTING_KEY]
 
     this.locationLabel = (locationLabel ? locationLabel.board : {}) || {}
     this.palletLabel = (palletLabel ? palletLabel.board : {}) || {}
@@ -180,7 +180,7 @@ export class LabelSettingLet extends connect(store)(localize(i18next)(LitElement
             var settings = await fetchBoardSettings()
 
             store.dispatch({
-              type: UPDATE_OPA_APP_SETTINGS,
+              type: UPDATE_DASHBOARD_SETTINGS,
               settings: settings.reduce((settings, setting) => {
                 settings[setting.name] = setting
                 return settings
