@@ -72,7 +72,7 @@ class InventorySummaryReport extends localize(i18next)(PageView) {
           <!-- <label>${i18next.t('label.balance')}</label>
           <input name="balance" /> -->
 
-          <label>${i18next.t('label.total_price')}</label>
+          <label>${i18next.t('label.total_balance')}</label>
           <input name="totalPrice" />
         </fieldset>
       </form>
@@ -81,7 +81,7 @@ class InventorySummaryReport extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.inventory_warehouse'),
+      title: i18next.t('title.report_inventory_warehouse'),
       actions: [
         {
           title: i18next.t('button.toPdf'),
