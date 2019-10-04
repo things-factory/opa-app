@@ -553,5 +553,19 @@
   "title.warehouse": "warehouse",
   "title.worker": "worker",
   "title.worksheet": "worksheet",
-  "title.worksheet_unloading": "worksheet unloading"
+  "title.worksheet_unloading": "worksheet unloading",
+
+  "label.laoding": "loading",
+  "field.truck_no": "truck no.",
+  "label.vas_order": "vas order",
+  "text.arrival_notice_form_invalid": "arrival notice form invalid",
+  "text.do_you_want_to_print": "do you want to print",
+  "title.unloading_worksheet": "unloading worksheet",
+  "title.pallet_label": "pallet label",
+  "text.create_vas_order": "create vas order",
+  "title.vas_no": "vas no.",
+  "text.duplicated_vas_on_same_batch": "duplicated vas on same batch",
+  "vas_order_created": "vas order created",
+  "text.confirm_vas_order": "confirm vas order",
+  "text.save_vas_order": "save vas order"
 }
