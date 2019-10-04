@@ -116,7 +116,7 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
       _targetRows.forEach(async record => {
         for (let i = 1; i <= record.printQty; i++) {
           let searchParams = new URLSearchParams()
-          let batchId = record.batchId.replace(/[^a-zA-Z ]/g, '')
+          let batchId = record.batchId.replace(/[^a-zA-Z0-9 ]/g, '')
           searchParams.append(
             'pallet',
             `${batchId.substring(batchId.length - 8)}${new Date()
