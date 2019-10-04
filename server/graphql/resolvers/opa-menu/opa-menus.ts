@@ -41,6 +41,12 @@ export const opaMenusResolver = {
           menuType: Equal('MENU'),
           domain: context.state.domain,
           category: IsNull()
+        },
+        {
+          hiddenFlag: false,
+          menuType: Equal('MENU'),
+          domain: context.state.domain,
+          category: ''
         }
       ],
       order: {

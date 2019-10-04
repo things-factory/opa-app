@@ -109,6 +109,7 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
 
   async _printLabel() {
     try {
+      this.printer = new USBPrinter()
       const _targetRows = this._validate()
       let labelId = this._palletLabel && this._palletLabel.id
 
@@ -134,10 +135,6 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
           let command = await response.text()
 
           try {
-            if (!this.printer) {
-              this.printer = new USBPrinter()
-            }
-
             await this.printer.connectAndPrint(command)
           } catch (ex) {
             document.dispatchEvent(

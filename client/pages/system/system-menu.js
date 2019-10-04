@@ -218,6 +218,7 @@ class SystemMenu extends localize(i18next)(PageView) {
           patchField[key] = dirtyFields[key].after
         }
         patchField.cuFlag = menu.__dirty__
+        patchField.menuType = 'MENU'
 
         return patchField
       })
