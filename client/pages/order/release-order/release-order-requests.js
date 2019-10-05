@@ -128,10 +128,6 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
                 navigate(`receive_release_order_request/${record.name}`) // 1. move to order receiving page
               } else if (status === ORDER_STATUS.READY_TO_PICK.value) {
                 navigate(`execute_release_order/${record.name}`) // 2. move to order arriving check page
-              } else if (status === ORDER_STATUS.INPROCESS.value) {
-                navigate(`complete_release_order/${record.name}`) // 3. move to order arriving check page
-              } else if (status === ORDER_STATUS.DELIVERING.value) {
-                navigate(`complete_release_delivery/${record.name}`) // 3. move to order arriving check page
               } else if (status === ORDER_STATUS.DONE.value) {
                 navigate(`completed_release_order/${record.name}`) // 4. move to assign buffer location
               }

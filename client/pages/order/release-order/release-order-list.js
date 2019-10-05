@@ -91,8 +91,8 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
       },
       {
         label: i18next.t('field.release_date'),
-        name: 'releaseDateTime',
-        type: 'datetime-local',
+        name: 'releaseDate',
+        type: 'date',
         props: { searchOper: 'like' }
       },
       {

@@ -128,14 +128,6 @@ export default {
       page: 'execute_release_order'
     },
     {
-      tagname: 'complete-release-order',
-      page: 'complete_release_order'
-    },
-    {
-      tagname: 'complete-release-delivery',
-      page: 'complete_release_delivery'
-    },
-    {
       tagname: 'rejected-release-order',
       page: 'rejected_release_order'
     },

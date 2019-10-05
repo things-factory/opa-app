@@ -1,24 +1,19 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { connect } from 'pwa-helpers/connect-mixin.js'
-import { LOAD_TYPES } from '../constants/order'
 
-class CompletedReleaseDelivery extends connect(store)(localize(i18next)(PageView)) {
+class CompletedReleaseOrder extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _releaseOrderNo: String,
       _ownTransport: Boolean,
-      _shippingOption: Boolean,
+      _exportOption: Boolean,
       inventoryGristConfig: Object,
-      currentOrderType: String,
       vasGristConfig: Object,
       inventoryData: Object,
-      _assignedDriverName: String,
-      _assignedVehicleName: String,
       vasData: Object,
       _status: String
     }
@@ -72,132 +67,115 @@ class CompletedReleaseDelivery extends connect(store)(localize(i18next)(PageView
 
   get context() {
     return {
-      title: i18next.t('title.complete_release_delivery'),
+      title: i18next.t('title.completed_release_order'),
       actions: [
         {
           title: i18next.t('button.back'),
-          action: history.back
+          action: () => history.back()
         }
       ]
     }
   }
 
-  pageUpdated(changes, lifecycle) {
-    if (this.active) {
-      this.fetchReleaseOrder()
-    }
+  get releaseOrderForm() {
+    return this.shadowRoot.querySelector('form[name=releaseOrder]')
   }
 
-  get form() {
-    return this.shadowRoot.querySelector('form')
+  get deliveryOrderForm() {
+    return this.shadowRoot.querySelector('form[name=deliveryOrder]')
+  }
+
+  get shippingOrderForm() {
+    return this.shadowRoot.querySelector('form[name=shippingOrder]')
+  }
+
+  get inventoryGrist() {
+    return this.shadowRoot.querySelector('data-grist#inventory-grist')
+  }
+
+  get vasGrist() {
+    return this.shadowRoot.querySelector('data-grist#vas-grist')
+  }
+
+  async firstUpdated() {
+    this._loadTypes = await getCodeByName('LOAD_TYPES')
+  }
+
+  async pageUpdated(changes) {
+    if (this.active) {
+      this._releaseOrderNo = changes.resourceId || this._releaseOrderNo || ''
+      await this._fetchReleaseOrder()
+    }
   }
 
   render() {
     return html`
-      <form class="multi-column-form">
-        <fieldset>
+        <form name="releaseOrder" class="multi-column-form">
+          <fieldset>
           <legend>${i18next.t('title.release_order_no')}: ${this._releaseOrderNo}</legend>
-          <label>${i18next.t('label.release_date')}</label>
-          <input name="releaseDateTime" type="datetime-local" disabled />
+            <label>${i18next.t('label.release_date')}</label>
+            <input name="releaseDate" type="date" readonly/>
 
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
-          <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" disabled />
+            <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
+            <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" readonly/>
 
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
-          <input name="truckNo" ?hidden="${!this._ownTransport}" disabled />
+            <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
+            <input name="truckNo" ?hidden="${!this._ownTransport}" readonly/>
 
-          <input
-            name="shippingOption"
+            <input
+            id="exportOption"
             type="checkbox"
-            ?checked="${this._shippingOption}"
-            @change=${e => {
-              this._shippingOption = e.currentTarget.checked
-            }}
+            name="exportOption"
+            ?checked="${this._exportOption}"
             disabled
-          />
-          <label>${i18next.t('label.shipping_option')}</label>
+            />
+            <label>${i18next.t('label.export')}</label>
 
-          <label ?hidden="${!this._shippingOption}">${i18next.t('label.container_no')}</label>
-          <input shipping name="containerNo" ?hidden="${!this._shippingOption}" disabled />
-
-          <label>${i18next.t('label.load_type')}</label>
-          <select name="loadType" disabled>
-            ${LOAD_TYPES.map(
-              loadType => html`
-                <option value="${loadType.value}">${i18next.t(`label.${loadType.name}`)}</option>
-              `
-            )}
-          </select>
-
-          <label ?hidden="${!this._shippingOption}">${i18next.t('label.container_arrival_date')}</label>
-          <input
-            shipping
-            name="containerArrivalDate"
-            type="datetime-local"
-            ?hidden="${!this._shippingOption}"
-            disabled
-          />
-
-          <label ?hidden="${!this._shippingOption}">${i18next.t('label.container_leaving_date')}</label>
-          <input
-            shipping
-            name="containerLeavingDate"
-            type="datetime-local"
-            ?hidden="${!this._shippingOption}"
-            disabled
-          />
-
-          <label ?hidden="${!this._shippingOption}">${i18next.t('label.ship_name')}</label>
-          <input shipping name="shipName" ?hidden="${!this._shippingOption}" disabled />
-
-          <input
+            <input
+            id="ownTransport"
+            type="checkbox"
             name="ownTransport"
-            type="checkbox"
             ?checked="${this._ownTransport}"
-            @change=${e => {
-              this._ownTransport = e.currentTarget.checked
-            }}
+            ?hidden="${this._exportOption}"
             disabled
-          />
-          <label>${i18next.t('label.own_transport')}</label>
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.delivery_date')}</label>
-          <input delivery name="deliveryDateTime" type="datetime-local" ?hidden="${this._ownTransport}" disabled />
+            />
+            <label ?hidden="${this._exportOption}">${i18next.t('label.own_transport')}</label>
+          </fieldset>
+        </form>
+      </div>
 
-          <label>${i18next.t('label.release_from')}</label>
-          <input name="from" disabled />
+      <div class="so-form-container" ?hidden="${!this._exportOption || (this._exportOption && !this._ownTransport)}">
+        <form name="shippingOrder" class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.export_order')}</legend>
+            <label>${i18next.t('label.container_no')}</label>
+            <input name="containerNo" readonly/>
 
-          <label>${i18next.t('label.release_to')}</label>
-          <input name="to" disabled />
+            <label>${i18next.t('label.container_arrival_date')}</label>
+            <input 
+              name="containerArrivalDate" 
+              type="date"  
+              readonly
+            />
 
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.assigned_truck')}</label>
-          <input
-            name=${this._assignedVehicleName}
-            value=${this._assignedVehicleName}
-            ?hidden="${this._ownTransport}"
-            disabled
-          />
+            <label>${i18next.t('label.container_leaving_date')}</label>
+            <input name="containerLeavingDate" type="date" readonly/>
 
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.assigned_driver')}</label>
-          <input
-            name=${this._assignedDriverName}
-            ?hidden="${this._ownTransport}"
-            value=${this._assignedDriverName}
-            disabled
-          />
+            <label>${i18next.t('label.ship_name')}</label>
+            <input name="shipName" readonly/>
 
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.tel_no')}</label>
-          <input delivery name="telNo" ?hidden="${this._ownTransport}" disabled />
-        </fieldset>
-      </form>
+          </fieldset>
+        </form>
+      </div>
 
       <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.release_inventory')}</h2>
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.release_product_list')}</h2>
 
         <data-grist
           id="inventory-grist"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.inventoryGristConfig}
-          .data="${this.inventoryData}"
+          .data=${this.inventoryData}
         ></data-grist>
       </div>
 
@@ -211,7 +189,48 @@ class CompletedReleaseDelivery extends connect(store)(localize(i18next)(PageView
           .data="${this.vasData}"
         ></data-grist>
       </div>
+
+      <div class="do-form-container" ?hidden="${this._exportOption || (!this._exportOption && this._ownTransport)}">
+        <form name="deliveryOrder" class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.delivery_order')}</legend>
+            <label>${i18next.t('label.issued_do_no')}</label>
+            <input name="name" readonly />
+
+            <label>${i18next.t('label.delivery_date')}</label>
+            <input name="deliveryDate" type="date" readonly/>
+
+            <label>${i18next.t('label.destination')}</label>
+            <input name="to" readonly/>
+
+            <label>${i18next.t('label.load_type')}</label>
+            <select name="loadType" disabled>
+              <option value=""></option>
+              ${this._loadTypes.map(
+                loadType => html`
+                  <option value="${loadType.name}">${i18next.t(`label.${loadType.description}`)}</option>
+                `
+              )}
+            </select>
+
+            <label>${i18next.t('label.tel_no')}</label>
+            <input delivery name="telNo"/>
+
+            <!--label>${i18next.t('label.document')}</label>
+            <input name="attiachment" type="file" /-->
+          </fieldset>
+        </form>
+      </div>
     `
+  }
+
+  constructor() {
+    super()
+    this._exportOption = false
+    this._ownTransport = true
+    this.inventoryData = { records: [] }
+    this.vasData = { records: [] }
+    this._loadTypes = []
   }
 
   pageInitialized() {
@@ -226,11 +245,9 @@ class CompletedReleaseDelivery extends connect(store)(localize(i18next)(PageView
           icon: 'close',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              this.inventoryData = {
-                ...this.inventoryData,
-                records: data.records.filter((record, idx) => idx !== rowIndex)
-              }
-
+              const newData = data.records.filter((_, idx) => idx !== rowIndex)
+              this.inventoryData = { ...this.inventoryData, records: newData }
+              this.inventoryGrist.dirtyData.records = newData
               this._updateBatchList()
             }
           }
@@ -250,10 +267,13 @@ class CompletedReleaseDelivery extends connect(store)(localize(i18next)(PageView
           width: 250
         },
         {
-          type: 'string',
+          type: 'code',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
-          record: { align: 'center' },
+          record: {
+            align: 'center',
+            codeName: 'PACKING_TYPES'
+          },
           width: 150
         },
         {
@@ -269,13 +289,6 @@ class CompletedReleaseDelivery extends connect(store)(localize(i18next)(PageView
           header: i18next.t('field.release_qty'),
           record: { align: 'center', options: { min: 0 } },
           width: 100
-        },
-        {
-          type: 'object',
-          name: 'location',
-          header: i18next.t('field.location'),
-          record: { align: 'center' },
-          width: 100
         }
       ]
     }
@@ -286,30 +299,28 @@ class CompletedReleaseDelivery extends connect(store)(localize(i18next)(PageView
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'close',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              const newData = data.records.filter((_, idx) => idx !== rowIndex)
+              this.vasData = { ...this.vasData, records: newData }
+            }
+          }
+        },
+        {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
-          record: {
-            align: 'center',
-            options: { queryName: 'vass' }
-          },
+          record: { align: 'center', options: { queryName: 'vass' } },
           width: 250
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: { align: 'center' },
-          width: 180
         },
         {
           type: 'select',
           name: 'batchId',
           header: i18next.t('field.batch_id'),
-          record: {
-            align: 'center',
-            options: [i18next.t('label.all')]
-          },
+          record: { align: 'center', options: ['', i18next.t('label.all')] },
           width: 150
         },
         {
@@ -323,13 +334,9 @@ class CompletedReleaseDelivery extends connect(store)(localize(i18next)(PageView
     }
   }
 
-  updated(changedProps) {
-    if (changedProps.has('_releaseOrderNo')) {
-      this.fetchReleaseOrder()
-    }
-  }
-
-  async fetchReleaseOrder() {
+  async _fetchReleaseOrder() {
+    if (!this._releaseOrderNo) return
+    this._status = ''
     const response = await client.query({
       query: gql`
         query {
@@ -338,36 +345,42 @@ class CompletedReleaseDelivery extends connect(store)(localize(i18next)(PageView
           })}) {
             id
             name
-            from
-            to
-            loadType
             truckNo
             status
             ownTransport
-            shippingOption
-            releaseDateTime
+            exportOption
+            releaseDate
+            collectionOrderNo
             inventoryInfos {
               name
               batchId
+              packingType
+              qty
+              releaseQty
               product {
                 name
                 description
               }
               location {
                 name
-              }
-              packingType
-              qty
-              releaseQty
+              }              
             }
-            releaseGoodInfo {
+            shippingOrder {
+              id
+              name
+              description
               containerNo
               containerLeavingDate
               containerArrivalDate
               shipName
-              deliveryDateTime
-              transportDriver
-              transportVehicle
+            }
+            deliveryOrder {
+              id
+              name
+              description
+              to
+              loadType
+              deliveryDate
               telNo
             }
             orderVass {
@@ -386,46 +399,50 @@ class CompletedReleaseDelivery extends connect(store)(localize(i18next)(PageView
     })
 
     if (!response.errors) {
-      const driver = response.data.releaseGoodDetail.releaseGoodInfo.transportDriver || { name: '' }
-      const vehicle = response.data.releaseGoodDetail.releaseGoodInfo.transportVehicle || { name: '' }
-      this._assignedDriverName = driver
-      this._assignedVehicleName = vehicle
+      const releaseOrder = response.data.releaseGoodDetail
+      const deliveryOrder = releaseOrder.deliveryOrder
+      const shippingOrder = releaseOrder.shippingOrder
+      const orderInventories = releaseOrder.inventoryInfos
+      const orderVass = releaseOrder.orderVass
 
-      this._shippingOption = response.data.releaseGoodDetail.shippingOption
-      this._ownTransport = response.data.releaseGoodDetail.ownTransport
-      this._status = response.data.releaseGoodDetail.status
-      this._fillupForm(response.data.releaseGoodDetail)
-      this._fillupForm(response.data.releaseGoodDetail.releaseGoodInfo)
-      this.inventoryData = {
-        records: response.data.releaseGoodDetail.inventoryInfos
+      this._exportOption = response.data.releaseGoodDetail.exportOption
+      if (this._exportOption) {
+        this._ownTransport = true
+      } else if (!this._exportOption) {
+        this._ownTransport = response.data.releaseGoodDetail.ownTransport
       }
+      this._status = releaseOrder.status
 
-      this.vasData = {
-        ...this.vasData,
-        records: response.data.releaseGoodDetail.orderVass
-      }
+      this._fillupRGForm(response.data.releaseGoodDetail)
+      if (this._exportOption) this._fillupSOForm(shippingOrder)
+      if (!this._ownTransport) this._fillupDOForm(deliveryOrder)
+
+      this.inventoryData = { records: orderInventories }
+      this.vasData = { records: orderVass }
     }
   }
 
-  _fillupForm(data) {
+  _fillupRGForm(data) {
+    this._fillupForm(this.releaseOrderForm, data)
+  }
+
+  _fillupDOForm(data) {
+    this._fillupForm(this.deliveryOrderForm, data)
+  }
+
+  _fillupSOForm(data) {
+    this._fillupForm(this.shippingOrderForm, data)
+  }
+
+  _fillupForm(form, data) {
     for (let key in data) {
-      Array.from(this.form.querySelectorAll('input, textarea, select')).forEach(field => {
+      Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
-        } else if (field.name === key && field.type === 'datetime-local') {
-          const datetime = Number(data[key])
-          const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
-          field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
         } else if (field.name === key) {
           field.value = data[key]
         }
       })
-    }
-  }
-
-  stateChanged(state) {
-    if (this.active) {
-      this._releaseOrderNo = state && state.route && state.route.resourceId
     }
   }
 
@@ -441,4 +458,4 @@ class CompletedReleaseDelivery extends connect(store)(localize(i18next)(PageView
   }
 }
 
-window.customElements.define('completed-release-delivery', CompletedReleaseDelivery)
+window.customElements.define('completed-release-order', CompletedReleaseOrder)
