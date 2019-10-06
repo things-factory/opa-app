@@ -15,7 +15,8 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
       _status: String,
       _loadTypes: Array,
       _assignedDriverName: String,
-      _assignedVehicleName: String
+      _assignedVehicleName: String,
+      _path: String
     }
   }
 
@@ -76,6 +77,7 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
     super()
     this._transportOptions = []
     this._loadTypes = []
+    this._path = ''
   }
 
   render() {
@@ -105,6 +107,9 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
                 `
               )}
             </select>
+
+            <label>${i18next.t('label.download_file')}</label>
+            <a href="/attachment/${this._path}" target="_blank">${i18next.t('download_co')}</a>
 
             <label>${i18next.t('label.assigned_truck')}</label>
             <input name=${this._assignedVehicleName} value=${this._assignedVehicleName} disabled />
@@ -152,6 +157,12 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
             to
             loadType
             status
+            attachments {
+              id
+              name
+              refBy
+              path
+            }
             transportVehicle {
               id
               name
@@ -170,6 +181,7 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
     if (!response.errors) {
       const driver = response.data.deliveryOrder.transportDriver || { name: '' }
       const vehicle = response.data.deliveryOrder.transportVehicle || { name: '' }
+      this._path = response.data.collectionOrder.attachments[0].path
       this._assignedDriverName = driver.name
       this._assignedVehicleName = vehicle.name
       const deliveryOrder = response.data.deliveryOrder

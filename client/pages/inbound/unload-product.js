@@ -149,7 +149,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           <label>${i18next.t('label.buffer_location')}</label>
           <input name="bufferLocation" readonly />
 
-          <label>${i18next.t('label.startedAt')}</label>
+          <label>${i18next.t('label.started_at')}</label>
           <input name="startedAt" type="datetime-local" readonly />
         </fieldset>
       </form>

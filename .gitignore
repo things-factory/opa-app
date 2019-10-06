@@ -1,6 +1,7 @@
 dist-client/
 dist-server/
 node_modules/
+attachments/
 licenses/
 yarn*.*
 package-lock.json

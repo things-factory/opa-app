@@ -15,7 +15,8 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
       _status: String,
       _loadTypes: Array,
       _assignedDriverName: String,
-      _assignedVehicleName: String
+      _assignedVehicleName: String,
+      _path: String
     }
   }
 
@@ -76,6 +77,7 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
     super()
     this._transportOptions = []
     this._loadTypes = []
+    this._path = ''
   }
 
   render() {
@@ -106,14 +108,14 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
               )}
             </select>
 
+            <label>${i18next.t('label.download_file')}</label>
+            <a href="/attachment/${this._path}" target="_blank">${i18next.t('download_co')}</a>
+
             <label>${i18next.t('label.assigned_truck')}</label>
             <input name=${this._assignedVehicleName} value=${this._assignedVehicleName} readonly />
 
             <label>${i18next.t('label.assigned_driver')}</label>
             <input name=${this._assignedDriverName} value=${this._assignedDriverName} readonly />
-
-            <!-- <label>${i18next.t('label.document')}</label>
-            <input name="attachment" type="file" readonly /> -->
           </fieldset>
         </form>
       </div>
@@ -152,6 +154,12 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
             from
             loadType
             status
+            attachments {
+              id
+              name
+              refBy
+              path
+            }
             transportVehicle {
               id
               name
@@ -170,6 +178,7 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
     if (!response.errors) {
       const driver = response.data.collectionOrder.transportDriver || { name: '' }
       const vehicle = response.data.collectionOrder.transportVehicle || { name: '' }
+      this._path = response.data.collectionOrder.attachments[0].path
       this._assignedDriverName = driver.name
       this._assignedVehicleName = vehicle.name
 
@@ -214,7 +223,7 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
 
   _fillupForm(form, data) {
     for (let key in data) {
-      Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
+      Array.from(form.querySelectorAll('input, textarea, select, a')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
         } else if (field.name === key) {

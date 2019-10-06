@@ -6,6 +6,7 @@ import { client, gqlBuilder, navigate, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { ORDER_TYPES } from '../constants/order'
+import { CARGO_TYPES } from '../constants/cargo'
 import { CustomAlert } from '../../../utils/custom-alert'
 
 class CreateTransportOrder extends localize(i18next)(PageView) {
@@ -15,7 +16,8 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
       _status: String,
       _transportOptions: Array,
       _loadTypes: Array,
-      _orderType: String
+      _orderType: String,
+      _cargoType: String
     }
   }
 
@@ -81,6 +83,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
   constructor() {
     super()
     this._orderType = null
+    this._cargoType = null
     this._transportOptions = []
     this._loadTypes = []
   }
@@ -122,18 +125,30 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.ref_no')}</label>
             <input name="refNo" />
 
-            <label>${i18next.t('label.load_type')}</label>
-            <select name="loadType" ?required="${this._orderType == ORDER_TYPES.COLLECTION.value}">
+            <label>${i18next.t('label.cargo_type')}</label>
+            <select name="cargoType" @change="${e => (this._cargoType = e.currentTarget.value)}">
               <option value=""></option>
-              ${this._loadTypes.map(
-                loadType => html`
-                  <option value="${loadType.name}">${i18next.t(`label.${loadType.description}`)}</option>
+              ${Object.keys(CARGO_TYPES).map(key => {
+                const cargoTypes = CARGO_TYPES[key]
+                return html`
+                  <option value="${cargoTypes.value}">${i18next.t(`label.${cargoTypes.name}`)}</option>
                 `
-              )}
+              })}
             </select>
 
-            <!-- <label>${i18next.t('label.document')}</label>
-            <input name="attachment" type="file" ?required="${this._orderType == ORDER_TYPES.COLLECTION.value}" /> -->
+            <label ?hidden="${this._cargoType == CARGO_TYPES.OTHERS.value}">${i18next.t('label.others')}</label>
+            <input
+              ?hidden="${this._cargoType == CARGO_TYPES.OTHERS.value}"
+              ?required="${this._cargoType == CARGO_TYPES.OTHERS.value}"
+              name="others"
+              type="text"
+            />
+
+            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
+            <input name="loadType" type="number" min="0" />
+
+            <label>${i18next.t('label.upload_co')}</label>
+            <input name="attachments" type="file" ?required="${this._orderType == ORDER_TYPES.COLLECTION.value}" />
           </fieldset>
         </form>
       </div>
@@ -159,18 +174,11 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.ref_no')}</label>
             <input name="refNo" />
 
-            <label>${i18next.t('label.load_type')}</label>
-            <select name="loadType" ?required="${this._orderType == ORDER_TYPES.DELIVERY.value}">
-              <option value=""></option>
-              ${this._loadTypes.map(
-                loadType => html`
-                  <option value="${loadType.name}">${i18next.t(`label.${loadType.description}`)}</option>
-                `
-              )}
-            </select>
+            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
+            <input name="loadType" type="number" min="0" />
 
-            <!-- <label>${i18next.t('label.document')}</label>
-            <input name="attachment" type="file" ?required="${this._orderType == ORDER_TYPES.DELIVERY.value}" /> -->
+            <label>${i18next.t('label.upload_do')}</label>
+            <input name="attachments" type="file" ?required="${this._orderType == ORDER_TYPES.DELIVERY.value}" />
           </fieldset>
         </form>
       </div>
@@ -183,6 +191,10 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
 
   get deliveryOrderForm() {
     return this.shadowRoot.querySelector('form[name=deliveryOrder]')
+  }
+
+  get uploadAttachment() {
+    return this.shadowRoot.querySelector('input[name=attachments]')
   }
 
   async firstUpdated() {
@@ -213,15 +225,23 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
         }
 
         let args = { collectionOrder: this._getCollectionOrder() }
+        const attachments = this.uploadAttachment.files
+        delete args.collectionOrder.attachments
         const response = await client.query({
           query: gql`
-              mutation {
-                generateCollectionOrder(${gqlBuilder.buildArgs(args)}) {
+              mutation($attachments: [Upload]!) {
+                generateCollectionOrder(${gqlBuilder.buildArgs(args)}, attachments: $attachments )  {
                   id
                   name
                 }
               }
-            `
+            `,
+          variables: {
+            attachments
+          },
+          context: {
+            hasUpload: true
+          }
         })
 
         if (!response.errors) {
@@ -250,15 +270,24 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
         }
 
         let args = { deliveryOrder: this._getDeliveryOrder() }
+        const attachments = this.uploadAttachment.files
+        delete args.collectionOrder.attachments
+
         const response = await client.query({
           query: gql`
-              mutation {
-                generateDeliveryOrder(${gqlBuilder.buildArgs(args)}) {
+              mutation ($attachments: [Upload]!) {
+                generateDeliveryOrder(${gqlBuilder.buildArgs(args)}, attachments: $attachments) {
                   id
                   name
                 }
               }
-            `
+              `,
+          variables: {
+            attachments
+          },
+          context: {
+            hasUpload: true
+          }
         })
 
         if (!response.errors) {

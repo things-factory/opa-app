@@ -162,7 +162,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
           <input ?hidden="${this.orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}" name="containerNo" readonly />
 
           <label ?hidden="${this.orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}"
-            >${i18next.t('label.startedAt')}</label
+            >${i18next.t('label.started_at')}</label
           >
           <input
             ?hidden="${this.orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}"
