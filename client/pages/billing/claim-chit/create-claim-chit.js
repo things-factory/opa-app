@@ -73,10 +73,10 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: 'Create Claim Chit',
+      title: i18next.t('create_claim_chit'),
       actions: [
         {
-          title: i18next.t('button.save'),
+          title: i18next.t('button.create'),
           action: this._createNewClaim.bind(this)
         }
       ]
@@ -161,7 +161,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
         <fieldset>
           <legend>${i18next.t('title.create_claim_chit')}</legend>
 
-          <label>${i18next.t('label.orderNo')}</label>
+          <label>${i18next.t('label.order_no')}</label>
           <select name="orderNo" @change=${e => (this._selectedOrderNo = e.target.value)} data-name="name">
             <option value="">-- Please Select an Order --</option>
 
@@ -173,16 +173,16 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
             })}</select
           >
 
-          <label>${i18next.t('label.billingMode')}</label>
+          <label>${i18next.t('label.billing_mode')}</label>
           <input disabled name="billingMode" value="" data-name="billingMode"></label>
 
           <label>${i18next.t('label.date')}</label>
           <input disabled name="orderDate" value="" type="datetime-local" data-name="orderDate"></label>
 
-          <label>${i18next.t('label.lorryNo')}</label>
+          <label>${i18next.t('label.lorry_no')}</label>
           <input disabled name="lorryNo" value="" data-name="transportVehicle|name"></label>
 
-          <label>${i18next.t('label.driverCode')}</label>
+          <label>${i18next.t('label.driver_code')}</label>
           <input disabled name="driveCode" value="" data-name="transportDriver|name"></label>
 
           <label>${i18next.t('label.customer')}</label>
@@ -197,7 +197,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
       </form>
 
       <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${'title.claim_chit_details'}</h2>
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.create_claim_chit_details')}</h2>
 
         <data-grist
           id="claim-details-grist"

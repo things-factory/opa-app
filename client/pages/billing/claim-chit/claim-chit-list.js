@@ -58,7 +58,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
       <div class="grist">
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this._grist_config}
+          .config=${this._gristConfig}
           .fetchHandler=${this.fetchHandler.bind(this)}
         ></data-grist>
       </div>
@@ -69,7 +69,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
     return {
       _companyId: String,
       _searchFields: Array,
-      _grist_config: Object,
+      _gristConfig: Object,
       data: Object,
       importHandler: Object
     }
@@ -77,7 +77,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: 'Claim Chit List'
+      title: i18next.t('claim_chit_list')
     }
   }
 
@@ -90,20 +90,20 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
         props: { searchOper: 'like', placeholder: i18next.t('label.name') }
       },
       {
-        label: 'Order Name',
+        label: i18next.t('label.order_name'),
         name: 'deliveryOrder.name',
         type: 'text',
         props: { searchOper: 'like' }
       },
       {
-        label: 'From Date',
+        label: i18next.t('label.from_date'),
         name: 'deliveryOrder.From',
         type: 'date',
         props: {}
       }
     ]
 
-    this._grist_config = {
+    this._gristConfig = {
       rows: {
         selectable: {
           multiple: true
@@ -122,7 +122,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'deliveryOrder|transportDriver|name',
-          header: 'Driver Name',
+          header: i18next.t('field.driver_name'),
           record: { editable: false, align: 'left' },
           sortable: true,
           width: 250
@@ -130,7 +130,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'deliveryOrder|transportVehicle|name',
-          header: 'Vehicle Reg no',
+          header: i18next.t('field.vehicle_reg_no'),
           record: { editable: false, align: 'left' },
           sortable: true,
           width: 150
@@ -138,7 +138,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'deliveryOrder|from',
-          header: 'From',
+          header: i18next.t('field.from'),
           record: { editable: false, align: 'center' },
           sortable: true,
           width: 100
@@ -146,7 +146,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'deliveryOrder|to',
-          header: 'To',
+          header: i18next.t('field.to'),
           record: { editable: false, align: 'center' },
           sortable: true,
           width: 100
@@ -154,7 +154,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'deliveryOrder|loadType',
-          header: 'Load Type',
+          header: i18next.t('field.load_type'),
           record: { editable: false, align: 'center' },
           sortable: true,
           width: 150
