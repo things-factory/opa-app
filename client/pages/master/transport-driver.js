@@ -13,7 +13,8 @@ class TransportDriver extends localize(i18next)(PageView) {
     return {
       config: Object,
       data: Object,
-      importHandler: Object
+      importHandler: Object,
+      bizplace: Array
     }
   }
 
@@ -94,7 +95,9 @@ class TransportDriver extends localize(i18next)(PageView) {
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    this.bizplace = await this.fetchBizplace()
+
     this._searchFields = [
       {
         label: i18next.t('field.name'),
@@ -126,7 +129,11 @@ class TransportDriver extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),
-          record: { editable: true, align: 'left' },
+          record: {
+            editable: true,
+            align: 'left',
+            imexSetting: { header: 'Name', key: 'name', width: 50, type: 'string' }
+          },
           sortable: true,
           width: 250
         },
@@ -138,6 +145,13 @@ class TransportDriver extends localize(i18next)(PageView) {
             editable: true,
             options: {
               queryName: 'bizplaces'
+            },
+            imexSetting: {
+              header: 'Bizplace',
+              key: 'bizplace.name',
+              width: 50,
+              type: 'array',
+              arrData: this.bizplace
             }
           },
           header: i18next.t('field.customer'),
@@ -147,7 +161,11 @@ class TransportDriver extends localize(i18next)(PageView) {
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
-          record: { editable: true, align: 'center' },
+          record: {
+            editable: true,
+            align: 'center',
+            imexSetting: { header: 'Description', key: 'description', width: 100, type: 'string' }
+          },
           sortable: true,
           width: 200
         },
@@ -163,7 +181,11 @@ class TransportDriver extends localize(i18next)(PageView) {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
-          record: { editable: false, align: 'center' },
+          record: {
+            editable: false,
+            align: 'center',
+            imexSetting: { header: 'Modify Date', key: 'updatedAt', width: 30, type: 'date' }
+          },
           sortable: true,
           width: 150
         },
@@ -367,15 +389,51 @@ class TransportDriver extends localize(i18next)(PageView) {
     } else {
       records = this.dataGrist.data.records
     }
+    // data structure // { //    header: {headerName, fieldName, type = string, arrData = []} //    data: [{fieldName: value}] // }
 
-    return records.map(item => {
-      return this._columns
-        .filter(column => column.type !== 'gutter')
-        .reduce((record, column) => {
-          record[column.name] = item[column.name]
-          return record
-        }, {})
+    var headerSetting = this.dataGrist._config.columns
+      .filter(
+        column => column.type !== 'gutter' && column.record !== undefined && column.record.imexSetting !== undefined
+      )
+      .map(column => {
+        return column.record.imexSetting
+      })
+
+    var data = records.map(item => {
+      return {
+        id: item.id,
+        ...this._columns
+          .filter(
+            column => column.type !== 'gutter' && column.record !== undefined && column.record.imexSetting !== undefined
+          )
+          .reduce((record, column) => {
+            record[column.record.imexSetting.key] = column.record.imexSetting.key
+              .split('.')
+              .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
+            return record
+          }, {})
+      }
     })
+
+    return { header: headerSetting, data: data }
+  }
+
+  async fetchBizplace() {
+    const response = await client.query({
+      query: gql`
+          query {
+            bizplaces(${gqlBuilder.buildArgs({
+              filters: []
+            })}) {
+              items {
+                id
+                name
+              }
+            }
+          }
+        `
+    })
+    return response.data.bizplaces.items
   }
 }
 
