@@ -1,19 +1,18 @@
-import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { client, gqlBuilder, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
-import { ORDER_STATUS } from '../constants/order'
 import { css, html } from 'lit-element'
-import { CustomAlert } from '../../../utils/custom-alert'
+import { CARGO_TYPES } from '../constants/cargo'
 
 class RejectedDeliveryOrder extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _doNo: String,
       _status: String,
-      _loadTypes: Array
+      _path: String,
+      _deliveryCargo: String
     }
   }
 
@@ -78,7 +77,8 @@ class RejectedDeliveryOrder extends localize(i18next)(PageView) {
   constructor() {
     super()
     this._transportOptions = []
-    this._loadTypes = []
+    this._path = ''
+    this._deliveryCargo = null
   }
 
   render() {
@@ -99,21 +99,38 @@ class RejectedDeliveryOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.ref_no')}</label>
             <input name="refNo" readonly />
 
-            <label>${i18next.t('label.load_type')}</label>
-            <select name="loadType" disabled>
+            <label>${i18next.t('label.cargo_type')}</label>
+            <select name="cargoType" disabled>
               <option value=""></option>
-              ${this._loadTypes.map(
-                loadType => html`
-                  <option value="${loadType.name}">${i18next.t(`label.${loadType.description}`)}</option>
+              ${Object.keys(CARGO_TYPES).map(key => {
+                const deliveryCargo = CARGO_TYPES[key]
+                return html`
+                  <option value="${deliveryCargo.value}">${i18next.t(`label.${deliveryCargo.name}`)}</option>
                 `
-              )}
+              })}
             </select>
+
+            <label ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
+              >${i18next.t('label.if_others_please_specify')}</label
+            >
+            <input
+              ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
+              ?required="${this._deliveryCargo == CARGO_TYPES.OTHERS.value}"
+              name="otherCargo"
+              readonly
+            />
+
+            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
+            <input name="loadWeight" type="number" min="0" readonly />
+
+            <input name="urgency" type="checkbox" readonly />
+            <label>${i18next.t('label.urgent_delivery')}</label>
 
             <label>${i18next.t('label.rejection_remark')}</label>
             <textarea name="remark" readonly></textarea>
 
-            <!-- <label>${i18next.t('label.document')}</label>
-            <input name="attachment" type="file" readonly /> -->
+            <label>${i18next.t('label.download_do')}</label>
+            <a href="/attachment/${this._path}" download><mwc-icon>cloud_download</mwc-icon></a>
           </fieldset>
         </form>
       </div>
@@ -122,10 +139,6 @@ class RejectedDeliveryOrder extends localize(i18next)(PageView) {
 
   get deliveryOrderForm() {
     return this.shadowRoot.querySelector('form[name=deliveryOrder]')
-  }
-
-  async firstUpdated() {
-    this._loadTypes = await getCodeByName('LOAD_TYPES')
   }
 
   async pageUpdated(changes) {
@@ -149,9 +162,18 @@ class RejectedDeliveryOrder extends localize(i18next)(PageView) {
             deliveryDate
             refNo
             to
-            loadType
+            loadWeight
             status
+            urgency
+            cargoType
+            otherCargo
             remark
+            attachments {
+              id
+              name
+              refBy
+              path
+            }
           }
         }
       `
@@ -159,6 +181,8 @@ class RejectedDeliveryOrder extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const deliveryOrder = response.data.deliveryOrder
+      this._path = deliveryOrder.attachments[0].path
+      this._deliveryCargo = deliveryOrder.cargoType
       this._status = deliveryOrder.status
       this._fillupDOForm(deliveryOrder)
     }
@@ -173,7 +197,7 @@ class RejectedDeliveryOrder extends localize(i18next)(PageView) {
       Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
-        } else if (field.name === key) {
+        } else if (field.name === key && field.type !== 'file') {
           field.value = data[key]
         }
       })

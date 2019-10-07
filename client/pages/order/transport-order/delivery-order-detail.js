@@ -76,7 +76,6 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
 
   constructor() {
     super()
-    this._transportOptions = []
     this._path = ''
     this._deliveryCargo = null
   }

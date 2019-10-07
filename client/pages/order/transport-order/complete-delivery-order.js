@@ -1,4 +1,5 @@
 import { getCodeByName } from '@things-factory/code-base'
+import { CARGO_TYPES } from '../constants/cargo'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -13,9 +14,8 @@ class CompleteDeliveryOrder extends localize(i18next)(PageView) {
     return {
       _doNo: String,
       _status: String,
-      _loadTypes: Array,
-      drivers: Array,
-      vehicles: Array,
+      _path: String,
+      _deliveryCargo: String,
       _prevDriverName: String,
       _prevVehicleName: String
     }
@@ -85,10 +85,8 @@ class CompleteDeliveryOrder extends localize(i18next)(PageView) {
 
   constructor() {
     super()
-    this._transportOptions = []
-    this._loadTypes = []
-    this.drivers = []
-    this.vehicles = []
+    this._path = ''
+    this._deliveryCargo = null
   }
 
   render() {
@@ -109,46 +107,41 @@ class CompleteDeliveryOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.ref_no')}</label>
             <input name="refNo" readonly />
 
-            <label>${i18next.t('label.load_type')}</label>
-            <select name="loadType" disabled>
+            <label>${i18next.t('label.cargo_type')}</label>
+            <select name="cargoType" disabled>
               <option value=""></option>
-              ${this._loadTypes.map(
-                loadType => html`
-                  <option value="${loadType.name}">${i18next.t(`label.${loadType.description}`)}</option>
+              ${Object.keys(CARGO_TYPES).map(key => {
+                const deliveryCargo = CARGO_TYPES[key]
+                return html`
+                  <option value="${deliveryCargo.value}">${i18next.t(`label.${deliveryCargo.name}`)}</option>
                 `
-              )}
+              })}
             </select>
 
-            <label>${i18next.t('label.assign_driver')}</label>
-            <select name="driver" id="driver" disabled>
-              ${this.drivers.map(
-                driver => html`
-                  <option
-                    ?selected="${this._prevDriverName === driver.name}"
-                    driver-id="${driver.id}"
-                    value="${driver.name}"
-                    >${driver.driverCode}-${driver.name}</option
-                  >
-                `
-              )}</select
+            <label ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
+              >${i18next.t('label.if_others_please_specify')}</label
             >
+            <input
+              ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
+              ?required="${this._deliveryCargo == CARGO_TYPES.OTHERS.value}"
+              name="otherCargo"
+              readonly
+            />
 
-            <label>${i18next.t('label.assign_vehicle')}</label>
-            <select name="vehicle" id="vehicle" disabled>
-              ${this.vehicles.map(
-                vehicle => html`
-                  <option
-                    ?selected="${this._prevVehicleName === vehicle.name}"
-                    vehicle-id="${vehicle.id}"
-                    value="${vehicle.name}"
-                    >${vehicle.regNumber}</option
-                  >
-                `
-              )}</select
-            >
+            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
+            <input name="loadWeight" type="number" min="0" readonly />
 
-            <!-- <label>${i18next.t('label.document')}</label>
-            <input name="attachment" type="file" readonly /> -->
+            <input name="urgency" type="checkbox" readonly />
+            <label>${i18next.t('label.urgent_delivery')}</label>
+
+            <label>${i18next.t('label.assigned_truck')}</label>
+            <input name=${this._assignedVehicleName} value=${this._assignedVehicleName} readonly />
+
+            <label>${i18next.t('label.assigned_driver')}</label>
+            <input name=${this._assignedDriverName} value=${this._assignedDriverName} readonly />
+
+            <label>${i18next.t('label.download_co')}</label>
+            <a href="/attachment/${this._path}" download><mwc-icon>cloud_download</mwc-icon></a>
           </fieldset>
         </form>
       </div>
@@ -159,24 +152,10 @@ class CompleteDeliveryOrder extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('form[name=deliveryOrder]')
   }
 
-  get driver() {
-    return this.shadowRoot.querySelector('select#driver')
-  }
-
-  get vehicle() {
-    return this.shadowRoot.querySelector('select#vehicle')
-  }
-
-  async firstUpdated() {
-    this._loadTypes = await getCodeByName('LOAD_TYPES')
-  }
-
   async pageUpdated(changes) {
     if (this.active) {
       this._doNo = changes.resourceId || this._doNo || ''
       this._fetchDeliveryOrder()
-      this._fetchTransportDriver()
-      this._fetchTransportVehicle()
     }
   }
 
@@ -194,8 +173,17 @@ class CompleteDeliveryOrder extends localize(i18next)(PageView) {
             deliveryDate
             refNo
             to
-            loadType
+            loadWeight
             status
+            urgency
+            cargoType
+            otherCargo
+            attachments {
+              id
+              name
+              refBy
+              path
+            }
             transportDriver {
               id
               name
@@ -212,68 +200,16 @@ class CompleteDeliveryOrder extends localize(i18next)(PageView) {
     })
 
     if (!response.errors) {
-      this._prevDriverName = response.data.deliveryOrder.transportDriver.name
-      this._prevVehicleName = response.data.deliveryOrder.transportVehicle.name
-
       const deliveryOrder = response.data.deliveryOrder
+      const driver = deliveryOrder.transportDriver || { name: '' }
+      const vehicle = deliveryOrder.transportVehicle || { name: '' }
+
+      this._path = deliveryOrder.attachments[0].path
+      this._deliveryCargo = deliveryOrder.cargoType
+      this._assignedDriverName = driver.name
+      this._assignedVehicleName = vehicle.name
       this._status = deliveryOrder.status
       this._fillupDOForm(deliveryOrder)
-    }
-  }
-
-  async _fetchTransportDriver() {
-    if (!this._doNo) return
-    const response = await client.query({
-      query: gql`
-        query {
-          transportDrivers(${gqlBuilder.buildArgs({
-            filters: []
-          })}) {
-            items {
-              id
-              name
-              bizplace{
-                id
-                name
-              }
-              driverCode
-            }
-            total
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      this.drivers = response.data.transportDrivers.items
-    }
-  }
-
-  async _fetchTransportVehicle() {
-    if (!this._doNo) return
-    const response = await client.query({
-      query: gql`
-        query {
-          transportVehicles(${gqlBuilder.buildArgs({
-            filters: []
-          })}) {
-            items {
-              id
-              name
-              bizplace{
-                id
-                name
-              }
-              regNumber
-            }
-            total
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      this.vehicles = response.data.transportVehicles.items
     }
   }
 
@@ -290,7 +226,7 @@ class CompleteDeliveryOrder extends localize(i18next)(PageView) {
       Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
-        } else if (field.name === key) {
+        } else if (field.name === key && field.type !== 'file') {
           field.value = data[key]
         }
       })

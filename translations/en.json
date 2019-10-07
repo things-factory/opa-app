@@ -261,6 +261,8 @@
   "label.domain": "domain",
   "label.done": "done",
   "label.download_file": "download file",
+  "label.download_do": "download d/o",
+  "label.download_co": "download c/o",
   "label.driver": "driver",
   "label.driver_code": "driver code",
   "label.driver_name": "driver name",

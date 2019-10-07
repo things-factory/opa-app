@@ -15,7 +15,6 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
     return {
       _coNo: String,
       _status: String,
-      _loadTypes: Array,
       _assignedDriverName: String,
       _assignedVehicleName: String,
       _path: String,
@@ -78,7 +77,6 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
 
   constructor() {
     super()
-    this._transportOptions = []
     this._loadTypes = []
     this._path = ''
     this._collectionCargo = null

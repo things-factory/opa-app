@@ -2,8 +2,7 @@ import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, navigate, PageView } from '@things-factory/shell'
+import { client, gqlBuilder, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
@@ -14,11 +13,11 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
     return {
       _coNo: String,
       _status: String,
-      _loadTypes: Array,
+      _cargoTypes: Array,
       drivers: Array,
       vehicles: Array,
-      _prevDriverName: String,
-      _prevVehicleName: String
+      _path: String,
+      _collectionCargo: String
     }
   }
 
@@ -74,7 +73,7 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.dispatch'),
-          action: this._checkDriverVehicle.bind(this)
+          action: this._executeCollectionOrder.bind(this)
         },
         {
           title: i18next.t('button.back'),
@@ -87,7 +86,8 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
   constructor() {
     super()
     this._transportOptions = []
-    this._loadTypes = []
+    this._cargoTypes = []
+    this._path = ''
     this.drivers = []
     this.vehicles = []
   }
@@ -110,26 +110,38 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.ref_no')}</label>
             <input name="refNo" readonly />
 
-            <label>${i18next.t('label.load_type')}</label>
-            <select name="loadType" disabled>
+            <label>${i18next.t('label.cargo_type')}</label>
+            <select name="cargoType" disabled>
               <option value=""></option>
-              ${this._loadTypes.map(
-                loadType => html`
-                  <option value="${loadType.name}">${i18next.t(`label.${loadType.description}`)}</option>
+              ${Object.keys(CARGO_TYPES).map(key => {
+                const collectionCargo = CARGO_TYPES[key]
+                return html`
+                  <option value="${collectionCargo.value}">${i18next.t(`label.${collectionCargo.name}`)}</option>
                 `
-              )}
+              })}
             </select>
+
+            <label ?hidden="${this._collectionCargo !== CARGO_TYPES.OTHERS.value}"
+              >${i18next.t('label.if_others_please_specify')}</label
+            >
+            <input
+              ?hidden="${this._collectionCargo !== CARGO_TYPES.OTHERS.value}"
+              ?required="${this._collectionCargo == CARGO_TYPES.OTHERS.value}"
+              name="otherCargo"
+              readonly
+            />
+
+            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
+            <input name="loadWeight" type="number" min="0" readonly />
+
+            <input name="urgency" type="checkbox" readonly />
+            <label>${i18next.t('label.urgent_delivery')}</label>
 
             <label>${i18next.t('label.assign_driver')}</label>
             <select name="driver" id="driver" required>
               ${this.drivers.map(
                 driver => html`
-                  <option
-                    ?selected="${this._prevDriverName === driver.name}"
-                    driver-id="${driver.id}"
-                    value="${driver.name}"
-                    >${driver.driverCode}-${driver.name}</option
-                  >
+                  <option driver-id="${driver.id}" value="${driver.name}">${driver.driverCode}-${driver.name}</option>
                 `
               )}</select
             >
@@ -138,18 +150,13 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
             <select name="vehicle" id="vehicle" required>
               ${this.vehicles.map(
                 vehicle => html`
-                  <option
-                    ?selected="${this._prevVehicleName === vehicle.name}"
-                    vehicle-id="${vehicle.id}"
-                    value="${vehicle.name}"
-                    >${vehicle.regNumber}</option
-                  >
+                  <option vehicle-id="${vehicle.id}" value="${vehicle.name}">${vehicle.regNumber}</option>
                 `
               )}</select
             >
 
-            <!-- <label>${i18next.t('label.document')}</label>
-            <input name="attachment" type="file" readonly /> -->
+            <label>${i18next.t('label.download_co')}</label>
+            <a href="/attachment/${this._path}" target="_blank"><mwc-icon>cloud_download</mwc-icon></a>
           </fieldset>
         </form>
       </div>
@@ -169,7 +176,7 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
   }
 
   async firstUpdated() {
-    this._loadTypes = await getCodeByName('LOAD_TYPES')
+    this._cargoTypes = await getCodeByName('CARGO_TYPES')
   }
 
   async pageUpdated(changes) {
@@ -195,17 +202,16 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
             collectionDate
             refNo
             from
-            loadType
+            loadWeight
+            cargoType
+            urgency
+            otherCargo
             status
-            transportDriver {
+            attachments {
               id
               name
-              driverCode
-            }
-            transportVehicle {
-              id
-              name
-              regNumber
+              refBy
+              path
             }
           }
         }
@@ -213,10 +219,10 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
     })
 
     if (!response.errors) {
-      this._prevDriverName = response.data.collectionOrder.transportDriver.name
-      this._prevVehicleName = response.data.collectionOrder.transportVehicle.name
-
       const collectionOrder = response.data.collectionOrder
+      this._path = collectionOrder.attachments[0].path
+      this._collectionCargo = collectionOrder.cargoType
+
       this._status = collectionOrder.status
       this._fillupCOForm(collectionOrder)
     }
@@ -287,14 +293,14 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
       Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
-        } else if (field.name === key) {
+        } else if (field.name === key && field.type !== 'file') {
           field.value = data[key]
         }
       })
     }
   }
 
-  async _executeCollectionOrder({ patch }) {
+  async _executeCollectionOrder() {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
@@ -309,7 +315,7 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
 
       let args = {
         name: this._coNo,
-        patch
+        patch: this._getDriverVehicle()
       }
 
       const response = await client.query({
@@ -329,27 +335,6 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
-    }
-  }
-
-  async _checkDriverVehicle() {
-    if (this._prevDriverName !== this.driver.value || this._prevVehicleName !== this.vehicle.value) {
-      const result = await CustomAlert({
-        title: i18next.t('title.are_you_sure'),
-        text: i18next.t('text.change_driver/vehicle'),
-        confirmButton: { text: i18next.t('button.confirm') },
-        cancelButton: { text: i18next.t('button.cancel') }
-      })
-
-      if (!result.value) {
-        return
-      }
-
-      this._executeCollectionOrder({
-        patch: this._getDriverVehicle()
-      })
-    } else {
-      this._executeCollectionOrder({})
     }
   }
 

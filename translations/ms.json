@@ -261,6 +261,8 @@
   "label.domain": "domain",
   "label.done": "selesai",
   "label.download_file": "muat turun fail",
+  "label.download_do": "muat turun d/o",
+  "label.download_co": "muat turun c/o",
   "label.driver": "pemandu",
   "label.driver_code": "kod pemandu",
   "label.driver_name": "nama pemandu",

@@ -153,6 +153,14 @@ class DeliveryOrderRequests extends localize(i18next)(PageView) {
           width: 250
         },
         {
+          type: 'checkbox',
+          name: 'urgency',
+          header: i18next.t('field.urgency'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 180
+        },
+        {
           type: 'date',
           name: 'deliveryDate',
           header: i18next.t('field.delivery_date'),
@@ -227,6 +235,7 @@ class DeliveryOrderRequests extends localize(i18next)(PageView) {
               name
               telNo
               description
+              urgency
               bizplace {
                 id
                 name

@@ -1,22 +1,20 @@
-import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, navigate, PageView } from '@things-factory/shell'
+import { client, gqlBuilder, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
 import '../../popup-note'
+import { CARGO_TYPES } from '../constants/cargo'
 
 class CompleteCollectionOrder extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _coNo: String,
       _status: String,
-      _loadTypes: Array,
-      drivers: Array,
-      vehicles: Array,
+      _path: String,
+      _collectionCargo: String,
       _prevDriverName: String,
       _prevVehicleName: String
     }
@@ -86,10 +84,8 @@ class CompleteCollectionOrder extends localize(i18next)(PageView) {
 
   constructor() {
     super()
-    this._transportOptions = []
-    this._loadTypes = []
-    this.drivers = []
-    this.vehicles = []
+    this._path = ''
+    this._collectionCargo = null
   }
 
   render() {
@@ -110,46 +106,41 @@ class CompleteCollectionOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.ref_no')}</label>
             <input name="refNo" readonly />
 
-            <label>${i18next.t('label.load_type')}</label>
-            <select name="loadType" disabled>
+            <label>${i18next.t('label.cargo_type')}</label>
+            <select name="cargoType" disabled>
               <option value=""></option>
-              ${this._loadTypes.map(
-                loadType => html`
-                  <option value="${loadType.name}">${i18next.t(`label.${loadType.description}`)}</option>
+              ${Object.keys(CARGO_TYPES).map(key => {
+                const collectionCargo = CARGO_TYPES[key]
+                return html`
+                  <option value="${collectionCargo.value}">${i18next.t(`label.${collectionCargo.name}`)}</option>
                 `
-              )}
+              })}
             </select>
 
-            <label>${i18next.t('label.assign_driver')}</label>
-            <select name="driver" id="driver" disabled>
-              ${this.drivers.map(
-                driver => html`
-                  <option
-                    ?selected="${this._prevDriverName === driver.name}"
-                    driver-id="${driver.id}"
-                    value="${driver.name}"
-                    >${driver.driverCode}-${driver.name}</option
-                  >
-                `
-              )}</select
+            <label ?hidden="${this._collectionCargo !== CARGO_TYPES.OTHERS.value}"
+              >${i18next.t('label.if_others_please_specify')}</label
             >
+            <input
+              ?hidden="${this._collectionCargo !== CARGO_TYPES.OTHERS.value}"
+              ?required="${this._collectionCargo == CARGO_TYPES.OTHERS.value}"
+              name="otherCargo"
+              readonly
+            />
 
-            <label>${i18next.t('label.assign_vehicle')}</label>
-            <select name="vehicle" id="vehicle" disabled>
-              ${this.vehicles.map(
-                vehicle => html`
-                  <option
-                    ?selected="${this._prevVehicleName === vehicle.name}"
-                    vehicle-id="${vehicle.id}"
-                    value="${vehicle.name}"
-                    >${vehicle.regNumber}</option
-                  >
-                `
-              )}</select
-            >
+            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
+            <input name="loadWeight" type="number" min="0" readonly />
 
-            <!-- <label>${i18next.t('label.document')}</label>
-            <input name="attachment" type="file" readonly /> -->
+            <input name="urgency" type="checkbox" readonly />
+            <label>${i18next.t('label.urgent_delivery')}</label>
+
+            <label>${i18next.t('label.assigned_truck')}</label>
+            <input name=${this._assignedVehicleName} value=${this._assignedVehicleName} readonly />
+
+            <label>${i18next.t('label.assigned_driver')}</label>
+            <input name=${this._assignedDriverName} value=${this._assignedDriverName} readonly />
+
+            <label>${i18next.t('label.download_co')}</label>
+            <a href="/attachment/${this._path}" target="_blank"><mwc-icon>cloud_download</mwc-icon></a>
           </fieldset>
         </form>
       </div>
@@ -160,24 +151,10 @@ class CompleteCollectionOrder extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('form[name=collectionOrder]')
   }
 
-  get driver() {
-    return this.shadowRoot.querySelector('select#driver')
-  }
-
-  get vehicle() {
-    return this.shadowRoot.querySelector('select#vehicle')
-  }
-
-  async firstUpdated() {
-    this._loadTypes = await getCodeByName('LOAD_TYPES')
-  }
-
   async pageUpdated(changes) {
     if (this.active) {
       this._coNo = changes.resourceId || this._coNo || ''
       this._fetchCollectionOrder()
-      this._fetchTransportDriver()
-      this._fetchTransportVehicle()
     }
   }
 
@@ -195,8 +172,17 @@ class CompleteCollectionOrder extends localize(i18next)(PageView) {
             collectionDate
             refNo
             from
-            loadType
+            loadWeight
+            cargoType
+            urgency
+            otherCargo
             status
+            attachments {
+              id
+              name
+              refBy
+              path
+            }
             transportDriver {
               id
               name
@@ -213,68 +199,16 @@ class CompleteCollectionOrder extends localize(i18next)(PageView) {
     })
 
     if (!response.errors) {
-      this._prevDriverName = response.data.collectionOrder.transportDriver.name
-      this._prevVehicleName = response.data.collectionOrder.transportVehicle.name
-
       const collectionOrder = response.data.collectionOrder
+      const driver = collectionOrder.transportDriver || { name: '' }
+      const vehicle = collectionOrder.transportVehicle || { name: '' }
+
+      this._path = collectionOrder.attachments[0].path
+      this._collectionCargo = collectionOrder.cargoType
+      this._assignedDriverName = driver.name
+      this._assignedVehicleName = vehicle.name
       this._status = collectionOrder.status
       this._fillupCOForm(collectionOrder)
-    }
-  }
-
-  async _fetchTransportDriver() {
-    if (!this._coNo) return
-    const response = await client.query({
-      query: gql`
-        query {
-          transportDrivers(${gqlBuilder.buildArgs({
-            filters: []
-          })}) {
-            items {
-              id
-              name
-              bizplace{
-                id
-                name
-              }
-              driverCode
-            }
-            total
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      this.drivers = response.data.transportDrivers.items
-    }
-  }
-
-  async _fetchTransportVehicle() {
-    if (!this._coNo) return
-    const response = await client.query({
-      query: gql`
-        query {
-          transportVehicles(${gqlBuilder.buildArgs({
-            filters: []
-          })}) {
-            items {
-              id
-              name
-              bizplace{
-                id
-                name
-              }
-              regNumber
-            }
-            total
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      this.vehicles = response.data.transportVehicles.items
     }
   }
 
@@ -287,7 +221,7 @@ class CompleteCollectionOrder extends localize(i18next)(PageView) {
       Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
-        } else if (field.name === key) {
+        } else if (field.name === key && field.type !== 'file') {
           field.value = data[key]
         }
       })

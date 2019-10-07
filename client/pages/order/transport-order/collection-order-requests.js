@@ -152,6 +152,14 @@ class CollectionOrderRequests extends localize(i18next)(PageView) {
           width: 250
         },
         {
+          type: 'checkbox',
+          name: 'urgency',
+          header: i18next.t('field.urgency'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 180
+        },
+        {
           type: 'date',
           name: 'collectionDate',
           header: i18next.t('field.collection_date'),
@@ -225,6 +233,7 @@ class CollectionOrderRequests extends localize(i18next)(PageView) {
               name
               telNo
               description
+              urgency
               bizplace {
                 id
                 name
