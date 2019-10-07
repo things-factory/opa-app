@@ -28,6 +28,10 @@ export const opaMenusResolver = {
     `)
     const userRoles = response.map((priviledge: Priviledge) => priviledge.category)
 
+    if (userRoles.length == 0) {
+      return
+    }
+
     const menus = await getRepository(Menu).find({
       where: [
         {
