@@ -376,12 +376,10 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       this._actions = [
         {
           title: i18next.t('button.edit'),
-          type: 'transaction',
           action: this._changeToEditable.bind(this)
         },
         {
           title: i18next.t('button.confirm'),
-          type: 'transaction',
           action: this._confirmArrivalNotice.bind(this)
         }
       ]
@@ -415,7 +413,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     }
   }
 
-  async _changeToEditable(cb) {
+  async _changeToEditable() {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
@@ -444,19 +442,17 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
-  async _confirmArrivalNotice(cb) {
+  async _confirmArrivalNotice() {
     const result = await CustomAlert({
       title: i18next.t('title.are_you_sure'),
       text: i18next.t('text.confirm_arrival_notice'),
       confirmButton: { text: i18next.t('button.confirm') },
       cancelButton: { text: i18next.t('button.cancel') }
     })
+
     if (!result.value) {
-      cb()
       return
     }
 
@@ -479,8 +475,6 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 

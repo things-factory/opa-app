@@ -72,12 +72,10 @@ class ReceiveDeliveryOrder extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.reject'),
-          type: 'transaction',
           action: this._rejectDeliveryOrder.bind(this)
         },
         {
           title: i18next.t('button.receive'),
-          type: 'transaction',
           action: this._receiveDeliveryOrder.bind(this)
         },
         {
@@ -281,7 +279,7 @@ class ReceiveDeliveryOrder extends localize(i18next)(PageView) {
     }
   }
 
-  async _receiveDeliveryOrder(cb) {
+  async _receiveDeliveryOrder() {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
@@ -289,8 +287,8 @@ class ReceiveDeliveryOrder extends localize(i18next)(PageView) {
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
+
       if (!result.value) {
-        cb()
         return
       }
 
@@ -316,8 +314,6 @@ class ReceiveDeliveryOrder extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 
@@ -332,7 +328,7 @@ class ReceiveDeliveryOrder extends localize(i18next)(PageView) {
     }
   }
 
-  async _rejectDeliveryOrder(cb) {
+  async _rejectDeliveryOrder() {
     const popup = openPopup(
       html`
         <popup-note
@@ -346,8 +342,8 @@ class ReceiveDeliveryOrder extends localize(i18next)(PageView) {
                 confirmButton: { text: i18next.t('button.confirm') },
                 cancelButton: { text: i18next.t('button.cancel') }
               })
+
               if (!result.value) {
-                cb()
                 return
               }
 
@@ -370,8 +366,6 @@ class ReceiveDeliveryOrder extends localize(i18next)(PageView) {
               }
             } catch (e) {
               this._showToast(e)
-            } finally {
-              cb()
             }
           }}"
         ></popup-note>

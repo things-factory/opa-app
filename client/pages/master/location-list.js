@@ -2,7 +2,7 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
@@ -43,7 +43,8 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     return {
       _warehouseName: String,
       _searchFields: Array,
-      config: Object
+      config: Object,
+      _selectedRecords: Array
     }
   }
 
@@ -61,6 +62,8 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
           .fetchHandler="${this.fetchHandler.bind(this)}"
+          @select-record-change=${e => (this._selectedRecords = e.detail.selectedRecords)}
+          }
         ></data-grist>
       </div>
     `

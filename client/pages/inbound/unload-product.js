@@ -238,17 +238,11 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
     }
 
     if (this._selectedInventory) {
-      actions = [
-        ...actions,
-        { title: i18next.t('button.undo'), type: 'transaction', action: this._undoUnloading.bind(this) }
-      ]
+      actions = [...actions, { title: i18next.t('button.undo'), action: this._undoUnloading.bind(this) }]
     }
 
     if (this._arrivalNoticeNo) {
-      actions = [
-        ...actions,
-        { title: i18next.t('button.complete'), type: 'transaction', action: this._complete.bind(this) }
-      ]
+      actions = [...actions, { title: i18next.t('button.complete'), action: this._complete.bind(this) }]
     }
 
     store.dispatch({
@@ -601,7 +595,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
     )
   }
 
-  async _undoUnloading(cb) {
+  async _undoUnloading() {
     try {
       this._validateUndo()
       const result = await CustomAlert({
@@ -612,7 +606,6 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!result.value) {
-        cb()
         return
       }
 
@@ -637,8 +630,6 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       this._focusOnPalletInput()
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 
@@ -646,7 +637,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
     if (!this._selectedInventory) throw new Error('text.target_does_not_selected')
   }
 
-  async _complete(cb) {
+  async _complete() {
     try {
       this._validateComplete()
 
@@ -656,8 +647,8 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
+
       if (!result.value) {
-        cb()
         return
       }
 
@@ -687,8 +678,6 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 

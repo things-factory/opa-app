@@ -76,7 +76,6 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.assign_buffer_location'),
-          type: 'transaction',
           action: this._assignBufferLocation.bind(this)
         },
         {
@@ -363,7 +362,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
     )
   }
 
-  async _assignBufferLocation(cb) {
+  async _assignBufferLocation() {
     try {
       this._validateBufferLocation()
 
@@ -373,8 +372,8 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
+
       if (!result.value) {
-        cb()
         return
       }
 
@@ -399,8 +398,6 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 

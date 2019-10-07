@@ -274,9 +274,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
   _updateContext() {
     this._actions = []
     if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value) {
-      this._actions = [
-        { title: i18next.t('button.activate'), type: 'transaction', action: this._activateWorksheet.bind(this) }
-      ]
+      this._actions = [{ title: i18next.t('button.activate'), action: this._activateWorksheet.bind(this) }]
     } else if (this._worksheetStatus === WORKSHEET_STATUS.EXECUTING.value) {
       this._actions = [
         { title: i18next.t('button.pallet_label_print'), action: this._openPalletLabelPrintPopup.bind(this) }
@@ -334,7 +332,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     }
   }
 
-  async _activateWorksheet(cb) {
+  async _activateWorksheet() {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
@@ -344,7 +342,6 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       })
 
       if (!result.value) {
-        cb()
         return
       }
 
@@ -382,8 +379,6 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 

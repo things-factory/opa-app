@@ -74,7 +74,6 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.arrived'),
-          type: 'transaction',
           action: this._checkArrivedNotice.bind(this)
         },
         {
@@ -349,7 +348,7 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
     }
   }
 
-  async _checkArrivedNotice(cb) {
+  async _checkArrivedNotice() {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
@@ -357,8 +356,8 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
+
       if (!result.value) {
-        cb()
         return
       }
 
@@ -381,8 +380,6 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 

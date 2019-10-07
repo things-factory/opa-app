@@ -74,7 +74,6 @@ class CompleteCollectionOrder extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.completed'),
-          type: 'transaction',
           action: this._checkCollectionOrder.bind(this)
         },
         {
@@ -295,7 +294,7 @@ class CompleteCollectionOrder extends localize(i18next)(PageView) {
     }
   }
 
-  async _checkCollectionOrder(cb) {
+  async _checkCollectionOrder() {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
@@ -303,8 +302,8 @@ class CompleteCollectionOrder extends localize(i18next)(PageView) {
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
+
       if (!result.value) {
-        cb()
         return
       }
 
@@ -329,8 +328,6 @@ class CompleteCollectionOrder extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 
