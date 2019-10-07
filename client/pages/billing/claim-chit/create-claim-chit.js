@@ -119,7 +119,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'select',
           name: 'name',
-          header: i18next.t('field.claimType'),
+          header: i18next.t('field.claim_type'),
           record: {
             editable: true,
             align: 'center',
