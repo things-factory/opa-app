@@ -1,11 +1,10 @@
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import { getCodeByName } from '@things-factory/code-base'
+import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, navigate, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { ORDER_TYPES } from '../constants/order'
 import { CustomAlert } from '../../../utils/custom-alert'
 
 class EditCollectionOrder extends localize(i18next)(PageView) {
@@ -13,7 +12,8 @@ class EditCollectionOrder extends localize(i18next)(PageView) {
     return {
       _coNo: String,
       _status: String,
-      _loadTypes: Array
+      _loadTypes: Array,
+      _collectionCargo: String
     }
   }
 
@@ -78,6 +78,7 @@ class EditCollectionOrder extends localize(i18next)(PageView) {
   constructor() {
     super()
     this._loadTypes = []
+    this._collectionCargo = null
   }
 
   render() {
@@ -98,18 +99,35 @@ class EditCollectionOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.ref_no')}</label>
             <input name="refNo" />
 
-            <label>${i18next.t('label.load_type')}</label>
-            <select name="loadType" required>
+            <label>${i18next.t('label.cargo_type')}</label>
+            <select name="cargoType" @change="${e => (this._collectionCargo = e.currentTarget.value)}" required>
               <option value=""></option>
-              ${this._loadTypes.map(
-                loadType => html`
-                  <option value="${loadType.name}">${i18next.t(`label.${loadType.description}`)}</option>
+              ${Object.keys(CARGO_TYPES).map(key => {
+                const collectionCargo = CARGO_TYPES[key]
+                return html`
+                  <option value="${collectionCargo.value}">${i18next.t(`label.${collectionCargo.name}`)}</option>
                 `
-              )}
+              })}
             </select>
 
-            <!-- <label>${i18next.t('label.document')}</label>
-            <input name="attachment" type="file" required /> -->
+            <label ?hidden="${this._collectionCargo !== CARGO_TYPES.OTHERS.value}"
+              >${i18next.t('label.if_others_please_specify')}</label
+            >
+            <input
+              ?hidden="${this._collectionCargo !== CARGO_TYPES.OTHERS.value}"
+              ?required="${this._collectionCargo == CARGO_TYPES.OTHERS.value}"
+              name="otherCargoType"
+              type="text"
+            />
+
+            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
+            <input name="loadWeight" type="number" min="0" required />
+
+            <input name="urgency" type="checkbox" required />
+            <label>${i18next.t('label.urgent_collection')}</label>
+
+            <label>${i18next.t('label.upload_co')}</label>
+            <input name="attachments" type="file" required />
           </fieldset>
         </form>
       </div>
@@ -121,7 +139,7 @@ class EditCollectionOrder extends localize(i18next)(PageView) {
   }
 
   async firstUpdated() {
-    this._loadTypes = await getCodeByName('LOAD_TYPES')
+    this._cargoTypes = await getCodeByName('CARGO_TYPES')
   }
 
   pageUpdated(changes) {
@@ -144,8 +162,17 @@ class EditCollectionOrder extends localize(i18next)(PageView) {
             collectionDate
             refNo
             from
-            loadType
+            loadWeight
+            cargoType
+            otherCargoType
+            urgency
             status
+            attachments {
+              id
+              name
+              refBy
+              path
+            }
             transportVehicle {
               id
               name
@@ -163,6 +190,7 @@ class EditCollectionOrder extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const collectionOrder = response.data.collectionOrder
+      this._collectionCargo = collectionOrder.cargoType
       this._status = collectionOrder.status
       this._fillupCOForm(collectionOrder)
     }
@@ -209,16 +237,24 @@ class EditCollectionOrder extends localize(i18next)(PageView) {
         name: this._coNo,
         collectionOrder: this._getCollectionOrder()
       }
+      const attachments = this.uploadAttachment.files
+      delete args.collectionOrder.attachments
 
       const response = await client.query({
         query: gql`
-            mutation {
+            mutation ($attachments: [Upload]!) {
               editCollectionOrder(${gqlBuilder.buildArgs(args)}) {
                 id
                 name
               }
             }
-          `
+            `,
+        variables: {
+          attachments
+        },
+        context: {
+          hasUpload: true
+        }
       })
 
       if (!response.errors) {
