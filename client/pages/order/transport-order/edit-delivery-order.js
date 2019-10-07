@@ -12,7 +12,8 @@ class EditDeliveryOrder extends localize(i18next)(PageView) {
     return {
       _doNo: String,
       _status: String,
-      _loadTypes: Array
+      _loadTypes: Array,
+      _deliveryCargo: String
     }
   }
 
@@ -78,6 +79,7 @@ class EditDeliveryOrder extends localize(i18next)(PageView) {
   constructor() {
     super()
     this._loadTypes = []
+    this._deliveryCargo = null
   }
 
   render() {
@@ -98,18 +100,35 @@ class EditDeliveryOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.ref_no')}</label>
             <input name="refNo" />
 
-            <label>${i18next.t('label.load_type')}</label>
-            <select name="loadType" required>
+            <label>${i18next.t('label.cargo_type')}</label>
+            <select name="cargoType" @change="${e => (this._deliveryCargo = e.currentTarget.value)}">
               <option value=""></option>
-              ${this._loadTypes.map(
-                loadType => html`
-                  <option value="${loadType.name}">${i18next.t(`label.${loadType.description}`)}</option>
+              ${Object.keys(CARGO_TYPES).map(key => {
+                const deliveryCargo = CARGO_TYPES[key]
+                return html`
+                  <option value="${deliveryCargo.value}">${i18next.t(`label.${deliveryCargo.name}`)}</option>
                 `
-              )}
+              })}
             </select>
 
-            <!-- <label>${i18next.t('label.document')}</label>
-            <input name="attachment" type="file" required /> -->
+            <label ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
+              >${i18next.t('label.if_others_please_specify')}</label
+            >
+            <input
+              ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
+              ?required="${this._deliveryCargo == CARGO_TYPES.OTHERS.value}"
+              name="otherCargo"
+              type="text"
+            />
+
+            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
+            <input name="loadWeight" type="number" min="0" required />
+
+            <input name="urgency" type="checkbox" required />
+            <label>${i18next.t('label.urgent_delivery')}</label>
+
+            <label>${i18next.t('label.upload_do')}</label>
+            <input name="attachments" type="file" required />
           </fieldset>
         </form>
       </div>
@@ -121,7 +140,7 @@ class EditDeliveryOrder extends localize(i18next)(PageView) {
   }
 
   async firstUpdated() {
-    this._loadTypes = await getCodeByName('LOAD_TYPES')
+    this._cargoTypes = await getCodeByName('CARGO_TYPES')
   }
 
   pageUpdated(changes) {
@@ -145,8 +164,17 @@ class EditDeliveryOrder extends localize(i18next)(PageView) {
             refNo
             from
             to
-            loadType
+            loadWeight
+            urgency
+            cargoType
+            otherCargoType
             status
+            attachments {
+              id
+              name
+              refBy
+              path
+            }
             transportVehicle {
               id
               name
@@ -164,6 +192,7 @@ class EditDeliveryOrder extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const deliveryOrder = response.data.deliveryOrder
+      this._deliveryCargo = deliveryOrder.cargoType
       this._status = deliveryOrder.status
       this._fillupDOForm(deliveryOrder)
     }
@@ -210,16 +239,24 @@ class EditDeliveryOrder extends localize(i18next)(PageView) {
         name: this._doNo,
         deliveryOrder: this._getDeliveryOrder()
       }
+      const attachments = this.uploadAttachment.files
+      delete args.collectionOrder.attachments
 
       const response = await client.query({
         query: gql`
-            mutation {
+            mutation ($attachments: [Upload]!) {
               editDeliveryOrder(${gqlBuilder.buildArgs(args)}) {
                 id
                 name
               }
             }
-          `
+          `,
+        variables: {
+          attachments
+        },
+        context: {
+          hasUpload: true
+        }
       })
 
       if (!response.errors) {
@@ -236,7 +273,6 @@ class EditDeliveryOrder extends localize(i18next)(PageView) {
   _validateForm() {
     // collection order and delivery order
     //    - condition: not imported and not own transport
-
     if (!this.deliveryOrderForm.checkValidity()) throw new Error('text.delivery_order_form_invalid')
   }
 
