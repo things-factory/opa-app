@@ -109,7 +109,6 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
 
   async _printLabel() {
     try {
-      this.printer = new USBPrinter()
       const _targetRows = this._validate()
       let labelId = this._palletLabel && this._palletLabel.id
 
@@ -128,25 +127,25 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
           searchParams.append('batch', record.batchId)
           searchParams.append('product', record.product.name)
 
-          const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
-            method: 'GET'
-          })
-
-          let command = await response.text()
-
           try {
+            const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
+              method: 'GET'
+            })
+
+            if (response.status !== 200) {
+              throw `Error : Can't get label command from server (response: ${response.status})`
+            }
+
+            let command = await response.text()
+
+            if (!this.printer) {
+              this.printer = new USBPrinter()
+            }
+
             await this.printer.connectAndPrint(command)
           } catch (ex) {
-            document.dispatchEvent(
-              new CustomEvent('notify', {
-                detail: {
-                  level: 'error',
-                  message: ex,
-                  ex
-                }
-              })
-            )
-            break
+            delete this.printer
+            throw ex
           }
         }
       })
