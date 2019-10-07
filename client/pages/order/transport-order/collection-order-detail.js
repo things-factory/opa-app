@@ -1,10 +1,12 @@
 import { getCodeByName } from '@things-factory/code-base'
+import '@material/mwc-icon'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { ORDER_STATUS } from '../constants/order'
+import { CARGO_TYPES } from '../constants/cargo'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
 
@@ -117,8 +119,7 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
             <input
               ?hidden="${this._collectionCargo !== CARGO_TYPES.OTHERS.value}"
               ?required="${this._collectionCargo == CARGO_TYPES.OTHERS.value}"
-              name="otherCargoType"
-              type="text"
+              name="otherCargo"
               readonly
             />
 
@@ -128,14 +129,14 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
             <input name="urgency" type="checkbox" readonly />
             <label>${i18next.t('label.urgent_delivery')}</label>
 
-            <label>${i18next.t('label.download_file')}</label>
-            <a href="/attachment/${this._path}" target="_blank">${i18next.t('download_co')}</a>
-
             <label>${i18next.t('label.assigned_truck')}</label>
             <input name=${this._assignedVehicleName} value=${this._assignedVehicleName} readonly />
 
             <label>${i18next.t('label.assigned_driver')}</label>
             <input name=${this._assignedDriverName} value=${this._assignedDriverName} readonly />
+
+            <label>${i18next.t('label.download_co')}</label>
+            <a href="/attachment/${this._path}" target="_blank"><mwc-icon>cloud_download</mwc-icon></a>
           </fieldset>
         </form>
       </div>
@@ -175,7 +176,7 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
             loadWeight
             cargoType
             urgency
-            otherCargoType
+            otherCargo
             status
             attachments {
               id
