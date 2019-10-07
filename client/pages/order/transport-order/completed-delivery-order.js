@@ -1,11 +1,12 @@
+import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
-import { CARGO_TYPES } from '../constants/cargo'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../popup-note'
+import { CARGO_TYPES } from '../constants/cargo'
 
 class CompletedDeliveryOrder extends localize(i18next)(PageView) {
   static get properties() {
@@ -13,6 +14,7 @@ class CompletedDeliveryOrder extends localize(i18next)(PageView) {
       _doNo: String,
       _status: String,
       _path: String,
+      _cargoTypes: Array,
       _deliveryCargo: String,
       _prevDriverName: String,
       _prevVehicleName: String
@@ -80,6 +82,7 @@ class CompletedDeliveryOrder extends localize(i18next)(PageView) {
   constructor() {
     super()
     this._path = ''
+    this._cargoTypes = []
     this._deliveryCargo = null
   }
 
@@ -104,12 +107,11 @@ class CompletedDeliveryOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.cargo_type')}</label>
             <select name="cargoType" disabled>
               <option value=""></option>
-              ${Object.keys(CARGO_TYPES).map(key => {
-                const deliveryCargo = CARGO_TYPES[key]
-                return html`
-                  <option value="${deliveryCargo.value}">${i18next.t(`label.${deliveryCargo.name}`)}</option>
+              ${this._cargoTypes.map(
+                cargoType => html`
+                  <option value="${cargoType.name}">${i18next.t(`label.${cargoType.description}`)}</option>
                 `
-              })}
+              )}
             </select>
 
             <label ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
@@ -144,6 +146,10 @@ class CompletedDeliveryOrder extends localize(i18next)(PageView) {
 
   get deliveryOrderForm() {
     return this.shadowRoot.querySelector('form[name=deliveryOrder]')
+  }
+
+  async firstUpdated() {
+    this._cargoTypes = await getCodeByName('CARGO_TYPES')
   }
 
   async pageUpdated(changes) {

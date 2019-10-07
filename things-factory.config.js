@@ -76,10 +76,6 @@ export default {
       page: 'arrival_notice_detail'
     },
     {
-      tagname: 'edit-arrival-notice',
-      page: 'edit_arrival_notice'
-    },
-    {
       tagname: 'arrival-notice-requests',
       page: 'arrival_notice_requests'
     },

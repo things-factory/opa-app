@@ -1,13 +1,13 @@
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import { getCodeByName } from '@things-factory/code-base'
+import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, navigate, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { ORDER_TYPES } from '../constants/order'
-import { CARGO_TYPES } from '../constants/cargo'
 import { CustomAlert } from '../../../utils/custom-alert'
+import { CARGO_TYPES } from '../constants/cargo'
+import { ORDER_TYPES } from '../constants/order'
 
 class CreateTransportOrder extends localize(i18next)(PageView) {
   static get properties() {
@@ -17,7 +17,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
       _transportOptions: Array,
       _loadTypes: Array,
       _orderType: String,
-      _cargoType: String,
+      _cargoTypes: Array,
       _deliveryCargo: String,
       _collectionCargo: String
     }
@@ -87,7 +87,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
     this._collectionCargo = null
     this._deliveryCargo = null
     this._transportOptions = []
-    this._loadTypes = []
+    this._cargoTypes = []
   }
 
   render() {
@@ -131,12 +131,11 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.cargo_type')}</label>
             <select name="cargoType" @change="${e => (this._collectionCargo = e.currentTarget.value)}">
               <option value=""></option>
-              ${Object.keys(CARGO_TYPES).map(key => {
-                const collectionCargo = CARGO_TYPES[key]
-                return html`
-                  <option value="${collectionCargo.value}">${i18next.t(`label.${collectionCargo.name}`)}</option>
+              ${this._cargoTypes.map(
+                cargoType => html`
+                  <option value="${cargoType.name}">${i18next.t(`label.${cargoType.description}`)}</option>
                 `
-              })}
+              )}
             </select>
 
             <label ?hidden="${this._collectionCargo !== CARGO_TYPES.OTHERS.value}"
@@ -189,12 +188,11 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.cargo_type')}</label>
             <select name="cargoType" @change="${e => (this._deliveryCargo = e.currentTarget.value)}">
               <option value=""></option>
-              ${Object.keys(CARGO_TYPES).map(key => {
-                const deliveryCargo = CARGO_TYPES[key]
-                return html`
-                  <option value="${deliveryCargo.value}">${i18next.t(`label.${deliveryCargo.name}`)}</option>
+              ${this._cargoTypes.map(
+                cargoType => html`
+                  <option value="${cargoType.name}">${i18next.t(`label.${cargoType.description}`)}</option>
                 `
-              })}
+              )}
             </select>
 
             <label ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
@@ -243,6 +241,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
 
   async firstUpdated() {
     this._transportOptions = await getCodeByName('TRANSPORT_TYPES')
+    this._cargoTypes = await getCodeByName('CARGO_TYPES')
   }
 
   _getStdDate() {

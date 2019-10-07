@@ -1,3 +1,4 @@
+import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -13,6 +14,7 @@ class CompletedCollectionOrder extends localize(i18next)(PageView) {
       _coNo: String,
       _status: String,
       _path: String,
+      _cargoTypes: Array,
       _collectionCargo: String,
       _prevDriverName: String,
       _prevVehicleName: String
@@ -80,6 +82,7 @@ class CompletedCollectionOrder extends localize(i18next)(PageView) {
   constructor() {
     super()
     this._path = ''
+    this._cargoTypes = []
     this._collectionCargo = null
   }
 
@@ -104,12 +107,11 @@ class CompletedCollectionOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.cargo_type')}</label>
             <select name="cargoType" disabled>
               <option value=""></option>
-              ${Object.keys(CARGO_TYPES).map(key => {
-                const collectionCargo = CARGO_TYPES[key]
-                return html`
-                  <option value="${collectionCargo.value}">${i18next.t(`label.${collectionCargo.name}`)}</option>
+              ${this._cargoTypes.map(
+                cargoType => html`
+                  <option value="${cargoType.name}">${i18next.t(`label.${cargoType.description}`)}</option>
                 `
-              })}
+              )}
             </select>
 
             <label ?hidden="${this._collectionCargo !== CARGO_TYPES.OTHERS.value}"
@@ -144,6 +146,10 @@ class CompletedCollectionOrder extends localize(i18next)(PageView) {
 
   get collectionOrderForm() {
     return this.shadowRoot.querySelector('form[name=collectionOrder]')
+  }
+
+  async firstUpdated() {
+    this._cargoTypes = await getCodeByName('CARGO_TYPES')
   }
 
   async pageUpdated(changes) {

@@ -75,10 +75,6 @@ export default function route(page) {
       import('./pages/order/arrival-notice/arrival-notice-detail')
       return page
 
-    case 'edit_arrival_notice':
-      import('./pages/order/arrival-notice/edit-arrival-notice')
-      return page
-
     case 'arrival_notice_requests':
       import('./pages/order/arrival-notice/arrival-notice-requests')
       return page

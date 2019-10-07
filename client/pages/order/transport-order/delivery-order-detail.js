@@ -17,6 +17,7 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
       _assignedDriverName: String,
       _assignedVehicleName: String,
       _path: String,
+      _cargoTypes: Array,
       _deliveryCargo: String
     }
   }
@@ -76,6 +77,7 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
 
   constructor() {
     super()
+    this._cargoTypes = []
     this._path = ''
     this._deliveryCargo = null
   }
@@ -101,12 +103,11 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
             <label>${i18next.t('label.cargo_type')}</label>
             <select name="cargoType" disabled>
               <option value=""></option>
-              ${Object.keys(CARGO_TYPES).map(key => {
-                const deliveryCargo = CARGO_TYPES[key]
-                return html`
-                  <option value="${deliveryCargo.value}">${i18next.t(`label.${deliveryCargo.name}`)}</option>
+              ${this._cargoTypes.map(
+                cargoType => html`
+                  <option value="${cargoType.name}">${i18next.t(`label.${cargoType.description}`)}</option>
                 `
-              })}
+              )}
             </select>
 
             <label ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
@@ -144,7 +145,7 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
   }
 
   async firstUpdated() {
-    this._loadTypes = await getCodeByName('LOAD_TYPES')
+    this._cargoTypes = await getCodeByName('CARGO_TYPES')
   }
 
   async pageUpdated(changes) {

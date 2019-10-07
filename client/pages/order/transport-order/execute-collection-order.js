@@ -113,12 +113,11 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.cargo_type')}</label>
             <select name="cargoType" disabled>
               <option value=""></option>
-              ${Object.keys(CARGO_TYPES).map(key => {
-                const collectionCargo = CARGO_TYPES[key]
-                return html`
-                  <option value="${collectionCargo.value}">${i18next.t(`label.${collectionCargo.name}`)}</option>
+              ${this._cargoTypes.map(
+                cargoType => html`
+                  <option value="${cargoType.name}">${i18next.t(`label.${cargoType.description}`)}</option>
                 `
-              })}
+              )}
             </select>
 
             <label ?hidden="${this._collectionCargo !== CARGO_TYPES.OTHERS.value}"

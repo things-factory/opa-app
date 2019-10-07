@@ -13,6 +13,7 @@ class RejectedCollectionOrder extends localize(i18next)(PageView) {
       _coNo: String,
       _status: String,
       _path: String,
+      _cargoTypes: Array,
       _deliveryCargo: String
     }
   }
@@ -77,9 +78,9 @@ class RejectedCollectionOrder extends localize(i18next)(PageView) {
 
   constructor() {
     super()
-    this._transportOptions = []
     this._path = ''
     this._deliveryCargo = null
+    this._cargoTypes = []
   }
 
   render() {
@@ -103,12 +104,11 @@ class RejectedCollectionOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.cargo_type')}</label>
             <select name="cargoType" disabled>
               <option value=""></option>
-              ${Object.keys(CARGO_TYPES).map(key => {
-                const collectionCargo = CARGO_TYPES[key]
-                return html`
-                  <option value="${collectionCargo.value}">${i18next.t(`label.${collectionCargo.name}`)}</option>
+              ${this._cargoTypes.map(
+                cargoType => html`
+                  <option value="${cargoType.name}">${i18next.t(`label.${cargoType.description}`)}</option>
                 `
-              })}
+              )}
             </select>
 
             <label ?hidden="${this._collectionCargo !== CARGO_TYPES.OTHERS.value}"
@@ -143,7 +143,7 @@ class RejectedCollectionOrder extends localize(i18next)(PageView) {
   }
 
   async firstUpdated() {
-    this._cargoType = await getCodeByName('CARGO_TYPES')
+    this._cargoTypes = await getCodeByName('CARGO_TYPES')
   }
 
   async pageUpdated(changes) {
