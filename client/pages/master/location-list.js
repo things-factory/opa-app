@@ -440,16 +440,22 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     } else {
       for (var record of records) {
         var searchParams = new URLSearchParams()
+
+        /* for location record mapping */
         searchParams.append('location', record.name)
-        searchParams.append('shelf', record.shelf)
-
-        const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
-          method: 'GET'
-        })
-
-        var command = await response.text()
+        ;[('row', 'type', 'zone', 'column', 'shelf')].forEach(key => searchParams.append(key, record[key]))
 
         try {
+          const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
+            method: 'GET'
+          })
+
+          if (response.status !== 200) {
+            throw `Error : Can't get label command from server (response: ${response.status})`
+          }
+
+          var command = await response.text()
+
           if (!this.printer) {
             this.printer = new USBPrinter()
           }
@@ -465,6 +471,8 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
               }
             })
           )
+
+          delete this.printer
           break
         }
       }
