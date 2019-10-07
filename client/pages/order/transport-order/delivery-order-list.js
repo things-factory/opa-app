@@ -220,7 +220,6 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
               name
               to
               telNo
-              loadType
               transportDriver {
                 id
                 name

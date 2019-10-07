@@ -16,7 +16,8 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
       _loadTypes: Array,
       _assignedDriverName: String,
       _assignedVehicleName: String,
-      _path: String
+      _path: String,
+      _deliveryCargo: String
     }
   }
 
@@ -78,6 +79,7 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
     this._transportOptions = []
     this._loadTypes = []
     this._path = ''
+    this._deliveryCargo = null
   }
 
   render() {
@@ -98,27 +100,42 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
             <label>${i18next.t('label.ref_no')}</label>
             <input name="refNo" readonly />
 
-            <label>${i18next.t('label.load_type')}</label>
-            <select name="loadType" disabled>
+            <label>${i18next.t('label.cargo_type')}</label>
+            <select name="cargoType" disabled>
               <option value=""></option>
-              ${this._loadTypes.map(
-                loadType => html`
-                  <option value="${loadType.name}">${i18next.t(`label.${loadType.description}`)}</option>
+              ${Object.keys(CARGO_TYPES).map(key => {
+                const deliveryCargo = CARGO_TYPES[key]
+                return html`
+                  <option value="${deliveryCargo.value}">${i18next.t(`label.${deliveryCargo.name}`)}</option>
                 `
-              )}
+              })}
             </select>
+
+            <label ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
+              >${i18next.t('label.if_others_please_specify')}</label
+            >
+            <input
+              ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
+              ?required="${this._deliveryCargo == CARGO_TYPES.OTHERS.value}"
+              name="otherCargoType"
+              type="text"
+              readonly
+            />
+
+            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
+            <input name="loadWeight" type="number" min="0" readonly />
+
+            <input name="urgency" type="checkbox" readonly />
+            <label>${i18next.t('label.urgent_delivery')}</label>
 
             <label>${i18next.t('label.download_file')}</label>
             <a href="/attachment/${this._path}" target="_blank">${i18next.t('download_co')}</a>
 
             <label>${i18next.t('label.assigned_truck')}</label>
-            <input name=${this._assignedVehicleName} value=${this._assignedVehicleName} disabled />
+            <input name=${this._assignedVehicleName} value=${this._assignedVehicleName} readonly />
 
             <label>${i18next.t('label.assigned_driver')}</label>
-            <input name=${this._assignedDriverName} value=${this._assignedDriverName} disabled />
-
-            <!-- <label>${i18next.t('label.document')}</label>
-            <input name="attachment" type="file" readonly /> -->
+            <input name=${this._assignedDriverName} value=${this._assignedDriverName} readonly />
           </fieldset>
         </form>
       </div>
@@ -155,8 +172,11 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
             deliveryDate
             refNo
             to
-            loadType
+            loadWeight
             status
+            urgency
+            cargoType
+            otherCargoType
             attachments {
               id
               name
@@ -179,12 +199,14 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
     })
 
     if (!response.errors) {
-      const driver = response.data.deliveryOrder.transportDriver || { name: '' }
-      const vehicle = response.data.deliveryOrder.transportVehicle || { name: '' }
-      this._path = response.data.collectionOrder.attachments[0].path
+      const deliveryOrder = response.data.deliveryOrder
+      const driver = deliveryOrder.transportDriver || { name: '' }
+      const vehicle = deliveryOrder.transportVehicle || { name: '' }
+
+      this._path = deliveryOrder.attachments[0].path
+      this._deliveryCargo = deliveryOrder.cargoType
       this._assignedDriverName = driver.name
       this._assignedVehicleName = vehicle.name
-      const deliveryOrder = response.data.deliveryOrder
       this._status = deliveryOrder.status
       this._fillupDOForm(deliveryOrder)
     }
