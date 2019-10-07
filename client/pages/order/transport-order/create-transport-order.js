@@ -17,7 +17,8 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
       _transportOptions: Array,
       _loadTypes: Array,
       _orderType: String,
-      _cargoType: String
+      _cargoType: String,
+      _deliveryCargo: String
     }
   }
 
@@ -83,7 +84,8 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
   constructor() {
     super()
     this._orderType = null
-    this._cargoType = null
+    this._collectionCargo = null
+    this._deliveryCargo = null
     this._transportOptions = []
     this._loadTypes = []
   }
@@ -104,6 +106,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
           </select>
         </fieldset>
       </form>
+
       <div class="co-form-container" ?hidden="${this._orderType !== ORDER_TYPES.COLLECTION.value}">
         <form name="collectionOrder" class="multi-column-form">
           <fieldset>
@@ -126,26 +129,31 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <input name="refNo" />
 
             <label>${i18next.t('label.cargo_type')}</label>
-            <select name="cargoType" @change="${e => (this._cargoType = e.currentTarget.value)}">
+            <select name="cargoType" @change="${e => (this._collectionCargo = e.currentTarget.value)}">
               <option value=""></option>
               ${Object.keys(CARGO_TYPES).map(key => {
-                const cargoTypes = CARGO_TYPES[key]
+                const collectionCargo = CARGO_TYPES[key]
                 return html`
-                  <option value="${cargoTypes.value}">${i18next.t(`label.${cargoTypes.name}`)}</option>
+                  <option value="${collectionCargo.value}">${i18next.t(`label.${collectionCargo.name}`)}</option>
                 `
               })}
             </select>
 
-            <label ?hidden="${this._cargoType == CARGO_TYPES.OTHERS.value}">${i18next.t('label.others')}</label>
+            <label ?hidden="${this._collectionCargo !== CARGO_TYPES.OTHERS.value}"
+              >${i18next.t('label.if_others_please_specify')}</label
+            >
             <input
-              ?hidden="${this._cargoType == CARGO_TYPES.OTHERS.value}"
-              ?required="${this._cargoType == CARGO_TYPES.OTHERS.value}"
-              name="others"
+              ?hidden="${this._collectionCargo !== CARGO_TYPES.OTHERS.value}"
+              ?required="${this._collectionCargo == CARGO_TYPES.OTHERS.value}"
+              name="cargoType"
               type="text"
             />
 
             <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
             <input name="loadType" type="number" min="0" />
+
+            <input name="urgency" type="checkbox" />
+            <label>${i18next.t('label.urgent_collection')}</label>
 
             <label>${i18next.t('label.upload_co')}</label>
             <input name="attachments" type="file" ?required="${this._orderType == ORDER_TYPES.COLLECTION.value}" />
@@ -174,8 +182,32 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.ref_no')}</label>
             <input name="refNo" />
 
+            <label>${i18next.t('label.cargo_type')}</label>
+            <select name="cargoType" @change="${e => (this._deliveryCargo = e.currentTarget.value)}">
+              <option value=""></option>
+              ${Object.keys(CARGO_TYPES).map(key => {
+                const deliveryCargo = CARGO_TYPES[key]
+                return html`
+                  <option value="${deliveryCargo.value}">${i18next.t(`label.${deliveryCargo.name}`)}</option>
+                `
+              })}
+            </select>
+
+            <label ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
+              >${i18next.t('label.if_others_please_specify')}</label
+            >
+            <input
+              ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
+              ?required="${this._deliveryCargo == CARGO_TYPES.OTHERS.value}"
+              name="cargoType"
+              type="text"
+            />
+
             <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
             <input name="loadType" type="number" min="0" />
+
+            <input name="urgency" type="checkbox" />
+            <label>${i18next.t('label.urgent_delivery')}</label>
 
             <label>${i18next.t('label.upload_do')}</label>
             <input name="attachments" type="file" ?required="${this._orderType == ORDER_TYPES.DELIVERY.value}" />
