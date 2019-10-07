@@ -145,7 +145,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <input
               ?hidden="${this._collectionCargo !== CARGO_TYPES.OTHERS.value}"
               ?required="${this._collectionCargo == CARGO_TYPES.OTHERS.value}"
-              name="otherCargoType"
+              name="otherCargo"
             />
 
             <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
@@ -155,7 +155,12 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.urgent_collection')}</label>
 
             <label>${i18next.t('label.upload_co')}</label>
-            <input name="attachments" type="file" ?required="${this._orderType == ORDER_TYPES.COLLECTION.value}" />
+            <input
+              id="coUpload"
+              name="attachments"
+              type="file"
+              ?required="${this._orderType == ORDER_TYPES.COLLECTION.value}"
+            />
           </fieldset>
         </form>
       </div>
@@ -208,7 +213,12 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.urgent_delivery')}</label>
 
             <label>${i18next.t('label.upload_do')}</label>
-            <input name="attachments" type="file" ?required="${this._orderType == ORDER_TYPES.DELIVERY.value}" />
+            <input
+              id="doUpload"
+              name="attachments"
+              type="file"
+              ?required="${this._orderType == ORDER_TYPES.DELIVERY.value}"
+            />
           </fieldset>
         </form>
       </div>
@@ -223,12 +233,15 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('form[name=deliveryOrder]')
   }
 
-  get uploadAttachment() {
-    return this.shadowRoot.querySelector('input[name=attachments]')
+  get uploadCOAttachment() {
+    return this.shadowRoot.querySelector('#coUpload')
+  }
+
+  get uploadDOAttachment() {
+    return this.shadowRoot.querySelector('#doUpload')
   }
 
   async firstUpdated() {
-    this._loadTypes = await getCodeByName('LOAD_TYPES')
     this._transportOptions = await getCodeByName('TRANSPORT_TYPES')
   }
 
@@ -255,7 +268,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
         }
 
         let args = { collectionOrder: this._getCollectionOrder() }
-        const attachments = this.uploadAttachment.files
+        const attachments = this.uploadCOAttachment.files
         delete args.collectionOrder.attachments
         const response = await client.query({
           query: gql`
@@ -298,18 +311,17 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
         }
 
         let args = { deliveryOrder: this._getDeliveryOrder() }
-        const attachments = this.uploadAttachment.files
-        delete args.collectionOrder.attachments
-
+        const attachments = this.uploadDOAttachment.files
+        delete args.deliveryOrder.attachments
         const response = await client.query({
           query: gql`
-              mutation ($attachments: [Upload]!) {
-                generateDeliveryOrder(${gqlBuilder.buildArgs(args)}, attachments: $attachments) {
+              mutation($attachments: [Upload]!) {
+                generateDeliveryOrder(${gqlBuilder.buildArgs(args)}, attachments: $attachments )  {
                   id
                   name
                 }
               }
-              `,
+            `,
           variables: {
             attachments
           },

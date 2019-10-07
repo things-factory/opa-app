@@ -222,8 +222,8 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
     if (this._status === ORDER_STATUS.PENDING.value) {
       this._actions = [
         {
-          title: i18next.t('button.edit'),
-          action: this._changeToEditable.bind(this)
+          title: i18next.t('button.delete'),
+          action: this._deleteCollectionOrder.bind(this)
         },
         {
           title: i18next.t('button.confirm'),
@@ -249,18 +249,18 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
       Array.from(form.querySelectorAll('input, textarea, select, a')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
-        } else if (field.name === key) {
+        } else if (field.name === key && field.type !== 'file') {
           field.value = data[key]
         }
       })
     }
   }
 
-  async _changeToEditable() {
+  async _deleteCollectionOrder() {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
-        text: i18next.t('text.change_to_editable'),
+        text: i18next.t('text.remove_order_permanently'),
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
@@ -269,18 +269,14 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
         const response = await client.query({
           query: gql`
             mutation {
-              updateCollectionOrder(${gqlBuilder.buildArgs({
-                name: this._coNo,
-                patch: { status: ORDER_STATUS.EDITING.value }
-              })}) {
-                name 
-              }
+              deleteCollectionOrder(${gqlBuilder.buildArgs({ name: this._coNo })})
             }
           `
         })
 
         if (!response.errors) {
-          navigate(`edit_collection_order/${this._coNo}`)
+          this._showToast({ message: i18next.t('text.order_has_been_removed') })
+          navigate(`collection_orders`)
         }
       }
     } catch (e) {

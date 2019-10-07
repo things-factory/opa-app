@@ -188,14 +188,6 @@ export default {
       page: 'collection_order_detail'
     },
     {
-      tagname: 'edit-delivery-order',
-      page: 'edit_delivery_order'
-    },
-    {
-      tagname: 'edit-collection-order',
-      page: 'edit_collection_order'
-    },
-    {
       tagname: 'delivery-order-list',
       page: 'delivery_orders'
     },

@@ -175,14 +175,6 @@ export default function route(page) {
       import('./pages/order/transport-order/collection-order-detail')
       return page
 
-    case 'edit_delivery_order':
-      import('./pages/order/transport-order/edit-delivery-order')
-      return page
-
-    case 'edit_collection_order':
-      import('./pages/order/transport-order/edit-collection-order')
-      return page
-
     case 'delivery_orders':
       import('./pages/order/transport-order/delivery-order-list')
       return page

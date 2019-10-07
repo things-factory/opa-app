@@ -5,6 +5,7 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { ORDER_STATUS } from '../constants/order'
+import { CARGO_TYPES } from '../constants/cargo'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
 
@@ -13,7 +14,6 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
     return {
       _doNo: String,
       _status: String,
-      _loadTypes: Array,
       _assignedDriverName: String,
       _assignedVehicleName: String,
       _path: String,
@@ -77,7 +77,6 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
   constructor() {
     super()
     this._transportOptions = []
-    this._loadTypes = []
     this._path = ''
     this._deliveryCargo = null
   }
@@ -117,8 +116,7 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
             <input
               ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
               ?required="${this._deliveryCargo == CARGO_TYPES.OTHERS.value}"
-              name="otherCargoType"
-              type="text"
+              name="otherCargo"
               readonly
             />
 
@@ -128,14 +126,14 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
             <input name="urgency" type="checkbox" readonly />
             <label>${i18next.t('label.urgent_delivery')}</label>
 
-            <label>${i18next.t('label.download_file')}</label>
-            <a href="/attachment/${this._path}" target="_blank">${i18next.t('download_co')}</a>
-
             <label>${i18next.t('label.assigned_truck')}</label>
             <input name=${this._assignedVehicleName} value=${this._assignedVehicleName} readonly />
 
             <label>${i18next.t('label.assigned_driver')}</label>
             <input name=${this._assignedDriverName} value=${this._assignedDriverName} readonly />
+
+            <label>${i18next.t('label.download_co')}</label>
+            <a href="/attachment/${this._path}" download><mwc-icon>cloud_download</mwc-icon></a>
           </fieldset>
         </form>
       </div>
@@ -176,7 +174,7 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
             status
             urgency
             cargoType
-            otherCargoType
+            otherCargo
             attachments {
               id
               name
@@ -221,8 +219,8 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
     if (this._status === ORDER_STATUS.PENDING.value) {
       this._actions = [
         {
-          title: i18next.t('button.edit'),
-          action: this._changeToEditable.bind(this)
+          title: i18next.t('button.delete'),
+          action: this._deleteDeliveryOrder.bind(this)
         },
         {
           title: i18next.t('button.confirm'),
@@ -248,18 +246,18 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
       Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
-        } else if (field.name === key) {
+        } else if (field.name === key && field.type !== 'file') {
           field.value = data[key]
         }
       })
     }
   }
 
-  async _changeToEditable() {
+  async _deleteDeliveryOrder() {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
-        text: i18next.t('text.change_to_editable'),
+        text: i18next.t('text.remove_order_permanently'),
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
@@ -268,18 +266,14 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
         const response = await client.query({
           query: gql`
             mutation {
-              updateDeliveryOrder(${gqlBuilder.buildArgs({
-                name: this._doNo,
-                patch: { status: ORDER_STATUS.EDITING.value }
-              })}) {
-                name 
-              }
+              deleteDeliveryOrder(${gqlBuilder.buildArgs({ name: this._doNo })})
             }
           `
         })
 
         if (!response.errors) {
-          navigate(`edit_delivery_order/${this._doNo}`)
+          this._showToast({ message: i18next.t('text.order_has_been_removed') })
+          navigate(`delivery_orders`)
         }
       }
     } catch (e) {
