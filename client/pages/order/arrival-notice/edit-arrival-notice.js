@@ -78,7 +78,6 @@ class EditArrivalNotice extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.confirm'),
-          type: 'transaction',
           action: this._editArrivalNotice.bind(this)
         }
       ]
@@ -469,7 +468,7 @@ class EditArrivalNotice extends localize(i18next)(PageView) {
     }
   }
 
-  async _editArrivalNotice(cb) {
+  async _editArrivalNotice() {
     try {
       this._validateForm()
       this._validateProducts()
@@ -481,8 +480,8 @@ class EditArrivalNotice extends localize(i18next)(PageView) {
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
+
       if (!result.value) {
-        cb()
         return
       }
 
@@ -509,8 +508,6 @@ class EditArrivalNotice extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 

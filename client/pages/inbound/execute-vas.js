@@ -301,10 +301,10 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       actions = [
         ...actions,
         { title: i18next.t('button.issue'), action: this._openIssueEditor.bind(this) },
-        { title: i18next.t('button.done'), type: 'transaction', action: this._executeVas.bind(this) }
+        { title: i18next.t('button.done'), action: this._executeVas.bind(this) }
       ]
     } else if (this._selectedTaskStatus === WORKSHEET_STATUS.DONE.value) {
-      actions = [...actions, { title: i18next.t('button.undo'), type: 'transaction', action: this._undoVas.bind(this) }]
+      actions = [...actions, { title: i18next.t('button.undo'), action: this._undoVas.bind(this) }]
     }
 
     store.dispatch({
@@ -456,7 +456,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
     )
   }
 
-  async _executeVas(cb) {
+  async _executeVas() {
     try {
       this._validate()
       const response = await client.query({
@@ -478,12 +478,10 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 
-  async _undoVas(cb) {
+  async _undoVas() {
     try {
       this._validate()
 
@@ -495,7 +493,6 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!result.value) {
-        cb()
         return
       }
 
@@ -518,8 +515,6 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 

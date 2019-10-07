@@ -198,12 +198,10 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
       this._actions = [
         {
           title: i18next.t('button.edit'),
-          type: 'transaction',
           action: this._changeToEditable.bind(this)
         },
         {
           title: i18next.t('button.confirm'),
-          type: 'transaction',
           action: this._confirmCollectionOrder.bind(this)
         }
       ]
@@ -233,7 +231,7 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
     }
   }
 
-  async _changeToEditable(cb) {
+  async _changeToEditable() {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
@@ -262,20 +260,18 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 
-  async _confirmCollectionOrder(cb) {
+  async _confirmCollectionOrder() {
     const result = await CustomAlert({
       title: i18next.t('title.are_you_sure'),
       text: i18next.t('text.confirm_collection_order'),
       confirmButton: { text: i18next.t('button.confirm') },
       cancelButton: { text: i18next.t('button.cancel') }
     })
+
     if (!result.value) {
-      cb()
       return
     }
 
@@ -298,8 +294,6 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 

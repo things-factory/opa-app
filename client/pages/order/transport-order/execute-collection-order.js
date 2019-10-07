@@ -74,7 +74,6 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.dispatch'),
-          type: 'transaction',
           action: this._checkDriverVehicle.bind(this)
         },
         {
@@ -295,7 +294,7 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
     }
   }
 
-  async _executeCollectionOrder({ patch, cb }) {
+  async _executeCollectionOrder({ patch }) {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
@@ -303,8 +302,8 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
+
       if (!result.value) {
-        cb()
         return
       }
 
@@ -330,12 +329,10 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 
-  async _checkDriverVehicle(cb) {
+  async _checkDriverVehicle() {
     if (this._prevDriverName !== this.driver.value || this._prevVehicleName !== this.vehicle.value) {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
@@ -343,19 +340,16 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
+
       if (!result.value) {
-        cb()
         return
       }
 
       this._executeCollectionOrder({
-        patch: this._getDriverVehicle(),
-        cb
+        patch: this._getDriverVehicle()
       })
     } else {
-      this._executeCollectionOrder({
-        cb
-      })
+      this._executeCollectionOrder({})
     }
   }
 

@@ -262,9 +262,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
     this._actions = []
 
     if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value) {
-      this._actions = [
-        { title: i18next.t('button.activate'), type: 'transaction', action: this._activateWorksheet.bind(this) }
-      ]
+      this._actions = [{ title: i18next.t('button.activate'), action: this._activateWorksheet.bind(this) }]
     }
 
     this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
@@ -318,7 +316,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _activateWorksheet(cb) {
+  async _activateWorksheet() {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
@@ -328,7 +326,6 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!result.value) {
-        cb()
         return
       }
 
@@ -364,8 +361,6 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 

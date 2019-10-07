@@ -71,7 +71,6 @@ class EditVasOrder extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.confirm'),
-          type: 'transaction',
           action: this._editVasOrder.bind(this)
         },
         {
@@ -240,7 +239,7 @@ class EditVasOrder extends localize(i18next)(PageView) {
     )
   }
 
-  async _editVasOrder(cb) {
+  async _editVasOrder() {
     try {
       this._validateVas()
 
@@ -250,8 +249,8 @@ class EditVasOrder extends localize(i18next)(PageView) {
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
+
       if (!result.value) {
-        cb()
         return
       }
 
@@ -276,8 +275,6 @@ class EditVasOrder extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 

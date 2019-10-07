@@ -68,7 +68,6 @@ class EditDeliveryOrder extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.confirm'),
-          type: 'transaction',
           action: this._editDeliveryOrder.bind(this)
         }
       ]
@@ -191,7 +190,7 @@ class EditDeliveryOrder extends localize(i18next)(PageView) {
     return date.toISOString().split('T')[0]
   }
 
-  async _editDeliveryOrder(cb) {
+  async _editDeliveryOrder() {
     try {
       this._validateForm()
 
@@ -201,8 +200,8 @@ class EditDeliveryOrder extends localize(i18next)(PageView) {
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
+
       if (!result.value) {
-        cb()
         return
       }
 
@@ -228,8 +227,6 @@ class EditDeliveryOrder extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 

@@ -77,7 +77,6 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       actions: [
         {
           title: i18next.t('button.submit'),
-          type: 'transaction',
           action: this._generateReleaseOrder.bind(this)
         }
       ]
@@ -413,7 +412,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _generateReleaseOrder(cb) {
+  async _generateReleaseOrder() {
     try {
       this._validateForm()
       this._validateInventories()
@@ -425,8 +424,8 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
+
       if (!result.value) {
-        cb()
         return
       }
 
@@ -454,8 +453,6 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 

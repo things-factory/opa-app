@@ -70,12 +70,10 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.reject'),
-          type: 'transaction',
           action: this._rejectVasOrder.bind(this)
         },
         {
           title: i18next.t('button.receive'),
-          type: 'transaction',
           action: this._receiveVasOrder.bind(this)
         },
         {
@@ -216,7 +214,7 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
     }
   }
 
-  async _receiveVasOrder(cb) {
+  async _receiveVasOrder() {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
@@ -224,8 +222,8 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
+
       if (!result.value) {
-        cb()
         return
       }
 
@@ -250,12 +248,10 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 
-  async _rejectVasOrder(cb) {
+  async _rejectVasOrder() {
     const popup = openPopup(
       html`
         <popup-note
@@ -269,8 +265,8 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
                 confirmButton: { text: i18next.t('button.confirm') },
                 cancelButton: { text: i18next.t('button.cancel') }
               })
+
               if (!result.value) {
-                cb()
                 return
               }
 
@@ -293,8 +289,6 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
               }
             } catch (e) {
               this._showToast(e)
-            } finally {
-              cb()
             }
           }}"
         ></popup-note>

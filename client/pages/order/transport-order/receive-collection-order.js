@@ -72,12 +72,10 @@ class ReceiveCollectionOrder extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.reject'),
-          type: 'transaction',
           action: this._rejectCollectionOrder.bind(this)
         },
         {
           title: i18next.t('button.receive'),
-          type: 'transaction',
           action: this._receiveCollectionOrder.bind(this)
         },
         {
@@ -277,7 +275,7 @@ class ReceiveCollectionOrder extends localize(i18next)(PageView) {
     }
   }
 
-  async _receiveCollectionOrder(cb) {
+  async _receiveCollectionOrder() {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
@@ -285,8 +283,8 @@ class ReceiveCollectionOrder extends localize(i18next)(PageView) {
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
+
       if (!result.value) {
-        cb()
         return
       }
 
@@ -312,8 +310,6 @@ class ReceiveCollectionOrder extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 
@@ -328,7 +324,7 @@ class ReceiveCollectionOrder extends localize(i18next)(PageView) {
     }
   }
 
-  async _rejectCollectionOrder(cb) {
+  async _rejectCollectionOrder() {
     const popup = openPopup(
       html`
         <popup-note
@@ -342,8 +338,8 @@ class ReceiveCollectionOrder extends localize(i18next)(PageView) {
                 confirmButton: { text: i18next.t('button.confirm') },
                 cancelButton: { text: i18next.t('button.cancel') }
               })
+
               if (!result.value) {
-                cb()
                 return
               }
 
@@ -366,8 +362,6 @@ class ReceiveCollectionOrder extends localize(i18next)(PageView) {
               }
             } catch (e) {
               this._showToast(e)
-            } finally {
-              cb()
             }
           }}"
         ></popup-note>
@@ -378,8 +372,6 @@ class ReceiveCollectionOrder extends localize(i18next)(PageView) {
         title: i18next.t('title.reject_collection_order')
       }
     )
-
-    popup.onclosed = cb
   }
 
   _showToast({ type, message }) {

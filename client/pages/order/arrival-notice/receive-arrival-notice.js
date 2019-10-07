@@ -75,12 +75,10 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.reject'),
-          type: 'transaction',
           action: this._rejectArrivalNotice.bind(this)
         },
         {
           title: i18next.t('button.receive'),
-          type: 'transaction',
           action: this._receiveArrivalNotice.bind(this)
         },
         {
@@ -405,7 +403,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
     }
   }
 
-  async _receiveArrivalNotice(cb) {
+  async _receiveArrivalNotice() {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
@@ -413,8 +411,8 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
+
       if (!result.value) {
-        cb()
         return
       }
 
@@ -437,12 +435,10 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 
-  async _rejectArrivalNotice(cb) {
+  async _rejectArrivalNotice() {
     const popup = openPopup(
       html`
         <popup-note
@@ -456,8 +452,8 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
                 confirmButton: { text: i18next.t('button.confirm') },
                 cancelButton: { text: i18next.t('button.cancel') }
               })
+
               if (!result.value) {
-                cb()
                 return
               }
 
@@ -480,8 +476,6 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
               }
             } catch (e) {
               this._showToast(e)
-            } finally {
-              cb()
             }
           }}"
         ></popup-note>

@@ -81,12 +81,10 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
         },
         {
           title: i18next.t('button.reject'),
-          type: 'transaction',
           action: this._rejectReleaseOrder.bind(this)
         },
         {
           title: i18next.t('button.receive'),
-          type: 'transaction',
           action: this._receiveReleaseOrder.bind(this)
         }
       ]
@@ -457,7 +455,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
     }
   }
 
-  async _receiveReleaseOrder(cb) {
+  async _receiveReleaseOrder() {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
@@ -465,8 +463,8 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
+
       if (!result.value) {
-        cb()
         return
       }
 
@@ -489,12 +487,10 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 
-  async _rejectReleaseOrder(cb) {
+  async _rejectReleaseOrder() {
     const popup = openPopup(
       html`
         <popup-note
@@ -508,8 +504,8 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
                 confirmButton: { text: i18next.t('button.confirm') },
                 cancelButton: { text: i18next.t('button.cancel') }
               })
+
               if (!result.value) {
-                cb()
                 return
               }
 
@@ -532,8 +528,6 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
               }
             } catch (e) {
               this._showToast(e)
-            } finally {
-              cb()
             }
           }}"
         ></popup-note>

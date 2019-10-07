@@ -69,7 +69,6 @@ class EditCollectionOrder extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.confirm'),
-          type: 'transaction',
           action: this._editCollectionOrder.bind(this)
         }
       ]
@@ -191,7 +190,7 @@ class EditCollectionOrder extends localize(i18next)(PageView) {
     return date.toISOString().split('T')[0]
   }
 
-  async _editCollectionOrder(cb) {
+  async _editCollectionOrder() {
     try {
       this._validateForm()
 
@@ -201,8 +200,8 @@ class EditCollectionOrder extends localize(i18next)(PageView) {
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
+
       if (!result.value) {
-        cb()
         return
       }
 
@@ -228,8 +227,6 @@ class EditCollectionOrder extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
-    } finally {
-      cb()
     }
   }
 

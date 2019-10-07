@@ -74,7 +74,6 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.create'),
-          type: 'transaction',
           action: this._generateTransportOrder.bind(this)
         }
       ]
@@ -240,7 +239,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
     return date.toISOString().split('T')[0]
   }
 
-  async _generateTransportOrder(cb) {
+  async _generateTransportOrder() {
     if (this._orderType == ORDER_TYPES.COLLECTION.value) {
       try {
         this._validateForm()
@@ -251,8 +250,8 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
           confirmButton: { text: i18next.t('button.confirm') },
           cancelButton: { text: i18next.t('button.cancel') }
         })
+
         if (!result.value) {
-          cb()
           return
         }
 
@@ -283,8 +282,6 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
         }
       } catch (e) {
         this._showToast(e)
-      } finally {
-        cb()
       }
     } else if (this._orderType == ORDER_TYPES.DELIVERY.value) {
       try {
@@ -296,8 +293,8 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
           confirmButton: { text: i18next.t('button.confirm') },
           cancelButton: { text: i18next.t('button.cancel') }
         })
+
         if (!result.value) {
-          cb()
           return
         }
 
@@ -329,8 +326,6 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
         }
       } catch (e) {
         this._showToast(e)
-      } finally {
-        cb()
       }
     }
   }
