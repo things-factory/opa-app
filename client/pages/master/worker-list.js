@@ -1,3 +1,4 @@
+import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -7,6 +8,7 @@ import { openPopup } from '@things-factory/layout-base'
 import { css, html } from 'lit-element'
 import '../components/import-pop-up'
 import { CustomAlert } from '../../utils/custom-alert'
+import { O_WRONLY } from 'constants'
 
 class WorkerList extends localize(i18next)(PageView) {
   static get styles() {
@@ -87,7 +89,8 @@ class WorkerList extends localize(i18next)(PageView) {
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    this._workerTypes = await getCodeByName('WORKER_TYPES')
     this._searchFields = [
       {
         label: i18next.t('field.name'),
@@ -98,8 +101,17 @@ class WorkerList extends localize(i18next)(PageView) {
       {
         label: i18next.t('field.type'),
         name: 'type',
-        type: 'text',
-        props: { searchOper: 'like' }
+        type: 'select',
+        options: [
+          { value: '' },
+          ...this._workerTypes.map(_workerType => {
+            return {
+              name: _workerType.name,
+              value: _workerType.name
+            }
+          })
+        ],
+        props: { searchOper: 'eq' }
       }
     ]
 
