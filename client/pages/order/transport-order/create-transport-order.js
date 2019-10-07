@@ -18,7 +18,8 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
       _loadTypes: Array,
       _orderType: String,
       _cargoType: String,
-      _deliveryCargo: String
+      _deliveryCargo: String,
+      _collectionCargo: String
     }
   }
 
@@ -122,7 +123,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
               ?required="${this._orderType == ORDER_TYPES.COLLECTION.value}"
             />
 
-            <label>${i18next.t('label.destination')}</label>
+            <label>${i18next.t('label.collect_from')}</label>
             <input name="from" ?required="${this._orderType == ORDER_TYPES.COLLECTION.value}" />
 
             <label>${i18next.t('label.ref_no')}</label>
@@ -145,12 +146,11 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <input
               ?hidden="${this._collectionCargo !== CARGO_TYPES.OTHERS.value}"
               ?required="${this._collectionCargo == CARGO_TYPES.OTHERS.value}"
-              name="cargoType"
-              type="text"
+              name="otherCargoType"
             />
 
             <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
-            <input name="loadType" type="number" min="0" />
+            <input name="loadWeight" type="number" min="0" />
 
             <input name="urgency" type="checkbox" />
             <label>${i18next.t('label.urgent_collection')}</label>
@@ -176,7 +176,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
               ?required="${this._orderType == ORDER_TYPES.DELIVERY.value}"
             />
 
-            <label>${i18next.t('label.destination')}</label>
+            <label>${i18next.t('label.deliver_to')}</label>
             <input name="to" ?required="${this._orderType == ORDER_TYPES.DELIVERY.value}" />
 
             <label>${i18next.t('label.ref_no')}</label>
@@ -199,12 +199,11 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <input
               ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
               ?required="${this._deliveryCargo == CARGO_TYPES.OTHERS.value}"
-              name="cargoType"
-              type="text"
+              name="otherCargo"
             />
 
             <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
-            <input name="loadType" type="number" min="0" />
+            <input name="loadWeight" type="number" min="0" />
 
             <input name="urgency" type="checkbox" />
             <label>${i18next.t('label.urgent_delivery')}</label>

@@ -221,7 +221,6 @@ class CollectionOrderList extends localize(i18next)(PageView) {
               name
               from
               telNo
-              loadType
               transportDriver {
                 id
                 name
