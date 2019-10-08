@@ -7,6 +7,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
 import { ORDER_TYPES } from '../constants/order'
+import '../../components/file-uploader'
 
 class CreateTransportOrder extends localize(i18next)(PageView) {
   static get properties() {
@@ -61,43 +62,6 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
 
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
-        }
-        [fileupload] {
-          padding: 15px;
-        }
-        [fileupload] label {
-          font: normal 14px var(--theme-font);
-          color: var(--secondary-color);
-          text-transform: capitalize;
-        }
-        [fileupload-content] {
-          text-align: center;
-          border: 1px solid rgba(0, 0, 0, 0.1);
-          background-color: rgba(0, 0, 0, 0.1);
-        }
-        [fileupload-content] > * {
-          display: block;
-          margin: auto;
-        }
-        [fileupload-content] input{
-          position:relative;
-          z-index:1;
-          width:150px;
-          opacity:0;
-        }
-        [fileupload-content] button{
-          position:relative;
-          margin-top:-20px;
-          padding:10px 20px
-          z-index:0;
-          width:150px;
-        }
-        [fileupload-content] ul{
-          max-width:500px;
-        }
-        [fileupload-content] ul mwc-icon{
-          font:normal 14px var(--mdc-icon-font, "Material Icons");
-          float:right
         }
       `
     ]
@@ -171,12 +135,11 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.urgent_collection')}</label>
 
             <label>${i18next.t('label.upload_co')}</label>
-            <input
+            <file-uploader
               id="coUpload"
               name="attachments"
-              type="file"
               ?required="${this._orderType == ORDER_TYPES.COLLECTION.value}"
-            />
+            ></file-uploader>
           </fieldset>
         </form>
       </div>
@@ -212,36 +175,13 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.urgent_delivery')}</label>
 
             <label>${i18next.t('label.upload_do')}</label>
-            <input
+            <file-uploader
               id="doUpload"
               name="attachments"
-              type="file"
               ?required="${this._orderType == ORDER_TYPES.DELIVERY.value}"
-            />
+            ></file-uploader>
           </fieldset>
         </form>
-
-        <div fileupload>
-          <label>${i18next.t('label.upload_do')}</label>
-          <div fileupload-content>
-            <mwc-icon>post_add</mwc-icon>
-            <span>add file or drop files here</span>
-            <input
-              id="doUpload"
-              name="attachments"
-              type="file"
-              ?required="${this._orderType == ORDER_TYPES.DELIVERY.value}"
-            />
-            <button>upload file</button>
-            <ul>
-              <li>
-                - file name.fileformat
-                <mwc-icon>delete_outline</mwc-icon>
-                <mwc-icon>save_alt</mwc-icon>
-              </li>
-            </ul>
-          </div>
-        </div>
       </div>
     `
   }
