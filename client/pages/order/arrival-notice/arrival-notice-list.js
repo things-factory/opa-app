@@ -160,20 +160,20 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           width: 150
         },
         {
-          type: 'string',
-          name: 'deliveryOrderNo',
-          header: i18next.t('field.do_no'),
+          type: 'boolean',
+          name: 'importCargo',
+          header: i18next.t('field.import_cargo'),
           record: { align: 'center' },
           sortable: true,
           width: 200
         },
         {
-          type: 'object',
-          name: 'collectionOrder',
-          header: i18next.t('field.co_no'),
+          type: 'boolean',
+          name: 'ownTransport',
+          header: i18next.t('field.own_transport'),
           record: { align: 'center' },
           sortable: true,
-          width: 200
+          width: 100
         },
         {
           type: 'date',
@@ -225,13 +225,8 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
               name
               etaDate
               status
-              collectionOrder {
-                id
-                name
-                description
-                collectionDate
-              }
-              deliveryOrderNo
+              ownTransport
+              importCargo
               updatedAt
               updater {
                 id
@@ -248,9 +243,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
     if (!response.errors) {
       return {
         total: response.data.arrivalNotices.total || 0,
-        records: (response.data.arrivalNotices.items || []).map(item => {
-          return { ...item, collectionDate: (item.collectionOrder && item.collectionOrder.collectionDate) || '' }
-        })
+        records: response.data.arrivalNotices.items || []
       }
     }
   }

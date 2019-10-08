@@ -17,8 +17,8 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
        */
       _ganNo: String,
       _ownTransport: Boolean,
+      _importCargo: Boolean,
       _status: String,
-      _path: String,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -87,11 +87,17 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
           <label ?hidden="${!this._importedOrder}">${i18next.t('label.container_no')}</label>
           <input name="containerNo" ?hidden="${!this._importedOrder}" readonly />
 
-          <label>${i18next.t('label.do_no')}</label>
-          <input name="deliveryOrderNo" readonly />
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
+          <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" readonly />
+
+          <label ?hidden="${this._importedOrder || !this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
+          <input ?hidden="${this._importedOrder || !this._ownTransport}" name="truckNo" readonly />
 
           <label>${i18next.t('label.eta_date')}</label>
           <input name="etaDate" type="date" readonly />
+
+          <input id="importedOrder" type="checkbox" name="importCargo" ?checked="${this._importedOrder}" readonly />
+          <label for="importedOrder">${i18next.t('label.import_cargo')}</label>
 
           <input
             id="ownTransport"
@@ -102,9 +108,6 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             disabled
           />
           <label>${i18next.t('label.own_transport')}</label>
-
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
-          <input ?hidden="${!this._ownTransport}" name="truckNo" readonly />
         </fieldset>
 
         <label>${i18next.t('label.status')}</label>
@@ -139,34 +142,6 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
           .data="${this.vasData}"
         ></data-grist>
       </div>
-
-      <div class="co-form-container" ?hidden="${this._ownTransport}">
-        <form name="collectionOrder" class="multi-column-form">
-          <fieldset>
-            <legend>${i18next.t('title.collection_order')}</legend>
-            <label>${i18next.t('label.issued_co_no')}</label>
-            <input name="name" readonly />
-
-            <label>${i18next.t('label.collection_date')}</label>
-            <input name="collectionDate" type="date" readonly />
-
-            <label>${i18next.t('label.destination')}</label>
-            <input name="from" readonly />
-
-            <label>${i18next.t('label.cargo_type')}</label>
-            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
-
-            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
-            <input name="loadWeight" type="number" min="0" readonly />
-
-            <input name="urgency" type="checkbox" readonly />
-            <label>${i18next.t('label.urgent_collection')}</label>
-
-            <label>${i18next.t('label.download_co')}</label>
-            <a href="/attachment/${this._path}" target="_blank"><mwc-icon>cloud_download</mwc-icon></a>
-          </fieldset>
-        </form>
-      </div>
     `
   }
 
@@ -175,15 +150,11 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     this.productData = { records: [] }
     this.vasData = { records: [] }
     this._ownTransport = true
-    this._path = ''
+    this._importCargo = false
   }
 
   get arrivalNoticeForm() {
     return this.shadowRoot.querySelector('form[name=arrivalNotice]')
-  }
-
-  get collectionOrderForm() {
-    return this.shadowRoot.querySelector('form[name=collectionOrder]')
   }
 
   get productGrist() {
@@ -316,6 +287,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             deliveryOrderNo
             status
             truckNo
+            importCargo
             orderProducts {
               batchId
               product {
@@ -337,22 +309,6 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
               batchId
               remark
             }
-            collectionOrder {
-              name
-              collectionDate
-              refNo
-              from
-              loadWeight
-              cargoType
-              urgency
-              status
-              attachments {
-                id
-                name
-                refBy
-                path
-              }
-            }   
           }
         }
       `
@@ -360,18 +316,14 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const arrivalNotice = response.data.arrivalNotice
-      const collectionOrder = arrivalNotice.collectionOrder
       const orderProducts = arrivalNotice.orderProducts
       const orderVass = arrivalNotice.orderVass
 
       this._ownTransport = arrivalNotice.ownTransport
+      this._importCargo = arrivalNotice.importCargo
       this._status = arrivalNotice.status
-      if (collectionOrder) {
-        this._path = collectionOrder.attachments[0].path
-      }
       this._fillupANForm(arrivalNotice)
 
-      if (!this._ownTransport) this._fillupCOForm(collectionOrder)
       this.productData = { records: orderProducts }
       this.vasData = { records: orderVass }
     }
@@ -404,16 +356,12 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     this._fillupForm(this.arrivalNoticeForm, data)
   }
 
-  _fillupCOForm(data) {
-    this._fillupForm(this.collectionOrderForm, data)
-  }
-
   _fillupForm(form, data) {
     for (let key in data) {
       Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
-        } else if (field.name === key && field.type !== 'file') {
+        } else if (field.name === key) {
           field.value = data[key]
         }
       })

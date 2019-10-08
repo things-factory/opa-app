@@ -16,7 +16,8 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
       _status: String,
       _assignedDriverName: String,
       _assignedVehicleName: String,
-      _path: String
+      _path: String,
+      _fileName: String
     }
   }
 
@@ -76,6 +77,7 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
   constructor() {
     super()
     this._path = ''
+    this._fileName = ''
   }
 
   render() {
@@ -112,7 +114,7 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
             <input name=${this._assignedDriverName} value=${this._assignedDriverName} readonly />
 
             <label>${i18next.t('label.download_do')}</label>
-            <a href="/attachment/${this._path}" download><mwc-icon>cloud_download</mwc-icon></a>
+            <a href="/attachment/${this._path}" download=${this._fileName}><mwc-icon>cloud_download</mwc-icon></a>
           </fieldset>
         </form>
       </div>
@@ -176,6 +178,7 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
       const vehicle = deliveryOrder.transportVehicle || { name: '' }
 
       this._path = deliveryOrder.attachments[0].path
+      this._fileName = deliveryOrder.attachments[0].name
       this._assignedDriverName = driver.name
       this._assignedVehicleName = vehicle.name
       this._status = deliveryOrder.status

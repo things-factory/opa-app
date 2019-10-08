@@ -90,24 +90,23 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           <label ?hidden="${!this._importedOrder}">${i18next.t('label.container_no')}</label>
           <input name="containerNo" ?hidden="${!this._importedOrder}" />
 
-          <label>${i18next.t('label.do_no')}</label>
-          <input name="deliveryOrderNo" />
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
+          <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" />
+
+          <label ?hidden="${this._importedOrder || !this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
+          <input
+            ?hidden="${this._importedOrder || !this._ownTransport}"
+            name="truckNo"
+            ?required="${this._ownTransport}"
+          />
 
           <label>${i18next.t('label.eta_date')}</label>
-          <input
-            name="etaDate"
-            type="date"
-            min="${this._getStdDate()}"
-            required
-            @change="${e => {
-              this._collectionDateInput.setAttribute('max', e.currentTarget.value)
-            }}"
-          />
+          <input name="etaDate" type="date" min="${this._getStdDate()}" required />
 
           <input
             id="importedOrder"
             type="checkbox"
-            name="importedOrder"
+            name="importCargo"
             ?checked="${this._importedOrder}"
             @change="${e => {
               this._importedOrder = e.currentTarget.checked
@@ -128,9 +127,6 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             ?hidden="${this._importedOrder}"
           />
           <label for="ownTransport" ?hidden="${this._importedOrder}">${i18next.t('label.own_transport')}</label>
-
-          <label ?hidden="${this._importedOrder}">${i18next.t('label.transport_reg_no')}</label>
-          <input ?hidden="${this._importedOrder}" name="truckNo" ?required="${this._ownTransport}" />
         </fieldset>
       </form>
 
@@ -156,34 +152,6 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           .data="${this.vasData}"
         ></data-grist>
       </div>
-
-      <div class="co-form-container" ?hidden="${this._importedOrder || (!this._importedOrder && this._ownTransport)}">
-        <form name="collectionOrder" class="multi-column-form">
-          <fieldset>
-            <legend>${i18next.t('title.collection_order')}</legend>
-            <label>${i18next.t('label.issued_co_no')}</label>
-            <input name="name" ?required="${!this._ownTransport}" />
-
-            <label>${i18next.t('label.collection_date')}</label>
-            <input name="collectionDate" type="date" min="${this._getStdDate()}" ?required="${!this._ownTransport}" />
-
-            <label>${i18next.t('label.collect_from')}</label>
-            <input name="from" ?required="${!this._ownTransport}" />
-
-            <label>${i18next.t('label.cargo_type')}</label>
-            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
-
-            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
-            <input name="loadWeight" type="number" min="0" ?required="${!this._ownTransport}" />
-
-            <input name="urgency" type="checkbox" ?required="${!this._ownTransport}" />
-            <label>${i18next.t('label.urgent_collection')}</label>
-
-            <label>${i18next.t('label.upload_co')}</label>
-            <input name="attachments" type="file" ?required="${!this._ownTransport}" />
-          </fieldset>
-        </form>
-      </div>
     `
   }
 
@@ -200,16 +168,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('form[name=arrivalNotice]')
   }
 
-  get collectionOrderForm() {
-    return this.shadowRoot.querySelector('form[name=collectionOrder]')
-  }
-
   get _ownTransportInput() {
     return this.shadowRoot.querySelector('input[name=ownTransport]')
-  }
-
-  get _collectionDateInput() {
-    return this.shadowRoot.querySelector('input[name=collectionDate]')
   }
 
   get productGrist() {
@@ -388,7 +348,6 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       let args = {
         arrivalNotice: { ...this._getArrivalNotice(), ownTransport: this._importedOrder ? true : this._ownTransport }
       }
-      if (!this._importedOrder && !this._ownTransport) args.collectionOrder = this._getCollectionOrder()
 
       const response = await client.query({
         query: gql`
@@ -413,12 +372,6 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
   _validateForm() {
     if (!this.arrivalNoticeForm.checkValidity()) throw new Error('text.arrival_notice_form_invalid')
-
-    // arrival notice and collection order
-    //    - condition: not imported and not own transport
-    if (!this._importedOrder && !this._ownTransport) {
-      if (!this.collectionOrderForm.checkValidity()) throw new Error('text.collection_order_form_invalid')
-    }
   }
 
   _validateProducts() {
@@ -506,24 +459,15 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     return arrivalNotice
   }
 
-  _getCollectionOrder() {
-    return this._serializeForm(this.collectionOrderForm)
-  }
-
   _clearView() {
     this.arrivalNoticeForm.reset()
-    this.collectionOrderForm.reset()
   }
 
   _serializeForm(form) {
     let obj = {}
     Array.from(form.querySelectorAll('input, select')).forEach(field => {
       if (!field.hasAttribute('hidden') && field.value) {
-        if (field.type === 'number' && field.name === 'loadWeight') {
-          obj[field.name] = parseFloat(field.value)
-        } else {
-          obj[field.name] = field.type === 'checkbox' ? field.checked : field.value
-        }
+        obj[field.name] = field.type === 'checkbox' ? field.checked : field.value
       }
     })
 

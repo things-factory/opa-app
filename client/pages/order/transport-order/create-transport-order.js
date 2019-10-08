@@ -6,7 +6,7 @@ import { client, gqlBuilder, navigate, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
-import { ORDER_TYPES } from '../constants/order'
+import { ORDER_TYPES, ORDER_STATUS } from '../constants/order'
 
 class CreateTransportOrder extends localize(i18next)(PageView) {
   static get properties() {
@@ -16,7 +16,9 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
       _transportOptions: Array,
       _orderType: String,
       _deliveryCargo: String,
-      _collectionCargo: String
+      _collectionCargo: String,
+      _arrivalNotices: Object,
+      _releaseOrders: Object
     }
   }
 
@@ -84,6 +86,8 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
     this._collectionCargo = null
     this._deliveryCargo = null
     this._transportOptions = []
+    this._arrivalNotices = {}
+    this._releaseOrders = {}
   }
 
   render() {
@@ -121,11 +125,19 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.collect_from')}</label>
             <input name="from" ?required="${this._orderType == ORDER_TYPES.COLLECTION.value}" />
 
-            <label>${i18next.t('label.ref_no')}</label>
-            <input name="refNo" />
+            <label>${i18next.t('label.gan_ref_if_any')}</label>
+            <select name="refNo">
+              <option value="">-- Please Select GAN --</option>
+              ${Object.keys(this._arrivalNotices).map(key => {
+                const gan = this._arrivalNotices[key]
+                return html`
+                  <option value="${gan.name}">${gan.name}</option>
+                `
+              })}
+            </select>
 
             <label>${i18next.t('label.cargo_type')}</label>
-            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
+            <input name="cargoType" placeholder="${i18next.t('label.bag_crates_carton_ibc_drums_pails')}" />
 
             <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
             <input name="loadWeight" type="number" min="0" />
@@ -162,11 +174,19 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.deliver_to')}</label>
             <input name="to" ?required="${this._orderType == ORDER_TYPES.DELIVERY.value}" />
 
-            <label>${i18next.t('label.ref_no')}</label>
-            <input name="refNo" />
+            <label>${i18next.t('label.release_order_ref_if_any')}</label>
+            <select name="refNo">
+              <option value="">-- Please Select Release Order --</option>
+              ${Object.keys(this._releaseOrders).map(key => {
+                const ro = this._releaseOrders[key]
+                return html`
+                  <option value="${ro.name}">${ro.name}</option>
+                `
+              })}
+            </select>
 
             <label>${i18next.t('label.cargo_type')}</label>
-            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
+            <input name="cargoType" placeholder="${i18next.t('label.bag_crates_carton_ibc_drums_pails')}" />
 
             <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
             <input name="loadWeight" type="number" min="0" />
@@ -185,6 +205,13 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
         </form>
       </div>
     `
+  }
+
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
+      this._fetchGAN()
+      this._fetchRO()
+    }
   }
 
   get collectionOrderForm() {
@@ -211,6 +238,90 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
     let date = new Date()
     date.setDate(date.getDate() + 1)
     return date.toISOString().split('T')[0]
+  }
+
+  async _fetchGAN() {
+    const response = await client.query({
+      query: gql`
+        query {
+          arrivalNotices(${gqlBuilder.buildArgs({
+            filters: [
+              {
+                name: 'status',
+                operator: 'eq',
+                value: ORDER_STATUS.PENDING.value
+              },
+              {
+                name: 'ownTransport',
+                operator: 'eq',
+                value: false
+              },
+              {
+                name: 'importCargo',
+                operator: 'eq',
+                value: false
+              }
+            ]
+          })}) {
+            items {
+              id
+              name
+              description
+              ownTransport
+              importCargo
+              status
+            }
+            total
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      this._arrivalNotices = response.data.arrivalNotices.items || {}
+    }
+  }
+
+  async _fetchRO() {
+    const response = await client.query({
+      query: gql`
+        query {
+          releaseGoods(${gqlBuilder.buildArgs({
+            filters: [
+              {
+                name: 'status',
+                operator: 'eq',
+                value: ORDER_STATUS.PENDING.value
+              },
+              {
+                name: 'ownTransport',
+                operator: 'eq',
+                value: false
+              },
+              {
+                name: 'exportOption',
+                operator: 'eq',
+                value: false
+              }
+            ]
+          })}) {
+            items {
+              id
+              name
+              description
+              ownTransport
+              exportOption
+              status
+            }
+            total
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      this._releaseOrders = response.data.releaseGoods.items || {}
+    }
   }
 
   async _generateTransportOrder() {

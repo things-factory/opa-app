@@ -14,7 +14,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
     return {
       _ganNo: String,
       _ownTransport: Boolean,
-      _path: String,
+      _importCargo: Boolean,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -102,14 +102,10 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
           <label>${i18next.t('label.eta_date')}</label>
           <input name="etaDate" type="date" readonly />
 
-          <input
-            id="ownTransport"
-            type="checkbox"
-            name="ownTransport"
-            ?checked="${this._ownTransport}"
-            @change="${e => (this._ownTransport = e.currentTarget.checked)}"
-            disabled
-          />
+          <input id="importCargo" type="checkbox" name="importCargo" ?checked="${this._importCargo}" disabled />
+          <label>${i18next.t('label.import_cargo')}</label>
+
+          <input id="ownTransport" type="checkbox" name="ownTransport" ?checked="${this._ownTransport}" disabled />
           <label>${i18next.t('label.own_transport')}</label>
 
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
@@ -148,34 +144,6 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
           .data="${this.vasData}"
         ></data-grist>
       </div>
-
-      <div class="co-form-container" ?hidden="${this._ownTransport}">
-        <form name="collectionOrder" class="multi-column-form">
-          <fieldset>
-            <legend>${i18next.t('title.collection_order')}</legend>
-            <label>${i18next.t('label.issued_co_no')}</label>
-            <input name="name" readonly />
-
-            <label>${i18next.t('label.collection_date')}</label>
-            <input name="collectionDate" type="date" readonly />
-
-            <label>${i18next.t('label.destination')}</label>
-            <input name="from" readonly />
-
-            <label>${i18next.t('label.cargo_type')}</label>
-            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
-
-            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
-            <input name="loadWeight" type="number" min="0" readonly />
-
-            <input name="urgency" type="checkbox" readonly />
-            <label>${i18next.t('label.urgent_collection')}</label>
-
-            <label>${i18next.t('label.download_co')}</label>
-            <a href="/attachment/${this._path}" target="_blank"><mwc-icon>cloud_download</mwc-icon></a>
-          </fieldset>
-        </form>
-      </div>
     `
   }
 
@@ -185,23 +153,14 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
     this.vasData = { records: [] }
     this._importedOrder = false
     this._ownTransport = true
-    this._path = ''
   }
 
   get arrivalNoticeForm() {
     return this.shadowRoot.querySelector('form[name=arrivalNotice]')
   }
 
-  get collectionOrderForm() {
-    return this.shadowRoot.querySelector('form[name=collectionOrder]')
-  }
-
   get _ownTransportInput() {
     return this.shadowRoot.querySelector('input[name=ownTransport]')
-  }
-
-  get _collectionDateInput() {
-    return this.shadowRoot.querySelector('input[name=collectionDate]')
   }
 
   get productGrist() {
@@ -328,6 +287,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
             etaDate
             deliveryOrderNo
             status
+            importCargo
             truckNo
             orderProducts {
               batchId
@@ -350,22 +310,6 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
               batchId
               remark
             }
-            collectionOrder {
-              name
-              collectionDate
-              refNo
-              from
-              loadWeight
-              cargoType
-              urgency
-              status
-              attachments {
-                id
-                name
-                refBy
-                path
-              }
-            }   
           }
         }
       `
@@ -373,14 +317,11 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const arrivalNotice = response.data.arrivalNotice
-      const collectionOrder = arrivalNotice.collectionOrder
       const orderProducts = arrivalNotice.orderProducts
       const orderVass = arrivalNotice.orderVass
 
       this._ownTransport = arrivalNotice.ownTransport
-      if (collectionOrder) {
-        this._path = collectionOrder.attachments[0].path
-      }
+      this._importCargo = arrivalNotice.importCargo
       this._status = arrivalNotice.status
       this._fillupANForm(arrivalNotice)
 
@@ -392,10 +333,6 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
 
   _fillupANForm(data) {
     this._fillupForm(this.arrivalNoticeForm, data)
-  }
-
-  _fillupCOForm(data) {
-    this._fillupForm(this.collectionOrderForm, data)
   }
 
   _fillupForm(form, data) {

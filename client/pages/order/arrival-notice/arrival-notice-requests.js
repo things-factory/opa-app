@@ -172,17 +172,9 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           width: 200
         },
         {
-          type: 'string',
-          name: 'deliveryOrderNo',
-          header: i18next.t('field.delivery_order_no'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 200
-        },
-        {
-          type: 'string',
-          name: 'truckNo',
-          header: i18next.t('field.truck_no'),
+          type: 'boolean',
+          name: 'importCargo',
+          header: i18next.t('field.import_cargo'),
           record: { align: 'center' },
           sortable: true,
           width: 200
@@ -194,14 +186,6 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           record: { align: 'center' },
           sortable: true,
           width: 150
-        },
-        {
-          type: 'object',
-          name: 'collectionOrder',
-          header: i18next.t('field.co_no'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 200
         },
         {
           type: 'datetime',
@@ -250,14 +234,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
               etaDate
               status
               ownTransport
-              deliveryOrderNo
-              truckNo
-              collectionOrder {
-                id
-                name
-                description
-                collectionDate
-              }
+              importCargo
               updatedAt
               updater {
                 name
