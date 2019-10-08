@@ -6,68 +6,87 @@ export class FileUploader extends LitElement {
     return [
       css`
         :host {
-          padding: 15px;
-        }
-
-        label {
-          font: normal 14px var(--theme-font);
+          border-radius: var(--border-radius);
+          text-align: center;
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          background-color: #f4f7fb;
+          padding-bottom: 5px !important;
+          font: normal 12px/20px var(--theme-font) !important;
           color: var(--secondary-color);
           text-transform: capitalize;
         }
-        
-        [fileupload-content] {
-          text-align: center;
-          border: 1px solid rgba(0, 0, 0, 0.1);
-          background-color: rgba(0, 0, 0, 0.1);
-        }
-        
+
         :host > * {
           display: block;
           margin: auto;
         }
-        
-        input{
-          position:relative;
-          z-index:1;
-          width:150px;
-          opacity:0;
+        :host > mwc-icon {
+          color: var(--primary-color);
         }
-        
-        button{
-          position:relative;
-          margin-top:-20px;
-          padding:10px 20px
-          z-index:0;
-          width:150px;
+        input {
+          position: relative;
+          z-index: 1;
+          width: 150px;
+          opacity: 0;
+          cursor: pointer;
         }
-        
-        ul{
-          max-width:500px;
+
+        button {
+          position: relative;
+          margin-top: -20px !important;
+          padding: 3px 20px;
+          z-index: 0;
+          width: 150px;
+          border: none;
+          border-radius: var(--border-radius);
+          background-color: var(--secondary-color);
+          color: #fff;
+          font: normal 12px var(--theme-font) !important;
+          text-transform: capitalize;
         }
-        
-        ul mwc-icon{
-          font:normal 14px var(--mdc-icon-font, "Material Icons");
-          float:right
+
+        ul {
+          max-width: 500px;
+          list-style: none;
+          padding: 0;
         }
-    `
+        li {
+          padding: 2px 5px 0px 5px;
+          border-bottom: 1px dotted rgba(0, 0, 0, 0.1);
+          text-align: left;
+        }
+        li mwc-icon {
+          margin: 2px 0 2px 5px;
+          float: right;
+          font: normal 15px var(--mdc-icon-font, 'Material Icons');
+          cursor: pointer;
+        }
+        li mwc-icon:hover,
+        li mwc-icon:active {
+          color: var(--primary-color);
+        }
+      `
     ]
   }
 
   render() {
     return html`
-      <div fileupload-content>
-        <mwc-icon>post_add</mwc-icon>
-        <span>add file or drop files here</span>
-        <input type="file" />
-        <button>upload file</button>
-        <ul>
-          <li>
-            - file name.fileformat
-            <mwc-icon>delete_outline</mwc-icon>
-            <mwc-icon>save_alt</mwc-icon>
-          </li>
-        </ul>
-      </div>
+      <mwc-icon>post_add</mwc-icon>
+      <span>add file or drop files here!</span>
+      <input type="file" />
+      <button>upload file</button>
+      <ul>
+        <li>
+          - file name.fileformat
+          <mwc-icon>delete_outline</mwc-icon>
+          <mwc-icon>save_alt</mwc-icon>
+        </li>
+        <li>
+          - file name.fileformat
+          <mwc-icon>delete_outline</mwc-icon>
+          <mwc-icon>save_alt</mwc-icon>
+        </li>
+      </ul>
     `
   }
 }
