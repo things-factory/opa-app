@@ -1,4 +1,3 @@
-import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -15,7 +14,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
     return {
       _ganNo: String,
       _ownTransport: Boolean,
-      _loadTypes: Array,
+      _path: String,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -94,8 +93,8 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       <form name="arrivalNotice" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.gan_no')}: ${this._ganNo}</legend>
-          <label>${i18next.t('label.container_no')}</label>
-          <input name="containerNo" readonly />
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.container_no')}</label>
+          <input name="containerNo" ?hidden="${this._ownTransport}" readonly />
 
           <label>${i18next.t('label.do_no')}</label>
           <input name="deliveryOrderNo" readonly />
@@ -163,18 +162,17 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
             <label>${i18next.t('label.destination')}</label>
             <input name="from" readonly />
 
-            <label>${i18next.t('label.load_type')}</label>
-            <select name="loadType" disabled>
-              <option value=""></option>
-              ${this._loadTypes.map(
-                loadType => html`
-                  <option value="${loadType.name}">${i18next.t(`label.${loadType.description}`)}</option>
-                `
-              )}
-            </select>
+            <label>${i18next.t('label.cargo_type')}</label>
+            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
 
-            <!--label>${i18next.t('label.document')}</label>
-            <input name="attiachment" type="file" ?required="${!this._ownTransport}" /-->
+            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
+            <input name="loadWeight" type="number" min="0" readonly />
+
+            <input name="urgency" type="checkbox" readonly />
+            <label>${i18next.t('label.urgent_collection')}</label>
+
+            <label>${i18next.t('label.download_co')}</label>
+            <a href="/attachment/${this._path}" target="_blank"><mwc-icon>cloud_download</mwc-icon></a>
           </fieldset>
         </form>
       </div>
@@ -187,7 +185,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
     this.vasData = { records: [] }
     this._importedOrder = false
     this._ownTransport = true
-    this._loadTypes = []
+    this._path = ''
   }
 
   get arrivalNoticeForm() {
@@ -212,10 +210,6 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
 
   get vasGrist() {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
-  }
-
-  async firstUpdated() {
-    this._loadTypes = await getCodeByName('LOAD_TYPES')
   }
 
   pageInitialized() {
@@ -358,9 +352,19 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
             }
             collectionOrder {
               name
-              from
-              loadType
               collectionDate
+              refNo
+              from
+              loadWeight
+              cargoType
+              urgency
+              status
+              attachments {
+                id
+                name
+                refBy
+                path
+              }
             }   
           }
         }
@@ -374,6 +378,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       const orderVass = arrivalNotice.orderVass
 
       this._ownTransport = arrivalNotice.ownTransport
+      this._path = collectionOrder.attachments[0].path
       this._status = arrivalNotice.status
       this._fillupANForm(arrivalNotice)
 
@@ -487,7 +492,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       }
     )
 
-    popup.onclosed = cb
+    popup.onclosed
   }
 
   _showToast({ type, message }) {

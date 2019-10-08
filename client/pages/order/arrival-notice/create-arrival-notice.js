@@ -1,4 +1,3 @@
-import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -18,7 +17,6 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       _ganNo: String,
       _importedOrder: Boolean,
       _ownTransport: Boolean,
-      _loadTypes: Array,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -89,8 +87,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       <form name="arrivalNotice" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.arrival_notice')}</legend>
-          <label>${i18next.t('label.container_no')}</label>
-          <input name="containerNo" />
+          <label ?hidden="${!this._importedOrder}">${i18next.t('label.container_no')}</label>
+          <input name="containerNo" ?hidden="${!this._importedOrder}" />
 
           <label>${i18next.t('label.do_no')}</label>
           <input name="deliveryOrderNo" />
@@ -119,7 +117,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
               }
             }}"
           />
-          <label for="importedOrder">${i18next.t('label.imported')}</label>
+          <label for="importedOrder">${i18next.t('label.import_cargo')}</label>
 
           <input
             id="ownTransport"
@@ -131,8 +129,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           />
           <label for="ownTransport" ?hidden="${this._importedOrder}">${i18next.t('label.own_transport')}</label>
 
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
-          <input ?hidden="${!this._ownTransport}" name="truckNo" ?required="${this._ownTransport}" />
+          <label ?hidden="${this._importedOrder}">${i18next.t('label.transport_reg_no')}</label>
+          <input ?hidden="${this._importedOrder}" name="truckNo" ?required="${this._ownTransport}" />
         </fieldset>
       </form>
 
@@ -169,21 +167,20 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             <label>${i18next.t('label.collection_date')}</label>
             <input name="collectionDate" type="date" min="${this._getStdDate()}" ?required="${!this._ownTransport}" />
 
-            <label>${i18next.t('label.destination')}</label>
+            <label>${i18next.t('label.collect_from')}</label>
             <input name="from" ?required="${!this._ownTransport}" />
 
-            <label>${i18next.t('label.load_type')}</label>
-            <select name="loadType" ?required="${!this._ownTransport}">
-              <option value=""></option>
-              ${this._loadTypes.map(
-                loadType => html`
-                  <option value="${loadType.name}">${i18next.t(`label.${loadType.description}`)}</option>
-                `
-              )}
-            </select>
+            <label>${i18next.t('label.cargo_type')}</label>
+            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
 
-            <!--label>${i18next.t('label.document')}</label>
-            <input name="attiachment" type="file" ?required="${!this._ownTransport}" /-->
+            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
+            <input name="loadWeight" type="number" min="0" ?required="${!this._ownTransport}" />
+
+            <input name="urgency" type="checkbox" ?required="${!this._ownTransport}" />
+            <label>${i18next.t('label.urgent_collection')}</label>
+
+            <label>${i18next.t('label.upload_co')}</label>
+            <input name="attachments" type="file" ?required="${!this._ownTransport}" />
           </fieldset>
         </form>
       </div>
@@ -196,7 +193,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     this.vasData = { records: [] }
     this._importedOrder = false
     this._ownTransport = true
-    this._loadTypes = []
+    this._orderType = null
   }
 
   get arrivalNoticeForm() {
@@ -221,10 +218,6 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
   get vasGrist() {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
-  }
-
-  async firstUpdated() {
-    this._loadTypes = await getCodeByName('LOAD_TYPES')
   }
 
   pageInitialized() {

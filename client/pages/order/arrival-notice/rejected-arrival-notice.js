@@ -4,13 +4,14 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { LOAD_TYPES, ORDER_STATUS } from '../constants/order'
+import { ORDER_STATUS } from '../constants/order'
 
 class RejectedArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _ganNo: String,
       _ownTransport: Boolean,
+      _path: String,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -76,76 +77,43 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
     }
   }
 
-  pageUpdated(changes) {
-    if (this.active && changes.resourceId) {
-      this._ganNo = changes.resourceId
-      this._fetchGAN()
-    }
-  }
-
-  get form() {
-    return this.shadowRoot.querySelector('form')
-  }
-
   render() {
     return html`
-      <form class="multi-column-form">
+      <form name="arrivalNotice" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.gan_no')}: ${this._ganNo}</legend>
-          <label>${i18next.t('label.container_no')}</label>
-          <input name="containerNo" disabled />
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.container_no')}</label>
+          <input name="containerNo" ?hidden="${this._ownTransport}" readonly />
 
-          <input type="checkbox" name="ownTransport" ?checked="${this._ownTransport}" disabled />
-          <label>${i18next.t('label.use_own_transport')}</label>
+          <label>${i18next.t('label.do_no')}</label>
+          <input name="deliveryOrderNo" readonly />
 
-          <!-- Show when userOwnTransport is true -->
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.collection_date')}</label>
-          <input ?hidden="${this._ownTransport}" name="collectionDateTime" type="datetime-local" disabled />
+          <label>${i18next.t('label.eta_date')}</label>
+          <input name="etaDate" type="date" readonly />
 
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.from')}</label>
-          <input ?hidden="${this._ownTransport}" name="from" disabled />
-
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.to')}</label>
-          <input ?hidden="${this._ownTransport}" name="to" disabled />
-
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.load_type')}</label>
-          <select ?hidden="${this._ownTransport}" name="loadType" disabled>
-            ${LOAD_TYPES.map(
-              loadType => html`
-                <option value="${loadType.value}">${i18next.t(`label.${loadType.name}`)}</option>
-              `
-            )}
-          </select>
-
-          <!-- Show when userOwnTransport option is false-->
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
-          <input ?hidden="${!this._ownTransport}" ?required="${this._ownTransport}" name="truckNo" disabled />
-
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.delivery_order_no')}</label>
-          <input ?hidden="${!this._ownTransport}" name="deliveryOrderNo" disabled />
-
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.eta_date')}</label>
           <input
-            ?hidden="${!this._ownTransport}"
-            ?required="${this._ownTransport}"
-            name="eta"
-            type="datetime-local"
+            id="ownTransport"
+            type="checkbox"
+            name="ownTransport"
+            ?checked="${this._ownTransport}"
+            @change="${e => (this._ownTransport = e.currentTarget.checked)}"
             disabled
           />
+          <label>${i18next.t('label.own_transport')}</label>
 
-          <label>${i18next.t('label.remark')}</label>
-          <textarea name="remark" disabled></textarea>
-
-          <label>${i18next.t('label.status')}</label>
-          <select name="status" disabled
-            >${Object.keys(ORDER_STATUS).map(key => {
-              const status = ORDER_STATUS[key]
-              return html`
-                <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option>
-              `
-            })}</select
-          >
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
+          <input ?hidden="${!this._ownTransport}" name="truckNo" readonly />
         </fieldset>
+
+        <label>${i18next.t('label.status')}</label>
+        <select name="status" disabled
+          >${Object.keys(ORDER_STATUS).map(key => {
+            const status = ORDER_STATUS[key]
+            return html`
+              <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option>
+            `
+          })}</select
+        >
       </form>
 
       <div class="grist">
@@ -169,7 +137,68 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
           .data="${this.vasData}"
         ></data-grist>
       </div>
+
+      <div class="co-form-container" ?hidden="${this._ownTransport}">
+        <form name="collectionOrder" class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.collection_order')}</legend>
+            <label>${i18next.t('label.issued_co_no')}</label>
+            <input name="name" readonly />
+
+            <label>${i18next.t('label.collection_date')}</label>
+            <input name="collectionDate" type="date" readonly />
+
+            <label>${i18next.t('label.destination')}</label>
+            <input name="from" readonly />
+
+            <label>${i18next.t('label.cargo_type')}</label>
+            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
+
+            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
+            <input name="loadWeight" type="number" min="0" readonly />
+
+            <input name="urgency" type="checkbox" readonly />
+            <label>${i18next.t('label.urgent_collection')}</label>
+
+            <label>${i18next.t('label.download_co')}</label>
+            <a href="/attachment/${this._path}" target="_blank"><mwc-icon>cloud_download</mwc-icon></a>
+          </fieldset>
+        </form>
+      </div>
     `
+  }
+
+  constructor() {
+    super()
+    this.productData = { records: [] }
+    this.vasData = { records: [] }
+    this._importedOrder = false
+    this._ownTransport = true
+    this._path = ''
+  }
+
+  get arrivalNoticeForm() {
+    return this.shadowRoot.querySelector('form[name=arrivalNotice]')
+  }
+
+  get collectionOrderForm() {
+    return this.shadowRoot.querySelector('form[name=collectionOrder]')
+  }
+
+  get _ownTransportInput() {
+    return this.shadowRoot.querySelector('input[name=ownTransport]')
+  }
+
+  get _collectionDateInput() {
+    return this.shadowRoot.querySelector('input[name=collectionDate]')
+  }
+
+  get productGrist() {
+    return this.shadowRoot.querySelector('data-grist#product-grist')
+  }
+
+  get vasGrist() {
+    return this.shadowRoot.querySelector('data-grist#vas-grist')
   }
 
   pageInitialized() {
@@ -182,54 +211,42 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_id'),
-          record: {
-            align: 'center',
-            options: { queryName: 'products' }
-          },
+          record: { align: 'center' },
           width: 150
         },
         {
           type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
-          record: {
-            align: 'center',
-            options: { queryName: 'products' }
-          },
+          record: { align: 'center', options: { queryName: 'products' } },
           width: 350
         },
         {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          width: 180
-        },
-        {
-          type: 'string',
+          type: 'code',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
-          record: { align: 'center' },
+          record: { align: 'center', codeName: 'PACKING_TYPES' },
           width: 150
         },
         {
           type: 'float',
           name: 'weight',
           header: i18next.t('field.weight'),
-          record: { align: 'right' },
+          record: { align: 'center' },
           width: 80
         },
         {
-          type: 'select',
+          type: 'code',
           name: 'unit',
           header: i18next.t('field.unit'),
-          record: { align: 'center', options: ['kg', 'g'] },
+          record: { align: 'center', codeName: 'WEIGHT_UNITS' },
           width: 80
         },
         {
           type: 'integer',
           name: 'packQty',
           header: i18next.t('field.pack_qty'),
-          record: { align: 'right' },
+          record: { align: 'center' },
           width: 80
         },
         {
@@ -258,32 +275,21 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
-          record: {
-            align: 'center',
-            options: { queryName: 'vass' }
-          },
+          record: { editable: true, align: 'center', options: { queryName: 'vass' } },
           width: 250
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          width: 180
         },
         {
           type: 'select',
           name: 'batchId',
           header: i18next.t('field.batch_id'),
-          record: {
-            align: 'center',
-            options: [i18next.t('label.all')]
-          },
+          record: { editable: true, align: 'center', options: ['', i18next.t('label.all')] },
           width: 150
         },
         {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
+          record: { editable: true, align: 'center' },
           width: 350
         }
       ]
@@ -291,46 +297,33 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
   }
 
   pageUpdated(changes) {
-    if (this.active && changes.has('_ganNo')) {
+    if (this.active && changes.resourceId) {
+      this._ganNo = changes.resourceId
       this._fetchGAN()
     }
   }
 
-  async fetchGAN() {
-    if (!this._ganNo) return
+  async _fetchGAN() {
+    this._status = ''
     const response = await client.query({
       query: gql`
         query {
           arrivalNotice(${gqlBuilder.buildArgs({
             name: this._ganNo
           })}) {
-            id
             name
             containerNo
             ownTransport
-            collectionDateTime
-            eta
-            from
-            to
-            loadType
-            truckNo
+            etaDate
             deliveryOrderNo
             status
-            remark
-            collectionOrder {
-              id
-              name
-              description
-            }
+            truckNo
             orderProducts {
-              id
               batchId
               product {
-                id
                 name
                 description
               }
-              description
               packingType
               weight
               unit
@@ -340,45 +333,65 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
             }
             orderVass {
               vas {
-                id
                 name
                 description
               }
-              description
               batchId
               remark
             }
+            collectionOrder {
+              name
+              collectionDate
+              refNo
+              from
+              loadWeight
+              cargoType
+              urgency
+              status
+              attachments {
+                id
+                name
+                refBy
+                path
+              }
+            }   
           }
         }
       `
     })
 
     if (!response.errors) {
-      this._ownTransport = response.data.arrivalNotice.ownTransport
-      this._fillupForm(response.data.arrivalNotice)
-      this.productData = {
-        ...this.productData,
-        records: response.data.arrivalNotice.orderProducts
-      }
+      const arrivalNotice = response.data.arrivalNotice
+      const collectionOrder = arrivalNotice.collectionOrder
+      const orderProducts = arrivalNotice.orderProducts
+      const orderVass = arrivalNotice.orderVass
 
-      this.vasData = {
-        ...this.vasData,
-        records: response.data.arrivalNotice.orderVass
-      }
+      this._ownTransport = arrivalNotice.ownTransport
+      this._path = collectionOrder.attachments[0].path
+      this._status = arrivalNotice.status
+      this._fillupANForm(arrivalNotice)
+
+      if (!this._ownTransport) this._fillupCOForm(collectionOrder)
+      this.productData = { records: orderProducts }
+      this.vasData = { records: orderVass }
     }
   }
 
-  _fillupForm(arrivalNotice) {
-    for (let key in arrivalNotice) {
-      Array.from(this.form.querySelectorAll('input, select, textarea')).forEach(field => {
+  _fillupANForm(data) {
+    this._fillupForm(this.arrivalNoticeForm, data)
+  }
+
+  _fillupCOForm(data) {
+    this._fillupForm(this.collectionOrderForm, data)
+  }
+
+  _fillupForm(form, data) {
+    for (let key in data) {
+      Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
-          field.checked = arrivalNotice[key]
-        } else if (field.name === key && field.type === 'datetime-local') {
-          const datetime = Number(arrivalNotice[key])
-          const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
-          field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
+          field.checked = data[key]
         } else if (field.name === key) {
-          field.value = arrivalNotice[key]
+          field.value = data[key]
         }
       })
     }
