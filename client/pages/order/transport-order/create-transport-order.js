@@ -7,7 +7,6 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
 import { ORDER_TYPES } from '../constants/order'
-import '../../components/file-uploader'
 
 class CreateTransportOrder extends localize(i18next)(PageView) {
   static get properties() {
@@ -135,12 +134,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.urgent_collection')}</label>
 
             <label>${i18next.t('label.upload_co')}</label>
-            <file-uploader
-              custom-input
-              id="coUpload"
-              name="attachments"
-              ?required="${this._orderType == ORDER_TYPES.COLLECTION.value}"
-            ></file-uploader>
+            <file-uploader custom-input id="coUpload" name="attachments"></file-uploader>
           </fieldset>
         </form>
       </div>
@@ -176,12 +170,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.urgent_delivery')}</label>
 
             <label>${i18next.t('label.upload_do')}</label>
-            <file-uploader
-              custom-input
-              id="doUpload"
-              name="attachments"
-              ?required="${this._orderType == ORDER_TYPES.DELIVERY.value}"
-            ></file-uploader>
+            <file-uploader custom-input id="doUpload" name="attachments"></file-uploader>
           </fieldset>
         </form>
       </div>
