@@ -175,47 +175,6 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
           .data="${this.vasData}"
         ></data-grist>
       </div>
-
-      <div class="do-form-container" ?hidden="${this._exportOption || (!this._exportOption && this._ownTransport)}">
-      <form name="deliveryOrder" class="multi-column-form">
-          <fieldset>
-            <legend>${i18next.t('title.delivery_order')}</legend>
-            <label>${i18next.t('label.issued_do_no')}</label>
-            <input name="name" ?required="${!this._ownTransport}" />
-
-            <label>${i18next.t('label.delivery_date')}</label>
-            <input
-              name="deliveryDate"
-              type="date"
-              min="${this._getStdDate()}"
-              ?required="${!this._ownTransport}"
-            />
-
-            <label>${i18next.t('label.deliver_to')}</label>
-            <input name="to" ?required="${!this._ownTransport}" />
-
-            <label>${i18next.t('label.ref_no')}</label>
-            <input name="refNo" />
-
-            <label>${i18next.t('label.cargo_type')}</label>
-            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
-
-            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
-            <input name="loadWeight" type="number" min="0" />
-
-            <input name="urgency" type="checkbox" />
-            <label>${i18next.t('label.urgent_delivery')}</label>
-
-            <label>${i18next.t('label.upload_do')}</label>
-            <input
-              id="doUpload"
-              name="attachments"
-              type="file"
-              ?required="${!this._ownTransport}"
-            />
-          </fieldset>
-        </form>
-      </div>
     `
   }
 
@@ -229,10 +188,6 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
 
   get releaseOrderForm() {
     return this.shadowRoot.querySelector('form[name=releaseOrder]')
-  }
-
-  get deliveryOrderForm() {
-    return this.shadowRoot.querySelector('form[name=deliveryOrder]')
   }
 
   get _conLeavingDateInput() {
@@ -435,7 +390,6 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
         releaseGood: { ...this._getReleaseOrder(), ownTransport: this._exportOption ? true : this._ownTransport }
       }
       if (this._exportOption && this._ownTransport) args.shippingOrder = this._getShippingOrder()
-      if (!this._exportOption && !this._ownTransport) args.deliveryOrder = this._getDeliveryOrder()
 
       const response = await client.query({
         query: gql`
@@ -464,12 +418,6 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     //    - condition: export is ticked and own transport
     if (this._exportOption && this._ownTransport) {
       if (!this.shippingOrderForm.checkValidity()) throw new Error('text.shipping_order_form_invalid')
-    }
-
-    // release order and delivery order
-    //    - condition: not imported and not own transport
-    if (!this._exportOption && !this._ownTransport) {
-      if (!this.deliveryOrderForm.checkValidity()) throw new Error('text.delivery_order_form_invalid')
     }
   }
 
@@ -560,19 +508,11 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     let obj = {}
     Array.from(form.querySelectorAll('input, select')).forEach(field => {
       if (!field.hasAttribute('hidden') && field.value) {
-        if (field.type === 'number' && field.name === 'loadWeight') {
-          obj[field.name] = parseFloat(field.value)
-        } else {
-          obj[field.name] = field.type === 'checkbox' ? field.checked : field.value
-        }
+        obj[field.name] = field.type === 'checkbox' ? field.checked : field.value
       }
     })
 
     return obj
-  }
-
-  _getDeliveryOrder() {
-    return this._serializeForm(this.deliveryOrderForm)
   }
 
   _getShippingOrder() {
@@ -581,7 +521,6 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
 
   _clearView() {
     this.releaseOrderForm.reset()
-    this.deliveryOrderForm.reset()
     this.shippingOrderForm.reset()
   }
 

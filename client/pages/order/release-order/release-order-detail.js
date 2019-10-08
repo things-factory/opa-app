@@ -156,43 +156,6 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
           .data="${this.vasData}"
         ></data-grist>
       </div>
-
-      <div class="do-form-container" ?hidden="${this._exportOption || (!this._exportOption && this._ownTransport)}">
-      <form name="deliveryOrder" class="multi-column-form">
-          <fieldset>
-            <legend>${i18next.t('title.delivery_order')}</legend>
-            <label>${i18next.t('label.issued_do_no')}</label>
-            <input name="name" readonly />
-
-            <label>${i18next.t('label.delivery_date')}</label>
-            <input name="deliveryDate" type="date" readonly />
-
-            <label>${i18next.t('label.destination')}</label>
-            <input name="to" readonly />
-
-            <label>${i18next.t('label.ref_no')}</label>
-            <input name="refNo" readonly />
-
-            <label>${i18next.t('label.cargo_type')}</label>
-            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
-
-            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
-            <input name="loadWeight" type="number" min="0" readonly />
-
-            <input name="urgency" type="checkbox" readonly />
-            <label>${i18next.t('label.urgent_delivery')}</label>
-
-            <label>${i18next.t('label.assigned_truck')}</label>
-            <input name=${this._assignedVehicleName} value=${this._assignedVehicleName} readonly />
-
-            <label>${i18next.t('label.assigned_driver')}</label>
-            <input name=${this._assignedDriverName} value=${this._assignedDriverName} readonly />
-
-            <label>${i18next.t('label.download_do')}</label>
-            <a href="/attachment/${this._path}" download><mwc-icon>cloud_download</mwc-icon></a>
-          </fieldset>
-        </form>
-      </div>
     `
   }
 
@@ -206,10 +169,6 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
 
   get releaseOrderForm() {
     return this.shadowRoot.querySelector('form[name=releaseOrder]')
-  }
-
-  get deliveryOrderForm() {
-    return this.shadowRoot.querySelector('form[name=deliveryOrder]')
   }
 
   get shippingOrderForm() {
@@ -377,23 +336,6 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
               containerArrivalDate
               shipName
             }
-            deliveryOrder {
-              id
-              name
-              deliveryDate
-              refNo
-              to
-              loadWeight
-              status
-              urgency
-              cargoType
-              attachments {
-                id
-                name
-                refBy
-                path
-              }
-            }
             orderVass {
               vas {
                 id
@@ -411,7 +353,6 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const releaseOrder = response.data.releaseGoodDetail
-      const deliveryOrder = releaseOrder.deliveryOrder
       const shippingOrder = releaseOrder.shippingOrder
       const orderInventories = releaseOrder.inventoryInfos
       const orderVass = releaseOrder.orderVass
@@ -423,13 +364,9 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         this._ownTransport = response.data.releaseGoodDetail.ownTransport
       }
       this._status = releaseOrder.status
-      if (deliveryOrder) {
-        this._path = deliveryOrder.attachments[0].path
-      }
 
       this._fillupRGForm(response.data.releaseGoodDetail)
       if (this._exportOption) this._fillupSOForm(shippingOrder)
-      if (!this._ownTransport) this._fillupDOForm(deliveryOrder)
 
       this.inventoryData = { records: orderInventories }
       this.vasData = { records: orderVass }
@@ -463,10 +400,6 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
     this._fillupForm(this.releaseOrderForm, data)
   }
 
-  _fillupDOForm(data) {
-    this._fillupForm(this.deliveryOrderForm, data)
-  }
-
   _fillupSOForm(data) {
     this._fillupForm(this.shippingOrderForm, data)
   }
@@ -476,7 +409,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
-        } else if (field.name === key && field.type !== 'file') {
+        } else if (field.name === key) {
           field.value = data[key]
         }
       })

@@ -212,6 +212,10 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('form[name=deliveryOrder]')
   }
 
+  get fileUploader() {
+    return this.shadowRoot.querySelector('file-uploader')
+  }
+
   get uploadCOAttachment() {
     return this.shadowRoot.querySelector('#coUpload')
   }
@@ -425,6 +429,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
   _clearView() {
     this.deliveryOrderForm.reset()
     this.collectionOrderForm.reset()
+    this.fileUploader.reset()
   }
 
   _serializeForm(form) {
