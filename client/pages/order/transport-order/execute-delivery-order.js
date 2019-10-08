@@ -1,4 +1,3 @@
-import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -7,7 +6,6 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
 import '../../popup-note'
-import { CARGO_TYPES } from '../constants/cargo'
 
 class ExecuteDeliveryOrder extends localize(i18next)(PageView) {
   static get properties() {
@@ -15,8 +13,6 @@ class ExecuteDeliveryOrder extends localize(i18next)(PageView) {
       _doNo: String,
       _status: String,
       _path: String,
-      _cargoTypes: Array,
-      _deliveryCargo: String,
       drivers: Array,
       vehicles: Array
     }
@@ -87,8 +83,6 @@ class ExecuteDeliveryOrder extends localize(i18next)(PageView) {
   constructor() {
     super()
     this._path = ''
-    this._cargoTypes = []
-    this._deliveryCargo = null
     this.drivers = []
     this.vehicles = []
   }
@@ -112,24 +106,7 @@ class ExecuteDeliveryOrder extends localize(i18next)(PageView) {
             <input name="refNo" readonly />
 
             <label>${i18next.t('label.cargo_type')}</label>
-            <select name="cargoType" disabled>
-              <option value=""></option>
-              ${this._cargoTypes.map(
-                cargoType => html`
-                  <option value="${cargoType.name}">${i18next.t(`label.${cargoType.description}`)}</option>
-                `
-              )}
-            </select>
-
-            <label ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
-              >${i18next.t('label.if_others_please_specify')}</label
-            >
-            <input
-              ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
-              ?required="${this._deliveryCargo == CARGO_TYPES.OTHERS.value}"
-              name="otherCargo"
-              readonly
-            />
+            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
 
             <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
             <input name="loadWeight" type="number" min="0" readonly />
@@ -175,10 +152,6 @@ class ExecuteDeliveryOrder extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('select#vehicle')
   }
 
-  async firstUpdated() {
-    this._cargoTypes = await getCodeByName('CARGO_TYPES')
-  }
-
   async pageUpdated(changes) {
     if (this.active) {
       this._doNo = changes.resourceId || this._doNo || ''
@@ -206,7 +179,6 @@ class ExecuteDeliveryOrder extends localize(i18next)(PageView) {
             status
             urgency
             cargoType
-            otherCargo
             attachments {
               id
               name
@@ -222,8 +194,6 @@ class ExecuteDeliveryOrder extends localize(i18next)(PageView) {
       const deliveryOrder = response.data.deliveryOrder
 
       this._path = deliveryOrder.attachments[0].path
-      this._deliveryCargo = deliveryOrder.cargoType
-
       this._status = deliveryOrder.status
       this._fillupDOForm(deliveryOrder)
     }

@@ -1,4 +1,3 @@
-import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -7,8 +6,8 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { ORDER_PRODUCT_STATUS, ORDER_TYPES } from '../constants/order'
 import { CustomAlert } from '../../../utils/custom-alert'
+import { ORDER_PRODUCT_STATUS, ORDER_TYPES } from '../constants/order'
 import './inventory-product-selector'
 
 class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
@@ -16,7 +15,6 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     return {
       _ownTransport: Boolean,
       _exportOption: Boolean,
-      _loadTypes: Array,
       inventoryGristConfig: Object,
       vasGristConfig: Object,
       inventoryData: Object,
@@ -179,33 +177,42 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       </div>
 
       <div class="do-form-container" ?hidden="${this._exportOption || (!this._exportOption && this._ownTransport)}">
-        <form name="deliveryOrder" class="multi-column-form">
+      <form name="deliveryOrder" class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.delivery_order')}</legend>
             <label>${i18next.t('label.issued_do_no')}</label>
             <input name="name" ?required="${!this._ownTransport}" />
 
             <label>${i18next.t('label.delivery_date')}</label>
-            <input name="deliveryDate" type="date" min="${this._getStdDate()}" ?required="${!this._ownTransport}" />
+            <input
+              name="deliveryDate"
+              type="date"
+              min="${this._getStdDate()}"
+              ?required="${!this._ownTransport}"
+            />
 
-            <label>${i18next.t('label.destination')}</label>
+            <label>${i18next.t('label.deliver_to')}</label>
             <input name="to" ?required="${!this._ownTransport}" />
 
-            <label>${i18next.t('label.load_type')}</label>
-            <select name="loadType" ?required="${!this._ownTransport}">
-              <option value=""></option>
-              ${this._loadTypes.map(
-                loadType => html`
-                  <option value="${loadType.name}">${i18next.t(`label.${loadType.description}`)}</option>
-                `
-              )}
-            </select>
+            <label>${i18next.t('label.ref_no')}</label>
+            <input name="refNo" />
 
-            <label>${i18next.t('label.tel_no')}</label>
-            <input delivery name="telNo" ?required="${!this._ownTransport}"/>
+            <label>${i18next.t('label.cargo_type')}</label>
+            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
 
-            <!--label>${i18next.t('label.document')}</label>
-            <input name="attiachment" type="file" ?required="${!this._ownTransport}" /-->
+            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
+            <input name="loadWeight" type="number" min="0" />
+
+            <input name="urgency" type="checkbox" />
+            <label>${i18next.t('label.urgent_delivery')}</label>
+
+            <label>${i18next.t('label.upload_do')}</label>
+            <input
+              id="doUpload"
+              name="attachments"
+              type="file"
+              ?required="${!this._ownTransport}"
+            />
           </fieldset>
         </form>
       </div>
@@ -218,7 +225,6 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     this._ownTransport = true
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
-    this._loadTypes = []
   }
 
   get releaseOrderForm() {
@@ -247,10 +253,6 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
 
   get vasGrist() {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
-  }
-
-  async firstUpdated() {
-    this._loadTypes = await getCodeByName('LOAD_TYPES')
   }
 
   pageInitialized() {
@@ -558,7 +560,11 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     let obj = {}
     Array.from(form.querySelectorAll('input, select')).forEach(field => {
       if (!field.hasAttribute('hidden') && field.value) {
-        obj[field.name] = field.type === 'checkbox' ? field.checked : field.value
+        if (field.type === 'number' && field.name === 'loadWeight') {
+          obj[field.name] = parseFloat(field.value)
+        } else {
+          obj[field.name] = field.type === 'checkbox' ? field.checked : field.value
+        }
       }
     })
 

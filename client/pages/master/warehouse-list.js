@@ -1,3 +1,4 @@
+import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -87,7 +88,8 @@ class WarehouseList extends localize(i18next)(PageView) {
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    this._warehouseTypes = await getCodeByName('WAREHOUSE_TYPES')
     this._searchFields = [
       {
         label: i18next.t('field.name'),
@@ -104,8 +106,17 @@ class WarehouseList extends localize(i18next)(PageView) {
       {
         label: i18next.t('field.type'),
         name: 'type',
-        type: 'text',
-        props: { searchOper: 'like' }
+        type: 'select',
+        options: [
+          { value: '' },
+          ...this._warehouseTypes.map(_warehouseType => {
+            return {
+              name: _warehouseType.name,
+              value: _warehouseType.name
+            }
+          })
+        ],
+        props: { searchOper: 'eq' }
       }
     ]
 
@@ -165,10 +176,10 @@ class WarehouseList extends localize(i18next)(PageView) {
           width: 200
         },
         {
-          type: 'string',
+          type: 'code',
           name: 'type',
           header: i18next.t('field.type'),
-          record: { editable: true, align: 'center' },
+          record: { editable: true, align: 'center', codeName: 'WAREHOUSE_TYPES' },
           sortable: true,
           width: 100
         },

@@ -1,5 +1,3 @@
-import { getCodeByName } from '@things-factory/code-base'
-import { CARGO_TYPES } from '../constants/cargo'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -15,9 +13,7 @@ class ReceiveDeliveryOrder extends localize(i18next)(PageView) {
     return {
       _doNo: String,
       _status: String,
-      _cargoTypes: Array,
-      _path: String,
-      _deliveryCargo: String
+      _path: String
     }
   }
 
@@ -89,9 +85,7 @@ class ReceiveDeliveryOrder extends localize(i18next)(PageView) {
 
   constructor() {
     super()
-    this._cargoTypes = []
     this._path = ''
-    this._deliveryCargo = null
   }
 
   render() {
@@ -113,24 +107,7 @@ class ReceiveDeliveryOrder extends localize(i18next)(PageView) {
             <input name="refNo" readonly />
 
             <label>${i18next.t('label.cargo_type')}</label>
-            <select name="cargoType" disabled>
-              <option value=""></option>
-              ${this._cargoTypes.map(
-                cargoType => html`
-                  <option value="${cargoType.name}">${i18next.t(`label.${cargoType.description}`)}</option>
-                `
-              )}
-            </select>
-
-            <label ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
-              >${i18next.t('label.if_others_please_specify')}</label
-            >
-            <input
-              ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
-              ?required="${this._deliveryCargo == CARGO_TYPES.OTHERS.value}"
-              name="otherCargo"
-              readonly
-            />
+            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
 
             <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
             <input name="loadWeight" type="number" min="0" readonly />
@@ -148,10 +125,6 @@ class ReceiveDeliveryOrder extends localize(i18next)(PageView) {
 
   get deliveryOrderForm() {
     return this.shadowRoot.querySelector('form[name=deliveryOrder]')
-  }
-
-  async firstUpdated() {
-    this._cargoTypes = await getCodeByName('CARGO_TYPES')
   }
 
   async pageUpdated(changes) {
@@ -179,7 +152,6 @@ class ReceiveDeliveryOrder extends localize(i18next)(PageView) {
             status
             urgency
             cargoType
-            otherCargo
             attachments {
               id
               name
@@ -194,7 +166,6 @@ class ReceiveDeliveryOrder extends localize(i18next)(PageView) {
     if (!response.errors) {
       const deliveryOrder = response.data.deliveryOrder
       this._path = deliveryOrder.attachments[0].path
-      this._deliveryCargo = deliveryOrder.cargoType
       this._status = deliveryOrder.status
       this._fillupDOForm(deliveryOrder)
     }

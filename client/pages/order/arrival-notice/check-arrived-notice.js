@@ -1,4 +1,3 @@
-import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -14,7 +13,6 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
     return {
       _ganNo: String,
       _ownTransport: Boolean,
-      _loadTypes: Array,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -89,8 +87,8 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
       <form name="arrivalNotice" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.gan_no')}: ${this._ganNo}</legend>
-          <label>${i18next.t('label.container_no')}</label>
-          <input name="containerNo" readonly />
+          <label ?hidden="${this._ownTransport}">${i18next.t('label.container_no')}</label>
+          <input name="containerNo" ?hidden="${this._ownTransport}" readonly />
 
           <label>${i18next.t('label.do_no')}</label>
           <input name="deliveryOrderNo" readonly />
@@ -152,7 +150,6 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
     this.productData = { records: [] }
     this.vasData = { records: [] }
     this._ownTransport = true
-    this._loadTypes = []
   }
 
   get arrivalNoticeForm() {
@@ -169,10 +166,6 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
 
   get vasGrist() {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
-  }
-
-  async firstUpdated() {
-    this._loadTypes = await getCodeByName('LOAD_TYPES')
   }
 
   pageInitialized() {

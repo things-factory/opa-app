@@ -1,4 +1,3 @@
-import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -19,7 +18,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       _ganNo: String,
       _ownTransport: Boolean,
       _status: String,
-      _loadTypes: Array,
+      _path: String,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -85,8 +84,8 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       <form name="arrivalNotice" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.gan_no')}: ${this._ganNo}</legend>
-          <label>${i18next.t('label.container_no')}</label>
-          <input name="containerNo" readonly />
+          <label ?hidden="${!this._importedOrder}">${i18next.t('label.container_no')}</label>
+          <input name="containerNo" ?hidden="${!this._importedOrder}" readonly />
 
           <label>${i18next.t('label.do_no')}</label>
           <input name="deliveryOrderNo" readonly />
@@ -154,18 +153,17 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             <label>${i18next.t('label.destination')}</label>
             <input name="from" readonly />
 
-            <label>${i18next.t('label.load_type')}</label>
-            <select name="loadType" disabled>
-              <option value=""></option>
-              ${this._loadTypes.map(
-                loadType => html`
-                  <option value="${loadType.name}">${i18next.t(`label.${loadType.description}`)}</option>
-                `
-              )}
-            </select>
+            <label>${i18next.t('label.cargo_type')}</label>
+            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
 
-            <!--label>${i18next.t('label.document')}</label>
-            <input name="attiachment" type="file" ?required="${!this._ownTransport}" /-->
+            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
+            <input name="loadWeight" type="number" min="0" readonly />
+
+            <input name="urgency" type="checkbox" readonly />
+            <label>${i18next.t('label.urgent_collection')}</label>
+
+            <label>${i18next.t('label.download_co')}</label>
+            <a href="/attachment/${this._path}" target="_blank"><mwc-icon>cloud_download</mwc-icon></a>
           </fieldset>
         </form>
       </div>
@@ -177,7 +175,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     this.productData = { records: [] }
     this.vasData = { records: [] }
     this._ownTransport = true
-    this._loadTypes = []
+    this._path = ''
   }
 
   get arrivalNoticeForm() {
@@ -194,10 +192,6 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
 
   get vasGrist() {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
-  }
-
-  async firstUpdated() {
-    this._loadTypes = await getCodeByName('LOAD_TYPES')
   }
 
   async pageUpdated(changes) {
@@ -345,9 +339,19 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             }
             collectionOrder {
               name
-              from
-              loadType
               collectionDate
+              refNo
+              from
+              loadWeight
+              cargoType
+              urgency
+              status
+              attachments {
+                id
+                name
+                refBy
+                path
+              }
             }   
           }
         }
@@ -362,6 +366,9 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
 
       this._ownTransport = arrivalNotice.ownTransport
       this._status = arrivalNotice.status
+      if (collectionOrder) {
+        this._path = collectionOrder.attachments[0].path
+      }
       this._fillupANForm(arrivalNotice)
 
       if (!this._ownTransport) this._fillupCOForm(collectionOrder)
@@ -375,8 +382,8 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     if (this._status === ORDER_STATUS.PENDING.value) {
       this._actions = [
         {
-          title: i18next.t('button.edit'),
-          action: this._changeToEditable.bind(this)
+          title: i18next.t('button.delete'),
+          action: this._deleteArrivalNotice.bind(this)
         },
         {
           title: i18next.t('button.confirm'),
@@ -406,18 +413,18 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
-        } else if (field.name === key) {
+        } else if (field.name === key && field.type !== 'file') {
           field.value = data[key]
         }
       })
     }
   }
 
-  async _changeToEditable() {
+  async _deleteArrivalNotice() {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
-        text: i18next.t('text.change_to_editable'),
+        text: i18next.t('text.you_wont_be_able_to_revert'),
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
@@ -426,24 +433,23 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         const response = await client.query({
           query: gql`
             mutation {
-              updateArrivalNotice(${gqlBuilder.buildArgs({
-                name: this._ganNo,
-                patch: { status: ORDER_STATUS.EDITING.value }
-              })}) {
-                name 
-              }
+              deleteArrivalNotice(${gqlBuilder.buildArgs({
+                name: this._ganNo
+              })}) 
             }
           `
         })
 
         if (!response.errors) {
-          navigate(`edit_arrival_notice/${this._ganNo}`)
+          this._showToast({ message: i18next.t('text.gan_has_been_deleted') })
+          navigate(`arrival_notices`)
         }
       }
     } catch (e) {
       this._showToast(e)
     }
   }
+
   async _confirmArrivalNotice() {
     const result = await CustomAlert({
       title: i18next.t('title.are_you_sure'),

@@ -158,33 +158,38 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       </div>
 
       <div class="do-form-container" ?hidden="${this._exportOption || (!this._exportOption && this._ownTransport)}">
-        <form name="deliveryOrder" class="multi-column-form">
+      <form name="deliveryOrder" class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.delivery_order')}</legend>
             <label>${i18next.t('label.issued_do_no')}</label>
             <input name="name" readonly />
 
             <label>${i18next.t('label.delivery_date')}</label>
-            <input name="deliveryDate" type="date" readonly/>
+            <input name="deliveryDate" type="date" readonly />
 
             <label>${i18next.t('label.destination')}</label>
-            <input name="to" readonly/>
+            <input name="to" readonly />
 
-            <label>${i18next.t('label.load_type')}</label>
-            <select name="loadType" disabled>
-              <option value=""></option>
-              ${this._loadTypes.map(
-                loadType => html`
-                  <option value="${loadType.name}">${i18next.t(`label.${loadType.description}`)}</option>
-                `
-              )}
-            </select>
+            <label>${i18next.t('label.ref_no')}</label>
+            <input name="refNo" readonly />
 
-            <label>${i18next.t('label.tel_no')}</label>
-            <input delivery name="telNo"/>
+            <label>${i18next.t('label.cargo_type')}</label>
+            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
 
-            <!--label>${i18next.t('label.document')}</label>
-            <input name="attiachment" type="file" /-->
+            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
+            <input name="loadWeight" type="number" min="0" readonly />
+
+            <input name="urgency" type="checkbox" readonly />
+            <label>${i18next.t('label.urgent_delivery')}</label>
+
+            <label>${i18next.t('label.assigned_truck')}</label>
+            <input name=${this._assignedVehicleName} value=${this._assignedVehicleName} readonly />
+
+            <label>${i18next.t('label.assigned_driver')}</label>
+            <input name=${this._assignedDriverName} value=${this._assignedDriverName} readonly />
+
+            <label>${i18next.t('label.download_do')}</label>
+            <a href="/attachment/${this._path}" download><mwc-icon>cloud_download</mwc-icon></a>
           </fieldset>
         </form>
       </div>
@@ -197,7 +202,6 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
     this._ownTransport = true
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
-    this._loadTypes = []
   }
 
   get releaseOrderForm() {
@@ -222,10 +226,6 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
 
   get vasGrist() {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
-  }
-
-  async firstUpdated() {
-    this._loadTypes = await getCodeByName('LOAD_TYPES')
   }
 
   async pageUpdated(changes) {
@@ -380,11 +380,19 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
             deliveryOrder {
               id
               name
-              description
-              to
-              loadType
               deliveryDate
-              telNo
+              refNo
+              to
+              loadWeight
+              status
+              urgency
+              cargoType
+              attachments {
+                id
+                name
+                refBy
+                path
+              }
             }
             orderVass {
               vas {
@@ -415,6 +423,9 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         this._ownTransport = response.data.releaseGoodDetail.ownTransport
       }
       this._status = releaseOrder.status
+      if (deliveryOrder) {
+        this._path = deliveryOrder.attachments[0].path
+      }
 
       this._fillupRGForm(response.data.releaseGoodDetail)
       if (this._exportOption) this._fillupSOForm(shippingOrder)
@@ -430,8 +441,8 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
     if (this._status === ORDER_STATUS.PENDING.value) {
       this._actions = [
         {
-          title: i18next.t('button.edit'),
-          action: this._changeToEditable.bind(this)
+          title: i18next.t('button.delete'),
+          action: this._deleteReleaseOrder.bind(this)
         },
         {
           title: i18next.t('button.confirm'),
@@ -465,18 +476,18 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
-        } else if (field.name === key) {
+        } else if (field.name === key && field.type !== 'file') {
           field.value = data[key]
         }
       })
     }
   }
 
-  async _changeToEditable() {
+  async _deleteReleaseOrder() {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
-        text: i18next.t('text.change_to_editable'),
+        text: i18next.t('text.you_wont_be_able_to_revert'),
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
@@ -485,18 +496,16 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         const response = await client.query({
           query: gql`
             mutation {
-              updateReleaseGood(${gqlBuilder.buildArgs({
-                name: this._releaseOrderNo,
-                patch: { status: ORDER_STATUS.EDITING.value }
-              })}) {
-                name 
-              }
+              deleteReleaseGood(${gqlBuilder.buildArgs({
+                name: this._releaseOrderNo
+              })})
             }
           `
         })
 
         if (!response.errors) {
-          navigate(`edit_release_order/${this._releaseOrderNo}`)
+          this._showToast({ message: i18next.t('text.release_order_has_been_deleted') })
+          navigate(`release_orders`)
         }
       }
     } catch (e) {

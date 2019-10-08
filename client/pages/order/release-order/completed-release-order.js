@@ -97,10 +97,6 @@ class CompletedReleaseOrder extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
   }
 
-  async firstUpdated() {
-    this._loadTypes = await getCodeByName('LOAD_TYPES')
-  }
-
   async pageUpdated(changes) {
     if (this.active) {
       this._releaseOrderNo = changes.resourceId || this._releaseOrderNo || ''
@@ -191,33 +187,38 @@ class CompletedReleaseOrder extends localize(i18next)(PageView) {
       </div>
 
       <div class="do-form-container" ?hidden="${this._exportOption || (!this._exportOption && this._ownTransport)}">
-        <form name="deliveryOrder" class="multi-column-form">
+      <form name="deliveryOrder" class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.delivery_order')}</legend>
             <label>${i18next.t('label.issued_do_no')}</label>
             <input name="name" readonly />
 
             <label>${i18next.t('label.delivery_date')}</label>
-            <input name="deliveryDate" type="date" readonly/>
+            <input name="deliveryDate" type="date" readonly />
 
             <label>${i18next.t('label.destination')}</label>
-            <input name="to" readonly/>
+            <input name="to" readonly />
 
-            <label>${i18next.t('label.load_type')}</label>
-            <select name="loadType" disabled>
-              <option value=""></option>
-              ${this._loadTypes.map(
-                loadType => html`
-                  <option value="${loadType.name}">${i18next.t(`label.${loadType.description}`)}</option>
-                `
-              )}
-            </select>
+            <label>${i18next.t('label.ref_no')}</label>
+            <input name="refNo" readonly />
 
-            <label>${i18next.t('label.tel_no')}</label>
-            <input delivery name="telNo"/>
+            <label>${i18next.t('label.cargo_type')}</label>
+            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
 
-            <!--label>${i18next.t('label.document')}</label>
-            <input name="attiachment" type="file" /-->
+            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
+            <input name="loadWeight" type="number" min="0" readonly />
+
+            <input name="urgency" type="checkbox" readonly />
+            <label>${i18next.t('label.urgent_delivery')}</label>
+
+            <label>${i18next.t('label.assigned_truck')}</label>
+            <input name=${this._assignedVehicleName} value=${this._assignedVehicleName} readonly />
+
+            <label>${i18next.t('label.assigned_driver')}</label>
+            <input name=${this._assignedDriverName} value=${this._assignedDriverName} readonly />
+
+            <label>${i18next.t('label.download_do')}</label>
+            <a href="/attachment/${this._path}" download><mwc-icon>cloud_download</mwc-icon></a>
           </fieldset>
         </form>
       </div>
@@ -230,7 +231,6 @@ class CompletedReleaseOrder extends localize(i18next)(PageView) {
     this._ownTransport = true
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
-    this._loadTypes = []
   }
 
   pageInitialized() {
@@ -377,11 +377,19 @@ class CompletedReleaseOrder extends localize(i18next)(PageView) {
             deliveryOrder {
               id
               name
-              description
-              to
-              loadType
               deliveryDate
-              telNo
+              refNo
+              to
+              loadWeight
+              status
+              urgency
+              cargoType
+              attachments {
+                id
+                name
+                refBy
+                path
+              }
             }
             orderVass {
               vas {
@@ -412,7 +420,9 @@ class CompletedReleaseOrder extends localize(i18next)(PageView) {
         this._ownTransport = response.data.releaseGoodDetail.ownTransport
       }
       this._status = releaseOrder.status
-
+      if (deliveryOrder) {
+        this._path = deliveryOrder.attachments[0].path
+      }
       this._fillupRGForm(response.data.releaseGoodDetail)
       if (this._exportOption) this._fillupSOForm(shippingOrder)
       if (!this._ownTransport) this._fillupDOForm(deliveryOrder)

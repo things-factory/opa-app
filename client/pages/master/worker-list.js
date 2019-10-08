@@ -138,10 +138,10 @@ class WorkerList extends localize(i18next)(PageView) {
           width: 150
         },
         {
-          type: 'string',
+          type: 'code',
           name: 'type',
           header: i18next.t('field.type'),
-          record: { editable: true, align: 'left' },
+          record: { editable: true, align: 'left', codeName: 'WORKER_TYPES' },
           sortable: true,
           width: 150
         },
