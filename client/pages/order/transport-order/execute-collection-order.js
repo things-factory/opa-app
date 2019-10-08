@@ -1,4 +1,3 @@
-import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -13,11 +12,9 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
     return {
       _coNo: String,
       _status: String,
-      _cargoTypes: Array,
-      drivers: Array,
-      vehicles: Array,
       _path: String,
-      _collectionCargo: String
+      drivers: Array,
+      vehicles: Array
     }
   }
 
@@ -86,7 +83,6 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
   constructor() {
     super()
     this._transportOptions = []
-    this._cargoTypes = []
     this._path = ''
     this.drivers = []
     this.vehicles = []
@@ -111,24 +107,7 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
             <input name="refNo" readonly />
 
             <label>${i18next.t('label.cargo_type')}</label>
-            <select name="cargoType" disabled>
-              <option value=""></option>
-              ${this._cargoTypes.map(
-                cargoType => html`
-                  <option value="${cargoType.name}">${i18next.t(`label.${cargoType.description}`)}</option>
-                `
-              )}
-            </select>
-
-            <label ?hidden="${this._collectionCargo !== CARGO_TYPES.OTHERS.value}"
-              >${i18next.t('label.if_others_please_specify')}</label
-            >
-            <input
-              ?hidden="${this._collectionCargo !== CARGO_TYPES.OTHERS.value}"
-              ?required="${this._collectionCargo == CARGO_TYPES.OTHERS.value}"
-              name="otherCargo"
-              readonly
-            />
+            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
 
             <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
             <input name="loadWeight" type="number" min="0" readonly />
@@ -174,10 +153,6 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('select#vehicle')
   }
 
-  async firstUpdated() {
-    this._cargoTypes = await getCodeByName('CARGO_TYPES')
-  }
-
   async pageUpdated(changes) {
     if (this.active) {
       this._coNo = changes.resourceId || this._coNo || ''
@@ -204,7 +179,6 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
             loadWeight
             cargoType
             urgency
-            otherCargo
             status
             attachments {
               id
@@ -220,8 +194,6 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
     if (!response.errors) {
       const collectionOrder = response.data.collectionOrder
       this._path = collectionOrder.attachments[0].path
-      this._collectionCargo = collectionOrder.cargoType
-
       this._status = collectionOrder.status
       this._fillupCOForm(collectionOrder)
     }

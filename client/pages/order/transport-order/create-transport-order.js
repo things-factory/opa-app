@@ -6,7 +6,6 @@ import { client, gqlBuilder, navigate, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
-import { CARGO_TYPES } from '../constants/cargo'
 import { ORDER_TYPES } from '../constants/order'
 
 class CreateTransportOrder extends localize(i18next)(PageView) {
@@ -15,9 +14,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
       _orderNo: String,
       _status: String,
       _transportOptions: Array,
-      _loadTypes: Array,
       _orderType: String,
-      _cargoTypes: Array,
       _deliveryCargo: String,
       _collectionCargo: String
     }
@@ -87,7 +84,6 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
     this._collectionCargo = null
     this._deliveryCargo = null
     this._transportOptions = []
-    this._cargoTypes = []
   }
 
   render() {
@@ -129,23 +125,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <input name="refNo" />
 
             <label>${i18next.t('label.cargo_type')}</label>
-            <select name="cargoType" @change="${e => (this._collectionCargo = e.currentTarget.value)}">
-              <option value=""></option>
-              ${this._cargoTypes.map(
-                cargoType => html`
-                  <option value="${cargoType.name}">${i18next.t(`label.${cargoType.description}`)}</option>
-                `
-              )}
-            </select>
-
-            <label ?hidden="${this._collectionCargo !== CARGO_TYPES.OTHERS.value}"
-              >${i18next.t('label.if_others_please_specify')}</label
-            >
-            <input
-              ?hidden="${this._collectionCargo !== CARGO_TYPES.OTHERS.value}"
-              ?required="${this._collectionCargo == CARGO_TYPES.OTHERS.value}"
-              name="otherCargo"
-            />
+            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
 
             <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
             <input name="loadWeight" type="number" min="0" />
@@ -186,23 +166,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <input name="refNo" />
 
             <label>${i18next.t('label.cargo_type')}</label>
-            <select name="cargoType" @change="${e => (this._deliveryCargo = e.currentTarget.value)}">
-              <option value=""></option>
-              ${this._cargoTypes.map(
-                cargoType => html`
-                  <option value="${cargoType.name}">${i18next.t(`label.${cargoType.description}`)}</option>
-                `
-              )}
-            </select>
-
-            <label ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
-              >${i18next.t('label.if_others_please_specify')}</label
-            >
-            <input
-              ?hidden="${this._deliveryCargo !== CARGO_TYPES.OTHERS.value}"
-              ?required="${this._deliveryCargo == CARGO_TYPES.OTHERS.value}"
-              name="otherCargo"
-            />
+            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
 
             <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
             <input name="loadWeight" type="number" min="0" />
@@ -241,7 +205,6 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
 
   async firstUpdated() {
     this._transportOptions = await getCodeByName('TRANSPORT_TYPES')
-    this._cargoTypes = await getCodeByName('CARGO_TYPES')
   }
 
   _getStdDate() {
