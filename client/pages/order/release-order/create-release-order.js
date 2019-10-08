@@ -560,7 +560,11 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     let obj = {}
     Array.from(form.querySelectorAll('input, select')).forEach(field => {
       if (!field.hasAttribute('hidden') && field.value) {
-        obj[field.name] = field.type === 'checkbox' ? field.checked : field.value
+        if (field.type === 'number' && field.name === 'loadWeight') {
+          obj[field.name] = parseFloat(field.value)
+        } else {
+          obj[field.name] = field.type === 'checkbox' ? field.checked : field.value
+        }
       }
     })
 
