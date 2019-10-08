@@ -292,20 +292,12 @@ export default {
      * Inbound Menus Section
      */
     {
-      tagname: 'inbound-work-order',
-      page: 'inbound_work_order'
-    },
-    {
-      tagname: 'receive-goods',
-      page: 'receiving'
-    },
-    {
       tagname: 'vas-work-order',
       page: 'vas-work-order'
     },
     {
-      tagname: 'worksheet-list',
-      page: 'worksheets'
+      tagname: 'inbound-worksheet',
+      page: 'inbound_worksheets'
     },
     {
       tagname: 'worksheet-unloading',
@@ -335,16 +327,16 @@ export default {
      * Outbound Menus Section
      */
     {
-      tagname: 'outbound-work-order',
-      page: 'outbound'
+      tagname: 'outbound-worksheet',
+      page: 'outbound_worksheets'
     },
     {
-      tagname: 'picking-by-product',
+      tagname: 'worksheet-picking',
+      page: 'worksheet_picking'
+    },
+    {
+      tagname: 'picking-product',
       page: 'picking_product'
-    },
-    {
-      tagname: 'picking-by-unit',
-      page: 'picking_unit'
     }
   ],
   bootstrap
