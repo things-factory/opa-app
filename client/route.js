@@ -225,6 +225,7 @@ export default function route(page) {
     case 'create_claim_chit':
       import('./pages/billing/claim-chit/create-claim-chit')
       return page
+
     case 'claim_chit_list':
       import('./pages/billing/claim-chit/claim-chit-list')
       return page
@@ -278,12 +279,8 @@ export default function route(page) {
     /**
      * Inbound Menus Section
      */
-    case 'inbound_work_order':
-      import('./pages/inbound/inbound-work-order')
-      return page
-
-    case 'receiving':
-      import('./pages/inbound/receive-goods')
+    case 'inbound_worksheets':
+      import('./pages/inbound/inbound-worksheet')
       return page
 
     case 'putaway':
@@ -292,10 +289,6 @@ export default function route(page) {
 
     case 'vas-work-order':
       import('./pages/inbound/vas-work-order')
-      return page
-
-    case 'worksheets':
-      import('./pages/inbound/worksheet-list')
       return page
 
     case 'worksheet_unloading':
@@ -321,16 +314,16 @@ export default function route(page) {
     /**
      * Outbound Menus Section
      */
-    case 'outbound':
-      import('./pages/outbound/outbound-work-order')
+    case 'outbound_worksheets':
+      import('./pages/outbound/outbound-worksheet')
       return page
 
-    case 'picking_product':
-      import('./pages/outbound/picking-by-product')
+    case 'worksheet_picking':
+      import('./pages/outbound/worksheet-picking')
       return page
 
-    case 'picking_unit':
-      import('./pages/outbound/picking-by-unit')
+    case 'picking':
+      import('./pages/outbound/picking-product')
       return page
   }
 }

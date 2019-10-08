@@ -621,7 +621,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       })
 
       this._clearView()
-      navigate('worksheets')
+      navigate('inbound_worksheets')
     }
   }
 
