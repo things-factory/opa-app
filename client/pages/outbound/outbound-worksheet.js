@@ -5,9 +5,9 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { WORKSHEET_TYPE } from './constants/worksheet'
+import { WORKSHEET_TYPE } from '../inbound/constants/worksheet'
 
-class WorksheetList extends localize(i18next)(PageView) {
+class OutboundWorksheet extends localize(i18next)(PageView) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -63,9 +63,9 @@ class WorksheetList extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.worksheet'),
+      title: i18next.t('title.outbound_worksheet'),
       exportable: {
-        name: i18next.t('title.worksheet'),
+        name: i18next.t('title.outbound_worksheet'),
         data: this._exportableData.bind(this)
       },
       importable: {
@@ -118,7 +118,7 @@ class WorksheetList extends localize(i18next)(PageView) {
     ]
 
     this.config = {
-      list: { fields: ['arrivalNotice', 'bizplace', 'status'] },
+      list: { fields: ['releaseGood', 'bizplace', 'status'] },
       rows: { appendable: false },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
@@ -133,23 +133,16 @@ class WorksheetList extends localize(i18next)(PageView) {
               const type = record.type
 
               // Handle UNLOADING
-              if (type === WORKSHEET_TYPE.UNLOADING.value) {
-                navigate(`worksheet_unloading/${record.name}`)
-
-                // Handle PUTAWAY
-              } else if (type === WORKSHEET_TYPE.PUTAWAY.value) {
-                navigate(`worksheet_putaway/${record.name}`)
-                // Handle VAS
-              } else if (type === WORKSHEET_TYPE.VAS.value) {
-                navigate(`worksheet_vas/${record.name}`)
+              if (type === WORKSHEET_TYPE.PICKING.value) {
+                navigate(`worksheet_picking/${record.name}`)
               }
             }
           }
         },
         {
           type: 'object',
-          name: 'arrivalNotice',
-          header: i18next.t('field.arrival_notice'),
+          name: 'releaseGood',
+          header: i18next.t('field.release_goods'),
           record: { align: 'center' },
           sortable: true,
           width: 200
@@ -231,17 +224,23 @@ class WorksheetList extends localize(i18next)(PageView) {
   }
 
   async fetchHandler({ page, limit, sorters = [] }) {
+    const filters = this.searchForm.queryFilters
+    filters.push({
+      name: 'type',
+      operator: 'in',
+      value: [WORKSHEET_TYPE.PICKING.value]
+    })
     const response = await client.query({
       query: gql`
         query {
           worksheets(${gqlBuilder.buildArgs({
-            filters: this.searchForm.queryFilters,
+            filters,
             pagination: { page, limit },
             sortings: sorters
           })}) {
             items {
               id
-              arrivalNotice {
+              releaseGood {
                 id
                 name
                 description
@@ -299,4 +298,4 @@ class WorksheetList extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('worksheet-list', WorksheetList)
+window.customElements.define('outbound-worksheet', OutboundWorksheet)

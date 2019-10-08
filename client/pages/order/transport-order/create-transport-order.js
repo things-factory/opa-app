@@ -146,12 +146,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.urgent_collection')}</label>
 
             <label>${i18next.t('label.upload_co')}</label>
-            <input
-              id="coUpload"
-              name="attachments"
-              type="file"
-              ?required="${this._orderType == ORDER_TYPES.COLLECTION.value}"
-            />
+            <file-uploader custom-input id="coUpload" name="attachments"></file-uploader>
           </fieldset>
         </form>
       </div>
@@ -195,12 +190,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.urgent_delivery')}</label>
 
             <label>${i18next.t('label.upload_do')}</label>
-            <input
-              id="doUpload"
-              name="attachments"
-              type="file"
-              ?required="${this._orderType == ORDER_TYPES.DELIVERY.value}"
-            />
+            <file-uploader custom-input id="doUpload" name="attachments"></file-uploader>
           </fieldset>
         </form>
       </div>

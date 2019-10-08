@@ -385,7 +385,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
       })
 
       if (!response.errors) {
-        navigate(`worksheets`)
+        navigate(`inbound_worksheets`)
         this._showToast({ message: i18next.t('text.buffer_location_assigned') })
       }
     } catch (e) {

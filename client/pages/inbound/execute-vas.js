@@ -581,7 +581,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
           confirmButtonText: i18next.t('text.confirm')
         })
 
-        navigate('worksheets')
+        navigate('inbound_worksheets')
       }
     } catch (e) {
       this._showToast(e)

@@ -357,7 +357,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
         }
 
         this._worksheetNo = ''
-        navigate(`worksheets`)
+        navigate(`inbound_worksheets`)
       }
     } catch (e) {
       this._showToast(e)

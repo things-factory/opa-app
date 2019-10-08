@@ -11,10 +11,6 @@ export const WORKSHEET_TYPE = {
     name: 'vas',
     value: 'VAS'
   },
-  LOADING: {
-    name: 'loading',
-    value: 'LOADING'
-  },
   PICKING: {
     name: 'picking',
     value: 'PICKING'

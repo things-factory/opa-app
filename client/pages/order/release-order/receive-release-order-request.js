@@ -487,10 +487,12 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
       const response = await client.query({
         query: gql`
           mutation {
-            receiveReleaseGood(${gqlBuilder.buildArgs({
-              name: this._releaseOrderNo
+            generateReleaseGoodWorksheet(${gqlBuilder.buildArgs({
+              releaseGoodNo: this._releaseOrderNo
             })}) {
-              name
+              pickingWorksheet {
+                name
+              }
             }
           }
         `
