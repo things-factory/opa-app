@@ -93,11 +93,11 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       <form name="arrivalNotice" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.gan_no')}: ${this._ganNo}</legend>
-          <label ?hidden="${this._ownTransport}">${i18next.t('label.container_no')}</label>
-          <input name="containerNo" ?hidden="${this._ownTransport}" readonly />
+          <label ?hidden="${!this._importCargo}">${i18next.t('label.container_no')}</label>
+          <input name="containerNo" ?hidden="${!this._importCargo}" readonly />
 
-          <label>${i18next.t('label.do_no')}</label>
-          <input name="deliveryOrderNo" readonly />
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
+          <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" readonly />
 
           <label>${i18next.t('label.eta_date')}</label>
           <input name="etaDate" type="date" readonly />
@@ -108,8 +108,8 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
           <input id="ownTransport" type="checkbox" name="ownTransport" ?checked="${this._ownTransport}" disabled />
           <label>${i18next.t('label.own_transport')}</label>
 
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
-          <input ?hidden="${!this._ownTransport}" name="truckNo" readonly />
+          <label ?hidden="${this._importCargo || !this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
+          <input ?hidden="${this._importCargo || !this._ownTransport}" name="truckNo" readonly />
         </fieldset>
 
         <label>${i18next.t('label.status')}</label>
@@ -325,7 +325,6 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       this._status = arrivalNotice.status
       this._fillupANForm(arrivalNotice)
 
-      if (!this._ownTransport) this._fillupCOForm(collectionOrder)
       this.productData = { records: orderProducts }
       this.vasData = { records: orderVass }
     }
