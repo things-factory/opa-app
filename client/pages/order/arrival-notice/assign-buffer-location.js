@@ -1,4 +1,3 @@
-import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -16,7 +15,6 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
     return {
       _ganNo: String,
       _ownTransport: Boolean,
-      _loadTypes: Array,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -161,7 +159,6 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
     this.vasData = { records: [] }
     this._importedOrder = false
     this._ownTransport = true
-    this._loadTypes = []
   }
 
   get arrivalNoticeForm() {
@@ -178,10 +175,6 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
 
   get bufferLocationField() {
     return this.shadowRoot.querySelector('input#buffer-location')
-  }
-
-  async firstUpdated() {
-    this._loadTypes = await getCodeByName('LOAD_TYPES')
   }
 
   pageInitialized() {
@@ -329,7 +322,6 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const arrivalNotice = response.data.arrivalNotice
-      const collectionOrder = arrivalNotice.collectionOrder
       const orderProducts = arrivalNotice.orderProducts
       const orderVass = arrivalNotice.orderVass
 

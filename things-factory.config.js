@@ -100,10 +100,6 @@ export default {
       page: 'create_release_order'
     },
     {
-      tagname: 'edit-release-order',
-      page: 'edit_release_order'
-    },
-    {
       tagname: 'release-order-list',
       page: 'release_orders'
     },

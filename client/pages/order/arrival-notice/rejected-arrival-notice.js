@@ -367,7 +367,9 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
       const orderVass = arrivalNotice.orderVass
 
       this._ownTransport = arrivalNotice.ownTransport
-      this._path = collectionOrder.attachments[0].path
+      if (collectionOrder) {
+        this._path = collectionOrder.attachments[0].path
+      }
       this._status = arrivalNotice.status
       this._fillupANForm(arrivalNotice)
 
@@ -390,7 +392,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
       Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
-        } else if (field.name === key) {
+        } else if (field.name === key && field.type !== 'file') {
           field.value = data[key]
         }
       })
