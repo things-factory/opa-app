@@ -115,10 +115,6 @@ export default function route(page) {
       import('./pages/order/release-order/receive-release-order-request')
       return page
 
-    case 'execute_release_order':
-      import('./pages/order/release-order/execute-release-order')
-      return page
-
     case 'rejected_release_order':
       import('./pages/order/release-order/rejected-release-order')
       return page

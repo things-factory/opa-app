@@ -116,10 +116,6 @@ export default {
       page: 'receive_release_order_request'
     },
     {
-      tagname: 'execute-release-order',
-      page: 'execute_release_order'
-    },
-    {
       tagname: 'rejected-release-order',
       page: 'rejected_release_order'
     },

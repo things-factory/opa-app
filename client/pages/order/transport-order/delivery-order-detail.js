@@ -111,7 +111,7 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
             <label>${i18next.t('label.assigned_driver')}</label>
             <input name=${this._assignedDriverName} value=${this._assignedDriverName} readonly />
 
-            <label>${i18next.t('label.download_co')}</label>
+            <label>${i18next.t('label.download_do')}</label>
             <a href="/attachment/${this._path}" download><mwc-icon>cloud_download</mwc-icon></a>
           </fieldset>
         </form>
