@@ -183,8 +183,7 @@ class TransportDriver extends localize(i18next)(PageView) {
           header: i18next.t('field.updated_at'),
           record: {
             editable: false,
-            align: 'center',
-            imexSetting: { header: 'Modify Date', key: 'updatedAt', width: 30, type: 'date' }
+            align: 'center'
           },
           sortable: true,
           width: 150
@@ -277,7 +276,6 @@ class TransportDriver extends localize(i18next)(PageView) {
           }
         `
     })
-
     if (!response.errors) {
       history.back()
       this.dataGrist.fetch()
