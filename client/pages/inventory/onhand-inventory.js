@@ -312,7 +312,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
         var searchParams = new URLSearchParams()
 
         /* for pallet record mapping */
-        searchParams.append('pallet', record.name)
+        searchParams.append('pallet', record.palletId)
         searchParams.append('batch', record.batchId)
         searchParams.append('product', record.product.name)
 
