@@ -115,7 +115,6 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
       columns: [
-        { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'gutter',
