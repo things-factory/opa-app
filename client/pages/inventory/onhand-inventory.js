@@ -1,11 +1,14 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { connect } from 'pwa-helpers/connect-mixin'
+import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
+import { PALLET_LABEL_SETTING_KEY } from '../../setting-constants'
 import gql from 'graphql-tag'
+import { USBPrinter } from '@things-factory/barcode-base'
 import { css, html } from 'lit-element'
 
-class OnhandInventory extends localize(i18next)(PageView) {
+class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -40,7 +43,8 @@ class OnhandInventory extends localize(i18next)(PageView) {
     return {
       _searchFields: Array,
       config: Object,
-      data: Object
+      data: Object,
+      _palletLabel: Object
     }
   }
 
@@ -65,7 +69,12 @@ class OnhandInventory extends localize(i18next)(PageView) {
   get context() {
     return {
       title: i18next.t('title.onhand_inventory'),
-      actions: [],
+      actions: [
+        {
+          title: i18next.t('button.pallet_label_print'),
+          action: this._printPalletLabel.bind(this)
+        }
+      ],
       exportable: {
         name: i18next.t('title.onhand_inventory'),
         data: this._exportableData.bind(this)
@@ -78,12 +87,19 @@ class OnhandInventory extends localize(i18next)(PageView) {
       list: {
         fields: ['palletId', 'product', 'bizplace', 'location']
       },
+      rows: {
+        selectable: {
+          mulitple: true
+        }
+      },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
+        { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'string',
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
+          record: { align: 'center' },
           sortable: true,
           width: 150
         },
@@ -91,6 +107,7 @@ class OnhandInventory extends localize(i18next)(PageView) {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_id'),
+          record: { align: 'center' },
           sortable: true,
           width: 150
         },
@@ -98,6 +115,7 @@ class OnhandInventory extends localize(i18next)(PageView) {
           type: 'object',
           name: 'bizplace',
           header: i18next.t('field.customer'),
+          record: { align: 'center' },
           sortable: true,
           width: 200
         },
@@ -105,6 +123,7 @@ class OnhandInventory extends localize(i18next)(PageView) {
           type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
+          record: { align: 'center' },
           sortable: true,
           width: 200
         },
@@ -112,7 +131,7 @@ class OnhandInventory extends localize(i18next)(PageView) {
           type: 'number',
           name: 'qty',
           header: i18next.t('field.qty'),
-          record: { align: 'right' },
+          record: { align: 'center' },
           sortable: true,
           width: 80
         },
@@ -120,6 +139,7 @@ class OnhandInventory extends localize(i18next)(PageView) {
           type: 'object',
           name: 'warehouse',
           header: i18next.t('field.warehouse'),
+          record: { align: 'center' },
           sortable: true,
           width: 200
         },
@@ -127,6 +147,7 @@ class OnhandInventory extends localize(i18next)(PageView) {
           type: 'string',
           name: 'zone',
           header: i18next.t('field.zone'),
+          record: { align: 'center' },
           sortable: true,
           width: 80
         },
@@ -134,6 +155,7 @@ class OnhandInventory extends localize(i18next)(PageView) {
           type: 'object',
           name: 'location',
           header: i18next.t('field.location'),
+          record: { align: 'center' },
           sortable: true,
           width: 200
         },
@@ -141,6 +163,7 @@ class OnhandInventory extends localize(i18next)(PageView) {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
+          record: { align: 'center' },
           sortable: true,
           width: 150
         },
@@ -148,6 +171,7 @@ class OnhandInventory extends localize(i18next)(PageView) {
           type: 'object',
           name: 'updater',
           header: i18next.t('field.updater'),
+          record: { align: 'center' },
           sortable: true,
           width: 150
         }
@@ -270,6 +294,62 @@ class OnhandInventory extends localize(i18next)(PageView) {
     return this.config.columns
   }
 
+  async _printPalletLabel() {
+    const records = this.dataGrist.selected
+    var labelId = this._palletLabel && this._palletLabel.id
+
+    if (!labelId) {
+      document.dispatchEvent(
+        new CustomEvent('notify', {
+          detail: {
+            level: 'error',
+            message: `${i18next.t('text.no_label_setting_was_found')}. ${i18next.t('text.please_check_your_setting')}`
+          }
+        })
+      )
+    } else {
+      for (var record of records) {
+        var searchParams = new URLSearchParams()
+
+        /* for pallet record mapping */
+        searchParams.append('pallet', record.name)
+        searchParams.append('batch', record.batchId)
+        searchParams.append('product', record.product.name)
+
+        try {
+          const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
+            method: 'GET'
+          })
+
+          if (response.status !== 200) {
+            throw `Error : Can't get label command from server (response: ${response.status})`
+          }
+
+          var command = await response.text()
+
+          if (!this.printer) {
+            this.printer = new USBPrinter()
+          }
+
+          await this.printer.connectAndPrint(command)
+        } catch (ex) {
+          document.dispatchEvent(
+            new CustomEvent('notify', {
+              detail: {
+                level: 'error',
+                message: ex,
+                ex
+              }
+            })
+          )
+
+          delete this.printer
+          break
+        }
+      }
+    }
+  }
+
   _exportableData() {
     let records = []
     if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
@@ -286,6 +366,11 @@ class OnhandInventory extends localize(i18next)(PageView) {
           return record
         }, {})
     })
+  }
+
+  stateChanged(state) {
+    let palletLabelSetting = state.dashboard[PALLET_LABEL_SETTING_KEY]
+    this._palletLabel = (palletLabelSetting && palletLabelSetting.board) || {}
   }
 }
 
