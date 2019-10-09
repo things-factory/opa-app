@@ -50,11 +50,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
 
   render() {
     return html`
-      <search-form
-        id="search-form"
-        .fields=${this._searchFields}
-        @submit=${async () => this.dataGrist.fetch()}
-      ></search-form>
+      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
       <div class="grist">
         <data-grist
@@ -89,7 +85,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
       },
       rows: {
         selectable: {
-          mulitple: true
+          multiple: true
         }
       },
       columns: [

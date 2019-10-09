@@ -51,7 +51,7 @@ class SystemRole extends localize(i18next)(PageView) {
         id="search-form"
         .fields=${this._searchFields}
         initFocus="name"
-        @submit=${async () => this.dataGrist.fetch()}
+        @submit=${e => this.dataGrist.fetch()}
       ></search-form>
 
       <div class="grist">
