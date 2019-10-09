@@ -216,7 +216,7 @@ class TransportSummaryReport extends connect(store)(localize(i18next)(PageView))
         id="search-form"
         .fields=${this._searchFields}
         initFocus="description"
-        @submit=${async () => this.dataGrist.fetch()}
+        @submit=${e => this.dataGrist.fetch()}
       ></search-form>
 
       <div class="grist">
