@@ -196,14 +196,6 @@ export default {
       page: 'create_vas_order'
     },
     {
-      tagname: 'edit-vas-order',
-      page: 'edit_vas_order'
-    },
-    {
-      tagname: 'confirm-vas-order',
-      page: 'confirm_vas_order'
-    },
-    {
       tagname: 'receive-vas-order',
       page: 'receive_vas_order'
     },
@@ -292,10 +284,6 @@ export default {
      * Inbound Menus Section
      */
     {
-      tagname: 'vas-work-order',
-      page: 'vas-work-order'
-    },
-    {
       tagname: 'inbound-worksheet',
       page: 'inbound_worksheets'
     },
@@ -322,6 +310,10 @@ export default {
     {
       tagname: 'execute-vas',
       page: 'execute_vas'
+    },
+    {
+      tagname: 'vas-worksheet-list',
+      page: 'vas_worksheets'
     },
     /**
      * Outbound Menus Section

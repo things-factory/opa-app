@@ -131,14 +131,6 @@ export default function route(page) {
       import('./pages/order/vas-order/create-vas-order')
       return page
 
-    case 'edit_vas_order':
-      import('./pages/order/vas-order/edit-vas-order')
-      return page
-
-    case 'confirm_vas_order':
-      import('./pages/order/vas-order/confirm-vas-order')
-      return page
-
     case 'vas_order_detail':
       import('./pages/order/vas-order/vas-order-detail')
       return page
@@ -287,10 +279,6 @@ export default function route(page) {
       import('./pages/inbound/putaway-product')
       return page
 
-    case 'vas-work-order':
-      import('./pages/inbound/vas-work-order')
-      return page
-
     case 'worksheet_unloading':
       import('./pages/inbound/worksheet-unloading')
       return page
@@ -300,7 +288,7 @@ export default function route(page) {
       return page
 
     case 'worksheet_vas':
-      import('./pages/inbound/worksheet-vas')
+      import('./pages/vas/worksheet-vas')
       return page
 
     case 'unloading':
@@ -308,7 +296,11 @@ export default function route(page) {
       return page
 
     case 'execute_vas':
-      import('./pages/inbound/execute-vas')
+      import('./pages/vas/execute-vas')
+      return page
+
+    case 'vas_worksheets':
+      import('./pages/vas/vas-worksheet-list')
       return page
 
     /**

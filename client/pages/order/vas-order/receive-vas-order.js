@@ -233,7 +233,7 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
             generateVasOrderWorksheet(${gqlBuilder.buildArgs({
               vasNo: this._vasNo
             })}) {
-              unloadingWorksheet {
+              vasWorksheet {
                 name
               }
             }
@@ -242,9 +242,8 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
       })
 
       if (!response.errors) {
-        navigate('worksheets')
-
         this._showToast({ message: i18next.t('text.vas_order_has_been_confirmed') })
+        navigate('worksheets')
       }
     } catch (e) {
       this._showToast(e)
@@ -300,7 +299,7 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
       }
     )
 
-    popup.onclosed = cb
+    popup.onclosed
   }
 
   _showToast({ type, message }) {

@@ -8,7 +8,7 @@ import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { CustomAlert } from '../../utils/custom-alert'
 import { ORDER_TYPES } from '../order/constants/order'
-import { WORKSHEET_STATUS } from './constants/worksheet'
+import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
 
 class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -84,6 +84,11 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
             >${i18next.t('label.arrival_notice')}</label
           >
           <input ?hidden="${this._orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}" name="arrivalNotice" readonly />
+
+          <label ?hidden="${this._orderType !== ORDER_TYPES.SHIPPING.value}"
+            >${i18next.t('label.shipping_order')}</label
+          >
+          <input ?hidden="${this._orderType !== ORDER_TYPES.SHIPPING.value}" name="shipping_order" readonly />
 
           <label ?hidden="${this._orderType !== ORDER_TYPES.SHIPPING.value}"
             >${i18next.t('label.shipping_order')}</label
