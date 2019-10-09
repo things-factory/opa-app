@@ -115,6 +115,7 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
       columns: [
+        { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'gutter',
@@ -180,7 +181,7 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
           @selected="${e => {
             this.vasData = {
               ...this.vasData,
-              records: e.detail
+              records: [...this.vasData.records, ...e.detail]
             }
           }}"
         ></inventory-product-selector>
