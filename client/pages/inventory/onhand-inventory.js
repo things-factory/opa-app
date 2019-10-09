@@ -332,16 +332,8 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
           }
 
           await this.printer.connectAndPrint(command)
-        } catch (ex) {
-          document.dispatchEvent(
-            new CustomEvent('notify', {
-              detail: {
-                level: 'error',
-                message: ex,
-                ex
-              }
-            })
-          )
+        } catch (e) {
+          this._showToast(e)
 
           delete this.printer
           break
@@ -371,6 +363,17 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
   stateChanged(state) {
     let palletLabelSetting = state.dashboard[PALLET_LABEL_SETTING_KEY]
     this._palletLabel = (palletLabelSetting && palletLabelSetting.board) || {}
+  }
+
+  _showToast({ type, message }) {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: {
+          type,
+          message
+        }
+      })
+    )
   }
 }
 
