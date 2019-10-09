@@ -180,7 +180,7 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
           @selected="${e => {
             this.vasData = {
               ...this.vasData,
-              records: e.detail
+              records: [...this.vasData.records, ...e.detail]
             }
           }}"
         ></inventory-product-selector>
