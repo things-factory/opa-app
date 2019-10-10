@@ -1,8 +1,4 @@
 export const BILLING_MODE = {
-  METRIC_TONNE: {
-    name: 'metric_tonne',
-    value: 'METRIC_TONNE'
-  },
   FULL_LOAD: {
     name: 'full_load',
     value: 'FULL_LOAD'

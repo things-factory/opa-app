@@ -7,6 +7,7 @@ import { client, gqlBuilder, isMobileDevice, PageView, store, flattenObject } fr
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
+import { BILLING_MODE } from '../constants/claim'
 
 class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -62,7 +63,8 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
       _claimDetailGristConfig: Object,
       _orders: Object,
       _selectedOrderNo: String,
-      _claimDetailsData: Object
+      _claimDetailsData: Object,
+      _orderType: Object
     }
   }
 
@@ -96,6 +98,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async pageInitialized() {
+    this._orderType = { name: '' }
     this._orders = { ...(await this.fetchOrderList()) }
     this._claimDetailGristConfig = {
       pagination: { infinite: true },
@@ -163,21 +166,29 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
 
           <label>${i18next.t('label.order_no')}</label>
           <select name="orderNo" @change=${e => (this._selectedOrderNo = e.target.value)} data-name="name">
-            <option value="">-- Please Select an Order --</option>
+            <option value="">-- Please select an Order --</option>
 
-            ${Object.keys(this.___orders.data.claimOrderList || {}).map(key => {
-              const orderNo = this.___orders.data.claimOrderList[key]
+            ${Object.keys(this._orders.data.claimOrderList || {}).map(key => {
+              const orderNo = this._orders.data.claimOrderList[key]
               return html`
                 <option value="${orderNo.name}">${orderNo.description}</option>
               `
-            })}</select
-          >
+            })}</select>
 
           <label>${i18next.t('label.billing_mode')}</label>
-          <input disabled name="billingMode" value="" data-name="billingMode"></label>
+          <!-- <input disabled name="billingMode" value="" data-name="billingMode"></label> -->
+          <select name="billingMode">
+            <option value="">-- Please select a Billing Mode --</option>
+            
+            ${Object.keys(BILLING_MODE || {}).map(key => {
+              return html`
+                <option value="${BILLING_MODE[key].value}">${BILLING_MODE[key].name}</option>
+              `
+            })}</select>
+          </select>
 
           <label>${i18next.t('label.date')}</label>
-          <input disabled name="orderDate" value="" type="datetime-local" data-name="orderDate"></label>
+          <input disabled name="orderDate" value="" type="date" data-name="orderDate"></label>
 
           <label>${i18next.t('label.lorry_no')}</label>
           <input disabled name="lorryNo" value="" data-name="transportVehicle|name"></label>
@@ -188,11 +199,14 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
           <label>${i18next.t('label.customer')}</label>
           <input disabled name="bizplace" value="" data-name="bizplace|name"></label>
 
-          <label>${i18next.t('label.from')}</label>
-          <input disabled name="from" value="" data-name="from"></label>
+          <label ?hidden="${this._orderType.name !== 'collectionOrder'}">${i18next.t('label.from')}</label>
+          <input ?hidden="${this._orderType.name !==
+            'collectionOrder'}" disabled name="from" value="" data-name="from"></label>
 
-          <label>${i18next.t('label.to')}</label>
-          <input disabled name="to" value="" data-name="to"></label>
+          <label ?hidden="${this._orderType.name !== 'deliveryOrder'}">${i18next.t('label.to')}</label>
+          <input ?hidden="${this._orderType.name !==
+            'deliveryOrder'}" disabled name="to" value="" data-name="to"></label>
+
         </fieldset>
       </form>
 
@@ -253,10 +267,9 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
             filters
           })}){
             deliveryOrder{
-              deliveryDateTime
+              deliveryDate
               from
               to
-              loadType
               transportDriver{
                 id
                 name
@@ -270,10 +283,9 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
               }
             }   
             collectionOrder{
-              collectionDateTime
+              collectionDate
               from
               to
-              loadType
               transportDriver{
                 id
                 name
@@ -290,6 +302,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
         }
       `
     })
+
     this._fillOrderDetails(result.data.claimOrderDetail)
   }
 
@@ -319,17 +332,21 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _fillOrderDetails(objData) {
+    if (objData.deliveryOrder !== null) {
+      this._orderType = { name: 'deliveryOrder' }
+    } else if (objData.collectionOrder !== null) {
+      this._orderType = { name: 'collectionOrder' }
+    }
+
     var obj = flattenObject(objData.deliveryOrder || objData.collectionOrder)
     Object.keys(obj).map(key => {
       Array.from(this._form.querySelectorAll('input')).forEach(field => {
         if (
           field.dataset.name === 'orderDate' &&
-          field.type === 'datetime-local' &&
-          (key === 'deliveryDateTime' || key === 'collectionDateTime')
+          field.type === 'date' &&
+          (key === 'deliveryDate' || key === 'collectionDate')
         ) {
-          const datetime = Number(obj[key])
-          const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
-          field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
+          field.value = obj[key]
         } else if (field.dataset.name === key) {
           field.value = obj[key]
         }
@@ -348,18 +365,21 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
   _validateData(data) {
     let error = ''
 
-    if (data.name === '') error = error + 'Please choose the order for claim.'
-    if (data.claimDetails.length === 0) error = error + 'Please add at least one (1) claim to proceed.'
+    if (data.name === '') error = error + 'Please choose the order for claim. '
+    if (data.billingMode === '') error = error + 'Please choose the billing mode for claim. '
+    if (data.claimDetails.length === 0) error = error + 'Please add at least one (1) claim to proceed. '
 
     if (error.trim() !== '') throw new Error(error)
   }
 
   _getClaimData() {
     let claim = {}
-    Array.from(this._form.querySelectorAll('select')).forEach(field => {
-      claim['description'] = field.options[field.selectedIndex].text
-      claim['name'] = field.value
-    })
+    let orderNo = this._form.querySelector('[name="orderNo"]')
+    claim['description'] = orderNo.options[orderNo.selectedIndex].text
+    claim['name'] = orderNo.value
+
+    let billingMode = this._form.querySelector('[name="billingMode"]')
+    claim['billingMode'] = billingMode.value
 
     let claimDetails = {}
     claimDetails = this._dataGrist.dirtyRecords.map(claimDetail => {

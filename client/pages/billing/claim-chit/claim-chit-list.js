@@ -1,22 +1,11 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { openPopup } from '@things-factory/layout-base'
-import {
-  client,
-  gqlBuilder,
-  isMobileDevice,
-  PageView,
-  ScrollbarStyles,
-  store,
-  flattenObject
-} from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store, navigate } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
-import Swal from 'sweetalert2'
 
-// TODO: To be continue, in-progress (ChrisLim - 30 Sept 2019)
 class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
     return [
@@ -51,7 +40,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
       <search-form
         id="search-form"
         .fields=${this._searchFields}
-        initFocus="description"
+        initFocus="name"
         @submit=${e => this.dataGrist.fetch()}
       ></search-form>
 
@@ -88,18 +77,6 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
         name: 'name',
         type: 'text',
         props: { searchOper: 'like', placeholder: i18next.t('label.name') }
-      },
-      {
-        label: i18next.t('label.order_name'),
-        name: 'deliveryOrder.name',
-        type: 'text',
-        props: { searchOper: 'like' }
-      },
-      {
-        label: i18next.t('label.from_date'),
-        name: 'deliveryOrder.From',
-        type: 'date',
-        props: {}
       }
     ]
 
@@ -112,6 +89,16 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'reorder',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              if (record.id) navigate(`claim_chit_detail?id=${record.id}`)
+            }
+          }
+        },
+        {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),
@@ -121,7 +108,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'string',
-          name: 'deliveryOrder|transportDriver|name',
+          name: 'transportDriverName',
           header: i18next.t('field.driver_name'),
           record: { editable: false, align: 'left' },
           sortable: true,
@@ -129,7 +116,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'string',
-          name: 'deliveryOrder|transportVehicle|name',
+          name: 'transportVehicleName',
           header: i18next.t('field.vehicle_reg_no'),
           record: { editable: false, align: 'left' },
           sortable: true,
@@ -137,24 +124,24 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'string',
-          name: 'deliveryOrder|from',
+          name: 'from',
           header: i18next.t('field.from'),
           record: { editable: false, align: 'center' },
           sortable: true,
-          width: 100
+          width: 300
         },
         {
           type: 'string',
-          name: 'deliveryOrder|to',
+          name: 'to',
           header: i18next.t('field.to'),
           record: { editable: false, align: 'center' },
           sortable: true,
-          width: 100
+          width: 300
         },
         {
           type: 'string',
-          name: 'deliveryOrder|loadType',
-          header: i18next.t('field.load_type'),
+          name: 'billingMode',
+          header: i18next.t('field.billing_mode'),
           record: { editable: false, align: 'center' },
           sortable: true,
           width: 150
@@ -187,13 +174,10 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
 
   async fetchHandler({ page, limit, sorters = [] }) {
     try {
-      let inputs = { transportDriver_name: 'ali' }
       let args = gqlBuilder.buildArgs({
-        filters: [],
+        filters: [...this.searchForm.queryFilters],
         pagination: { page, limit },
-        sortings: sorters,
-        //extras: { ...inputs }
-        extras: [...this._conditionParser()]
+        sortings: sorters
       })
       const response = await client.query({
         query: gql`
@@ -203,40 +187,11 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
                 id
                 name
                 description
-                collectionOrder{
-                  collectionDateTime
-                  from
-                  to
-                  loadType
-                  transportDriver{
-                    id
-                    name
-                  }
-                  transportVehicle{
-                    id
-                    name
-                  }
-                  bizplace{
-                    name
-                  }
-                }
-                deliveryOrder{
-                  deliveryDateTime
-                  from
-                  to
-                  loadType
-                  transportDriver{
-                    id
-                    name
-                  }
-                  transportVehicle{
-                    id
-                    name
-                  }
-                  bizplace{
-                    name
-                  }
-                }
+                billingMode
+                transportDriverName
+                transportVehicleName
+                from
+                to
                 createdAt
                 updatedAt
                 updater {
@@ -252,14 +207,9 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!response.errors) {
-        let data = []
-        response.data.claims.items.map(key => {
-          data.push(flattenObject(key))
-        })
-
         return {
           total: response.data.claims.total || 0,
-          records: data
+          records: response.data.claims.items || {}
         }
       }
     } catch (e) {
@@ -286,10 +236,6 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
         }
       })
   }
-
-  // get _columns() {
-  //   return this._grist_config.columns
-  // }
 
   stateChanged(state) {
     if (JSON.parse(this.active)) {
