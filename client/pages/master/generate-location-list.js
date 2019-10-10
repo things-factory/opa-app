@@ -2,7 +2,7 @@ import '@things-factory/form-ui'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, ScrollbarStyles } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, ScrollbarStyles, sleep } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import Swal from 'sweetalert2'
@@ -151,7 +151,15 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
       </div>
 
       <div class="button-container">
-        <mwc-button @click=${this._validateGenerator}>${i18next.t('button.preview')}</mwc-button>
+        <mwc-button
+          @click=${async () => {
+            this.dataGrist.showSpinner()
+            await sleep(1)
+            this._validateGenerator()
+            this.dataGrist.hideSpinner()
+          }}
+          >${i18next.t('button.preview')}</mwc-button
+        >
         <mwc-button @click=${this._saveGeneratedLocation}>${i18next.t('button.save')}</mwc-button>
         <mwc-button @click=${this._deleteFromList}>${i18next.t('button.clear_list')}</mwc-button>
       </div>
@@ -231,7 +239,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
 
     this.previewConfig = {
       pagination: { pages: [100, 200, 500] },
-      rows: { selectable: { multiple: true } },
+      rows: { selectable: { multiple: true }, appendable: false },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
@@ -360,7 +368,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
     if (!validationError) this._generateLocationList()
   }
 
-  _generateLocationList() {
+  async _generateLocationList() {
     let locationData = this.data.records
     let validationError = false
     let tempLocationList = []
@@ -448,16 +456,17 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
       })
     } else {
       try {
-        Swal.fire({
-          title: i18next.t('text.please_wait'),
-          text: i18next.t('text.saving_locations'),
-          allowEscapeKey: true,
-          allowOutsideClick: false,
-          showConfirmButton: false,
-          onOpen: () => {
-            Swal.showLoading()
-          }
-        })
+        this.dataGrist.showSpinner()
+        // Swal.fire({
+        //   title: i18next.t('text.please_wait'),
+        //   text: i18next.t('text.saving_locations'),
+        //   allowEscapeKey: true,
+        //   allowOutsideClick: false,
+        //   showConfirmButton: false,
+        //   onOpen: () => {
+        //     Swal.showLoading()
+        //   }
+        // })
         for (let x = 0; x < chunkPatches.length; x++) {
           const patches = chunkPatches[x]
           const response = await client.query({
@@ -473,11 +482,11 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           })
         }
 
-        Swal.close()
+        // Swal.close()
         if (this.callback && typeof this.callback === 'function') this.callback()
         history.back()
       } catch (e) {
-        Swal.close()
+        // Swal.close()
         document.dispatchEvent(
           new CustomEvent('notify', {
             detail: {
@@ -486,6 +495,8 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
             }
           })
         )
+      } finally {
+        this.dataGrist.hideSpinner()
       }
     }
   }
