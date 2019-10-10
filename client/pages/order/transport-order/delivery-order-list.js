@@ -44,11 +44,7 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <search-form
-        id="search-form"
-        .fields=${this._searchFields}
-        @submit=${e => this.dataGrist.fetch()}
-      ></search-form>
+      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
       <div class="grist">
         <data-grist
@@ -66,9 +62,6 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
       exportable: {
         name: i18next.t('title.delivery_orders'),
         data: this._exportableData.bind(this)
-      },
-      importable: {
-        handler: () => {}
       }
     }
   }
@@ -89,8 +82,8 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
       },
       {
         label: i18next.t('field.delivery_date'),
-        name: 'deliveryDateTime',
-        type: 'datetime-local',
+        name: 'deliveryDate',
+        type: 'date',
         props: { searchOper: 'like' }
       },
       {
@@ -109,7 +102,7 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
     ]
 
     this.config = {
-      rows: { selectable: { multiple: true } },
+      rows: { selectable: { multiple: true }, appendable: false },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
@@ -256,7 +249,7 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
   }
 
   _exportableData() {
-    return this.dataGrist.exportRecords()  
+    return this.dataGrist.exportRecords()
   }
 }
 

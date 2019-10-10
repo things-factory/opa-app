@@ -84,7 +84,8 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
       rows: {
         selectable: {
           multiple: true
-        }
+        },
+        appendable: false
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },

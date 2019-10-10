@@ -86,7 +86,8 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
       rows: {
         selectable: {
           multiple: true
-        }
+        },
+        appendable: false
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -339,7 +340,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _exportableData() {
-    return this.dataGrist.exportRecords()  
+    return this.dataGrist.exportRecords()
   }
 
   stateChanged(state) {

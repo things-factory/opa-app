@@ -132,7 +132,8 @@ export class BufferLocationSelector extends localize(i18next)(LitElement) {
             this._warehouseId = record.id
             this.locationGrist.fetch()
           }
-        }
+        },
+        appendable: false
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -165,7 +166,8 @@ export class BufferLocationSelector extends localize(i18next)(LitElement) {
       rows: {
         selectable: {
           multiple: false
-        }
+        },
+        appendable: false
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },

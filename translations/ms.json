@@ -486,6 +486,7 @@
   "text.receive_arrival_notice": "terima notis ketibaan",
   "text.receive_collection_order": "terima pengunpulan barang",
   "text.receive_delivery_order": "terima pesanan penghantaran",
+  "text.receive_vas_order": "menerima pesanan vas",
   "text.reject_arrival_notice": "tolak notis ketibaan",
   "text.reject_collection_order": "tolak pesanan pengumpulan barang",
   "text.reject_delivery_order": "tolak pesanan penghantaran",
@@ -664,5 +665,6 @@
   "title.worksheet_vas": "VAS worksheet",
   "title.worksheet_picking": "pengambilan stok worksheet",
   "title.vas_worksheets": "VAS worksheets",
+  "title.vas_order": "pesanan VAS",
   "vas_order_created": "pesanan vas telah dicipta"
 }

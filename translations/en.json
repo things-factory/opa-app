@@ -487,6 +487,7 @@
   "text.receive_arrival_notice": "receive arrival notice",
   "text.receive_collection_order": "receive collection order",
   "text.receive_delivery_order": "receive delivery order",
+  "text.receive_vas_order": "receive vas order",
   "text.reject_arrival_notice": "reject arrival notice",
   "text.reject_collection_order": "reject collection order",
   "text.reject_delivery_order": "reject delivery order",
@@ -665,5 +666,6 @@
   "title.worksheet": "worksheet",
   "title.worksheet_vas": "VAS worksheet",
   "title.vas_worksheets": "VAS worksheets",
+  "title.vas_order": "VAS order",
   "vas_order_created": "vas order created"
 }

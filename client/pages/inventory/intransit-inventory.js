@@ -46,11 +46,7 @@ class IntransitInventory extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <search-form
-        id="search-form"
-        .fields=${this._searchFields}
-        @submit=${e => this.dataGrist.fetch()}
-      ></search-form>
+      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
       <div class="grist">
         <data-grist
@@ -77,6 +73,12 @@ class IntransitInventory extends localize(i18next)(PageView) {
     this.config = {
       list: {
         fields: ['palletId', 'product', 'bizplace', 'location']
+      },
+      rows: {
+        selectable: {
+          multiple: true
+        },
+        appendable: false
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -271,7 +273,7 @@ class IntransitInventory extends localize(i18next)(PageView) {
   }
 
   _exportableData() {
-    return this.dataGrist.exportRecords()  
+    return this.dataGrist.exportRecords()
   }
 }
 

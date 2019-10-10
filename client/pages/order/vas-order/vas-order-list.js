@@ -61,9 +61,6 @@ class VasOrderList extends localize(i18next)(PageView) {
       exportable: {
         name: i18next.t('title.vas_orders'),
         data: this._exportableData.bind(this)
-      },
-      importable: {
-        handler: () => {}
       }
     }
   }
@@ -102,7 +99,7 @@ class VasOrderList extends localize(i18next)(PageView) {
     ]
 
     this.config = {
-      rows: { selectable: { multiple: true } },
+      rows: { selectable: { multiple: true }, appendable: false },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
@@ -211,7 +208,7 @@ class VasOrderList extends localize(i18next)(PageView) {
   }
 
   _exportableData() {
-    return this.dataGrist.exportRecords()  
+    return this.dataGrist.exportRecords()
   }
 }
 

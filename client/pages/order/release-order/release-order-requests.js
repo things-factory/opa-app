@@ -62,9 +62,6 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
       exportable: {
         name: i18next.t('title.release_order_requests'),
         data: this._exportableData.bind(this)
-      },
-      importable: {
-        handler: () => {}
       }
     }
   }
@@ -109,7 +106,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
     ]
 
     this.config = {
-      rows: { selectable: { multiple: true } },
+      rows: { selectable: { multiple: true }, appendable: false },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },

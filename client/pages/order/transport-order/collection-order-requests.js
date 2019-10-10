@@ -44,11 +44,7 @@ class CollectionOrderRequests extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <search-form
-        id="search-form"
-        .fields=${this._searchFields}
-        @submit=${e => this.dataGrist.fetch()}
-      ></search-form>
+      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
       <div class="grist">
         <data-grist
@@ -66,9 +62,6 @@ class CollectionOrderRequests extends localize(i18next)(PageView) {
       exportable: {
         name: i18next.t('title.collection_orders'),
         data: this._exportableData.bind(this)
-      },
-      importable: {
-        handler: () => {}
       }
     }
   }
@@ -112,7 +105,7 @@ class CollectionOrderRequests extends localize(i18next)(PageView) {
     ]
 
     this.config = {
-      rows: { selectable: { multiple: true } },
+      rows: { selectable: { multiple: true }, appendable: false },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
@@ -274,7 +267,7 @@ class CollectionOrderRequests extends localize(i18next)(PageView) {
   }
 
   _exportableData() {
-    return this.dataGrist.exportRecords()  
+    return this.dataGrist.exportRecords()
   }
 }
 

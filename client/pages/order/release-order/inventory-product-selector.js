@@ -100,7 +100,8 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
         fields: ['product', 'batchId', 'location']
       },
       rows: {
-        selectable: { multiple: true }
+        selectable: { multiple: true },
+        appendable: false
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },

@@ -178,7 +178,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
   pageInitialized() {
     this.productGristConfig = {
       pagination: { infinite: true },
-      rows: { selectable: { multiple: true } },
+      rows: { selectable: { multiple: true }, appendable: false },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -242,7 +242,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
 
     this.vasGristConfig = {
       pagination: { infinite: true },
-      rows: { selectable: { multiple: true } },
+      rows: { selectable: { multiple: true }, appendable: false },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {

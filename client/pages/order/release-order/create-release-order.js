@@ -446,11 +446,6 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       // required field (vas && remark)
       if (this.vasGrist.data.records.filter(record => !record.vas || !record.remark).length)
         throw new Error(i18next.t('text.empty_value_in_list'))
-
-      // duplication of vas for same batch
-      const vasBatches = this.vasGrist.data.records.map(vas => `${vas.vas.id}-${vas.batchId}`)
-      if (vasBatches.filter((vasBatch, idx, vasBatches) => vasBatches.indexOf(vasBatch) !== idx).length)
-        throw new Error(i18next.t('text.duplicated_vas_on_same_batch'))
     }
   }
 

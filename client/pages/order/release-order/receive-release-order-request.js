@@ -205,7 +205,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
   pageInitialized() {
     this.inventoryGristConfig = {
       pagination: { infinite: true },
-      rows: { selectable: { multiple: true } },
+      rows: { selectable: { multiple: true }, appendable: false },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -264,7 +264,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
 
     this.vasGristConfig = {
       pagination: { infinite: true },
-      rows: { selectable: { multiple: true } },
+      rows: { selectable: { multiple: true }, appendable: false },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {

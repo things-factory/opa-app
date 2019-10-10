@@ -152,6 +152,8 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
     super()
     this._statusOptions = []
     this._ganNo = ''
+    this._roNo = ''
+    this._voNo = ''
   }
 
   async pageUpdated(changes) {
@@ -268,6 +270,8 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
 
       this._worksheetStatus = worksheet.status
       this._ganNo = (worksheet.arrivalNotice && worksheet.arrivalNotice.name) || ''
+      this._voNo = (worksheet.vasOrder && worksheet.vasOrder.name) || ''
+      this._roNo = (worksheet.releaseGood && worksheet.releaseGood.name) || ''
 
       this._orderType = worksheet.arrivalNotice
         ? ORDER_TYPES.ARRIVAL_NOTICE.value
