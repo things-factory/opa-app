@@ -121,14 +121,6 @@ class VasWorksheetList extends localize(i18next)(PageView) {
         },
         {
           type: 'object',
-          name: 'vasOrder',
-          header: i18next.t('field.vas_order'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 200
-        },
-        {
-          type: 'object',
           name: 'bizplace',
           header: i18next.t('field.customer'),
           record: { align: 'center' },
@@ -220,11 +212,7 @@ class VasWorksheetList extends localize(i18next)(PageView) {
           })}) {
             items {
               id
-              vasOrder {
-                id
-                name
-                description
-              }
+              name
               bizplace {
                 id
                 name
@@ -260,7 +248,7 @@ class VasWorksheetList extends localize(i18next)(PageView) {
   }
 
   _exportableData() {
-    return this.dataGrist.exportRecords()  
+    return this.dataGrist.exportRecords()
   }
 }
 
