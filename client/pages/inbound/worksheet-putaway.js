@@ -210,18 +210,20 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
                 description
               }
               targetInventory {
-                batchId
-                palletId
-                product {
-                  name
-                  description
+                inventory {
+                  batchId
+                  palletId
+                  product {
+                    name
+                    description
+                  }
+                  packingType
+                  location {
+                    name
+                    description
+                  }
+                  qty
                 }
-                packingType
-                location {
-                  name
-                  description
-                }
-                qty
               }
               status
             }
@@ -240,10 +242,9 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
       this.data = {
         records: worksheetDetails.map(worksheetDetail => {
           return {
-            ...worksheetDetail.targetInventory,
+            ...worksheetDetail.targetInventory.inventory,
             name: worksheetDetail.name,
             description: worksheetDetail.description,
-            toLocation: worksheetDetail.toLocation,
             status: worksheetDetail.status
           }
         })
