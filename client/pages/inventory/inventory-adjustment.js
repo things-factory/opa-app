@@ -43,7 +43,8 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     return {
       _searchFields: Array,
       config: Object,
-      data: Object
+      data: Object,
+      _palletLabel: Object
     }
   }
 
@@ -64,9 +65,26 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   get context() {
     return {
       title: i18next.t('title.inventory_adjustment'),
+      actions: [
+        {
+          title: i18next.t('button.pallet_label_print'),
+          action: this._printPalletLabel.bind(this)
+        },
+        {
+          title: i18next.t('button.save'),
+          action: this._saveCompanies.bind(this)
+        },
+        {
+          title: i18next.t('button.delete'),
+          action: this._deleteCompanies.bind(this)
+        }
+      ],
       exportable: {
         name: i18next.t('title.inventory_adjustment'),
         data: this._exportableData.bind(this)
+      },
+      importable: {
+        handler: this._exportableData.bind(this)
       }
     }
   }
@@ -120,7 +138,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           type: 'number',
           name: 'qty',
           header: i18next.t('field.qty'),
-          record: { align: 'center' },
+          record: { editable: true, align: 'center' },
           sortable: true,
           width: 80
         },
@@ -279,15 +297,128 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
+  async _saveCompanies() {
+    var patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
+    if (patches && patches.length) {
+      const response = await client.query({
+        query: gql`
+            mutation {
+              updateMultipleCompany(${gqlBuilder.buildArgs({
+                patches
+              })}) {
+                name
+              }
+            }
+          `
+      })
+
+      if (!response.errors) {
+        this.dataGrist.fetch()
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              message: i18next.t('text.data_updated_successfully')
+            }
+          })
+        )
+      }
+    }
+  }
+
+  async _deleteCompanies() {
+    CustomAlert({
+      title: i18next.t('text.are_you_sure'),
+      text: i18next.t('text.you_wont_be_able_to_revert_this!'),
+      type: 'warning',
+      confirmButton: { text: i18next.t('button.delete'), color: '#22a6a7' },
+      cancelButton: { text: 'cancel', color: '#cfcfcf' },
+      callback: async result => {
+        if (result.value) {
+          const names = this.dataGrist.selected.map(record => record.name)
+          if (names && names.length > 0) {
+            const response = await client.query({
+              query: gql`
+                mutation {
+                  deleteCompanies(${gqlBuilder.buildArgs({ names })})
+                }
+              `
+            })
+            if (!response.errors) {
+              this.dataGrist.fetch()
+              document.dispatchEvent(
+                new CustomEvent('notify', {
+                  detail: {
+                    message: i18next.t('text.data_deleted_successfully')
+                  }
+                })
+              )
+            }
+          }
+        }
+      }
+    })
+  }
+
   get _columns() {
     return this.config.columns
+  }
+
+  async _printPalletLabel() {
+    const records = this.dataGrist.selected
+    var labelId = this._palletLabel && this._palletLabel.id
+
+    if (!labelId) {
+      document.dispatchEvent(
+        new CustomEvent('notify', {
+          detail: {
+            level: 'error',
+            message: `${i18next.t('text.no_label_setting_was_found')}. ${i18next.t('text.please_check_your_setting')}`
+          }
+        })
+      )
+    } else {
+      for (var record of records) {
+        var searchParams = new URLSearchParams()
+
+        /* for pallet record mapping */
+        searchParams.append('pallet', record.palletId)
+        searchParams.append('batch', record.batchId)
+        searchParams.append('product', record.product.name)
+
+        try {
+          const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
+            method: 'GET'
+          })
+
+          if (response.status !== 200) {
+            throw `Error : Can't get label command from server (response: ${response.status})`
+          }
+
+          var command = await response.text()
+
+          if (!this.printer) {
+            this.printer = new USBPrinter()
+          }
+
+          await this.printer.connectAndPrint(command)
+        } catch (e) {
+          this._showToast(e)
+
+          delete this.printer
+          break
+        }
+      }
+    }
   }
 
   _exportableData() {
     return this.dataGrist.exportRecords()
   }
 
-  stateChanged(state) {}
+  stateChanged(state) {
+    let palletLabelSetting = state.dashboard[PALLET_LABEL_SETTING_KEY]
+    this._palletLabel = (palletLabelSetting && palletLabelSetting.board) || {}
+  }
 
   _showToast({ type, message }) {
     document.dispatchEvent(
