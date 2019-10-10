@@ -228,6 +228,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
             worksheetDetails {
               id
               name
+              description
               targetProduct {
                 product {
                   id
@@ -265,7 +266,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
 
       this.data = {
         records: worksheetDetails.map(worksheetDetail => {
-          return { ...worksheetDetail.targetProduct, name: worksheetDetail.name, status: worksheetDetail.status }
+          return { ...worksheetDetail.targetProduct, name: worksheetDetail.name, status: worksheetDetail.status, description: worksheetDetail.description }
         })
       }
     }

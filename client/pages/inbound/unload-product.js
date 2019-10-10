@@ -693,7 +693,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
 
   _getWorksheetDetails() {
     return this.orderProductData.records.map(task => {
-      return { name: task.name, remark: task.issue ? task.issue : null }
+      return { name: task.name, issue: task.issue ? task.issue : null }
     })
   }
 
