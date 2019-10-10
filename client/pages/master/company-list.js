@@ -85,7 +85,7 @@ class CompanyList extends localize(i18next)(PageView) {
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
     this.countryCodes = await getCodeByName('COUNTRY_CODE')
 
     this._searchFields = [
@@ -234,7 +234,6 @@ class CompanyList extends localize(i18next)(PageView) {
         }
       ]
     }
-
 
     this.config = this.gristConfig
   }
