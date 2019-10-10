@@ -332,7 +332,7 @@ export default {
     },
     {
       tagname: 'picking-product',
-      page: 'picking_product'
+      page: 'picking'
     }
   ],
   bootstrap
