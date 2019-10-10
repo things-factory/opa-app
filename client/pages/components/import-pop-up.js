@@ -80,10 +80,12 @@ class ImportPopUp extends localize(i18next)(LitElement) {
 
   updated(changedProps) {
     if (changedProps.has('config')) {
+      this.config.columns.splice(0, 0, { type: 'gutter', gutterName: 'row-selector', multiple: true })
+
       this._config = {
         ...this.config,
         pagination: { infinite: true },
-        columns: this.config.columns.filter(column => column.gutterName !== 'dirty' && column.gutterName !== 'button')
+        columns: this.config.columns
       }
     }
   }
@@ -99,7 +101,7 @@ class ImportPopUp extends localize(i18next)(LitElement) {
     const grist = this.shadowRoot.querySelector('data-grist')
     grist.commit()
     //patches is array of records
-    return grist.data.records.map(record => {
+    return grist.selected.map(record => {
       return {
         ...record,
         cuFlag: '+'
