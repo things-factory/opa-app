@@ -254,7 +254,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     this.data = { records: [] }
     this._productName = ''
     this.arrivalNoticeNo = ''
-    this.selectedOrderProduct = null
+    this._selectedOrderProduct = null
     this._selectedTaskStatus = null
     this._operationType = OPERATION_TYPE.PUTAWAY
   }
@@ -284,11 +284,11 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
             if (data.records.length && record) {
-              if (this.selectedOrderProduct && this.selectedOrderProduct.name === record) {
+              if (this._selectedOrderProduct && this._selectedOrderProduct.name === record) {
                 return
               }
 
-              this.selectedOrderProduct = record
+              this._selectedOrderProduct = record
               this._selectedTaskStatus = null
               this._selectedTaskStatus = record.status
               this._productName = `${record.product.name} ${
@@ -432,7 +432,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     this.inputForm.reset()
     this._productName = ''
     this.arrivalNoticeNo = ''
-    this.selectedOrderProduct = null
+    this._selectedOrderProduct = null
     this._selectedTaskStatus = null
   }
 
@@ -475,6 +475,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
         query: gql`
             mutation {
               putaway(${gqlBuilder.buildArgs({
+                worksheetDetailName: this._selectedOrderProduct.name,
                 palletId: this.palletInput.value,
                 toLocation: this.locationInput.value
               })})
@@ -486,7 +487,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
         this._fetchProducts(this.arrivalNoticeNo)
         this._focusOnPalletInput()
         this._selectedTaskStatus = null
-        this.selectedOrderProduct = null
+        this._selectedOrderProduct = null
         this.palletInput.value = ''
         this.locationInput.value = ''
       }
@@ -514,7 +515,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
         this._fetchProducts(this.arrivalNoticeNo)
         this._focusOnPalletInput()
         this._selectedTaskStatus = null
-        this.selectedOrderProduct = null
+        this._selectedOrderProduct = null
         this.palletInput.value = ''
         this.toPalletInput.value = ''
         this.qtyInput.value = ''
@@ -526,7 +527,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
 
   _validatePutaway() {
     // 1. validate for order selection
-    if (!this.selectedOrderProduct) throw new Error(i18next.t('text.target_doesnt_selected'))
+    if (!this._selectedOrderProduct) throw new Error(i18next.t('text.target_doesnt_selected'))
 
     // 2. pallet id existing
     if (!this.palletInput.value) {
@@ -535,7 +536,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     }
 
     // 3. Equality of pallet id
-    if (this.selectedOrderProduct.palletId !== this.palletInput.value) {
+    if (this._selectedOrderProduct.palletId !== this.palletInput.value) {
       setTimeout(() => this.palletInput.select(), 100)
       throw new Error(i18next.t('text.wrong_pallet_id'))
     }
@@ -549,7 +550,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
 
   _validateTransfer() {
     // 1. validate for order selection
-    if (!this.selectedOrderProduct) throw new Error(i18next.t('text.target_doesnt_selected'))
+    if (!this._selectedOrderProduct) throw new Error(i18next.t('text.target_doesnt_selected'))
 
     // 2. pallet id existing
     if (!this.palletInput.value) {
@@ -558,7 +559,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     }
 
     // 3. Equality of pallet id
-    if (this.selectedOrderProduct.palletId !== this.palletInput.value) {
+    if (this._selectedOrderProduct.palletId !== this.palletInput.value) {
       setTimeout(() => this.palletInput.select(), 100)
       throw new Error(i18next.t('text.wrong_pallet_id'))
     }
@@ -575,7 +576,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       throw new Error(i18next.t('text.qty_is_empty'))
     }
 
-    if (parseInt(this.qtyInput.value) > this.selectedOrderProduct.qty) {
+    if (parseInt(this.qtyInput.value) > this._selectedOrderProduct.qty) {
       this._focusOnQtyInput()
       throw new Error(i18next.t('text.qty_exceed_limit'))
     }
