@@ -230,6 +230,10 @@ export default function route(page) {
       import('./pages/billing/claim-chit/claim-chit-list')
       return page
 
+    case 'claim_chit_detail':
+      import('./pages/billing/claim-chit/claim-chit-detail')
+      return page
+
     /**
      * Inventory Menus Section
      */

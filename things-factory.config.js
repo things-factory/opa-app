@@ -235,6 +235,10 @@ export default {
       tagname: 'claim-chit-list',
       page: 'claim_chit_list'
     },
+    {
+      tagname: 'claim-chit-detail',
+      page: 'claim_chit_detail'
+    },
 
     /**
      * Billing Menus Section
