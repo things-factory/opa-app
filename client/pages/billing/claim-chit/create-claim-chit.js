@@ -176,13 +176,12 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
             })}</select>
 
           <label>${i18next.t('label.billing_mode')}</label>
-          <!-- <input disabled name="billingMode" value="" data-name="billingMode"></label> -->
           <select name="billingMode">
             <option value="">-- Please select a Billing Mode --</option>
             
             ${Object.keys(BILLING_MODE || {}).map(key => {
               return html`
-                <option value="${BILLING_MODE[key].value}">${BILLING_MODE[key].name}</option>
+                <option value="${BILLING_MODE[key].value}">${i18next.t(`label.${BILLING_MODE[key].name}`)}</option>
               `
             })}</select>
           </select>
