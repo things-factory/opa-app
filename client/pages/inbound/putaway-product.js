@@ -138,7 +138,9 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
             @keypress="${async e => {
               if (e.keyCode === 13) {
                 e.preventDefault()
-                if (e.currentTarget.value) this._fetchProducts(e.currentTarget.value)
+                if (this.arrivalNoticeNoInput.value) {
+                  this._fetchProducts(this.arrivalNoticeNoInput.value)
+                }
               }
             }}"
           ></barcode-scanable-input>
