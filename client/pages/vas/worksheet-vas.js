@@ -9,6 +9,7 @@ import { connect } from 'pwa-helpers/connect-mixin.js'
 import { CustomAlert } from '../../utils/custom-alert'
 import { ORDER_TYPES } from '../order/constants/order'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
+import '@things-factory/barcode-ui'
 
 class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -31,6 +32,13 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
           flex-direction: column;
           overflow-x: auto;
         }
+
+        barcode-tag {
+          width: 100px;
+          height: 100px;
+          margin: 10px;
+        }
+
         .grist {
           background-color: var(--main-section-background-color);
           display: flex;
@@ -71,7 +79,11 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
   get context() {
     return {
       title: i18next.t('title.worksheet_vas'),
-      actions: this._actions
+      actions: this._actions,
+      printable: {
+        accept: ['preview'],
+        content: this
+      }
     }
   }
 
@@ -106,6 +118,11 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
               `
             )}
           </select>
+
+          <label></label>
+          <span center custom-input>
+            <barcode-tag bcid="qrcode" .value=${this._worksheetNo}></barcode-tag>
+          </span>
         </fieldset>
       </form>
 
