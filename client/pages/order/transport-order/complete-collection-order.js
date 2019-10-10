@@ -1,7 +1,8 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
+import { openPopup } from '@things-factory/layout-base'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, PageView } from '@things-factory/shell'
+import { client, gqlBuilder, PageView, navigate } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
@@ -206,40 +207,53 @@ class CompleteCollectionOrder extends localize(i18next)(PageView) {
   }
 
   async _checkCollectionOrder() {
-    try {
-      const result = await CustomAlert({
-        title: i18next.t('title.are_you_sure'),
-        text: i18next.t('text.completed_collection_order'),
-        confirmButton: { text: i18next.t('button.confirm') },
-        cancelButton: { text: i18next.t('button.cancel') }
-      })
+    const popup = openPopup(
+      html`
+        <popup-note
+          .title="${i18next.t('title.remark')}"
+          @submit="${async e => {
+            try {
+              const result = await CustomAlert({
+                title: i18next.t('title.are_you_sure'),
+                text: i18next.t('text.completed_collection_order'),
+                confirmButton: { text: i18next.t('button.confirm') },
+                cancelButton: { text: i18next.t('button.cancel') }
+              })
 
-      if (!result.value) {
-        return
-      }
+              if (!result.value) {
+                return
+              }
 
-      let args = {
-        name: this._coNo
-      }
+              const response = await client.query({
+                query: gql`
+                mutation {
+                  checkCollectedOrder(${gqlBuilder.buildArgs({
+                    name: this._coNo,
+                    patch: { remark: e.detail.value }
+                  })}) {
+                    name
+                  }
+                }
+              `
+              })
 
-      const response = await client.query({
-        query: gql`
-          mutation {
-            checkCollectedOrder(${gqlBuilder.buildArgs(args)}) {
-              name
+              if (!response.errors) {
+                navigate('collection_order_requests')
+                this._showToast({ message: i18next.t('text.collection_order_completed') })
+              }
+            } catch (e) {
+              this._showToast(e)
             }
-          }
-        `
-      })
-
-      if (!response.errors) {
-        history.back()
-
-        this._showToast({ message: i18next.t('text.collection_order_completed') })
+          }}"
+        ></popup-note>
+      `,
+      {
+        backdrop: true,
+        size: 'medium',
+        title: i18next.t('title.completed_collection_order')
       }
-    } catch (e) {
-      this._showToast(e)
-    }
+    )
+    popup.onclosed
   }
 
   _showToast({ type, message }) {
