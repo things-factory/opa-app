@@ -130,7 +130,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
         </fieldset>
 
         <fieldset>
-          <legend>${`${i18next.t('title.release_good')}: ${this.releaseGoodNo}`}</legend>
+          <legend>${`${i18next.t('title.release_order')}: ${this.releaseGoodNo}`}</legend>
 
           <label>${i18next.t('label.customer')}</label>
           <input name="bizplaceName" readonly />
