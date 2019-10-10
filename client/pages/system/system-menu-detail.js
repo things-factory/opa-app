@@ -47,11 +47,22 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
           flex: 1;
         }
         .button-container {
-          display: flex;
-          margin-left: auto;
+          padding: 10px 0 12px 0;
+          text-align: center;
         }
-        .button-container > mwc-button {
-          padding: 10px;
+        .button-container > button {
+          background-color: var(--button-background-color);
+          border: var(--button-border);
+          border-radius: var(--button-border-radius);
+          margin: var(--button-margin);
+          padding: var(--button-padding);
+          color: var(--button-color);
+          font: var(--button-font);
+          text-transform: var(--button-text-transform);
+        }
+        .button-container > button:hover,
+        .button-container > button:active {
+          background-color: var(--button-background-focus-color);
         }
       `
     ]
@@ -72,8 +83,8 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
       </div>
 
       <div class="button-container">
-        <mwc-button @click=${this._saveMenus}>${i18next.t('button.save')}</mwc-button>
-        <mwc-button @click=${this._deleteMenus}>${i18next.t('button.delete')}</mwc-button>
+        <button @click=${this._saveMenus}>${i18next.t('button.save')}</button>
+        <button @click=${this._deleteMenus}>${i18next.t('button.delete')}</button>
       </div>
     `
   }

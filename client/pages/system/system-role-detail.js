@@ -42,10 +42,22 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
           border-bottom: var(--subtitle-border-bottom);
         }
         .button-container {
-          display: flex;
+          padding-bottom: 12px;
+          text-align: center;
         }
-        .button-container > mwc-button {
-          margin-left: auto;
+        .button-container > button {
+          background-color: var(--button-background-color);
+          border: var(--button-border);
+          border-radius: var(--button-border-radius);
+          margin: var(--button-margin);
+          padding: var(--button-padding);
+          color: var(--button-color);
+          font: var(--button-font);
+          text-transform: var(--button-text-transform);
+        }
+        .button-container > button:hover,
+        .button-container > button:active {
+          background-color: var(--button-background-focus-color);
         }
       `
     ]
@@ -76,7 +88,7 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
       </div>
 
       <div class="button-container">
-        <mwc-button @click="${this._saveRoleInfo}">${i18next.t('button.update')}</mwc-button>
+        <button @click="${this._saveRoleInfo}">${i18next.t('button.update')}</button>
       </div>
     `
   }
