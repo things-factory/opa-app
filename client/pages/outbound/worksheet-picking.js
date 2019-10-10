@@ -343,7 +343,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         query: gql`
           mutation {
             activatePicking(${gqlBuilder.buildArgs({
-              worksheetNo: this._worksheetNo
+              worksheetNo: this._worksheetNo,
+              pickingWorksheetDetails: this._getPickingWorksheetDetails()
             })}) {
               name
             }
@@ -373,12 +374,11 @@ class WorksheetPicking extends localize(i18next)(PageView) {
     }
   }
 
-  _getPutawayWorksheetDetails() {
+  _getPickingWorksheetDetails() {
     return this.grist.dirtyData.records.map(worksheetDetail => {
       return {
         name: worksheetDetail.name,
-        description: worksheetDetail.description,
-        toLocation: worksheetDetail.toLocation
+        description: worksheetDetail.description
       }
     })
   }
