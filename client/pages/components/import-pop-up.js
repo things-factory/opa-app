@@ -101,11 +101,21 @@ class ImportPopUp extends localize(i18next)(LitElement) {
     const grist = this.shadowRoot.querySelector('data-grist')
     grist.commit()
     //patches is array of records
+
     return grist.selected.map(record => {
-      return {
+      var selectedRecords = {
         ...record,
         cuFlag: '+'
       }
+
+      delete selectedRecords.__seq__
+      delete selectedRecords.__dirty__
+      delete selectedRecords.__selected__
+      delete selectedRecords.__changes__
+      delete selectedRecords.__dirtyfields__
+      delete selectedRecords.__origin__
+
+      return selectedRecords
     })
   }
 }
