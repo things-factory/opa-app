@@ -45,11 +45,7 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <search-form
-        id="search-form"
-        .fields=${this._searchFields}
-        @submit=${e => this.dataGrist.fetch()}
-      ></search-form>
+      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
       <div class="grist">
         <data-grist
@@ -154,14 +150,6 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
           record: { align: 'center' },
           sortable: true,
           width: 200
-        },
-        {
-          type: 'string',
-          name: 'name',
-          header: i18next.t('field.name'),
-          record: { align: 'left' },
-          sortable: true,
-          width: 180
         },
         {
           type: 'string',
@@ -280,7 +268,7 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
   }
 
   _exportableData() {
-    return this.dataGrist.exportRecords()  
+    return this.dataGrist.exportRecords()
   }
 }
 

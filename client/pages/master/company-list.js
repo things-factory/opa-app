@@ -1,5 +1,6 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
+import { getCodeByName } from '@things-factory/code-base'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
@@ -130,23 +131,33 @@ class CompanyList extends localize(i18next)(PageView) {
       }
     ]
 
-    this.importGristConfig = {
+    this.config = {
       rows: { selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
-        { type: 'gutter', gutterName: 'row-selector', multiple: true },
+        { type: 'gutter', gutterName: 'row-selector' },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'reorder',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              if (record.id) navigate(`bizplaces/${record.id}`)
+            }
+          }
+        },
         {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),
           record: {
             editable: true,
-            align: 'left',
-            imexSetting: { header: 'Name', key: 'name', width: 50, type: 'string' }
+            align: 'left'
           },
+          imex: { header: 'Name', key: 'name', width: 50, type: 'string' },
           sortable: true,
-          width: 250
+          width: 200
         },
         {
           type: 'string',
@@ -154,11 +165,11 @@ class CompanyList extends localize(i18next)(PageView) {
           header: i18next.t('field.description'),
           record: {
             editable: true,
-            align: 'center',
-            imexSetting: { header: 'Description', key: 'description', width: 100, type: 'string' }
+            align: 'left'
           },
+          imex: { header: 'Description', key: 'description', width: 50, type: 'string' },
           sortable: true,
-          width: 200
+          width: 150
         },
         {
           type: 'code',
@@ -167,19 +178,19 @@ class CompanyList extends localize(i18next)(PageView) {
           record: {
             editable: true,
             align: 'center',
-            codeName: 'COUNTRY_CODE',
-            imexSetting: {
-              header: 'Country Code',
-              key: 'countryCode',
-              width: 100,
-              type: 'array',
-              arrData: this.countryCodes.map(countryCodes => {
-                return {
-                  name: countryCodes.name,
-                  id: countryCodes.name
-                }
-              })
-            }
+            codeName: 'COUNTRY_CODE'
+          },
+          imex: {
+            header: 'Country Code',
+            key: 'countryCode',
+            width: 100,
+            type: 'array',
+            arrData: this.countryCodes.map(countryCodes => {
+              return {
+                name: countryCodes.name,
+                id: countryCodes.name
+              }
+            })
           },
           sortable: true,
           width: 200
@@ -190,11 +201,11 @@ class CompanyList extends localize(i18next)(PageView) {
           header: i18next.t('field.brn'),
           record: {
             editable: true,
-            align: 'center',
-            imexSetting: { header: 'Brn', key: 'brn', width: 100, type: 'string' }
+            align: 'left'
           },
+          imex: { header: 'Brn', key: 'brn', width: 50, type: 'string' },
           sortable: true,
-          width: 200
+          width: 100
         },
         {
           type: 'string',
@@ -202,11 +213,11 @@ class CompanyList extends localize(i18next)(PageView) {
           header: i18next.t('field.postal_code'),
           record: {
             editable: true,
-            align: 'center',
-            imexSetting: { header: 'Postal Code', key: 'postalCode', width: 100, type: 'string' }
+            align: 'left'
           },
+          imex: { header: 'Postal Code', key: 'postalCode', width: 50, type: 'string' },
           sortable: true,
-          width: 200
+          width: 150
         },
         {
           type: 'string',
@@ -214,11 +225,11 @@ class CompanyList extends localize(i18next)(PageView) {
           header: i18next.t('field.address'),
           record: {
             editable: true,
-            align: 'center',
-            imexSetting: { header: 'Address', key: 'address', width: 100, type: 'string' }
+            align: 'left'
           },
+          imex: { header: 'Address', key: 'address', width: 50, type: 'string' },
           sortable: true,
-          width: 200
+          width: 250
         },
         {
           type: 'string',
@@ -226,16 +237,30 @@ class CompanyList extends localize(i18next)(PageView) {
           header: i18next.t('field.status'),
           record: {
             editable: true,
-            align: 'center',
-            imexSetting: { header: 'Status', key: 'status', width: 100, type: 'string' }
+            align: 'left'
           },
+          imex: { header: 'Status', key: 'status', width: 50, type: 'string' },
           sortable: true,
-          width: 200
+          width: 80
+        },
+        {
+          type: 'datetime',
+          name: 'updatedAt',
+          header: i18next.t('field.updated_at'),
+          record: { editable: false, align: 'center' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'object',
+          name: 'updater',
+          header: i18next.t('field.updater'),
+          record: { editable: false, align: 'center' },
+          sortable: true,
+          width: 150
         }
       ]
     }
-
-    this.config = this.gristConfig
   }
 
   pageUpdated(changes, lifecycle) {
@@ -268,7 +293,7 @@ class CompanyList extends localize(i18next)(PageView) {
           record: {
             editable: true,
             align: 'left',
-            imexSetting: { header: 'Name', key: 'name', width: 50, type: 'string' }
+            imex: { header: 'Name', key: 'name', width: 50, type: 'string' }
           },
           sortable: true,
           width: 200
@@ -280,7 +305,7 @@ class CompanyList extends localize(i18next)(PageView) {
           record: {
             editable: true,
             align: 'left',
-            imexSetting: { header: 'Description', key: 'description', width: 50, type: 'string' }
+            imex: { header: 'Description', key: 'description', width: 50, type: 'string' }
           },
           sortable: true,
           width: 150
@@ -293,7 +318,7 @@ class CompanyList extends localize(i18next)(PageView) {
             editable: true,
             align: 'center',
             codeName: 'COUNTRY_CODE',
-            imexSetting: {
+            imex: {
               header: 'Country Code',
               key: 'countryCode',
               width: 100,
@@ -306,7 +331,6 @@ class CompanyList extends localize(i18next)(PageView) {
               })
             }
           },
-          record: { editable: true, align: 'center', codeName: 'COUNTRY_CODE' },
           sortable: true,
           width: 200
         },
@@ -317,7 +341,7 @@ class CompanyList extends localize(i18next)(PageView) {
           record: {
             editable: true,
             align: 'left',
-            imexSetting: { header: 'Brn', key: 'brn', width: 50, type: 'string' }
+            imex: { header: 'Brn', key: 'brn', width: 50, type: 'string' }
           },
           sortable: true,
           width: 100
@@ -329,7 +353,7 @@ class CompanyList extends localize(i18next)(PageView) {
           record: {
             editable: true,
             align: 'left',
-            imexSetting: { header: 'Postal Code', key: 'postalCode', width: 50, type: 'string' }
+            imex: { header: 'Postal Code', key: 'postalCode', width: 50, type: 'string' }
           },
           sortable: true,
           width: 150
@@ -341,7 +365,7 @@ class CompanyList extends localize(i18next)(PageView) {
           record: {
             editable: true,
             align: 'left',
-            imexSetting: { header: 'Address', key: 'address', width: 50, type: 'string' }
+            imex: { header: 'Address', key: 'address', width: 50, type: 'string' }
           },
           sortable: true,
           width: 250
@@ -353,7 +377,7 @@ class CompanyList extends localize(i18next)(PageView) {
           record: {
             editable: true,
             align: 'left',
-            imexSetting: { header: 'Status', key: 'status', width: 50, type: 'string' }
+            imex: { header: 'Status', key: 'status', width: 50, type: 'string' }
           },
           sortable: true,
           width: 80
@@ -392,7 +416,10 @@ class CompanyList extends localize(i18next)(PageView) {
         html`
           <import-pop-up
             .records=${records}
-            .config=${this.importGristConfig}
+            .config=${{
+              rows: this.config.rows,
+              columns: [...this.config.columns.filter(column => column.imex !== undefined)]
+            }}
             .importHandler="${this.importHandler.bind(this)}"
           ></import-pop-up>
         `,
@@ -454,7 +481,6 @@ class CompanyList extends localize(i18next)(PageView) {
           }
         `
     })
-
     if (!response.errors) {
       history.back()
       this.dataGrist.fetch()
@@ -544,22 +570,18 @@ class CompanyList extends localize(i18next)(PageView) {
     // data structure // { //    header: {headerName, fieldName, type = string, arrData = []} //    data: [{fieldName: value}] // }
 
     var headerSetting = this.dataGrist._config.columns
-      .filter(
-        column => column.type !== 'gutter' && column.record !== undefined && column.record.imexSetting !== undefined
-      )
+      .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
       .map(column => {
-        return column.record.imexSetting
+        return column.imex
       })
 
     var data = records.map(item => {
       return {
         id: item.id,
         ...this._columns
-          .filter(
-            column => column.type !== 'gutter' && column.record !== undefined && column.record.imexSetting !== undefined
-          )
+          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
           .reduce((record, column) => {
-            record[column.record.imexSetting.key] = column.record.imexSetting.key
+            record[column.imex.key] = column.imex.key
               .split('.')
               .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
             return record
