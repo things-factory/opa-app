@@ -312,19 +312,8 @@ class CompanyList extends localize(i18next)(PageView) {
   }
 
   async _saveCompanies() {
-    let patches = this.dataGrist.dirtyRecords
+    var patches = this.dataGrist.exportPatchList({ flagName: cuFlag })
     if (patches && patches.length) {
-      patches = patches.map(company => {
-        let patchField = company.id ? { id: company.id } : {}
-        const dirtyFields = company.__dirtyfields__
-        for (let key in dirtyFields) {
-          patchField[key] = dirtyFields[key].after
-        }
-        patchField.cuFlag = company.__dirty__
-
-        return patchField
-      })
-
       const response = await client.query({
         query: gql`
             mutation {
