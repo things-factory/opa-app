@@ -130,15 +130,6 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
               }
             }}"
           ></barcode-scanable-input>
-          <!-- <input
-            name="orderNo"
-            @keypress="${async e => {
-            if (e.keyCode === 13) {
-              e.preventDefault()
-              this._fetchVass(e.currentTarget.value, this.orderTypeInput.value)
-            }
-          }}"
-          /> -->
 
           <label>${i18next.t('label.order_type')}</label>
           <select

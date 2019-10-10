@@ -9,6 +9,7 @@ import { css, html } from 'lit-element'
 import { CustomAlert } from '../../utils/custom-alert'
 import { WORKSHEET_STATUS } from './constants/worksheet'
 import './pallet-label-popup'
+import '@things-factory/barcode-ui'
 
 class WorksheetUnloading extends localize(i18next)(PageView) {
   static get properties() {
@@ -16,6 +17,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       _statusOptions: Array,
       _worksheetNo: String,
       _worksheetStatus: String,
+      _ganNo: String,
       config: Object,
       data: Object
     }
@@ -37,6 +39,12 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
           flex: 1;
           overflow-y: auto;
         }
+        barcode-tag {
+          width: 100px;
+          height: 100px;
+          margin: 10px;
+        }
+
         data-grist {
           overflow-y: hidden;
           flex: 1;
@@ -68,7 +76,14 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
   }
 
   get context() {
-    return { title: i18next.t('title.worksheet_unloading'), actions: this._actions }
+    return {
+      title: i18next.t('title.worksheet_unloading'),
+      actions: this._actions,
+      printable: {
+        accept: ['preview'],
+        content: this
+      }
+    }
   }
 
   render() {
@@ -92,10 +107,17 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
           <select name="status" disabled>
             ${this._statusOptions.map(
               status => html`
-                <option value="${status.name}">${i18next.t(`label.${status.description}`)}</option>
+                <option value="${status.name}" ?selected="${this._worksheetStatus === status.name}"
+                  >${i18next.t(`label.${status.description}`)}</option
+                >
               `
             )}
           </select>
+
+          <label>${i18next.t(`label.order_qr_code`)}</label>
+          <span center custom-input>
+            <barcode-tag bcid="qrcode" .value=${this._ganNo}></barcode-tag>
+          </span>
         </fieldset>
       </form>
 
@@ -115,6 +137,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
   constructor() {
     super()
     this._statusOptions = []
+    this._ganNo = ''
   }
 
   async pageUpdated(changes) {
@@ -255,6 +278,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       const worksheet = response.data.worksheet
       const worksheetDetails = worksheet.worksheetDetails
       this._worksheetStatus = worksheet.status
+      this._ganNo = (worksheet.arrivalNotice && worksheet.arrivalNotice.name) || ''
 
       this._fillupForm({
         ...worksheet,
@@ -266,7 +290,12 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
 
       this.data = {
         records: worksheetDetails.map(worksheetDetail => {
-          return { ...worksheetDetail.targetProduct, name: worksheetDetail.name, status: worksheetDetail.status, description: worksheetDetail.description }
+          return {
+            ...worksheetDetail.targetProduct,
+            name: worksheetDetail.name,
+            status: worksheetDetail.status,
+            description: worksheetDetail.description
+          }
         })
       }
     }

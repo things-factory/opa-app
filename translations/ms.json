@@ -662,6 +662,7 @@
   "title.worksheet": "lembaran kerja",
   "title.worksheet_unloading": "pemunggahan worksheet",
   "title.worksheet_vas": "VAS worksheet",
+  "title.worksheet_picking": "pengambilan stok worksheet",
   "title.vas_worksheets": "VAS worksheets",
   "vas_order_created": "pesanan vas telah dicipta"
 }

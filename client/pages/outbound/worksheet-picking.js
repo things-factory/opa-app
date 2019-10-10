@@ -6,12 +6,14 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../utils/custom-alert'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
+import '@things-factory/barcode-ui'
 
 class WorksheetPicking extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _worksheetNo: String,
       _worksheetStatus: String,
+      _roNo: String,
       config: Object,
       data: Object
     }
@@ -25,6 +27,11 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           display: flex;
           flex-direction: column;
           overflow-x: auto;
+        }
+        barcode-tag {
+          width: 100px;
+          height: 100px;
+          margin: 10px;
         }
         .grist {
           background-color: var(--main-section-background-color);
@@ -66,8 +73,17 @@ class WorksheetPicking extends localize(i18next)(PageView) {
   get context() {
     return {
       title: i18next.t('title.worksheet_picking'),
-      actions: this._actions
+      actions: this._actions,
+      printable: {
+        accept: ['preview'],
+        content: this
+      }
     }
+  }
+
+  constructor() {
+    super()
+    this._roNo = ''
   }
 
   render() {
@@ -75,7 +91,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       <form class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.picking')}</legend>
-          <label>${i18next.t('label.release_good')}</label>
+          <label>${i18next.t('label.release_good_no')}</label>
           <input name="releaseGood" readonly />
 
           <label>${i18next.t('label.customer')}</label>
@@ -91,6 +107,11 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               `
             )}
           </select>
+
+          <label>${i18next.t(`label.order_qr_code`)}</label>
+          <span center custom-input>
+            <barcode-tag bcid="qrcode" .value=${this._roNo}></barcode-tag>
+          </span>
         </fieldset>
       </form>
 
@@ -175,20 +196,21 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           type: 'integer',
           name: 'qty',
           header: i18next.t('field.qty'),
-          record: { align: 'right' },
+          record: { align: 'center' },
           width: 60
         },
         {
           type: 'integer',
           name: 'releaseQty',
           header: i18next.t('field.release_qty'),
-          record: { align: 'right' },
+          record: { align: 'center' },
           width: 60
         },
         {
           type: 'string',
           name: 'description',
           header: i18next.t('field.comment'),
+          record: { align: 'center' },
           width: 300
         }
       ]
@@ -256,6 +278,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       const worksheet = response.data.worksheet
       const worksheetDetails = worksheet.worksheetDetails
       this._worksheetStatus = worksheet.status
+      this._roNo = (worksheet.releaseGood && worksheet.releaseGood.name) || ''
 
       this._fillupForm(worksheet)
       this.data = {

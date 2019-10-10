@@ -124,7 +124,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
 
           <label>${i18next.t(`label.order_qr_code`)}</label>
           <span center custom-input ?hidden="${this._orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}">
-            <barcode-tag bcid="qrcode" .value=${this._gaNo}></barcode-tag>
+            <barcode-tag bcid="qrcode" .value=${this._ganNo}></barcode-tag>
           </span>
           <span center custom-input ?hidden="${this._orderType !== ORDER_TYPES.RELEASE_OF_GOODS.value}">
             <barcode-tag bcid="qrcode" .value=${this._roNo}></barcode-tag>

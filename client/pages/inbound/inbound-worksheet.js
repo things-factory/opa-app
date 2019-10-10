@@ -63,9 +63,6 @@ class InboundWorksheet extends localize(i18next)(PageView) {
       exportable: {
         name: i18next.t('title.inbound_worksheet'),
         data: this._exportableData.bind(this)
-      },
-      importable: {
-        handler: () => {}
       }
     }
   }
