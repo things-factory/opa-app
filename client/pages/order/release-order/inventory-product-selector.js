@@ -94,27 +94,11 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
   }
 
   async firstUpdated() {
-    this._searchFields = [
-      {
-        label: i18next.t('field.warehouse_name'),
-        name: 'warehouse',
-        type: 'text',
-        props: {
-          searchOper: 'like'
-        }
-      },
-      {
-        label: i18next.t('field.product_name'),
-        name: 'product_id',
-        type: 'text',
-        props: {
-          searchOper: 'like'
-        }
-      }
-    ]
-
     this.inventoryConfig = {
       pagination: { infinite: true },
+      list: {
+        fields: ['product', 'batchId', 'location']
+      },
       rows: {
         selectable: { multiple: true }
       },
@@ -122,10 +106,19 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
+          type: 'string',
+          name: 'palletId',
+          header: i18next.t('field.pallet_id'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 150
+        },
+        {
           type: 'object',
           name: 'product',
           record: { align: 'center' },
           header: i18next.t('field.product'),
+          sortable: true,
           width: 250
         },
         {
@@ -133,6 +126,7 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
           name: 'batchId',
           record: { align: 'center' },
           header: i18next.t('field.batch_id'),
+          sortable: true,
           width: 200
         },
         {
@@ -140,6 +134,7 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
           name: 'location',
           record: { align: 'center' },
           header: i18next.t('field.location'),
+          sortable: true,
           width: 180
         },
         {
@@ -147,6 +142,7 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
           name: 'packingType',
           record: { align: 'center' },
           header: i18next.t('field.packing_type'),
+          sortable: true,
           width: 200
         },
         {
@@ -154,10 +150,32 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
           name: 'qty',
           record: { align: 'center' },
           header: i18next.t('field.qty'),
+          sortable: true,
           width: 120
         }
       ]
     }
+
+    this._searchFields = [
+      {
+        label: i18next.t('field.location'),
+        name: 'locationName',
+        type: 'text',
+        props: { searchOper: 'like' }
+      },
+      {
+        label: i18next.t('field.batch_id'),
+        name: 'batchId',
+        type: 'text',
+        props: { searchOper: 'like' }
+      },
+      {
+        label: i18next.t('field.product'),
+        name: 'productName',
+        type: 'text',
+        props: { searchOper: 'like' }
+      }
+    ]
 
     this.inventoryGrist.fetch()
   }
@@ -171,35 +189,45 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
   }
 
   async fetchInventoryProduct({ page, limit, sorters = [] }) {
+    let inventory = {}
+    this.searchForm.queryFilters.forEach(filter => {
+      inventory[filter.name] = filter.value
+    })
     const response = await client.query({
       query: gql`
         query {
-          inventories(${gqlBuilder.buildArgs({
-            filters: this._conditionParser(),
+          onhandInventories(${gqlBuilder.buildArgs({
+            inventory,
             pagination: { page, limit },
             sortings: sorters
           })}) {
             items {
               id
-              name
+              palletId
               batchId
-              qty
               packingType
+              bizplace {
+                name
+                description
+              }
               product {
-                id
                 name
+                description
               }
+              qty
               warehouse {
-                id
                 name
-                locations {
-                  id
-                  name
-                }
+                description
               }
+              zone
               location {
-                id
                 name
+                description
+              }
+              updatedAt
+              updater {
+                name
+                description
               }
             }
             total
@@ -210,8 +238,8 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
 
     if (!response.errors) {
       return {
-        total: response.data.inventories.total || 0,
-        records: response.data.inventories.items || []
+        total: response.data.onhandInventories.total || 0,
+        records: response.data.onhandInventories.items || []
       }
     }
   }

@@ -211,8 +211,8 @@ class VasOrderDetail extends localize(i18next)(PageView) {
     if (this._status === ORDER_STATUS.PENDING.value) {
       this._actions = [
         {
-          title: i18next.t('button.edit'),
-          action: this._changeToEditable.bind(this)
+          title: i18next.t('button.delete'),
+          action: this._deleteVasOrder.bind(this)
         },
         {
           title: i18next.t('button.confirm'),
@@ -229,11 +229,11 @@ class VasOrderDetail extends localize(i18next)(PageView) {
     })
   }
 
-  async _changeToEditable() {
+  async _deleteVasOrder() {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
-        text: i18next.t('text.change_to_editable'),
+        text: i18next.t('text.you_wont_be_able_to_revert'),
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
@@ -242,18 +242,16 @@ class VasOrderDetail extends localize(i18next)(PageView) {
         const response = await client.query({
           query: gql`
             mutation {
-              updateVasOrder(${gqlBuilder.buildArgs({
-                name: this._vasNo,
-                patch: { status: ORDER_STATUS.EDITING.value }
-              })}) {
-                name 
-              }
+              deleteVasOrder(${gqlBuilder.buildArgs({
+                name: this._vasNo
+              })}) 
             }
           `
         })
 
         if (!response.errors) {
-          navigate(`edit_vas_order/${this._vasNo}`)
+          this._showToast({ message: i18next.t('text.vas_order_has_been_deleted') })
+          navigate(`vas_orders`)
         }
       }
     } catch (e) {

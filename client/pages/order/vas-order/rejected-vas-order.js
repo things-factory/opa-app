@@ -118,30 +118,17 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'close',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              this.vasData = {
-                ...this.vasData,
-                records: data.records.filter((record, idx) => idx !== rowIndex)
-              }
-            }
-          }
+          type: 'object',
+          name: 'product',
+          header: i18next.t('field.inventory_list'),
+          record: { align: 'center' },
+          width: 250
         },
         {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
           record: { align: 'center', options: { queryName: 'vass' } },
-          width: 250
-        },
-        {
-          type: 'object',
-          name: 'product',
-          header: i18next.t('field.inventory_list'),
-          record: { align: 'center' },
           width: 250
         },
         {
