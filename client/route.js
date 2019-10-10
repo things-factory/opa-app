@@ -241,6 +241,10 @@ export default function route(page) {
       import('./pages/inventory/inventory-history')
       return page
 
+    case 'inventory_adjustment':
+      import('./pages/inventory/inventory-adjustment')
+      return page
+
     /**
      * System Menus Section
      */

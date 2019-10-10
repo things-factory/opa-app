@@ -251,6 +251,10 @@ export default {
       tagname: 'inventory-history',
       page: 'inventory_histories'
     },
+    {
+      tagname: 'inventory-adjustment',
+      page: 'inventory_adjustment'
+    },
 
     /**
      * System Menus Section
