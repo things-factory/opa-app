@@ -113,6 +113,9 @@ class CompletedCollectionOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.assigned_driver')}</label>
             <input name=${this._assignedDriverName} value=${this._assignedDriverName} readonly />
 
+            <label>${i18next.t('label.remark')}</label>
+            <textarea name="remark" readonly></textarea>
+
             <label>${i18next.t('label.download_co')}</label>
             <a href="/attachment/${this._path}" target="_blank"><mwc-icon>cloud_download</mwc-icon></a>
           </fieldset>
@@ -150,6 +153,7 @@ class CompletedCollectionOrder extends localize(i18next)(PageView) {
             cargoType
             urgency
             status
+            remark
             attachments {
               id
               name
