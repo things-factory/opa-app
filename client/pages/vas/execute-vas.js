@@ -91,10 +91,6 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   }
 
   get orderNoInput() {
-    return this.shadowRoot.querySelector('input[name=orderNo]')
-  }
-
-  get orderBarcodeInput() {
     return this.shadowRoot.querySelector('barcode-scanable-input[name=orderNo]').shadowRoot.querySelector('input')
   }
 
@@ -130,7 +126,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
             @keypress="${e => {
               if (e.keyCode === 13) {
                 e.preventDefault()
-                this._fetchVass(e.currentTarget.value, this.orderTypeInput.value)
+                this._fetchVass(this._orderNo, this.orderTypeInput.value)
               }
             }}"
           ></barcode-scanable-input>
@@ -364,7 +360,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _focusOnBarcodeField() {
-    setTimeout(() => this.orderBarcodeInput.focus(), 100)
+    setTimeout(() => this.orderNoInput.focus(), 100)
   }
 
   async _fetchVass(orderNo, orderType) {
@@ -521,7 +517,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
         this._selectedTaskStatus = null
         this.infoForm.reset()
         this.inputForm.reset()
-        this._fetchVass(this.orderNo, this.orderType)
+        this._fetchVass(this.orderNoInput.value, this.orderType)
       }
     } catch (e) {
       this._showToast(e)
