@@ -19,7 +19,7 @@ class SystemUserBizplacesDetail extends localize(i18next)(LitElement) {
       MultiColumnFormStyles,
       css`
         :host {
-          padding: 10px;
+          padding: 0 15px;
           display: flex;
           flex-direction: column;
           overflow-x: overlay;

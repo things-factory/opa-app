@@ -24,7 +24,8 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
           display: flex;
           flex-direction: column;
           overflow: hidden;
-          background-color: white;
+          padding: 0 15px;
+          background-color: #fff;
         }
         h2 {
           padding: var(--subtitle-padding);
@@ -59,11 +60,7 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
   render() {
     return html`
       <h2>${i18next.t('title.menu')}</h2>
-      <search-form
-        id="search-form"
-        .fields=${this._searchFields}
-        @submit=${e => this.dataGrist.fetch()}
-      ></search-form>
+      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
       <h2>${i18next.t('title.submenus')}</h2>
       <div class="grist">
