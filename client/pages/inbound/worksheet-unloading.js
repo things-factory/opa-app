@@ -159,21 +159,21 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
           type: 'integer',
           name: 'palletQty',
           header: i18next.t('field.pallet_qty'),
-          record: { align: 'right' },
+          record: { align: 'center' },
           width: 60
         },
         {
           type: 'integer',
           name: 'packQty',
           header: i18next.t('field.pack_qty'),
-          record: { align: 'right' },
+          record: { align: 'center' },
           width: 60
         },
         {
           type: 'integer',
           name: 'totalWeight',
           header: i18next.t('field.total_weight'),
-          record: { align: 'right' },
+          record: { align: 'center' },
           width: 80
         },
         {
