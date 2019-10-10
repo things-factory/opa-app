@@ -312,7 +312,7 @@ class CompanyList extends localize(i18next)(PageView) {
   }
 
   async _saveCompanies() {
-    var patches = this.dataGrist.exportPatchList({ flagName: cuFlag })
+    var patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
     if (patches && patches.length) {
       const response = await client.query({
         query: gql`
