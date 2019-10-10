@@ -86,6 +86,8 @@ class CompanyList extends localize(i18next)(PageView) {
   }
 
   pageInitialized() {
+    this.countryCodes = await getCodeByName('COUNTRY_CODE')
+
     this._searchFields = [
       {
         label: i18next.t('field.name'),
@@ -95,8 +97,17 @@ class CompanyList extends localize(i18next)(PageView) {
       },
       {
         label: i18next.t('field.country_code'),
-        name: 'country_code',
-        type: 'text',
+        name: 'countryCode',
+        type: 'select',
+        options: [
+          { value: '' },
+          ...this.countryCodes.map(countryCodes => {
+            return {
+              name: countryCodes.name,
+              value: countryCodes.name
+            }
+          })
+        ],
         props: { searchOper: 'like' }
       },
       {
@@ -118,6 +129,112 @@ class CompanyList extends localize(i18next)(PageView) {
         props: { searchOper: 'like' }
       }
     ]
+
+    this.importGristConfig = {
+      rows: { selectable: { multiple: true } },
+      columns: [
+        { type: 'gutter', gutterName: 'dirty' },
+        { type: 'gutter', gutterName: 'sequence' },
+        { type: 'gutter', gutterName: 'row-selector', multiple: true },
+        {
+          type: 'string',
+          name: 'name',
+          header: i18next.t('field.name'),
+          record: {
+            editable: true,
+            align: 'left',
+            imexSetting: { header: 'Name', key: 'name', width: 50, type: 'string' }
+          },
+          sortable: true,
+          width: 250
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.description'),
+          record: {
+            editable: true,
+            align: 'center',
+            imexSetting: { header: 'Description', key: 'description', width: 100, type: 'string' }
+          },
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'code',
+          name: 'countryCode',
+          header: i18next.t('field.country_code'),
+          record: {
+            editable: true,
+            align: 'center',
+            codeName: 'COUNTRY_CODE',
+            imexSetting: {
+              header: 'Country Code',
+              key: 'countryCode',
+              width: 100,
+              type: 'array',
+              arrData: this.countryCodes.map(countryCodes => {
+                return {
+                  name: countryCodes.name,
+                  id: countryCodes.name
+                }
+              })
+            }
+          },
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'brn',
+          header: i18next.t('field.brn'),
+          record: {
+            editable: true,
+            align: 'center',
+            imexSetting: { header: 'Brn', key: 'brn', width: 100, type: 'string' }
+          },
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'postalCode',
+          header: i18next.t('field.postal_code'),
+          record: {
+            editable: true,
+            align: 'center',
+            imexSetting: { header: 'Postal Code', key: 'postalCode', width: 100, type: 'string' }
+          },
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'address',
+          header: i18next.t('field.address'),
+          record: {
+            editable: true,
+            align: 'center',
+            imexSetting: { header: 'Address', key: 'address', width: 100, type: 'string' }
+          },
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: {
+            editable: true,
+            align: 'center',
+            imexSetting: { header: 'Status', key: 'status', width: 100, type: 'string' }
+          },
+          sortable: true,
+          width: 200
+        }
+      ]
+    }
+
 
     this.config = this.gristConfig
   }
@@ -149,7 +266,11 @@ class CompanyList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),
-          record: { editable: true, align: 'center' },
+          record: {
+            editable: true,
+            align: 'left',
+            imexSetting: { header: 'Name', key: 'name', width: 50, type: 'string' }
+          },
           sortable: true,
           width: 200
         },
@@ -157,7 +278,11 @@ class CompanyList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
-          record: { editable: true, align: 'left' },
+          record: {
+            editable: true,
+            align: 'left',
+            imexSetting: { header: 'Description', key: 'description', width: 50, type: 'string' }
+          },
           sortable: true,
           width: 150
         },
@@ -165,15 +290,36 @@ class CompanyList extends localize(i18next)(PageView) {
           type: 'code',
           name: 'countryCode',
           header: i18next.t('field.country_code'),
+          record: {
+            editable: true,
+            align: 'center',
+            codeName: 'COUNTRY_CODE',
+            imexSetting: {
+              header: 'Country Code',
+              key: 'countryCode',
+              width: 100,
+              type: 'array',
+              arrData: this.countryCodes.map(countryCodes => {
+                return {
+                  name: countryCodes.name,
+                  id: countryCodes.name
+                }
+              })
+            }
+          },
           record: { editable: true, align: 'center', codeName: 'COUNTRY_CODE' },
           sortable: true,
-          width: 80
+          width: 200
         },
         {
           type: 'string',
           name: 'brn',
           header: i18next.t('field.brn'),
-          record: { editable: true, align: 'left' },
+          record: {
+            editable: true,
+            align: 'left',
+            imexSetting: { header: 'Brn', key: 'brn', width: 50, type: 'string' }
+          },
           sortable: true,
           width: 100
         },
@@ -181,7 +327,11 @@ class CompanyList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'postalCode',
           header: i18next.t('field.postal_code'),
-          record: { editable: true, align: 'left' },
+          record: {
+            editable: true,
+            align: 'left',
+            imexSetting: { header: 'Postal Code', key: 'postalCode', width: 50, type: 'string' }
+          },
           sortable: true,
           width: 150
         },
@@ -189,7 +339,11 @@ class CompanyList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'address',
           header: i18next.t('field.address'),
-          record: { editable: true, align: 'left' },
+          record: {
+            editable: true,
+            align: 'left',
+            imexSetting: { header: 'Address', key: 'address', width: 50, type: 'string' }
+          },
           sortable: true,
           width: 250
         },
@@ -197,7 +351,11 @@ class CompanyList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'status',
           header: i18next.t('field.status'),
-          record: { editable: true, align: 'center' },
+          record: {
+            editable: true,
+            align: 'left',
+            imexSetting: { header: 'Status', key: 'status', width: 50, type: 'string' }
+          },
           sortable: true,
           width: 80
         },
@@ -235,7 +393,7 @@ class CompanyList extends localize(i18next)(PageView) {
         html`
           <import-pop-up
             .records=${records}
-            .config=${this.config}
+            .config=${this.importGristConfig}
             .importHandler="${this.importHandler.bind(this)}"
           ></import-pop-up>
         `,
@@ -378,7 +536,40 @@ class CompanyList extends localize(i18next)(PageView) {
   }
 
   _exportableData() {
-    return this.dataGrist.exportRecords()
+    let records = []
+    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+      records = this.dataGrist.selected
+    } else {
+      records = this.dataGrist.data.records
+    }
+    // data structure // { //    header: {headerName, fieldName, type = string, arrData = []} //    data: [{fieldName: value}] // }
+
+    var headerSetting = this.dataGrist._config.columns
+      .filter(
+        column => column.type !== 'gutter' && column.record !== undefined && column.record.imexSetting !== undefined
+      )
+      .map(column => {
+        return column.record.imexSetting
+      })
+
+    var data = records.map(item => {
+      return {
+        id: item.id,
+        ...this._columns
+          .filter(
+            column => column.type !== 'gutter' && column.record !== undefined && column.record.imexSetting !== undefined
+          )
+          .reduce((record, column) => {
+            record[column.record.imexSetting.key] = column.record.imexSetting.key
+              .split('.')
+              .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
+            return record
+          }, {})
+      }
+    })
+
+    return { header: headerSetting, data: data }
+    // return this.dataGrist.exportRecords()
   }
 }
 
