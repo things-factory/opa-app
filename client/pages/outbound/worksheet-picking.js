@@ -367,6 +367,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         }
 
         this._worksheetNo = ''
+        await this.fetchWorksheet()
+        this._updateContext()
         navigate(`outbound_worksheets`)
       }
     } catch (e) {
