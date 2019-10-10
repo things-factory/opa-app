@@ -44,11 +44,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <search-form
-        id="search-form"
-        .fields=${this._searchFields}
-        @submit=${e => this.dataGrist.fetch()}
-      ></search-form>
+      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
       <div class="grist">
         <data-grist
@@ -126,8 +122,6 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
               const status = record.status
               if (status === ORDER_STATUS.PENDING_RECEIVE.value) {
                 navigate(`receive_release_order_request/${record.name}`) // 1. move to order receiving page
-              } else if (status === ORDER_STATUS.READY_TO_PICK.value) {
-                navigate(`execute_release_order/${record.name}`) // 2. move to order arriving check page
               } else if (status === ORDER_STATUS.DONE.value) {
                 navigate(`completed_release_order/${record.name}`) // 4. move to assign buffer location
               }
@@ -257,7 +251,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
   }
 
   _exportableData() {
-    return this.dataGrist.exportRecords()  
+    return this.dataGrist.exportRecords()
   }
 }
 
