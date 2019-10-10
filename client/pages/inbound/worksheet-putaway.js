@@ -205,10 +205,6 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
             worksheetDetails {
               name
               description
-              toLocation {
-                name
-                description
-              }
               targetInventory {
                 inventory {
                   batchId
@@ -236,8 +232,6 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
       const worksheet = response.data.worksheet
       const worksheetDetails = worksheet.worksheetDetails
       this._worksheetStatus = worksheet.status
-
-      this._setWarehouseFilter(worksheet.bufferLocation.warehouse.id)
       this._fillupForm(worksheet)
       this.data = {
         records: worksheetDetails.map(worksheetDetail => {
@@ -250,22 +244,6 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
         })
       }
     }
-  }
-
-  _setWarehouseFilter(warehouseId) {
-    this.preConfig.columns.map(column => {
-      if (column.name === 'toLocation') {
-        column.record.options.basicArgs.filters = [
-          { name: 'warehouse_id', value: warehouseId, operator: 'eq' },
-          {
-            name: 'type',
-            value: 'BUFFER',
-            operator: 'noteq'
-          }
-        ]
-      }
-      return column
-    })
   }
 
   _updateContext() {
@@ -381,8 +359,7 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
     return this.grist.dirtyData.records.map(worksheetDetail => {
       return {
         name: worksheetDetail.name,
-        description: worksheetDetail.description,
-        toLocation: worksheetDetail.toLocation
+        description: worksheetDetail.description
       }
     })
   }
