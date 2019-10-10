@@ -18,6 +18,9 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
       _orderType: String,
       _worksheetNo: String,
       _worksheetStatus: String,
+      _voNo: String,
+      _ganNo: String,
+      _roNo: String,
       config: Object,
       data: Object
     }
@@ -97,15 +100,13 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
           >
           <input ?hidden="${this._orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}" name="arrivalNotice" readonly />
 
-          <label ?hidden="${this._orderType !== ORDER_TYPES.SHIPPING.value}"
-            >${i18next.t('label.shipping_order')}</label
+          <label ?hidden="${this._orderType !== ORDER_TYPES.RELEASE_OF_GOODS.value}"
+            >${i18next.t('label.release_order')}</label
           >
-          <input ?hidden="${this._orderType !== ORDER_TYPES.SHIPPING.value}" name="shipping_order" readonly />
+          <input ?hidden="${this._orderType !== ORDER_TYPES.RELEASE_OF_GOODS.value}" name="releaseGood" readonly />
 
-          <label ?hidden="${this._orderType !== ORDER_TYPES.SHIPPING.value}"
-            >${i18next.t('label.shipping_order')}</label
-          >
-          <input ?hidden="${this._orderType !== ORDER_TYPES.SHIPPING.value}" name="shipping_order" readonly />
+          <label ?hidden="${this._orderType !== ORDER_TYPES.VAS_ORDER.value}">${i18next.t('label.vas_order')}</label>
+          <input ?hidden="${this._orderType !== ORDER_TYPES.VAS_ORDER.value}" name="vasOrder" readonly />
 
           <label>${i18next.t('label.customer')}</label>
           <input name="bizplace" readonly />
@@ -119,9 +120,15 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
             )}
           </select>
 
-          <label></label>
-          <span center custom-input>
-            <barcode-tag bcid="qrcode" .value=${this._worksheetNo}></barcode-tag>
+          <label>${i18next.t(`label.order_qr_code`)}</label>
+          <span center custom-input ?hidden="${this._orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}">
+            <barcode-tag bcid="qrcode" .value=${this._gaNo}></barcode-tag>
+          </span>
+          <span center custom-input ?hidden="${this._orderType !== ORDER_TYPES.RELEASE_OF_GOODS.value}">
+            <barcode-tag bcid="qrcode" .value=${this._roNo}></barcode-tag>
+          </span>
+          <span center custom-input ?hidden="${this._orderType !== ORDER_TYPES.VAS_ORDER.value}">
+            <barcode-tag bcid="qrcode" .value=${this._voNo}></barcode-tag>
           </span>
         </fieldset>
       </form>
@@ -142,6 +149,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
   constructor() {
     super()
     this._statusOptions = []
+    this._ganNo = ''
   }
 
   async pageUpdated(changes) {
@@ -154,7 +162,6 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async pageInitialized() {
-    this._statusOptions = await getCodeByName('WORKSHEET_STATUS')
     this.preConfig = {
       rows: { appendable: false },
       list: { fields: ['batchId', 'vas', 'remark'] },
@@ -171,7 +178,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'object',
           name: 'vas',
-          header: i18next.t('field.product'),
+          header: i18next.t('field.vas'),
           width: 250
         },
         {
@@ -188,6 +195,8 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
         }
       ]
     }
+
+    this._statusOptions = await getCodeByName('WORKSHEET_STATUS')
   }
 
   get form() {
@@ -219,7 +228,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
               name
               description
             }
-            shippingOrder {
+            releaseGood {
               id
               name
               description
@@ -256,10 +265,12 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
       const worksheetDetails = worksheet.worksheetDetails
 
       this._worksheetStatus = worksheet.status
+      this._ganNo = (worksheet.arrivalNotice && worksheet.arrivalNotice.name) || ''
+
       this._orderType = worksheet.arrivalNotice
         ? ORDER_TYPES.ARRIVAL_NOTICE.value
-        : worksheet.shippingOrder
-        ? ORDER_TYPES.SHIPPING.value
+        : worksheet.releaseGood
+        ? ORDER_TYPES.RELEASE_OF_GOODS.value
         : worksheet.vasOrder
         ? ORDER_TYPES.VAS_ORDER.value
         : null

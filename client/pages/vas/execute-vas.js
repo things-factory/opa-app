@@ -1,3 +1,4 @@
+import '@things-factory/barcode-ui'
 import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -6,7 +7,7 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_C
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import Swal from 'sweetalert2'
+import { CustomAlert } from '../../utils/custom-alert'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
 import { ORDER_TYPES } from '../order/constants/order'
 import '../popup-note'
@@ -93,6 +94,10 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('input[name=orderNo]')
   }
 
+  get orderBarcodeInput() {
+    return this.shadowRoot.querySelector('barcode-scanable-input[name=orderNo]').shadowRoot.querySelector('input')
+  }
+
   get orderTypeInput() {
     return this.shadowRoot.querySelector('select[name=orderType]')
   }
@@ -119,15 +124,25 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
         <fieldset>
           <legend>${i18next.t('title.scan_area')}</legend>
           <label>${i18next.t('label.order_no')}</label>
-          <input
+          <barcode-scanable-input
             name="orderNo"
-            @keypress="${async e => {
+            custom-input
+            @keypress="${e => {
               if (e.keyCode === 13) {
                 e.preventDefault()
                 this._fetchVass(e.currentTarget.value, this.orderTypeInput.value)
               }
             }}"
-          />
+          ></barcode-scanable-input>
+          <!-- <input
+            name="orderNo"
+            @keypress="${async e => {
+            if (e.keyCode === 13) {
+              e.preventDefault()
+              this._fetchVass(e.currentTarget.value, this.orderTypeInput.value)
+            }
+          }}"
+          /> -->
 
           <label>${i18next.t('label.order_type')}</label>
           <select
@@ -173,9 +188,41 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
         </fieldset>
 
         <fieldset>
-          <div ?hidden="${this._orderType !== ORDER_TYPES.SHIPPING.value}">
-            <legend>${`${i18next.t('title.shipping_order')}: ${this.shipping_order}`}</legend>
-          </div>
+          <legend ?hidden="${this.orderType !== ORDER_TYPES.VAS_ORDER.value}">
+            ${`${i18next.t('title.vas_order')}: ${this.orderNo}`}
+          </legend>
+
+          <label ?hidden="${this.orderType !== ORDER_TYPES.VAS_ORDER.value}">${i18next.t('label.customer')}</label>
+          <input ?hidden="${this.orderType !== ORDER_TYPES.VAS_ORDER.value}" name="bizplaceName" readonly />
+
+          <label ?hidden="${this.orderType !== ORDER_TYPES.VAS_ORDER.value}">${i18next.t('label.started_at')}</label>
+          <input
+            ?hidden="${this.orderType !== ORDER_TYPES.VAS_ORDER.value}"
+            name="startedAt"
+            type="datetime-local"
+            readonly
+          />
+        </fieldset>
+
+        <fieldset>
+          <legend ?hidden="${this.orderType !== ORDER_TYPES.RELEASE_OF_GOODS.value}">
+            ${`${i18next.t('title.release_order')}: ${this.orderNo}`}
+          </legend>
+
+          <label ?hidden="${this.orderType !== ORDER_TYPES.RELEASE_OF_GOODS.value}"
+            >${i18next.t('label.customer')}</label
+          >
+          <input ?hidden="${this.orderType !== ORDER_TYPES.RELEASE_OF_GOODS.value}" name="bizplaceName" readonly />
+
+          <label ?hidden="${this.orderType !== ORDER_TYPES.RELEASE_OF_GOODS.value}"
+            >${i18next.t('label.started_at')}</label
+          >
+          <input
+            ?hidden="${this.orderType !== ORDER_TYPES.RELEASE_OF_GOODS.value}"
+            name="startedAt"
+            type="datetime-local"
+            readonly
+          />
         </fieldset>
       </form>
 
@@ -287,7 +334,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
 
   pageUpdated(changes, lifecycle) {
     if (this.active) {
-      this._focusOnBarcodField()
+      this._focusOnBarcodeField()
     }
   }
 
@@ -316,8 +363,8 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
     })
   }
 
-  _focusOnBarcodField() {
-    setTimeout(() => this.shadowRoot.querySelector('input[name=orderNo]').focus(), 100)
+  _focusOnBarcodeField() {
+    setTimeout(() => this.orderBarcodeInput.focus(), 100)
   }
 
   async _fetchVass(orderNo, orderType) {
@@ -525,17 +572,12 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
 
   async _completeHandler() {
     if (!this.data.records.every(record => record.completed)) return
-    const result = await Swal.fire({
-      title: i18next.t('text.vas'),
-      text: i18next.t('text.do_you_want_to_complete?'),
-      type: 'warning',
-      allowOutsideClick: false,
-      showCancelButton: true,
-      confirmButtonColor: '#22a6a7',
-      cancelButtonColor: '#cfcfcf',
-      confirmButtonText: i18next.t('text.yes')
+    const result = await CustomAlert({
+      title: i18next.t('title.are_you_sure'),
+      text: i18next.t('text.vas_has_been_completed'),
+      confirmButton: { text: i18next.t('button.confirm') },
+      cancelButton: { text: i18next.t('button.cancel') }
     })
-
     this._updateContext()
 
     if (result.value) this._complete()
@@ -572,16 +614,8 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
 
       if (!response.errors) {
         this._clearView()
-        await Swal.fire({
-          title: i18next.t('text.vas'),
-          text: i18next.t('text.vas_work_is_completed'),
-          type: 'info',
-          allowOutsideClick: false,
-          confirmButtonColor: '#22a6a7',
-          confirmButtonText: i18next.t('text.confirm')
-        })
-
-        navigate('inbound_worksheets')
+        this._showToast({ message: i18next.t('text.vas_is_completed') })
+        navigate('vas_worksheets')
       }
     } catch (e) {
       this._showToast(e)

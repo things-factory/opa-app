@@ -122,7 +122,6 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           <label>${i18next.t('label.arrival_notice_no')}</label>
           <barcode-scanable-input
             name="arrivalNoticeNo"
-            .value=${this._palletId}
             custom-input
             @keypress="${e => {
               if (e.keyCode === 13) {

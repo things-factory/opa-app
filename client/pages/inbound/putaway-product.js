@@ -92,6 +92,12 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
+  get arrivalNoticeNoInput() {
+    return this.shadowRoot
+      .querySelector('barcode-scanable-input[name=arrivalNoticeNo]')
+      .shadowRoot.querySelector('input')
+  }
+
   get infoForm() {
     return this.shadowRoot.querySelector('form#info-form')
   }
@@ -126,15 +132,18 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
         <fieldset>
           <legend>${i18next.t('title.scan_area')}</legend>
           <label>${i18next.t('label.arrival_notice_no')}</label>
-          <input
+          <barcode-scanable-input
             name="arrivalNoticeNo"
+            custom-input
             @keypress="${async e => {
               if (e.keyCode === 13) {
                 e.preventDefault()
-                if (e.currentTarget.value) this._fetchProducts(e.currentTarget.value)
+                if (this.arrivalNoticeNoInput.value) {
+                  this._fetchProducts(this.arrivalNoticeNoInput.value)
+                }
               }
             }}"
-          />
+          ></barcode-scanable-input>
         </fieldset>
 
         <fieldset>
@@ -355,7 +364,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _focusOnArrivalNoticeField() {
-    setTimeout(() => this.shadowRoot.querySelector('input[name=arrivalNoticeNo]').focus(), 100)
+    setTimeout(() => this.arrivalNoticeNoInput.focus(), 100)
   }
 
   _focusOnPalletInput() {

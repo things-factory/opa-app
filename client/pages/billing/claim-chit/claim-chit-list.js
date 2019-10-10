@@ -102,7 +102,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),
-          record: { editable: false, align: 'left' },
+          record: { editable: false, align: 'center' },
           sortable: true,
           width: 200
         },
@@ -118,7 +118,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'transportVehicleName',
           header: i18next.t('field.vehicle_reg_no'),
-          record: { editable: false, align: 'left' },
+          record: { editable: false, align: 'center' },
           sortable: true,
           width: 150
         },
@@ -150,7 +150,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
           type: 'datetime',
           name: 'createdAt',
           header: i18next.t('field.created_at'),
-          record: { editable: false, align: 'left' },
+          record: { editable: false, align: 'center' },
           sortable: true,
           width: 175
         }
