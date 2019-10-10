@@ -203,6 +203,7 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
           })}) {
             items {
               id
+              name
               palletId
               batchId
               packingType
