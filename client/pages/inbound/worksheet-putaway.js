@@ -129,7 +129,7 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'batchId',
-          header: i18next.t('field.batch_id'),
+          header: i18next.t('field.batch_no'),
           record: { align: 'center' },
           width: 150
         },
@@ -334,19 +334,6 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
       })
       if (!response.errors) {
         this._showToast({ message: i18next.t('text.worksheet_activated') })
-        const result = await CustomAlert({
-          title: i18next.t('title.putaway_worksheet'),
-          text: i18next.t('text.do_you_want_to_print'),
-          confirmButton: { text: i18next.t('button.confirm') },
-          cancelButton: { text: i18next.t('button.cancel') }
-        })
-
-        if (result.value) {
-          console.warn('TODO: PRINT OUT WORKSHEET')
-          console.warn('TODO: PRINT OUT WORKSHEET')
-          console.warn('TODO: PRINT OUT WORKSHEET')
-        }
-
         this._worksheetNo = ''
         navigate(`inbound_worksheets`)
       }

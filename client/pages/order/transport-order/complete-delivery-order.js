@@ -5,6 +5,7 @@ import { client, gqlBuilder, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
+import { openPopup } from '@things-factory/layout-base'
 import '../../popup-note'
 
 class CompleteDeliveryOrder extends localize(i18next)(PageView) {
@@ -230,7 +231,7 @@ class CompleteDeliveryOrder extends localize(i18next)(PageView) {
               const response = await client.query({
                 query: gql`
                 mutation {
-                  checkDeliveryOrder(${gqlBuilder.buildArgs({
+                  checkDeliveredOrder(${gqlBuilder.buildArgs({
                     name: this._doNo,
                     patch: { remark: e.detail.value }
                   })}) {

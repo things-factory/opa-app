@@ -90,13 +90,13 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
           <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" readonly />
 
-          <label ?hidden="${this._importedOrder || !this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
+          <label ?hidden="${this._importedOrder || !this._ownTransport}">${i18next.t('label.truck_no')}</label>
           <input ?hidden="${this._importedOrder || !this._ownTransport}" name="truckNo" readonly />
 
           <label>${i18next.t('label.eta_date')}</label>
           <input name="etaDate" type="date" readonly />
 
-          <input id="importedOrder" type="checkbox" name="importCargo" ?checked="${this._importedOrder}" readonly />
+          <input id="importedOrder" type="checkbox" name="importCargo" ?checked="${this._importedOrder}" disabled />
           <label for="importedOrder">${i18next.t('label.import_cargo')}</label>
 
           <input
@@ -182,7 +182,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'batchId',
-          header: i18next.t('field.batch_id'),
+          header: i18next.t('field.batch_no'),
           record: { align: 'center' },
           width: 150
         },
@@ -256,7 +256,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         {
           type: 'select',
           name: 'batchId',
-          header: i18next.t('field.batch_id'),
+          header: i18next.t('field.batch_no'),
           record: { align: 'center', options: ['', i18next.t('label.all')] },
           width: 150
         },

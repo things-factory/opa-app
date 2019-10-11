@@ -218,7 +218,7 @@ class CompletedReleaseOrder extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'batchId',
-          header: i18next.t('field.batch_id'),
+          header: i18next.t('field.batch_no'),
           record: { align: 'center' },
           width: 150
         },
@@ -282,7 +282,7 @@ class CompletedReleaseOrder extends localize(i18next)(PageView) {
         {
           type: 'select',
           name: 'batchId',
-          header: i18next.t('field.batch_id'),
+          header: i18next.t('field.batch_no'),
           record: { align: 'center', options: ['', i18next.t('label.all')] },
           width: 150
         },

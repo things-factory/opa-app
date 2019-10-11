@@ -118,7 +118,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'transportVehicleName',
-          header: i18next.t('field.vehicle_reg_no'),
+          header: i18next.t('field.truck_no'),
           record: { editable: false, align: 'center' },
           sortable: true,
           width: 150

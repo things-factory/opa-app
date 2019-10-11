@@ -135,7 +135,7 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
         {
           type: 'object',
           name: 'releaseGood',
-          header: i18next.t('field.release_goods'),
+          header: i18next.t('field.release_good_no'),
           record: { align: 'center' },
           sortable: true,
           width: 200

@@ -169,7 +169,7 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
           props: { searchOper: 'like' }
         },
         {
-          label: i18next.t('field.batch_id'),
+          label: i18next.t('field.batch_no'),
           name: 'batchId',
           type: 'text',
           props: { searchOper: 'like' }
@@ -215,7 +215,7 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'batchId',
-          header: i18next.t('field.batch_id'),
+          header: i18next.t('field.batch_no'),
           sortable: true,
           width: 150
         },
