@@ -96,7 +96,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
           <label>${i18next.t('label.eta_date')}</label>
           <input name="etaDate" type="date" readonly />
 
-          <input id="importedOrder" type="checkbox" name="importCargo" ?checked="${this._importedOrder}" readonly />
+          <input id="importedOrder" type="checkbox" name="importCargo" ?checked="${this._importedOrder}" disabled />
           <label for="importedOrder">${i18next.t('label.import_cargo')}</label>
 
           <input

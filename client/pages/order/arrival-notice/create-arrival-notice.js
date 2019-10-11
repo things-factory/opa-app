@@ -228,7 +228,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           type: 'float',
           name: 'weight',
           header: i18next.t('field.weight'),
-          record: { editable: true, align: 'center' },
+          record: { editable: true, align: 'center', options: { min: 0 } },
           width: 80
         },
         {
@@ -242,7 +242,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           type: 'integer',
           name: 'packQty',
           header: i18next.t('field.pack_qty'),
-          record: { editable: true, align: 'center' },
+          record: { editable: true, align: 'center', options: { min: 0 } },
           width: 80
         },
         {
@@ -256,7 +256,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           type: 'integer',
           name: 'palletQty',
           header: i18next.t('field.pallet_qty'),
-          record: { editable: true, align: 'center' },
+          record: { editable: true, align: 'center', options: { min: 0 } },
           width: 80
         }
       ]
