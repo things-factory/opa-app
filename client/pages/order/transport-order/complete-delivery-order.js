@@ -231,7 +231,7 @@ class CompleteDeliveryOrder extends localize(i18next)(PageView) {
               const response = await client.query({
                 query: gql`
                 mutation {
-                  checkDeliveryOrder(${gqlBuilder.buildArgs({
+                  checkDeliveredOrder(${gqlBuilder.buildArgs({
                     name: this._doNo,
                     patch: { remark: e.detail.value }
                   })}) {
