@@ -1,6 +1,7 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import { getCodeByName } from '@things-factory/code-base'
 import { connect } from 'pwa-helpers/connect-mixin'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
 import { PALLET_LABEL_SETTING_KEY } from '../../setting-constants'
@@ -72,11 +73,11 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           title: i18next.t('button.save'),
-          action: this._saveCompanies.bind(this)
+          action: this._saveInventories.bind(this)
         },
         {
           title: i18next.t('button.delete'),
-          action: this._deleteCompanies.bind(this)
+          action: this._deleteInventories.bind(this)
         }
       ],
       exportable: {
@@ -89,7 +90,8 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    this.packingType = await getCodeByName('PACKING_TYPE')
     this.config = {
       list: {
         fields: ['palletId', 'product', 'bizplace', 'location']
@@ -114,7 +116,10 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_id'),
-          record: { align: 'center' },
+          record: {
+            editable: true,
+            align: 'center'
+          },
           sortable: true,
           width: 150
         },
@@ -122,7 +127,13 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           type: 'object',
           name: 'bizplace',
           header: i18next.t('field.customer'),
-          record: { align: 'center' },
+          record: {
+            editable: true,
+            align: 'center',
+            options: {
+              queryName: 'bizplaces'
+            }
+          },
           sortable: true,
           width: 200
         },
@@ -130,8 +141,25 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
-          record: { align: 'center' },
+          record: {
+            editable: true,
+            align: 'center',
+            options: {
+              queryName: 'products'
+            }
+          },
           sortable: true,
+          width: 300
+        },
+        {
+          type: 'code',
+          name: 'packingType',
+          header: i18next.t('field.packing_type'),
+          record: {
+            editable: true,
+            align: 'center',
+            codeName: 'PACKING_TYPE'
+          },
           width: 200
         },
         {
@@ -146,7 +174,12 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           type: 'object',
           name: 'warehouse',
           header: i18next.t('field.warehouse'),
-          record: { align: 'center' },
+          record: {
+            align: 'center',
+            options: {
+              queryName: 'warehouses'
+            }
+          },
           sortable: true,
           width: 200
         },
@@ -162,9 +195,15 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           type: 'object',
           name: 'location',
           header: i18next.t('field.location'),
-          record: { align: 'center' },
+          record: {
+            editable: true,
+            align: 'center',
+            options: {
+              queryName: 'locations'
+            }
+          },
           sortable: true,
-          width: 200
+          width: 150
         },
         {
           type: 'datetime',
@@ -259,23 +298,28 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
             sortings: sorters
           })}) {
             items {
+              id
               palletId
               batchId
               bizplace {
+                id
                 name
                 description
               }
               product {
+                id
                 name
                 description
               }
               qty
               warehouse {
+                id
                 name
                 description
               }
               zone
               location {
+                id
                 name
                 description
               }
@@ -297,13 +341,13 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _saveCompanies() {
+  async _saveInventories() {
     var patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
     if (patches && patches.length) {
       const response = await client.query({
         query: gql`
             mutation {
-              updateMultipleCompany(${gqlBuilder.buildArgs({
+              updateMultipleInventory(${gqlBuilder.buildArgs({
                 patches
               })}) {
                 name
@@ -325,7 +369,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _deleteCompanies() {
+  async _deleteInventories() {
     CustomAlert({
       title: i18next.t('text.are_you_sure'),
       text: i18next.t('text.you_wont_be_able_to_revert_this!'),
@@ -339,7 +383,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
             const response = await client.query({
               query: gql`
                 mutation {
-                  deleteCompanies(${gqlBuilder.buildArgs({ names })})
+                  deleteInventories(${gqlBuilder.buildArgs({ names })})
                 }
               `
             })
