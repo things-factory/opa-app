@@ -118,19 +118,6 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'close',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              this.vasData = {
-                ...this.vasData,
-                records: data.records.filter((record, idx) => idx !== rowIndex)
-              }
-            }
-          }
-        },
-        {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
@@ -243,7 +230,7 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
 
       if (!response.errors) {
         this._showToast({ message: i18next.t('text.vas_order_has_been_confirmed') })
-        navigate('worksheets')
+        navigate('vas_worksheets')
       }
     } catch (e) {
       this._showToast(e)

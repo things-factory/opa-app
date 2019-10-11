@@ -109,19 +109,6 @@ class VasOrderDetail extends localize(i18next)(PageView) {
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'close',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              this.vasData = {
-                ...this.vasData,
-                records: data.records.filter((record, idx) => idx !== rowIndex)
-              }
-            }
-          }
-        },
-        {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
