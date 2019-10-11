@@ -193,7 +193,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
             <fieldset>
               <legend>${i18next.t('label.product')}: ${this._productName}</legend>
 
-              <label>${i18next.t('label.batch_id')}</label>
+              <label>${i18next.t('label.batch_no')}</label>
               <input name="batchId" readonly />
 
               <label>${i18next.t('label.packing_type')}</label>
@@ -329,7 +329,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'batchId',
-          header: i18next.t('field.batch_id'),
+          header: i18next.t('field.batch_no'),
           width: 140
         },
         {

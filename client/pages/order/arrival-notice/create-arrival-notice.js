@@ -93,7 +93,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
           <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" />
 
-          <label ?hidden="${this._importedOrder || !this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
+          <label ?hidden="${this._importedOrder || !this._ownTransport}">${i18next.t('label.truck_no')}</label>
           <input
             ?hidden="${this._importedOrder || !this._ownTransport}"
             name="truckNo"
@@ -202,7 +202,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'batchId',
-          header: i18next.t('field.batch_id'),
+          header: i18next.t('field.batch_no'),
           record: { editable: true, align: 'center' },
           width: 150
         },
@@ -288,7 +288,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'select',
           name: 'batchId',
-          header: i18next.t('field.batch_id'),
+          header: i18next.t('field.batch_no'),
           record: { editable: true, align: 'center', options: ['', i18next.t('label.all')] },
           width: 150
         },

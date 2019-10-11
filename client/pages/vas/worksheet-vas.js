@@ -175,7 +175,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'batchId',
-          header: i18next.t('field.batch_id'),
+          header: i18next.t('field.batch_no'),
           record: { align: 'center' },
           width: 150
         },

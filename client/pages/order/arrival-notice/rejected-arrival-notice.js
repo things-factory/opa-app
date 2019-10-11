@@ -101,7 +101,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
           />
           <label>${i18next.t('label.own_transport')}</label>
 
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.transport_reg_no')}</label>
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
           <input ?hidden="${!this._ownTransport}" name="truckNo" readonly />
         </fieldset>
 
@@ -210,7 +210,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'batchId',
-          header: i18next.t('field.batch_id'),
+          header: i18next.t('field.batch_no'),
           record: { align: 'center' },
           width: 150
         },
@@ -281,7 +281,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'select',
           name: 'batchId',
-          header: i18next.t('field.batch_id'),
+          header: i18next.t('field.batch_no'),
           record: { editable: true, align: 'center', options: ['', i18next.t('label.all')] },
           width: 150
         },

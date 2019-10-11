@@ -231,7 +231,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
             <fieldset>
               <legend>${i18next.t('label.vas')}: ${this._vasName}</legend>
 
-              <label>${i18next.t('label.batchId')}</label>
+              <label>${i18next.t('label.batch_no')}</label>
               <input name="batchId" readonly />
 
               <label>${i18next.t('label.vas')}</label>
@@ -298,7 +298,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'batchId',
-          header: i18next.t('field.batch_id'),
+          header: i18next.t('field.batch_no'),
           record: { align: 'center' },
           width: 180
         },

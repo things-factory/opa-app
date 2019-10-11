@@ -126,7 +126,7 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
           type: 'string',
           name: 'batchId',
           record: { align: 'center' },
-          header: i18next.t('field.batch_id'),
+          header: i18next.t('field.batch_no'),
           sortable: true,
           width: 200
         },
@@ -165,7 +165,7 @@ export class InventoryProductSelector extends localize(i18next)(LitElement) {
         props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('field.batch_id'),
+        label: i18next.t('field.batch_no'),
         name: 'batchId',
         type: 'text',
         props: { searchOper: 'like' }
