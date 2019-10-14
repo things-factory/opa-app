@@ -149,22 +149,6 @@ class CollectionOrderList extends localize(i18next)(PageView) {
           width: 250
         },
         {
-          type: 'object',
-          name: 'transportVehicle',
-          header: i18next.t('field.assigned_truck'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 150
-        },
-        {
-          type: 'object',
-          name: 'transportDriver',
-          header: i18next.t('field.assigned_driver'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 250
-        },
-        {
           type: 'string',
           name: 'status',
           header: i18next.t('field.status'),
@@ -214,14 +198,6 @@ class CollectionOrderList extends localize(i18next)(PageView) {
               name
               from
               telNo
-              transportDriver {
-                id
-                name
-              }
-              transportVehicle {
-                id
-                name
-              }
               collectionDate
               status
               updatedAt
