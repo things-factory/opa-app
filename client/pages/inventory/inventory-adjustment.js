@@ -5,9 +5,12 @@ import { getCodeByName } from '@things-factory/code-base'
 import { connect } from 'pwa-helpers/connect-mixin'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
 import { PALLET_LABEL_SETTING_KEY } from '../../setting-constants'
+import { CustomAlert } from '../../utils/custom-alert'
 import gql from 'graphql-tag'
 import { USBPrinter } from '@things-factory/barcode-base'
 import { css, html } from 'lit-element'
+import { openPopup } from '@things-factory/layout-base'
+import '../components/import-pop-up'
 
 class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -85,13 +88,17 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         data: this._exportableData.bind(this)
       },
       importable: {
-        handler: this._exportableData.bind(this)
+        handler: this._importableData.bind(this)
       }
     }
   }
 
   async pageInitialized() {
-    this.packingType = await getCodeByName('PACKING_TYPE')
+    this.bizplace = await this.fetchBizplace()
+    this.product = await this.fetchProduct()
+    this.location = await this.fetchLocation()
+
+    this.packingType = await getCodeByName('PACKING_TYPES')
     this.config = {
       list: {
         fields: ['palletId', 'product', 'bizplace', 'location']
@@ -109,6 +116,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
           record: { align: 'center' },
+          imex: { header: i18next.t('field.pallet_id'), key: 'palletId', width: 25, type: 'string' },
           sortable: true,
           width: 150
         },
@@ -120,7 +128,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
             editable: true,
             align: 'center'
           },
-
+          imex: { header: i18next.t('field.batch_no'), key: 'batchId', width: 30, type: 'string' },
           sortable: true,
           width: 150
         },
@@ -134,6 +142,13 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
             options: {
               queryName: 'bizplaces'
             }
+          },
+          imex: {
+            header: i18next.t('field.customer'),
+            key: 'bizplace.name',
+            width: 50,
+            type: 'array',
+            arrData: this.bizplace
           },
           sortable: true,
           width: 200
@@ -149,6 +164,13 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
               queryName: 'products'
             }
           },
+          imex: {
+            header: i18next.t('field.product'),
+            key: 'product.name',
+            width: 50,
+            type: 'array',
+            arrData: this.product
+          },
           sortable: true,
           width: 300
         },
@@ -159,9 +181,21 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           record: {
             editable: true,
             align: 'center',
-            codeName: 'PACKING_TYPE'
+            codeName: 'PACKING_TYPES'
           },
-          width: 200
+          imex: {
+            header: i18next.t('field.packing_type'),
+            key: 'packingType',
+            width: 25,
+            type: 'array',
+            arrData: this.packingType.map(packingType => {
+              return {
+                name: packingType.name,
+                id: packingType.name
+              }
+            })
+          },
+          width: 150
         },
         {
           type: 'number',
@@ -169,6 +203,12 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.qty'),
           record: { editable: true, align: 'center' },
           sortable: true,
+          imex: {
+            header: i18next.t('field.qty'),
+            key: 'qty',
+            width: 10,
+            type: 'float'
+          },
           width: 80
         },
         {
@@ -202,6 +242,13 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
             options: {
               queryName: 'locations'
             }
+          },
+          imex: {
+            header: i18next.t('field.location'),
+            key: 'location.name',
+            width: 15,
+            type: 'array',
+            arrData: this.location
           },
           sortable: true,
           width: 150
@@ -302,6 +349,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
               id
               palletId
               batchId
+              packingType
               bizplace {
                 id
                 name
@@ -343,7 +391,24 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _saveInventories() {
-    var patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
+    var patches = this.dataGrist.exportRecords()
+    patches.map(x => {
+      if (x.bizplace) {
+        delete x.bizplace['__seq__']
+        delete x.bizplace['__origin__']
+        delete x.bizplace['__selected__']
+      }
+      if (x.location) {
+        delete x.location['__seq__']
+        delete x.location['__origin__']
+        delete x.location['__selected__']
+      }
+      if (x.product) {
+        delete x.product['__seq__']
+        delete x.product['__origin__']
+        delete x.product['__selected__']
+      }
+    })
     if (patches && patches.length) {
       const response = await client.query({
         query: gql`
@@ -379,12 +444,12 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       cancelButton: { text: 'cancel', color: '#cfcfcf' },
       callback: async result => {
         if (result.value) {
-          const names = this.dataGrist.selected.map(record => record.name)
-          if (names && names.length > 0) {
+          const id = this.dataGrist.selected.map(record => record.id)
+          if (id && id.length > 0) {
             const response = await client.query({
               query: gql`
                 mutation {
-                  deleteInventories(${gqlBuilder.buildArgs({ names })})
+                  deleteInventories(${gqlBuilder.buildArgs({ id })})
                 }
               `
             })
@@ -456,13 +521,143 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
+  async importHandler(patches) {
+    const response = await client.query({
+      query: gql`
+          mutation {
+            updateMultipleInventory(${gqlBuilder.buildArgs({
+              patches
+            })}) {
+              name
+            }
+          }
+        `
+    })
+    if (!response.errors) {
+      history.back()
+      this.dataGrist.fetch()
+      document.dispatchEvent(
+        new CustomEvent('notify', {
+          detail: {
+            message: i18next.t('text.data_imported_successfully')
+          }
+        })
+      )
+    }
+  }
+
+  _importableData(records) {
+    setTimeout(() => {
+      openPopup(
+        html`
+          <import-pop-up
+            .records=${records}
+            .config=${{
+              rows: this.config.rows,
+              columns: [...this.config.columns.filter(column => column.imex !== undefined)]
+            }}
+            .importHandler="${this.importHandler.bind(this)}"
+          ></import-pop-up>
+        `,
+        {
+          backdrop: true,
+          size: 'large',
+          title: i18next.t('title.import')
+        }
+      )
+    }, 500)
+  }
+
   _exportableData() {
-    return this.dataGrist.exportRecords()
+    let records = []
+    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+      records = this.dataGrist.selected
+    } else {
+      records = this.dataGrist.data.records
+    }
+    // data structure // { //    header: {headerName, fieldName, type = string, arrData = []} //    data: [{fieldName: value}] // }
+
+    var headerSetting = this.dataGrist._config.columns
+      .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+      .map(column => {
+        return column.imex
+      })
+
+    var data = records.map(item => {
+      return {
+        id: item.id,
+        ...this._columns
+          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+          .reduce((record, column) => {
+            record[column.imex.key] = column.imex.key
+              .split('.')
+              .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
+            return record
+          }, {})
+      }
+    })
+
+    return { header: headerSetting, data: data }
+    // return this.dataGrist.exportRecords()
   }
 
   stateChanged(state) {
     let palletLabelSetting = state.dashboard[PALLET_LABEL_SETTING_KEY]
     this._palletLabel = (palletLabelSetting && palletLabelSetting.board) || {}
+  }
+
+  async fetchBizplace() {
+    const response = await client.query({
+      query: gql`
+          query {
+            bizplaces(${gqlBuilder.buildArgs({
+              filters: []
+            })}) {
+              items {
+                id
+                name
+              }
+            }
+          }
+        `
+    })
+    return response.data.bizplaces.items
+  }
+
+  async fetchProduct() {
+    const response = await client.query({
+      query: gql`
+          query {
+            products(${gqlBuilder.buildArgs({
+              filters: []
+            })}) {
+              items {
+                id
+                name
+              }
+            }
+          }
+        `
+    })
+    return response.data.products.items
+  }
+
+  async fetchLocation() {
+    const response = await client.query({
+      query: gql`
+          query {
+            locations(${gqlBuilder.buildArgs({
+              filters: []
+            })}) {
+              items {
+                id
+                name
+              }
+            }
+          }
+        `
+    })
+    return response.data.locations.items
   }
 
   _showToast({ type, message }) {
