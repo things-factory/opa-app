@@ -38,7 +38,9 @@ class CollectionOrderRequests extends localize(i18next)(PageView) {
     return {
       _searchFields: Array,
       config: Object,
-      data: Object
+      data: Object,
+      drivers: Array,
+      vehicles: Array
     }
   }
 
@@ -66,13 +68,22 @@ class CollectionOrderRequests extends localize(i18next)(PageView) {
     }
   }
 
-  pageUpdated(changes, lifecycle) {
+  constructor() {
+    super()
+    this.drivers = []
+    this.vehicles = []
+  }
+
+  async pageUpdated(changes, lifecycle) {
     if (this.active) {
       this.dataGrist.fetch()
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    await this._fetchTransportDriver()
+    await this._fetchTransportVehicle()
+
     this._searchFields = [
       {
         label: i18next.t('field.co_no'),
@@ -87,18 +98,39 @@ class CollectionOrderRequests extends localize(i18next)(PageView) {
         props: { searchOper: 'like' }
       },
       {
+        label: i18next.t('field.driver'),
+        name: 'transportDriver',
+        type: 'select',
+        options: [
+          { value: '' },
+          ...this.drivers.map(driver => {
+            return { name: `${driver.driverCode}-${driver.name}`, value: driver.name }
+          })
+        ],
+        props: { searchOper: 'eq' }
+      },
+      {
+        label: i18next.t('field.truck'),
+        name: 'transportVehicle',
+        type: 'select',
+        options: [
+          { value: '' },
+          ...this.vehicles.map(vehicle => {
+            return { name: vehicle.name, value: vehicle.name }
+          })
+        ],
+        props: { searchOper: 'eq' }
+      },
+      {
         label: i18next.t('field.status'),
         name: 'status',
         type: 'select',
         options: [
           { value: '' },
-          { name: i18next.t(`label.${ORDER_STATUS.PENDING_RECEIVE.name}`), value: ORDER_STATUS.PENDING_RECEIVE.value },
-          {
-            name: i18next.t(`label.${ORDER_STATUS.READY_TO_DISPATCH.name}`),
-            value: ORDER_STATUS.READY_TO_DISPATCH.value
-          },
-          { name: i18next.t(`label.${ORDER_STATUS.COLLECTING.name}`), value: ORDER_STATUS.DELIVERING.value },
-          { name: i18next.t(`label.${ORDER_STATUS.DONE.name}`), value: ORDER_STATUS.DONE.value }
+          ...Object.keys(ORDER_STATUS).map(key => {
+            const status = ORDER_STATUS[key]
+            return { name: i18next.t(`label.${status.name}`), value: status.value }
+          })
         ],
         props: { searchOper: 'eq' }
       }
@@ -153,28 +185,20 @@ class CollectionOrderRequests extends localize(i18next)(PageView) {
           width: 180
         },
         {
+          type: 'checkbox',
+          name: 'looseItem',
+          header: i18next.t('field.loose_item'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 180
+        },
+        {
           type: 'date',
           name: 'collectionDate',
           header: i18next.t('field.collection_date'),
           record: { align: 'center' },
           sortable: true,
           width: 160
-        },
-        {
-          type: 'object',
-          name: 'transportVehicle',
-          header: i18next.t('field.transport_vehicle'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 160
-        },
-        {
-          type: 'object',
-          name: 'transportDriver',
-          header: i18next.t('field.transport_driver'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 250
         },
         {
           type: 'string',
@@ -227,17 +251,22 @@ class CollectionOrderRequests extends localize(i18next)(PageView) {
               telNo
               description
               urgency
+              looseItem
               bizplace {
                 id
                 name
               }
-              transportDriver {
-                id
-                name
-              }
-              transportVehicle {
-                id
-                name
+              transportOrderDetails {
+                transportVehicle {
+                  id
+                  name
+                  description
+                }
+                transportDriver {
+                  id
+                  name
+                  description
+                }
               }
               collectionDate
               status
@@ -259,6 +288,60 @@ class CollectionOrderRequests extends localize(i18next)(PageView) {
         total: response.data.collectionOrderRequests.total || 0,
         records: response.data.collectionOrderRequests.items || []
       }
+    }
+  }
+
+  async _fetchTransportDriver() {
+    const response = await client.query({
+      query: gql`
+        query {
+          transportDrivers(${gqlBuilder.buildArgs({
+            filters: []
+          })}) {
+            items {
+              id
+              name
+              bizplace{
+                id
+                name
+              }
+              driverCode
+            }
+            total
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      this.drivers = response.data.transportDrivers.items
+    }
+  }
+
+  async _fetchTransportVehicle() {
+    const response = await client.query({
+      query: gql`
+        query {
+          transportVehicles(${gqlBuilder.buildArgs({
+            filters: []
+          })}) {
+            items {
+              id
+              name
+              bizplace{
+                id
+                name
+              }
+              regNumber
+            }
+            total
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      this.vehicles = response.data.transportVehicles.items
     }
   }
 
