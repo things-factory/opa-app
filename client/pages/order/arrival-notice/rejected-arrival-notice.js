@@ -152,7 +152,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
             <input name="from" readonly />
 
             <label>${i18next.t('label.cargo_type')}</label>
-            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
+            <input name="cargoType" placeholder="${i18next.t('label.bag_crates_carton_ibc_drums_pails')}" />
 
             <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
             <input name="loadWeight" type="number" min="0" readonly />
@@ -389,7 +389,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
 
   _fillupForm(form, data) {
     for (let key in data) {
-      Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
+      Array.from(form.querySelectorAll('input')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
         } else if (field.name === key && field.type !== 'file') {

@@ -236,7 +236,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
 
   _getStdDate() {
     let date = new Date()
-    date.setDate(date.getDate() + 1)
+    date.setDate(date.getDate())
     return date.toISOString().split('T')[0]
   }
 

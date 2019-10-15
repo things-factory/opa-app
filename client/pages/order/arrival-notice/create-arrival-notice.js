@@ -305,7 +305,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
   _getStdDate() {
     let date = new Date()
-    date.setDate(date.getDate() + 1)
+    date.setDate(date.getDate())
     return date.toISOString().split('T')[0]
   }
 
@@ -442,16 +442,18 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     arrivalNotice.orderProducts = this.productGrist.data.records.map((record, idx) => {
       const seq = idx + 1
       delete record.id
-      delete record.__typename
-      delete record.product.__typename
+      delete record.product.__origin__
+      delete record.product.__seq__
+      delete record.product.__selected__
 
       return { ...record, seq }
     })
 
     arrivalNotice.orderVass = this.vasGrist.data.records.map(record => {
       delete record.id
-      delete record.__typename
-      delete record.vas.__typename
+      delete record.vas.__origin__
+      delete record.vas.__seq__
+      delete record.vas.__selected__
 
       return { ...record, name }
     })

@@ -6,9 +6,8 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_C
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import Swal from 'sweetalert2'
-import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
 import { CustomAlert } from '../../utils/custom-alert'
+import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
 
 class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {

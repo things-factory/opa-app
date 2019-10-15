@@ -122,22 +122,13 @@ class ProductList extends localize(i18next)(PageView) {
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
-        // {
-        //   type: 'gutter',
-        //   gutterName: 'button',
-        //   icon: 'reorder',
-        //   handlers: {
-        //     click: (columns, data, column, record, rowIndex) => {
-        //       if (record.id) navigate(`product_options/${record.id}`)
-        //     }
-        //   }
-        // },
         {
           type: 'string',
           name: 'name',
           record: {
             editable: true
           },
+          imex: { header: 'Name', key: 'name', width: 50, type: 'string' },
           header: i18next.t('field.name'),
           width: 180
         },
@@ -147,6 +138,7 @@ class ProductList extends localize(i18next)(PageView) {
           record: {
             editable: true
           },
+          imex: { header: 'Description', key: 'description', width: 50, type: 'string' },
           header: i18next.t('field.description'),
           width: 250
         },
@@ -157,6 +149,7 @@ class ProductList extends localize(i18next)(PageView) {
             align: 'center',
             editable: true
           },
+          imex: { header: 'Type', key: 'type', width: 50, type: 'string' },
           header: i18next.t('field.type'),
           width: 150
         },
@@ -198,7 +191,10 @@ class ProductList extends localize(i18next)(PageView) {
         html`
           <import-pop-up
             .records=${records}
-            .config=${this.config}
+            .config=${{
+              rows: this.config.rows,
+              columns: [...this.config.columns.filter(column => column.imex !== undefined)]
+            }}
             .importHandler="${this.importHandler.bind(this)}"
           ></import-pop-up>
         `,
@@ -247,6 +243,7 @@ class ProductList extends localize(i18next)(PageView) {
   }
 
   async importHandler(patches) {
+    debugger
     const response = await client.query({
       query: gql`
           mutation {
@@ -351,7 +348,34 @@ class ProductList extends localize(i18next)(PageView) {
   }
 
   _exportableData() {
-    return this.dataGrist.exportRecords()  
+    let records = []
+    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+      records = this.dataGrist.selected
+    } else {
+      records = this.dataGrist.data.records
+    }
+
+    var headerSetting = this.dataGrist._config.columns
+      .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+      .map(column => {
+        return column.imex
+      })
+
+    var data = records.map(item => {
+      return {
+        id: item.id,
+        ...this._columns
+          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+          .reduce((record, column) => {
+            record[column.imex.key] = column.imex.key
+              .split('.')
+              .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
+            return record
+          }, {})
+      }
+    })
+
+    return { header: headerSetting, data: data }
   }
 }
 
