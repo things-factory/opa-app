@@ -1,28 +1,15 @@
-import { CustomAlert } from '../../../utils/custom-alert'
 import '@things-factory/grist-ui'
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store, navigate } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { openPopup } from '@things-factory/layout-base'
-import '../release-order/inventory-product-selector'
-import { ORDER_STATUS } from '../constants/order'
+import { CustomAlert } from '../../../utils/custom-alert'
+import '../../vas/vas-relabel'
 
 class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
-  static get properties() {
-    return {
-      _vasNo: String,
-      vasGristConfig: Object,
-      vasData: Object,
-      _status: String
-    }
-  }
-
   static get styles() {
     return [
-      MultiColumnFormStyles,
       css`
         :host {
           display: flex;
@@ -66,54 +53,90 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
     ]
   }
 
-  get context() {
+  static get properties() {
     return {
-      title: i18next.t('title.create_vas_order'),
-      actions: [
-        {
-          title: i18next.t('button.create'),
-          action: this._generateVasOrder.bind(this)
-        }
-      ]
+      config: Object,
+      data: Object,
+      template: Object
     }
+  }
+
+  get dataGrist() {
+    return this.shadowRoot.querySelector('data-grist')
   }
 
   render() {
     return html`
       <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas_order')}</h2>
-
         <data-grist
-          id="vas-grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.vasGristConfig}
-          .data="${this.vasData}"
+          .mode="${isMobileDevice() ? 'LIST' : 'GRID'}"
+          .config="${this.config}"
+          .data="${this.data}"
+          @field-change="${this._onFieldChange.bind(this)}"
         ></data-grist>
+      </div>
+
+      <div class="guide-container">
+        ${this.template}
       </div>
     `
   }
 
-  constructor() {
-    super()
-    this.vasData = { records: [] }
-  }
-
-  get vasGrist() {
-    return this.shadowRoot.querySelector('data-grist#vas-grist')
-  }
-
-  updated(changedProps) {
-    if (changedProps.has('_vasNo') && this._vasNo) {
-      this.fetchVas()
-    } else if (changedProps.has('_vasNo') && !this._vasNo) {
-      this._clearPage()
+  get context() {
+    return {
+      title: i18next.t('title.create_vas_order'),
+      actions: this._actions
     }
   }
 
+  get createButton() {
+    return { title: i18next.t('button.create'), action: this._generateVasOrder.bind(this) }
+  }
+
+  get adjustButton() {
+    return {
+      title: i18next.t('button.adjust'),
+      action: () => {
+        this.data = {
+          ...this.data,
+          records: this.dataGrist.dirtyData.records.map((record, idx) => {
+            if (idx === this._selectedRecordIdx) {
+              record.operationGuide = this.template.adjust()
+              record.ready = this._isReadyToCreate(record)
+            }
+            return record
+          })
+        }
+      }
+    }
+  }
+
+  constructor() {
+    super()
+    this.data = { records: [] }
+    this._actions = [this.createButton]
+  }
+
   pageInitialized() {
-    this.vasGristConfig = {
+    this.config = {
       pagination: { infinite: true },
-      rows: { selectable: { multiple: true } },
+      rows: {
+        selectable: { multiple: true },
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            if (record && record.vas && record.vas.operationGuideType === 'template' && record.vas.operationGuide) {
+              this.template = document.createElement(record.vas.operationGuide)
+              this.template.record = record
+              this.template.operationGuide = record.operationGuide
+            } else {
+              this.template = null
+            }
+            this._selectedRecord = record
+            this._selectedRecordIdx = rowIndex
+            this._updateContext()
+          }
+        }
+      },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -122,38 +145,49 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
           icon: 'close',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              this.vasData = {
-                ...this.vasData,
+              data = {
+                ...data,
                 records: data.records.filter((record, idx) => idx !== rowIndex)
               }
             }
           }
         },
         {
+          type: 'boolean',
+          name: 'ready',
+          header: i18next.t('field.ready'),
+          width: 40
+        },
+        {
           type: 'object',
-          name: 'product',
+          name: 'inventory',
           header: i18next.t('field.inventory_list'),
-          record: { editable: true, align: 'center' },
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              this._openInventoryProduct()
+          record: {
+            editable: true,
+            align: 'center',
+            options: {
+              queryName: 'inventories',
+              nameField: 'batchId',
+              descriptionField: 'palletId',
+              select: [
+                { name: 'id', hidden: true },
+                { name: 'palletId', header: i18next.t('field.pallet_id'), record: { align: 'center' } },
+                { name: 'batchId', header: i18next.t('field.batch_id'), record: { align: 'center' } },
+                { name: 'warehouse', type: 'object', subFields: ['name', 'description'], width: 200 },
+                { name: 'location', type: 'object', subFields: ['name', 'description'], record: { align: 'center' } },
+                { name: 'product', type: 'object', subfields: ['name', 'description'] },
+                { name: 'qty', type: 'float', record: { align: 'center' } }
+              ]
             }
           },
           width: 250
         },
         {
           type: 'object',
-          name: 'vas',
-          header: i18next.t('field.vas'),
-          record: { editable: true, align: 'center', options: { queryName: 'vass' } },
-          width: 250
-        },
-        {
-          type: 'string',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
+          name: 'warehouse',
+          header: i18next.t('field.warehouse'),
           record: { align: 'center' },
-          width: 150
+          width: 200
         },
         {
           type: 'object',
@@ -161,6 +195,26 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.location'),
           record: { align: 'center' },
           width: 150
+        },
+        {
+          type: 'object',
+          name: 'vas',
+          header: i18next.t('field.vas'),
+          record: {
+            editable: true,
+            align: 'center',
+            options: {
+              queryName: 'vass',
+              select: [
+                { name: 'id', hidden: true },
+                { name: 'name' },
+                { name: 'description' },
+                { name: 'operationGuideType', hidden: true },
+                { name: 'operationGuide', hidden: true }
+              ]
+            }
+          },
+          width: 250
         },
         {
           type: 'string',
@@ -173,43 +227,46 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  _openInventoryProduct() {
-    openPopup(
-      html`
-        <inventory-product-selector
-          @selected="${e => {
-            this.vasData = {
-              ...this.vasData,
-              records: [...this.vasData.records, ...e.detail]
-            }
-          }}"
-        ></inventory-product-selector>
-      `,
-      {
-        backdrop: true,
-        size: 'large',
-        title: i18next.t('title.inventory_product_selection')
-      }
-    )
+  _updateContext() {
+    this._actions = []
+    if (this._selectedRecord && this._selectedRecord.vas && this._selectedRecord.vas.operationGuideType) {
+      this._actions = [this.adjustButton]
+    }
+
+    this._actions = [...this._actions, this.createButton]
+
+    store.dispatch({
+      type: UPDATE_CONTEXT,
+      context: this.context
+    })
   }
 
-  _clearPage() {
-    this.vasGrist.data = Object.assign({ records: [] })
+  _onFieldChange() {
+    this.data = {
+      ...this.dataGrist.dirtyData,
+      records: this.dataGrist.dirtyData.records.map(record => {
+        return {
+          ...record,
+          ...record.inventory,
+          ready: this._isReadyToCreate(record)
+        }
+      })
+    }
   }
 
-  _validateVas() {
-    this.vasGrist.commit()
-    if (this.vasGrist.data.records && this.vasGrist.data.records.length) {
-      // required field (vas && remark)
-      if (this.vasGrist.data.records.filter(record => !record.vas || !record.remark).length)
-        throw new Error(i18next.t('text.empty_value_in_list'))
+  _isReadyToCreate(record) {
+    if (record.vas && record.vas.operationGuideType) {
+      return Boolean(record.operationGuide && record.inventory && record.remark)
+    } else if (record.vas && !record.vas.operationGuideType) {
+      return Boolean(record.inventory && record.remark)
+    } else {
+      return false
     }
   }
 
   async _generateVasOrder() {
     try {
-      this._validateVas()
-
+      this._validate()
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.create_vas_order'),
@@ -217,18 +274,16 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
         cancelButton: { text: i18next.t('button.cancel') }
       })
 
-      if (!result.value) {
-        return
-      }
+      if (!result.value) return
 
-      let args = {
-        vasOrder: this._getVasOrder()
-      }
+      await this._executeRelatedTrxs()
 
       const response = await client.query({
         query: gql`
             mutation {
-              generateVasOrder(${gqlBuilder.buildArgs(args)}) {
+              generateVasOrder(${gqlBuilder.buildArgs({
+                vasOrder: this._getVasOrder()
+              })}) {
                 id
                 name
               }
@@ -245,23 +300,47 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
+  _validate() {
+    if (!this.data.records.every(record => record.ready)) throw new Error(i18next.t('text.invalid_data_in_list'))
+  }
+
+  async _executeRelatedTrxs() {
+    this.data = {
+      ...this.data,
+      records: await Promise.all(
+        this.dataGrist.dirtyData.records.map(async record => {
+          if (record.vas.operationGuide && record.operationGuide && record.operationGuide.transactions) {
+            const trxs = record.operationGuide.transactions || []
+            if (trxs.length) {
+              for (let i = 0; i < trxs.length; i++) {
+                const trx = trxs[i]
+                record.operationGuide = await trx(record.operationGuide)
+              }
+            }
+          }
+
+          return record
+        })
+      )
+    }
+  }
+
   _getVasOrder() {
-    let vasOrder = {}
+    return {
+      orderVass: this.data.records.map(record => {
+        let orderVas = {
+          batchId: record.inventory.batchId,
+          remark: record.remark,
+          inventory: { id: record.inventory.id },
+          vas: { id: record.vas.id }
+        }
 
-    vasOrder.orderVass = this.vasGrist.data.records.map((record, idx) => {
-      delete record.__typename
-      delete record.vas.__typename
-      return {
-        batchId: record.batchId,
-        remark: record.remark,
-        inventory: {
-          id: record.id
-        },
-        vas: record.vas
-      }
-    })
+        if (record.operationGuide && record.operationGuide.data)
+          orderVas.operationGuide = JSON.stringify(record.operationGuide.data)
 
-    return vasOrder
+        return orderVas
+      })
+    }
   }
 
   _showToast({ type, message }) {

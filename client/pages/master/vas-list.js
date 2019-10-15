@@ -49,11 +49,7 @@ class VasList extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <search-form
-        id="search-form"
-        .fields=${this._searchFields}
-        @submit=${e => this.dataGrist.fetch()}
-      ></search-form>
+      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
       <div class="grist">
         <data-grist
@@ -135,6 +131,22 @@ class VasList extends localize(i18next)(PageView) {
           width: 80
         },
         {
+          type: 'string',
+          name: 'operationGuideType',
+          header: i18next.t('field.operation_guide_type'),
+          record: { editable: true, align: 'center' },
+          sortable: true,
+          width: 160
+        },
+        {
+          type: 'string',
+          name: 'operationGuide',
+          header: i18next.t('field.operation_guide'),
+          record: { editable: true, align: 'center' },
+          sortable: true,
+          width: 160
+        },
+        {
           type: 'float',
           name: 'defaultPrice',
           header: i18next.t('field.default_price'),
@@ -210,6 +222,8 @@ class VasList extends localize(i18next)(PageView) {
               description
               defaultPrice
               currency
+              operationGuideType
+              operationGuide
               updatedAt
               updater{
                 id
@@ -337,7 +351,7 @@ class VasList extends localize(i18next)(PageView) {
   }
 
   _exportableData() {
-    return this.dataGrist.exportRecords()  
+    return this.dataGrist.exportRecords()
   }
 }
 
