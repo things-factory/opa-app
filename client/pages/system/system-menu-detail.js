@@ -21,13 +21,14 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
       ScrollbarStyles,
       css`
         :host {
+          padding: 0 15px;
           display: flex;
           flex-direction: column;
-          overflow: hidden;
-          padding: 0 15px;
-          background-color: #fff;
+          overflow-x: overlay;
+          background-color: var(--main-section-background-color);
         }
         h2 {
+          margin: var(--subtitle-margin);
           padding: var(--subtitle-padding);
           font: var(--subtitle-font);
           color: var(--subtitle-text-color);
@@ -47,21 +48,27 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
           flex: 1;
         }
         .button-container {
-          padding: 10px 0 12px 0;
-          text-align: center;
+          padding: var(--button-container-padding);
+          margin: var(--button-container-margin);
+          text-align: var(--button-container-align);
+          background-color: var(--button-container-background);
+          height: var(--button-container-height);
         }
-        .button-container > button {
-          background-color: var(--button-background-color);
-          border: var(--button-border);
-          border-radius: var(--button-border-radius);
-          margin: var(--button-margin);
+        .button-container button {
+          background-color: var(--button-container-button-background-color);
+          border-radius: var(--button-container-button-border-radius);
+          height: var(--button-container-button-height);
+          border: var(--button-container-button-border);
+          margin: var(--button-container-button-margin);
+
           padding: var(--button-padding);
           color: var(--button-color);
           font: var(--button-font);
           text-transform: var(--button-text-transform);
         }
-        .button-container > button:hover,
-        .button-container > button:active {
+        .button-container button:hover,
+        .button-container button:active,
+        .button-container button[ok] {
           background-color: var(--button-background-focus-color);
         }
       `
@@ -83,8 +90,8 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
       </div>
 
       <div class="button-container">
-        <button @click=${this._saveMenus}>${i18next.t('button.save')}</button>
         <button @click=${this._deleteMenus}>${i18next.t('button.delete')}</button>
+        <button ok @click=${this._saveMenus}>${i18next.t('button.save')}</button>
       </div>
     `
   }
