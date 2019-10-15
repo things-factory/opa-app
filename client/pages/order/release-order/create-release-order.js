@@ -231,15 +231,72 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'object',
-          name: 'product',
-          header: i18next.t('field.release_inventory_list'),
-          record: { editable: true, align: 'center' },
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              this._openInventoryProduct()
+          name: 'inventory',
+          header: i18next.t('field.inventory_list'),
+          record: {
+            editable: true,
+            align: 'center',
+            options: {
+              queryName: 'inventories',
+              basicArgs: {
+                filters: [
+                  {
+                    name: 'qty',
+                    operator: 'noteq',
+                    value: 0
+                  }
+                ]
+              },
+              nameField: 'batchId',
+              descriptionField: 'palletId',
+              select: [
+                {
+                  name: 'id',
+                  hidden: true
+                },
+                {
+                  name: 'palletId',
+                  header: i18next.t('field.pallet_id'),
+                  record: { align: 'center' }
+                },
+                {
+                  name: 'batchId',
+                  header: i18next.t('field.batch_id'),
+                  record: { align: 'center' }
+                },
+                {
+                  name: 'warehouse',
+                  type: 'object',
+                  subFields: ['description'],
+                  width: 200
+                },
+                {
+                  name: 'location',
+                  type: 'object',
+                  subFields: ['name', 'description'],
+                  record: { align: 'center' }
+                },
+                {
+                  name: 'product',
+                  type: 'object',
+                  subfields: ['name', 'description']
+                },
+                {
+                  name: 'qty',
+                  type: 'float',
+                  record: { align: 'center' }
+                }
+              ]
             }
           },
           width: 250
+        },
+        {
+          type: 'object',
+          name: 'location',
+          header: i18next.t('field.location'),
+          record: { align: 'center' },
+          width: 150
         },
         {
           type: 'string',
@@ -319,7 +376,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
 
   _getStdDate() {
     let date = new Date()
-    date.setDate(date.getDate() + 1)
+    date.setDate(date.getDate())
     return date.toISOString().split('T')[0]
   }
 
@@ -328,9 +385,9 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       html`
         <inventory-product-selector
           @selected="${e => {
-            this.inventoryData = {
-              ...this.inventoryData,
-              records: e.detail
+            this.vasData = {
+              ...this.vasData,
+              records: [...this.vasData.records, ...e.detail]
             }
           }}"
         ></inventory-product-selector>

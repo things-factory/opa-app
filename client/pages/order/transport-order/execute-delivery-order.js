@@ -1,7 +1,7 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, PageView } from '@things-factory/shell'
+import { client, gqlBuilder, PageView, isMobileDevice } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
@@ -13,8 +13,8 @@ class ExecuteDeliveryOrder extends localize(i18next)(PageView) {
       _doNo: String,
       _status: String,
       _path: String,
-      drivers: Array,
-      vehicles: Array
+      _loadWeight: String,
+      transportDetail: Object
     }
   }
 
@@ -83,8 +83,8 @@ class ExecuteDeliveryOrder extends localize(i18next)(PageView) {
   constructor() {
     super()
     this._path = ''
-    this.drivers = []
-    this.vehicles = []
+    this._loadWeight = ''
+    this.transportDetail = { records: [] }
   }
 
   render() {
@@ -106,58 +106,115 @@ class ExecuteDeliveryOrder extends localize(i18next)(PageView) {
             <input name="refNo" readonly />
 
             <label>${i18next.t('label.cargo_type')}</label>
-            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
+            <input name="cargoType" placeholder="${i18next.t('label.bag_crates_carton_ibc_drums_pails')}" />
 
             <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
             <input name="loadWeight" type="number" min="0" readonly />
 
-            <input name="urgency" type="checkbox" readonly />
+            <input name="urgency" type="checkbox" disabled />
             <label>${i18next.t('label.urgent_delivery')}</label>
 
-            <label>${i18next.t('label.assign_driver')}</label>
-            <select name="driver" id="driver" required>
-              ${this.drivers.map(
-                driver => html`
-                  <option driver-id="${driver.id}" value="${driver.name}">${driver.driverCode}-${driver.name}</option>
-                `
-              )}</select
-            >
-
-            <label>${i18next.t('label.assign_vehicle')}</label>
-            <select name="vehicle" id="vehicle" required>
-              ${this.vehicles.map(
-                vehicle => html`
-                  <option vehicle-id="${vehicle.id}" value="${vehicle.name}">${vehicle.regNumber}</option>
-                `
-              )}</select
-            >
+            <input name="looseItem" type="checkbox" disabled />
+            <label>${i18next.t('label.loose_item')}</label>
 
             <label>${i18next.t('label.download_do')}</label>
             <a href="/attachment/${this._path}" download><mwc-icon>cloud_download</mwc-icon></a>
           </fieldset>
         </form>
       </div>
+
+      <div class="grist">
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.assign_driver_and_truck')}</h2>
+
+        <data-grist
+          id="transport-grist"
+          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+          .config=${this.transportOrderDetail}
+          .data="${this.transportDetail}"
+        ></data-grist>
+      </div>
     `
+  }
+
+  get transportDetailGrist() {
+    return this.shadowRoot.querySelector('data-grist#transport-grist')
   }
 
   get deliveryOrderForm() {
     return this.shadowRoot.querySelector('form[name=deliveryOrder]')
   }
 
-  get driver() {
-    return this.shadowRoot.querySelector('select#driver')
-  }
-
-  get vehicle() {
-    return this.shadowRoot.querySelector('select#vehicle')
+  pageInitialized() {
+    this.transportOrderDetail = {
+      pagination: { infinite: true },
+      rows: { selectable: { multiple: true } },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'close',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              const newData = data.records.filter((_, idx) => idx !== rowIndex)
+              this.transportDetail = { ...this.transportDetail, records: newData }
+              this.transportDetailGrist.dirtyData.records = newData
+            }
+          }
+        },
+        {
+          type: 'object',
+          name: 'transportDriver',
+          header: i18next.t('field.driver'),
+          record: {
+            editable: true,
+            align: 'center',
+            options: {
+              queryName: 'transportDrivers',
+              select: [
+                {
+                  name: 'id',
+                  hidden: true
+                },
+                {
+                  name: 'name',
+                  width: 250
+                },
+                {
+                  name: 'description'
+                },
+                {
+                  name: 'driverCode',
+                  header: i18next.t('field.driver_code'),
+                  record: { align: 'center' }
+                }
+              ]
+            }
+          },
+          width: 250
+        },
+        {
+          type: 'object',
+          name: 'transportVehicle',
+          header: i18next.t('field.truck_no'),
+          record: { editable: true, align: 'center', options: { queryName: 'transportVehicles' } },
+          width: 200
+        },
+        {
+          type: 'float',
+          name: 'assignedLoad',
+          header: i18next.t('field.assigned_load'),
+          record: { editable: true, align: 'center', options: { min: 0 } },
+          width: 100
+        }
+      ]
+    }
   }
 
   async pageUpdated(changes) {
     if (this.active) {
       this._doNo = changes.resourceId || this._doNo || ''
       this._fetchDeliveryOrder()
-      this._fetchTransportDriver()
-      this._fetchTransportVehicle()
     }
   }
 
@@ -176,6 +233,7 @@ class ExecuteDeliveryOrder extends localize(i18next)(PageView) {
             refNo
             to
             loadWeight
+            looseItem
             status
             urgency
             cargoType
@@ -194,69 +252,10 @@ class ExecuteDeliveryOrder extends localize(i18next)(PageView) {
       const deliveryOrder = response.data.deliveryOrder
 
       this._path = deliveryOrder.attachments[0].path
+      this._loadWeight = deliveryOrder.loadWeight
       this._status = deliveryOrder.status
       this._fillupDOForm(deliveryOrder)
     }
-  }
-
-  async _fetchTransportDriver() {
-    if (!this._doNo) return
-    const response = await client.query({
-      query: gql`
-        query {
-          transportDrivers(${gqlBuilder.buildArgs({
-            filters: []
-          })}) {
-            items {
-              id
-              name
-              bizplace{
-                id
-                name
-              }
-              driverCode
-            }
-            total
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      this.drivers = response.data.transportDrivers.items
-    }
-  }
-
-  async _fetchTransportVehicle() {
-    if (!this._doNo) return
-    const response = await client.query({
-      query: gql`
-        query {
-          transportVehicles(${gqlBuilder.buildArgs({
-            filters: []
-          })}) {
-            items {
-              id
-              name
-              bizplace{
-                id
-                name
-              }
-              regNumber
-            }
-            total
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      this.vehicles = response.data.transportVehicles.items
-    }
-  }
-
-  _getDeliveryOrder() {
-    return this._serializeForm(this.deliveryOrderForm)
   }
 
   _fillupDOForm(data) {
@@ -265,7 +264,7 @@ class ExecuteDeliveryOrder extends localize(i18next)(PageView) {
 
   _fillupForm(form, data) {
     for (let key in data) {
-      Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
+      Array.from(form.querySelectorAll('input')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
         } else if (field.name === key && field.type !== 'file') {
@@ -277,6 +276,8 @@ class ExecuteDeliveryOrder extends localize(i18next)(PageView) {
 
   async _executeDeliveryOrder() {
     try {
+      this._validateTransport()
+
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.dispatch_delivery_order'),
@@ -290,7 +291,7 @@ class ExecuteDeliveryOrder extends localize(i18next)(PageView) {
 
       let args = {
         name: this._doNo,
-        patch: this._getDriverVehicle()
+        orderDetails: { ...this._getDriverVehicle() }
       }
 
       const response = await client.query({
@@ -313,15 +314,44 @@ class ExecuteDeliveryOrder extends localize(i18next)(PageView) {
     }
   }
 
+  _validateTransport() {
+    this.transportDetailGrist.commit()
+    // no records
+    if (!this.transportDetailGrist.data.records || !this.transportDetailGrist.data.records.length)
+      throw new Error(i18next.t('text.no_drivers_and_trucks'))
+
+    // required field (driver, truck and assigned load)
+    if (
+      this.transportDetailGrist.data.records.filter(
+        record => !record.transportDriver || !record.transportVehicle || !record.assignedLoad
+      ).length
+    )
+      throw new Error(i18next.t('text.empty_value_in_list'))
+  }
+
   _getDriverVehicle() {
-    if (this.driver.value && this.vehicle.value) {
-      return {
-        transportDriver: { id: this.driver.selectedOptions[0].getAttribute('driver-id'), name: this.driver.value },
-        transportVehicle: { id: this.vehicle.selectedOptions[0].getAttribute('vehicle-id'), name: this.vehicle.value }
-      }
-    } else {
-      throw new Error(i18next.t('text.invalid_form'))
-    }
+    let deliveryOrder = {}
+    deliveryOrder.orderDetails = this.transportDetailGrist.data.records.map(record => {
+      delete record.transportDriver.__origin__
+      delete record.transportDriver.__seq__
+      delete record.transportDriver.__selected__
+      delete record.transportVehicle.__origin__
+      delete record.transportVehicle.__seq__
+      delete record.transportVehicle.__selected__
+      parseInt(record.assignedLoad)
+
+      return { ...record }
+    })
+    return deliveryOrder.orderDetails
+  }
+
+  _onTransportChangedHandler(event) {
+    // const changeRecord = event.detail.after
+    // const changedColumn = event.detail.column.name
+    // if (changedColumn === 'assignedLoad') {
+    //   const assignedLoads = this.transportDetail.data.records.map(transport => transport.assignedLoad)
+    //   if (assignedLoads != this._loadWeight) throw new Error(i18next.t('text.assigned_load_weight_is_insufficient'))
+    // }
   }
 
   _showToast({ type, message }) {

@@ -38,9 +38,7 @@ class DeliveryOrderRequests extends localize(i18next)(PageView) {
     return {
       _searchFields: Array,
       config: Object,
-      data: Object,
-      drivers: Array,
-      vehicles: Array
+      data: Object
     }
   }
 
@@ -68,12 +66,6 @@ class DeliveryOrderRequests extends localize(i18next)(PageView) {
     }
   }
 
-  constructor() {
-    super()
-    this.drivers = []
-    this.vehicles = []
-  }
-
   pageUpdated(changes, lifecycle) {
     if (this.active) {
       this.dataGrist.fetch()
@@ -81,9 +73,6 @@ class DeliveryOrderRequests extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
-    await this._fetchTransportDriver()
-    await this._fetchTransportVehicle()
-
     this._searchFields = [
       {
         label: i18next.t('field.do_no'),
@@ -96,30 +85,6 @@ class DeliveryOrderRequests extends localize(i18next)(PageView) {
         name: 'deliveryDate',
         type: 'date',
         props: { searchOper: 'like' }
-      },
-      {
-        label: i18next.t('field.driver'),
-        name: 'transportDriver',
-        type: 'select',
-        options: [
-          { value: '' },
-          ...this.drivers.map(driver => {
-            return { name: `${driver.driverCode}-${driver.name}`, value: driver.name }
-          })
-        ],
-        props: { searchOper: 'eq' }
-      },
-      {
-        label: i18next.t('field.truck'),
-        name: 'transportVehicle',
-        type: 'select',
-        options: [
-          { value: '' },
-          ...this.vehicles.map(vehicle => {
-            return { name: vehicle.name, value: vehicle.name }
-          })
-        ],
-        props: { searchOper: 'eq' }
       },
       {
         label: i18next.t('field.status'),
@@ -197,23 +162,6 @@ class DeliveryOrderRequests extends localize(i18next)(PageView) {
           width: 160
         },
         {
-          type: 'object',
-          name: 'transportVehicle',
-          header: i18next.t('field.transport_vehicle'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 160
-        },
-        {
-          type: 'object',
-          name: 'transportDriver',
-          header: i18next.t('field.transport_driver'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 250
-        },
-
-        {
           type: 'string',
           name: 'status',
           header: i18next.t('field.status'),
@@ -268,18 +216,6 @@ class DeliveryOrderRequests extends localize(i18next)(PageView) {
                 id
                 name
               }
-              transportOrderDetails {
-                transportVehicle {
-                  id
-                  name
-                  description
-                }
-                transportDriver {
-                  id
-                  name
-                  description
-                }
-              }
               deliveryDate
               status
               updatedAt
@@ -300,60 +236,6 @@ class DeliveryOrderRequests extends localize(i18next)(PageView) {
         total: response.data.deliveryOrderRequests.total || 0,
         records: response.data.deliveryOrderRequests.items || []
       }
-    }
-  }
-
-  async _fetchTransportDriver() {
-    const response = await client.query({
-      query: gql`
-        query {
-          transportDrivers(${gqlBuilder.buildArgs({
-            filters: []
-          })}) {
-            items {
-              id
-              name
-              bizplace{
-                id
-                name
-              }
-              driverCode
-            }
-            total
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      this.drivers = response.data.transportDrivers.items
-    }
-  }
-
-  async _fetchTransportVehicle() {
-    const response = await client.query({
-      query: gql`
-        query {
-          transportVehicles(${gqlBuilder.buildArgs({
-            filters: []
-          })}) {
-            items {
-              id
-              name
-              bizplace{
-                id
-                name
-              }
-              regNumber
-            }
-            total
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      this.vehicles = response.data.transportVehicles.items
     }
   }
 
