@@ -43,27 +43,33 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
           flex: 1;
         }
         h2 {
+          margin: var(--subtitle-margin);
           padding: var(--subtitle-padding);
           font: var(--subtitle-font);
           color: var(--subtitle-text-color);
           border-bottom: var(--subtitle-border-bottom);
         }
         .button-container {
-          padding-bottom: 12px;
-          text-align: center;
+          padding: var(--button-container-padding);
+          margin: var(--button-container-margin);
+          text-align: var(--button-container-align);
+          background-color: var(--button-container-background);
+          height: var(--button-container-height);
         }
-        .button-container > button {
-          background-color: var(--button-background-color);
-          border: var(--button-border);
-          border-radius: var(--button-border-radius);
-          margin: var(--button-margin);
+        .button-container button {
+          background-color: var(--button-container-button-background-color);
+          border-radius: var(--button-container-button-border-radius);
+          height: var(--button-container-button-height);
+          border: var(--button-container-button-border);
+          margin: var(--button-container-button-margin);
+
           padding: var(--button-padding);
           color: var(--button-color);
           font: var(--button-font);
           text-transform: var(--button-text-transform);
         }
-        .button-container > button:hover,
-        .button-container > button:active {
+        .button-container button:hover,
+        .button-container button:active {
           background-color: var(--button-background-focus-color);
         }
       `
@@ -124,7 +130,7 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
 
     this.roleConfig = {
       pagination: { infinite: true },
-      list: { fields: ['assigned', 'name', 'description'] },
+      list: { fields: ['name', 'description', 'assigned'] },
       rows: { appendable: false },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },

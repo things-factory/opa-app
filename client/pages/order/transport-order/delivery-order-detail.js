@@ -99,19 +99,16 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
             <input name="refNo" readonly />
 
             <label>${i18next.t('label.cargo_type')}</label>
-            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
+            <input name="cargoType" placeholder="${i18next.t('label.bag_crates_carton_ibc_drums_pails')}" />
 
             <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
             <input name="loadWeight" type="number" min="0" readonly />
 
-            <input name="urgency" type="checkbox" readonly />
+            <input name="urgency" type="checkbox" disabled />
             <label>${i18next.t('label.urgent_delivery')}</label>
 
-            <label>${i18next.t('label.assigned_truck')}</label>
-            <input name=${this._assignedVehicleName} value=${this._assignedVehicleName} readonly />
-
-            <label>${i18next.t('label.assigned_driver')}</label>
-            <input name=${this._assignedDriverName} value=${this._assignedDriverName} readonly />
+            <input name="looseItem" type="checkbox" disabled />
+            <label>${i18next.t('label.loose_item')}</label>
 
             <label>${i18next.t('label.download_do')}</label>
             <a href="/attachment/${this._path}" download=${this._fileName}><mwc-icon>cloud_download</mwc-icon></a>
@@ -151,21 +148,24 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
             status
             urgency
             cargoType
+            looseItem
             attachments {
               id
               name
               refBy
               path
             }
-            transportVehicle {
-              id
-              name
-              description
-            }
-            transportDriver {
-              id
-              name
-              description
+            transportOrderDetails {
+              transportVehicle {
+                id
+                name
+                description
+              }
+              transportDriver {
+                id
+                name
+                description
+              }
             }
           }
         }
@@ -174,13 +174,9 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const deliveryOrder = response.data.deliveryOrder
-      const driver = deliveryOrder.transportDriver || { name: '' }
-      const vehicle = deliveryOrder.transportVehicle || { name: '' }
 
       this._path = deliveryOrder.attachments[0].path
       this._fileName = deliveryOrder.attachments[0].name
-      this._assignedDriverName = driver.name
-      this._assignedVehicleName = vehicle.name
       this._status = deliveryOrder.status
       this._fillupDOForm(deliveryOrder)
     }
