@@ -109,7 +109,7 @@ class ReceiveCollectionOrder extends localize(i18next)(PageView) {
             <input name="refNo" readonly />
 
             <label>${i18next.t('label.cargo_type')}</label>
-            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" readonly />
+            <input name="cargoType" placeholder="${i18next.t('label.bag_crates_carton_ibc_drums_pails')}" readonly />
 
             <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
             <input name="loadWeight" type="number" min="0" readonly />
