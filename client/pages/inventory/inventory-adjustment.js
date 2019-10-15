@@ -391,7 +391,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _saveInventories() {
-    var patches = this.dataGrist.exportRecords()
+    var patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
     patches.map(x => {
       if (x.bizplace) {
         delete x.bizplace['__seq__']
