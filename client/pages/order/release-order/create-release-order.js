@@ -490,8 +490,9 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
 
     releaseGood.orderVass = this.vasGrist.data.records.map(record => {
       delete record.id
-      delete record.__typename
-      delete record.vas.__typename
+      delete record.vas.__origin__
+      delete record.vas.__seq__
+      delete record.vas.__selected__
 
       return { ...record, name }
     })
