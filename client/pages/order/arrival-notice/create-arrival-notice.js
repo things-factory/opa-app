@@ -246,7 +246,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           width: 80
         },
         {
-          type: 'integer',
+          type: 'float',
           name: 'totalWeight',
           header: i18next.t('field.total_weight'),
           record: { align: 'center' },

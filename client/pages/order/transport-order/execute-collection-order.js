@@ -13,8 +13,7 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
       _coNo: String,
       _status: String,
       _path: String,
-      drivers: Array,
-      vehicles: Array
+      transportDetail: Object
     }
   }
 
@@ -84,8 +83,7 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
     super()
     this._transportOptions = []
     this._path = ''
-    this.drivers = []
-    this.vehicles = []
+    this.transportDetail = { records: [] }
   }
 
   render() {
@@ -107,58 +105,116 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
             <input name="refNo" readonly />
 
             <label>${i18next.t('label.cargo_type')}</label>
-            <input name="cargoType" placeholder="${i18next.t('bag_crates_carton_ibc_drums_pails')}" />
+            <input name="cargoType" placeholder="${i18next.t('label.bag_crates_carton_ibc_drums_pails')}" />
 
             <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
             <input name="loadWeight" type="number" min="0" readonly />
 
-            <input name="urgency" type="checkbox" readonly />
-            <label>${i18next.t('label.urgent_delivery')}</label>
+            <input name="urgent_collection" type="checkbox" disabled />
+            <label>${i18next.t('label.urgent_collection')}</label>
 
-            <label>${i18next.t('label.assign_driver')}</label>
-            <select name="driver" id="driver" required>
-              ${this.drivers.map(
-                driver => html`
-                  <option driver-id="${driver.id}" value="${driver.name}">${driver.driverCode}-${driver.name}</option>
-                `
-              )}</select
-            >
-
-            <label>${i18next.t('label.assign_vehicle')}</label>
-            <select name="vehicle" id="vehicle" required>
-              ${this.vehicles.map(
-                vehicle => html`
-                  <option vehicle-id="${vehicle.id}" value="${vehicle.name}">${vehicle.regNumber}</option>
-                `
-              )}</select
-            >
+            <input name="looseItem" type="checkbox" disabled />
+            <label>${i18next.t('label.loose_item')}</label>
 
             <label>${i18next.t('label.download_co')}</label>
             <a href="/attachment/${this._path}" target="_blank"><mwc-icon>cloud_download</mwc-icon></a>
           </fieldset>
         </form>
       </div>
+
+      <div class="grist">
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.assign_driver_and_truck')}</h2>
+
+        <data-grist
+          id="transport-grist"
+          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+          .config=${this.transportOrderDetail}
+          .data="${this.transportDetail}"
+          @record-change="${this._onProductChangeHandler.bind(this)}"
+        ></data-grist>
+      </div>
     `
+  }
+
+  get transportDetailGrist() {
+    return this.shadowRoot.querySelector('data-grist#transport-grist')
   }
 
   get collectionOrderForm() {
     return this.shadowRoot.querySelector('form[name=collectionOrder]')
   }
 
-  get driver() {
-    return this.shadowRoot.querySelector('select#driver')
-  }
-
-  get vehicle() {
-    return this.shadowRoot.querySelector('select#vehicle')
+  pageInitialized() {
+    this.transportOrderDetail = {
+      pagination: { infinite: true },
+      rows: { selectable: { multiple: true } },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'close',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              const newData = data.records.filter((_, idx) => idx !== rowIndex)
+              this.transportDetail = { ...this.transportDetail, records: newData }
+              this.transportOrderDetail.dirtyData.records = newData
+            }
+          }
+        },
+        {
+          type: 'object',
+          name: 'transportDriver',
+          header: i18next.t('field.driver'),
+          record: {
+            editable: true,
+            align: 'center',
+            options: {
+              queryName: 'transportDrivers',
+              select: [
+                {
+                  name: 'id',
+                  hidden: true
+                },
+                {
+                  name: 'name',
+                  width: 250
+                },
+                {
+                  name: 'description'
+                },
+                {
+                  name: 'driverCode',
+                  header: i18next.t('field.driver_code'),
+                  record: { align: 'center' }
+                }
+              ]
+            }
+          },
+          width: 250
+        },
+        {
+          type: 'object',
+          name: 'transportVehicle',
+          header: i18next.t('field.truck_no'),
+          record: { editable: true, align: 'center', options: { queryName: 'transportVehicles' } },
+          width: 150
+        },
+        {
+          type: 'float',
+          name: 'assginedLoad',
+          header: i18next.t('field.assigned_load'),
+          record: { editable: true, align: 'center', options: { min: 0 } },
+          width: 80
+        }
+      ]
+    }
   }
 
   async pageUpdated(changes) {
     if (this.active) {
       this._coNo = changes.resourceId || this._coNo || ''
       this._fetchCollectionOrder()
-      this._fetchTransportDriver()
-      this._fetchTransportVehicle()
     }
   }
 
@@ -178,6 +234,7 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
             from
             loadWeight
             cargoType
+            looseItem
             urgency
             status
             attachments {
@@ -199,69 +256,13 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
     }
   }
 
-  async _fetchTransportDriver() {
-    if (!this._coNo) return
-    const response = await client.query({
-      query: gql`
-        query {
-          transportDrivers(${gqlBuilder.buildArgs({
-            filters: []
-          })}) {
-            items {
-              id
-              name
-              bizplace{
-                id
-                name
-              }
-              driverCode
-            }
-            total
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      this.drivers = response.data.transportDrivers.items
-    }
-  }
-
-  async _fetchTransportVehicle() {
-    if (!this._coNo) return
-    const response = await client.query({
-      query: gql`
-        query {
-          transportVehicles(${gqlBuilder.buildArgs({
-            filters: []
-          })}) {
-            items {
-              id
-              name
-              bizplace{
-                id
-                name
-              }
-              regNumber
-            }
-            total
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      this.vehicles = response.data.transportVehicles.items
-    }
-  }
-
   _fillupCOForm(data) {
     this._fillupForm(this.collectionOrderForm, data)
   }
 
   _fillupForm(form, data) {
     for (let key in data) {
-      Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
+      Array.from(form.querySelectorAll('input')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
         } else if (field.name === key && field.type !== 'file') {
@@ -286,7 +287,7 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
 
       let args = {
         name: this._coNo,
-        patch: this._getDriverVehicle()
+        orderDetails: this._getDriverVehicle()
       }
 
       const response = await client.query({
@@ -309,16 +310,7 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
     }
   }
 
-  _getDriverVehicle() {
-    if (this.driver.value && this.vehicle.value) {
-      return {
-        transportDriver: { id: this.driver.selectedOptions[0].getAttribute('driver-id'), name: this.driver.value },
-        transportVehicle: { id: this.vehicle.selectedOptions[0].getAttribute('vehicle-id'), name: this.vehicle.value }
-      }
-    } else {
-      throw new Error(i18next.t('text.invalid_form'))
-    }
-  }
+  _getDriverVehicle() {}
 
   _showToast({ type, message }) {
     document.dispatchEvent(

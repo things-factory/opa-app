@@ -290,8 +290,7 @@ class ExecuteDeliveryOrder extends localize(i18next)(PageView) {
       }
 
       let args = {
-        name: this._doNo,
-        orderDetails: { ...this._getDriverVehicle() }
+        orderInfo: { ...this._getDriverVehicle() }
       }
 
       const response = await client.query({
@@ -330,19 +329,22 @@ class ExecuteDeliveryOrder extends localize(i18next)(PageView) {
   }
 
   _getDriverVehicle() {
-    let deliveryOrder = {}
-    deliveryOrder.orderDetails = this.transportDetailGrist.data.records.map(record => {
+    let orderInfo = { name: this._doNo }
+    orderInfo.transportOrderDetails = this.transportDetailGrist.data.records.map(record => {
       delete record.transportDriver.__origin__
       delete record.transportDriver.__seq__
+      delete record.transportDriver.driverCode
       delete record.transportDriver.__selected__
       delete record.transportVehicle.__origin__
       delete record.transportVehicle.__seq__
       delete record.transportVehicle.__selected__
+      delete record.transportVehicle.regNumber
       parseInt(record.assignedLoad)
 
       return { ...record }
     })
-    return deliveryOrder.orderDetails
+
+    return orderInfo
   }
 
   _onTransportChangedHandler(event) {
