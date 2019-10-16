@@ -2,7 +2,7 @@ import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, PageView } from '@things-factory/shell'
+import { client, gqlBuilder, PageView, isMobileDevice } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
@@ -14,8 +14,7 @@ class CompleteDeliveryOrder extends localize(i18next)(PageView) {
       _doNo: String,
       _status: String,
       _path: String,
-      _prevDriverName: String,
-      _prevVehicleName: String
+      transportDetail: Object
     }
   }
 
@@ -84,6 +83,7 @@ class CompleteDeliveryOrder extends localize(i18next)(PageView) {
   constructor() {
     super()
     this._path = ''
+    this.transportDetail = { records: [] }
   }
 
   render() {
@@ -121,11 +121,59 @@ class CompleteDeliveryOrder extends localize(i18next)(PageView) {
           </fieldset>
         </form>
       </div>
+
+      <div class="grist">
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.assigned_truck_and_driver')}</h2>
+
+        <data-grist
+          id="transport-grist"
+          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+          .config=${this.transportOrderDetail}
+          .data="${this.transportDetail}"
+        ></data-grist>
+      </div>
     `
+  }
+
+  get transportDetailGrist() {
+    return this.shadowRoot.querySelector('data-grist#transport-grist')
   }
 
   get deliveryOrderForm() {
     return this.shadowRoot.querySelector('form[name=deliveryOrder]')
+  }
+
+  pageInitialized() {
+    this.transportOrderDetail = {
+      pagination: { infinite: true },
+      rows: { selectable: { multiple: true }, appendable: false },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'object',
+          name: 'transportDriver',
+          header: i18next.t('field.driver'),
+          record: {
+            align: 'center'
+          },
+          width: 250
+        },
+        {
+          type: 'object',
+          name: 'transportVehicle',
+          header: i18next.t('field.truck_no'),
+          record: { align: 'center' },
+          width: 200
+        },
+        {
+          type: 'float',
+          name: 'assignedLoad',
+          header: i18next.t('field.assigned_load'),
+          record: { align: 'center' },
+          width: 100
+        }
+      ]
+    }
   }
 
   async pageUpdated(changes) {
@@ -161,6 +209,7 @@ class CompleteDeliveryOrder extends localize(i18next)(PageView) {
               path
             }
             transportOrderDetails {
+              assignedLoad
               transportDriver {
                 id
                 name
@@ -179,10 +228,12 @@ class CompleteDeliveryOrder extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const deliveryOrder = response.data.deliveryOrder
+      const transportOrderDetails = deliveryOrder.transportOrderDetails
 
       this._path = deliveryOrder.attachments[0].path
       this._status = deliveryOrder.status
       this._fillupDOForm(deliveryOrder)
+      this.transportDetail = { records: transportOrderDetails }
     }
   }
 

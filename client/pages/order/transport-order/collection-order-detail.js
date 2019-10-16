@@ -2,7 +2,7 @@ import '@material/mwc-icon'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { client, gqlBuilder, navigate, PageView, store, UPDATE_CONTEXT, isMobileDevice } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
@@ -13,10 +13,9 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
     return {
       _coNo: String,
       _status: String,
-      _assignedDriverName: String,
-      _assignedVehicleName: String,
       _path: String,
-      _fileName: String
+      _fileName: String,
+      transportDetail: Object
     }
   }
 
@@ -77,6 +76,7 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
     super()
     this._path = ''
     this._fileName = ''
+    this.transportDetail = { records: [] }
   }
 
   render() {
@@ -114,11 +114,59 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
           </fieldset>
         </form>
       </div>
+
+      <div class="grist">
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.assigned_truck_and_driver')}</h2>
+
+        <data-grist
+          id="transport-grist"
+          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+          .config=${this.transportOrderDetail}
+          .data="${this.transportDetail}"
+        ></data-grist>
+      </div>
     `
+  }
+
+  get transportDetailGrist() {
+    return this.shadowRoot.querySelector('data-grist#transport-grist')
   }
 
   get collectionOrderForm() {
     return this.shadowRoot.querySelector('form[name=collectionOrder]')
+  }
+
+  pageInitialized() {
+    this.transportOrderDetail = {
+      pagination: { infinite: true },
+      rows: { selectable: { multiple: true }, appendable: false },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'object',
+          name: 'transportDriver',
+          header: i18next.t('field.driver'),
+          record: {
+            align: 'center'
+          },
+          width: 250
+        },
+        {
+          type: 'object',
+          name: 'transportVehicle',
+          header: i18next.t('field.truck_no'),
+          record: { align: 'center' },
+          width: 200
+        },
+        {
+          type: 'float',
+          name: 'assignedLoad',
+          header: i18next.t('field.assigned_load'),
+          record: { align: 'center' },
+          width: 100
+        }
+      ]
+    }
   }
 
   async pageUpdated(changes) {
@@ -145,9 +193,9 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
             from
             loadWeight
             cargoType
+            looseItem
             urgency
             status
-            looseItem
             attachments {
               id
               name
@@ -155,15 +203,16 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
               path
             }
             transportOrderDetails {
-              transportVehicle {
-                id
-                name
-                description
-              }
+              assignedLoad
               transportDriver {
                 id
                 name
-                description
+                driverCode
+              }
+              transportVehicle {
+                id
+                name
+                regNumber
               }
             }
           }
@@ -173,11 +222,12 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const collectionOrder = response.data.collectionOrder
+      const transportOrderDetails = collectionOrder.transportOrderDetails
 
       this._path = collectionOrder.attachments[0].path
-      this._fileName = collectionOrder.attachments[0].name
       this._status = collectionOrder.status
       this._fillupCOForm(collectionOrder)
+      this.transportDetail = { records: transportOrderDetails }
     }
   }
 

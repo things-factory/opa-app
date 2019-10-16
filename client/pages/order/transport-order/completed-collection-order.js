@@ -1,7 +1,7 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, PageView } from '@things-factory/shell'
+import { client, gqlBuilder, PageView, isMobileDevice } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/popup-note'
@@ -12,8 +12,7 @@ class CompletedCollectionOrder extends localize(i18next)(PageView) {
       _coNo: String,
       _status: String,
       _path: String,
-      _prevDriverName: String,
-      _prevVehicleName: String
+      transportDetail: Object
     }
   }
 
@@ -78,6 +77,7 @@ class CompletedCollectionOrder extends localize(i18next)(PageView) {
   constructor() {
     super()
     this._path = ''
+    this.transportDetail = { records: [] }
   }
 
   render() {
@@ -118,11 +118,59 @@ class CompletedCollectionOrder extends localize(i18next)(PageView) {
           </fieldset>
         </form>
       </div>
+
+      <div class="grist">
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.assigned_truck_and_driver')}</h2>
+
+        <data-grist
+          id="transport-grist"
+          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+          .config=${this.transportOrderDetail}
+          .data="${this.transportDetail}"
+        ></data-grist>
+      </div>
     `
+  }
+
+  get transportDetailGrist() {
+    return this.shadowRoot.querySelector('data-grist#transport-grist')
   }
 
   get collectionOrderForm() {
     return this.shadowRoot.querySelector('form[name=collectionOrder]')
+  }
+
+  pageInitialized() {
+    this.transportOrderDetail = {
+      pagination: { infinite: true },
+      rows: { selectable: { multiple: true }, appendable: false },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'object',
+          name: 'transportDriver',
+          header: i18next.t('field.driver'),
+          record: {
+            align: 'center'
+          },
+          width: 250
+        },
+        {
+          type: 'object',
+          name: 'transportVehicle',
+          header: i18next.t('field.truck_no'),
+          record: { align: 'center' },
+          width: 200
+        },
+        {
+          type: 'float',
+          name: 'assignedLoad',
+          header: i18next.t('field.assigned_load'),
+          record: { align: 'center' },
+          width: 100
+        }
+      ]
+    }
   }
 
   async pageUpdated(changes) {
@@ -148,10 +196,9 @@ class CompletedCollectionOrder extends localize(i18next)(PageView) {
             from
             loadWeight
             cargoType
-            urgency
             looseItem
+            urgency
             status
-            remark
             attachments {
               id
               name
@@ -159,6 +206,7 @@ class CompletedCollectionOrder extends localize(i18next)(PageView) {
               path
             }
             transportOrderDetails {
+              assignedLoad
               transportDriver {
                 id
                 name
@@ -177,10 +225,12 @@ class CompletedCollectionOrder extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const collectionOrder = response.data.collectionOrder
+      const transportOrderDetails = collectionOrder.transportOrderDetails
 
       this._path = collectionOrder.attachments[0].path
       this._status = collectionOrder.status
       this._fillupCOForm(collectionOrder)
+      this.transportDetail = { records: transportOrderDetails }
     }
   }
 
