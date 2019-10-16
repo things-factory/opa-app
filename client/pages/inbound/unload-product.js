@@ -200,6 +200,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
               <barcode-scanable-input
                 name="palletId"
                 .value=${this._palletId}
+                without-enter
                 custom-input
                 @keypress="${this._unload.bind(this)}"
               ></barcode-scanable-input>
