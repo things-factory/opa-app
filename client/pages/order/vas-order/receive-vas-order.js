@@ -13,6 +13,7 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _vasNo: String,
+      _template: Object,
       config: Object,
       data: Object,
       _status: String
@@ -166,7 +167,6 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
-          record: { align: 'center' },
           width: 350
         }
       ]

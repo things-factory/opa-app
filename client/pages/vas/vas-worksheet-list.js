@@ -6,6 +6,7 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { WORKSHEET_TYPE, WORKSHEET_STATUS } from '../inbound/constants/worksheet'
+import { ORDER_TYPES } from '../order/constants/order'
 
 class VasWorksheetList extends localize(i18next)(PageView) {
   static get styles() {
@@ -120,6 +121,22 @@ class VasWorksheetList extends localize(i18next)(PageView) {
           }
         },
         {
+          type: 'string',
+          name: 'orderNo',
+          header: i18next.t('field.order_no'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'refOrder',
+          header: i18next.t('field.ref_order'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 200
+        },
+        {
           type: 'object',
           name: 'bizplace',
           header: i18next.t('field.customer'),
@@ -127,22 +144,7 @@ class VasWorksheetList extends localize(i18next)(PageView) {
           sortable: true,
           width: 200
         },
-        {
-          type: 'string',
-          name: 'name',
-          header: i18next.t('field.name'),
-          record: { align: 'left' },
-          sortable: true,
-          width: 180
-        },
-        {
-          type: 'string',
-          name: 'type',
-          header: i18next.t('field.type'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 160
-        },
+
         {
           type: 'string',
           name: 'status',
@@ -218,6 +220,15 @@ class VasWorksheetList extends localize(i18next)(PageView) {
                 name
                 description
               }
+              arrivalNotice {
+                name
+              }
+              releaseGood {
+                name
+              }
+              vasOrder {
+                name
+              }
               name
               type
               status
@@ -238,13 +249,28 @@ class VasWorksheetList extends localize(i18next)(PageView) {
     if (!response.errors) {
       return {
         total: response.data.worksheets.total || 0,
-        records: response.data.worksheets.items || []
+        records: (response.data.worksheets.items || []).map(item => {
+          return {
+            ...item,
+            orderNo:
+              (item.arrivalNotice && item.arrivalNotice.name) ||
+              (item.releaseGood && item.releaseGood.name) ||
+              (item.vasOrder && item.vasOrder.name),
+            refOrder: this._getRefOrder(item)
+          }
+        })
       }
     }
   }
 
-  get _columns() {
-    return this.config.columns
+  _getRefOrder(order) {
+    if (order.arrivalNotice && order.arrivalNotice.name) {
+      return i18next.t(`label.${ORDER_TYPES.ARRIVAL_NOTICE.name}`)
+    } else if (order.releaseGood && order.releaseGood.name) {
+      return i18next.t(`label.${ORDER_TYPES.RELEASE_OF_GOODS.name}`)
+    } else if (order.vasOrder && order.vasOrder.name) {
+      return i18next.t(`label.${ORDER_TYPES.VAS_ORDER.name}`)
+    }
   }
 
   _exportableData() {
