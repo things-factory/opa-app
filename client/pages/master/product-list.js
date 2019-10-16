@@ -1,12 +1,12 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
-import gql from 'graphql-tag'
 import { openPopup } from '@things-factory/layout-base'
+import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
+import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import '../components/import-pop-up'
 import { CustomAlert } from '../../utils/custom-alert'
+import '../components/import-pop-up'
 
 class ProductList extends localize(i18next)(PageView) {
   static get properties() {
@@ -114,9 +114,8 @@ class ProductList extends localize(i18next)(PageView) {
 
     this.config = {
       rows: {
-        selectable: {
-          multiple: true
-        }
+        handlers: { click: this._setProductRefConfition.bind(this) },
+        selectable: { multiple: true }
       },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
@@ -125,19 +124,26 @@ class ProductList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'name',
-          record: {
-            editable: true
-          },
+          record: { editable: true },
           imex: { header: 'Name', key: 'name', width: 50, type: 'string' },
           header: i18next.t('field.name'),
           width: 180
         },
         {
+          type: 'object',
+          name: 'productRef',
+          record: {
+            editable: true,
+            options: { queryName: 'products' }
+          },
+          imex: { header: 'Product Ref', key: 'productRef', width: 50, type: 'string' },
+          header: i18next.t('field.product_ref'),
+          width: 230
+        },
+        {
           type: 'string',
           name: 'description',
-          record: {
-            editable: true
-          },
+          record: { editable: true },
           imex: { header: 'Description', key: 'description', width: 50, type: 'string' },
           header: i18next.t('field.description'),
           width: 250
@@ -145,10 +151,7 @@ class ProductList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'type',
-          record: {
-            align: 'center',
-            editable: true
-          },
+          record: { align: 'center', editable: true },
           imex: { header: 'Type', key: 'type', width: 50, type: 'string' },
           header: i18next.t('field.type'),
           width: 150
@@ -156,20 +159,14 @@ class ProductList extends localize(i18next)(PageView) {
         {
           type: 'object',
           name: 'updater',
-          record: {
-            align: 'center',
-            editable: false
-          },
+          record: { align: 'center', editable: false },
           header: i18next.t('field.updater'),
           width: 250
         },
         {
           type: 'datetime',
           name: 'updatedAt',
-          record: {
-            align: 'center',
-            editable: false
-          },
+          record: { align: 'center', editable: false },
           header: i18next.t('field.updated_at'),
           width: 180
         }
@@ -219,6 +216,10 @@ class ProductList extends localize(i18next)(PageView) {
             items {
               id
               name
+              productRef {
+                name
+                description
+              }
               description
               type
               updater {
@@ -240,6 +241,18 @@ class ProductList extends localize(i18next)(PageView) {
         records: response.data.products.items || []
       }
     }
+  }
+
+  _setProductRefConfition(columns, data, column, record, rowIndex) {
+    this.config.columns.map(column => {
+      if (column.name === 'productRef') {
+        if (record && record.id) {
+          column.record.options.basicArgs = { filters: [{ name: 'id', operator: 'noteq', value: record.id }] }
+        } else {
+          delete column.record.options.basicArgs
+        }
+      }
+    })
   }
 
   async importHandler(patches) {
@@ -276,6 +289,11 @@ class ProductList extends localize(i18next)(PageView) {
         let patchField = product.id ? { id: product.id } : {}
         const dirtyFields = product.__dirtyfields__
         for (let key in dirtyFields) {
+          if (dirtyFields[key].after instanceof Object) {
+            for (let objKey in dirtyFields[key].after) {
+              if (objKey.startsWith('__')) delete dirtyFields[key].after[objKey]
+            }
+          }
           patchField[key] = dirtyFields[key].after
         }
         patchField.cuFlag = product.__dirty__
