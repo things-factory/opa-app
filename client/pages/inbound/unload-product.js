@@ -8,7 +8,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { CustomAlert } from '../../utils/custom-alert'
-import '../popup-note'
+import '../components/popup-note'
 
 class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -200,6 +200,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
               <barcode-scanable-input
                 name="palletId"
                 .value=${this._palletId}
+                without-enter
                 custom-input
                 @keypress="${this._unload.bind(this)}"
               ></barcode-scanable-input>

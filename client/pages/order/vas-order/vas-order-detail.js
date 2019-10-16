@@ -5,8 +5,8 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_C
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
-import { ORDER_STATUS } from '../constants/order'
 import '../../components/vas-relabel'
+import { ORDER_STATUS } from '../constants/order'
 
 class VasOrderDetail extends localize(i18next)(PageView) {
   static get properties() {
@@ -65,6 +65,11 @@ class VasOrderDetail extends localize(i18next)(PageView) {
     ]
   }
 
+  constructor() {
+    super()
+    this.data = { records: [] }
+  }
+
   get context() {
     return {
       title: i18next.t('title.vas_order_detail'),
@@ -89,15 +94,6 @@ class VasOrderDetail extends localize(i18next)(PageView) {
         ${this._template}
       </div>
     `
-  }
-
-  constructor() {
-    super()
-    this.data = { records: [] }
-  }
-
-  get vasGrist() {
-    return this.shadowRoot.querySelector('data-grist#vas-grist')
   }
 
   async pageUpdated(changes) {

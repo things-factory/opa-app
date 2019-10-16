@@ -1,3 +1,4 @@
+import '@things-factory/barcode-ui'
 import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
@@ -7,9 +8,9 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { CustomAlert } from '../../utils/custom-alert'
-import { ORDER_TYPES } from '../order/constants/order'
+import '../components/vas-relabel'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
-import '@things-factory/barcode-ui'
+import { ORDER_TYPES } from '../order/constants/order'
 
 class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -21,6 +22,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
       _voNo: String,
       _ganNo: String,
       _roNo: String,
+      _template: Object,
       config: Object,
       data: Object
     }
@@ -145,6 +147,10 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
           .data="${this.data}"
         ></data-grist>
       </div>
+
+      <div class="guide-container">
+        ${this._template}
+      </div>
     `
   }
 
@@ -167,7 +173,19 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
 
   async pageInitialized() {
     this.preConfig = {
-      rows: { appendable: false },
+      rows: {
+        appendable: false,
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            if (record && record.vas && record.vas.operationGuideType === 'template') {
+              this._template = document.createElement(record.vas.operationGuide)
+              this._template.record = { ...record, operationGuide: JSON.parse(record.operationGuide) }
+            } else {
+              this._template = null
+            }
+          }
+        }
+      },
       list: { fields: ['batchId', 'vas', 'remark'] },
       pagination: { infinite: true },
       columns: [
@@ -247,10 +265,17 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
               name
               description
               targetVas {
+                operationGuide
+                inventory {
+                  name
+                  description
+                }
                 vas {
                   id
                   name
                   description
+                  operationGuideType
+                  operationGuide
                 }
                 batchId
                 name

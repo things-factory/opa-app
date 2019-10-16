@@ -8,9 +8,10 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { CustomAlert } from '../../utils/custom-alert'
+import '../components/popup-note'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
 import { ORDER_TYPES } from '../order/constants/order'
-import '../popup-note'
+import '../components/vas-relabel'
 
 class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -20,7 +21,8 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       config: Object,
       data: Object,
       _vasName: String,
-      _selectedTaskStatus: String
+      _selectedTaskStatus: String,
+      _template: Object
     }
   }
 
@@ -126,7 +128,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
             @keypress="${e => {
               if (e.keyCode === 13) {
                 e.preventDefault()
-                this._fetchVass(this._orderNo, this.orderTypeInput.value)
+                this._fetchVass()
               }
             }}"
           ></barcode-scanable-input>
@@ -137,7 +139,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
             @keypress="${async e => {
               if (e.keyCode === 13) {
                 e.preventDefault()
-                this._fetchVass(this.orderNoInput.value, e.currentTarget.value)
+                this._fetchVass()
               }
             }}"
           >
@@ -244,6 +246,8 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
               <input name="description" readonly />
             </fieldset>
           </form>
+
+          ${this._template}
         </div>
       </div>
     `
@@ -278,6 +282,13 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
 
               this.inputForm.reset()
               this._fillUpInputForm(record)
+
+              if (record.vas.operationGuideType && record.vas.operationGuideType === 'template') {
+                this._template = document.createElement(record.vas.operationGuide)
+                this._template.record = { ...record, operationGuide: JSON.parse(record.operationGuide) }
+              } else {
+                this._template = null
+              }
             }
           }
         }
@@ -354,7 +365,9 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
     setTimeout(() => this.orderNoInput.focus(), 100)
   }
 
-  async _fetchVass(orderNo, orderType) {
+  async _fetchVass() {
+    const orderNo = this.orderNo ? this.orderNo : this.orderNoInput.value
+    const orderType = this.orderType ? this.orderType : this.orderTypeInput.value
     if (!orderNo) {
       this._showToast({ message: i18next.t('text.order_no_is_empty') })
       return
@@ -383,10 +396,13 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
               name
               targetName
               status
+              operationGuide
               vas {
                 id
                 name
                 description
+                operationGuide
+                operationGuideType
               }
               description
               remark
@@ -508,7 +524,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
         this._selectedTaskStatus = null
         this.infoForm.reset()
         this.inputForm.reset()
-        this._fetchVass(this.orderNoInput.value, this.orderType)
+        this._fetchVass()
       }
     } catch (e) {
       this._showToast(e)
@@ -545,7 +561,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
         this._selectedTaskStatus = null
         this.infoForm.reset()
         this.inputForm.reset()
-        this._fetchVass(this.orderNo, this.orderType)
+        this._fetchVass()
       }
     } catch (e) {
       this._showToast(e)

@@ -1,15 +1,18 @@
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
+import { SingleColumnFormStyles, MultiColumnFormStyles } from '@things-factory/form-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
 import { client, gqlBuilder } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
+import '../components/image-viewer'
 import '../master/product-list'
 import { ORDER_VAS_STATUS } from '../order/constants/order'
+import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
 
 class VasRelabel extends localize(i18next)(LitElement) {
   static get styles() {
     return [
+      SingleColumnFormStyles,
       MultiColumnFormStyles,
       css`
         h2 {
@@ -27,14 +30,13 @@ class VasRelabel extends localize(i18next)(LitElement) {
           color: var(--grist-title-icon-color);
         }
 
+        mwc-icon {
+          vertical-align: middle;
+          margin: var(--grist-title-icon-margin);
+          color: var(--grist-title-icon-color);
+        }
         .new-label {
           display: flex;
-          flex-direction: column;
-          margin-bottom: 30px;
-        }
-
-        .new-label > img {
-          margin: auto;
         }
       `
     ]
@@ -50,7 +52,12 @@ class VasRelabel extends localize(i18next)(LitElement) {
     return html`
       <div class="container">
         <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.relabel')}</h2>
-        <form class="multi-column-form" @submit="${e => e.preventDefault()}">
+        <form
+          class="${this.record && this.record.status === WORKSHEET_STATUS.EXECUTING.value
+            ? 'single-column-form'
+            : 'multi-column-form'}"
+          @submit="${e => e.preventDefault()}"
+        >
           <fieldset>
             <legend>${i18next.t('title.product')}</legend>
             <label>${i18next.t('label.from_product')}</label>
@@ -58,6 +65,20 @@ class VasRelabel extends localize(i18next)(LitElement) {
 
             <label>${i18next.t('label.to_product')}</label>
             <input readonly name="product" @click="${this._openProductPopup.bind(this)}" value="${this.toProduct}" />
+
+            ${this.record && this.record.status === WORKSHEET_STATUS.EXECUTING.value
+              ? html`
+                  <label ?hidden="${this._isEditable}">${i18next.t('label.label_preview')}</label>
+                  <div ?hidden="${this._isEditable}" class="new-label">
+                    <mwc-icon ?hidden="${this._isEditable}" @click="${this._openPrevPopup.bind(this)}">image</mwc-icon>
+                  </div>
+                `
+              : html`
+                  <div ?hidden="${this._isEditable}" class="new-label">
+                    <label ?hidden="${this._isEditable}">${i18next.t('label.label_preview')}</label>
+                    <mwc-icon ?hidden="${this._isEditable}" @click="${this._openPrevPopup.bind(this)}">image</mwc-icon>
+                  </div>
+                `}
           </fieldset>
 
           <fieldset>
@@ -65,11 +86,6 @@ class VasRelabel extends localize(i18next)(LitElement) {
             <file-uploader ?hidden="${!this._isEditable}" custom-input required name="newLabel"></file-uploader>
           </fieldset>
         </form>
-
-        <div ?hidden="${this._isEditable}" class="new-label">
-          <h2 ?hidden="${this._isEditable}"><mwc-icon>list_alt</mwc-icon>${i18next.t('title.label_preview')}</h2>
-          <img ?hidden="${this._isEditable}" src="${this._newLabelPath}" />
-        </div>
       </div>
     `
   }
@@ -89,6 +105,10 @@ class VasRelabel extends localize(i18next)(LitElement) {
   get fromProdut() {
     if (this.record && this.record.inventory && this.record.inventory.product) {
       const product = this.record.inventory.product
+      this._selectedFromProduct = product
+      return `${product.name} ${product.description ? `(${product.description})` : ''}`
+    } else if (this.record && this.record.operationGuide.data.fromProduct) {
+      const product = this.record.operationGuide.data.fromProduct
       return `${product.name} ${product.description ? `(${product.description})` : ''}`
     } else {
       return ''
@@ -106,7 +126,7 @@ class VasRelabel extends localize(i18next)(LitElement) {
   }
 
   get _isEditable() {
-    return !(this.record.status === ORDER_VAS_STATUS.PENDING.value)
+    return !this.record.status
   }
 
   get _newLabelPath() {
@@ -161,6 +181,7 @@ class VasRelabel extends localize(i18next)(LitElement) {
       this._validateAdjust()
       return {
         data: {
+          fromProduct: this._selectedFromProduct,
           toProduct: this._selectedProduct,
           newLabel: {
             files: this.newLabelInput.files
@@ -176,6 +197,19 @@ class VasRelabel extends localize(i18next)(LitElement) {
   _validateAdjust() {
     if (!this._selectedProduct) throw new Error(i18next.t('text.product_is_empty'))
     if (!this.newLabelInput.files) throw new Error(i18next.t('text.new_label_doesn_not_selected'))
+  }
+
+  _openPrevPopup() {
+    openPopup(
+      html`
+        <image-viewer .src="${this._newLabelPath}" downloadable></image-viewer>
+      `,
+      {
+        backdrop: true,
+        size: 'medium',
+        title: i18next.t('title.label_preview')
+      }
+    )
   }
 
   async createNewLabel(operationGuide) {
@@ -202,6 +236,8 @@ class VasRelabel extends localize(i18next)(LitElement) {
         }
       })
 
+      if (response.errors) throw response.errors[0]
+
       return {
         ...operationGuide,
         data: {
@@ -217,7 +253,7 @@ class VasRelabel extends localize(i18next)(LitElement) {
   async deleteNewLabel(record) {
     try {
       const operationGuide = JSON.parse(record.operationGuide)
-      await client.query({
+      const response = await client.query({
         query: gql`
           mutation {
             deleteAttachment(${gqlBuilder.buildArgs({
@@ -228,6 +264,8 @@ class VasRelabel extends localize(i18next)(LitElement) {
           }
         `
       })
+
+      if (response.errors) throw response.errors[0]
     } catch (e) {
       throw e
     }

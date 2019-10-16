@@ -6,7 +6,7 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
-import '../../popup-note'
+import '../../components/popup-note'
 import { ORDER_STATUS } from '../constants/order'
 
 class ReceiveArrivalNotice extends localize(i18next)(PageView) {

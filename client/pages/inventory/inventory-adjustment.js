@@ -522,6 +522,10 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async importHandler(patches) {
+    patches.map(itm => {
+      itm.qty = parseFloat(itm.qty)
+    })
+
     const response = await client.query({
       query: gql`
           mutation {
