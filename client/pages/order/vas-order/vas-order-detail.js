@@ -6,13 +6,15 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
 import { ORDER_STATUS } from '../constants/order'
+import '../../components/vas-relabel'
 
 class VasOrderDetail extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _vasNo: String,
-      vasGristConfig: Object,
-      vasData: Object,
+      _template: Object,
+      config: Object,
+      data: Object,
       _status: String
     }
   }
@@ -78,16 +80,20 @@ class VasOrderDetail extends localize(i18next)(PageView) {
         <data-grist
           id="vas-grist"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.vasGristConfig}
-          .data="${this.vasData}"
+          .config=${this.config}
+          .data="${this.data}"
         ></data-grist>
+      </div>
+
+      <div class="guide-container">
+        ${this._template}
       </div>
     `
   }
 
   constructor() {
     super()
-    this.vasData = { records: [] }
+    this.data = { records: [] }
   }
 
   get vasGrist() {
@@ -103,16 +109,35 @@ class VasOrderDetail extends localize(i18next)(PageView) {
   }
 
   pageInitialized() {
-    this.vasGristConfig = {
+    this.config = {
       pagination: { infinite: true },
-      rows: { selectable: { multiple: true }, appendable: false },
+      rows: {
+        selectable: { multiple: true },
+        appendable: false,
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            if (record && record.vas && record.vas.operationGuideType === 'template') {
+              this._template = document.createElement(record.vas.operationGuide)
+              this._template.record = { ...record, operationGuide: JSON.parse(record.operationGuide) }
+            } else {
+              this._template = null
+            }
+          }
+        }
+      },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
-          record: { align: 'center', options: { queryName: 'vass' } },
+          record: {
+            align: 'center',
+            options: {
+              queryName: 'vass',
+              select: [{ name: 'operationGuide' }, { name: 'operationGuideType' }]
+            }
+          },
           width: 250
         },
         {
@@ -140,7 +165,6 @@ class VasOrderDetail extends localize(i18next)(PageView) {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
-          record: { align: 'center' },
           width: 350
         }
       ]
@@ -164,19 +188,25 @@ class VasOrderDetail extends localize(i18next)(PageView) {
             id
             name
             status
-            inventoryDetail {
+            orderVass {
               vas {
                 name
                 description
+                operationGuide
+                operationGuideType
               }
-              batchId
-              name
-              product {
+              inventory {
+                batchId
                 name
+                product {
+                  name
+                }
+                location {
+                  name
+                }
               }
-              location {
-                name
-              }
+              operationGuide
+              status
               remark
             }
           }
@@ -186,10 +216,15 @@ class VasOrderDetail extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const vasOrder = response.data.vasOrder
-      const orderVass = vasOrder.inventoryDetail
-
       this._status = vasOrder.status
-      this.vasData = { records: orderVass }
+      this.data = {
+        records: vasOrder.orderVass.map(orderVas => {
+          return {
+            ...orderVas,
+            ...orderVas.inventory
+          }
+        })
+      }
     }
   }
 
@@ -225,6 +260,8 @@ class VasOrderDetail extends localize(i18next)(PageView) {
         cancelButton: { text: i18next.t('button.cancel') }
       })
 
+      await this._executeRevertTransactions()
+
       if (result.value) {
         const response = await client.query({
           query: gql`
@@ -243,6 +280,24 @@ class VasOrderDetail extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
+    }
+  }
+
+  async _executeRevertTransactions() {
+    try {
+      for (let i = 0; i < this.data.records.length; i++) {
+        const record = this.data.records[i]
+        if (record.vas.operationGuideType && record.vas.operationGuideType === 'template') {
+          const template = document.createElement(record.vas.operationGuide)
+
+          for (let j = 0; j < template.revertTransactions.length; j++) {
+            const trx = template.revertTransactions[j]
+            await trx(record)
+          }
+        }
+      }
+    } catch (e) {
+      throw e
     }
   }
 

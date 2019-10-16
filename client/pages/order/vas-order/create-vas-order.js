@@ -5,7 +5,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { CustomAlert } from '../../../utils/custom-alert'
-import '../../vas/vas-relabel'
+import '../../components/vas-relabel'
 
 class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -57,7 +57,7 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
     return {
       config: Object,
       data: Object,
-      template: Object
+      _template: Object
     }
   }
 
@@ -77,7 +77,7 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
       </div>
 
       <div class="guide-container">
-        ${this.template}
+        ${this._template}
       </div>
     `
   }
@@ -101,7 +101,7 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
           ...this.data,
           records: this.dataGrist.dirtyData.records.map((record, idx) => {
             if (idx === this._selectedRecordIdx) {
-              record.operationGuide = this.template.adjust()
+              record.operationGuide = this._template.adjust()
               record.ready = this._isReadyToCreate(record)
             }
             return record
@@ -125,11 +125,11 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
             if (record && record.vas && record.vas.operationGuideType === 'template' && record.vas.operationGuide) {
-              this.template = document.createElement(record.vas.operationGuide)
-              this.template.record = record
-              this.template.operationGuide = record.operationGuide
+              this._template = document.createElement(record.vas.operationGuide)
+              this._template.record = record
+              this._template.operationGuide = record.operationGuide
             } else {
-              this.template = null
+              this._template = null
             }
             this._selectedRecord = record
             this._selectedRecordIdx = rowIndex
@@ -292,6 +292,10 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!response.errors) {
+        this.data = { records: [] }
+        this._template = null
+        this._selectedRecord = null
+        this._selectedRecordIdx = null
         navigate(`vas_order_detail/${response.data.generateVasOrder.name}`)
         this._showToast({ message: i18next.t('vas_order_created') })
       }
@@ -305,23 +309,30 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _executeRelatedTrxs() {
-    this.data = {
-      ...this.data,
-      records: await Promise.all(
-        this.dataGrist.dirtyData.records.map(async record => {
-          if (record.vas.operationGuide && record.operationGuide && record.operationGuide.transactions) {
-            const trxs = record.operationGuide.transactions || []
-            if (trxs.length) {
-              for (let i = 0; i < trxs.length; i++) {
-                const trx = trxs[i]
+    try {
+      this.data = {
+        ...this.data,
+        records: await (async () => {
+          let records = []
+          for (let i = 0; i < this.dataGrist.dirtyData.records.length; i++) {
+            const record = this.dataGrist.dirtyData.records[i]
+
+            if (record.vas.operationGuide && record.operationGuide && record.operationGuide.transactions) {
+              const trxs = record.operationGuide.transactions || []
+
+              for (let j = 0; j < trxs.length; j++) {
+                const trx = trxs[j]
                 record.operationGuide = await trx(record.operationGuide)
               }
             }
+            records.push(record)
           }
 
-          return record
-        })
-      )
+          return records
+        })()
+      }
+    } catch (e) {
+      throw e
     }
   }
 
@@ -335,8 +346,10 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
           vas: { id: record.vas.id }
         }
 
-        if (record.operationGuide && record.operationGuide.data)
-          orderVas.operationGuide = JSON.stringify(record.operationGuide.data)
+        if (record.operationGuide && record.operationGuide.data) {
+          delete record.operationGuide.transactions
+          orderVas.operationGuide = JSON.stringify(record.operationGuide)
+        }
 
         return orderVas
       })

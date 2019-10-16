@@ -1,10 +1,11 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client } from '@things-factory/shell'
+import { client, gqlBuilder } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import '../master/product-list'
+import { ORDER_VAS_STATUS } from '../order/constants/order'
 
 class VasRelabel extends localize(i18next)(LitElement) {
   static get styles() {
@@ -24,6 +25,16 @@ class VasRelabel extends localize(i18next)(LitElement) {
           margin: var(--grist-title-icon-margin);
           font-size: var(--grist-title-icon-size);
           color: var(--grist-title-icon-color);
+        }
+
+        .new-label {
+          display: flex;
+          flex-direction: column;
+          margin-bottom: 30px;
+        }
+
+        .new-label > img {
+          margin: auto;
         }
       `
     ]
@@ -50,10 +61,15 @@ class VasRelabel extends localize(i18next)(LitElement) {
           </fieldset>
 
           <fieldset>
-            <legend>${i18next.t('title.upload_label')}</legend>
-            <file-uploader custom-input required name="newLabel"></file-uploader>
+            <legend ?hidden="${!this._isEditable}">${i18next.t('title.upload_label')}</legend>
+            <file-uploader ?hidden="${!this._isEditable}" custom-input required name="newLabel"></file-uploader>
           </fieldset>
         </form>
+
+        <div ?hidden="${this._isEditable}" class="new-label">
+          <h2 ?hidden="${this._isEditable}"><mwc-icon>list_alt</mwc-icon>${i18next.t('title.label_preview')}</h2>
+          <img ?hidden="${this._isEditable}" src="${this._newLabelPath}" />
+        </div>
       </div>
     `
   }
@@ -89,15 +105,27 @@ class VasRelabel extends localize(i18next)(LitElement) {
     }
   }
 
-  updated(changedProps) {
-    if (changedProps.has('record')) {
-      if (this.record && this.record.operationGuide) {
-        this.newLabelInput._files = this.record.operationGuide.data.newLabel.files
-      }
-    }
+  get _isEditable() {
+    return !(this.record.status === ORDER_VAS_STATUS.PENDING.value)
+  }
+
+  get _newLabelPath() {
+    return (
+      (this.record.operationGuide &&
+        this.record.operationGuide.data &&
+        this.record.operationGuide.data.newLabel &&
+        this.record.operationGuide.data.newLabel.path &&
+        `${location.origin}/attachment/${this.record.operationGuide.data.newLabel.path}`) ||
+      ''
+    )
+  }
+
+  get revertTransactions() {
+    return [this.deleteNewLabel.bind(this)]
   }
 
   _openProductPopup() {
+    if (this.record.status === ORDER_VAS_STATUS.PENDING.value) return
     const queryName = 'products'
     const basicArgs = {
       filters: [
@@ -162,6 +190,7 @@ class VasRelabel extends localize(i18next)(LitElement) {
           mutation($attachment: NewAttachment!) {
             createAttachment(attachment: $attachment) {
               id
+              path
             }
           }
         `,
@@ -177,23 +206,31 @@ class VasRelabel extends localize(i18next)(LitElement) {
         ...operationGuide,
         data: {
           ...operationGuide.data,
-          newLabel: { id: response.data.createAttachment.id }
+          newLabel: response.data.createAttachment
         }
       }
     } catch (e) {
-      this._showToast(e)
+      throw e
     }
   }
 
-  _showToast({ type, message }) {
-    document.dispatchEvent(
-      new CustomEvent('notify', {
-        detail: {
-          type,
-          message
-        }
+  async deleteNewLabel(record) {
+    try {
+      const operationGuide = JSON.parse(record.operationGuide)
+      await client.query({
+        query: gql`
+          mutation {
+            deleteAttachment(${gqlBuilder.buildArgs({
+              id: operationGuide.data.newLabel.id
+            })}) {
+              name
+            }
+          }
+        `
       })
-    )
+    } catch (e) {
+      throw e
+    }
   }
 }
 
