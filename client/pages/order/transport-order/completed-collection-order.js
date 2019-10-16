@@ -4,7 +4,7 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import '../../popup-note'
+import '../../components/popup-note'
 
 class CompletedCollectionOrder extends localize(i18next)(PageView) {
   static get properties() {

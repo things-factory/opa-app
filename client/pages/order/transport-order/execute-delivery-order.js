@@ -5,7 +5,7 @@ import { client, gqlBuilder, PageView, isMobileDevice } from '@things-factory/sh
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
-import '../../popup-note'
+import '../../components/popup-note'
 
 class ExecuteDeliveryOrder extends localize(i18next)(PageView) {
   static get properties() {

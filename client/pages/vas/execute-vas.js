@@ -8,9 +8,9 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { CustomAlert } from '../../utils/custom-alert'
+import '../components/popup-note'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
 import { ORDER_TYPES } from '../order/constants/order'
-import '../popup-note'
 
 class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {

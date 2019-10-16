@@ -1,19 +1,20 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@things-factory/shell'
+import { openPopup } from '@things-factory/layout-base'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
-import { openPopup } from '@things-factory/layout-base'
-import '../../popup-note'
+import '../../components/popup-note'
+import '../../components/vas-relabel'
 
 class ReceiveVasOrder extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _vasNo: String,
-      vasGristConfig: Object,
-      vasData: Object,
+      config: Object,
+      data: Object,
       _status: String
     }
   }
@@ -64,6 +65,11 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
     ]
   }
 
+  constructor() {
+    super()
+    this.data = { records: [] }
+  }
+
   get context() {
     return {
       title: i18next.t('title.receive_vas_order'),
@@ -84,6 +90,24 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
     }
   }
 
+  render() {
+    return html`
+      <div class="grist">
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas_no')}: ${this._vasNo}</h2>
+
+        <data-grist
+          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+          .config=${this.config}
+          .data="${this.data}"
+        ></data-grist>
+      </div>
+
+      <div class="guide-container">
+        ${this._template}
+      </div>
+    `
+  }
+
   pageUpdated(changes) {
     if (this.active && changes.resourceId) {
       this._vasNo = changes.resourceId
@@ -91,30 +115,23 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
     }
   }
 
-  render() {
-    return html`
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas_no')}: ${this._vasNo}</h2>
-
-        <data-grist
-          id="vas-grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.vasGristConfig}
-          .data="${this.vasData}"
-        ></data-grist>
-      </div>
-    `
-  }
-
-  constructor() {
-    super()
-    this.vasData = { records: [] }
-  }
-
   pageInitialized() {
-    this.vasGristConfig = {
+    this.config = {
       pagination: { infinite: true },
-      rows: { selectable: { multiple: true }, appendable: false },
+      rows: {
+        selectable: { multiple: true },
+        appendable: false,
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            if (record && record.vas && record.vas.operationGuideType === 'template') {
+              this._template = document.createElement(record.vas.operationGuide)
+              this._template.record = { ...record, operationGuide: JSON.parse(record.operationGuide) }
+            } else {
+              this._template = null
+            }
+          }
+        }
+      },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -167,24 +184,25 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
             id
             name
             status
-            inventoryDetail {
+            orderVass {
               vas {
-                id
                 name
                 description
+                operationGuide
+                operationGuideType
               }
-              batchId
-              name
-              product {
-                id
+              inventory {
+                batchId
                 name
-                description
+                product {
+                  name
+                }
+                location {
+                  name
+                }
               }
-              location {
-                id
-                name
-                description
-              }
+              operationGuide
+              status
               remark
             }
           }
@@ -194,10 +212,16 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const vasOrder = response.data.vasOrder
-      const orderVass = vasOrder.inventoryDetail
 
       this._status = vasOrder.status
-      this.vasData = { records: orderVass }
+      this.data = {
+        records: vasOrder.orderVass.map(orderVas => {
+          return {
+            ...orderVas,
+            ...orderVas.inventory
+          }
+        })
+      }
     }
   }
 

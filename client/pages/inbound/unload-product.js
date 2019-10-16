@@ -8,7 +8,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { CustomAlert } from '../../utils/custom-alert'
-import '../popup-note'
+import '../components/popup-note'
 
 class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
