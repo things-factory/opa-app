@@ -140,7 +140,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <input name="cargoType" placeholder="${i18next.t('label.bag_crates_carton_ibc_drums_pails')}" />
 
             <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
-            <input name="loadWeight" type="number" min="0" />
+            <input name="loadWeight" type="number" step=".01" min="0" />
 
             <input name="urgency" type="checkbox" />
             <label>${i18next.t('label.urgent_collection')}</label>
@@ -187,7 +187,7 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             <input name="cargoType" placeholder="${i18next.t('label.bag_crates_carton_ibc_drums_pails')}" />
 
             <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
-            <input name="loadWeight" type="number" min="0" />
+            <input name="loadWeight" type="number" step=".01" min="0" />
 
             <input name="urgency" type="checkbox" />
             <label>${i18next.t('label.urgent_delivery')}</label>

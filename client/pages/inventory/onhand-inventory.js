@@ -133,14 +133,6 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
           width: 80
         },
         {
-          type: 'object',
-          name: 'warehouse',
-          header: i18next.t('field.warehouse'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 200
-        },
-        {
           type: 'string',
           name: 'zone',
           header: i18next.t('field.zone'),
@@ -179,12 +171,6 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
       {
         label: i18next.t('field.customer'),
         name: 'bizplaceName',
-        type: 'text',
-        props: { searchOper: 'like' }
-      },
-      {
-        label: i18next.t('field.warehouse'),
-        name: 'warehouseName',
         type: 'text',
         props: { searchOper: 'like' }
       },

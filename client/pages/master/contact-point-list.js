@@ -64,11 +64,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
     return html`
       <h2>${i18next.t('title.contact_point')} ${this.bizplaceName}</h2>
 
-      <search-form
-        id="search-form"
-        .fields=${this._searchFields}
-        @submit=${e => this.dataGrist.fetch()}
-      ></search-form>
+      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
       <div class="grist">
         <data-grist
@@ -391,7 +387,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
   async _deleteContactPoints() {
     CustomAlert({
       title: i18next.t('text.are_you_sure'),
-      text: i18next.t('text.you_wont_be_able_to_revert_this!'),
+      text: i18next.t('text.you_wont_be_able_to_revert_this'),
       type: 'warning',
       confirmButton: { text: i18next.t('button.delete'), color: '#22a6a7' },
       cancelButton: { text: 'cancel', color: '#cfcfcf' },
@@ -428,7 +424,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
   }
 
   _exportableData() {
-    return this.dataGrist.exportRecords()  
+    return this.dataGrist.exportRecords()
   }
 }
 

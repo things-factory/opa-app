@@ -70,10 +70,10 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.assign_buffer_location'),
+      title: i18next.t('title.assign_warehouse'),
       actions: [
         {
-          title: i18next.t('button.assign_buffer_location'),
+          title: i18next.t('button.assign_warehouse'),
           action: this._assignBufferLocation.bind(this)
         },
         {
@@ -121,8 +121,8 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
 
 
         <fieldset>
-          <legend>${i18next.t('title.assign_buffer_location')}</legend>
-          <label>${i18next.t('label.buffer_location')}</label>
+          <legend>${i18next.t('title.assign_warehouse')}</legend>
+          <label>${i18next.t('label.warehouse_name')}</label>
           <input id="buffer-location" name="buffer-location" readonly @click="${this._openBufferSelector.bind(this)}" />
         </fieldset>
       </form>
