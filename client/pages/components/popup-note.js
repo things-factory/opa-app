@@ -5,7 +5,8 @@ class PopupNote extends localize(i18next)(LitElement) {
   static get properties() {
     return {
       title: String,
-      value: String
+      value: String,
+      readonly: Boolean
     }
   }
 
@@ -13,7 +14,6 @@ class PopupNote extends localize(i18next)(LitElement) {
     return [
       css`
         :host {
-          padding: 10px;
           display: flex;
           flex-direction: column;
           overflow-x: overlay;
@@ -28,12 +28,22 @@ class PopupNote extends localize(i18next)(LitElement) {
           flex: 1;
           resize: none;
           border-color: var(--primary-color);
+          padding: 5px;
+          margin: 10px;
+          outline: none;
         }
         h2 {
           padding: var(--subtitle-padding);
           font: var(--subtitle-font);
-          color: var(--subtitle-text-color);
-          border-bottom: var(--subtitle-border-bottom);
+          margin: var(--grist-title-margin);
+          border: var(--grist-title-border);
+          color: var(--secondary-color);
+        }
+        h2 mwc-icon {
+          vertical-align: middle;
+          margin: var(--grist-title-icon-margin);
+          font-size: var(--grist-title-icon-size);
+          color: var(--grist-title-icon-color);
         }
         .button-container {
           display: flex;
@@ -50,7 +60,9 @@ class PopupNote extends localize(i18next)(LitElement) {
   }
 
   firstUpdated() {
-    setTimeout(() => this.textarea.focus(), 100)
+    if (!this.readonly) {
+      setTimeout(() => this.textarea.focus(), 100)
+    }
   }
 
   updated(changedProps) {
@@ -62,26 +74,30 @@ class PopupNote extends localize(i18next)(LitElement) {
   render() {
     return html`
       <div class="container">
-        <h2>${this.title}</h2>
-        <textarea></textarea>
+        <h2><mwc-icon>list_alt</mwc-icon>${this.title}</h2>
+        <textarea ?readonly="${this.readonly}"></textarea>
       </div>
 
-      <div class="button-container">
-        <mwc-button
-          @click="${() => {
-            this.dispatchEvent(
-              new CustomEvent('submit', {
-                detail: {
-                  value: this.textarea.value
-                }
-              })
-            )
+      ${this.readonly
+        ? ''
+        : html`
+            <div class="button-container">
+              <mwc-button
+                @click="${() => {
+                  this.dispatchEvent(
+                    new CustomEvent('submit', {
+                      detail: {
+                        value: this.textarea.value
+                      }
+                    })
+                  )
 
-            history.back()
-          }}"
-          >${i18next.t('button.confirm')}</mwc-button
-        >
-      </div>
+                  history.back()
+                }}"
+                >${i18next.t('button.confirm')}</mwc-button
+              >
+            </div>
+          `}
     `
   }
 }

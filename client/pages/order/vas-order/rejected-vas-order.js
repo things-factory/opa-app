@@ -5,14 +5,17 @@ import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-fac
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
+import '../../components/popup-note'
+import '../../components/vas-relabel'
 
 class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _vasNo: String,
-      vasGristConfig: Object,
-      vasData: Object,
-      _status: String
+      _rejectReason: String,
+      config: Object,
+      data: Object,
+      _template: Object
     }
   }
 
@@ -25,12 +28,27 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
           flex-direction: column;
           overflow-x: auto;
         }
+        popup-note {
+          flex: 1;
+        }
+        .container {
+          display: flex;
+          flex: 4;
+        }
         .grist {
           background-color: var(--main-section-background-color);
           display: flex;
           flex-direction: column;
-          flex: 1;
           overflow-y: auto;
+        }
+        .guide-container {
+          max-width: 30vw;
+          display: flex;
+        }
+        .column {
+          display: flex;
+          flex-direction: column;
+          max-width: 30vw;
         }
         data-grist {
           overflow-y: hidden;
@@ -74,31 +92,40 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
+  get rejectReasonField() {
+    return this.shadowRoot.querySelector('textarea[name=rejectReason]')
+  }
+
   render() {
     return html`
-      <form name="rejectForm" class="multi-column-form">
-        <fieldset>
-          <label>${i18next.t('label.remark')}</label>
-          <textarea name="remark" disabled></textarea>
-        </fieldset>
-      </form>
+      <popup-note
+        .title="${i18next.t('title.reject_reason')}"
+        .value="${this._rejectReason}"
+        .readonly="${true}"
+      ></popup-note>
 
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas_order')}</h2>
+      <div class="container">
+        <div class="grist">
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas_order')}</h2>
 
-        <data-grist
-          id="vas-grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.vasGristConfig}
-          .data="${this.vasData}"
-        ></data-grist>
+          <data-grist
+            id="vas-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.config}
+            .data="${this.data}"
+          ></data-grist>
+        </div>
+
+        <div class="guide-container">
+          ${this._template}
+        </div>
       </div>
     `
   }
 
   constructor() {
     super()
-    this.vasData = { records: [] }
+    this.data = { records: [] }
   }
 
   get vasGrist() {
@@ -112,9 +139,22 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
     }
   }
   pageInitialized() {
-    this.vasGristConfig = {
+    this.config = {
       pagination: { infinite: true },
-      rows: { selectable: { multiple: true }, appendable: false },
+      rows: {
+        selectable: { multiple: true },
+        appendable: false,
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            if (record && record.vas && record.vas.operationGuideType === 'template') {
+              this._template = document.createElement(record.vas.operationGuide)
+              this._template.record = { ...record, operationGuide: JSON.parse(record.operationGuide) }
+            } else {
+              this._template = null
+            }
+          }
+        }
+      },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -143,13 +183,12 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
           name: 'location',
           header: i18next.t('field.location'),
           record: { align: 'center' },
-          width: 150
+          width: 230
         },
         {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
-          record: { align: 'center' },
           width: 350
         }
       ]
@@ -172,19 +211,26 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
             name
             status
             remark
-            inventoryDetail {
+            orderVass {
               vas {
                 name
                 description
+                operationGuide
+                operationGuideType
               }
-              batchId
-              name
-              product {
+              inventory {
+                batchId
                 name
+                product {
+                  name
+                }
+                location {
+                  name
+                  description
+                }
               }
-              location {
-                name
-              }
+              operationGuide
+              status
               remark
             }
           }
@@ -193,31 +239,16 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      this._status = response.data.vasOrder.status
-      this._fillupVOForm(response.data.vasOrder)
-
-      const newData = response.data.vasOrder
-
-      this.vasData = {
-        ...this.vasData,
-        records: [...newData, ...newData.inventoryDetail, ...newData.orderVass]
+      const vasOrder = response.data.vasOrder
+      this._rejectReason = vasOrder.remark
+      this.data = {
+        records: vasOrder.orderVass.map(orderVas => {
+          return {
+            ...orderVas,
+            ...orderVas.inventory
+          }
+        })
       }
-    }
-  }
-
-  get rejectForm() {
-    return this.shadowRoot.querySelector('form[name=rejectForm]')
-  }
-
-  _fillupVOForm(data) {
-    this._fillupForm(this.rejectForm, data)
-  }
-
-  _fillupForm(form, data) {
-    for (let key in data) {
-      Array.from(form.querySelectorAll('textarea')).forEach(field => {
-        field.value = data[key]
-      })
     }
   }
 

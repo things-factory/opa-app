@@ -15,6 +15,21 @@ class VasRelabel extends localize(i18next)(LitElement) {
       SingleColumnFormStyles,
       MultiColumnFormStyles,
       css`
+        :host {
+          display: flex;
+          flex: 1;
+          flex-direction: column;
+        }
+        .container {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+        }
+        .label-preview {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+        }
         h2 {
           padding: var(--subtitle-padding);
           font: var(--subtitle-font);
@@ -22,7 +37,6 @@ class VasRelabel extends localize(i18next)(LitElement) {
           border: var(--grist-title-border);
           color: var(--secondary-color);
         }
-
         h2 mwc-icon {
           vertical-align: middle;
           margin: var(--grist-title-icon-margin);
@@ -30,10 +44,8 @@ class VasRelabel extends localize(i18next)(LitElement) {
           color: var(--grist-title-icon-color);
         }
 
-        mwc-icon {
-          vertical-align: middle;
-          margin: var(--grist-title-icon-margin);
-          color: var(--grist-title-icon-color);
+        image-viewer {
+          flex: 1;
         }
         .new-label {
           display: flex;
@@ -52,12 +64,8 @@ class VasRelabel extends localize(i18next)(LitElement) {
     return html`
       <div class="container">
         <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.relabel')}</h2>
-        <form
-          class="${this.record && this.record.status === WORKSHEET_STATUS.EXECUTING.value
-            ? 'single-column-form'
-            : 'multi-column-form'}"
-          @submit="${e => e.preventDefault()}"
-        >
+
+        <form class="single-column-form" @submit="${e => e.preventDefault()}">
           <fieldset>
             <legend>${i18next.t('title.product')}</legend>
             <label>${i18next.t('label.from_product')}</label>
@@ -66,26 +74,28 @@ class VasRelabel extends localize(i18next)(LitElement) {
             <label>${i18next.t('label.to_product')}</label>
             <input readonly name="product" @click="${this._openProductPopup.bind(this)}" value="${this.toProduct}" />
 
-            ${this.record && this.record.status === WORKSHEET_STATUS.EXECUTING.value
-              ? html`
-                  <label ?hidden="${this._isEditable}">${i18next.t('label.label_preview')}</label>
-                  <div ?hidden="${this._isEditable}" class="new-label">
-                    <mwc-icon ?hidden="${this._isEditable}" @click="${this._openPrevPopup.bind(this)}">image</mwc-icon>
-                  </div>
-                `
-              : html`
-                  <div ?hidden="${this._isEditable}" class="new-label">
-                    <label ?hidden="${this._isEditable}">${i18next.t('label.label_preview')}</label>
-                    <mwc-icon ?hidden="${this._isEditable}" @click="${this._openPrevPopup.bind(this)}">image</mwc-icon>
-                  </div>
-                `}
-          </fieldset>
-
-          <fieldset>
-            <legend ?hidden="${!this._isEditable}">${i18next.t('title.upload_label')}</legend>
-            <file-uploader ?hidden="${!this._isEditable}" custom-input required name="newLabel"></file-uploader>
+            <label ?hidden="${!this._isEditable}">${i18next.t('label.new-label')}</label>
+            <file-uploader
+              ?hidden="${!this._isEditable}"
+              custom-input
+              required
+              name="newLabel"
+              ._files="${this.newLabelFile}"
+            ></file-uploader>
           </fieldset>
         </form>
+
+        ${this._isEditable
+          ? ''
+          : html`
+              <div class="label-preview" ?hidden="${this._isEditable}">
+                <image-viewer
+                  name="${this._newLabelName}"
+                  src="${this._newLabelPath}"
+                  .downloadable="${this._isDownloadable}"
+                ></image-viewer>
+              </div>
+            `}
       </div>
     `
   }
@@ -125,8 +135,29 @@ class VasRelabel extends localize(i18next)(LitElement) {
     }
   }
 
+  get newLabelFile() {
+    if (this.record && this.record.operationGuide) {
+      return this.record.operationGuide.data.newLabel.files
+    }
+  }
+
   get _isEditable() {
     return !this.record.status
+  }
+
+  get _isDownloadable() {
+    return this.record.status !== WORKSHEET_STATUS.EXECUTING.value
+  }
+
+  get _newLabelName() {
+    return (
+      (this.record.operationGuide &&
+        this.record.operationGuide &&
+        this.record.operationGuide.data &&
+        this.record.operationGuide.data.newLabel &&
+        this.record.operationGuide.data.newLabel.name) ||
+      ''
+    )
   }
 
   get _newLabelPath() {
@@ -148,11 +179,7 @@ class VasRelabel extends localize(i18next)(LitElement) {
     if (this.record.status === ORDER_VAS_STATUS.PENDING.value) return
     const queryName = 'products'
     const basicArgs = {
-      filters: [
-        { name: 'productRef', operator: 'noteq', value: '' },
-        { name: 'productRef', operator: 'is_not_null' },
-        { name: 'id', operator: 'noteq', value: this.record.inventory.product.id }
-      ]
+      filters: [{ name: 'productRef', operator: 'noteq', value: '' }, { name: 'productRef', operator: 'is_not_null' }]
     }
     const confirmCallback = selected => {
       this._selectedProduct = selected
@@ -190,26 +217,13 @@ class VasRelabel extends localize(i18next)(LitElement) {
         transactions: [this.createNewLabel.bind(this)]
       }
     } catch (e) {
-      this._showToast(e)
+      throw e
     }
   }
 
   _validateAdjust() {
-    if (!this._selectedProduct) throw new Error(i18next.t('text.product_is_empty'))
-    if (!this.newLabelInput.files) throw new Error(i18next.t('text.new_label_doesn_not_selected'))
-  }
-
-  _openPrevPopup() {
-    openPopup(
-      html`
-        <image-viewer .src="${this._newLabelPath}" downloadable></image-viewer>
-      `,
-      {
-        backdrop: true,
-        size: 'medium',
-        title: i18next.t('title.label_preview')
-      }
-    )
+    if (!this._selectedProduct) throw new Error(i18next.t('text.to_product_is_empty'))
+    if (!this.newLabelInput.files) throw new Error(i18next.t('text.new_label_does_not_selected'))
   }
 
   async createNewLabel(operationGuide) {
@@ -224,6 +238,7 @@ class VasRelabel extends localize(i18next)(LitElement) {
           mutation($attachment: NewAttachment!) {
             createAttachment(attachment: $attachment) {
               id
+              name
               path
             }
           }
