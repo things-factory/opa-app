@@ -104,10 +104,13 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
             <input name="loadWeight" type="number" min="0" readonly />
 
             <input name="urgency" type="checkbox" readonly />
-            <label>${i18next.t('label.urgent_delivery')}</label>
+            <label>${i18next.t('label.urgent_collection')}</label>
 
             <input name="looseItem" type="checkbox" readonly />
             <label>${i18next.t('label.loose_item')}</label>
+
+            <label ?hidden="${this._status !== ORDER_STATUS.DONE.value}">${i18next.t('label.remark')}</label>
+            <textarea name="remark" ?hidden="${this._status !== ORDER_STATUS.DONE.value}" readonly></textarea>
 
             <label>${i18next.t('label.download_co')}</label>
             <a href="/attachment/${this._path}" download=${this._fileName}><mwc-icon>cloud_download</mwc-icon></a>

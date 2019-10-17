@@ -267,12 +267,6 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('field.warehouse'),
-        name: 'warehouseName',
-        type: 'text',
-        props: { searchOper: 'like' }
-      },
-      {
         label: i18next.t('field.zone'),
         name: 'zone',
         type: 'text',
@@ -425,7 +419,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   async _deleteInventories() {
     CustomAlert({
       title: i18next.t('text.are_you_sure'),
-      text: i18next.t('text.you_wont_be_able_to_revert_this!'),
+      text: i18next.t('text.you_wont_be_able_to_revert_this'),
       type: 'warning',
       confirmButton: { text: i18next.t('button.delete'), color: '#22a6a7' },
       cancelButton: { text: 'cancel', color: '#cfcfcf' },

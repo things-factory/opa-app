@@ -81,7 +81,7 @@ export class BufferLocationSelector extends localize(i18next)(LitElement) {
         </div>
 
         <div class="grist">
-          <h2>${i18next.t('title.buffer_location')}: ${this._warehouseName}</h2>
+          <h2>${i18next.t('title.warehouse_name')}: ${this._warehouseName}</h2>
           <data-grist
             id="location"
             .mode=${isMobileDevice() ? 'LIST' : 'GRID'}

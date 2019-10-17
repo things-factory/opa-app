@@ -113,7 +113,7 @@ class CompletedDeliveryOrder extends localize(i18next)(PageView) {
             <label>${i18next.t('label.remark')}</label>
             <textarea name="remark" readonly></textarea>
 
-            <label>${i18next.t('label.download_co')}</label>
+            <label>${i18next.t('label.download_do')}</label>
             <a href="/attachment/${this._path}" download><mwc-icon>cloud_download</mwc-icon></a>
           </fieldset>
         </form>
@@ -199,6 +199,7 @@ class CompletedDeliveryOrder extends localize(i18next)(PageView) {
             urgency
             looseItem
             cargoType
+            remark
             attachments {
               id
               name
@@ -234,10 +235,6 @@ class CompletedDeliveryOrder extends localize(i18next)(PageView) {
     }
   }
 
-  _getDeliveryOrder() {
-    return this._serializeForm(this.deliveryOrderForm)
-  }
-
   _fillupDOForm(data) {
     this._fillupForm(this.deliveryOrderForm, data)
   }
@@ -247,8 +244,8 @@ class CompletedDeliveryOrder extends localize(i18next)(PageView) {
       Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
-        } else if (field.name === key) {
         } else if (field.name === key && field.type !== 'file') {
+          field.value = data[key]
         }
       })
     }

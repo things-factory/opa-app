@@ -420,7 +420,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
-        text: i18next.t('text.you_wont_be_able_to_revert'),
+        text: i18next.t('text.you_wont_be_able_to_revert_this'),
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })

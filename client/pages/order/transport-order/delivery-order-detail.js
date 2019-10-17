@@ -110,6 +110,9 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
             <input name="looseItem" type="checkbox" disabled />
             <label>${i18next.t('label.loose_item')}</label>
 
+            <label ?hidden="${this._status !== ORDER_STATUS.DONE.value}">${i18next.t('label.remark')}</label>
+            <textarea name="remark" ?hidden="${this._status !== ORDER_STATUS.DONE.value}" readonly></textarea>
+
             <label>${i18next.t('label.download_do')}</label>
             <a href="/attachment/${this._path}" download=${this._fileName}><mwc-icon>cloud_download</mwc-icon></a>
           </fieldset>
@@ -197,6 +200,7 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
             urgency
             looseItem
             cargoType
+            remark
             attachments {
               id
               name
