@@ -48,11 +48,7 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
 
   render() {
     return html`
-      <search-form
-        id="search-form"
-        .fields=${this._searchFields}
-        @submit=${e => this.dataGrist.fetch()}
-      ></search-form>
+      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
       <div class="grist">
         <data-grist
@@ -143,13 +139,6 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
           value: new Date().toISOString().split('T')[0]
         },
         {
-          label: i18next.t('field.warehouse'),
-          name: 'warehouseName',
-          type: 'text',
-          props: { searchOper: 'like' },
-          attrs: ['custom']
-        },
-        {
           label: i18next.t('field.zone'),
           name: 'zone',
           type: 'text',
@@ -226,13 +215,6 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
           record: { align: 'right' },
           sortable: true,
           width: 80
-        },
-        {
-          type: 'object',
-          name: 'warehouse',
-          header: i18next.t('field.warehouse'),
-          sortable: true,
-          width: 200
         },
         {
           type: 'string',
@@ -404,7 +386,7 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _exportableData() {
-    return this.dataGrist.exportRecords()  
+    return this.dataGrist.exportRecords()
   }
 
   _showToast({ type, message }) {

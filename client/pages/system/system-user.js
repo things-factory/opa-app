@@ -5,6 +5,7 @@ import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } 
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
+import { CustomAlert } from '../../utils/custom-alert'
 import '@things-factory/grist-ui'
 import './system-create-user'
 import './system-user-detail'
@@ -321,29 +322,38 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _deleteUsers() {
-    if (confirm(i18next.t('text.sure_to_delete'))) {
-      const emails = this.dataGrist.selected.map(record => record.email)
-      if (emails && emails.length > 0) {
-        const response = await client.query({
-          query: gql`
+    CustomAlert({
+      title: i18next.t('text.are_you_sure'),
+      text: i18next.t('text.you_wont_be_able_to_revert_this'),
+      type: 'warning',
+      confirmButton: { text: i18next.t('button.delete'), color: '#22a6a7' },
+      cancelButton: { text: 'cancel', color: '#cfcfcf' },
+      callback: async result => {
+        if (result.value) {
+          const emails = this.dataGrist.selected.map(record => record.email)
+          if (emails && emails.length > 0) {
+            const response = await client.query({
+              query: gql`
                 mutation {
                   deleteUsers(${gqlBuilder.buildArgs({ emails })})
                 }
               `
-        })
-
-        if (!response.errors) {
-          this.dataGrist.fetch()
-          await document.dispatchEvent(
-            new CustomEvent('notify', {
-              detail: {
-                message: i18next.t('text.info_delete_successfully')
-              }
             })
-          )
+
+            if (!response.errors) {
+              this.dataGrist.fetch()
+              await document.dispatchEvent(
+                new CustomEvent('notify', {
+                  detail: {
+                    message: i18next.t('text.info_delete_successfully')
+                  }
+                })
+              )
+            }
+          }
         }
       }
-    }
+    })
   }
 }
 
