@@ -41,6 +41,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
 
   static get properties() {
     return {
+      _email: String,
       _searchFields: Array,
       config: Object,
       data: Object,
@@ -78,7 +79,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
     this.config = {
       list: {
         fields: ['palletId', 'product', 'bizplace', 'location']
@@ -133,6 +134,13 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
           width: 80
         },
         {
+          type: 'object',
+          name: 'warehouse',
+          header: i18next.t('field.warehouse'),
+          sortable: true,
+          width: 200
+        },
+        {
           type: 'string',
           name: 'zone',
           header: i18next.t('field.zone'),
@@ -167,22 +175,42 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
       ]
     }
 
+    const _userBizplaces = await this._fetchUserBizplaces()
+
     this._searchFields = [
       {
         label: i18next.t('field.customer'),
         name: 'bizplaceName',
-        type: 'text',
-        props: { searchOper: 'like' }
+        type: 'select',
+        options: [
+          { value: '' },
+          ..._userBizplaces
+            .filter(userBizplaces => !userBizplaces.mainBizplace)
+            .map(userBizplace => {
+              return {
+                name: userBizplace.name,
+                value: userBizplace.name
+              }
+            })
+        ],
+        props: { searchOper: 'like' },
+        attrs: ['custom']
       },
       {
-        label: i18next.t('field.zone'),
-        name: 'zone',
+        label: i18next.t('field.warehouse'),
+        name: 'warehouseName',
         type: 'text',
         props: { searchOper: 'like' }
       },
       {
         label: i18next.t('field.location'),
         name: 'locationName',
+        type: 'text',
+        props: { searchOper: 'like' }
+      },
+      {
+        label: i18next.t('field.zone'),
+        name: 'zone',
         type: 'text',
         props: { searchOper: 'like' }
       },
@@ -205,6 +233,28 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
         props: { searchOper: 'eq' }
       }
     ]
+  }
+
+  async _fetchUserBizplaces() {
+    if (!this._email) return
+    const response = await client.query({
+      query: gql`
+        query {
+          userBizplaces(${gqlBuilder.buildArgs({
+            email: this._email
+          })}) {
+            id
+            name
+            description
+            mainBizplace
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      return response.data.userBizplaces
+    }
   }
 
   async pageUpdated(changes, lifecycle) {
@@ -332,6 +382,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
   stateChanged(state) {
     let palletLabelSetting = state.dashboard[PALLET_LABEL_SETTING_KEY]
     this._palletLabel = (palletLabelSetting && palletLabelSetting.board) || {}
+    this._email = state.auth && state.auth.user && state.auth.user.email
   }
 
   _showToast({ type, message }) {
