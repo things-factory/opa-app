@@ -172,7 +172,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
             arrData: this.product
           },
           sortable: true,
-          width: 300
+          width: 500
         },
         {
           type: 'code',
@@ -210,19 +210,6 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
             type: 'float'
           },
           width: 80
-        },
-        {
-          type: 'object',
-          name: 'warehouse',
-          header: i18next.t('field.warehouse'),
-          record: {
-            align: 'center',
-            options: {
-              queryName: 'warehouses'
-            }
-          },
-          sortable: true,
-          width: 200
         },
         {
           type: 'string',
