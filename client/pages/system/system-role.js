@@ -5,6 +5,7 @@ import { openPopup } from '@things-factory/layout-base'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import { CustomAlert } from '../../utils/custom-alert'
 import './system-create-role'
 import './system-role-detail'
 
@@ -261,27 +262,36 @@ class SystemRole extends localize(i18next)(PageView) {
   }
 
   async _deleteRoles() {
-    if (confirm(i18next.t('text.sure_to_delete'))) {
-      const names = this.dataGrist.selected.map(record => record.name)
-      if (names && names.length > 0) {
-        const response = await client.query({
-          query: gql`
+    CustomAlert({
+      title: i18next.t('text.are_you_sure'),
+      text: i18next.t('text.you_wont_be_able_to_revert_this'),
+      type: 'warning',
+      confirmButton: { text: i18next.t('button.delete'), color: '#22a6a7' },
+      cancelButton: { text: 'cancel', color: '#cfcfcf' },
+      callback: async result => {
+        if (result.value) {
+          const names = this.dataGrist.selected.map(record => record.name)
+          if (names && names.length > 0) {
+            const response = await client.query({
+              query: gql`
               mutation {
                 deleteRoles(${gqlBuilder.buildArgs({ names })})
               }
             `
-        })
+            })
 
-        if (!response.errors) this.dataGrist.fetch()
-        await document.dispatchEvent(
-          new CustomEvent('notify', {
-            detail: {
-              message: i18next.t('text.info_delete_successfully')
-            }
-          })
-        )
+            if (!response.errors) this.dataGrist.fetch()
+            await document.dispatchEvent(
+              new CustomEvent('notify', {
+                detail: {
+                  message: i18next.t('text.info_delete_successfully')
+                }
+              })
+            )
+          }
+        }
       }
-    }
+    })
   }
 }
 
