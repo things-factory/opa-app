@@ -162,6 +162,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
           .config=${this.inventoryGristConfig}
           .data=${this.inventoryData}
           @record-change="${this._onProductChangeHandler.bind(this)}"
+          @field-change="${this._onFieldChange.bind(this)}"
         ></data-grist>
       </div>
 
@@ -238,54 +239,16 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
             align: 'center',
             options: {
               queryName: 'inventories',
-              basicArgs: {
-                filters: [
-                  {
-                    name: 'qty',
-                    operator: 'noteq',
-                    value: 0
-                  }
-                ]
-              },
               nameField: 'batchId',
               descriptionField: 'palletId',
               select: [
-                {
-                  name: 'id',
-                  hidden: true
-                },
-                {
-                  name: 'palletId',
-                  header: i18next.t('field.pallet_id'),
-                  record: { align: 'center' }
-                },
-                {
-                  name: 'batchId',
-                  header: i18next.t('field.batch_id'),
-                  record: { align: 'center' }
-                },
-                {
-                  name: 'warehouse',
-                  type: 'object',
-                  subFields: ['description'],
-                  width: 200
-                },
-                {
-                  name: 'location',
-                  type: 'object',
-                  subFields: ['name', 'description'],
-                  record: { align: 'center' }
-                },
-                {
-                  name: 'product',
-                  type: 'object',
-                  subfields: ['name', 'description']
-                },
-                {
-                  name: 'qty',
-                  type: 'float',
-                  record: { align: 'center' }
-                }
+                { name: 'id', hidden: true },
+                { name: 'palletId', header: i18next.t('field.pallet_id'), record: { align: 'center' } },
+                { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
+                { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
+                { name: 'location', type: 'object', subFields: ['name', 'description'], record: { align: 'center' } },
+                { name: 'product', type: 'object', subfields: ['name', 'description'] },
+                { name: 'qty', type: 'float', record: { align: 'center' } }
               ]
             }
           },
@@ -296,13 +259,6 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
           name: 'location',
           header: i18next.t('field.location'),
           record: { align: 'center' },
-          width: 150
-        },
-        {
-          type: 'string',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
-          record: { editable: true, align: 'center' },
           width: 150
         },
         {
@@ -380,24 +336,16 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     return date.toISOString().split('T')[0]
   }
 
-  _openInventoryProduct() {
-    openPopup(
-      html`
-        <inventory-product-selector
-          @selected="${e => {
-            this.vasData = {
-              ...this.vasData,
-              records: [...this.vasData.records, ...e.detail]
-            }
-          }}"
-        ></inventory-product-selector>
-      `,
-      {
-        backdrop: true,
-        size: 'large',
-        title: i18next.t('title.inventory_product_selection')
-      }
-    )
+  _onFieldChange() {
+    this.inventoryData = {
+      ...this.inventoryGrist.dirtyData,
+      records: this.inventoryGrist.dirtyData.records.map(record => {
+        return {
+          ...record,
+          ...record.inventory
+        }
+      })
+    }
   }
 
   _onProductChangeHandler(event) {
