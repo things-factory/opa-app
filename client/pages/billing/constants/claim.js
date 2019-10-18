@@ -1,18 +1,3 @@
-export const BILLING_MODE = {
-  FULL_LOAD: {
-    name: 'full_load',
-    value: 'FULL_LOAD'
-  },
-  HALF_LOAD: {
-    name: 'half_load',
-    value: 'HALF_LOAD'
-  },
-  TAG_ALONG: {
-    name: 'tag_along',
-    value: 'TAG_ALONG'
-  }
-}
-
 export const TRIP_CLAIM = {
   TOLL: {
     name: 'toll',
