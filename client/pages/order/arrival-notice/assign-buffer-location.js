@@ -7,6 +7,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
 import '../../components/popup-note'
+import '../../components/vas-relabel'
 import { ORDER_STATUS } from '../constants/order'
 import './buffer-location-selector'
 
@@ -18,7 +19,8 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
-      vasData: Object
+      vasData: Object,
+      _template: Object
     }
   }
 
@@ -31,12 +33,21 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
           flex-direction: column;
           overflow-x: auto;
         }
+        .container {
+          flex: 1;
+          display: flex;
+        }
         .grist {
           background-color: var(--main-section-background-color);
           display: flex;
           flex-direction: column;
           flex: 1;
           overflow-y: auto;
+        }
+        .guide-container {
+          max-width: 30vw;
+          display: flex;
+          flex-direction: column;
         }
         data-grist {
           overflow-y: hidden;
@@ -127,6 +138,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
         </fieldset>
       </form>
 
+      <div class="container">
       <div class="grist">
         <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product')}</h2>
 
@@ -136,9 +148,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
           .config=${this.productGristConfig}
           .data="${this.productData}"
         ></data-grist>
-      </div>
 
-      <div class="grist">
         <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
 
         <data-grist
@@ -147,6 +157,12 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
           .config=${this.vasGristConfig}
           .data="${this.vasData}"
         ></data-grist>
+      </div>
+
+      <div class="guide-container">
+      ${this._template}
+      </div>
+
       </div>
     `
   }
@@ -242,7 +258,20 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
 
     this.vasGristConfig = {
       pagination: { infinite: true },
-      rows: { selectable: { multiple: true }, appendable: false },
+      rows: {
+        selectable: { multiple: true },
+        appendable: false,
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            if (record && record.vas && record.vas.operationGuideType === 'template') {
+              this._template = document.createElement(record.vas.operationGuide)
+              this._template.record = { ...record, operationGuide: JSON.parse(record.operationGuide) }
+            } else {
+              this._template = null
+            }
+          }
+        }
+      },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -309,9 +338,13 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
               vas {
                 name
                 description
+                operationGuide
+                operationGuideType
               }
               batchId
               remark
+              operationGuide
+              status
             }
           }
         }

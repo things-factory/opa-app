@@ -573,16 +573,19 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     })
 
     arrivalNotice.orderVass = this.vasGrist.dirtyData.records.map(record => {
+      let _tempObj = {}
       if (record.operationGuide && record.operationGuide.data) {
-        record.operationGuide = JSON.stringify(record.operationGuide)
+        _tempObj.operationGuide = JSON.stringify(record.operationGuide)
       }
 
-      return {
+      _tempObj = {
+        ..._tempObj,
         vas: { id: record.vas.id },
         batchId: record.batchId,
-        remark: record.remark,
-        operationGuide: record.operationGuide ? JSON.stringify(record.operationGuide) : ''
+        remark: record.remark
       }
+
+      return _tempObj
     })
 
     return arrivalNotice
@@ -590,6 +593,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
   _clearView() {
     this.arrivalNoticeForm.reset()
+    this.productData = { ...this.productData, records: [] }
+    this.vasData = { ...this.vasData, records: [] }
   }
 
   _serializeForm(form) {

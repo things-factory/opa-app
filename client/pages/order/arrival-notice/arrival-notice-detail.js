@@ -5,6 +5,7 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_C
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
+import '../../components/vas-relabel'
 import { ORDER_STATUS } from '../constants/order'
 
 class ArrivalNoticeDetail extends localize(i18next)(PageView) {
@@ -22,7 +23,8 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
-      vasData: Object
+      vasData: Object,
+      _template: Object
     }
   }
 
@@ -35,12 +37,21 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
           flex-direction: column;
           overflow-x: auto;
         }
+        .container {
+          flex: 1;
+          display: flex;
+        }
         .grist {
           background-color: var(--main-section-background-color);
           display: flex;
           flex-direction: column;
           flex: 1;
           overflow-y: auto;
+        }
+        .guide-container {
+          max-width: 30vw;
+          display: flex;
+          flex-direction: column;
         }
         data-grist {
           overflow-y: hidden;
@@ -121,26 +132,28 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         >
       </form>
 
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product')}</h2>
+      <div class="container">
+        <div class="grist">
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product')}</h2>
+          <data-grist
+            id="product-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.productGristConfig}
+            .data="${this.productData}"
+          ></data-grist>
 
-        <data-grist
-          id="product-grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.productGristConfig}
-          .data="${this.productData}"
-        ></data-grist>
-      </div>
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
+          <data-grist
+            id="vas-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.vasGristConfig}
+            .data="${this.vasData}"
+          ></data-grist>
+        </div>
 
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
-
-        <data-grist
-          id="vas-grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.vasGristConfig}
-          .data="${this.vasData}"
-        ></data-grist>
+        <div class="guide-container">
+          ${this._template}
+        </div>
       </div>
     `
   }
@@ -243,7 +256,20 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
 
     this.vasGristConfig = {
       pagination: { infinite: true },
-      rows: { selectable: { multiple: true }, appendable: false },
+      rows: {
+        selectable: { multiple: true },
+        appendable: false,
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            if (record && record.vas && record.vas.operationGuideType === 'template') {
+              this._template = document.createElement(record.vas.operationGuide)
+              this._template.record = { ...record, operationGuide: JSON.parse(record.operationGuide) }
+            } else {
+              this._template = null
+            }
+          }
+        }
+      },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -305,9 +331,13 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
               vas {
                 name
                 description
+                operationGuide
+                operationGuideType
               }
               batchId
               remark
+              status
+              operationGuide
             }
           }
         }
@@ -377,24 +407,43 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         cancelButton: { text: i18next.t('button.cancel') }
       })
 
-      if (result.value) {
-        const response = await client.query({
-          query: gql`
+      if (!result.value) return
+
+      this._executeRevertTransactions()
+      const response = await client.query({
+        query: gql`
             mutation {
               deleteArrivalNotice(${gqlBuilder.buildArgs({
                 name: this._ganNo
               })}) 
             }
           `
-        })
+      })
 
-        if (!response.errors) {
-          this._showToast({ message: i18next.t('text.gan_has_been_deleted') })
-          navigate(`arrival_notices`)
-        }
+      if (!response.errors) {
+        this._showToast({ message: i18next.t('text.gan_has_been_deleted') })
+        navigate(`arrival_notices`)
       }
     } catch (e) {
       this._showToast(e)
+    }
+  }
+
+  async _executeRevertTransactions() {
+    try {
+      for (let i = 0; i < this.vasData.records.length; i++) {
+        const record = this.vasData.records[i]
+        if (record.vas.operationGuideType && record.vas.operationGuideType === 'template') {
+          const template = document.createElement(record.vas.operationGuide)
+
+          for (let j = 0; j < template.revertTransactions.length; j++) {
+            const trx = template.revertTransactions[j]
+            await trx(record)
+          }
+        }
+      }
+    } catch (e) {
+      throw e
     }
   }
 

@@ -38,17 +38,13 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
         .grist {
           background-color: var(--main-section-background-color);
           display: flex;
+          flex: 1;
           flex-direction: column;
           overflow-y: auto;
         }
         .guide-container {
           max-width: 30vw;
           display: flex;
-        }
-        .column {
-          display: flex;
-          flex-direction: column;
-          max-width: 30vw;
         }
         data-grist {
           overflow-y: hidden;

@@ -351,7 +351,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
   _updateContext() {
     let actions = []
     if (this.completed) {
-      actions = [{ title: i18next.t('button.complete'), action: this._complete.bind(this) }]
+      actions = [{ title: i18next.t('button.complete'), action: this._completeHandler.bind(this) }]
     }
 
     store.dispatch({

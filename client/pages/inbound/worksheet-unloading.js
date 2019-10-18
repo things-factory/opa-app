@@ -1,3 +1,4 @@
+import '@things-factory/barcode-ui'
 import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
@@ -9,7 +10,6 @@ import { css, html } from 'lit-element'
 import { CustomAlert } from '../../utils/custom-alert'
 import { WORKSHEET_STATUS } from './constants/worksheet'
 import './pallet-label-popup'
-import '@things-factory/barcode-ui'
 
 class WorksheetUnloading extends localize(i18next)(PageView) {
   static get properties() {
@@ -32,6 +32,14 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
           flex-direction: column;
           overflow-x: auto;
         }
+        .form-container {
+          display: flex;
+        }
+        barcode-tag {
+          width: 100px;
+          height: 100px;
+          margin: 10px;
+        }
         .grist {
           background-color: var(--main-section-background-color);
           display: flex;
@@ -39,12 +47,6 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
           flex: 1;
           overflow-y: auto;
         }
-        barcode-tag {
-          width: 100px;
-          height: 100px;
-          margin: 10px;
-        }
-
         data-grist {
           overflow-y: hidden;
           flex: 1;
@@ -88,38 +90,37 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <form class="multi-column-form">
-        <fieldset>
-          <legend>${i18next.t('title.unloading')}</legend>
-          <label>${i18next.t('label.arrival_notice')}</label>
-          <input name="arrivalNotice" readonly />
+      <div class="form-container">
+        <form class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.unloading')}</legend>
+            <label>${i18next.t('label.arrival_notice')}</label>
+            <input name="arrivalNotice" readonly />
 
-          <label>${i18next.t('label.customer')}</label>
-          <input name="bizplace" readonly />
+            <label>${i18next.t('label.customer')}</label>
+            <input name="bizplace" readonly />
 
-          <label>${i18next.t('label.warehouse')}</label>
-          <input name="warehouse" readonly />
+            <label>${i18next.t('label.warehouse')}</label>
+            <input name="warehouse" readonly />
 
-          <label>${i18next.t('label.buffer_location')}</label>
-          <input name="bufferLocation" readonly />
+            <label>${i18next.t('label.buffer_location')}</label>
+            <input name="bufferLocation" readonly />
 
-          <label>${i18next.t('label.status')}</label>
-          <select name="status" disabled>
-            ${this._statusOptions.map(
-              status => html`
-                <option value="${status.name}" ?selected="${this._worksheetStatus === status.name}"
-                  >${i18next.t(`label.${status.description}`)}</option
-                >
-              `
-            )}
-          </select>
+            <label>${i18next.t('label.status')}</label>
+            <select name="status" disabled>
+              ${this._statusOptions.map(
+                status => html`
+                  <option value="${status.name}" ?selected="${this._worksheetStatus === status.name}"
+                    >${i18next.t(`label.${status.description}`)}</option
+                  >
+                `
+              )}
+            </select>
+          </fieldset>
+        </form>
 
-          <label>${i18next.t(`label.order_qr_code`)}</label>
-          <span center custom-input>
-            <barcode-tag bcid="qrcode" .value=${this._ganNo}></barcode-tag>
-          </span>
-        </fieldset>
-      </form>
+        <barcode-tag bcid="qrcode" .value=${this._ganNo}></barcode-tag>
+      </div>
 
       <div class="grist">
         <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product')}</h2>

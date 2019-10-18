@@ -1,3 +1,4 @@
+import '@things-factory/barcode-ui'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -12,6 +13,7 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
     return {
       _worksheetNo: String,
       _worksheetStatus: String,
+      _ganNo: String,
       config: Object,
       data: Object
     }
@@ -25,6 +27,14 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
           display: flex;
           flex-direction: column;
           overflow-x: auto;
+        }
+        .form-container {
+          display: flex;
+        }
+        barcode-tag {
+          width: 100px;
+          height: 100px;
+          margin: 10px;
         }
         .grist {
           background-color: var(--main-section-background-color);
@@ -72,30 +82,34 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <form class="multi-column-form">
-        <fieldset>
-          <legend>${i18next.t('title.putaway')}</legend>
-          <label>${i18next.t('label.arrival_notice')}</label>
-          <input name="arrivalNotice" readonly />
+      <div class="form-container">
+        <form class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.putaway')}</legend>
+            <label>${i18next.t('label.arrival_notice')}</label>
+            <input name="arrivalNotice" readonly />
 
-          <label>${i18next.t('label.customer')}</label>
-          <input name="bizplace" readonly />
+            <label>${i18next.t('label.customer')}</label>
+            <input name="bizplace" readonly />
 
-          <label>${i18next.t('label.buffer_location')}</label>
-          <input name="bufferLocation" readonly />
+            <label>${i18next.t('label.buffer_location')}</label>
+            <input name="bufferLocation" readonly />
 
-          <label>${i18next.t('label.status')}</label>
-          <select name="status" disabled>
-            ${Object.keys(WORKSHEET_STATUS).map(
-              key => html`
-                <option value="${WORKSHEET_STATUS[key].value}"
-                  >${i18next.t(`label.${WORKSHEET_STATUS[key].name}`)}</option
-                >
-              `
-            )}
-          </select>
-        </fieldset>
-      </form>
+            <label>${i18next.t('label.status')}</label>
+            <select name="status" disabled>
+              ${Object.keys(WORKSHEET_STATUS).map(
+                key => html`
+                  <option value="${WORKSHEET_STATUS[key].value}"
+                    >${i18next.t(`label.${WORKSHEET_STATUS[key].name}`)}</option
+                  >
+                `
+              )}
+            </select>
+          </fieldset>
+        </form>
+
+        <barcode-tag bcid="qrcode" .value=${this._ganNo}></barcode-tag>
+      </div>
 
       <div class="grist">
         <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product')}</h2>
@@ -232,6 +246,7 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
       const worksheet = response.data.worksheet
       const worksheetDetails = worksheet.worksheetDetails
       this._worksheetStatus = worksheet.status
+      this._ganNo = (worksheet.arrivalNotice && worksheet.arrivalNotice.name) || ''
       this._fillupForm(worksheet)
       this.data = {
         records: worksheetDetails.map(worksheetDetail => {
