@@ -230,6 +230,13 @@ class CompletedReleaseOrder extends localize(i18next)(PageView) {
           width: 250
         },
         {
+          type: 'object',
+          name: 'location',
+          header: i18next.t('field.location'),
+          record: { align: 'center' },
+          width: 150
+        },
+        {
           type: 'code',
           name: 'packingType',
           header: i18next.t('field.packing_type'),

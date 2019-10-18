@@ -243,6 +243,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
               descriptionField: 'palletId',
               select: [
                 { name: 'id', hidden: true },
+                { name: 'name', hidden: true },
                 { name: 'palletId', header: i18next.t('field.pallet_id'), record: { align: 'center' } },
                 { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
                 { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
@@ -253,6 +254,13 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
             }
           },
           width: 250
+        },
+        {
+          type: 'object',
+          name: 'product',
+          header: i18next.t('field.product'),
+          record: { align: 'center' },
+          width: 150
         },
         {
           type: 'object',
@@ -439,10 +447,10 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     )
       throw new Error(i18next.t('text.empty_value_in_list'))
 
-    // duplication of batch id
-    const batchIds = this.inventoryGrist.data.records.map(inventory => inventory.batchId)
-    if (batchIds.filter((batchId, idx, batchIds) => batchIds.indexOf(batchId) !== idx).length)
-      throw new Error(i18next.t('text.batch_id_is_duplicated'))
+    // duplication of pallet id
+    const palletIds = this.inventoryGrist.data.records.map(inventory => inventory.palletId)
+    if (palletIds.filter((palletId, idx, palletIds) => palletIds.indexOf(palletId) !== idx).length)
+      throw new Error(i18next.t('text.pallet_id_is_duplicated'))
   }
 
   _validateVas() {
@@ -485,8 +493,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
         releaseQty: record.releaseQty,
         seq,
         inventory: {
-          id: '',
-          name: record.name
+          id: record.id
         },
         type: ORDER_TYPES.RELEASE_OF_GOODS.value,
         status: ORDER_PRODUCT_STATUS.PENDING.value
