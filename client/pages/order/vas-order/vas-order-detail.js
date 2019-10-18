@@ -25,7 +25,6 @@ class VasOrderDetail extends localize(i18next)(PageView) {
       css`
         :host {
           display: flex;
-          flex-direction: column;
           overflow-x: auto;
         }
         .grist {
@@ -60,6 +59,10 @@ class VasOrderDetail extends localize(i18next)(PageView) {
 
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
+        }
+        .guide-container {
+          max-width: 30vw;
+          display: flex;
         }
       `
     ]

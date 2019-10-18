@@ -24,7 +24,6 @@ class ImageViewer extends localize(i18next)(LitElement) {
         .container {
           display: flex;
           flex-direction: column;
-          flex: 1;
         }
         h2 {
           padding: var(--subtitle-padding);
@@ -32,15 +31,11 @@ class ImageViewer extends localize(i18next)(LitElement) {
           color: var(--subtitle-text-color);
           border-bottom: var(--subtitle-border-bottom);
         }
-        .img-container {
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-          height: 100px;
-        }
         .img-container > img {
+          max-width: 100%;
           max-height: 100%;
           margin: auto;
+          display: flex;
         }
         .button-container {
           display: flex;
@@ -72,15 +67,19 @@ class ImageViewer extends localize(i18next)(LitElement) {
         </div>
       </div>
 
-      <div ?hidden="${!this.downloadable}" class="button-container">
-        <a href="${this._fullPath}" download="${`${this.name ? this.name : 'image'}.${this._exetention}`}"></a>
-        <mwc-button
-          @click="${() => {
-            this.shadowRoot.querySelector('a').click()
-          }}"
-          >${i18next.t('button.download')}</mwc-button
-        >
-      </div>
+      ${this.downloadable
+        ? html`
+            <div ?hidden="${!this.downloadable}" class="button-container">
+              <a href="${this._fullPath}" download="${`${this.name ? this.name : 'image'}.${this._exetention}`}"></a>
+              <mwc-button
+                @click="${() => {
+                  this.shadowRoot.querySelector('a').click()
+                }}"
+                >${i18next.t('button.download')}</mwc-button
+              >
+            </div>
+          `
+        : ''}
     `
   }
 

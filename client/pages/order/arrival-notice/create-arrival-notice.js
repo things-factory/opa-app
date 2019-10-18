@@ -1,10 +1,11 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
+import '../../components/vas-relabel'
 
 class CreateArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
@@ -20,7 +21,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
-      vasData: Object
+      vasData: Object,
+      _template: Object
     }
   }
 
@@ -33,12 +35,21 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           flex-direction: column;
           overflow-x: auto;
         }
+        .container {
+          flex: 1;
+          display: flex;
+        }
         .grist {
           background-color: var(--main-section-background-color);
           display: flex;
           flex-direction: column;
           flex: 1;
           overflow-y: auto;
+        }
+        .guide-container {
+          max-width: 30vw;
+          display: flex;
+          flex-direction: column;
         }
         data-grist {
           overflow-y: hidden;
@@ -73,12 +84,33 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   get context() {
     return {
       title: i18next.t('title.create_arrival_notice'),
-      actions: [
-        {
-          title: i18next.t('button.create'),
-          action: this._generateArrivalNotice.bind(this)
+      actions: this._actions
+    }
+  }
+
+  get createButton() {
+    return { title: i18next.t('button.create'), action: this._generateArrivalNotice.bind(this) }
+  }
+
+  get adjustButton() {
+    return {
+      title: i18next.t('button.adjust'),
+      action: () => {
+        this.vasData = {
+          ...this.vasData,
+          records: this.vasGrist.dirtyData.records.map((record, idx) => {
+            if (idx === this._selectedVasRecordIdx) {
+              try {
+                record.operationGuide = this._template.adjust()
+                record.ready = this._isReadyToCreate(record)
+              } catch (e) {
+                this._showToast(e)
+              }
+            }
+            return record
+          })
         }
-      ]
+      }
     }
   }
 
@@ -130,27 +162,32 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         </fieldset>
       </form>
 
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product')}</h2>
+      <div class="container">
+        <div class="grist">
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product')}</h2>
 
-        <data-grist
-          id="product-grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.productGristConfig}
-          .data="${this.productData}"
-          @record-change="${this._onProductChangeHandler.bind(this)}"
-        ></data-grist>
-      </div>
+          <data-grist
+            id="product-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.productGristConfig}
+            .data="${this.productData}"
+            @record-change="${this._onProductChangeHandler.bind(this)}"
+          ></data-grist>
 
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
 
-        <data-grist
-          id="vas-grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.vasGristConfig}
-          .data="${this.vasData}"
-        ></data-grist>
+          <data-grist
+            id="vas-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.vasGristConfig}
+            .data="${this.vasData}"
+            @field-change="${this._onFieldChange.bind(this)}"
+          ></data-grist>
+        </div>
+
+        <div class="guide-container">
+          ${this._template}
+        </div>
       </div>
     `
   }
@@ -159,6 +196,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     super()
     this.productData = { records: [] }
     this.vasData = { records: [] }
+    this._actions = [this.createButton]
     this._importedOrder = false
     this._ownTransport = true
     this._orderType = null
@@ -264,7 +302,30 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
     this.vasGristConfig = {
       pagination: { infinite: true },
-      rows: { selectable: { multiple: true } },
+      rows: {
+        selectable: { multiple: true },
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            if (
+              record &&
+              record.vas &&
+              record.vas.operationGuideType === 'template' &&
+              record.vas.operationGuide &&
+              record.batchId
+            ) {
+              record.inventory = { product: { name: record.batchId } }
+              this._template = document.createElement(record.vas.operationGuide)
+              this._template.record = record
+              this._template.operationGuide = record.operationGuide
+            } else {
+              this._template = null
+            }
+            this._selectedVasRecord = record
+            this._selectedVasRecordIdx = rowIndex
+            this._updateContext()
+          }
+        }
+      },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -279,10 +340,29 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           }
         },
         {
+          type: 'boolean',
+          name: 'ready',
+          header: i18next.t('field.ready'),
+          width: 40
+        },
+        {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
-          record: { editable: true, align: 'center', options: { queryName: 'vass' } },
+          record: {
+            editable: true,
+            align: 'center',
+            options: {
+              queryName: 'vass',
+              select: [
+                { name: 'id', hidden: true },
+                { name: 'name', width: 160 },
+                { name: 'description', width: 200 },
+                { name: 'operationGuide', hidden: true },
+                { name: 'operationGuideType', hidden: true }
+              ]
+            }
+          },
           width: 250
         },
         {
@@ -345,6 +425,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         return
       }
 
+      await this._executeRelatedTrxs()
+
       let args = {
         arrivalNotice: { ...this._getArrivalNotice(), ownTransport: this._importedOrder ? true : this._ownTransport }
       }
@@ -367,6 +449,34 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
+    }
+  }
+
+  async _executeRelatedTrxs() {
+    try {
+      this.vasData = {
+        ...this.vasData,
+        records: await (async () => {
+          let records = []
+          for (let i = 0; i < this.vasGrist.dirtyData.records.length; i++) {
+            const record = this.vasGrist.dirtyData.records[i]
+
+            if (record.vas.operationGuide && record.operationGuide && record.operationGuide.transactions) {
+              const trxs = record.operationGuide.transactions || []
+
+              for (let j = 0; j < trxs.length; j++) {
+                const trx = trxs[j]
+                record.operationGuide = await trx(record.operationGuide)
+              }
+            }
+            records.push(record)
+          }
+
+          return records
+        })()
+      }
+    } catch (e) {
+      throw e
     }
   }
 
@@ -411,6 +521,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       const vasBatches = this.vasGrist.data.records.map(vas => `${vas.vas.id}-${vas.batchId}`)
       if (vasBatches.filter((vasBatch, idx, vasBatches) => vasBatches.indexOf(vasBatch) !== idx).length)
         throw new Error(i18next.t('text.duplicated_vas_on_same_batch'))
+
+      if (!this.vasGrist.data.records.every(record => record.ready)) throw new Error('there_is_not_ready_vas')
     }
   }
 
@@ -429,7 +541,12 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       records: this.vasGrist.dirtyData.records.map(record => {
         return {
           ...record,
-          batchId: batchIds.includes(record.batchId) ? record.batchId : null
+          batchId: batchIds.includes(record.batchId) ? record.batchId : null,
+          ready: record.vas.operationGuideType
+            ? batchIds.includes(record.batchId)
+              ? record.ready
+              : false
+            : record.ready
         }
       })
     }
@@ -439,23 +556,33 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     let arrivalNotice = this._serializeForm(this.arrivalNoticeForm)
     delete arrivalNotice.importedOrder
 
-    arrivalNotice.orderProducts = this.productGrist.data.records.map((record, idx) => {
+    arrivalNotice.orderProducts = this.productGrist.dirtyData.records.map((record, idx) => {
       const seq = idx + 1
-      delete record.id
-      delete record.product.__origin__
-      delete record.product.__seq__
-      delete record.product.__selected__
 
-      return { ...record, seq }
+      return {
+        seq,
+        batchId: record.batchId,
+        product: { id: record.product.id },
+        packingType: record.packingType,
+        weight: record.weight,
+        unit: record.unit,
+        packQty: record.packQty,
+        totalWeight: record.totalWeight,
+        palletQty: record.palletQty
+      }
     })
 
-    arrivalNotice.orderVass = this.vasGrist.data.records.map(record => {
-      delete record.id
-      delete record.vas.__origin__
-      delete record.vas.__seq__
-      delete record.vas.__selected__
+    arrivalNotice.orderVass = this.vasGrist.dirtyData.records.map(record => {
+      if (record.operationGuide && record.operationGuide.data) {
+        record.operationGuide = JSON.stringify(record.operationGuide)
+      }
 
-      return { ...record, name }
+      return {
+        vas: { id: record.vas.id },
+        batchId: record.batchId,
+        remark: record.remark,
+        operationGuide: record.operationGuide ? JSON.stringify(record.operationGuide) : ''
+      }
     })
 
     return arrivalNotice
@@ -474,6 +601,43 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     })
 
     return obj
+  }
+
+  _updateContext() {
+    this._actions = []
+
+    if (this._selectedVasRecord && this._selectedVasRecord.vas && this._selectedVasRecord.vas.operationGuideType) {
+      this._actions = [this.adjustButton]
+    }
+
+    this._actions = [...this._actions, this.createButton]
+
+    store.dispatch({
+      type: UPDATE_CONTEXT,
+      context: this.context
+    })
+  }
+
+  _onFieldChange() {
+    this.vasData = {
+      ...this.vasGrist.dirtyData,
+      records: this.vasGrist.dirtyData.records.map(record => {
+        return {
+          ...record,
+          ready: this._isReadyToCreate(record)
+        }
+      })
+    }
+  }
+
+  _isReadyToCreate(record) {
+    if (record.vas && record.vas.operationGuideType) {
+      return Boolean(record.operationGuide && record.inventory && record.remark)
+    } else if (record.vas && !record.vas.operationGuideType) {
+      return Boolean(record.vas && record.batchId && record.remark)
+    } else {
+      return false
+    }
   }
 
   _showToast({ type, message }) {

@@ -37,19 +37,25 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
           flex-direction: column;
           overflow-x: auto;
         }
-
         barcode-tag {
           width: 100px;
           height: 100px;
           margin: 10px;
         }
-
+        .container {
+          display: flex;
+          flex: 1;
+        }
         .grist {
           background-color: var(--main-section-background-color);
           display: flex;
           flex-direction: column;
           flex: 1;
           overflow-y: auto;
+        }
+        .guide-container {
+          display: flex;
+          max-width: 30vw;
         }
         data-grist {
           overflow-y: hidden;
@@ -137,19 +143,20 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
         </fieldset>
       </form>
 
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
+      <div class="container">
+        <div class="grist">
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
 
-        <data-grist
-          id="grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .data="${this.data}"
-        ></data-grist>
-      </div>
-
-      <div class="guide-container">
-        ${this._template}
+          <data-grist
+            id="grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.config}
+            .data="${this.data}"
+          ></data-grist>
+        </div>
+        <div class="guide-container">
+          ${this._template}
+        </div>
       </div>
     `
   }
@@ -393,6 +400,20 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
         return
       }
 
+      if (this.data.records.some(record => record.vas.operationGuideType)) {
+        const result = await CustomAlert({
+          type: 'warning',
+          title: i18next.t('title.is_operation_finished'),
+          text: i18next.t('text.there_is_additional_operation'),
+          confirmButton: { text: i18next.t('button.confirm') },
+          cancelButton: { text: i18next.t('button.cancel') }
+        })
+
+        if (!result.value) {
+          return
+        }
+      }
+
       const response = await client.query({
         query: gql`
           mutation {
@@ -408,6 +429,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
       if (!response.errors) {
         this._showToast({ message: i18next.t('text.worksheet_activated') })
         this._worksheetNo = ''
+        await this.fetchWorksheet()
         navigate(`vas_worksheets`)
       }
     } catch (e) {

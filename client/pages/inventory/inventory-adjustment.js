@@ -46,6 +46,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _searchFields: Array,
+      _email: String,
       config: Object,
       data: Object,
       _palletLabel: Object
@@ -259,12 +260,26 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       ]
     }
 
+    const _userBizplaces = await this._fetchUserBizplaces()
+
     this._searchFields = [
       {
         label: i18next.t('field.customer'),
         name: 'bizplaceName',
-        type: 'text',
-        props: { searchOper: 'like' }
+        type: 'select',
+        options: [
+          { value: '' },
+          ..._userBizplaces
+            .filter(userBizplaces => !userBizplaces.mainBizplace)
+            .map(userBizplace => {
+              return {
+                name: userBizplace.name,
+                value: userBizplace.name
+              }
+            })
+        ],
+        props: { searchOper: 'like' },
+        attrs: ['custom']
       },
       {
         label: i18next.t('field.zone'),
@@ -589,6 +604,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   stateChanged(state) {
     let palletLabelSetting = state.dashboard[PALLET_LABEL_SETTING_KEY]
     this._palletLabel = (palletLabelSetting && palletLabelSetting.board) || {}
+    this._email = state.auth && state.auth.user && state.auth.user.email
   }
 
   async fetchBizplace() {
@@ -607,6 +623,28 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         `
     })
     return response.data.bizplaces.items
+  }
+
+  async _fetchUserBizplaces() {
+    if (!this._email) return
+    const response = await client.query({
+      query: gql`
+        query {
+          userBizplaces(${gqlBuilder.buildArgs({
+            email: this._email
+          })}) {
+            id
+            name
+            description
+            mainBizplace
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      return response.data.userBizplaces
+    }
   }
 
   async fetchProduct() {

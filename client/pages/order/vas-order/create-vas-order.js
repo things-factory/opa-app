@@ -3,17 +3,15 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { connect } from 'pwa-helpers/connect-mixin.js'
 import { CustomAlert } from '../../../utils/custom-alert'
 import '../../components/vas-relabel'
 
-class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
+class CreateVasOrder extends localize(i18next)(PageView) {
   static get styles() {
     return [
       css`
         :host {
           display: flex;
-          flex-direction: column;
           overflow-x: auto;
         }
         .grist {
@@ -68,6 +66,7 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
   render() {
     return html`
       <div class="grist">
+        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
         <data-grist
           .mode="${isMobileDevice() ? 'LIST' : 'GRID'}"
           .config="${this.config}"
@@ -101,8 +100,12 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
           ...this.data,
           records: this.dataGrist.dirtyData.records.map((record, idx) => {
             if (idx === this._selectedRecordIdx) {
-              record.operationGuide = this._template.adjust()
-              record.ready = this._isReadyToCreate(record)
+              try {
+                record.operationGuide = this._template.adjust()
+                record.ready = this._isReadyToCreate(record)
+              } catch (e) {
+                this._showToast(e)
+              }
             }
             return record
           })
@@ -124,7 +127,13 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
         selectable: { multiple: true },
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
-            if (record && record.vas && record.vas.operationGuideType === 'template' && record.vas.operationGuide) {
+            if (
+              record &&
+              record.vas &&
+              record.vas.operationGuideType === 'template' &&
+              record.vas.operationGuide &&
+              record.inventory
+            ) {
               this._template = document.createElement(record.vas.operationGuide)
               this._template.record = record
               this._template.operationGuide = record.operationGuide

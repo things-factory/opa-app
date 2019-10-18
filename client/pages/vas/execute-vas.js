@@ -433,10 +433,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
 
   _clearView() {
     this.data = { records: [] }
-    this.infoForm.reset()
     this.inputForm.reset()
-    this._orderNo = null
-    this._orderType = null
     this._selectedVas = null
     this._selectedTaskStatus = null
   }

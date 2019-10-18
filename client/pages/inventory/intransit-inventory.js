@@ -1,11 +1,12 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
+import { connect } from 'pwa-helpers/connect-mixin'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 
-class IntransitInventory extends localize(i18next)(PageView) {
+class IntransitInventory extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -38,6 +39,7 @@ class IntransitInventory extends localize(i18next)(PageView) {
 
   static get properties() {
     return {
+      _email: String,
       _searchFields: Array,
       config: Object,
       data: Object
@@ -69,7 +71,7 @@ class IntransitInventory extends localize(i18next)(PageView) {
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
     this.config = {
       list: {
         fields: ['palletId', 'product', 'bizplace', 'location']
@@ -126,18 +128,18 @@ class IntransitInventory extends localize(i18next)(PageView) {
           width: 200
         },
         {
-          type: 'string',
-          name: 'zone',
-          header: i18next.t('field.zone'),
-          sortable: true,
-          width: 80
-        },
-        {
           type: 'object',
           name: 'location',
           header: i18next.t('field.location'),
           sortable: true,
           width: 200
+        },
+        {
+          type: 'string',
+          name: 'zone',
+          header: i18next.t('field.zone'),
+          sortable: true,
+          width: 80
         },
         {
           type: 'datetime',
@@ -156,12 +158,26 @@ class IntransitInventory extends localize(i18next)(PageView) {
       ]
     }
 
+    const _userBizplaces = await this._fetchUserBizplaces()
+
     this._searchFields = [
       {
         label: i18next.t('field.customer'),
         name: 'bizplaceName',
-        type: 'text',
-        props: { searchOper: 'like' }
+        type: 'select',
+        options: [
+          { value: '' },
+          ..._userBizplaces
+            .filter(userBizplaces => !userBizplaces.mainBizplace)
+            .map(userBizplace => {
+              return {
+                name: userBizplace.name,
+                value: userBizplace.name
+              }
+            })
+        ],
+        props: { searchOper: 'like' },
+        attrs: ['custom']
       },
       {
         label: i18next.t('field.warehouse'),
@@ -170,14 +186,14 @@ class IntransitInventory extends localize(i18next)(PageView) {
         props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('field.zone'),
-        name: 'zone',
+        label: i18next.t('field.location'),
+        name: 'locationName',
         type: 'text',
         props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('field.location'),
-        name: 'locationName',
+        label: i18next.t('field.zone'),
+        name: 'zone',
         type: 'text',
         props: { searchOper: 'like' }
       },
@@ -200,6 +216,28 @@ class IntransitInventory extends localize(i18next)(PageView) {
         props: { searchOper: 'eq' }
       }
     ]
+  }
+
+  async _fetchUserBizplaces() {
+    if (!this._email) return
+    const response = await client.query({
+      query: gql`
+        query {
+          userBizplaces(${gqlBuilder.buildArgs({
+            email: this._email
+          })}) {
+            id
+            name
+            description
+            mainBizplace
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      return response.data.userBizplaces
+    }
   }
 
   async pageUpdated(changes, lifecycle) {
@@ -266,6 +304,10 @@ class IntransitInventory extends localize(i18next)(PageView) {
       total: response.data.intransitInventories.total || 0,
       records: response.data.intransitInventories.items || []
     }
+  }
+
+  stateChanged(state) {
+    this._email = state.auth && state.auth.user && state.auth.user.email
   }
 
   get _columns() {

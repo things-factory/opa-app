@@ -26,7 +26,6 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
       css`
         :host {
           display: flex;
-          flex-direction: column;
           overflow-x: auto;
         }
         .grist {
@@ -35,6 +34,10 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
           flex-direction: column;
           flex: 1;
           overflow-y: auto;
+        }
+        .guide-container {
+          max-width: 30vw;
+          display: flex;
         }
         data-grist {
           overflow-y: hidden;
