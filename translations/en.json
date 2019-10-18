@@ -429,6 +429,7 @@
   "text.collection_order_confirmed": "collection order confirmed",
   "text.collection_order_dispatched": "collection order dispatched",
   "text.collection_order_received": "collection order received",
+  "text.collection_order_completed": "collection order completed",
   "text.collection_order_form_invalid": "collection order form invalid",
   "text.collection_order_rejected": "collection order rejected",
   "text.complete_unloading": "complete unloading",

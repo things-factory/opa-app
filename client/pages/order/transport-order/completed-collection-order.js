@@ -198,6 +198,7 @@ class CompletedCollectionOrder extends localize(i18next)(PageView) {
             cargoType
             looseItem
             urgency
+            remark
             status
             attachments {
               id

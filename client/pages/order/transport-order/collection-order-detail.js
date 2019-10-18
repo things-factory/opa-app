@@ -199,6 +199,7 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
             looseItem
             urgency
             status
+            remark
             attachments {
               id
               name
