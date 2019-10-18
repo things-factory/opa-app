@@ -148,6 +148,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
           name: 'name',
           header: i18next.t('field.name'),
           record: { editable: true, align: 'left' },
+          imex: { header: 'Name', key: 'name', width: 50, type: 'string' },
           sortable: true,
           width: 100
         },
@@ -156,6 +157,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
           name: 'description',
           header: i18next.t('field.description'),
           record: { editable: true, align: 'left' },
+          imex: { header: 'Description', key: 'description', width: 50, type: 'string' },
           sortable: true,
           width: 150
         },
@@ -164,6 +166,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
           name: 'address',
           header: i18next.t('field.address'),
           record: { editable: true, align: 'left' },
+          imex: { header: 'Address', key: 'address', width: 50, type: 'string' },
           sortable: true,
           width: 150
         },
@@ -172,6 +175,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
           name: 'postalCode',
           header: i18next.t('field.postal_code'),
           record: { editable: true, align: 'left' },
+          imex: { header: 'PostalCode', key: 'postalCode', width: 50, type: 'string' },
           sortable: true,
           width: 120
         },
@@ -180,6 +184,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
           name: 'latlng',
           header: i18next.t('field.latlng'),
           record: { editable: true, align: 'left' },
+          imex: { header: 'Latlng', key: 'latlng', width: 50, type: 'string' },
           sortable: true,
           width: 100
         },
@@ -188,6 +193,7 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
           name: 'status',
           header: i18next.t('field.status'),
           record: { editable: true, align: 'left' },
+          imex: { header: 'Status', key: 'status', width: 50, type: 'string' },
           sortable: true,
           width: 80
         },
@@ -231,7 +237,10 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         html`
           <import-pop-up
             .records=${records}
-            .config=${this.config}
+            .config=${{
+              rows: this.config.rows,
+              columns: [...this.config.columns.filter(column => column.imex !== undefined)]
+            }}
             .importHandler="${this.importHandler.bind(this)}"
           ></import-pop-up>
         `,
@@ -295,8 +304,16 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async importHandler(patches) {
-    const response = await client.query({
-      query: gql`
+    if (patches && patches.length) {
+      patches = patches.map(patch => {
+        if (this._companyId) {
+          patch.company = { id: this._companyId }
+        }
+        return patch
+      })
+
+      const response = await client.query({
+        query: gql`
           mutation {
             updateMultipleBizplace(${gqlBuilder.buildArgs({
               patches
@@ -305,18 +322,19 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
             }
           }
         `
-    })
+      })
 
-    if (!response.errors) {
-      history.back()
-      this.dataGrist.fetch()
-      document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            message: i18next.t('text.data_imported_successfully')
-          }
-        })
-      )
+      if (!response.errors) {
+        history.back()
+        this.dataGrist.fetch()
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              message: i18next.t('text.data_imported_successfully')
+            }
+          })
+        )
+      }
     }
   }
 
@@ -334,20 +352,14 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _saveBizplaces() {
-    let patches = this.dataGrist.dirtyRecords
-    if (patches && patches.length) {
-      patches = patches.map(bizplace => {
-        let patchField = bizplace.id ? { id: bizplace.id } : {}
-        const dirtyFields = bizplace.__dirtyfields__
-        for (let key in dirtyFields) {
-          patchField[key] = dirtyFields[key].after
-        }
-        patchField.cuFlag = bizplace.__dirty__
-        if (this._companyId) {
-          patchField.company = { id: this._companyId }
-        }
+    var patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
 
-        return patchField
+    if (patches && patches.length) {
+      patches = patches.map(patch => {
+        if (this._companyId) {
+          patch.company = { id: this._companyId }
+        }
+        return patch
       })
 
       const response = await client.query({
@@ -415,7 +427,34 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _exportableData() {
-    return this.dataGrist.exportRecords()
+    let records = []
+    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+      records = this.dataGrist.selected
+    } else {
+      records = this.dataGrist.data.records
+    }
+
+    var headerSetting = this.dataGrist._config.columns
+      .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+      .map(column => {
+        return column.imex
+      })
+
+    var data = records.map(item => {
+      return {
+        id: item.id,
+        ...this._columns
+          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+          .reduce((record, column) => {
+            record[column.imex.key] = column.imex.key
+              .split('.')
+              .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
+            return record
+          }, {})
+      }
+    })
+
+    return { header: headerSetting, data: data }
   }
 
   stateChanged(state) {

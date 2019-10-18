@@ -142,11 +142,8 @@ class WarehouseList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),
-          record: {
-            editable: true,
-            align: 'center',
-            imexSetting: { header: 'Name', key: 'name', width: 50, type: 'string' }
-          },
+          record: { editable: true, align: 'center' },
+          imex: { header: i18next.t('field.name'), key: 'name', width: 50, type: 'string' },
           sortable: true,
           width: 100
         },
@@ -154,32 +151,29 @@ class WarehouseList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
-          record: {
-            editable: true,
-            align: 'center',
-            imexSetting: { header: 'Description', key: 'description', width: 100, type: 'string' }
-          },
+          record: { editable: true, align: 'center' },
+          imex: { header: i18next.t('field.description'), key: 'description', width: 100, type: 'string' },
           sortable: true,
           width: 150
         },
         {
           type: 'object',
           name: 'bizplace',
+          header: i18next.t('field.customer'),
           record: {
             align: 'center',
             editable: true,
             options: {
               queryName: 'bizplaces'
-            },
-            imexSetting: {
-              header: 'Bizplace',
-              key: 'bizplace.name',
-              width: 50,
-              type: 'array',
-              arrData: this.bizplace
             }
           },
-          header: i18next.t('field.customer'),
+          imex: {
+            header: i18next.t('field.customer'),
+            key: 'bizplace.name',
+            width: 50,
+            type: 'array',
+            arrData: this.bizplace
+          },
           width: 200
         },
         {
@@ -189,19 +183,19 @@ class WarehouseList extends localize(i18next)(PageView) {
           record: {
             editable: true,
             align: 'center',
-            codeName: 'WAREHOUSE_TYPES',
-            imexSetting: {
-              header: 'Type',
-              key: 'type',
-              width: 50,
-              type: 'array',
-              arrData: this._warehouseTypes.map(_warehouseType => {
-                return {
-                  name: _warehouseType.name,
-                  id: _warehouseType.name
-                }
-              })
-            }
+            codeName: 'WAREHOUSE_TYPES'
+          },
+          imex: {
+            header: i18next.t('field.type'),
+            key: 'type',
+            width: 50,
+            type: 'array',
+            arrData: this._warehouseTypes.map(_warehouseType => {
+              return {
+                name: _warehouseType.name,
+                id: _warehouseType.name
+              }
+            })
           },
           sortable: true,
           width: 100
@@ -221,93 +215,6 @@ class WarehouseList extends localize(i18next)(PageView) {
           record: { editable: false, align: 'center' },
           sortable: true,
           width: 180
-        }
-      ]
-    }
-
-    this.importConfig = {
-      rows: { selectable: { multiple: true } },
-      columns: [
-        { type: 'gutter', gutterName: 'dirty' },
-        { type: 'gutter', gutterName: 'sequence' },
-        { type: 'gutter', gutterName: 'row-selector', multiple: true },
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'reorder',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              if (record.id) navigate(`locations/${record.id}?name=${record.name}`)
-            }
-          }
-        },
-        {
-          type: 'string',
-          name: 'name',
-          header: i18next.t('field.name'),
-          record: {
-            editable: true,
-            align: 'center',
-            imexSetting: { header: 'Name', key: 'name', width: 50, type: 'string' }
-          },
-          sortable: true,
-          width: 100
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: {
-            editable: true,
-            align: 'center',
-            imexSetting: { header: 'Description', key: 'description', width: 100, type: 'string' }
-          },
-          sortable: true,
-          width: 150
-        },
-        {
-          type: 'object',
-          name: 'bizplace',
-          record: {
-            align: 'center',
-            editable: true,
-            options: {
-              queryName: 'bizplaces'
-            },
-            imexSetting: {
-              header: 'Bizplace',
-              key: 'bizplace.name',
-              width: 50,
-              type: 'array',
-              arrData: this.bizplace
-            }
-          },
-          header: i18next.t('field.customer'),
-          width: 200
-        },
-        {
-          type: 'code',
-          name: 'type',
-          header: i18next.t('field.type'),
-          record: {
-            editable: true,
-            align: 'center',
-            codeName: 'WAREHOUSE_TYPES',
-            imexSetting: {
-              header: 'Type',
-              key: 'type',
-              width: 50,
-              type: 'array',
-              arrData: this._warehouseTypes.map(_warehouseType => {
-                return {
-                  name: _warehouseType.name,
-                  id: _warehouseType.name
-                }
-              })
-            }
-          },
-          sortable: true,
-          width: 100
         }
       ]
     }
@@ -343,14 +250,16 @@ class WarehouseList extends localize(i18next)(PageView) {
     })
     return response.data.bizplaces.items
   }
-
   _importableData(records) {
     setTimeout(() => {
       openPopup(
         html`
           <import-pop-up
             .records=${records}
-            .config=${this.importConfig}
+            .config=${{
+              rows: this.config.rows,
+              columns: [...this.config.columns.filter(column => column.imex !== undefined)]
+            }}
             .importHandler="${this.importHandler.bind(this)}"
           ></import-pop-up>
         `,
@@ -404,6 +313,14 @@ class WarehouseList extends localize(i18next)(PageView) {
   }
 
   async importHandler(patches) {
+    patches = patches.map(patch => {
+      if (patch.bizplace) {
+        delete patch.bizplace.__seq__
+        delete patch.bizplace.__origin__
+        delete patch.bizplace.__selected__
+      }
+      return patch
+    })
     const response = await client.query({
       query: gql`
           mutation {
@@ -430,17 +347,15 @@ class WarehouseList extends localize(i18next)(PageView) {
   }
 
   async _saveWarehouse() {
-    let patches = this.dataGrist.dirtyRecords
+    let patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
     if (patches && patches.length) {
-      patches = patches.map(warehouse => {
-        let patchField = warehouse.id ? { id: warehouse.id } : {}
-        const dirtyFields = warehouse.__dirtyfields__
-        for (let key in dirtyFields) {
-          patchField[key] = dirtyFields[key].after
+      patches = patches.map(patch => {
+        if (patch.bizplace) {
+          delete patch.bizplace.__seq__
+          delete patch.bizplace.__origin__
+          delete patch.bizplace.__selected__
         }
-        patchField.cuFlag = warehouse.__dirty__
-
-        return patchField
+        return patch
       })
 
       const response = await client.query({
@@ -515,23 +430,19 @@ class WarehouseList extends localize(i18next)(PageView) {
       records = this.dataGrist.data.records
     }
 
-    let headerSetting = this.dataGrist._config.columns
-      .filter(
-        column => column.type !== 'gutter' && column.record !== undefined && column.record.imexSetting !== undefined
-      )
+    var headerSetting = this.dataGrist._config.columns
+      .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
       .map(column => {
-        return column.record.imexSetting
+        return column.imex
       })
 
-    let data = records.map(item => {
+    var data = records.map(item => {
       return {
         id: item.id,
         ...this._columns
-          .filter(
-            column => column.type !== 'gutter' && column.record !== undefined && column.record.imexSetting !== undefined
-          )
+          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
           .reduce((record, column) => {
-            record[column.record.imexSetting.key] = column.record.imexSetting.key
+            record[column.imex.key] = column.imex.key
               .split('.')
               .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
             return record
