@@ -1,3 +1,4 @@
+import { USBPrinter } from '@things-factory/barcode-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -6,10 +7,9 @@ import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } 
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
-import './generate-location-list'
-import { USBPrinter } from '@things-factory/barcode-base'
 import { LOCATION_LABEL_SETTING_KEY } from '../../setting-constants'
 import { CustomAlert } from '../../utils/custom-alert'
+import './generate-location-list'
 
 class LocationList extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -71,11 +71,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.location' + (this._warehouseName ? ' (' + this._warehouseName + ')' : ''), {
-        state: {
-          text: this._warehouseName
-        }
-      }),
+      title: this._warehouseName,
       actions: [
         {
           title: i18next.t('button.print_label'),

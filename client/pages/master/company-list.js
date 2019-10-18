@@ -1,13 +1,13 @@
+import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
-import { getCodeByName } from '@things-factory/code-base'
 import { i18next, localize } from '@things-factory/i18n-base'
+import { openPopup } from '@things-factory/layout-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { openPopup } from '@things-factory/layout-base'
-import '../components/import-pop-up'
 import { CustomAlert } from '../../utils/custom-alert'
+import '../components/import-pop-up'
 
 class CompanyList extends localize(i18next)(PageView) {
   static get styles() {
@@ -118,12 +118,6 @@ class CompanyList extends localize(i18next)(PageView) {
         props: { searchOper: 'like' }
       },
       {
-        label: i18next.t('field.address'),
-        name: 'address',
-        type: 'text',
-        props: { searchOper: 'like' }
-      },
-      {
         label: i18next.t('field.status'),
         name: 'status',
         type: 'text',
@@ -201,7 +195,7 @@ class CompanyList extends localize(i18next)(PageView) {
           header: i18next.t('field.brn'),
           record: {
             editable: true,
-            align: 'left'
+            align: 'center'
           },
           imex: { header: 'Brn', key: 'brn', width: 50, type: 'string' },
           sortable: true,
@@ -213,7 +207,7 @@ class CompanyList extends localize(i18next)(PageView) {
           header: i18next.t('field.postal_code'),
           record: {
             editable: true,
-            align: 'left'
+            align: 'center'
           },
           imex: { header: 'Postal Code', key: 'postalCode', width: 50, type: 'string' },
           sortable: true,
@@ -237,7 +231,7 @@ class CompanyList extends localize(i18next)(PageView) {
           header: i18next.t('field.status'),
           record: {
             editable: true,
-            align: 'left'
+            align: 'center'
           },
           imex: { header: 'Status', key: 'status', width: 50, type: 'string' },
           sortable: true,

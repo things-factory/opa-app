@@ -127,6 +127,8 @@
   "field.number_of_cell": "bilangan sel",
   "field.number_of_column": "bilangan lajur",
   "field.origin_product": "produk asal",
+  "field.operation_guide_type": "jenis panduan operasi",
+  "field.operation_guide": "panduan operasi",
   "field.out": "keluar",
   "field.own_transport": "pengangkutan sendiri",
   "field.pack_in_qty": "kuantiti dalam pek",

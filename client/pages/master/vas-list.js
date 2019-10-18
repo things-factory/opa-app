@@ -1,12 +1,12 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import { openPopup } from '@things-factory/layout-base'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
-import { openPopup } from '@things-factory/layout-base'
 import { css, html } from 'lit-element'
-import '../components/import-pop-up'
 import { CustomAlert } from '../../utils/custom-alert'
+import '../components/import-pop-up'
 
 class VasList extends localize(i18next)(PageView) {
   static get properties() {
@@ -124,14 +124,6 @@ class VasList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'currency',
-          header: i18next.t('field.currency'),
-          record: { editable: true, align: 'center' },
-          sortable: true,
-          width: 80
-        },
-        {
-          type: 'string',
           name: 'operationGuideType',
           header: i18next.t('field.operation_guide_type'),
           record: { editable: true, align: 'center' },
@@ -145,6 +137,14 @@ class VasList extends localize(i18next)(PageView) {
           record: { editable: true, align: 'center' },
           sortable: true,
           width: 160
+        },
+        {
+          type: 'string',
+          name: 'currency',
+          header: i18next.t('field.currency'),
+          record: { editable: true, align: 'center' },
+          sortable: true,
+          width: 80
         },
         {
           type: 'float',
