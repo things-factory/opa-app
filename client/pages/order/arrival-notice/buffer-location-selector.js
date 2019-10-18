@@ -110,7 +110,7 @@ export class BufferLocationSelector extends localize(i18next)(LitElement) {
         label: i18next.t('field.name'),
         type: 'text',
         props: {
-          searchOper: 'like'
+          searchOper: 'i_like'
         }
       },
       {
@@ -118,7 +118,7 @@ export class BufferLocationSelector extends localize(i18next)(LitElement) {
         label: i18next.t('field.description'),
         type: 'text',
         props: {
-          searchOper: 'like'
+          searchOper: 'i_like'
         }
       }
     ]

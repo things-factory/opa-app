@@ -96,7 +96,7 @@ class WorkerList extends localize(i18next)(PageView) {
         label: i18next.t('field.name'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.type'),
@@ -126,6 +126,7 @@ class WorkerList extends localize(i18next)(PageView) {
           name: 'name',
           header: i18next.t('field.name'),
           record: { editable: true, align: 'left' },
+          imex: { header: i18next.t('field.name'), key: 'name', width: 50, type: 'string' },
           sortable: true,
           width: 250
         },
@@ -134,6 +135,7 @@ class WorkerList extends localize(i18next)(PageView) {
           name: 'description',
           header: i18next.t('field.description'),
           record: { editable: true, align: 'left' },
+          imex: { header: i18next.t('field.description'), key: 'description', width: 50, type: 'string' },
           sortable: true,
           width: 150
         },
@@ -142,6 +144,18 @@ class WorkerList extends localize(i18next)(PageView) {
           name: 'type',
           header: i18next.t('field.type'),
           record: { editable: true, align: 'left', codeName: 'WORKER_TYPES' },
+          imex: {
+            header: i18next.t('field.type'),
+            key: 'type',
+            width: 50,
+            type: 'array',
+            arrData: this._workerTypes.map(_workerType => {
+              return {
+                name: _workerType.name,
+                id: _workerType.name
+              }
+            })
+          },
           sortable: true,
           width: 150
         },
@@ -185,7 +199,10 @@ class WorkerList extends localize(i18next)(PageView) {
         html`
           <import-pop-up
             .records=${records}
-            .config=${this.config}
+            .config=${{
+              rows: this.config.rows,
+              columns: [...this.config.columns.filter(column => column.imex !== undefined)]
+            }}
             .importHandler="${this.importHandler.bind(this)}"
           ></import-pop-up>
         `,
@@ -258,19 +275,8 @@ class WorkerList extends localize(i18next)(PageView) {
   }
 
   async _saveWorker() {
-    let patches = this.dataGrist.dirtyRecords
+    let patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
     if (patches && patches.length) {
-      patches = patches.map(worker => {
-        let patchField = worker.id ? { id: worker.id } : {}
-        const dirtyFields = worker.__dirtyfields__
-        for (let key in dirtyFields) {
-          patchField[key] = dirtyFields[key].after
-        }
-        patchField.cuFlag = worker.__dirty__
-
-        return patchField
-      })
-
       const response = await client.query({
         query: gql`
             mutation {
@@ -336,7 +342,34 @@ class WorkerList extends localize(i18next)(PageView) {
   }
 
   _exportableData() {
-    return this.dataGrist.exportRecords()
+    let records = []
+    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+      records = this.dataGrist.selected
+    } else {
+      records = this.dataGrist.data.records
+    }
+
+    var headerSetting = this.dataGrist._config.columns
+      .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+      .map(column => {
+        return column.imex
+      })
+
+    var data = records.map(item => {
+      return {
+        id: item.id,
+        ...this._columns
+          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+          .reduce((record, column) => {
+            record[column.imex.key] = column.imex.key
+              .split('.')
+              .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
+            return record
+          }, {})
+      }
+    })
+
+    return { header: headerSetting, data: data }
   }
 }
 

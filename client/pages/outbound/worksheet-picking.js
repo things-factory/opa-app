@@ -149,28 +149,28 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           name: 'batchId',
           header: i18next.t('field.batch_no'),
           record: { align: 'center' },
-          width: 150
+          width: 100
         },
         {
           type: 'string',
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
           record: { align: 'center' },
-          width: 150
+          width: 100
         },
         {
           type: 'object',
-          name: 'warehouse',
-          header: i18next.t('field.warehouse'),
+          name: 'product',
+          header: i18next.t('field.product'),
           record: { align: 'center' },
-          width: 150
+          width: 350
         },
         {
           type: 'object',
           name: 'location',
           header: i18next.t('field.location'),
           record: { align: 'center' },
-          width: 150
+          width: 100
         },
         {
           type: 'string',
@@ -180,22 +180,16 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           width: 80
         },
         {
-          type: 'object',
-          name: 'product',
-          header: i18next.t('field.product'),
-          width: 250
-        },
-        {
           type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: { align: 'center' },
-          width: 120
+          width: 100
         },
         {
           type: 'integer',
           name: 'qty',
-          header: i18next.t('field.qty'),
+          header: i18next.t('field.available_qty'),
           record: { align: 'center' },
           width: 60
         },

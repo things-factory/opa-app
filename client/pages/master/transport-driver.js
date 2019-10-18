@@ -1,12 +1,12 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import { openPopup } from '@things-factory/layout-base'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { openPopup } from '@things-factory/layout-base'
-import '../components/import-pop-up'
 import { CustomAlert } from '../../utils/custom-alert'
+import '../components/import-pop-up'
 
 class TransportDriver extends localize(i18next)(PageView) {
   static get properties() {
@@ -99,7 +99,7 @@ class TransportDriver extends localize(i18next)(PageView) {
         label: i18next.t('field.name'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.driver_code'),
@@ -111,7 +111,7 @@ class TransportDriver extends localize(i18next)(PageView) {
         label: i18next.t('field.description'),
         name: 'description',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       }
     ]
 
@@ -127,9 +127,9 @@ class TransportDriver extends localize(i18next)(PageView) {
           header: i18next.t('field.name'),
           record: {
             editable: true,
-            align: 'left',
-            imexSetting: { header: 'Name', key: 'name', width: 50, type: 'string' }
+            align: 'left'
           },
+          imex: { header: i18next.t('field.name'), key: 'name', width: 50, type: 'string' },
           sortable: true,
           width: 250
         },
@@ -141,16 +141,16 @@ class TransportDriver extends localize(i18next)(PageView) {
             editable: true,
             options: {
               queryName: 'bizplaces'
-            },
-            imexSetting: {
-              header: 'Bizplace',
-              key: 'bizplace.name',
-              width: 50,
-              type: 'array',
-              arrData: this.bizplace
             }
           },
-          header: i18next.t('field.customer'),
+          imex: {
+            header: i18next.t('field.branch'),
+            key: 'bizplace.name',
+            width: 50,
+            type: 'array',
+            arrData: this.bizplace
+          },
+          header: i18next.t('field.branch'),
           width: 200
         },
         {
@@ -159,9 +159,9 @@ class TransportDriver extends localize(i18next)(PageView) {
           header: i18next.t('field.description'),
           record: {
             editable: true,
-            align: 'center',
-            imexSetting: { header: 'Description', key: 'description', width: 100, type: 'string' }
+            align: 'center'
           },
+          imex: { header: i18next.t('field.description'), key: 'description', width: 100, type: 'string' },
           sortable: true,
           width: 200
         },
@@ -170,6 +170,7 @@ class TransportDriver extends localize(i18next)(PageView) {
           name: 'driverCode',
           header: i18next.t('field.driver_code'),
           record: { editable: true, align: 'center' },
+          imex: { header: i18next.t('field.driver_code'), key: 'driverCode', width: 100, type: 'string' },
           sortable: true,
           width: 80
         },
@@ -210,7 +211,10 @@ class TransportDriver extends localize(i18next)(PageView) {
         html`
           <import-pop-up
             .records=${records}
-            .config=${this.config}
+            .config=${{
+              rows: this.config.rows,
+              columns: [...this.config.columns.filter(column => column.imex !== undefined)]
+            }}
             .importHandler="${this.importHandler.bind(this)}"
           ></import-pop-up>
         `,
@@ -261,6 +265,14 @@ class TransportDriver extends localize(i18next)(PageView) {
   }
 
   async importHandler(patches) {
+    patches = patches.map(patch => {
+      if (patch.bizplace) {
+        delete patch.bizplace.__seq__
+        delete patch.bizplace.__origin__
+        delete patch.bizplace.__selected__
+      }
+      return patch
+    })
     const response = await client.query({
       query: gql`
           mutation {
@@ -299,19 +311,16 @@ class TransportDriver extends localize(i18next)(PageView) {
   }
 
   async _saveTransportDriver() {
-    let patches = this.dataGrist.dirtyRecords
+    let patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
     if (patches && patches.length) {
-      patches = patches.map(transportDriver => {
-        let patchField = transportDriver.id ? { id: transportDriver.id } : {}
-        const dirtyFields = transportDriver.__dirtyfields__
-        for (let key in dirtyFields) {
-          patchField[key] = dirtyFields[key].after
+      patches = patches.map(patch => {
+        if (patch.bizplace) {
+          delete patch.bizplace.__seq__
+          delete patch.bizplace.__origin__
+          delete patch.bizplace.__selected__
         }
-        patchField.cuFlag = transportDriver.__dirty__
-
-        return patchField
+        return patch
       })
-
       const response = await client.query({
         query: gql`
           mutation {
@@ -383,25 +392,20 @@ class TransportDriver extends localize(i18next)(PageView) {
     } else {
       records = this.dataGrist.data.records
     }
-    // data structure // { //    header: {headerName, fieldName, type = string, arrData = []} //    data: [{fieldName: value}] // }
 
     var headerSetting = this.dataGrist._config.columns
-      .filter(
-        column => column.type !== 'gutter' && column.record !== undefined && column.record.imexSetting !== undefined
-      )
+      .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
       .map(column => {
-        return column.record.imexSetting
+        return column.imex
       })
 
     var data = records.map(item => {
       return {
         id: item.id,
         ...this._columns
-          .filter(
-            column => column.type !== 'gutter' && column.record !== undefined && column.record.imexSetting !== undefined
-          )
+          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
           .reduce((record, column) => {
-            record[column.record.imexSetting.key] = column.record.imexSetting.key
+            record[column.imex.key] = column.imex.key
               .split('.')
               .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
             return record

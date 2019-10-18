@@ -1,12 +1,12 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import { openPopup } from '@things-factory/layout-base'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
-import { openPopup } from '@things-factory/layout-base'
 import { css, html } from 'lit-element'
-import '../components/import-pop-up'
 import { CustomAlert } from '../../utils/custom-alert'
+import '../components/import-pop-up'
 
 class VasList extends localize(i18next)(PageView) {
   static get properties() {
@@ -90,13 +90,13 @@ class VasList extends localize(i18next)(PageView) {
         label: i18next.t('field.name'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.description'),
         name: 'description',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       }
     ]
 
@@ -111,6 +111,7 @@ class VasList extends localize(i18next)(PageView) {
           name: 'name',
           header: i18next.t('field.name'),
           record: { editable: true, align: 'left' },
+          imex: { header: i18next.t('field.name'), key: 'name', width: 50, type: 'string' },
           sortable: true,
           width: 150
         },
@@ -119,22 +120,21 @@ class VasList extends localize(i18next)(PageView) {
           name: 'description',
           header: i18next.t('field.description'),
           record: { editable: true, align: 'left' },
+          imex: { header: i18next.t('field.description'), key: 'description', width: 50, type: 'string' },
           sortable: true,
           width: 200
-        },
-        {
-          type: 'string',
-          name: 'currency',
-          header: i18next.t('field.currency'),
-          record: { editable: true, align: 'center' },
-          sortable: true,
-          width: 80
         },
         {
           type: 'string',
           name: 'operationGuideType',
           header: i18next.t('field.operation_guide_type'),
           record: { editable: true, align: 'center' },
+          imex: {
+            header: i18next.t('field.operation_guide_type'),
+            key: 'operationGuideType',
+            width: 50,
+            type: 'string'
+          },
           sortable: true,
           width: 160
         },
@@ -143,14 +143,25 @@ class VasList extends localize(i18next)(PageView) {
           name: 'operationGuide',
           header: i18next.t('field.operation_guide'),
           record: { editable: true, align: 'center' },
+          imex: { header: i18next.t('field.operation_guide'), key: 'operationGuide', width: 50, type: 'string' },
           sortable: true,
           width: 160
+        },
+        {
+          type: 'string',
+          name: 'currency',
+          header: i18next.t('field.currency'),
+          record: { editable: true, align: 'center' },
+          imex: { header: i18next.t('field.currency'), key: 'currency', width: 50, type: 'string' },
+          sortable: true,
+          width: 80
         },
         {
           type: 'float',
           name: 'defaultPrice',
           header: i18next.t('field.default_price'),
           record: { editable: true, align: 'center' },
+          imex: { header: i18next.t('field.default_price'), key: 'defaultPrice', width: 50, type: 'float' },
           sortable: true,
           width: 60
         },
@@ -194,7 +205,10 @@ class VasList extends localize(i18next)(PageView) {
         html`
           <import-pop-up
             .records=${records}
-            .config=${this.config}
+            .config=${{
+              rows: this.config.rows,
+              columns: [...this.config.columns.filter(column => column.imex !== undefined)]
+            }}
             .importHandler="${this.importHandler.bind(this)}"
           ></import-pop-up>
         `,
@@ -244,6 +258,11 @@ class VasList extends localize(i18next)(PageView) {
   }
 
   async importHandler(patches) {
+    patches.map(vas => {
+      if (vas.defaultPrice) {
+        vas.defaultPrice = parseFloat(vas.defaultPrice)
+      }
+    })
     const response = await client.query({
       query: gql`
           mutation {
@@ -270,20 +289,12 @@ class VasList extends localize(i18next)(PageView) {
   }
 
   async _saveVas() {
-    let patches = this.dataGrist.dirtyRecords
+    var patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
     if (patches && patches.length) {
-      patches = patches.map(vas => {
-        let patchField = vas.id ? { id: vas.id } : {}
-        const dirtyFields = vas.__dirtyfields__
-        for (let key in dirtyFields) {
-          if (key === 'defaultPrice') {
-            patchField[key] = parseFloat(dirtyFields[key].after)
-          } else {
-            patchField[key] = dirtyFields[key].after
-          }
+      patches.map(vas => {
+        if (vas.defaultPrice) {
+          vas.defaultPrice = parseFloat(vas.defaultPrice)
         }
-        patchField.cuFlag = vas.__dirty__
-        return patchField
       })
 
       const response = await client.query({
@@ -351,7 +362,34 @@ class VasList extends localize(i18next)(PageView) {
   }
 
   _exportableData() {
-    return this.dataGrist.exportRecords()
+    let records = []
+    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+      records = this.dataGrist.selected
+    } else {
+      records = this.dataGrist.data.records
+    }
+
+    var headerSetting = this.dataGrist._config.columns
+      .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+      .map(column => {
+        return column.imex
+      })
+
+    var data = records.map(item => {
+      return {
+        id: item.id,
+        ...this._columns
+          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+          .reduce((record, column) => {
+            record[column.imex.key] = column.imex.key
+              .split('.')
+              .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
+            return record
+          }, {})
+      }
+    })
+
+    return { header: headerSetting, data: data }
   }
 }
 

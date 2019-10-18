@@ -186,38 +186,38 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
               }
             })
         ],
-        props: { searchOper: 'like' },
+        props: { searchOper: 'i_like' },
         attrs: ['custom']
       },
       {
         label: i18next.t('field.location'),
         name: 'locationName',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.zone'),
         name: 'zone',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.pallet_id'),
         name: 'palletId',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.batch_no'),
         name: 'batchId',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.product'),
         name: 'productName',
         type: 'text',
-        props: { searchOper: 'eq' }
+        props: { searchOper: 'i_like' }
       }
     ]
   }

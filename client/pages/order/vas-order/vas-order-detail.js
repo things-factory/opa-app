@@ -259,23 +259,22 @@ class VasOrderDetail extends localize(i18next)(PageView) {
         cancelButton: { text: i18next.t('button.cancel') }
       })
 
-      await this._executeRevertTransactions()
+      if (!result.value) return
 
-      if (result.value) {
-        const response = await client.query({
-          query: gql`
+      await this._executeRevertTransactions()
+      const response = await client.query({
+        query: gql`
             mutation {
               deleteVasOrder(${gqlBuilder.buildArgs({
                 name: this._vasNo
               })}) 
             }
           `
-        })
+      })
 
-        if (!response.errors) {
-          this._showToast({ message: i18next.t('text.vas_order_has_been_deleted') })
-          navigate(`vas_orders`)
-        }
+      if (!response.errors) {
+        this._showToast({ message: i18next.t('text.vas_order_has_been_deleted') })
+        navigate(`vas_orders`)
       }
     } catch (e) {
       this._showToast(e)

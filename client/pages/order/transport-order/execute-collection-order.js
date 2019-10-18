@@ -1,7 +1,7 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, PageView } from '@things-factory/shell'
+import { client, gqlBuilder, PageView, isMobileDevice } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
@@ -13,6 +13,7 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
       _coNo: String,
       _status: String,
       _path: String,
+      _loadWeight: String,
       transportDetail: Object
     }
   }
@@ -81,8 +82,8 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
 
   constructor() {
     super()
-    this._transportOptions = []
     this._path = ''
+    this._loadWeight = ''
     this.transportDetail = { records: [] }
   }
 
@@ -130,7 +131,6 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.transportOrderDetail}
           .data="${this.transportDetail}"
-          @record-change="${this._onProductChangeHandler.bind(this)}"
         ></data-grist>
       </div>
     `
@@ -158,7 +158,7 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
             click: (columns, data, column, record, rowIndex) => {
               const newData = data.records.filter((_, idx) => idx !== rowIndex)
               this.transportDetail = { ...this.transportDetail, records: newData }
-              this.transportOrderDetail.dirtyData.records = newData
+              this.transportDetailGrist.dirtyData.records = newData
             }
           }
         },
@@ -198,14 +198,14 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
           name: 'transportVehicle',
           header: i18next.t('field.truck_no'),
           record: { editable: true, align: 'center', options: { queryName: 'transportVehicles' } },
-          width: 150
+          width: 200
         },
         {
           type: 'float',
-          name: 'assginedLoad',
+          name: 'assignedLoad',
           header: i18next.t('field.assigned_load'),
           record: { editable: true, align: 'center', options: { min: 0 } },
-          width: 80
+          width: 100
         }
       ]
     }
@@ -250,7 +250,9 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const collectionOrder = response.data.collectionOrder
+
       this._path = collectionOrder.attachments[0].path
+      this._loadWeight = collectionOrder.loadWeight
       this._status = collectionOrder.status
       this._fillupCOForm(collectionOrder)
     }
@@ -274,6 +276,8 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
 
   async _executeCollectionOrder() {
     try {
+      this._validateTransport()
+
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.dispatch_collection_order'),
@@ -286,8 +290,7 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
       }
 
       let args = {
-        name: this._coNo,
-        orderDetails: this._getDriverVehicle()
+        orderInfo: { ...this._getDriverVehicle() }
       }
 
       const response = await client.query({
@@ -310,7 +313,39 @@ class ExecuteCollectionOrder extends localize(i18next)(PageView) {
     }
   }
 
-  _getDriverVehicle() {}
+  _validateTransport() {
+    this.transportDetailGrist.commit()
+    // no records
+    if (!this.transportDetailGrist.data.records || !this.transportDetailGrist.data.records.length)
+      throw new Error(i18next.t('text.no_drivers_and_trucks'))
+
+    // required field (driver, truck and assigned load)
+    if (
+      this.transportDetailGrist.data.records.filter(
+        record => !record.transportDriver || !record.transportVehicle || !record.assignedLoad
+      ).length
+    )
+      throw new Error(i18next.t('text.empty_value_in_list'))
+  }
+
+  _getDriverVehicle() {
+    let orderInfo = { name: this._coNo }
+    orderInfo.transportOrderDetails = this.transportDetailGrist.data.records.map(record => {
+      delete record.transportDriver.__origin__
+      delete record.transportDriver.__seq__
+      delete record.transportDriver.driverCode
+      delete record.transportDriver.__selected__
+      delete record.transportVehicle.__origin__
+      delete record.transportVehicle.__seq__
+      delete record.transportVehicle.__selected__
+      delete record.transportVehicle.regNumber
+      parseFloat(record.assignedLoad)
+
+      return { ...record }
+    })
+
+    return orderInfo
+  }
 
   _showToast({ type, message }) {
     document.dispatchEvent(

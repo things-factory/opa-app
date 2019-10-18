@@ -1,3 +1,4 @@
+import { USBPrinter } from '@things-factory/barcode-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -6,10 +7,10 @@ import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } 
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
-import './generate-location-list'
-import { USBPrinter } from '@things-factory/barcode-base'
 import { LOCATION_LABEL_SETTING_KEY } from '../../setting-constants'
 import { CustomAlert } from '../../utils/custom-alert'
+import './generate-location-list'
+import '../components/import-pop-up'
 
 class LocationList extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -71,11 +72,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.location' + (this._warehouseName ? ' (' + this._warehouseName + ')' : ''), {
-        state: {
-          text: this._warehouseName
-        }
-      }),
+      title: this._warehouseName,
       actions: [
         {
           title: i18next.t('button.print_label'),
@@ -99,11 +96,11 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
         }
       ],
       exportable: {
-        name: i18next.t('title.location'),
+        name: this._warehouseName,
         data: this._exportableData.bind(this)
       },
       importable: {
-        handler: () => {}
+        handler: this._importableData.bind(this)
       }
     }
   }
@@ -122,13 +119,13 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
         label: i18next.t('field.name'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.type'),
         name: 'type',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.zone'),
@@ -158,7 +155,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
         label: i18next.t('field.status'),
         name: 'status',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       }
     ]
 
@@ -177,6 +174,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           name: 'name',
           header: i18next.t('field.name'),
           record: { editable: true, align: 'center' },
+          imex: { header: i18next.t('field.name'), key: 'name', width: 50, type: 'string' },
           sortable: true,
           width: 150
         },
@@ -185,6 +183,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           name: 'type',
           header: i18next.t('field.type'),
           record: { editable: true, align: 'center' },
+          imex: { header: i18next.t('field.type'), key: 'type', width: 50, type: 'string' },
           sortable: true,
           width: 150
         },
@@ -193,6 +192,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           name: 'zone',
           header: i18next.t('field.zone'),
           record: { editable: true, align: 'center' },
+          imex: { header: i18next.t('field.zone'), key: 'zone', width: 50, type: 'string' },
           sortable: true,
           width: 80
         },
@@ -201,6 +201,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           name: 'row',
           header: i18next.t('field.row'),
           record: { editable: true, align: 'center' },
+          imex: { header: i18next.t('field.row'), key: 'row', width: 50, type: 'string' },
           sortable: true,
           width: 80
         },
@@ -209,6 +210,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           name: 'column',
           header: i18next.t('field.column'),
           record: { editable: true, align: 'center' },
+          imex: { header: i18next.t('field.column'), key: 'column', width: 50, type: 'string' },
           sortable: true,
           width: 80
         },
@@ -218,6 +220,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           name: 'shelf',
           header: i18next.t('field.shelf'),
           record: { editable: true, align: 'center' },
+          imex: { header: i18next.t('field.shelf'), key: 'shelf', width: 50, type: 'string' },
           sortable: true,
           width: 80
         },
@@ -226,6 +229,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           name: 'status',
           header: i18next.t('field.status'),
           record: { editable: true, align: 'center' },
+          imex: { header: i18next.t('field.status'), key: 'status', width: 50, type: 'string' },
           sortable: true,
           width: 80
         },
@@ -255,6 +259,28 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
 
   get dataGrist() {
     return this.shadowRoot.querySelector('data-grist')
+  }
+
+  _importableData(records) {
+    setTimeout(() => {
+      openPopup(
+        html`
+          <import-pop-up
+            .records=${records}
+            .config=${{
+              rows: this.config.rows,
+              columns: [...this.config.columns.filter(column => column.imex !== undefined)]
+            }}
+            .importHandler="${this.importHandler.bind(this)}"
+          ></import-pop-up>
+        `,
+        {
+          backdrop: true,
+          size: 'large',
+          title: i18next.t('title.import')
+        }
+      )
+    }, 500)
   }
 
   async fetchHandler({ page, limit, sorters = [] }) {
@@ -305,21 +331,48 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _saveLocation() {
-    let patches = this.dataGrist.dirtyRecords
+  async importHandler(patches) {
     if (patches && patches.length) {
-      patches = patches.map(location => {
-        let patchField = location.id ? { id: location.id } : {}
-        const dirtyFields = location.__dirtyfields__
-        for (let key in dirtyFields) {
-          patchField[key] = dirtyFields[key].after
-        }
-        patchField.cuFlag = location.__dirty__
+      patches = patches.map(patch => {
         if (this._warehouseId) {
-          patchField.warehouse = { id: this._warehouseId }
+          patch.warehouse = { id: this._warehouseId }
         }
+        return patch
+      })
+      const response = await client.query({
+        query: gql`
+          mutation {
+            updateMultipleLocation(${gqlBuilder.buildArgs({
+              patches
+            })}) {
+              name
+            }
+          }
+        `
+      })
 
-        return patchField
+      if (!response.errors) {
+        history.back()
+        this.dataGrist.fetch()
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              message: i18next.t('text.data_imported_successfully')
+            }
+          })
+        )
+      }
+    }
+  }
+
+  async _saveLocation() {
+    let patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
+    if (patches && patches.length) {
+      patches = patches.map(patch => {
+        if (this._warehouseId) {
+          patch.warehouse = { id: this._warehouseId }
+        }
+        return patch
       })
 
       const response = await client.query({
@@ -500,7 +553,34 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _exportableData() {
-    return this.dataGrist.exportRecords()
+    let records = []
+    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+      records = this.dataGrist.selected
+    } else {
+      records = this.dataGrist.data.records
+    }
+
+    var headerSetting = this.dataGrist._config.columns
+      .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+      .map(column => {
+        return column.imex
+      })
+
+    var data = records.map(item => {
+      return {
+        id: item.id,
+        ...this._columns
+          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+          .reduce((record, column) => {
+            record[column.imex.key] = column.imex.key
+              .split('.')
+              .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
+            return record
+          }, {})
+      }
+    })
+
+    return { header: headerSetting, data: data }
   }
 
   stateChanged(state) {

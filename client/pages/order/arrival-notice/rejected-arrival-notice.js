@@ -4,6 +4,8 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import '../../components/popup-note'
+import '../../components/vas-relabel'
 import { ORDER_STATUS } from '../constants/order'
 
 class RejectedArrivalNotice extends localize(i18next)(PageView) {
@@ -15,7 +17,9 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
-      vasData: Object
+      vasData: Object,
+      _template: Object,
+      _rejectReason: String
     }
   }
 
@@ -28,6 +32,13 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
           flex-direction: column;
           overflow-x: auto;
         }
+        popup-note {
+          flex: 1;
+        }
+        .container {
+          display: flex;
+          flex: 4;
+        }
         .grist {
           background-color: var(--main-section-background-color);
           display: flex;
@@ -38,6 +49,10 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
         data-grist {
           overflow-y: hidden;
           flex: 1;
+        }
+        .guide-container {
+          max-width: 30vw;
+          display: flex;
         }
         h2 {
           padding: var(--subtitle-padding);
@@ -79,6 +94,11 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
 
   render() {
     return html`
+      <popup-note
+        .title="${i18next.t('title.reject_reason')}"
+        .value="${this._rejectReason}"
+        .readonly="${true}"
+      ></popup-note>
       <form name="arrivalNotice" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.gan_no')}: ${this._ganNo}</legend>
@@ -116,54 +136,29 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
         >
       </form>
 
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product')}</h2>
+      <div class="container">
+        <div class="grist">
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product')}</h2>
 
-        <data-grist
-          id="product-grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.productGristConfig}
-          .data="${this.productData}"
-        ></data-grist>
-      </div>
+          <data-grist
+            id="product-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.productGristConfig}
+            .data="${this.productData}"
+          ></data-grist>
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
 
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
+          <data-grist
+            id="vas-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.vasGristConfig}
+            .data="${this.vasData}"
+          ></data-grist>
+        </div>
 
-        <data-grist
-          id="vas-grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.vasGristConfig}
-          .data="${this.vasData}"
-        ></data-grist>
-      </div>
-
-      <div class="co-form-container" ?hidden="${this._ownTransport}">
-        <form name="collectionOrder" class="multi-column-form">
-          <fieldset>
-            <legend>${i18next.t('title.collection_order')}</legend>
-            <label>${i18next.t('label.issued_co_no')}</label>
-            <input name="name" readonly />
-
-            <label>${i18next.t('label.collection_date')}</label>
-            <input name="collectionDate" type="date" readonly />
-
-            <label>${i18next.t('label.destination')}</label>
-            <input name="from" readonly />
-
-            <label>${i18next.t('label.cargo_type')}</label>
-            <input name="cargoType" placeholder="${i18next.t('label.bag_crates_carton_ibc_drums_pails')}" />
-
-            <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
-            <input name="loadWeight" type="number" min="0" readonly />
-
-            <input name="urgency" type="checkbox" readonly />
-            <label>${i18next.t('label.urgent_collection')}</label>
-
-            <label>${i18next.t('label.download_co')}</label>
-            <a href="/attachment/${this._path}" target="_blank"><mwc-icon>cloud_download</mwc-icon></a>
-          </fieldset>
-        </form>
+        <div class="guide-container">
+          ${this._template}
+        </div>
       </div>
     `
   }
@@ -181,16 +176,8 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('form[name=arrivalNotice]')
   }
 
-  get collectionOrderForm() {
-    return this.shadowRoot.querySelector('form[name=collectionOrder]')
-  }
-
   get _ownTransportInput() {
     return this.shadowRoot.querySelector('input[name=ownTransport]')
-  }
-
-  get _collectionDateInput() {
-    return this.shadowRoot.querySelector('input[name=collectionDate]')
   }
 
   get productGrist() {
@@ -268,7 +255,20 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
 
     this.vasGristConfig = {
       pagination: { infinite: true },
-      rows: { selectable: { multiple: true }, appendable: false },
+      rows: {
+        selectable: { multiple: true },
+        appendable: false,
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            if (record && record.vas && record.vas.operationGuideType === 'template') {
+              this._template = document.createElement(record.vas.operationGuide)
+              this._template.record = { ...record, operationGuide: JSON.parse(record.operationGuide) }
+            } else {
+              this._template = null
+            }
+          }
+        }
+      },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -318,6 +318,8 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
             deliveryOrderNo
             status
             truckNo
+            importCargo
+            remark
             orderProducts {
               batchId
               product {
@@ -335,26 +337,14 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
               vas {
                 name
                 description
+                operationGuide
+                operationGuideType
               }
               batchId
               remark
-            }
-            collectionOrder {
-              name
-              collectionDate
-              refNo
-              from
-              loadWeight
-              cargoType
-              urgency
               status
-              attachments {
-                id
-                name
-                refBy
-                path
-              }
-            }   
+              operationGuide
+            }
           }
         }
       `
@@ -362,18 +352,14 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const arrivalNotice = response.data.arrivalNotice
-      const collectionOrder = arrivalNotice.collectionOrder
       const orderProducts = arrivalNotice.orderProducts
       const orderVass = arrivalNotice.orderVass
 
+      this._rejectReason = arrivalNotice.remark
       this._ownTransport = arrivalNotice.ownTransport
-      if (collectionOrder) {
-        this._path = collectionOrder.attachments[0].path
-      }
       this._status = arrivalNotice.status
       this._fillupANForm(arrivalNotice)
 
-      if (!this._ownTransport) this._fillupCOForm(collectionOrder)
       this.productData = { records: orderProducts }
       this.vasData = { records: orderVass }
     }
@@ -381,10 +367,6 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
 
   _fillupANForm(data) {
     this._fillupForm(this.arrivalNoticeForm, data)
-  }
-
-  _fillupCOForm(data) {
-    this._fillupForm(this.collectionOrderForm, data)
   }
 
   _fillupForm(form, data) {

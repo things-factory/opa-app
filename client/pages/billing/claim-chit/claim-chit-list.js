@@ -76,7 +76,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
         label: i18next.t('label.name'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'i_like', placeholder: i18next.t('label.name') }
       }
     ]
 

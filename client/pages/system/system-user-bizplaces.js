@@ -77,7 +77,7 @@ class SystemUserBizplaces extends connect(store)(localize(i18next)(PageView)) {
         label: i18next.t('field.name'),
         type: 'text',
         props: {
-          searchOper: 'like'
+          searchOper: 'i_like'
         }
       },
       {
@@ -85,7 +85,7 @@ class SystemUserBizplaces extends connect(store)(localize(i18next)(PageView)) {
         label: i18next.t('field.description'),
         type: 'text',
         props: {
-          searchOper: 'like'
+          searchOper: 'i_like'
         }
       },
       {
@@ -93,7 +93,7 @@ class SystemUserBizplaces extends connect(store)(localize(i18next)(PageView)) {
         label: i18next.t('field.email'),
         type: 'text',
         props: {
-          searchOper: 'like'
+          searchOper: 'i_like'
         }
       }
     ]

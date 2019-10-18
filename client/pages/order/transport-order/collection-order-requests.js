@@ -78,13 +78,13 @@ class CollectionOrderRequests extends localize(i18next)(PageView) {
         label: i18next.t('field.co_no'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.collection_date'),
         name: 'collectionDate',
         type: 'date',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.status'),

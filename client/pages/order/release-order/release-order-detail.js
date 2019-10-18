@@ -202,31 +202,32 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'close',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              const newData = data.records.filter((_, idx) => idx !== rowIndex)
-              this.inventoryData = { ...this.inventoryData, records: newData }
-              this.inventoryGrist.dirtyData.records = newData
-              this._updateBatchList()
-            }
-          }
-        },
-        {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_no'),
           record: { align: 'center' },
-          width: 150
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'name',
+          header: i18next.t('field.pallet_id'),
+          record: { align: 'center' },
+          width: 100
         },
         {
           type: 'object',
           name: 'product',
-          header: i18next.t('field.release_inventory_list'),
+          header: i18next.t('field.product'),
           record: { align: 'center' },
-          width: 250
+          width: 350
+        },
+        {
+          type: 'object',
+          name: 'location',
+          header: i18next.t('field.location'),
+          record: { align: 'center' },
+          width: 150
         },
         {
           type: 'code',

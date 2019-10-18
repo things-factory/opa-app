@@ -103,7 +103,7 @@ class TransportSummaryReport extends connect(store)(localize(i18next)(PageView))
         label: i18next.t('field.driver_name'),
         name: 'driver_name',
         props: {
-          searchOper: 'like'
+          searchOper: 'i_like'
         }
       },
       {
@@ -155,13 +155,13 @@ class TransportSummaryReport extends connect(store)(localize(i18next)(PageView))
         label: i18next.t('field.start_date'),
         name: 'startDate',
         type: 'datetime-local',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.end_date'),
         name: 'endDate',
         type: 'datetime-local',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       }
     ]
     this._claimDetailGristConfig = {

@@ -23,6 +23,7 @@ class VasRelabel extends localize(i18next)(LitElement) {
         .container {
           display: flex;
           flex-direction: column;
+          margin: 0px 20px;
           flex: 1;
         }
         .label-preview {
@@ -176,6 +177,7 @@ class VasRelabel extends localize(i18next)(LitElement) {
   }
 
   _openProductPopup() {
+    if (!this._isEditable) return
     if (this.record.status === ORDER_VAS_STATUS.PENDING.value) return
     const queryName = 'products'
     const basicArgs = {

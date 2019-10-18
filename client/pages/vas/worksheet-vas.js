@@ -37,6 +37,9 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
           flex-direction: column;
           overflow-x: auto;
         }
+        .form-container {
+          display: flex;
+        }
         barcode-tag {
           width: 100px;
           height: 100px;
@@ -100,48 +103,41 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
 
   render() {
     return html`
-      <form class="multi-column-form">
-        <fieldset>
-          <legend>${i18next.t('title.vas')}</legend>
-          <label ?hidden="${this._orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}"
-            >${i18next.t('label.arrival_notice')}</label
-          >
-          <input ?hidden="${this._orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}" name="arrivalNotice" readonly />
+      <div class="form-container">
+        <form class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.vas')}</legend>
+            <label ?hidden="${this._orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}"
+              >${i18next.t('label.arrival_notice')}</label
+            >
+            <input ?hidden="${this._orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}" name="arrivalNotice" readonly />
 
-          <label ?hidden="${this._orderType !== ORDER_TYPES.RELEASE_OF_GOODS.value}"
-            >${i18next.t('label.release_order')}</label
-          >
-          <input ?hidden="${this._orderType !== ORDER_TYPES.RELEASE_OF_GOODS.value}" name="releaseGood" readonly />
+            <label ?hidden="${this._orderType !== ORDER_TYPES.RELEASE_OF_GOODS.value}"
+              >${i18next.t('label.release_order')}</label
+            >
+            <input ?hidden="${this._orderType !== ORDER_TYPES.RELEASE_OF_GOODS.value}" name="releaseGood" readonly />
 
-          <label ?hidden="${this._orderType !== ORDER_TYPES.VAS_ORDER.value}">${i18next.t('label.vas_order')}</label>
-          <input ?hidden="${this._orderType !== ORDER_TYPES.VAS_ORDER.value}" name="vasOrder" readonly />
+            <label ?hidden="${this._orderType !== ORDER_TYPES.VAS_ORDER.value}">${i18next.t('label.vas_order')}</label>
+            <input ?hidden="${this._orderType !== ORDER_TYPES.VAS_ORDER.value}" name="vasOrder" readonly />
 
-          <label>${i18next.t('label.customer')}</label>
-          <input name="bizplace" readonly />
+            <label>${i18next.t('label.customer')}</label>
+            <input name="bizplace" readonly />
 
-          <label>${i18next.t('label.status')}</label>
-          <select name="status" disabled>
-            ${this._statusOptions.map(
-              status => html`
-                <option value="${status.name}" ?selected="${this._worksheetStatus === status.name}"
-                  >${i18next.t(`label.${status.description}`)}</option
-                >
-              `
-            )}
-          </select>
+            <label>${i18next.t('label.status')}</label>
+            <select name="status" disabled>
+              ${this._statusOptions.map(
+                status => html`
+                  <option value="${status.name}" ?selected="${this._worksheetStatus === status.name}"
+                    >${i18next.t(`label.${status.description}`)}</option
+                  >
+                `
+              )}
+            </select>
+          </fieldset>
+        </form>
 
-          <label>${i18next.t(`label.order_qr_code`)}</label>
-          <span center custom-input ?hidden="${this._orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}">
-            <barcode-tag bcid="qrcode" .value=${this._ganNo}></barcode-tag>
-          </span>
-          <span center custom-input ?hidden="${this._orderType !== ORDER_TYPES.RELEASE_OF_GOODS.value}">
-            <barcode-tag bcid="qrcode" .value=${this._roNo}></barcode-tag>
-          </span>
-          <span center custom-input ?hidden="${this._orderType !== ORDER_TYPES.VAS_ORDER.value}">
-            <barcode-tag bcid="qrcode" .value=${this._voNo}></barcode-tag>
-          </span>
-        </fieldset>
-      </form>
+        <barcode-tag bcid="qrcode" .value=${this._orderNo}></barcode-tag>
+      </div>
 
       <div class="container">
         <div class="grist">
@@ -234,6 +230,24 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
 
   get grist() {
     return this.shadowRoot.querySelector('data-grist')
+  }
+
+  get _orderNo() {
+    let orderNo
+    switch (this._orderType) {
+      case ORDER_TYPES.ARRIVAL_NOTICE.value:
+        orderNo = this._ganNo
+        break
+
+      case ORDER_TYPES.RELEASE_OF_GOODS.value:
+        orderNo = this._roNo
+        break
+      case ORDER_TYPES.VAS_ORDER.value:
+        orderNo = this._voNo
+        break
+    }
+
+    return orderNo
   }
 
   async fetchWorksheet() {

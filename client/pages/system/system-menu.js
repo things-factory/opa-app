@@ -88,13 +88,13 @@ class SystemMenu extends localize(i18next)(PageView) {
         name: 'name',
         label: i18next.t('label.name'),
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         name: 'description',
         label: i18next.t('label.description'),
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       }
     ]
 
