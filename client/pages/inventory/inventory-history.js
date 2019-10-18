@@ -167,7 +167,7 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
           label: i18next.t('field.product'),
           name: 'productName',
           type: 'text',
-          props: { searchOper: 'eq' },
+          props: { searchOper: 'like' },
           attrs: ['custom']
         }
       ]
