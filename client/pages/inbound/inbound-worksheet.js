@@ -5,7 +5,7 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { WORKSHEET_TYPE, WORKSHEET_STATUS } from './constants/worksheet'
+import { WORKSHEET_TYPE } from './constants/worksheet'
 
 class InboundWorksheet extends localize(i18next)(PageView) {
   static get styles() {
@@ -37,6 +37,7 @@ class InboundWorksheet extends localize(i18next)(PageView) {
 
   static get properties() {
     return {
+      _email: String,
       _searchFields: Array,
       config: Object,
       data: Object
@@ -74,15 +75,24 @@ class InboundWorksheet extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
-    const _worksheetTypes = await getCodeByName('WORKSHEET_TYPES')
+    const _worksheetTypes = [
+      { name: WORKSHEET_TYPE.UNLOADING.name, value: WORKSHEET_TYPE.UNLOADING.value },
+      { name: WORKSHEET_TYPE.PUTAWAY.name, value: WORKSHEET_TYPE.PUTAWAY.value }
+    ]
     const _worksheetStatus = await getCodeByName('WORKSHEET_STATUS')
 
     this._searchFields = [
       {
-        name: 'name',
-        label: i18next.t('field.name'),
+        name: 'arrivalNoticeNo',
+        label: i18next.t('field.arrival_notice'),
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
+      },
+      {
+        name: 'bizplaceName',
+        label: i18next.t('field.customer'),
+        type: 'text',
+        props: { searchOper: 'i_like' }
       },
       {
         name: 'type',
@@ -91,7 +101,7 @@ class InboundWorksheet extends localize(i18next)(PageView) {
         options: [
           { value: '' },
           ..._worksheetTypes.map(type => {
-            return { name: i18next.t(`label.${type.description}`), value: type.name }
+            return { name: i18next.t(`label.${type.name}`), value: type.value }
           })
         ],
         props: { searchOper: 'eq' }
@@ -157,14 +167,6 @@ class InboundWorksheet extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'name',
-          header: i18next.t('field.name'),
-          record: { align: 'left' },
-          sortable: true,
-          width: 180
-        },
-        {
-          type: 'string',
           name: 'type',
           header: i18next.t('field.type'),
           record: { align: 'center' },
@@ -196,14 +198,6 @@ class InboundWorksheet extends localize(i18next)(PageView) {
           width: 160
         },
         {
-          type: 'datetime',
-          name: 'updatedAt',
-          header: i18next.t('field.updated_at'),
-          record: { editable: false, align: 'center' },
-          sortable: true,
-          width: 150
-        },
-        {
           type: 'object',
           name: 'updater',
           header: i18next.t('field.updater'),
@@ -225,11 +219,14 @@ class InboundWorksheet extends localize(i18next)(PageView) {
 
   async fetchHandler({ page, limit, sorters = [] }) {
     const filters = this.searchForm.queryFilters
-    filters.push({
-      name: 'type',
-      operator: 'in',
-      value: [WORKSHEET_TYPE.UNLOADING.value, WORKSHEET_TYPE.PUTAWAY.value]
-    })
+    if (!filters.find(filter => filter.name === 'type')) {
+      filters.push({
+        name: 'type',
+        operator: 'in',
+        value: [WORKSHEET_TYPE.UNLOADING.value, WORKSHEET_TYPE.PUTAWAY.value]
+      })
+    }
+
     const response = await client.query({
       query: gql`
         query {
@@ -250,12 +247,10 @@ class InboundWorksheet extends localize(i18next)(PageView) {
                 name
                 description
               }
-              name
               type
               status
               startedAt
               endedAt
-              updatedAt
               updater {
                 name
                 description

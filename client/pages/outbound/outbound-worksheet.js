@@ -74,27 +74,20 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
-    const _worksheetTypes = await getCodeByName('WORKSHEET_TYPES')
     const _worksheetStatus = await getCodeByName('WORKSHEET_STATUS')
 
     this._searchFields = [
       {
-        name: 'name',
-        label: i18next.t('field.name'),
+        name: 'releaseGoodNo',
+        label: i18next.t('field.release_good_no'),
         type: 'text',
         props: { searchOper: 'i_like' }
       },
       {
-        name: 'type',
-        label: i18next.t('label.type'),
-        type: 'select',
-        options: [
-          { value: '' },
-          ..._worksheetTypes.map(type => {
-            return { name: i18next.t(`label.${type.description}`), value: type.name }
-          })
-        ],
-        props: { searchOper: 'eq' }
+        name: 'bizplaceName',
+        label: i18next.t('field.customer'),
+        type: 'text',
+        props: { searchOper: 'i_like' }
       },
       {
         name: 'status',
@@ -181,14 +174,6 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
           width: 160
         },
         {
-          type: 'datetime',
-          name: 'updatedAt',
-          header: i18next.t('field.updated_at'),
-          record: { editable: false, align: 'center' },
-          sortable: true,
-          width: 150
-        },
-        {
           type: 'object',
           name: 'updater',
           header: i18next.t('field.updater'),
@@ -240,7 +225,6 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
               status
               startedAt
               endedAt
-              updatedAt
               updater {
                 name
                 description
