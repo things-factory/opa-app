@@ -163,7 +163,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
               <label>${i18next.t('label.current_location')}</label>
               <input name="location" readonly />
 
-              <label>${i18next.t('label.qty')}</label>
+              <label>${i18next.t('label.available_qty')}</label>
               <input name="qty" readonly />
 
               <label>${i18next.t('label.release_qty')}</label>
@@ -183,7 +183,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
                 custom-input
               ></barcode-scanable-input>
 
-              <label style="display: ${this.scannable ? 'flex' : 'none'}">${i18next.t('label.confirmed_qty')}</label>
+              <label style="display: ${this.scannable ? 'flex' : 'none'}">${i18next.t('label.picked_qty')}</label>
               <input style="display: ${this.scannable ? 'flex' : 'none'}" type="number" min="1" name="confirmedQty" />
             </fieldset>
           </form>
@@ -246,25 +246,28 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'boolean',
           name: 'completed',
-          header: i18next.t('field.completed'),
+          header: i18next.t('field.done'),
           width: 40
         },
         {
           type: 'string',
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
+          record: { align: 'center' },
           width: 140
         },
         {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_no'),
+          record: { align: 'center' },
           width: 140
         },
         {
           type: 'integer',
           name: 'releaseQty',
           header: i18next.t('field.release_qty'),
+          record: { align: 'center' },
           width: 80
         }
       ]
@@ -455,7 +458,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     this._updateContext()
     const result = await CustomAlert({
       title: i18next.t('title.picking'),
-      text: i18next.t('text.do_you_want_to_complete'),
+      text: i18next.t('text.do_you_want_to_complete?'),
       confirmButton: { text: i18next.t('button.complete') },
       cancelButton: { text: i18next.t('button.cancel') }
     })
@@ -482,7 +485,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
       this._clearView()
       const result = await CustomAlert({
         title: i18next.t('title.picking'),
-        text: i18next.t('text.your_working_is_completed'),
+        text: i18next.t('text.picking_is_completed'),
         confirmButton: { text: i18next.t('button.confirm') }
       })
 
