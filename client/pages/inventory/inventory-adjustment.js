@@ -159,7 +159,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.product'),
           record: {
             editable: true,
-            align: 'center',
+            align: 'left',
             options: {
               queryName: 'products'
             }
