@@ -94,7 +94,7 @@ class SystemRole extends localize(i18next)(PageView) {
         label: i18next.t('field.name'),
         type: 'text',
         props: {
-          searchOper: 'like'
+          searchOper: 'i_like'
         }
       },
       {
@@ -102,7 +102,7 @@ class SystemRole extends localize(i18next)(PageView) {
         label: i18next.t('field.description'),
         type: 'text',
         props: {
-          searchOper: 'like'
+          searchOper: 'i_like'
         }
       }
     ]

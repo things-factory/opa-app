@@ -99,7 +99,7 @@ class TransportDriver extends localize(i18next)(PageView) {
         label: i18next.t('field.name'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.driver_code'),
@@ -111,7 +111,7 @@ class TransportDriver extends localize(i18next)(PageView) {
         label: i18next.t('field.description'),
         name: 'description',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       }
     ]
 

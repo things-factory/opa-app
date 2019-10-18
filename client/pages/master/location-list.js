@@ -118,13 +118,13 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
         label: i18next.t('field.name'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.type'),
         name: 'type',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.zone'),
@@ -154,7 +154,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
         label: i18next.t('field.status'),
         name: 'status',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       }
     ]
 

@@ -117,7 +117,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
         name: 'name',
         type: 'text',
         props: {
-          searchOper: 'like'
+          searchOper: 'i_like'
         }
       },
       {
@@ -125,7 +125,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
         name: 'email',
         type: 'text',
         props: {
-          searchOper: 'like'
+          searchOper: 'i_like'
         }
       },
       {
@@ -133,7 +133,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
         name: 'fax',
         type: 'text',
         props: {
-          searchOper: 'like'
+          searchOper: 'i_like'
         }
       },
       {
@@ -141,7 +141,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
         name: 'phone',
         type: 'text',
         props: {
-          searchOper: 'like'
+          searchOper: 'i_like'
         }
       },
       {
@@ -149,7 +149,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
         name: 'description',
         type: 'text',
         props: {
-          searchOper: 'like'
+          searchOper: 'i_like'
         }
       }
     ]

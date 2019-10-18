@@ -102,25 +102,25 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
         name: 'name',
         label: i18next.t('field.name'),
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         name: 'description',
         label: i18next.t('field.description'),
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         name: 'template',
         label: i18next.t('field.template'),
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         name: 'resourceUrl',
         label: i18next.t('field.resource_url'),
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       }
     ]
 

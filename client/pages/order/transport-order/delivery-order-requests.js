@@ -78,13 +78,13 @@ class DeliveryOrderRequests extends localize(i18next)(PageView) {
         label: i18next.t('field.do_no'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.delivery_date'),
         name: 'deliveryDate',
         type: 'date',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.status'),

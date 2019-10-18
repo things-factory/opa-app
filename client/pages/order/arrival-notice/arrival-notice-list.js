@@ -80,7 +80,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
         label: i18next.t('field.gan'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.eta'),

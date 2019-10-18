@@ -83,7 +83,7 @@ class VasWorksheetList extends localize(i18next)(PageView) {
         name: 'name',
         label: i18next.t('field.name'),
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         name: 'status',

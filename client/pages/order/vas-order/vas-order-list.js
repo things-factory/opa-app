@@ -77,7 +77,7 @@ class VasOrderList extends localize(i18next)(PageView) {
         label: i18next.t('field.vas_order_no'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.status'),

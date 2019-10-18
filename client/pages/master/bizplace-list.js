@@ -97,25 +97,25 @@ class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
         label: i18next.t('field.name'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.address'),
         name: 'address',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.postal_code'),
         name: 'postal_code',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.status'),
         name: 'status',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       }
     ]
 

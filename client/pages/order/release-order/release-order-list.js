@@ -80,13 +80,13 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
         label: i18next.t('field.release_order_no'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.release_date'),
         name: 'releaseDate',
         type: 'date',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.status'),

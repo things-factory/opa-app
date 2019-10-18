@@ -87,7 +87,7 @@ export class ProductOptionDetailList extends localize(i18next)(LitElement) {
         name: 'name',
         type: 'text',
         props: {
-          searchOper: 'like'
+          searchOper: 'i_like'
         }
       },
       {
@@ -95,7 +95,7 @@ export class ProductOptionDetailList extends localize(i18next)(LitElement) {
         name: 'description',
         type: 'text',
         props: {
-          searchOper: 'like'
+          searchOper: 'i_like'
         }
       }
     ]

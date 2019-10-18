@@ -94,7 +94,7 @@ class CompanyList extends localize(i18next)(PageView) {
         label: i18next.t('field.name'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.country_code'),
@@ -109,19 +109,19 @@ class CompanyList extends localize(i18next)(PageView) {
             }
           })
         ],
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.brn'),
         name: 'brn',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.status'),
         name: 'status',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       }
     ]
 

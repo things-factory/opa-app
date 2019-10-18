@@ -100,14 +100,14 @@ class ProductList extends localize(i18next)(PageView) {
         label: i18next.t('field.name'),
         name: 'name',
         props: {
-          searchOper: 'like'
+          searchOper: 'i_like'
         }
       },
       {
         label: i18next.t('field.type'),
         name: 'type',
         props: {
-          searchOper: 'like'
+          searchOper: 'i_like'
         }
       }
     ]

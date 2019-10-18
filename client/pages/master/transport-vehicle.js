@@ -97,19 +97,19 @@ class TransportVehicle extends localize(i18next)(PageView) {
         label: i18next.t('field.reg_number'),
         name: 'regNumber',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.size'),
         name: 'size',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.status'),
         name: 'status',
         type: 'text',
-        props: { searchOper: 'like' }
+        props: { searchOper: 'i_like' }
       }
     ]
 
