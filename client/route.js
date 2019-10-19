@@ -67,6 +67,10 @@ export default function route(page) {
       import('./pages/order/arrival-notice/create-arrival-notice')
       return page
 
+    case 'gan-official-view':
+      import('./pages/order/arrival-notice/gan-official-view')
+      return page
+
     case 'arrival_notices':
       import('./pages/order/arrival-notice/arrival-notice-list')
       return page

@@ -72,6 +72,10 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
           action: this._printPalletLabel.bind(this)
         }
       ],
+      printable: {
+        accept: ['preview'],
+        content: this
+      },
       exportable: {
         name: i18next.t('title.onhand_inventory'),
         data: this._exportableData.bind(this)

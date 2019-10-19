@@ -68,6 +68,10 @@ export default {
       page: 'create_arrival_notice'
     },
     {
+      tagname: 'gan-official-view',
+      page: 'gan-official-view'
+    },
+    {
       tagname: 'arrival-notice-list',
       page: 'arrival_notices'
     },
