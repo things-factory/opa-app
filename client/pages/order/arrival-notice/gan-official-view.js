@@ -15,6 +15,7 @@ class GANOfficialView extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
+          padding: 20px;
         }
 
         label {
@@ -119,6 +120,7 @@ class GANOfficialView extends localize(i18next)(PageView) {
         @media print {
           :host {
             font-size: 0.6em;
+            padding: 0;
           }
         }
       `
