@@ -23,11 +23,17 @@ class GANOfficialView extends localize(i18next)(PageView) {
         }
 
         [customer-info] {
+          width: 30%;
+          white-space: nowrap;
         }
 
         [customer-name] {
           display: inline-block;
           font-weight: bold;
+        }
+
+        [customer-info] [address] {
+          white-space: normal;
         }
 
         [title] {
