@@ -17,8 +17,103 @@ class GANOfficialView extends localize(i18next)(PageView) {
           flex-direction: column;
         }
 
+        label {
+          text-transform: capitalize;
+          text-align: right;
+        }
+
+        [customer-info] {
+        }
+
+        [customer-name] {
+          display: inline-block;
+          font-weight: bold;
+        }
+
+        [title] {
+          text-align: center;
+          font-weight: bold;
+        }
+
+        [brief] {
+          display: grid;
+          grid-template-columns: 2fr 1fr;
+        }
+
+        [brief] > div {
+          display: grid;
+          grid-template-columns: 1fr 3fr;
+          grid-gap: 10px;
+        }
+
+        [brief] > div[right] {
+          grid-auto-rows: 20px 20px;
+        }
+
+        [to-company],
+        [dnno],
+        [delivered-by] {
+          font-size: 1.2em;
+          font-weight: bold;
+          text-transform: capitalize;
+        }
+
         [detail] {
           flex: 1;
+          padding-top: 10px;
+          padding-bottom: 10px;
+        }
+
+        table {
+          width: 100%;
+          height: 100%;
+          border: 1px solid black;
+          border-spacing: 0;
+        }
+
+        th {
+          background-color: lightgray;
+        }
+
+        th,
+        td {
+          border: 1px solid black;
+        }
+
+        [agreement] {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          grid-gap: 100px;
+        }
+
+        [agreement] [customer-side] [customer-name] {
+          font-size: 1em;
+          font-weight: bold;
+        }
+
+        [signature] {
+          height: 100px;
+          border-bottom: 1px solid black;
+        }
+
+        [desc] {
+          font-style: italic;
+        }
+
+        [footer] {
+          text-align: center;
+        }
+
+        [supplier-side] [name],
+        [supplier-side] [date] {
+          margin-top: 10px;
+          margin-bottom: 10px;
+        }
+
+        @media print {
+          :host {
+            font-size: 0.6em;
+          }
         }
       `
     ]
@@ -51,40 +146,38 @@ class GANOfficialView extends localize(i18next)(PageView) {
 
     return html`
       <div customer-info>
-        <h2>${customerCompany}</h2>
+        <h2 customer-name>${customerCompany}</h2>
         <span brn>(${customerBrn})</span>
-        <span address>${customerAddress}</span>
-        <span contact>${customerContact}</span>
-        <span email>${customerEmail}</span>
+        <div address>${customerAddress}</div>
+        <div contact>${customerContact}</div>
+        <div email>${customerEmail}</div>
       </div>
 
-      <h2>DELIVERY NOTE</h2>
+      <h1 title>DELIVERY NOTE</h1>
 
       <div brief>
-        <div to>
-          <label>to</label>
-          <span to-company>${toCompany}</span>
-          <span to-address>${toAddress}</span>
-        </div>
-        <div attn>
-          <label>attn</label>
+        <div left>
+          <label>to : </label>
+          <div to>
+            <div to-company>${toCompany}</div>
+            <div to-address>${toAddress}</div>
+          </div>
+
+          <label>attn : </label>
           <span>${attn}</span>
-        </div>
-        <div tel>
-          <label>tel</label>
+
+          <label>tel : </label>
           <span>${tel}</span>
-        </div>
-        <div delivered-by>
-          <label>delivered by</label>
-          <span>${deliveredBy}</span>
+
+          <label>delivered by : </label>
+          <span delivered-by>${deliveredBy}</span>
         </div>
 
-        <div dn-no>
-          <label>D/N No.</label>
-          <span>${dnNo}</span>
-        </div>
-        <div date>
-          <label>Date</label>
+        <div right>
+          <label>D/N No. : </label>
+          <span dnno>${dnNo}</span>
+
+          <label>Date : </label>
           <span>${date}</span>
         </div>
       </div>
@@ -118,21 +211,21 @@ class GANOfficialView extends localize(i18next)(PageView) {
 
       <div agreement>
         <div supplier-side>
-          <span notice>Goods received in good order & condition</span>
-          <span signature></span>
-          <span desc>Official Stamp & Signature</span>
-          <label name>Name:</label>
-          <label date>Date:</label>
+          <div notice>Goods received in good order & condition</div>
+          <div signature></div>
+          <div desc>Official Stamp & Signature</div>
+          <div name>Name:</div>
+          <div date>Date:</div>
         </div>
 
         <div customer-side>
-          <label customer>For<span>${customerCompany}</span></label>
-          <span signature></span>
-          <span desc>Authorized Signature</span>
+          <div>For <span customer-name>${customerCompany}</span></div>
+          <div signature></div>
+          <div desc>Authorized Signature</div>
         </div>
       </div>
 
-      <h2 footer>** SILA TULIS NAMA PENUH DENGAN JELAS **</h2>
+      <h4 footer>** SILA TULIS NAMA PENUH DENGAN JELAS **</h4>
     `
   }
 
