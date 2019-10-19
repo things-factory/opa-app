@@ -130,7 +130,7 @@ class CompanyList extends localize(i18next)(PageView) {
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
-        { type: 'gutter', gutterName: 'row-selector' },
+        { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'gutter',
           gutterName: 'button',
