@@ -229,7 +229,8 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
             align: 'center',
             options: {
               queryName: 'locations'
-            }
+            },
+            list: { fields: ['location'] }
           },
           imex: {
             header: i18next.t('field.location'),

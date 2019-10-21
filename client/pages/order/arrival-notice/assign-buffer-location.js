@@ -133,7 +133,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
 
         <fieldset>
           <legend>${i18next.t('title.assign_warehouse')}</legend>
-          <label>${i18next.t('label.warehouse_name')}</label>
+          <label>${i18next.t('label.warehouse')}</label>
           <input id="buffer-location" name="buffer-location" readonly @click="${this._openBufferSelector.bind(this)}" />
         </fieldset>
       </form>
@@ -380,7 +380,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
       {
         backdrop: true,
         size: 'large',
-        title: i18next.t('title.select_buffer_location')
+        title: i18next.t('title.select_warehouse')
       }
     )
   }
@@ -391,7 +391,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
 
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
-        text: i18next.t('text.assign_buffer_location'),
+        text: i18next.t('text.assign_warehouse'),
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
@@ -417,7 +417,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
 
       if (!response.errors) {
         navigate(`inbound_worksheets`)
-        this._showToast({ message: i18next.t('text.buffer_location_assigned') })
+        this._showToast({ message: i18next.t('text.warehouse_is_assigned') })
       }
     } catch (e) {
       this._showToast(e)
@@ -426,7 +426,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
 
   _validateBufferLocation() {
     if (!this.bufferLocationField.getAttribute('location-id'))
-      throw new Error(i18next.t('text.buffer_location_is_not_assigned'))
+      throw new Error(i18next.t('text.warehouse_is_not_assigned'))
   }
 
   _fillupANForm(data) {

@@ -145,7 +145,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           <label>${i18next.t('label.container_no')}</label>
           <input name="containerNo" readonly />
 
-          <label>${i18next.t('label.buffer_location')}</label>
+          <label>${i18next.t('label.staging_area')}</label>
           <input name="bufferLocation" readonly />
 
           <label>${i18next.t('label.started_at')}</label>
