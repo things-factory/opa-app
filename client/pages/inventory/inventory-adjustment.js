@@ -228,7 +228,14 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
             editable: true,
             align: 'center',
             options: {
-              queryName: 'locations'
+              queryName: 'locations',
+              select: [
+                { name: 'id', hidden: true },
+                { name: 'name', header: i18next.t('field.name'), sortable: true, record: { align: 'center' } },
+                { name: 'zone', header: i18next.t('field.zone'), sortable: true, record: { align: 'center' } },
+                { name: 'row', header: i18next.t('field.row'), sortable: true, record: { align: 'center' } }
+              ],
+              list: { fields: ['z', 'product', 'batchId', 'location'] }
             },
             list: { fields: ['location'] }
           },
