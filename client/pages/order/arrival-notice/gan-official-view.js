@@ -16,6 +16,7 @@ class GANOfficialView extends localize(i18next)(PageView) {
           display: flex;
           flex-direction: column;
           padding: 20px;
+          font-family: 'Times New Roman', Times;
         }
 
         label {
@@ -24,7 +25,7 @@ class GANOfficialView extends localize(i18next)(PageView) {
         }
 
         [customer-info] {
-          width: 30%;
+          width: 40%;
           white-space: nowrap;
         }
 
@@ -64,6 +65,10 @@ class GANOfficialView extends localize(i18next)(PageView) {
           font-weight: bold;
           text-transform: capitalize;
         }
+        [dnno] {
+          font-size: 2em;
+          line-height: 0.5;
+        }
 
         [detail] {
           flex: 1;
@@ -79,7 +84,8 @@ class GANOfficialView extends localize(i18next)(PageView) {
         }
 
         th {
-          background-color: lightgray;
+          background-color: #f0f0f0;
+          text-transform: capitalize;
         }
 
         th,
@@ -121,6 +127,7 @@ class GANOfficialView extends localize(i18next)(PageView) {
           :host {
             font-size: 0.6em;
             padding: 0;
+            -webkit-print-color-adjust: exact;
           }
         }
       `
