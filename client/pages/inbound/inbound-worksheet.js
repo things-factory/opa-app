@@ -204,6 +204,14 @@ class InboundWorksheet extends localize(i18next)(PageView) {
           record: { editable: false, align: 'center' },
           sortable: true,
           width: 150
+        },
+        {
+          type: 'datetime',
+          name: 'updatedAt',
+          header: i18next.t('field.updated_at'),
+          record: { editable: false, align: 'center' },
+          sortable: true,
+          width: 200
         }
       ]
     }
@@ -237,6 +245,7 @@ class InboundWorksheet extends localize(i18next)(PageView) {
           })}) {
             items {
               id
+              name
               arrivalNotice {
                 id
                 name
@@ -255,6 +264,7 @@ class InboundWorksheet extends localize(i18next)(PageView) {
                 name
                 description
               }
+              updatedAt
             }
             total
           }

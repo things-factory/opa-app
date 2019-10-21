@@ -210,6 +210,7 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
           })}) {
             items {
               id
+              name
               releaseGood {
                 id
                 name
