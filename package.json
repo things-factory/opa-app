@@ -1,6 +1,6 @@
 {
   "name": "@things-factory/opa-app",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "main": "dist-server/index.js",
   "browser": "client/index.js",
   "things-factory": true,
@@ -79,7 +79,7 @@
     "@things-scene/progressbar": "*",
     "@things-scene/random": "*",
     "@things-scene/restful": "*",
-    "@things-scene/switch": "^1.0.0-beta.3",
+    "@things-scene/switch": "*",
     "@things-scene/tab": "*",
     "@things-scene/table": "*",
     "@things-scene/visualizer": "things-scene/visualizer#for-things-factory",
