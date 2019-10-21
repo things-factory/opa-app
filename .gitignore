@@ -7,6 +7,8 @@ yarn*.*
 package-lock.json
 db.sqlite
 ormconfig.js
+config.development.*
+config.production.*
 .DS_Store
 .vscode
 .pid
