@@ -170,12 +170,11 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
       this._worksheetNo = changes.resourceId
       await this.fetchWorksheet()
       this._updateContext()
-      this._updateGristConfig()
     }
   }
 
   async pageInitialized() {
-    this.preConfig = {
+    this.config = {
       rows: {
         appendable: false,
         handlers: {
@@ -217,6 +216,13 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
           name: 'description',
           header: i18next.t('field.comment'),
           width: 200
+        },
+        {
+          type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: { align: 'center' },
+          width: 100
         }
       ]
     }
@@ -358,28 +364,6 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
     })
   }
 
-  _updateGristConfig() {
-    const statusColumnConfig = {
-      type: 'string',
-      name: 'status',
-      header: i18next.t('field.status'),
-      record: { align: 'center' },
-      width: 100
-    }
-
-    this.preConfig.columns.map(column => {
-      if (column.name === 'description') {
-        column.record = { ...column.record, editable: this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value }
-      }
-    })
-
-    if (this._worksheetStatus !== WORKSHEET_STATUS.DEACTIVATED.value) {
-      this.preConfig.columns = [...this.preConfig.columns, statusColumnConfig]
-    }
-
-    this.config = this.preConfig
-  }
-
   _fillupForm(data) {
     for (let key in data) {
       Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
@@ -414,7 +398,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
         return
       }
 
-      if (this.data.records.some(record => record.vas.operationGuideType)) {
+      if (this.data.records.some(record => record.vas && record.vas.operationGuideType)) {
         const result = await CustomAlert({
           type: 'warning',
           title: i18next.t('title.is_operation_finished'),
@@ -442,9 +426,8 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
       })
       if (!response.errors) {
         this._showToast({ message: i18next.t('text.worksheet_activated') })
-        this._worksheetNo = ''
         await this.fetchWorksheet()
-        navigate(`vas_worksheets`)
+        this._updateContext()
       }
     } catch (e) {
       this._showToast(e)

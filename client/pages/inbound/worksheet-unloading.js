@@ -10,6 +10,7 @@ import { css, html } from 'lit-element'
 import { CustomAlert } from '../../utils/custom-alert'
 import { WORKSHEET_STATUS } from './constants/worksheet'
 import './pallet-label-popup'
+import './adjust-pallet-qty'
 
 class WorksheetUnloading extends localize(i18next)(PageView) {
   static get properties() {
@@ -153,7 +154,16 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
   async pageInitialized() {
     this._statusOptions = await getCodeByName('WORKSHEET_STATUS')
     this.preConfig = {
-      rows: { appendable: false },
+      rows: {
+        appendable: false,
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            if (!record.isPalletized) {
+              this._showPalletQtyAdjustPopup(record)
+            }
+          }
+        }
+      },
       list: { fields: ['batchId', 'product', 'palletQty'] },
       pagination: { infinite: true },
       columns: [
@@ -295,7 +305,13 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
             ...worksheetDetail.targetProduct,
             name: worksheetDetail.name,
             status: worksheetDetail.status,
-            description: worksheetDetail.description
+            description: worksheetDetail.description,
+            isPalletized:
+              worksheetDetail.targetProduct &&
+              worksheetDetail.targetProduct.palletQty &&
+              Number(worksheetDetail.targetProduct.palletQty) > 0
+                ? true
+                : false
           }
         })
       }
@@ -363,8 +379,38 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     }
   }
 
+  _showPalletQtyAdjustPopup(record) {
+    openPopup(
+      html`
+        <adjust-pallet-qty
+          .record="${record}"
+          @pallet-adjusted="${e => {
+            this.data = {
+              ...this.data,
+              records: this.data.records.map(item => {
+                if (item.name === record.name) {
+                  item.palletQty = e.detail.palletQty
+                  item.palletizingDescription = e.detail.palletizingDescription
+                }
+
+                return item
+              })
+            }
+          }}"
+        ></adjust-pallet-qty>
+      `,
+      {
+        backdrop: true,
+        size: 'medium',
+        title: i18next.t('title.adjust_pallet_qty')
+      }
+    )
+  }
+
   async _activateWorksheet() {
     try {
+      this._checkPalletQty()
+
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.activate_unloading_worksheet'),
@@ -372,9 +418,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
         cancelButton: { text: i18next.t('button.cancel') }
       })
 
-      if (!result.value) {
-        return
-      }
+      if (!result.value) return
 
       const response = await client.query({
         query: gql`
@@ -401,12 +445,25 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     }
   }
 
+  _checkPalletQty() {
+    if (!this.grist.dirtyData.records.every(record => record.palletQty && Number(record.palletQty) > 0))
+      throw new Error(i18next.t('text.there_is_no_pallet_qty'))
+  }
+
   _getUnloadingWorksheetDetails() {
     return (this.grist.dirtyData.records || []).map(worksheetDetail => {
-      return {
+      let _tempObj = {
         name: worksheetDetail.name,
+        batchId: worksheetDetail.batchId,
         description: worksheetDetail.description
       }
+
+      if (!worksheetDetail.isPalletized) {
+        _tempObj.palletQty = worksheetDetail.palletQty
+        _tempObj.palletizingDescription = worksheetDetail.palletizingDescription
+      }
+
+      return _tempObj
     })
   }
 

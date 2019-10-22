@@ -421,14 +421,24 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         cancelButton: { text: i18next.t('button.cancel') }
       })
 
-      if (!result.value) {
-        return
-      }
+      if (!result.value) return
 
+      let arrivalNotice = this._getArrivalNotice()
+      if (arrivalNotice.orderProducts.some(orderProduct => !orderProduct.palletQty)) {
+        const result = await CustomAlert({
+          title: i18next.t('title.are_you_sure'),
+          text: i18next.t('text.there_is_no_pallet_qty'),
+          confirmButton: { text: i18next.t('button.confirm') },
+          cancelButton: { text: i18next.t('button.cancel') }
+        })
+
+        if (!result.value) return
+      }
       await this._executeRelatedTrxs()
+      arrivalNotice = this._getArrivalNotice()
 
       let args = {
-        arrivalNotice: { ...this._getArrivalNotice(), ownTransport: this._importedOrder ? true : this._ownTransport }
+        arrivalNotice: { ...arrivalNotice, ownTransport: this._importedOrder ? true : this._ownTransport }
       }
 
       const response = await client.query({
@@ -485,44 +495,36 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   _validateProducts() {
-    this.productGrist.commit()
     // no records
-    if (!this.productGrist.data.records || !this.productGrist.data.records.length)
+    if (!this.productGrist.dirtyData.records || !this.productGrist.dirtyData.records.length)
       throw new Error(i18next.t('text.no_products'))
 
     // required field (batchId, packingType, weight, unit, packQty, palletQty)
     if (
-      this.productGrist.data.records.filter(
-        record =>
-          !record.batchId ||
-          !record.packingType ||
-          !record.weight ||
-          !record.unit ||
-          !record.packQty ||
-          !record.palletQty
+      this.productGrist.dirtyData.records.filter(
+        record => !record.batchId || !record.packingType || !record.weight || !record.unit || !record.packQty
       ).length
     )
       throw new Error(i18next.t('text.empty_value_in_list'))
 
     // duplication of batch id
-    const batchIds = this.productGrist.data.records.map(product => product.batchId)
+    const batchIds = this.productGrist.dirtyData.records.map(product => product.batchId)
     if (batchIds.filter((batchId, idx, batchIds) => batchIds.indexOf(batchId) !== idx).length)
       throw new Error(i18next.t('text.batch_id_is_duplicated'))
   }
 
   _validateVas() {
-    this.vasGrist.commit()
-    if (this.vasGrist.data.records && this.vasGrist.data.records.length) {
+    if (this.vasGrist.dirtyData.records && this.vasGrist.dirtyData.records.length) {
       // required field (vas && remark)
-      if (this.vasGrist.data.records.filter(record => !record.vas || !record.remark).length)
+      if (this.vasGrist.dirtyData.records.filter(record => !record.vas || !record.remark).length)
         throw new Error(i18next.t('text.empty_value_in_list'))
 
       // duplication of vas for same batch
-      const vasBatches = this.vasGrist.data.records.map(vas => `${vas.vas.id}-${vas.batchId}`)
+      const vasBatches = this.vasGrist.dirtyData.records.map(vas => `${vas.vas.id}-${vas.batchId}`)
       if (vasBatches.filter((vasBatch, idx, vasBatches) => vasBatches.indexOf(vasBatch) !== idx).length)
         throw new Error(i18next.t('text.duplicated_vas_on_same_batch'))
 
-      if (!this.vasGrist.data.records.every(record => record.ready)) throw new Error('there_is_not_ready_vas')
+      if (!this.vasGrist.dirtyData.records.every(record => record.ready)) throw new Error('there_is_not_ready_vas')
     }
   }
 
@@ -557,9 +559,12 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     delete arrivalNotice.importedOrder
 
     arrivalNotice.orderProducts = this.productGrist.dirtyData.records.map((record, idx) => {
+      let _tempObj = {}
       const seq = idx + 1
+      if (record.palletQty) _tempObj.palletQty = record.palletQty
 
-      return {
+      _tempObj = {
+        ..._tempObj,
         seq,
         batchId: record.batchId,
         product: { id: record.product.id },
@@ -567,9 +572,10 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         weight: record.weight,
         unit: record.unit,
         packQty: record.packQty,
-        totalWeight: record.totalWeight,
-        palletQty: record.palletQty
+        totalWeight: record.totalWeight
       }
+
+      return _tempObj
     })
 
     arrivalNotice.orderVass = this.vasGrist.dirtyData.records.map(record => {
@@ -592,6 +598,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   _clearView() {
+    this._template = null
     this.arrivalNoticeForm.reset()
     this.productData = { ...this.productData, records: [] }
     this.vasData = { ...this.vasData, records: [] }

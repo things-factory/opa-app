@@ -112,10 +112,6 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  get completed() {
-    return this.data.records.length && this.data.records.every(record => record.completed)
-  }
-
   render() {
     return html`
       <form class="multi-column-form" id="info-form">
@@ -323,7 +319,6 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'issue',
           header: i18next.t('field.issue'),
-          record: { editable: true },
           width: 300
         }
       ]
@@ -338,18 +333,20 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
 
   _updateContext() {
     let actions = []
-    if (this.completed) {
-      actions = [{ title: i18next.t('button.complete'), action: this._completeHandler.bind(this) }]
-    }
 
     if (this._selectedTaskStatus === WORKSHEET_STATUS.EXECUTING.value) {
       actions = [
         ...actions,
+        { title: i18next.t('button.complete'), action: this._completeHandler.bind(this) },
         { title: i18next.t('button.issue'), action: this._openIssueEditor.bind(this) },
         { title: i18next.t('button.done'), action: this._executeVas.bind(this) }
       ]
     } else if (this._selectedTaskStatus === WORKSHEET_STATUS.DONE.value) {
-      actions = [...actions, { title: i18next.t('button.undo'), action: this._undoVas.bind(this) }]
+      actions = [
+        ...actions,
+        { title: i18next.t('button.complete'), action: this._completeHandler.bind(this) },
+        { title: i18next.t('button.undo'), action: this._undoVas.bind(this) }
+      ]
     }
 
     store.dispatch({
@@ -419,12 +416,14 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
 
       this.data = {
         ...this.data,
-        records: response.data.vasWorksheet.worksheetDetailInfos.map(worksheetDetail => {
-          return {
-            ...worksheetDetail,
-            completed: worksheetDetail.status === WORKSHEET_STATUS.DONE.value
-          }
-        })
+        records: response.data.vasWorksheet.worksheetDetailInfos
+          .filter(worksheetDetail => worksheetDetail.vas)
+          .map(worksheetDetail => {
+            return {
+              ...worksheetDetail,
+              completed: worksheetDetail.status === WORKSHEET_STATUS.DONE.value
+            }
+          })
       }
 
       this._completeHandler()
@@ -485,6 +484,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       html`
         <popup-note
           .title="${i18next.t('title.issue')}"
+          .value="${this._selectedVas && this._selectedVas.issue ? this._selectedVas.issue : ''}"
           @submit="${async e => {
             this.data = {
               records: this.data.records.map(record => {
@@ -559,6 +559,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
         this.infoForm.reset()
         this.inputForm.reset()
         this._fetchVass()
+        this._updateContext()
       }
     } catch (e) {
       this._showToast(e)
@@ -571,7 +572,6 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _completeHandler() {
-    if (!this.data.records.every(record => record.completed)) return
     const result = await CustomAlert({
       title: i18next.t('title.are_you_sure'),
       text: i18next.t('text.vas_has_been_completed'),
@@ -581,14 +581,6 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
     this._updateContext()
 
     if (result.value) this._complete()
-  }
-
-  validate() {
-    const tasks = this.grist.dirtyData.records
-    // 1. every task has to be completed. if it's not completed there should be issue
-    if (!tasks.every(task => (task.complete && !task.issue) || (!task.complete && task.issue))) {
-      throw new Error(i18next.t('text.theres_is_uncompleted_task'))
-    }
   }
 
   _getVasWorksheetDetail() {
@@ -623,8 +615,9 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _validateComplete() {
-    if (!this.orderNo) throw new Error(i18next.t('text.order_no_is_empty'))
-    if (!this.orderType) throw new Error(i18next.t('text.order_type_is_empty'))
+    if (!this.data.records.some(record => (record.complete && !record.issue) || (!record.complete && record.issue))) {
+      throw new Error('text.there_is_uncompleted_task')
+    }
   }
 
   _showToast({ type, message }) {

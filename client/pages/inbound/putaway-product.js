@@ -336,6 +336,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
           type: 'integer',
           name: 'qty',
           header: i18next.t('field.qty'),
+          record: { align: 'center' },
           width: 80
         }
       ]
@@ -443,6 +444,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     this.arrivalNoticeNo = ''
     this._selectedOrderProduct = null
     this._selectedTaskStatus = null
+    this._updateContext()
   }
 
   _fillUpForm(form, data) {

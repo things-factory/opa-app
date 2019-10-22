@@ -480,6 +480,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
     this._productName = ''
     this._selectedOrderProduct = null
     this._selectedInventory = null
+    this._updateContext()
   }
 
   _fillUpInfoForm(data) {
