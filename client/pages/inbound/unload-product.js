@@ -674,7 +674,6 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
 
         this._arrivalNoticeNo = null
         this._clearView()
-        navigate('inbound_worksheets')
       }
     } catch (e) {
       this._showToast(e)
