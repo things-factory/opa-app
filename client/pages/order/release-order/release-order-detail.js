@@ -199,15 +199,9 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
     this.inventoryGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true }, appendable: false },
+      list: { fields: ['name', 'batchId', 'product', 'location', 'releaseQty'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
-        {
-          type: 'string',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
-          record: { align: 'center' },
-          width: 100
-        },
         {
           type: 'string',
           name: 'name',
@@ -216,10 +210,17 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
           width: 100
         },
         {
+          type: 'string',
+          name: 'batchId',
+          header: i18next.t('field.batch_no'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
           type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           width: 350
         },
         {
@@ -259,31 +260,28 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
     this.vasGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true }, appendable: false },
+      list: { fields: ['vas', 'inventory', 'product', 'remark'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'close',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              const newData = data.records.filter((_, idx) => idx !== rowIndex)
-              this.vasData = { ...this.vasData, records: newData }
-            }
-          }
-        },
         {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
-          record: { align: 'center', options: { queryName: 'vass' } },
+          record: { align: 'center' },
           width: 250
         },
         {
-          type: 'select',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
-          record: { align: 'center', options: ['', i18next.t('label.all')] },
+          type: 'object',
+          name: 'inventory',
+          header: i18next.t('field.inventory'),
+          record: { align: 'center' },
+          width: 150
+        },
+        {
+          type: 'object',
+          name: 'product',
+          header: i18next.t('field.product'),
+          record: { align: 'left' },
           width: 150
         },
         {
@@ -342,6 +340,16 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
                 id
                 name
                 description
+              }
+              inventory {
+                id
+                name
+                description
+                product {
+                  id
+                  name
+                  description
+                }
               }
               description
               batchId

@@ -110,6 +110,7 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
 
     this.config = {
       rows: { selectable: { multiple: true }, appendable: false },
+      list: { fields: ['name', 'releaseDate', 'status', 'updatedAt'] },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
