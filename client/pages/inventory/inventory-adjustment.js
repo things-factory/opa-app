@@ -231,6 +231,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
               queryName: 'locations',
               select: [
                 { name: 'id', hidden: true },
+                { name: 'description', hidden: true },
                 { name: 'name', header: i18next.t('field.name'), sortable: true, record: { align: 'center' } },
                 { name: 'zone', header: i18next.t('field.zone'), sortable: true, record: { align: 'center' } },
                 { name: 'row', header: i18next.t('field.row'), sortable: true, record: { align: 'center' } }
@@ -403,6 +404,8 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         delete x.bizplace['__selected__']
       }
       if (x.location) {
+        delete x.location['row']
+        delete x.location['zone']
         delete x.location['__seq__']
         delete x.location['__origin__']
         delete x.location['__selected__']
