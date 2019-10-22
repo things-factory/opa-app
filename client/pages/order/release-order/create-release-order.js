@@ -371,25 +371,8 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
             options: {
               queryName: 'inventories',
               basicArgs: {
-                ...this._selectedInventories.map(selectedInventory => {
-                  filters: [
-                    {
-                      name: 'palletId'
-                    }
-                  ]
-                })
+                filters: []
               },
-              // basicArgs: {
-              //   ...this._selectedInventories.map((selectedInventory, i) => {
-              //     filters: [
-              //       {
-              //         name: 'palletId',
-              //         value: `${selectedInventory[i]}`,
-              //         operator: 'eq'
-              //       }
-              //     ]
-              //   })
-              // },
               select: [
                 { name: 'id', hidden: true },
                 { name: 'name', hidden: true },
@@ -575,13 +558,18 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _updateInventoryList() {
-    this._selectedInventories = [...(this.inventoryGrist.dirtyData.records || []).map(record => record.inventory)]
+    this._selectedInventories = [...(this.inventoryGrist.dirtyData.records || []).map(record => record.inventory.id)]
 
-    // if (this._selectedInventories) {
-    //   var palletIds = this._selectedInventories.map(selectedInventory => selectedInventory.palletId)
-    //   if (palletIds.filter((palletId, idx, palletIds) => palletIds.indexOf(palletId) !== idx).length)
-    //     throw new Error(i18next.t('text.pallet_id_is_duplicated'))
-    // }
+    var filter = [{ name: 'inventory', value: this._selectedInventories, operator: 'in' }]
+
+    this.vasGristConfig = {
+      ...this.vasGristConfig,
+      columns: this.vasGristConfig.columns.map(column => {
+        if (column.name === 'inventory') column.record.options.basicArgs.filters = filter
+
+        return column
+      })
+    }
   }
 
   _getReleaseOrder() {
