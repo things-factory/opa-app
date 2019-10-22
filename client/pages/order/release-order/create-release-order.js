@@ -1,7 +1,6 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { openPopup } from '@things-factory/layout-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
@@ -15,6 +14,8 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     return {
       _ownTransport: Boolean,
       _exportOption: Boolean,
+      _email: String,
+      _selectedInventories: Array,
       inventoryGristConfig: Object,
       vasGristConfig: Object,
       inventoryData: Object,
@@ -83,7 +84,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
 
   render() {
     return html`
-        <form name="releaseOrder" class="multi-column-form">
+        <form name="releaseOrder" class="multi-column-form" autocomplete="off">
           <fieldset>
             <legend>${i18next.t('title.release_order')}</legend>
             <label>${i18next.t('label.release_date')}</label>
@@ -124,7 +125,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       </div>
 
       <div class="so-form-container" ?hidden="${!this._exportOption || (this._exportOption && !this._ownTransport)}">
-        <form name="shippingOrder" class="multi-column-form">
+        <form name="shippingOrder" class="multi-column-form" autocomplete="off">
           <fieldset>
             <legend>${i18next.t('title.export_order')}</legend>
             <label>${i18next.t('label.container_no')}</label>
@@ -183,6 +184,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     super()
     this._exportOption = false
     this._ownTransport = true
+    this._selectedInventories = []
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
   }
@@ -211,10 +213,13 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    const _userBizplaces = await this._fetchUserBizplaces()
+
     this.inventoryGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
+      list: { fields: ['inventory', 'product', 'location', 'releaseQty'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -226,7 +231,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
               const newData = data.records.filter((_, idx) => idx !== rowIndex)
               this.inventoryData = { ...this.inventoryData, records: newData }
               this.inventoryGrist.dirtyData.records = newData
-              this._updateBatchList()
+              this._updateInventoryList()
             }
           }
         },
@@ -239,6 +244,15 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
             align: 'center',
             options: {
               queryName: 'inventories',
+              basicArgs: {
+                filters: [
+                  {
+                    name: 'bizplace',
+                    value: `${_userBizplaces[0].id || ''}`,
+                    operator: 'eq'
+                  }
+                ]
+              },
               nameField: 'batchId',
               descriptionField: 'palletId',
               select: [
@@ -247,10 +261,25 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
                 { name: 'palletId', header: i18next.t('field.pallet_id'), record: { align: 'center' } },
                 { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
                 { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
-                { name: 'location', type: 'object', subFields: ['name', 'description'], record: { align: 'center' } },
-                { name: 'product', type: 'object', subfields: ['name', 'description'] },
+                {
+                  name: 'location',
+                  type: 'object',
+                  subFields: ['name', 'description'],
+                  record: { align: 'center' }
+                },
+                {
+                  name: 'bizplace',
+                  type: 'object',
+                  record: { align: 'center' }
+                },
+                {
+                  name: 'product',
+                  type: 'object',
+                  subfields: ['name', 'description']
+                },
                 { name: 'qty', type: 'float', record: { align: 'center' } }
-              ]
+              ],
+              list: { fields: ['palletId', 'product', 'batchId', 'location'] }
             }
           },
           width: 250
@@ -259,7 +288,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
           type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           width: 150
         },
         {
@@ -274,7 +303,6 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: {
-            editable: true,
             align: 'center',
             codeName: 'PACKING_TYPES'
           },
@@ -284,7 +312,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
           type: 'integer',
           name: 'qty',
           header: i18next.t('field.available_qty'),
-          record: { editable: true, align: 'center' },
+          record: { align: 'center' },
           width: 100
         },
         {
@@ -300,6 +328,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     this.vasGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
+      list: { fields: ['vas', 'inventory', 'product', 'remark'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -317,14 +346,75 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
-          record: { editable: true, align: 'center', options: { queryName: 'vass' } },
+          record: {
+            editable: true,
+            align: 'center',
+            options: {
+              queryName: 'vass',
+              select: [
+                { name: 'id', hidden: true },
+                { name: 'name', header: i18next.t('field.pallet_id') },
+                { name: 'description', header: i18next.t('field.description') }
+              ],
+              list: { fields: ['name', 'description'] }
+            }
+          },
           width: 250
         },
         {
-          type: 'select',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
-          record: { editable: true, align: 'center', options: ['', i18next.t('label.all')] },
+          type: 'object',
+          name: 'inventory',
+          header: i18next.t('field.inventory_list'),
+          record: {
+            editable: true,
+            align: 'center',
+            options: {
+              queryName: 'inventories',
+              basicArgs: {
+                ...this._selectedInventories.map(selectedInventory => {
+                  filters: [
+                    {
+                      name: 'palletId'
+                    }
+                  ]
+                })
+              },
+              // basicArgs: {
+              //   ...this._selectedInventories.map((selectedInventory, i) => {
+              //     filters: [
+              //       {
+              //         name: 'palletId',
+              //         value: `${selectedInventory[i]}`,
+              //         operator: 'eq'
+              //       }
+              //     ]
+              //   })
+              // },
+              select: [
+                { name: 'id', hidden: true },
+                { name: 'name', hidden: true },
+                { name: 'palletId', header: i18next.t('field.pallet_id'), record: { align: 'center' } },
+                { name: 'product', type: 'object' },
+                { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
+                { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
+                {
+                  name: 'location',
+                  type: 'object',
+                  subFields: ['name', 'description'],
+                  record: { align: 'center' }
+                }
+              ],
+              list: { fields: ['palletId', 'product', 'batchId', 'location'] }
+            }
+          },
+          sortable: true,
+          width: 180
+        },
+        {
+          type: 'object',
+          name: 'product',
+          header: i18next.t('field.product'),
+          record: { align: 'center' },
           width: 150
         },
         {
@@ -335,6 +425,28 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
           width: 350
         }
       ]
+    }
+  }
+
+  async _fetchUserBizplaces() {
+    if (!this._email) return
+    const response = await client.query({
+      query: gql`
+        query {
+          userBizplaces(${gqlBuilder.buildArgs({
+            email: this._email
+          })}) {
+            id
+            name
+            description
+            mainBizplace
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      return response.data.userBizplaces.filter(userBizplaces => userBizplaces.mainBizplace)
     }
   }
 
@@ -369,7 +481,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       }
     }
 
-    this._updateBatchList()
+    this._updateInventoryList()
   }
 
   _validateReleaseQty(releaseQty, qty) {
@@ -462,25 +574,14 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  _updateBatchList() {
-    const batchIds = ['', 'all', ...(this.inventoryGrist.dirtyData.records || []).map(record => record.batchId)]
+  _updateInventoryList() {
+    this._selectedInventories = [...(this.inventoryGrist.dirtyData.records || []).map(record => record.inventory)]
 
-    this.vasGristConfig = {
-      ...this.vasGristConfig,
-      columns: this.vasGristConfig.columns.map(column => {
-        if (column.name === 'batchId') column.record.options = batchIds
-        return column
-      })
-    }
-
-    this.vasData = {
-      records: this.vasGrist.dirtyData.records.map(record => {
-        return {
-          ...record,
-          batchId: batchIds.includes(record.batchId) ? record.batchId : null
-        }
-      })
-    }
+    // if (this._selectedInventories) {
+    //   var palletIds = this._selectedInventories.map(selectedInventory => selectedInventory.palletId)
+    //   if (palletIds.filter((palletId, idx, palletIds) => palletIds.indexOf(palletId) !== idx).length)
+    //     throw new Error(i18next.t('text.pallet_id_is_duplicated'))
+    // }
   }
 
   _getReleaseOrder() {
@@ -530,6 +631,10 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
   _clearView() {
     this.releaseOrderForm.reset()
     this.shippingOrderForm.reset()
+  }
+
+  stateChanged(state) {
+    this._email = state.auth && state.auth.user && state.auth.user.email
   }
 
   _showToast({ type, message }) {
