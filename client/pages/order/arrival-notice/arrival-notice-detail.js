@@ -288,9 +288,22 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: { align: 'center' },
+          width: 150
+        },
+        {
+          type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
           record: { align: 'center' },
+          width: 350
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.comment'),
           width: 350
         }
       ]
@@ -330,10 +343,10 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             orderVass {
               vas {
                 name
-                description
                 operationGuide
                 operationGuideType
               }
+              description
               batchId
               remark
               status

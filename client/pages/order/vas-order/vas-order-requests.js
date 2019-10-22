@@ -92,6 +92,7 @@ class VasOrderRequests extends localize(i18next)(PageView) {
             value: ORDER_STATUS.READY_TO_EXECUTE.value
           },
           { name: i18next.t(`label.${ORDER_STATUS.EXECUTING.name}`), value: ORDER_STATUS.EXECUTING.value },
+          { name: i18next.t(`label.${ORDER_STATUS.REJECTED.name}`), value: ORDER_STATUS.REJECTED.value },
           { name: i18next.t(`label.${ORDER_STATUS.DONE.name}`), value: ORDER_STATUS.DONE.value }
         ],
         props: { searchOper: 'eq' }

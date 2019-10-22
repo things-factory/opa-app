@@ -84,14 +84,15 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
-        label: i18next.t('field.eta'),
-        name: 'etaDate',
-        type: 'date',
-        props: { searchOper: 'eq' }
+        label: i18next.t('field.customer'),
+        name: 'bizplace',
+        type: 'object',
+        queryName: 'bizplaces',
+        field: 'name'
       },
       {
-        label: i18next.t('field.collection_date'),
-        name: 'collectionDate',
+        label: i18next.t('field.eta'),
+        name: 'etaDate',
         type: 'date',
         props: { searchOper: 'eq' }
       },
@@ -131,6 +132,8 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
                 navigate(`check_arrived_notice/${record.name}`) // 2. move to order arriving check page
               } else if (status === ORDER_STATUS.ARRIVED.value) {
                 navigate(`assign_buffer_location/${record.name}`) // 3. move to assign buffer location
+              } else {
+                navigate(`arrival_notice_detail/${record.name}`)
               }
             }
           }
@@ -216,7 +219,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
       query: gql`
         query {
           arrivalNoticeRequests(${gqlBuilder.buildArgs({
-            filters: this.searchForm.queryFilters,
+            filters: await this.searchForm.getQueryFilters(),
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -256,7 +259,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
   }
 
   _exportableData() {
-    return this.dataGrist.exportRecords()  
+    return this.dataGrist.exportRecords()
   }
 }
 
