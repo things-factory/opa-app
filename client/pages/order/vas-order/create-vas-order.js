@@ -7,7 +7,7 @@ import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
 import '../../components/vas-relabel'
 
-class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
+class CreateVasOrder extends localize(i18next)(PageView) {
   static get styles() {
     return [
       css`
@@ -56,7 +56,6 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
     return {
       config: Object,
       data: Object,
-      _email: String,
       _template: Object
     }
   }
@@ -122,9 +121,7 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
     this._actions = [this.createButton]
   }
 
-  async pageInitialized() {
-    const _userBizplaces = await this._fetchUserBizplaces()
-
+  pageInitialized() {
     this.config = {
       pagination: { infinite: true },
       rows: {
@@ -180,15 +177,6 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
             align: 'center',
             options: {
               queryName: 'inventories',
-              basicArgs: {
-                filters: [
-                  {
-                    name: 'bizplace',
-                    value: `${_userBizplaces[0].id || ''}`,
-                    operator: 'eq'
-                  }
-                ]
-              },
               nameField: 'batchId',
               descriptionField: 'palletId',
               select: [
@@ -342,28 +330,6 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _fetchUserBizplaces() {
-    if (!this._email) return
-    const response = await client.query({
-      query: gql`
-        query {
-          userBizplaces(${gqlBuilder.buildArgs({
-            email: this._email
-          })}) {
-            id
-            name
-            description
-            mainBizplace
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      return response.data.userBizplaces.filter(userBizplaces => userBizplaces.mainBizplace)
-    }
-  }
-
   _validate() {
     if (!this.data.records.every(record => record.ready)) throw new Error(i18next.t('text.invalid_data_in_list'))
   }
@@ -414,10 +380,6 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
         return orderVas
       })
     }
-  }
-
-  stateChanged(state) {
-    this._email = state.auth && state.auth.user && state.auth.user.email
   }
 
   _showToast({ type, message }) {

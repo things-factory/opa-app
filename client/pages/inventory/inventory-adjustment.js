@@ -84,6 +84,10 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           action: this._deleteInventories.bind(this)
         }
       ],
+      printable: {
+        accept: ['preview'],
+        content: this
+      },
       exportable: {
         name: i18next.t('title.inventory_adjustment'),
         data: this._exportableData.bind(this)

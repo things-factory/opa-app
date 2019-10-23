@@ -109,6 +109,13 @@ class ProductList extends localize(i18next)(PageView) {
         props: {
           searchOper: 'i_like'
         }
+      },
+      {
+        label: i18next.t('field.product_ref'),
+        name: 'productRef',
+        type: 'object',
+        queryName: 'products',
+        field: 'name'
       }
     ]
 
@@ -209,7 +216,7 @@ class ProductList extends localize(i18next)(PageView) {
       query: gql`
         query {
           products(${gqlBuilder.buildArgs({
-            filters: this.searchForm.queryFilters,
+            filters: await this.searchForm.getQueryFilters(),
             pagination: { page, limit },
             sortings: sorters
           })}) {

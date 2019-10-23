@@ -235,7 +235,21 @@ export default {
       tagname: 'claim-chit-detail',
       page: 'claim_chit_detail'
     },
-
+    /**
+     * GRN Menus Section
+     */
+    {
+      tagname: 'receival-note-list',
+      page: 'receival_note_list'
+    },
+    {
+      tagname: 'create-receival-note',
+      page: 'create_receival_note'
+    },
+    {
+      tagname: 'receival-note-detail',
+      page: 'receival_note_detail'
+    },
     /**
      * Billing Menus Section
      */

@@ -216,6 +216,21 @@ export default function route(page) {
       return page
 
     /**
+     * GRN Menus Section
+     */
+    case 'receival_note_list':
+      import('./pages/order/receival-note/receival-note-list')
+      return page
+
+    case 'create_receival_note':
+      import('./pages/order/receival-note/create-receival-note')
+      return page
+
+    case 'receival_note_detail':
+      import('./pages/order/receival-note/receival-note-detail')
+      return page
+
+    /**
      * Billing Menus Section
      */
     case 'create_claim_chit':

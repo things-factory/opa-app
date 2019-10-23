@@ -81,10 +81,31 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
+        label: i18next.t('field.customer'),
+        name: 'bizplace',
+        type: 'object',
+        queryName: 'bizplaces',
+        field: 'name'
+      },
+      {
         label: i18next.t('field.release_date'),
         name: 'releaseDate',
         type: 'date',
         props: { searchOper: 'i_like' }
+      },
+      {
+        label: i18next.t('field.import_cargo'),
+        name: 'importCargo',
+        type: 'checkbox',
+        props: { searchOper: 'eq' },
+        attrs: ['indeterminate']
+      },
+      {
+        label: i18next.t('field.shipping_option'),
+        name: 'exportOption',
+        type: 'checkbox',
+        props: { searchOper: 'eq' },
+        attrs: ['indeterminate']
       },
       {
         label: i18next.t('field.status'),
@@ -207,7 +228,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
       query: gql`
         query {
           releaseGoodRequests(${gqlBuilder.buildArgs({
-            filters: this.searchForm.queryFilters,
+            filters: await this.searchForm.getQueryFilters(),
             pagination: { page, limit },
             sortings: sorters
           })}) {

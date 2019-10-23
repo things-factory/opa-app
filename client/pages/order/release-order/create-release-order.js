@@ -6,7 +6,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { CustomAlert } from '../../../utils/custom-alert'
-import { ORDER_PRODUCT_STATUS, ORDER_TYPES } from '../constants/order'
+import { ORDER_PRODUCT_STATUS, ORDER_VAS_STATUS, ORDER_TYPES } from '../constants/order'
 import './inventory-product-selector'
 
 class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
@@ -184,7 +184,6 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     super()
     this._exportOption = false
     this._ownTransport = true
-    this._selectedInventories = []
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
   }
@@ -214,7 +213,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async pageInitialized() {
-    const _userBizplaces = await this._fetchUserBizplaces()
+    const _userBizplace = await this._fetchUserBizplaces()
 
     this.inventoryGristConfig = {
       pagination: { infinite: true },
@@ -248,8 +247,8 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
                 filters: [
                   {
                     name: 'bizplace',
-                    value: `${_userBizplaces[0].id || ''}`,
-                    operator: 'eq'
+                    value: `${_userBizplace}`,
+                    operator: 'in'
                   }
                 ]
               },
@@ -370,9 +369,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
             align: 'center',
             options: {
               queryName: 'inventories',
-              basicArgs: {
-                filters: []
-              },
+              basicArgs: { filters: [{ name: 'id', operator: 'in', value: [null] }] },
               select: [
                 { name: 'id', hidden: true },
                 { name: 'name', hidden: true },
@@ -380,25 +377,13 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
                 { name: 'product', type: 'object' },
                 { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
                 { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
-                {
-                  name: 'location',
-                  type: 'object',
-                  subFields: ['name', 'description'],
-                  record: { align: 'center' }
-                }
+                { name: 'location', type: 'object', subFields: ['name', 'description'], record: { align: 'center' } }
               ],
               list: { fields: ['palletId', 'product', 'batchId', 'location'] }
             }
           },
           sortable: true,
           width: 180
-        },
-        {
-          type: 'object',
-          name: 'product',
-          header: i18next.t('field.product'),
-          record: { align: 'center' },
-          width: 150
         },
         {
           type: 'string',
@@ -429,7 +414,9 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      return response.data.userBizplaces.filter(userBizplaces => userBizplaces.mainBizplace)
+      return response.data.userBizplaces
+        .filter(userBizplaces => userBizplaces.mainBizplace)
+        .map(userBizplace => userBizplace.id)
     }
   }
 
@@ -558,14 +545,23 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _updateInventoryList() {
-    this._selectedInventories = [...(this.inventoryGrist.dirtyData.records || []).map(record => record.inventory.id)]
-
-    var filter = [{ name: 'inventory', value: this._selectedInventories, operator: 'in' }]
-
+    const _selectedInventories = (this.inventoryGrist.dirtyData.records || []).map(record => record.inventory.id)
+    const filters = [
+      {
+        name: 'id',
+        value: _selectedInventories.length ? _selectedInventories : [null],
+        operator: 'in'
+      }
+    ]
     this.vasGristConfig = {
       ...this.vasGristConfig,
       columns: this.vasGristConfig.columns.map(column => {
-        if (column.name === 'inventory') column.record.options.basicArgs.filters = filter
+        if (column.name === 'inventory') {
+          column.record.options.basicArgs = {
+            ...column.record.options.basicArgs,
+            filters
+          }
+        }
 
         return column
       })
@@ -590,12 +586,18 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     })
 
     releaseGood.orderVass = this.vasGrist.data.records.map(record => {
-      delete record.id
-      delete record.vas.__origin__
-      delete record.vas.__seq__
-      delete record.vas.__selected__
-
-      return { ...record, name }
+      return {
+        vas: {
+          id: record.vas.id
+        },
+        inventory: {
+          id: record.inventory.id
+        },
+        remark: record.remark,
+        batchId: record.inventory.batchId,
+        type: ORDER_TYPES.RELEASE_OF_GOODS.value,
+        status: ORDER_VAS_STATUS.PENDING.value
+      }
     })
 
     return releaseGood

@@ -4,9 +4,8 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { ORDER_STATUS } from '../constants/order'
 
-class ReleaseOrderList extends localize(i18next)(PageView) {
+class ReceivalNoteList extends localize(i18next)(PageView) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -38,9 +37,7 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
     return {
       _searchFields: Array,
       config: Object,
-      data: Object,
-      _ownTransport: Boolean,
-      _exportOption: Boolean
+      data: Object
     }
   }
 
@@ -60,9 +57,9 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.release_orders'),
+      title: i18next.t('title.goods_receival_notes'),
       exportable: {
-        name: i18next.t('title.release_orders'),
+        name: i18next.t('title.goods_receival_notes'),
         data: this._exportableData.bind(this)
       }
     }
@@ -74,57 +71,25 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('field.release_order_no'),
+        label: i18next.t('field.grn'),
         name: 'name',
         type: 'text',
         props: { searchOper: 'i_like' }
       },
       {
-        label: i18next.t('field.release_date'),
-        name: 'releaseDate',
-        type: 'date',
+        label: i18next.t('field.gan'),
+        name: 'refNo',
+        type: 'text',
         props: { searchOper: 'i_like' }
-      },
-      {
-        label: i18next.t('field.own_transport'),
-        name: 'ownTransport',
-        type: 'checkbox',
-        props: { searchOper: 'eq' },
-        attrs: ['indeterminate']
-      },
-      {
-        label: i18next.t('field.shipping_option'),
-        name: 'exportOption',
-        type: 'checkbox',
-        props: { searchOper: 'eq' },
-        attrs: ['indeterminate']
-      },
-      {
-        label: i18next.t('field.status'),
-        name: 'status',
-        type: 'select',
-        options: [
-          { value: '' },
-          { name: i18next.t(`label.${ORDER_STATUS.PENDING.name}`), value: ORDER_STATUS.PENDING.value },
-          { name: i18next.t(`label.${ORDER_STATUS.EDITING.name}`), value: ORDER_STATUS.EDITING.value },
-          { name: i18next.t(`label.${ORDER_STATUS.PENDING_RECEIVE.name}`), value: ORDER_STATUS.PENDING_RECEIVE.value },
-          {
-            name: i18next.t(`label.${ORDER_STATUS.READY_TO_EXECUTE.name}`),
-            value: ORDER_STATUS.READY_TO_EXECUTE.value
-          },
-          { name: i18next.t(`label.${ORDER_STATUS.EXECUTING.name}`), value: ORDER_STATUS.EXECUTING.value },
-          { name: i18next.t(`label.${ORDER_STATUS.DONE.name}`), value: ORDER_STATUS.DONE.value }
-        ],
-        props: { searchOper: 'eq' }
       }
     ]
 
     this.config = {
-      rows: { selectable: { multiple: true }, appendable: false },
-      list: { fields: ['name', 'releaseDate', 'status', 'updatedAt'] },
+      pagination: { infinite: false },
+      rows: { appendable: false, selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
@@ -134,53 +99,30 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              const status = record.status
-              if (status === ORDER_STATUS.REJECTED.value) {
-                navigate(`rejected_release_order/${record.name}`) // 1. move to rejected detail page
-              } else if (status === ORDER_STATUS.EDITING.value) {
-                navigate(`edit_release_order/${record.name}`)
-              } else {
-                navigate(`release_order_detail/${record.name}`)
-              }
+              navigate(`receival_note_detail/${record.name}`)
             }
           }
         },
         {
           type: 'string',
           name: 'name',
-          header: i18next.t('field.release_order_no'),
+          header: i18next.t('field.grn'),
           record: { align: 'center' },
           sortable: true,
           width: 180
         },
         {
-          type: 'date',
-          name: 'releaseDate',
-          header: i18next.t('field.release_date'),
+          type: 'string',
+          name: 'refNo',
+          header: i18next.t('field.gan'),
           record: { align: 'center' },
           sortable: true,
           width: 160
         },
         {
-          type: 'boolean',
-          name: 'ownTransport',
-          header: i18next.t('field.own_transport'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 100
-        },
-        {
-          type: 'boolean',
-          name: 'exportOption',
-          header: i18next.t('field.shipping_option'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 100
-        },
-        {
           type: 'string',
-          name: 'status',
-          header: i18next.t('field.status'),
+          name: 'description',
+          header: i18next.t('field.description'),
           record: { align: 'center' },
           sortable: true,
           width: 150
@@ -213,15 +155,11 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  get _columns() {
-    return this.config.columns
-  }
-
   async fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
         query {
-          releaseGoods(${gqlBuilder.buildArgs({
+          goodsReceivalNotes(${gqlBuilder.buildArgs({
             filters: this.searchForm.queryFilters,
             pagination: { page, limit },
             sortings: sorters
@@ -229,14 +167,8 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
             items {
               id
               name
-              bizplace {
-                id
-                name
-              }
-              ownTransport
-              exportOption
-              releaseDate
-              status
+              refNo
+              description
               updatedAt
               updater {
                 id
@@ -251,14 +183,15 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
     })
 
     if (!response.errors) {
-      this._ownTransport = response.data.releaseGoods.ownTransport
-      this._exportOption = response.data.releaseGoods.exportOption
-
       return {
-        total: response.data.releaseGoods.total || 0,
-        records: response.data.releaseGoods.items || []
+        total: response.data.goodsReceivalNotes.total || 0,
+        records: response.data.goodsReceivalNotes.items || []
       }
     }
+  }
+
+  get _columns() {
+    return this.config.columns
   }
 
   _exportableData() {
@@ -266,4 +199,4 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('release-order-list', ReleaseOrderList)
+window.customElements.define('receival-note-list', ReceivalNoteList)

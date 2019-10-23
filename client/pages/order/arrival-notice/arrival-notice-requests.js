@@ -97,6 +97,20 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
         props: { searchOper: 'eq' }
       },
       {
+        label: i18next.t('field.import_cargo'),
+        name: 'importCargo',
+        type: 'checkbox',
+        props: { searchOper: 'eq' },
+        attrs: ['indeterminate']
+      },
+      {
+        label: i18next.t('field.own_transport'),
+        name: 'ownTransport',
+        type: 'checkbox',
+        props: { searchOper: 'eq' },
+        attrs: ['indeterminate']
+      },
+      {
         label: i18next.t('field.status'),
         name: 'status',
         type: 'select',
@@ -164,16 +178,16 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
         },
         {
           type: 'boolean',
-          name: 'ownTransport',
-          header: i18next.t('field.own_transport'),
+          name: 'importCargo',
+          header: i18next.t('field.import_cargo'),
           record: { align: 'center' },
           sortable: true,
           width: 200
         },
         {
           type: 'boolean',
-          name: 'importCargo',
-          header: i18next.t('field.import_cargo'),
+          name: 'ownTransport',
+          header: i18next.t('field.own_transport'),
           record: { align: 'center' },
           sortable: true,
           width: 200

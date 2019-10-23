@@ -89,6 +89,20 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
         props: { searchOper: 'eq' }
       },
       {
+        label: i18next.t('field.import_cargo'),
+        name: 'importCargo',
+        type: 'checkbox',
+        props: { searchOper: 'eq' },
+        attrs: ['indeterminate']
+      },
+      {
+        label: i18next.t('field.own_transport'),
+        name: 'ownTransport',
+        type: 'checkbox',
+        props: { searchOper: 'eq' },
+        attrs: ['indeterminate']
+      },
+      {
         label: i18next.t('field.status'),
         name: 'status',
         type: 'select',
@@ -145,14 +159,6 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           width: 160
         },
         {
-          type: 'string',
-          name: 'status',
-          header: i18next.t('field.status'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 150
-        },
-        {
           type: 'boolean',
           name: 'importCargo',
           header: i18next.t('field.import_cargo'),
@@ -169,14 +175,6 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           width: 100
         },
         {
-          type: 'date',
-          name: 'collectionDate',
-          header: i18next.t('field.collection_date'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 160
-        },
-        {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
@@ -191,6 +189,14 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           record: { align: 'center' },
           sortable: true,
           width: 160
+        },
+        {
+          type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 150
         }
       ]
     }
