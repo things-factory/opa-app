@@ -3,16 +3,17 @@ import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { openPopup } from '@things-factory/layout-base'
+import { client, gqlBuilder, isMobileDevice, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { connect } from 'pwa-helpers/connect-mixin.js'
 import { CustomAlert } from '../../utils/custom-alert'
+import '../components/popup-note'
 import '../components/vas-relabel'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
 import { ORDER_TYPES } from '../order/constants/order'
 
-class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
+class WorksheetVas extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _statusOptions: Array,
@@ -173,11 +174,12 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
       this._worksheetNo = changes.resourceId
       await this.fetchWorksheet()
       this._updateContext()
+      this._updateGristConfig()
     }
   }
 
   async pageInitialized() {
-    this.config = {
+    this.preConfig = {
       rows: {
         appendable: false,
         handlers: {
@@ -187,6 +189,10 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
               this._template.record = { ...record, operationGuide: JSON.parse(record.operationGuide) }
             } else {
               this._template = null
+            }
+
+            if (column.name === 'issue' && record.issue) {
+              this._showIssueNotePopup(record)
             }
           }
         }
@@ -219,13 +225,6 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
           name: 'description',
           header: i18next.t('field.comment'),
           width: 200
-        },
-        {
-          type: 'string',
-          name: 'status',
-          header: i18next.t('field.status'),
-          record: { align: 'center' },
-          width: 100
         }
       ]
     }
@@ -294,6 +293,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
               id
               name
               description
+              issue
               targetVas {
                 operationGuide
                 inventory {
@@ -345,6 +345,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
             ...worksheetDetail.targetVas,
             name: worksheetDetail.name,
             status: worksheetDetail.status,
+            issue: worksheetDetail.issue,
             description: worksheetDetail.description
           }
         })
@@ -367,6 +368,35 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
     })
   }
 
+  _updateGristConfig() {
+    const statusColumnConfig = {
+      type: 'string',
+      name: 'status',
+      header: i18next.t('field.status'),
+      record: { align: 'center' },
+      width: 100
+    }
+
+    const issueColumnConfig = {
+      type: 'string',
+      name: 'issue',
+      header: i18next.t('field.issue'),
+      width: 200
+    }
+
+    this.preConfig.columns.map(column => {
+      if (column.name === 'description') {
+        column.record = { ...column.record, editable: this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value }
+      }
+    })
+
+    if (this._worksheetStatus !== WORKSHEET_STATUS.DEACTIVATED.value) {
+      this.preConfig.columns = [...this.preConfig.columns, statusColumnConfig, issueColumnConfig]
+    }
+
+    this.config = { ...this.preConfig }
+  }
+
   _fillupForm(data) {
     for (let key in data) {
       Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
@@ -386,6 +416,19 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
         }
       })
     }
+  }
+
+  _showIssueNotePopup(record) {
+    openPopup(
+      html`
+        <popup-note title="${record.batchId}" value="${record.issue}" .readonly="${true}"></popup-note>
+      `,
+      {
+        backdrop: true,
+        size: 'medium',
+        title: i18next.t('title.issue_note')
+      }
+    )
   }
 
   async _activateWorksheet() {
@@ -430,6 +473,7 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
       if (!response.errors) {
         this._showToast({ message: i18next.t('text.worksheet_activated') })
         await this.fetchWorksheet()
+        this._updateGristConfig()
         this._updateContext()
       }
     } catch (e) {
@@ -444,12 +488,6 @@ class WorksheetVas extends connect(store)(localize(i18next)(PageView)) {
         description: worksheetDetail.description
       }
     })
-  }
-
-  stateChanged(state) {
-    if (this.active) {
-      this._worksheetNo = state && state.route && state.route.resourceId
-    }
   }
 
   _showToast({ type, message }) {

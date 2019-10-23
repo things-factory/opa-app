@@ -79,7 +79,11 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
   get context() {
     return {
       title: i18next.t('title.worksheet_putaway'),
-      actions: this._actions
+      actions: this._actions,
+      printable: {
+        accept: ['preview'],
+        content: this
+      }
     }
   }
 
@@ -305,7 +309,7 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
       this.preConfig.columns = [...this.preConfig.columns, currentLocationColumn, statusColumnConfig]
     }
 
-    this.config = this.preConfig
+    this.config = { ...this.preConfig }
   }
 
   _fillupForm(data) {
@@ -352,7 +356,9 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
       })
       if (!response.errors) {
         this._showToast({ message: i18next.t('text.worksheet_activated') })
-        this._worksheetNo = ''
+        await this.fetchWorksheet()
+        this._updateContext()
+        this._updateGristConfig()
         navigate(`inbound_worksheets`)
       }
     } catch (e) {

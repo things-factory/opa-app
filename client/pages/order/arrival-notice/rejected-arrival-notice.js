@@ -304,7 +304,6 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
   }
 
   async _fetchGAN() {
-    this._status = ''
     const response = await client.query({
       query: gql`
         query {
@@ -357,7 +356,6 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
 
       this._rejectReason = arrivalNotice.remark
       this._ownTransport = arrivalNotice.ownTransport
-      this._status = arrivalNotice.status
       this._fillupANForm(arrivalNotice)
 
       this.productData = { records: orderProducts }

@@ -6,8 +6,10 @@ import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-fac
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
+import '../../components/popup-note'
+import '../../components/vas-relabel'
 
-class RejectedReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
+class RejectedReleaseOrder extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _releaseOrderNo: String,
@@ -17,7 +19,8 @@ class RejectedReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       vasGristConfig: Object,
       inventoryData: Object,
       vasData: Object,
-      _status: String
+      _template: Object,
+      _rejectReason: String
     }
   }
 
@@ -30,6 +33,13 @@ class RejectedReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
           flex-direction: column;
           overflow-x: auto;
         }
+        popup-note {
+          flex: 1;
+        }
+        .container {
+          display: flex;
+          flex: 4;
+        }
         .grist {
           background-color: var(--main-section-background-color);
           display: flex;
@@ -40,6 +50,10 @@ class RejectedReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
         data-grist {
           overflow-y: hidden;
           flex: 1;
+        }
+        .guide-container {
+          max-width: 30vw;
+          display: flex;
         }
         h2 {
           padding: var(--subtitle-padding);
@@ -81,87 +95,79 @@ class RejectedReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
 
   render() {
     return html`
-        <form name="releaseOrder" class="multi-column-form">
-          <fieldset>
+      <popup-note
+        .title="${i18next.t('title.reject_reason')}"
+        .value="${this._rejectReason}"
+        .readonly="${true}"
+      ></popup-note>
+      <form name="releaseOrder" class="multi-column-form">
+        <fieldset>
           <legend>${i18next.t('title.release_order_no')}: ${this._releaseOrderNo}</legend>
-            <label>${i18next.t('label.release_date')}</label>
-            <input name="releaseDate" type="date" readonly/>
+          <label>${i18next.t('label.release_date')}</label>
+          <input name="releaseDate" type="date" readonly />
 
-            <label>${i18next.t('label.rejection_remark')}</label>
-            <textarea name="remark" type="text" readonly></textarea>
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
+          <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" readonly />
 
-            <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
-            <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" readonly/>
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
+          <input name="truckNo" ?hidden="${!this._ownTransport}" readonly />
 
-            <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
-            <input name="truckNo" ?hidden="${!this._ownTransport}" readonly/>
+          <input id="exportOption" type="checkbox" name="exportOption" ?checked="${this._exportOption}" disabled />
+          <label>${i18next.t('label.export')}</label>
 
-            <input
-            id="exportOption"
-            type="checkbox"
-            name="exportOption"
-            ?checked="${this._exportOption}"
-            disabled
-            />
-            <label>${i18next.t('label.export')}</label>
-
-            <input
+          <input
             id="ownTransport"
             type="checkbox"
             name="ownTransport"
             ?checked="${this._ownTransport}"
             ?hidden="${this._exportOption}"
             disabled
-            />
-            <label ?hidden="${this._exportOption}">${i18next.t('label.own_transport')}</label>
-          </fieldset>
-        </form>
-      </div>
+          />
+          <label ?hidden="${this._exportOption}">${i18next.t('label.own_transport')}</label>
+        </fieldset>
+      </form>
 
       <div class="so-form-container" ?hidden="${!this._exportOption || (this._exportOption && !this._ownTransport)}">
         <form name="shippingOrder" class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.export_order')}</legend>
             <label>${i18next.t('label.container_no')}</label>
-            <input name="containerNo" readonly/>
+            <input name="containerNo" readonly />
 
             <label>${i18next.t('label.container_arrival_date')}</label>
-            <input 
-              name="containerArrivalDate" 
-              type="date"  
-              readonly
-            />
+            <input name="containerArrivalDate" type="date" readonly />
 
             <label>${i18next.t('label.container_leaving_date')}</label>
-            <input name="containerLeavingDate" type="date" readonly/>
+            <input name="containerLeavingDate" type="date" readonly />
 
             <label>${i18next.t('label.ship_name')}</label>
-            <input name="shipName" readonly/>
-
+            <input name="shipName" readonly />
           </fieldset>
         </form>
       </div>
 
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.release_product_list')}</h2>
+      <div class="container">
+        <div class="grist">
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.release_product_list')}</h2>
 
-        <data-grist
-          id="inventory-grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.inventoryGristConfig}
-          .data=${this.inventoryData}
-        ></data-grist>
-      </div>
+          <data-grist
+            id="inventory-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.inventoryGristConfig}
+            .data=${this.inventoryData}
+          ></data-grist>
 
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
-
-        <data-grist
-          id="vas-grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.vasGristConfig}
-          .data="${this.vasData}"
-        ></data-grist>
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
+          <data-grist
+            id="vas-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.vasGristConfig}
+            .data="${this.vasData}"
+          ></data-grist>
+        </div>
+        <div class="guide-container">
+          ${this._template}
+        </div>
       </div>
     `
   }
@@ -194,10 +200,10 @@ class RejectedReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
   }
 
-  async pageUpdated(changes) {
+  pageUpdated(changes) {
     if (this.active && changes.resourceId) {
       this._releaseOrderNo = changes.resourceId
-      await this._fetchReleaseOrder()
+      this._fetchReleaseOrder()
     }
   }
 
@@ -265,7 +271,21 @@ class RejectedReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
 
     this.vasGristConfig = {
       pagination: { infinite: true },
-      rows: { selectable: { multiple: true }, appendable: false },
+      rows: {
+        selectable: { multiple: true },
+        appendable: false,
+        appendable: false,
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            if (record && record.vas && record.vas.operationGuideType === 'template') {
+              this._template = document.createElement(record.vas.operationGuide)
+              this._template.record = { ...record, operationGuide: JSON.parse(record.operationGuide) }
+            } else {
+              this._template = null
+            }
+          }
+        }
+      },
       list: { fields: ['vas', 'inventory', 'product', 'remark'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -302,14 +322,12 @@ class RejectedReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _fetchReleaseOrder() {
-    this._status = ''
     const response = await client.query({
       query: gql`
         query {
           releaseGoodDetail(${gqlBuilder.buildArgs({
             name: this._releaseOrderNo
           })}) {
-            id
             name
             truckNo
             status
@@ -333,6 +351,8 @@ class RejectedReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
               }              
             }
             shippingOrder {
+              name
+              description
               containerNo
               containerLeavingDate
               containerArrivalDate
@@ -340,23 +360,19 @@ class RejectedReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
             }
             orderVass {
               vas {
-                id
                 name
                 description
+                operationGuide
+                operationGuideType
               }
               inventory {
-                id
                 name
                 description
-                product {
-                  id
-                  name
-                  description
-                }
               }
-              description
-              batchId
+              operationGuide
+              status
               remark
+              description
             }
           }
         }
@@ -369,14 +385,14 @@ class RejectedReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
       const orderInventories = releaseOrder.inventoryInfos
       const orderVass = releaseOrder.orderVass
 
-      this._exportOption = response.data.releaseGoodDetail.exportOption
+      this._exportOption = releaseOrder.exportOption
       if (this._exportOption) {
         this._ownTransport = true
       } else if (!this._exportOption) {
-        this._ownTransport = response.data.releaseGoodDetail.ownTransport
+        this._ownTransport = releaseOrder.ownTransport
       }
-      this._status = releaseOrder.status
-      this._fillupRGForm(response.data.releaseGoodDetail)
+      this._rejectReason = releaseOrder.remark
+      this._fillupRGForm(releaseOrder)
       if (this._exportOption) this._fillupSOForm(shippingOrder)
 
       this.inventoryData = { records: orderInventories }

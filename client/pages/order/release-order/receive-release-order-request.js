@@ -8,6 +8,7 @@ import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { CustomAlert } from '../../../utils/custom-alert'
 import '../../components/popup-note'
+import '../../components/vas-relabel'
 
 class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -19,7 +20,8 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
       vasGristConfig: Object,
       inventoryData: Object,
       vasData: Object,
-      _status: String
+      _status: String,
+      _template: Object
     }
   }
 
@@ -32,12 +34,21 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
           flex-direction: column;
           overflow-x: auto;
         }
+        .container {
+          flex: 1;
+          display: flex;
+        }
         .grist {
           background-color: var(--main-section-background-color);
           display: flex;
           flex-direction: column;
           flex: 1;
           overflow-y: auto;
+        }
+        .guide-container {
+          max-width: 30vw;
+          display: flex;
+          flex-direction: column;
         }
         data-grist {
           overflow-y: hidden;
@@ -89,96 +100,86 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
     }
   }
 
-  constructor() {
-    super()
-    this.inventoryData = { records: [] }
-    this.vasData = { records: [] }
-    this._exportOption = false
-    this._ownTransport = true
-  }
-
   render() {
     return html`
-        <form name="releaseOrder" class="multi-column-form">
-          <fieldset>
+      <form name="releaseOrder" class="multi-column-form">
+        <fieldset>
           <legend>${i18next.t('title.release_order_no')}: ${this._releaseOrderNo}</legend>
-            <label>${i18next.t('label.release_date')}</label>
-            <input name="releaseDate" type="date" readonly/>
+          <label>${i18next.t('label.release_date')}</label>
+          <input name="releaseDate" type="date" readonly />
 
-            <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
-            <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" readonly/>
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
+          <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" readonly />
 
-            <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
-            <input name="truckNo" ?hidden="${!this._ownTransport}" readonly/>
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
+          <input name="truckNo" ?hidden="${!this._ownTransport}" readonly />
 
-            <input
-            id="exportOption"
-            type="checkbox"
-            name="exportOption"
-            ?checked="${this._exportOption}"
-            disabled
-            />
-            <label>${i18next.t('label.export')}</label>
+          <input id="exportOption" type="checkbox" name="exportOption" ?checked="${this._exportOption}" disabled />
+          <label>${i18next.t('label.export')}</label>
 
-            <input
+          <input
             id="ownTransport"
             type="checkbox"
             name="ownTransport"
             ?checked="${this._ownTransport}"
             ?hidden="${this._exportOption}"
             disabled
-            />
-            <label ?hidden="${this._exportOption}">${i18next.t('label.own_transport')}</label>
-          </fieldset>
-        </form>
-      </div>
+          />
+          <label ?hidden="${this._exportOption}">${i18next.t('label.own_transport')}</label>
+        </fieldset>
+      </form>
 
       <div class="so-form-container" ?hidden="${!this._exportOption || (this._exportOption && !this._ownTransport)}">
         <form name="shippingOrder" class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.export_order')}</legend>
             <label>${i18next.t('label.container_no')}</label>
-            <input name="containerNo" readonly/>
+            <input name="containerNo" readonly />
 
             <label>${i18next.t('label.container_arrival_date')}</label>
-            <input 
-              name="containerArrivalDate" 
-              type="date"  
-              readonly
-            />
+            <input name="containerArrivalDate" type="date" readonly />
 
             <label>${i18next.t('label.container_leaving_date')}</label>
-            <input name="containerLeavingDate" type="date" readonly/>
+            <input name="containerLeavingDate" type="date" readonly />
 
             <label>${i18next.t('label.ship_name')}</label>
-            <input name="shipName" readonly/>
-
+            <input name="shipName" readonly />
           </fieldset>
         </form>
       </div>
 
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.release_product_list')}</h2>
+      <div class="container">
+        <div class="grist">
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.release_product_list')}</h2>
+          <data-grist
+            id="inventory-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.inventoryGristConfig}
+            .data=${this.inventoryData}
+          ></data-grist>
 
-        <data-grist
-          id="inventory-grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.inventoryGristConfig}
-          .data=${this.inventoryData}
-        ></data-grist>
-      </div>
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
+          <data-grist
+            id="vas-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.vasGristConfig}
+            .data="${this.vasData}"
+          ></data-grist>
+        </div>
 
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
-
-        <data-grist
-          id="vas-grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.vasGristConfig}
-          .data="${this.vasData}"
-        ></data-grist>
+        <div class="guide-container">
+          ${this._template}
+        </div>
       </div>
     `
+  }
+
+  constructor() {
+    super()
+    this.inventoryData = { records: [] }
+    this.vasData = { records: [] }
+    this._exportOption = false
+    this._ownTransport = true
   }
 
   get releaseOrderForm() {
@@ -265,7 +266,20 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
 
     this.vasGristConfig = {
       pagination: { infinite: true },
-      rows: { selectable: { multiple: true }, appendable: false },
+      rows: {
+        selectable: { multiple: true },
+        appendable: false,
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            if (record && record.vas && record.vas.operationGuideType === 'template') {
+              this._template = document.createElement(record.vas.operationGuide)
+              this._template.record = { ...record, operationGuide: JSON.parse(record.operationGuide) }
+            } else {
+              this._template = null
+            }
+          }
+        }
+      },
       list: { fields: ['vas', 'inventory', 'product', 'remark'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -339,18 +353,20 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
             }
             orderVass {
               vas {
-                id
                 name
                 description
+                operationGuide
+                operationGuideType
               }
               inventory {
-                id
                 name
                 description
               }
               description
               batchId
               remark
+              operationGuide
+              status
             }
           }
         }

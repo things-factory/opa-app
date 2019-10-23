@@ -8,9 +8,10 @@ import { client, gqlBuilder, isMobileDevice, PageView, store, UPDATE_CONTEXT } f
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../utils/custom-alert'
+import '../components/popup-note'
+import './adjust-pallet-qty'
 import { WORKSHEET_STATUS } from './constants/worksheet'
 import './pallet-label-popup'
-import './adjust-pallet-qty'
 
 class WorksheetUnloading extends localize(i18next)(PageView) {
   static get properties() {
@@ -161,8 +162,10 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
         appendable: false,
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
-            if (!record.isPalletized) {
+            if (column.name === 'palletQty' && !record.isPalletized) {
               this._showPalletQtyAdjustPopup(record)
+            } else if (column.name === 'issue' && record.issue) {
+              this._showIssueNotePopup(record)
             }
           }
         }
@@ -309,6 +312,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
             name: worksheetDetail.name,
             status: worksheetDetail.status,
             description: worksheetDetail.description,
+            issue: worksheetDetail.issue,
             isPalletized:
               worksheetDetail.targetProduct &&
               worksheetDetail.targetProduct.palletQty &&
@@ -348,6 +352,13 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       width: 100
     }
 
+    const issueColumnConfig = {
+      type: 'string',
+      name: 'issue',
+      header: i18next.t('field.issue'),
+      width: 200
+    }
+
     this.preConfig.columns.map(column => {
       if (column.name === 'description') {
         column.record = { ...column.record, editable: this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value }
@@ -355,10 +366,10 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     })
 
     if (this._worksheetStatus !== WORKSHEET_STATUS.DEACTIVATED.value) {
-      this.preConfig.columns = [...this.preConfig.columns, statusColumnConfig]
+      this.preConfig.columns = [...this.preConfig.columns, statusColumnConfig, issueColumnConfig]
     }
 
-    this.config = this.preConfig
+    this.config = { ...this.preConfig }
   }
 
   _fillupForm(data) {
@@ -406,6 +417,19 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
         backdrop: true,
         size: 'medium',
         title: i18next.t('title.adjust_pallet_qty')
+      }
+    )
+  }
+
+  _showIssueNotePopup(record) {
+    openPopup(
+      html`
+        <popup-note title="${record.batchId}" value="${record.issue}" .readonly="${true}"></popup-note>
+      `,
+      {
+        backdrop: true,
+        size: 'medium',
+        title: i18next.t('title.issue_note')
       }
     )
   }

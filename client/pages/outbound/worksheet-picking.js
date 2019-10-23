@@ -28,6 +28,12 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           flex-direction: column;
           overflow-x: auto;
         }
+        .form-container {
+          display: flex;
+        }
+        .form-container > form {
+          flex: 1;
+        }
         barcode-tag {
           width: 100px;
           height: 100px;
@@ -81,39 +87,33 @@ class WorksheetPicking extends localize(i18next)(PageView) {
     }
   }
 
-  constructor() {
-    super()
-    this._roNo = ''
-  }
-
   render() {
     return html`
-      <form class="multi-column-form">
-        <fieldset>
-          <legend>${i18next.t('title.picking')}</legend>
-          <label>${i18next.t('label.release_good_no')}</label>
-          <input name="releaseGood" readonly />
+      <div class="form-container">
+        <form class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.picking')}</legend>
+            <label>${i18next.t('label.release_good_no')}</label>
+            <input name="releaseGood" readonly />
 
-          <label>${i18next.t('label.customer')}</label>
-          <input name="bizplace" readonly />
+            <label>${i18next.t('label.customer')}</label>
+            <input name="bizplace" readonly />
 
-          <label>${i18next.t('label.status')}</label>
-          <select name="status" disabled>
-            ${Object.keys(WORKSHEET_STATUS).map(
-              key => html`
-                <option value="${WORKSHEET_STATUS[key].value}"
-                  >${i18next.t(`label.${WORKSHEET_STATUS[key].name}`)}</option
-                >
-              `
-            )}
-          </select>
+            <label>${i18next.t('label.status')}</label>
+            <select name="status" disabled>
+              ${Object.keys(WORKSHEET_STATUS).map(
+                key => html`
+                  <option value="${WORKSHEET_STATUS[key].value}"
+                    >${i18next.t(`label.${WORKSHEET_STATUS[key].name}`)}</option
+                  >
+                `
+              )}
+            </select>
+          </fieldset>
+        </form>
 
-          <label>${i18next.t(`label.order_qr_code`)}</label>
-          <span center custom-input>
-            <barcode-tag bcid="qrcode" .value=${this._roNo}></barcode-tag>
-          </span>
-        </fieldset>
-      </form>
+        <barcode-tag bcid="qrcode" .value=${this._roNo}></barcode-tag>
+      </div>
 
       <div class="grist">
         <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.inventory')}</h2>
@@ -323,7 +323,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       this.preConfig.columns = [...this.preConfig.columns, statusColumnConfig]
     }
 
-    this.config = this.preConfig
+    this.config = { ...this.preConfig }
   }
 
   _fillupForm(data) {
@@ -370,7 +370,6 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       })
       if (!response.errors) {
         this._showToast({ message: i18next.t('text.worksheet_activated') })
-        this._worksheetNo = ''
         await this.fetchWorksheet()
         this._updateContext()
         navigate(`outbound_worksheets`)

@@ -337,14 +337,14 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
     if (this._selectedTaskStatus === WORKSHEET_STATUS.EXECUTING.value) {
       actions = [
         ...actions,
-        { title: i18next.t('button.complete'), action: this._completeHandler.bind(this) },
+        { title: i18next.t('button.complete'), action: this._complete.bind(this) },
         { title: i18next.t('button.issue'), action: this._openIssueEditor.bind(this) },
         { title: i18next.t('button.done'), action: this._executeVas.bind(this) }
       ]
     } else if (this._selectedTaskStatus === WORKSHEET_STATUS.DONE.value) {
       actions = [
         ...actions,
-        { title: i18next.t('button.complete'), action: this._completeHandler.bind(this) },
+        { title: i18next.t('button.complete'), action: this._complete.bind(this) },
         { title: i18next.t('button.undo'), action: this._undoVas.bind(this) }
       ]
     }
@@ -393,6 +393,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
               name
               targetName
               status
+              issue
               operationGuide
               vas {
                 id
@@ -425,8 +426,6 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
             }
           })
       }
-
-      this._completeHandler()
     }
   }
 
@@ -571,28 +570,26 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
     if (!this._selectedVas) throw new Error(i18next.t('text.target_doesnt_selected'))
   }
 
-  async _completeHandler() {
-    const result = await CustomAlert({
-      title: i18next.t('title.are_you_sure'),
-      text: i18next.t('text.vas_has_been_completed'),
-      confirmButton: { text: i18next.t('button.confirm') },
-      cancelButton: { text: i18next.t('button.cancel') }
-    })
-    this._updateContext()
-
-    if (result.value) this._complete()
-  }
-
   _getVasWorksheetDetail() {
     const worksheetDetail = this.grist.dirtyData.records.filter(record => record.name === this._selectedVas.name)[0]
     let vasWorkseetDetail = { name: worksheetDetail.name }
-    if (worksheetDetail.issue) vasWorkseetDetail.issue
+    if (worksheetDetail.issue) vasWorkseetDetail.issue = worksheetDetail.issue
     return vasWorkseetDetail
   }
 
   async _complete() {
     try {
       this._validateComplete()
+
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.vas_has_been_completed'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) return
+
       const response = await client.query({
         query: gql`
           mutation {
@@ -615,7 +612,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _validateComplete() {
-    if (!this.data.records.some(record => (record.complete && !record.issue) || (!record.complete && record.issue))) {
+    if (!this.data.records.every(record => record.completed)) {
       throw new Error('text.there_is_uncompleted_task')
     }
   }

@@ -1,26 +1,27 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { CustomAlert } from '../../../utils/custom-alert'
 import { ORDER_PRODUCT_STATUS, ORDER_VAS_STATUS, ORDER_TYPES } from '../constants/order'
 import './inventory-product-selector'
+import '../../components/vas-relabel'
 
-class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
+class CreateReleaseOrder extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _ownTransport: Boolean,
       _exportOption: Boolean,
-      _email: String,
       _selectedInventories: Array,
       inventoryGristConfig: Object,
       vasGristConfig: Object,
       inventoryData: Object,
       vasData: Object,
-      _releaseOrderNo: String
+      _releaseOrderNo: String,
+      _template: Object
     }
   }
 
@@ -33,12 +34,21 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
           flex-direction: column;
           overflow-x: auto;
         }
+        .container {
+          flex: 1;
+          display: flex;
+        }
         .grist {
           background-color: var(--main-section-background-color);
           display: flex;
           flex-direction: column;
           flex: 1;
           overflow-y: auto;
+        }
+        .guide-container {
+          max-width: 30vw;
+          display: flex;
+          flex-direction: column;
         }
         data-grist {
           overflow-y: hidden;
@@ -73,30 +83,51 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
   get context() {
     return {
       title: i18next.t('title.create_release_order'),
-      actions: [
-        {
-          title: i18next.t('button.submit'),
-          action: this._generateReleaseOrder.bind(this)
+      actions: this._actions
+    }
+  }
+
+  get createButton() {
+    return { title: i18next.t('button.submit'), action: this._generateReleaseOrder.bind(this) }
+  }
+
+  get adjustButton() {
+    return {
+      title: i18next.t('button.adjust'),
+      action: () => {
+        this.vasData = {
+          ...this.vasData,
+          records: this.vasGrist.dirtyData.records.map((record, idx) => {
+            if (idx === this._selectedRecordIdx) {
+              try {
+                record.operationGuide = this._template.adjust()
+                record.ready = this._isReadyToCreate(record)
+              } catch (e) {
+                this._showToast(e)
+              }
+            }
+            return record
+          })
         }
-      ]
+      }
     }
   }
 
   render() {
     return html`
-        <form name="releaseOrder" class="multi-column-form" autocomplete="off">
-          <fieldset>
-            <legend>${i18next.t('title.release_order')}</legend>
-            <label>${i18next.t('label.release_date')}</label>
-            <input name="releaseDate" type="date" min="${this._getStdDate()}" />
+      <form name="releaseOrder" class="multi-column-form" autocomplete="off">
+        <fieldset>
+          <legend>${i18next.t('title.release_order')}</legend>
+          <label>${i18next.t('label.release_date')}</label>
+          <input name="releaseDate" type="date" min="${this._getStdDate()}" />
 
-            <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
-            <input name="collectionOrderNo" ?hidden="${!this._ownTransport}"/>
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
+          <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" />
 
-            <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
-            <input name="truckNo" ?hidden="${!this._ownTransport}"/>
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
+          <input name="truckNo" ?hidden="${!this._ownTransport}" />
 
-            <input
+          <input
             id="exportOption"
             type="checkbox"
             name="exportOption"
@@ -108,74 +139,80 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
                 this._ownTransport = true
               }
             }}"
-            />
-            <label for="exportOption">${i18next.t('label.export')}</label>
+          />
+          <label for="exportOption">${i18next.t('label.export')}</label>
 
-            <input
+          <input
             id="ownTransport"
             type="checkbox"
             name="ownTransport"
             ?checked="${this._ownTransport}"
             @change="${e => (this._ownTransport = e.currentTarget.checked)}"
             ?hidden="${this._exportOption}"
-            />
-            <label for="ownTransport" ?hidden="${this._exportOption}">${i18next.t('label.own_transport')}</label>
-          </fieldset>
-        </form>
-      </div>
+          />
+          <label for="ownTransport" ?hidden="${this._exportOption}">${i18next.t('label.own_transport')}</label>
+        </fieldset>
+      </form>
 
       <div class="so-form-container" ?hidden="${!this._exportOption || (this._exportOption && !this._ownTransport)}">
         <form name="shippingOrder" class="multi-column-form" autocomplete="off">
           <fieldset>
             <legend>${i18next.t('title.export_order')}</legend>
             <label>${i18next.t('label.container_no')}</label>
-            <input name="containerNo" ?required="${this._exportOption}"/>
+            <input name="containerNo" ?required="${this._exportOption}" />
 
             <label>${i18next.t('label.container_arrival_date')}</label>
-            <input 
-              name="containerArrivalDate" 
-              type="date"  
+            <input
+              name="containerArrivalDate"
+              type="date"
               @change="${e => {
                 this._conLeavingDateInput.setAttribute('min', e.currentTarget.value)
-              }}" 
-              min="${this._getStdDate()}" 
+              }}"
+              min="${this._getStdDate()}"
               ?required="${this._exportOption}"
             />
 
             <label>${i18next.t('label.container_leaving_date')}</label>
-            <input name="containerLeavingDate" type="date" min="${this._getStdDate()}" ?required="${
-      this._exportOption
-    }"/>
+            <input
+              name="containerLeavingDate"
+              type="date"
+              min="${this._getStdDate()}"
+              ?required="${this._exportOption}"
+            />
 
             <label>${i18next.t('label.ship_name')}</label>
-            <input name="shipName" ?required="${this._exportOption}"/>
-
+            <input name="shipName" ?required="${this._exportOption}" />
           </fieldset>
         </form>
       </div>
 
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.release_product_list')}</h2>
+      <div class="container">
+        <div class="grist">
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.release_product_list')}</h2>
 
-        <data-grist
-          id="inventory-grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.inventoryGristConfig}
-          .data=${this.inventoryData}
-          @record-change="${this._onProductChangeHandler.bind(this)}"
-          @field-change="${this._onFieldChange.bind(this)}"
-        ></data-grist>
-      </div>
+          <data-grist
+            id="inventory-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.inventoryGristConfig}
+            .data=${this.inventoryData}
+            @record-change="${this._onProductChangeHandler.bind(this)}"
+            @field-change="${this._onInventoryFieldChanged.bind(this)}"
+          ></data-grist>
 
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
 
-        <data-grist
-          id="vas-grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.vasGristConfig}
-          .data="${this.vasData}"
-        ></data-grist>
+          <data-grist
+            id="vas-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.vasGristConfig}
+            .data="${this.vasData}"
+            @field-change="${this._onVasFieldChanged.bind(this)}"
+          ></data-grist>
+        </div>
+
+        <div class="guide-container">
+          ${this._template}
+        </div>
       </div>
     `
   }
@@ -186,6 +223,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     this._ownTransport = true
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
+    this._actions = [this.createButton]
   }
 
   get releaseOrderForm() {
@@ -212,9 +250,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
   }
 
-  async pageInitialized() {
-    const _userBizplace = await this._fetchUserBizplaces()
-
+  pageInitialized() {
     this.inventoryGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
@@ -243,15 +279,6 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
             align: 'center',
             options: {
               queryName: 'inventories',
-              basicArgs: {
-                filters: [
-                  {
-                    name: 'bizplace',
-                    value: `${_userBizplace}`,
-                    operator: 'in'
-                  }
-                ]
-              },
               nameField: 'batchId',
               descriptionField: 'palletId',
               select: [
@@ -326,7 +353,29 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
 
     this.vasGristConfig = {
       pagination: { infinite: true },
-      rows: { selectable: { multiple: true } },
+      rows: {
+        selectable: { multiple: true },
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            if (
+              record &&
+              record.vas &&
+              record.vas.operationGuideType === 'template' &&
+              record.vas.operationGuide &&
+              record.inventory
+            ) {
+              this._template = document.createElement(record.vas.operationGuide)
+              this._template.record = record
+              this._template.operationGuide = record.operationGuide
+            } else {
+              this._template = null
+            }
+            this._selectedRecord = record
+            this._selectedRecordIdx = rowIndex
+            this._updateContext()
+          }
+        }
+      },
       list: { fields: ['vas', 'inventory', 'product', 'remark'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -342,6 +391,12 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
           }
         },
         {
+          type: 'boolean',
+          name: 'ready',
+          header: i18next.t('field.ready'),
+          width: 40
+        },
+        {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
@@ -352,10 +407,11 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
               queryName: 'vass',
               select: [
                 { name: 'id', hidden: true },
-                { name: 'name', header: i18next.t('field.pallet_id') },
-                { name: 'description', header: i18next.t('field.description') }
-              ],
-              list: { fields: ['name', 'description'] }
+                { name: 'name' },
+                { name: 'description' },
+                { name: 'operationGuideType', hidden: true },
+                { name: 'operationGuide', hidden: true }
+              ]
             }
           },
           width: 250
@@ -369,6 +425,8 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
             align: 'center',
             options: {
               queryName: 'inventories',
+              nameField: 'batchId',
+              descriptionField: 'palletId',
               basicArgs: { filters: [{ name: 'id', operator: 'in', value: [null] }] },
               select: [
                 { name: 'id', hidden: true },
@@ -383,7 +441,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
             }
           },
           sortable: true,
-          width: 180
+          width: 250
         },
         {
           type: 'string',
@@ -396,28 +454,18 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _fetchUserBizplaces() {
-    if (!this._email) return
-    const response = await client.query({
-      query: gql`
-        query {
-          userBizplaces(${gqlBuilder.buildArgs({
-            email: this._email
-          })}) {
-            id
-            name
-            description
-            mainBizplace
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      return response.data.userBizplaces
-        .filter(userBizplaces => userBizplaces.mainBizplace)
-        .map(userBizplace => userBizplace.id)
+  _updateContext() {
+    this._actions = []
+    if (this._selectedRecord && this._selectedRecord.vas && this._selectedRecord.vas.operationGuideType) {
+      this._actions = [this.adjustButton]
     }
+
+    this._actions = [...this._actions, this.createButton]
+
+    store.dispatch({
+      type: UPDATE_CONTEXT,
+      context: this.context
+    })
   }
 
   _getStdDate() {
@@ -426,7 +474,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     return date.toISOString().split('T')[0]
   }
 
-  _onFieldChange() {
+  _onInventoryFieldChanged() {
     this.inventoryData = {
       ...this.inventoryGrist.dirtyData,
       records: this.inventoryGrist.dirtyData.records.map(record => {
@@ -435,6 +483,28 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
           ...record.inventory
         }
       })
+    }
+  }
+
+  _onVasFieldChanged() {
+    this.vasData = {
+      ...this.vasGrist.dirtyData,
+      records: this.vasGrist.dirtyData.records.map(record => {
+        return {
+          ...record,
+          ready: this._isReadyToCreate(record)
+        }
+      })
+    }
+  }
+
+  _isReadyToCreate(record) {
+    if (record.vas && record.vas.operationGuideType) {
+      return Boolean(record.operationGuide && record.inventory && record.remark)
+    } else if (record.vas && !record.vas.operationGuideType) {
+      return Boolean(record.inventory && record.remark)
+    } else {
+      return false
     }
   }
 
@@ -477,9 +547,9 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
         cancelButton: { text: i18next.t('button.cancel') }
       })
 
-      if (!result.value) {
-        return
-      }
+      if (!result.value) return
+
+      await this._executeRelatedTrxs()
 
       let args = {
         releaseGood: { ...this._getReleaseOrder(), ownTransport: this._exportOption ? true : this._ownTransport }
@@ -507,6 +577,34 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
+  async _executeRelatedTrxs() {
+    try {
+      this.vasData = {
+        ...this.vasData,
+        records: await (async () => {
+          let records = []
+          for (let i = 0; i < this.vasGrist.dirtyData.records.length; i++) {
+            const record = this.vasGrist.dirtyData.records[i]
+
+            if (record.vas.operationGuide && record.operationGuide && record.operationGuide.transactions) {
+              const trxs = record.operationGuide.transactions || []
+
+              for (let j = 0; j < trxs.length; j++) {
+                const trx = trxs[j]
+                record.operationGuide = await trx(record.operationGuide)
+              }
+            }
+            records.push(record)
+          }
+
+          return records
+        })()
+      }
+    } catch (e) {
+      throw e
+    }
+  }
+
   _validateForm() {
     if (!this.releaseOrderForm.checkValidity()) throw new Error('text.release_order_form_invalid')
 
@@ -517,49 +615,70 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _validateInventories() {
-    this.inventoryGrist.commit()
-    // no records
-    if (!this.inventoryGrist.data.records || !this.inventoryGrist.data.records.length)
+    if (!this.inventoryGrist.dirtyData.records || !this.inventoryGrist.dirtyData.records.length)
       throw new Error(i18next.t('text.no_products'))
 
     // required field (batchId, packingType, weight, unit, packQty)
     if (
-      this.inventoryGrist.data.records.filter(record => !record.releaseQty || !record.batchId || !record.packingType)
-        .length
+      this.inventoryGrist.dirtyData.records.filter(
+        record => !record.releaseQty || !record.batchId || !record.packingType
+      ).length
     )
       throw new Error(i18next.t('text.empty_value_in_list'))
 
     // duplication of pallet id
-    const palletIds = this.inventoryGrist.data.records.map(inventory => inventory.palletId)
+    const palletIds = this.inventoryGrist.dirtyData.records.map(inventory => inventory.palletId)
     if (palletIds.filter((palletId, idx, palletIds) => palletIds.indexOf(palletId) !== idx).length)
       throw new Error(i18next.t('text.pallet_id_is_duplicated'))
   }
 
   _validateVas() {
-    this.vasGrist.commit()
-    if (this.vasGrist.data.records && this.vasGrist.data.records.length) {
+    if (this.vasGrist.dirtyData.records && this.vasGrist.dirtyData.records.length) {
       // required field (vas && remark)
-      if (this.vasGrist.data.records.filter(record => !record.vas || !record.remark).length)
+      if (this.vasGrist.dirtyData.records.filter(record => !record.vas || !record.remark).length)
         throw new Error(i18next.t('text.empty_value_in_list'))
+
+      if (!this.vasGrist.dirtyData.records.every(record => record.ready))
+        throw new Error(i18next.t('text.invalid_data_in_list'))
     }
   }
 
   _updateInventoryList() {
     const _selectedInventories = (this.inventoryGrist.dirtyData.records || []).map(record => record.inventory.id)
-    const filters = [
-      {
-        name: 'id',
-        value: _selectedInventories.length ? _selectedInventories : [null],
-        operator: 'in'
-      }
-    ]
+
+    this.inventoryGristConfig = {
+      ...this.inventoryGristConfig,
+      columns: this.inventoryGristConfig.columns.map(column => {
+        if (column.name === 'inventory') {
+          column.record.options.basicArgs = {
+            ...column.record.options.basicArgs,
+            filters: [
+              {
+                name: 'id',
+                value: _selectedInventories.length ? _selectedInventories : [null],
+                operator: 'notin'
+              }
+            ]
+          }
+        }
+
+        return column
+      })
+    }
+
     this.vasGristConfig = {
       ...this.vasGristConfig,
       columns: this.vasGristConfig.columns.map(column => {
         if (column.name === 'inventory') {
           column.record.options.basicArgs = {
             ...column.record.options.basicArgs,
-            filters
+            filters: [
+              {
+                name: 'id',
+                value: _selectedInventories.length ? _selectedInventories : [null],
+                operator: 'in'
+              }
+            ]
           }
         }
 
@@ -586,18 +705,21 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     })
 
     releaseGood.orderVass = this.vasGrist.data.records.map(record => {
-      return {
-        vas: {
-          id: record.vas.id
-        },
-        inventory: {
-          id: record.inventory.id
-        },
-        remark: record.remark,
-        batchId: record.inventory.batchId,
-        type: ORDER_TYPES.RELEASE_OF_GOODS.value,
-        status: ORDER_VAS_STATUS.PENDING.value
+      let _tempObj = {}
+
+      if (record.operationGuide && record.operationGuide.data) {
+        _tempObj.operationGuide = JSON.stringify(record.operationGuide)
       }
+
+      _tempObj = {
+        ..._tempObj,
+        vas: { id: record.vas.id },
+        inventory: { id: record.inventory.id },
+        batchId: record.inventory.batchId,
+        remark: record.remark
+      }
+
+      return _tempObj
     })
 
     return releaseGood
@@ -619,12 +741,11 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _clearView() {
+    this._template = null
+    this._selectedRecord = null
+    this._selectedRecordIdx = null
     this.releaseOrderForm.reset()
     this.shippingOrderForm.reset()
-  }
-
-  stateChanged(state) {
-    this._email = state.auth && state.auth.user && state.auth.user.email
   }
 
   _showToast({ type, message }) {
