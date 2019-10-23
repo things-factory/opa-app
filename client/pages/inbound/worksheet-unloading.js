@@ -36,6 +36,9 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
         .form-container {
           display: flex;
         }
+        .form-container > form {
+          flex: 1;
+        }
         barcode-tag {
           width: 100px;
           height: 100px;
