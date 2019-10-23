@@ -284,13 +284,6 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
           width: 150
         },
         {
-          type: 'object',
-          name: 'product',
-          header: i18next.t('field.product'),
-          record: { align: 'left' },
-          width: 150
-        },
-        {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
@@ -354,11 +347,6 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
                 id
                 name
                 description
-                product {
-                  id
-                  name
-                  description
-                }
               }
               description
               batchId

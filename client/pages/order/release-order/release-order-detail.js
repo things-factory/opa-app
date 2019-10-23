@@ -278,13 +278,6 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
           width: 150
         },
         {
-          type: 'object',
-          name: 'product',
-          header: i18next.t('field.product'),
-          record: { align: 'left' },
-          width: 150
-        },
-        {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
@@ -345,14 +338,8 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
                 id
                 name
                 description
-                product {
-                  id
-                  name
-                  description
-                }
               }
               description
-              batchId
               remark
             }
           }

@@ -6,7 +6,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { CustomAlert } from '../../../utils/custom-alert'
-import { ORDER_PRODUCT_STATUS, ORDER_TYPES } from '../constants/order'
+import { ORDER_PRODUCT_STATUS, ORDER_VAS_STATUS, ORDER_TYPES } from '../constants/order'
 import './inventory-product-selector'
 
 class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
@@ -386,13 +386,6 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
           width: 180
         },
         {
-          type: 'object',
-          name: 'product',
-          header: i18next.t('field.product'),
-          record: { align: 'center' },
-          width: 150
-        },
-        {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
@@ -591,12 +584,18 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     })
 
     releaseGood.orderVass = this.vasGrist.data.records.map(record => {
-      delete record.id
-      delete record.vas.__origin__
-      delete record.vas.__seq__
-      delete record.vas.__selected__
-
-      return { ...record, name }
+      return {
+        vas: {
+          id: record.vas.id
+        },
+        inventory: {
+          id: record.inventory.id
+        },
+        remark: record.remark,
+        batchId: record.inventory.batchId,
+        type: ORDER_TYPES.RELEASE_OF_GOODS.value,
+        status: ORDER_VAS_STATUS.PENDING.value
+      }
     })
 
     return releaseGood
