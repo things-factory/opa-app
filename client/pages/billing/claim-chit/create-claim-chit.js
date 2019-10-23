@@ -231,7 +231,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
 
           <label>${i18next.t('label.order_no')}</label>
           <select name="transportDriver">
-            <option value="">-- Please select a Driver --</option>
+            <option value="">-- ${i18next.t('text.please_select_a_driver')} --</option>
 
             ${Object.keys(this._driverList.data.transportDrivers.items || {}).map(key => {
               let driver = this._driverList.data.transportDrivers.items[key]
@@ -243,7 +243,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
 
           <label>${i18next.t('label.lorry_no')}</label>
           <select name="transportVehicle">
-            <option value="">-- Please select a Truck --</option>
+            <option value="">-- ${i18next.t('text.please_select_a_truck')} --</option>
 
             ${Object.keys(this._vehicleList.data.transportVehicles.items || {}).map(key => {
               let vehicle = this._vehicleList.data.transportVehicles.items[key]
@@ -255,7 +255,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
 
           <label>${i18next.t('label.customer')}</label>
           <select name="bizplace">
-            <option value="">-- Please select a Bizplace --</option>
+            <option value="">-- ${i18next.t('text.please_select_a_customer')} --</option>
 
             ${Object.keys(this._bizplaceList.data.bizplaces.items || {}).map(key => {
               let bizplace = this._bizplaceList.data.bizplaces.items[key]
