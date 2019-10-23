@@ -184,7 +184,6 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     super()
     this._exportOption = false
     this._ownTransport = true
-    this._selectedInventories = []
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
   }
@@ -370,9 +369,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
             align: 'center',
             options: {
               queryName: 'inventories',
-              basicArgs: {
-                filters: []
-              },
+              basicArgs: { filters: [{ name: 'id', operator: 'in', value: [null] }] },
               select: [
                 { name: 'id', hidden: true },
                 { name: 'name', hidden: true },
@@ -380,12 +377,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
                 { name: 'product', type: 'object' },
                 { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
                 { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
-                {
-                  name: 'location',
-                  type: 'object',
-                  subFields: ['name', 'description'],
-                  record: { align: 'center' }
-                }
+                { name: 'location', type: 'object', subFields: ['name', 'description'], record: { align: 'center' } }
               ],
               list: { fields: ['palletId', 'product', 'batchId', 'location'] }
             }
@@ -558,14 +550,23 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _updateInventoryList() {
-    this._selectedInventories = [...(this.inventoryGrist.dirtyData.records || []).map(record => record.inventory.id)]
-
-    var filter = [{ name: 'inventory', value: this._selectedInventories, operator: 'in' }]
-
+    const _selectedInventories = (this.inventoryGrist.dirtyData.records || []).map(record => record.inventory.id)
+    const filters = [
+      {
+        name: 'id',
+        value: _selectedInventories.length ? _selectedInventories : [null],
+        operator: 'in'
+      }
+    ]
     this.vasGristConfig = {
       ...this.vasGristConfig,
       columns: this.vasGristConfig.columns.map(column => {
-        if (column.name === 'inventory') column.record.options.basicArgs.filters = filter
+        if (column.name === 'inventory') {
+          column.record.options.basicArgs = {
+            ...column.record.options.basicArgs,
+            filters
+          }
+        }
 
         return column
       })
