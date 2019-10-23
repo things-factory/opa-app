@@ -123,7 +123,7 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async pageInitialized() {
-    const _userBizplaces = await this._fetchUserBizplaces()
+    const _userBizplace = await this._fetchUserBizplaces()
 
     this.config = {
       pagination: { infinite: true },
@@ -184,7 +184,7 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
                 filters: [
                   {
                     name: 'bizplace',
-                    value: `${_userBizplaces[0].id || ''}`,
+                    value: `${_userBizplace}`,
                     operator: 'eq'
                   }
                 ]
@@ -360,7 +360,9 @@ class CreateVasOrder extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      return response.data.userBizplaces.filter(userBizplaces => userBizplaces.mainBizplace)
+      return response.data.userBizplaces
+        .filter(userBizplaces => userBizplaces.mainBizplace)
+        .map(userBizplace => userBizplace.id)
     }
   }
 
