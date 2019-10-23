@@ -213,7 +213,7 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async pageInitialized() {
-    const _userBizplaces = await this._fetchUserBizplaces()
+    const _userBizplace = await this._fetchUserBizplaces()
 
     this.inventoryGristConfig = {
       pagination: { infinite: true },
@@ -247,8 +247,8 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
                 filters: [
                   {
                     name: 'bizplace',
-                    value: `${_userBizplaces[0].id || ''}`,
-                    operator: 'eq'
+                    value: `${_userBizplace}`,
+                    operator: 'in'
                   }
                 ]
               },
@@ -414,7 +414,9 @@ class CreateReleaseOrder extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      return response.data.userBizplaces.filter(userBizplaces => userBizplaces.mainBizplace)
+      return response.data.userBizplaces
+        .filter(userBizplaces => userBizplaces.mainBizplace)
+        .map(userBizplace => userBizplace.id)
     }
   }
 
