@@ -225,13 +225,13 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
 
   render() {
     return html`
-      <form class="multi-column-form">
+      <form class="multi-column-form" autocomplete="off">
         <fieldset>
           <legend>${i18next.t('title.create_claim_chit')}</legend>
 
           <label>${i18next.t('label.order_no')}</label>
           <select name="transportDriver">
-            <option value="">-- Please select a Driver --</option>
+            <option value="transportDriver">-- Please select a Driver --</option>
 
             ${Object.keys(this._driverList.data.transportDrivers.items || {}).map(key => {
               let driver = this._driverList.data.transportDrivers.items[key]
@@ -255,7 +255,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
 
           <label>${i18next.t('label.customer')}</label>
           <select name="bizplace">
-            <option value="">-- Please select a Bizplace --</option>
+            <option value="">-- Please select a customer --</option>
 
             ${Object.keys(this._bizplaceList.data.bizplaces.items || {}).map(key => {
               let bizplace = this._bizplaceList.data.bizplaces.items[key]
@@ -270,7 +270,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
           <input name="billingMode" value="" />
 
           <label>${i18next.t('label.charges')}</label>
-          <input name="charges" value="" type="number" />
+          <input name="charges" value="" type="number" step="0.01" />
 
           <label>${i18next.t('label.from')}</label>
           <textarea name="from" value="" type="text"></textarea>
@@ -445,7 +445,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
   _getClaimData() {
     let claim = {}
     this._form.querySelectorAll('select,input,textarea').forEach(input => {
-      claim[input.name] = input.value
+      claim[input.name] = input.type === 'number' ? parseFloat(input.value) : input.value
     })
 
     let claimOrders = {}
