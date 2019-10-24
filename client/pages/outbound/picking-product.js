@@ -444,8 +444,8 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
       throw new Error(i18next.t('text.release_qty_is_empty'))
     }
 
-    // 5. release qty can't be more than stored qty
-    if (!parseInt(this.releaseQtyInput.value) > this._selectedOrderInventory.qty) {
+    // 5. typed qty should be matched with release qty.
+    if (parseInt(this.releaseQtyInput.value) !== this._selectedOrderInventory.releaseQty) {
       setTimeout(() => this.releaseQtyInput.select(), 100)
       throw new Error(i18next.t('text.wrong_release_qty'))
     }

@@ -141,8 +141,8 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
               const status = record.status
               if (status === ORDER_STATUS.PENDING_RECEIVE.value) {
                 navigate(`receive_release_order_request/${record.name}`) // 1. move to order receiving page
-              } else if (status === ORDER_STATUS.DONE.value) {
-                navigate(`completed_release_order/${record.name}`) // 4. move to assign buffer location
+              } else {
+                navigate(`release_order_detail/${record.name}`)
               }
             }
           }

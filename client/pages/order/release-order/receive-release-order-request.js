@@ -211,13 +211,6 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
         { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'string',
-          name: 'name',
-          header: i18next.t('field.pallet_id'),
-          record: { align: 'center' },
-          width: 100
-        },
-        {
-          type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_no'),
           record: { align: 'center' },

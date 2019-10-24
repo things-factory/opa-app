@@ -169,6 +169,18 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
           type: 'text',
           props: { searchOper: 'i_like' },
           attrs: ['custom']
+        },
+        {
+          label: i18next.t('field.status'),
+          name: 'status',
+          type: 'text',
+          props: { searchOper: 'i_like' }
+        },
+        {
+          label: i18next.t('field.transaction_type'),
+          name: 'transactionType',
+          type: 'text',
+          props: { searchOper: 'i_like' }
         }
       ]
     }
@@ -227,6 +239,22 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
           type: 'object',
           name: 'location',
           header: i18next.t('field.location'),
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'transactionType',
+          header: i18next.t('field.transaction_type'),
+          record: { align: 'center' },
           sortable: true,
           width: 200
         },
@@ -329,6 +357,8 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
                   name
                   description
                 }
+                status
+                transactionType
                 updatedAt
                 updater {
                   name
