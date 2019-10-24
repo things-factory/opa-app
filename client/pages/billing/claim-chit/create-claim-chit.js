@@ -82,9 +82,10 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
       _driverList: Object,
       _vehicleList: Object,
       _bizplaceList: Object,
-      _orderList: Array,
       _claimOrdersData: Object,
-      _claimDetailsData: Object
+      _claimDetailsData: Object,
+      _selectedDriver: String,
+      _selectedTruck: String
     }
   }
 
@@ -126,7 +127,6 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
     this._driverList = { ...(await this.fetchDriverList()) }
     this._vehicleList = { ...(await this.fetchVehicleList()) }
     this._bizplaceList = { ...(await this.fetchBizplaceList()) }
-    this._orderList = await this.fetchOrderList()
 
     this._claimOrderGristConfig = {
       pagination: { infinite: true },
@@ -153,12 +153,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
           record: {
             editable: true,
             align: 'left',
-            options: [
-              '',
-              ...this._orderList.map(key => {
-                return key.name
-              })
-            ]
+            options: ['']
           },
           width: 250
         }
@@ -230,7 +225,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
           <legend>${i18next.t('title.create_claim_chit')}</legend>
 
           <label>${i18next.t('label.order_no')}</label>
-          <select name="transportDriver">
+          <select @change=${e => (this._selectedDriver = e.target.value)} name="transportDriver" @>
             <option value="">-- ${i18next.t('text.please_select_a_driver')} --</option>
 
             ${Object.keys(this._driverList.data.transportDrivers.items || {}).map(key => {
@@ -242,7 +237,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
           </select>
 
           <label>${i18next.t('label.lorry_no')}</label>
-          <select name="transportVehicle">
+          <select @change=${e => (this._selectedTruck = e.target.value)} name="transportVehicle">
             <option value="">-- ${i18next.t('text.please_select_a_truck')} --</option>
 
             ${Object.keys(this._vehicleList.data.transportVehicles.items || {}).map(key => {
@@ -314,17 +309,14 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
       this._driverList = { ...(await this.fetchDriverList()) }
       this._vehicleList = { ...(await this.fetchVehicleList()) }
       this._bizplaceList = { ...(await this.fetchBizplaceList()) }
-      this._orderList = { ...(await this.fetchOrderList()) }
+      // this._orderList = { ...(await this.fetchOrderList()) }
     }
   }
 
-  updated(changes) {
-    // if (changes.has('_selectedOrderNo') && this._selectedOrderNo !== '') {
-    //   Array.from(this._form.querySelectorAll('input')).map(field => {
-    //     field.value = ''
-    //   })
-    //   if (this.___selectedOrderNo && this.___selectedOrderNo.trim() != '') this.fetchOrderDetail()
-    // }
+  async updated(changes) {
+    if (changes.has('_selectedDriver') || changes.has('_selectedTruck')) {
+      await this.fetchOrderList()
+    }
   }
 
   async fetchDriverList() {
@@ -382,18 +374,44 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async fetchOrderList() {
-    var result = await client.query({
-      query: gql`
+    if (this._selectedDriver && this._selectedTruck && (this._selectedDriver != '') & (this._selectedTruck != '')) {
+      var result = await client.query({
+        query: gql`
         query {
-          claimOrderList {
+          claimOrderList (${gqlBuilder.buildArgs({
+            transportDriver: this._selectedDriver,
+            transportVehicle: this._selectedTruck
+          })}){
+            id
             name
             description
           }
         }
       `
-    })
+      })
+      this._claimOrderGristConfig = {
+        ...this._claimOrderGristConfig,
+        columns: this._claimOrderGristConfig.columns.map(column => {
+          if (column.name === 'name')
+            column.record.options = [
+              '',
+              ...result.data.claimOrderList.map(key => {
+                return key.name
+              })
+            ]
 
-    return result.data.claimOrderList
+          return column
+        })
+      }
+    } else {
+      this._claimOrderGristConfig = {
+        ...this._claimOrderGristConfig,
+        columns: this._claimOrderGristConfig.columns.map(column => {
+          if (column.name === 'name') column.record.options = ['']
+          return column
+        })
+      }
+    }
   }
 
   async _createNewClaim() {
@@ -429,7 +447,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
     this._dataClaimDetailsGrist.fetch()
     this._driverList = { ...(await this.fetchDriverList()) }
     this._vehicleList = { ...(await this.fetchVehicleList()) }
-    this._bizplaceList = { ...(await this.fetchBizPlaces()) }
+    this._bizplaceList = { ...(await this.fetchBizplaceList()) }
   }
 
   _validateData(data) {
