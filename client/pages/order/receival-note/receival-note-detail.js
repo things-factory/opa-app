@@ -9,7 +9,10 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
       _grnNo: String,
       _products: Array,
       _bizplace: Object,
-      _arrivalNotice: Object
+      _arrivalNotice: Object,
+      _grnName: String,
+      _refNo: String,
+      _date: Date
     }
   }
 
@@ -18,6 +21,9 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
     this._products = []
     this._bizplace = {}
     this._arrivalNotice = {}
+    this._grnName = ''
+    this._refNo = ''
+    this._date = ''
   }
 
   static get styles() {
@@ -32,7 +38,11 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
 
         label {
           text-transform: capitalize;
-          text-align: right;
+          text-align: left;
+        }
+
+        [goods-receival-note] {
+          overflow: scroll;
         }
 
         [business-info] {
@@ -56,13 +66,13 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
 
         [brief] {
           display: grid;
-          grid-template-columns: 2fr 1fr;
+          grid-template-columns: 4fr 1fr;
         }
 
         [brief] > div {
           display: grid;
-          grid-template-columns: 1fr 3fr;
-          grid-gap: 10px;
+          grid-template-columns: 1fr 10fr;
+          grid-gap: 1px;
         }
 
         [brief] > div[right] {
@@ -70,15 +80,15 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
         }
 
         [customer-company],
-        [dnno],
+        [grn-no],
         [delivered-by] {
           font-size: 1.2em;
           font-weight: bold;
-          text-transform: capitalize;
+          text-transform: uppercase;
         }
 
-        [dnno] {
-          font-size: 2em;
+        [grn-no] {
+          font-size: 1em;
           line-height: 0.5;
         }
 
@@ -141,11 +151,20 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
           margin-bottom: 10px;
         }
 
+        [idx] {
+          width: 15px;
+          text-align: center;
+        }
+
         @media print {
           :host {
             font-size: 0.6em;
             padding: 0;
             -webkit-print-color-adjust: exact;
+          }
+          #Header,
+          #Footer {
+            display: none !important;
           }
         }
       `
@@ -154,7 +173,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.gan_view'),
+      title: i18next.t('title.goods_receival_note_details'),
       printable: {
         accept: ['preview'],
         content: this
@@ -172,97 +191,103 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
     var customerCompany = this._bizplace.company.name
     var customerBrn = this._bizplace.company.brn
     var customerAddress = this._bizplace.company.address
-    var customerPhone = '603-5191-2911'
-    var customerFax = '603-5192-5811'
-    var customerEmail = 'public@chem.com.my'
+    var customerContact = 'Phone: 603-5191-2911 | Fax: 603-5192-5811'
+    var customerEmail = 'Email: public@chem.com.my'
 
     var deliveredBy = 'container'
-    var dnNo = '082433'
-    var date = '02/10/2019'
+    var grnName = this._grnName
+    var refNo = this._refNo
+    var date = this._date
 
     var footer = i18next.t('text.please_write_down_full_name_clearly')
 
     return html`
-      <div business-info>
-        <h2 business-name>${company}</h2>
-        <span business-brn>(${brn})</span>
-        <div business-address>${address}</div>
-        <div business-contact>${contact}</div>
-        <div business-email>${email}</div>
-      </div>
+      <div goods-receival-note>
+        <div business-info>
+          <h2 business-name>${company}</h2>
+          <span business-brn>(${brn})</span>
+          <div business-address>${address}</div>
+          <div business-contact>${contact}</div>
+          <div business-email>${email}</div>
+        </div>
 
-      <h1 title>GOODS RECEIVAL NOTE</h1>
+        <h1 title>GOODS RECEIVAL NOTE</h1>
 
-      <div brief>
-        <div left>
-          <label>to : </label>
-          <div customer>
-            <div customer-company>${customerCompany}</div>
-            <span customer-brn>(${customerBrn})</span>
-            <div customer-address>${customerAddress}</div>
-            <div customer-contact>${customerPhone}</div>
-            <div customer-contact>${customerFax}</div>
-            <div customer-email>${customerEmail}</div>
+        <div brief>
+          <div left>
+            <label>to : </label>
+            <div customer>
+              <div customer-company>${customerCompany}</div>
+              <span customer-brn>(${customerBrn})</span>
+              <div customer-address>${customerAddress}</div>
+              <div customer-contact>${customerContact}</div>
+              <div customer-email>${customerEmail}</div>
+            </div>
+
+            <!-- <label>delivered by : </label>
+            <span delivered-by>${deliveredBy}</span> -->
           </div>
 
-          <label>delivered by : </label>
-          <span delivered-by>${deliveredBy}</span>
+          <div right>
+            <label>GRN No. : </label>
+            <span grn-no>${grnName}</span>
+
+            <label>Reference No. : </label>
+            <span grn-no>${refNo}</span>
+
+            <label>Date : </label>
+            <span>${date}</span>
+          </div>
         </div>
 
-        <div right>
-          <label>GRN No. : </label>
-          <span dnno>${dnNo}</span>
-
-          <label>Date : </label>
-          <span>${date}</span>
+        <div detail>
+          <table product>
+            <thead>
+              <tr>
+                <th idx>#</th>
+                <th>Batch ID</th>
+                <th>Product</th>
+                <th>Pallet ID</th>
+                <th>Quantity</th>
+                <th>Remark</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${Object.keys(this._products || {}).map((key, index) => {
+                let product = this._products[key]
+                return html`
+                  <tr>
+                    <td idx>${index + 1}</td>
+                    <td>${product.batchId}</td>
+                    <td>${product.product.name}</td>
+                    <td>${product.packingType}</td>
+                    <td>${product.packQty}</td>
+                    <td>${product.remark}</td>
+                  </tr>
+                `
+              })}
+            </tbody>
+          </table>
         </div>
+
+        <div agreement>
+          <div business-side>
+            <div notice>Goods received in good order & condition</div>
+            <div signature></div>
+            <div desc>Official Stamp & Signature</div>
+            <div name>Name:</div>
+            <div date>Date:</div>
+          </div>
+
+          <div customer-side>
+            <div>For <span customer-name>${customerCompany}</span></div>
+            <div signature></div>
+            <div desc>Authorized Signature</div>
+          </div>
+        </div>
+
+        <h4 footer>** ${footer} **</h4>
       </div>
-
-      <div detail>
-        <table product>
-          <thead>
-            <tr>
-              <th>Batch ID</th>
-              <th>Product</th>
-              <th>Pallet ID</th>
-              <th>Quantity</th>
-              <th>Remark</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${Object.keys(this._products || {}).map(key => {
-              let product = this._products[key]
-              return html`
-                <tr>
-                  <td>${product.batchId}</td>
-                  <td>${product.product.name}</td>
-                  <td>${product.packingType}</td>
-                  <td>${product.packQty}</td>
-                  <td>${product.remark}</td>
-                </tr>
-              `
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      <div agreement>
-        <div business-side>
-          <div notice>Goods received in good order & condition</div>
-          <div signature></div>
-          <div desc>Official Stamp & Signature</div>
-          <div name>Name:</div>
-          <div date>Date:</div>
-        </div>
-
-        <div customer-side>
-          <div>For <span customer-name>${customerCompany}</span></div>
-          <div signature></div>
-          <div desc>Authorized Signature</div>
-        </div>
-      </div>
-
-      <h4 footer>** ${footer} **</h4>
     `
   }
 
@@ -301,6 +326,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
               name
               description
             }
+            createdAt
           }
         }
       `
@@ -310,6 +336,15 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
       const goodsReceivalNote = response.data.goodsReceivalNote
       this._bizplace = goodsReceivalNote.bizplace
       this._arrivalNotice = goodsReceivalNote.arrivalNotice
+      this._grnName = goodsReceivalNote.name
+      this._refNo = goodsReceivalNote.refNo
+      const date = goodsReceivalNote.createdAt
+      this._date = new Date(parseInt(date))
+      this._date = new Date(this._date).toUTCString()
+      this._date = this._date
+        .split(' ')
+        .slice(1, 4)
+        .join(' ')
 
       await this._fetchOrderProducts()
     }
@@ -359,7 +394,6 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       this._products = response.data.orderProducts.items || []
-      console.log(this._products)
     }
   }
 }

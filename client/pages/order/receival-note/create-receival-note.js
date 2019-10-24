@@ -6,6 +6,7 @@ import { navigate, client, gqlBuilder, isMobileDevice, PageView } from '@things-
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
+import { elementType } from 'prop-types'
 
 class CreateReceivalNote extends localize(i18next)(PageView) {
   static get styles() {
@@ -66,7 +67,8 @@ class CreateReceivalNote extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _ganNo: String,
-      config: Object
+      config: Object,
+      _arrivalNoticeList: Object
     }
   }
 
@@ -77,7 +79,7 @@ class CreateReceivalNote extends localize(i18next)(PageView) {
           <legend>${i18next.t('title.create_receival_note')}</legend>
 
           <label>${i18next.t('label.customer')}</label>
-          <select name="bizplace" @change="${this._validateForm.bind(this)}">
+          <select name="bizplace" @change="${e => this._onValueChange(e.target.value)}">
             <option value="">-- ${i18next.t('text.please_select_a_customer')} --</option>
 
             ${Object.keys(this._bizplaceList || {}).map(key => {
@@ -127,10 +129,6 @@ class CreateReceivalNote extends localize(i18next)(PageView) {
     }
   }
 
-  // get createButton() {
-  //   return { title: i18next.t('button.create'), action: this._generategoodsReceivalNote.bind(this) }
-  // }
-
   get adjustButton() {
     return {
       title: i18next.t('button.adjust'),
@@ -140,7 +138,7 @@ class CreateReceivalNote extends localize(i18next)(PageView) {
 
   constructor() {
     super()
-    // this._actions = [this.createButton]
+    this._arrivalNoticeList = {}
   }
 
   get _getBizplaceId() {
@@ -157,7 +155,6 @@ class CreateReceivalNote extends localize(i18next)(PageView) {
 
   async pageInitialized() {
     this._bizplaceList = { ...(await this._fetchBizplaceList()) }
-    this._arrivalNoticeList = { ...(await this._fetchArrivalNoticeList()) }
 
     this.config = {
       pagination: { infinite: true },
@@ -210,21 +207,25 @@ class CreateReceivalNote extends localize(i18next)(PageView) {
 
   async fetchHandler() {
     let filters = []
+    const bizplaceId = this._getBizplaceId.value
+    const arrivalNoticeId = this._getArrivalNoticeId.value
+
     filters = [
       {
         name: 'bizplace',
         operator: 'eq',
-        value: this._getBizplaceId.value
+        value: bizplaceId
       },
       {
         name: 'arrivalNotice',
         operator: 'eq',
-        value: this._getArrivalNoticeId.value
+        value: arrivalNoticeId
       }
     ]
 
-    const response = await client.query({
-      query: gql`
+    if (bizplaceId && bizplaceId !== '' && arrivalNoticeId && arrivalNoticeId !== '') {
+      const response = await client.query({
+        query: gql`
         query {
           orderProducts(${gqlBuilder.buildArgs({
             filters
@@ -246,21 +247,23 @@ class CreateReceivalNote extends localize(i18next)(PageView) {
           }
         }
       `
-    })
-
-    return {
-      total: response.data.orderProducts.total || 0,
-      records: response.data.orderProducts.items || []
+      })
+      return {
+        total: response.data.orderProducts.total || 0,
+        records: response.data.orderProducts.items || []
+      }
+    } else {
+      return {
+        total: 0,
+        records: []
+      }
     }
   }
 
   _validateForm() {
-    if (
-      this._getBizplaceId.value &&
-      this._getBizplaceId.value !== '' &&
-      this._getArrivalNoticeId.value &&
-      this._getArrivalNoticeId.value !== ''
-    ) {
+    const bizplaceId = this._getBizplaceId.value
+    const arrivalNoticeId = this._getArrivalNoticeId.value
+    if (bizplaceId && bizplaceId !== '' && arrivalNoticeId && arrivalNoticeId !== '') {
       this.dataGrist.fetch()
     }
   }
@@ -282,35 +285,24 @@ class CreateReceivalNote extends localize(i18next)(PageView) {
     return response.data.bizplaces.items
   }
 
-  async _fetchArrivalNoticeList() {
-    const filters = [
-      {
-        name: 'status',
-        operator: 'eq',
-        value: 'READY_TO_PUTAWAY'
-      }
-      // {
-      //   name: 'bizplace',
-      //   operator: 'eq',
-      //   value: this._getBizplaceId.value
-      // }
-    ]
+  async _onValueChange(bizplace) {
     const response = await client.query({
       query: gql`
       query {
-        arrivalNotices(${gqlBuilder.buildArgs({
-          filters
+        customerArrivalNotices(${gqlBuilder.buildArgs({
+          bizplace: bizplace
         })}) {
-          items {
-            id
-            name
-            description
-          }
+          id
+          name
+          description
         }
       }
     `
     })
-    return response.data.arrivalNotices.items
+
+    this._arrivalNoticeList = response.data.customerArrivalNotices
+    this._getArrivalNoticeId.value = ''
+    this.dataGrist.fetch()
   }
 
   async _fetchArrivalNotice() {
@@ -355,7 +347,7 @@ class CreateReceivalNote extends localize(i18next)(PageView) {
       }
 
       let args = {
-        grn: { refNo: arrivalNoticeId, description: 'test' }
+        grn: { refNo: arrivalNoticeId }
       }
 
       const response = await client.query({
