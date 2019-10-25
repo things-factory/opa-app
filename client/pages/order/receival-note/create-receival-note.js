@@ -269,20 +269,22 @@ class CreateReceivalNote extends localize(i18next)(PageView) {
   }
 
   async _fetchBizplaceList() {
+    // name can be any value. It's because the type requires a parameter (cannot be empty)
+    const name = ''
     const response = await client.query({
       query: gql`
         query {
-          bizplaces (${gqlBuilder.buildArgs({ filters: [], pagination: { page: 1, limit: 9999 } })}){
-            items{
-              id
-              name
-              description
-            }
+          customerBizplaces (${gqlBuilder.buildArgs({
+            name: name
+          })}){
+            id
+            name
+            description
           }
         }`
     })
 
-    return response.data.bizplaces.items
+    return response.data.customerBizplaces
   }
 
   async _onValueChange(bizplace) {
@@ -347,7 +349,7 @@ class CreateReceivalNote extends localize(i18next)(PageView) {
       }
 
       let args = {
-        grn: { refNo: arrivalNoticeId }
+        grn: { refNo: arrivalNoticeId, customer: this._getBizplaceId.value }
       }
 
       const response = await client.query({
