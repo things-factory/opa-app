@@ -1,7 +1,16 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store, navigate } from '@things-factory/shell'
+import {
+  client,
+  gqlBuilder,
+  isMobileDevice,
+  PageView,
+  ScrollbarStyles,
+  store,
+  navigate,
+  flattenObject
+} from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
@@ -94,9 +103,9 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
           gutterName: 'button',
           icon: 'reorder',
           handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              if (record.id) navigate(`claim_chit_detail?id=${record.id}`)
-            }
+            // click: (columns, data, column, record, rowIndex) => {
+            //   if (record.id) navigate(`claim_chit_detail?id=${record.id}`)
+            // }
           }
         },
         {
@@ -109,15 +118,15 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'string',
-          name: 'transportDriverName',
+          name: 'transportDriver|name',
           header: i18next.t('field.driver_name'),
           record: { editable: false, align: 'left' },
           sortable: true,
-          width: 250
+          width: 200
         },
         {
           type: 'string',
-          name: 'transportVehicleName',
+          name: 'transportVehicle|name',
           header: i18next.t('field.truck_no'),
           record: { editable: false, align: 'center' },
           sortable: true,
@@ -125,27 +134,51 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'string',
-          name: 'from',
-          header: i18next.t('field.from'),
+          name: 'bizplace|name',
+          header: i18next.t('field.customer'),
           record: { editable: false, align: 'center' },
           sortable: true,
           width: 300
+        },
+        {
+          type: 'string',
+          name: 'from',
+          header: i18next.t('field.from'),
+          record: { editable: false, align: 'left' },
+          sortable: true,
+          width: 150
         },
         {
           type: 'string',
           name: 'to',
           header: i18next.t('field.to'),
-          record: { editable: false, align: 'center' },
+          record: { editable: false, align: 'left' },
           sortable: true,
-          width: 300
+          width: 150
         },
         {
           type: 'string',
           name: 'billingMode',
           header: i18next.t('field.billing_mode'),
+          record: { editable: false, align: 'left' },
+          sortable: true,
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'charges',
+          header: i18next.t('field.charges'),
           record: { editable: false, align: 'center' },
           sortable: true,
-          width: 150
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'total',
+          header: i18next.t('field.total'),
+          record: { editable: false, align: 'center' },
+          sortable: true,
+          width: 100
         },
         {
           type: 'datetime',
@@ -189,10 +222,22 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
                 name
                 description
                 billingMode
-                transportDriverName
-                transportVehicleName
+                transportDriver{
+                  name
+                }
+                transportVehicle{
+                  name
+                }
+                claimDetails{
+                  name
+                  amount
+                }
                 from
                 to
+                bizplace{
+                  name
+                }
+                charges
                 createdAt
                 updatedAt
                 updater {
@@ -210,7 +255,10 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
       if (!response.errors) {
         return {
           total: response.data.claims.total || 0,
-          records: response.data.claims.items || {}
+          records:
+            response.data.claims.items.map(item => {
+              return flattenObject(item)
+            }) || {}
         }
       }
     } catch (e) {
