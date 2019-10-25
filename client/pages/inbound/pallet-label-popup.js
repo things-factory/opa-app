@@ -156,7 +156,7 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
 
   _validate() {
     let _targetRows = this.dataGrist.selected.length > 0 ? this.dataGrist.selected : this.dataGrist.dirtyData.records
-    if (!_targetRows.every(row => row.printQty)) throw new Error(i18next.t('print_qty_is_empty'))
+    if (!_targetRows.every(row => row.printQty)) throw new Error(i18next.t('text.print_qty_is_empty'))
     return _targetRows
   }
 

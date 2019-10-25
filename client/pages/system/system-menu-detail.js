@@ -286,6 +286,9 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
         let patchField = menu.id ? { id: menu.id } : {}
         if (!patchField.parent) {
           patchField.parent = { id: this.menuId }
+          delete menu.parent.__selected__
+          delete menu.parent.__origin__
+          delete menu.parent.__seq__
         }
         const dirtyFields = menu.__dirtyfields__
         for (let key in dirtyFields) {

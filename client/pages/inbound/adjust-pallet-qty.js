@@ -49,7 +49,7 @@ class AdjustPalletQty extends localize(i18next)(LitElement) {
       >
         <fieldset>
           <legend>${i18next.t('title.product')}</legend>
-          <label>${i18next.t('label.batch_id')}</label>
+          <label>${i18next.t('label.batch_no')}</label>
           <input name="batchId" readonly value="${this.record.batchId}" />
 
           <label>${i18next.t('label.product')}</label>

@@ -188,6 +188,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
 
   pageInitialized() {
     this.productGristConfig = {
+      list: { fields: ['batchId', 'product', 'packingType', 'totalWeight'] },
       pagination: { infinite: true },
       rows: { selectable: { multiple: true }, appendable: false },
       columns: [
@@ -255,6 +256,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     }
 
     this.vasGristConfig = {
+      list: { fields: ['ready', 'vas', 'batchId', 'remark'] },
       pagination: { infinite: true },
       rows: {
         selectable: { multiple: true },
