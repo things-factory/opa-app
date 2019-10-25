@@ -288,23 +288,25 @@ class CreateReceivalNote extends localize(i18next)(PageView) {
   }
 
   async _onValueChange(bizplace) {
-    const response = await client.query({
-      query: gql`
-      query {
-        customerArrivalNotices(${gqlBuilder.buildArgs({
-          bizplace: bizplace
-        })}) {
-          id
-          name
-          description
+    if (!this._getBizplaceId.value == '') {
+      const response = await client.query({
+        query: gql`
+        query {
+          customerArrivalNotices(${gqlBuilder.buildArgs({
+            bizplace: bizplace
+          })}) {
+            id
+            name
+            description
+          }
         }
-      }
-    `
-    })
+        `
+      })
 
-    this._arrivalNoticeList = response.data.customerArrivalNotices
-    this._getArrivalNoticeId.value = ''
-    this.dataGrist.fetch()
+      this._arrivalNoticeList = response.data.customerArrivalNotices
+      this._getArrivalNoticeId.value = ''
+      this.dataGrist.fetch()
+    }
   }
 
   async _fetchArrivalNotice() {
@@ -365,10 +367,12 @@ class CreateReceivalNote extends localize(i18next)(PageView) {
 
       if (!response.errors) {
         navigate(`receival_note_detail/${response.data.generateGoodsReceivalNote.name}`)
-        this._showToast({ message: i18next.t('receival_note_created') })
+        this._showToast({ message: i18next.t('text.receival_note_created') })
+      } else if (response.errors[0].extensions.exception.code === '23505') {
+        throw new Error(i18next.t('text.this_receival_note_already_existed'))
       }
     } catch (e) {
-      this._showToast(e)
+      // this._showToast(e)
     }
   }
 
