@@ -80,7 +80,6 @@
   "field.resource_name": "资源名称",
   "field.resource_url": "资源url",
   "field.id_field": "id列",
-  "field.title_field": "标题列",
   "field.check_box": "复选框",
   "field.product_code": "产品代码",
   "field.packing_type": "包装类型",
