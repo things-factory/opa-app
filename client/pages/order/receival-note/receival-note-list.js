@@ -80,6 +80,13 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
+        label: i18next.t('field.customer'),
+        name: 'bizplace',
+        type: 'object',
+        queryName: 'bizplaces',
+        field: 'name'
+      },
+      {
         label: i18next.t('field.gan'),
         name: 'refNo',
         type: 'text',
@@ -107,15 +114,23 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.grn'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
           width: 180
+        },
+        {
+          type: 'object',
+          name: 'bizplace',
+          header: i18next.t('field.customer'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 200
         },
         {
           type: 'string',
           name: 'refNo',
           header: i18next.t('field.gan'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
           width: 160
         },
@@ -169,6 +184,11 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
               name
               refNo
               description
+              bizplace {
+                id
+                name
+                description
+              }
               updatedAt
               updater {
                 id
