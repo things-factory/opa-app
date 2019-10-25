@@ -339,6 +339,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     }
 
     this.vasGristConfig = {
+      list: { fields: ['ready', 'vas', 'inventory', 'product', 'remark'] },
       pagination: { infinite: true },
       rows: {
         selectable: { multiple: true },
@@ -363,7 +364,6 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
           }
         }
       },
-      list: { fields: ['vas', 'inventory', 'product', 'remark'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -398,7 +398,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                 { name: 'description' },
                 { name: 'operationGuideType', hidden: true },
                 { name: 'operationGuide', hidden: true }
-              ]
+              ],
+              list: { fields: ['name', 'description'] }
             }
           },
           width: 250

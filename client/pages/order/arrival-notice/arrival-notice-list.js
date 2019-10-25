@@ -120,6 +120,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
     ]
 
     this.config = {
+      list: { fields: ['name', 'etaDate', 'importCargo', 'ownTransport', 'updatedAt', 'updater'] },
       rows: { appendable: false, selectable: { multiple: true } },
       pagination: { infinite: true },
       columns: [

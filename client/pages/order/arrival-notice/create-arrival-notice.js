@@ -222,6 +222,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     this.productGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
+      list: { fields: ['batch_no', 'product', 'packingType', 'totalWeight'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -248,7 +249,16 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
-          record: { editable: true, align: 'center', options: { queryName: 'products' } },
+          record: {
+            editable: true,
+            align: 'center',
+            options: {
+              queryName: 'products',
+              nameField: 'name',
+              descriptionField: 'description',
+              list: { fields: ['name', 'description'] }
+            }
+          },
           width: 350
         },
         {
@@ -301,6 +311,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     }
 
     this.vasGristConfig = {
+      list: { fields: ['ready', 'vas', 'batchId', 'remark'] },
       pagination: { infinite: true },
       rows: {
         selectable: { multiple: true },
@@ -360,7 +371,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
                 { name: 'description', width: 200 },
                 { name: 'operationGuide', hidden: true },
                 { name: 'operationGuideType', hidden: true }
-              ]
+              ],
+              list: { fields: ['name', 'description'] }
             }
           },
           width: 250

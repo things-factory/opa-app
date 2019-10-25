@@ -267,7 +267,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
           }
         }
       },
-      list: { fields: ['vas', 'inventory', 'product', 'remark'] },
+      list: { fields: ['ready', 'vas', 'inventory', 'product', 'remark'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {

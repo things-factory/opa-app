@@ -188,6 +188,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
 
   pageInitialized() {
     this.productGristConfig = {
+      list: { fields: ['batchId', 'product', 'packingType', 'totalWeight'] },
       pagination: { infinite: true },
       rows: { selectable: { multiple: true }, appendable: false },
       columns: [
