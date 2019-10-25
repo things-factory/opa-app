@@ -285,24 +285,11 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                 { name: 'id', hidden: true },
                 { name: 'name', hidden: true },
                 { name: 'palletId', header: i18next.t('field.pallet_id'), record: { align: 'center' } },
+                { name: 'product', type: 'object', queryName: 'products' },
                 { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
+                { name: 'location', type: 'object', queryName: 'locations', record: { align: 'center' } },
                 { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
-                {
-                  name: 'location',
-                  type: 'object',
-                  subFields: ['name', 'description'],
-                  record: { align: 'center' }
-                },
-                {
-                  name: 'bizplace',
-                  type: 'object',
-                  record: { align: 'center' }
-                },
-                {
-                  name: 'product',
-                  type: 'object',
-                  subfields: ['name', 'description']
-                },
+                { name: 'bizplace', type: 'object', record: { align: 'center' } },
                 { name: 'qty', type: 'float', record: { align: 'center' } }
               ],
               list: { fields: ['palletId', 'product', 'batchId', 'location'] }
@@ -432,10 +419,10 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                 { name: 'id', hidden: true },
                 { name: 'name', hidden: true },
                 { name: 'palletId', header: i18next.t('field.pallet_id'), record: { align: 'center' } },
-                { name: 'product', type: 'object' },
+                { name: 'product', type: 'object', queryName: 'products' },
                 { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
                 { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
-                { name: 'location', type: 'object', subFields: ['name', 'description'], record: { align: 'center' } }
+                { name: 'location', type: 'object', queryName: 'locations', record: { align: 'center' } }
               ],
               list: { fields: ['palletId', 'product', 'batchId', 'location'] }
             }
