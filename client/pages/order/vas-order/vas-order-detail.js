@@ -132,26 +132,30 @@ class VasOrderDetail extends localize(i18next)(PageView) {
           header: i18next.t('field.vas'),
           record: {
             align: 'center',
-            options: {
-              queryName: 'vass',
-              select: [{ name: 'operationGuide' }, { name: 'operationGuideType' }]
-            }
+            options: { queryName: 'vass', select: [{ name: 'operationGuide' }, { name: 'operationGuideType' }] }
           },
-          width: 250
+          width: 300
+        },
+        {
+          type: 'object',
+          name: 'inventory',
+          header: i18next.t('field.inventory_list'),
+          record: { align: 'center', options: { nameField: 'batchId', descriptionField: 'palletId' } },
+          width: 300
         },
         {
           type: 'object',
           name: 'product',
-          header: i18next.t('field.inventory_list'),
+          header: i18next.t('field.product'),
           record: { align: 'center' },
-          width: 250
+          width: 300
         },
         {
-          type: 'string',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
+          type: 'object',
+          name: 'warehouse',
+          header: i18next.t('field.warehouse'),
           record: { align: 'center' },
-          width: 150
+          width: 300
         },
         {
           type: 'object',
@@ -196,8 +200,12 @@ class VasOrderDetail extends localize(i18next)(PageView) {
               }
               inventory {
                 batchId
+                palletId
                 name
                 product {
+                  name
+                }
+                warehouse {
                   name
                 }
                 location {

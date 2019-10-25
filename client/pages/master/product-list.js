@@ -48,12 +48,7 @@ class ProductList extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <search-form
-        id="search-form"
-        .fields=${this._searchFields}
-        initFocus="description"
-        @submit=${e => this.dataGrist.fetch()}
-      ></search-form>
+      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
       <div class="grist">
         <data-grist
@@ -104,18 +99,18 @@ class ProductList extends localize(i18next)(PageView) {
         }
       },
       {
-        label: i18next.t('field.type'),
-        name: 'type',
-        props: {
-          searchOper: 'i_like'
-        }
-      },
-      {
         label: i18next.t('field.product_ref'),
         name: 'productRef',
         type: 'object',
         queryName: 'products',
         field: 'name'
+      },
+      {
+        label: i18next.t('field.type'),
+        name: 'type',
+        props: {
+          searchOper: 'i_like'
+        }
       }
     ]
 

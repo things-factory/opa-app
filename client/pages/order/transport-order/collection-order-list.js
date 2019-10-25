@@ -76,8 +76,20 @@ class CollectionOrderList extends localize(i18next)(PageView) {
   pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('field.name'),
+        label: i18next.t('field.co_no'),
         name: 'name',
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
+        label: i18next.t('field.ref_no'),
+        name: 'refNo',
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
+        label: i18next.t('field.collect_from'),
+        name: 'from',
         type: 'text',
         props: { searchOper: 'i_like' }
       },
@@ -86,6 +98,26 @@ class CollectionOrderList extends localize(i18next)(PageView) {
         name: 'collectionDate',
         type: 'date',
         props: { searchOper: 'i_like' }
+      },
+      {
+        label: i18next.t('field.cargo_type'),
+        name: 'cargoType',
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
+        label: i18next.t('field.urgency'),
+        name: 'urgency',
+        type: 'checkbox',
+        props: { searchOper: 'eq' },
+        attrs: ['indeterminate']
+      },
+      {
+        label: i18next.t('field.loose_item'),
+        name: 'looseItem',
+        type: 'checkbox',
+        props: { searchOper: 'eq' },
+        attrs: ['indeterminate']
       },
       {
         label: i18next.t('field.status'),
@@ -128,9 +160,23 @@ class CollectionOrderList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.co_no'),
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'refNo',
+          header: i18next.t('field.ref_no'),
           record: { align: 'center' },
           sortable: true,
-          width: 180
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'from',
+          header: i18next.t('field.collect_from'),
+          sortable: true,
+          width: 250
         },
         {
           type: 'date',
@@ -142,11 +188,35 @@ class CollectionOrderList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'from',
-          header: i18next.t('field.collect_from'),
+          name: 'cargoType',
+          header: i18next.t('field.cargo_type'),
           record: { align: 'center' },
           sortable: true,
-          width: 250
+          width: 150
+        },
+        {
+          type: 'boolean',
+          name: 'urgency',
+          header: i18next.t('field.urgency'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'boolean',
+          name: 'looseItem',
+          header: i18next.t('field.loose_item'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'integer',
+          name: 'loadWeight',
+          header: i18next.t('label.load_weight'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 100
         },
         {
           type: 'string',
@@ -200,6 +270,11 @@ class CollectionOrderList extends localize(i18next)(PageView) {
               telNo
               collectionDate
               status
+              refNo
+              cargoType
+              urgency
+              loadWeight
+              looseItem
               updatedAt
               updater {
                 id

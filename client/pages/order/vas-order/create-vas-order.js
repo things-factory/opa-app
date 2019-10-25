@@ -155,10 +155,7 @@ class CreateVasOrder extends localize(i18next)(PageView) {
           icon: 'close',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              data = {
-                ...data,
-                records: data.records.filter((record, idx) => idx !== rowIndex)
-              }
+              this.data = { ...this.data, records: data.records.filter((_, idx) => idx !== rowIndex) }
             }
           }
         },
@@ -183,44 +180,39 @@ class CreateVasOrder extends localize(i18next)(PageView) {
                 { name: 'id', hidden: true },
                 { name: 'name', hidden: true },
                 { name: 'palletId', header: i18next.t('field.pallet_id'), record: { align: 'center' } },
+                { name: 'product', type: 'object', queryName: 'products' },
                 { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
                 { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
-                {
-                  name: 'location',
-                  type: 'object',
-                  subFields: ['name', 'description'],
-                  record: { align: 'center' }
-                },
-                {
-                  name: 'bizplace',
-                  type: 'object',
-                  record: { align: 'center' }
-                },
-                {
-                  name: 'product',
-                  type: 'object',
-                  subfields: ['name', 'description']
-                },
+                { name: 'warehouse', type: 'object', record: { align: 'center' } },
+                { name: 'location', type: 'object', queryName: 'locations', record: { align: 'center' } },
+                { name: 'bizplace', type: 'object', record: { align: 'center' } },
                 { name: 'qty', type: 'float', record: { align: 'center' } }
               ],
               list: { fields: ['palletId', 'product', 'batchId', 'location'] }
             }
           },
-          width: 250
+          width: 300
+        },
+        {
+          type: 'object',
+          name: 'product',
+          header: i18next.t('field.product'),
+          record: { align: 'center' },
+          width: 300
         },
         {
           type: 'object',
           name: 'warehouse',
           header: i18next.t('field.warehouse'),
           record: { align: 'center' },
-          width: 200
+          width: 300
         },
         {
           type: 'object',
           name: 'location',
           header: i18next.t('field.location'),
           record: { align: 'center' },
-          width: 150
+          width: 300
         },
         {
           type: 'object',
@@ -240,7 +232,7 @@ class CreateVasOrder extends localize(i18next)(PageView) {
               ]
             }
           },
-          width: 250
+          width: 300
         },
         {
           type: 'string',

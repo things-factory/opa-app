@@ -345,8 +345,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           icon: 'close',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              const newData = data.records.filter((_, idx) => idx !== rowIndex)
-              this.vasData = { ...this.vasData, records: newData }
+              this.vasData = { ...this.vasData, records: data.records.filter((_, idx) => idx !== rowIndex) }
             }
           }
         },

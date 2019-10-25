@@ -42,7 +42,8 @@ class IntransitInventory extends connect(store)(localize(i18next)(PageView)) {
       _email: String,
       _searchFields: Array,
       config: Object,
-      data: Object
+      data: Object,
+      _palletLabel: Object
     }
   }
 
@@ -84,24 +85,12 @@ class IntransitInventory extends connect(store)(localize(i18next)(PageView)) {
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
-        {
-          type: 'string',
-          name: 'palletId',
-          header: i18next.t('field.pallet_id'),
-          sortable: true,
-          width: 150
-        },
-        {
-          type: 'string',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
-          sortable: true,
-          width: 150
-        },
+        { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'object',
           name: 'bizplace',
           header: i18next.t('field.customer'),
+          record: { align: 'center' },
           sortable: true,
           width: 200
         },
@@ -109,28 +98,31 @@ class IntransitInventory extends connect(store)(localize(i18next)(PageView)) {
           type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
+          record: { align: 'left' },
           sortable: true,
           width: 200
         },
         {
-          type: 'number',
-          name: 'qty',
-          header: i18next.t('field.qty'),
-          record: { align: 'right' },
+          type: 'string',
+          name: 'palletId',
+          header: i18next.t('field.pallet_id'),
+          record: { align: 'center' },
           sortable: true,
-          width: 80
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'batchId',
+          header: i18next.t('field.batch_no'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 150
         },
         {
           type: 'object',
           name: 'warehouse',
           header: i18next.t('field.warehouse'),
-          sortable: true,
-          width: 200
-        },
-        {
-          type: 'object',
-          name: 'location',
-          header: i18next.t('field.location'),
+          record: { align: 'center' },
           sortable: true,
           width: 200
         },
@@ -138,13 +130,32 @@ class IntransitInventory extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'zone',
           header: i18next.t('field.zone'),
+          record: { align: 'center' },
           sortable: true,
           width: 80
         },
         {
+          type: 'object',
+          name: 'location',
+          header: i18next.t('field.location'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'number',
+          name: 'qty',
+          header: i18next.t('field.qty'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 80
+        },
+
+        {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
+          record: { align: 'center' },
           sortable: true,
           width: 150
         },
@@ -152,6 +163,7 @@ class IntransitInventory extends connect(store)(localize(i18next)(PageView)) {
           type: 'object',
           name: 'updater',
           header: i18next.t('field.updater'),
+          record: { align: 'center' },
           sortable: true,
           width: 150
         }
@@ -163,7 +175,7 @@ class IntransitInventory extends connect(store)(localize(i18next)(PageView)) {
     this._searchFields = [
       {
         label: i18next.t('field.customer'),
-        name: 'bizplaceName',
+        name: 'bizplace',
         type: 'select',
         options: [
           { value: '' },
@@ -172,28 +184,22 @@ class IntransitInventory extends connect(store)(localize(i18next)(PageView)) {
             .map(userBizplace => {
               return {
                 name: userBizplace.name,
-                value: userBizplace.name
+                value: userBizplace.id
               }
             })
         ],
-        props: { searchOper: 'i_like' },
-        attrs: ['custom']
+        props: { searchOper: 'eq' }
       },
       {
-        label: i18next.t('field.warehouse'),
-        name: 'warehouseName',
-        type: 'text',
-        props: { searchOper: 'i_like' }
+        label: i18next.t('field.product'),
+        name: 'product',
+        type: 'object',
+        queryName: 'products',
+        field: 'name'
       },
       {
-        label: i18next.t('field.location'),
-        name: 'locationName',
-        type: 'text',
-        props: { searchOper: 'i_like' }
-      },
-      {
-        label: i18next.t('field.zone'),
-        name: 'zone',
+        label: i18next.t('field.batch_no'),
+        name: 'batchId',
         type: 'text',
         props: { searchOper: 'i_like' }
       },
@@ -204,40 +210,26 @@ class IntransitInventory extends connect(store)(localize(i18next)(PageView)) {
         props: { searchOper: 'i_like' }
       },
       {
-        label: i18next.t('field.batch_no'),
-        name: 'batchId',
-        type: 'text',
-        props: { searchOper: 'i_like' }
+        label: i18next.t('field.warehouse'),
+        name: 'warehouse',
+        type: 'object',
+        queryName: 'warehouses',
+        field: 'name'
       },
       {
-        label: i18next.t('field.product'),
-        name: 'productName',
+        label: i18next.t('field.location'),
+        name: 'location',
+        type: 'object',
+        queryName: 'locations',
+        field: 'name'
+      },
+      {
+        label: i18next.t('field.zone'),
+        name: 'zone',
         type: 'text',
         props: { searchOper: 'i_like' }
       }
     ]
-  }
-
-  async _fetchUserBizplaces() {
-    if (!this._email) return
-    const response = await client.query({
-      query: gql`
-        query {
-          userBizplaces(${gqlBuilder.buildArgs({
-            email: this._email
-          })}) {
-            id
-            name
-            description
-            mainBizplace
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      return response.data.userBizplaces
-    }
   }
 
   async pageUpdated(changes, lifecycle) {
@@ -255,15 +247,12 @@ class IntransitInventory extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async fetchHandler({ page, limit, sorters = [] }) {
-    let inventory = {}
-    this.searchForm.queryFilters.forEach(filter => {
-      inventory[filter.name] = filter.value
-    })
+    const filters = await this.searchForm.getQueryFilters()
     const response = await client.query({
       query: gql`
         query {
-          intransitInventories(${gqlBuilder.buildArgs({
-            inventory,
+          inventories(${gqlBuilder.buildArgs({
+            filters: [...filters, { name: 'status', operator: 'eq', value: 'INTRANSIT' }],
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -301,13 +290,9 @@ class IntransitInventory extends connect(store)(localize(i18next)(PageView)) {
     })
 
     return {
-      total: response.data.intransitInventories.total || 0,
-      records: response.data.intransitInventories.items || []
+      total: response.data.inventories.total || 0,
+      records: response.data.inventories.items || []
     }
-  }
-
-  stateChanged(state) {
-    this._email = state.auth && state.auth.user && state.auth.user.email
   }
 
   get _columns() {
@@ -316,6 +301,43 @@ class IntransitInventory extends connect(store)(localize(i18next)(PageView)) {
 
   _exportableData() {
     return this.dataGrist.exportRecords()
+  }
+
+  async _fetchUserBizplaces() {
+    if (!this._email) return
+    const response = await client.query({
+      query: gql`
+        query {
+          userBizplaces(${gqlBuilder.buildArgs({
+            email: this._email
+          })}) {
+            id
+            name
+            description
+            mainBizplace
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      return response.data.userBizplaces
+    }
+  }
+
+  stateChanged(state) {
+    this._email = state.auth && state.auth.user && state.auth.user.email
+  }
+
+  _showToast({ type, message }) {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: {
+          type,
+          message
+        }
+      })
+    )
   }
 }
 

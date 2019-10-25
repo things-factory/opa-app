@@ -262,6 +262,14 @@ export default {
       page: 'onhand_inventory'
     },
     {
+      tagname: 'customer-onhand-inventory',
+      page: 'customer_onhand_inventory'
+    },
+    {
+      tagname: 'customer-intransit-inventory',
+      page: 'customer_intransit_inventory'
+    },
+    {
       tagname: 'intransit-inventory',
       page: 'intransit_inventory'
     },

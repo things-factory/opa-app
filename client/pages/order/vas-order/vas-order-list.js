@@ -136,14 +136,6 @@ class VasOrderList extends localize(i18next)(PageView) {
         },
         {
           type: 'datetime',
-          name: 'createdAt',
-          header: i18next.t('field.created_at'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 160
-        },
-        {
-          type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
           record: { align: 'center' },
@@ -152,8 +144,8 @@ class VasOrderList extends localize(i18next)(PageView) {
         },
         {
           type: 'object',
-          name: 'creator',
-          header: i18next.t('field.creator'),
+          name: 'updater',
+          header: i18next.t('field.updater'),
           record: { align: 'center' },
           sortable: true,
           width: 160

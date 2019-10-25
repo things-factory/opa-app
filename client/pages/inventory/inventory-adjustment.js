@@ -278,7 +278,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     this._searchFields = [
       {
         label: i18next.t('field.customer'),
-        name: 'bizplaceName',
+        name: 'bizplace',
         type: 'select',
         options: [
           { value: '' },
@@ -287,22 +287,22 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
             .map(userBizplace => {
               return {
                 name: userBizplace.name,
-                value: userBizplace.name
+                value: userBizplace.id
               }
             })
         ],
-        props: { searchOper: 'i_like' },
-        attrs: ['custom']
+        props: { searchOper: 'eq' }
       },
       {
-        label: i18next.t('field.zone'),
-        name: 'zone',
-        type: 'text',
-        props: { searchOper: 'i_like' }
+        label: i18next.t('field.product'),
+        name: 'product',
+        type: 'object',
+        queryName: 'products',
+        field: 'name'
       },
       {
-        label: i18next.t('field.location'),
-        name: 'locationName',
+        label: i18next.t('field.batch_no'),
+        name: 'batchId',
         type: 'text',
         props: { searchOper: 'i_like' }
       },
@@ -313,14 +313,22 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         props: { searchOper: 'i_like' }
       },
       {
-        label: i18next.t('field.batch_no'),
-        name: 'batchId',
-        type: 'text',
-        props: { searchOper: 'i_like' }
+        label: i18next.t('field.warehouse'),
+        name: 'warehouse',
+        type: 'object',
+        queryName: 'warehouses',
+        field: 'name'
       },
       {
-        label: i18next.t('field.product'),
-        name: 'productName',
+        label: i18next.t('field.location'),
+        name: 'location',
+        type: 'object',
+        queryName: 'locations',
+        field: 'name'
+      },
+      {
+        label: i18next.t('field.zone'),
+        name: 'zone',
         type: 'text',
         props: { searchOper: 'i_like' }
       }
@@ -342,15 +350,12 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async fetchHandler({ page, limit, sorters = [] }) {
-    let inventory = {}
-    this.searchForm.queryFilters.forEach(filter => {
-      inventory[filter.name] = filter.value
-    })
+    const filters = await this.searchForm.getQueryFilters()
     const response = await client.query({
       query: gql`
         query {
-          onhandInventories(${gqlBuilder.buildArgs({
-            inventory,
+          inventories(${gqlBuilder.buildArgs({
+            filters: [...filters, { name: 'status', operator: 'notin', value: ['INTRANSIT', 'TERMINATED', 'DELETED'] }],
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -394,8 +399,8 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     })
 
     return {
-      total: response.data.onhandInventories.total || 0,
-      records: response.data.onhandInventories.items || []
+      total: response.data.inventories.total || 0,
+      records: response.data.inventories.items || []
     }
   }
 

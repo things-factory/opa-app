@@ -7,7 +7,6 @@ import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { CustomAlert } from '../../../utils/custom-alert'
 import { ORDER_PRODUCT_STATUS, ORDER_VAS_STATUS, ORDER_TYPES } from '../constants/order'
-import './inventory-product-selector'
 import '../../components/vas-relabel'
 
 class CreateReleaseOrder extends localize(i18next)(PageView) {

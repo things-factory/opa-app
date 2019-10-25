@@ -132,28 +132,6 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
-          type: 'object',
-          name: 'parent',
-          header: i18next.t('field.group_menu'),
-          record: {
-            options: {
-              queryName: 'menus',
-              basicArgs: {
-                filters: [
-                  {
-                    name: 'menuType',
-                    value: 'MENU',
-                    operator: 'eq'
-                  }
-                ]
-              }
-            },
-            editable: true
-          },
-          sortable: true,
-          width: 180
-        },
-        {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),
@@ -280,28 +258,25 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
   }
 
   async _saveMenus() {
-    let patches = this.dataGrist.dirtyRecords
-    if (patches && patches.length) {
-      patches = patches.map(menu => {
-        let patchField = menu.id ? { id: menu.id } : {}
-        if (!patchField.parent) {
-          patchField.parent = { id: this.menuId }
-          delete menu.parent.__selected__
-          delete menu.parent.__origin__
-          delete menu.parent.__seq__
+    let patches = this.dataGrist.dirtyRecords.map(record => {
+      let patch = {}
+      for (let key in record.__dirtyfields__) {
+        const after = record.__dirtyfields__[key].after
+        patch = {
+          ...patch,
+          [key]: after,
+          cuFlag: record.__dirty__
         }
-        const dirtyFields = menu.__dirtyfields__
-        for (let key in dirtyFields) {
-          patchField[key] = dirtyFields[key].after
-        }
-        patchField.cuFlag = menu.__dirty__
-        patchField.routingType = patchField.routingType ? patchField.routingType : 'STATIC'
+      }
+      if (record.id) patch.id = record.id
+      if (!record.routingType) patch.routingType = 'STATIC'
+      if (!record.menuType) patch.menuType = 'SCREEN'
+      if (!record.parent) patch.parent = { id: this.menuId }
+      return patch
+    })
 
-        return patchField
-      })
-
-      const response = await client.query({
-        query: gql`
+    const response = await client.query({
+      query: gql`
           mutation {
             updateMultipleMenu(${gqlBuilder.buildArgs({
               patches
@@ -310,10 +285,9 @@ class SystemMenuDetail extends localize(i18next)(LitElement) {
             }
           }
         `
-      })
+    })
 
-      if (!response.errors) this.dataGrist.fetch()
-    }
+    if (!response.errors) this.dataGrist.fetch()
   }
 
   async _deleteMenus() {

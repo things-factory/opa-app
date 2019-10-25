@@ -1,14 +1,11 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { connect } from 'pwa-helpers/connect-mixin'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
-import { PALLET_LABEL_SETTING_KEY } from '../../setting-constants'
+import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
-import { USBPrinter } from '@things-factory/barcode-base'
 import { css, html } from 'lit-element'
 
-class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
+class CustomerOnhandInventory extends localize(i18next)(PageView) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -41,11 +38,9 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
 
   static get properties() {
     return {
-      _email: String,
       _searchFields: Array,
       config: Object,
-      data: Object,
-      _palletLabel: Object
+      data: Object
     }
   }
 
@@ -66,12 +61,6 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
   get context() {
     return {
       title: i18next.t('title.onhand_inventory'),
-      actions: [
-        {
-          title: i18next.t('button.pallet_label_print'),
-          action: this._printPalletLabel.bind(this)
-        }
-      ],
       printable: {
         accept: ['preview'],
         content: this
@@ -86,7 +75,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
   async pageInitialized() {
     this.config = {
       list: {
-        fields: ['palletId', 'product', 'bizplace', 'location']
+        fields: ['palletId', 'product', 'location']
       },
       rows: {
         selectable: {
@@ -96,15 +85,6 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
-        { type: 'gutter', gutterName: 'row-selector', multiple: true },
-        {
-          type: 'object',
-          name: 'bizplace',
-          header: i18next.t('field.customer'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 200
-        },
         {
           type: 'object',
           name: 'product',
@@ -181,26 +161,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
       ]
     }
 
-    const _userBizplaces = await this._fetchUserBizplaces()
-
     this._searchFields = [
-      {
-        label: i18next.t('field.customer'),
-        name: 'bizplace',
-        type: 'select',
-        options: [
-          { value: '' },
-          ..._userBizplaces
-            .filter(userBizplaces => !userBizplaces.mainBizplace)
-            .map(userBizplace => {
-              return {
-                name: userBizplace.name,
-                value: userBizplace.id
-              }
-            })
-        ],
-        props: { searchOper: 'eq' }
-      },
       {
         label: i18next.t('field.product'),
         name: 'product',
@@ -219,13 +180,6 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
         name: 'palletId',
         type: 'text',
         props: { searchOper: 'i_like' }
-      },
-      {
-        label: i18next.t('field.warehouse'),
-        name: 'warehouse',
-        type: 'object',
-        queryName: 'warehouses',
-        field: 'name'
       },
       {
         label: i18next.t('field.location'),
@@ -270,10 +224,6 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
             items {
               palletId
               batchId
-              bizplace {
-                name
-                description
-              }
               product {
                 name
                 description
@@ -310,84 +260,8 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
     return this.config.columns
   }
 
-  async _printPalletLabel() {
-    const records = this.dataGrist.selected
-    var labelId = this._palletLabel && this._palletLabel.id
-
-    if (!labelId) {
-      document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            level: 'error',
-            message: `${i18next.t('text.no_label_setting_was_found')}. ${i18next.t('text.please_check_your_setting')}`
-          }
-        })
-      )
-    } else {
-      for (var record of records) {
-        var searchParams = new URLSearchParams()
-
-        /* for pallet record mapping */
-        searchParams.append('pallet', record.palletId)
-        searchParams.append('batch', record.batchId)
-        searchParams.append('product', record.product.name)
-
-        try {
-          const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
-            method: 'GET'
-          })
-
-          if (response.status !== 200) {
-            throw `Error : Can't get label command from server (response: ${response.status})`
-          }
-
-          var command = await response.text()
-
-          if (!this.printer) {
-            this.printer = new USBPrinter()
-          }
-
-          await this.printer.connectAndPrint(command)
-        } catch (e) {
-          this._showToast(e)
-
-          delete this.printer
-          break
-        }
-      }
-    }
-  }
-
   _exportableData() {
     return this.dataGrist.exportRecords()
-  }
-
-  async _fetchUserBizplaces() {
-    if (!this._email) return
-    const response = await client.query({
-      query: gql`
-        query {
-          userBizplaces(${gqlBuilder.buildArgs({
-            email: this._email
-          })}) {
-            id
-            name
-            description
-            mainBizplace
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      return response.data.userBizplaces
-    }
-  }
-
-  stateChanged(state) {
-    let palletLabelSetting = state.dashboard[PALLET_LABEL_SETTING_KEY]
-    this._palletLabel = (palletLabelSetting && palletLabelSetting.board) || {}
-    this._email = state.auth && state.auth.user && state.auth.user.email
   }
 
   _showToast({ type, message }) {
@@ -402,4 +276,4 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
   }
 }
 
-window.customElements.define('onhand-inventory', OnhandInventory)
+window.customElements.define('customer-onhand-inventory', CustomerOnhandInventory)

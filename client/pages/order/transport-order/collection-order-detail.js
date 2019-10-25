@@ -103,17 +103,14 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
             <label>${i18next.t('label.load_weight')} <br />(${i18next.t('label.metric_tonne')})</label>
             <input name="loadWeight" type="number" min="0" readonly />
 
-            <input name="urgency" type="checkbox" readonly />
+            <input name="urgency" type="checkbox" disabled />
             <label>${i18next.t('label.urgent_collection')}</label>
 
-            <input name="looseItem" type="checkbox" readonly />
+            <input name="looseItem" type="checkbox" disabled />
             <label>${i18next.t('label.loose_item')}</label>
 
             <label ?hidden="${this._status !== ORDER_STATUS.DONE.value}">${i18next.t('label.remark')}</label>
             <textarea name="remark" ?hidden="${this._status !== ORDER_STATUS.DONE.value}" readonly></textarea>
-
-            <label>${i18next.t('label.download_co')}</label>
-            <a href="/attachment/${this._path}" download=${this._fileName}><mwc-icon>cloud_download</mwc-icon></a>
           </fieldset>
         </form>
       </div>
@@ -128,6 +125,8 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
           .data="${this.transportDetail}"
         ></data-grist>
       </div>
+
+      <a name="order-document" hidden href="/attachment/${this._path}" download=${this._fileName}></a>
     `
   }
 
@@ -229,6 +228,7 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
       const transportOrderDetails = collectionOrder.transportOrderDetails
 
       this._path = collectionOrder.attachments[0].path
+      this._fileName = collectionOrder.attachments[0].name
       this._status = collectionOrder.status
       this._fillupCOForm(collectionOrder)
       this.transportDetail = { records: transportOrderDetails }
@@ -240,9 +240,16 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
   }
 
   _updateContext() {
-    this._actions = []
+    this._actions = [
+      {
+        title: i18next.t('label.download_co'),
+        action: this._downloadOrderDocument.bind(this)
+      }
+    ]
+
     if (this._status === ORDER_STATUS.PENDING.value) {
       this._actions = [
+        ...this._actions,
         {
           title: i18next.t('button.delete'),
           action: this._deleteCollectionOrder.bind(this)
@@ -338,6 +345,10 @@ class CollectionOrderDetail extends localize(i18next)(PageView) {
     } catch (e) {
       this._showToast(e)
     }
+  }
+
+  _downloadOrderDocument() {
+    this.shadowRoot.querySelector('a[name=order-document]').click()
   }
 
   _showToast({ type, message }) {

@@ -81,10 +81,42 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
+        label: i18next.t('field.ref_no'),
+        name: 'refNo',
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
+        label: i18next.t('field.delivery_to'),
+        name: 'to',
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
         label: i18next.t('field.delivery_date'),
         name: 'deliveryDate',
         type: 'date',
         props: { searchOper: 'i_like' }
+      },
+      {
+        label: i18next.t('field.cargo_type'),
+        name: 'cargoType',
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
+        label: i18next.t('field.urgency'),
+        name: 'urgency',
+        type: 'checkbox',
+        props: { searchOper: 'eq' },
+        attrs: ['indeterminate']
+      },
+      {
+        label: i18next.t('field.loose_item'),
+        name: 'looseItem',
+        type: 'checkbox',
+        props: { searchOper: 'eq' },
+        attrs: ['indeterminate']
       },
       {
         label: i18next.t('field.status'),
@@ -127,9 +159,23 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.do_no'),
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'refNo',
+          header: i18next.t('field.ref_no'),
           record: { align: 'center' },
           sortable: true,
-          width: 180
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'to',
+          header: i18next.t('field.delivery_to'),
+          sortable: true,
+          width: 250
         },
         {
           type: 'date',
@@ -141,11 +187,35 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'to',
-          header: i18next.t('field.to'),
+          name: 'cargoType',
+          header: i18next.t('field.cargo_type'),
           record: { align: 'center' },
           sortable: true,
-          width: 250
+          width: 150
+        },
+        {
+          type: 'boolean',
+          name: 'urgency',
+          header: i18next.t('field.urgency'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'boolean',
+          name: 'looseItem',
+          header: i18next.t('field.loose_item'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'integer',
+          name: 'loadWeight',
+          header: i18next.t('label.load_weight'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 100
         },
         {
           type: 'string',
@@ -196,9 +266,13 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
               id
               name
               to
-              telNo
               deliveryDate
               status
+              refNo
+              urgency
+              cargoType
+              looseItem
+              loadWeight
               updatedAt
               updater {
                 id

@@ -112,9 +112,6 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
 
             <label ?hidden="${this._status !== ORDER_STATUS.DONE.value}">${i18next.t('label.remark')}</label>
             <textarea name="remark" ?hidden="${this._status !== ORDER_STATUS.DONE.value}" readonly></textarea>
-
-            <label>${i18next.t('label.download_do')}</label>
-            <a href="/attachment/${this._path}" download=${this._fileName}><mwc-icon>cloud_download</mwc-icon></a>
           </fieldset>
         </form>
       </div>
@@ -129,6 +126,8 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
           .data="${this.transportDetail}"
         ></data-grist>
       </div>
+
+      <a name="order-document" hidden href="/attachment/${this._path}" download=${this._fileName}></a>
     `
   }
 
@@ -230,6 +229,7 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
       const transportOrderDetails = deliveryOrder.transportOrderDetails
 
       this._path = deliveryOrder.attachments[0].path
+      this._fileName = deliveryOrder.attachments[0].name
       this._status = deliveryOrder.status
       this._fillupDOForm(deliveryOrder)
       this.transportDetail = { records: transportOrderDetails }
@@ -241,9 +241,16 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
   }
 
   _updateContext() {
-    this._actions = []
+    this._actions = [
+      {
+        title: i18next.t('label.download_do'),
+        action: this._downloadOrderDocument.bind(this)
+      }
+    ]
+
     if (this._status === ORDER_STATUS.PENDING.value) {
       this._actions = [
+        ...this._actions,
         {
           title: i18next.t('button.delete'),
           action: this._deleteDeliveryOrder.bind(this)
@@ -339,6 +346,10 @@ class DeliveryOrderDetail extends localize(i18next)(PageView) {
     } catch (e) {
       this._showToast(e)
     }
+  }
+
+  _downloadOrderDocument() {
+    this.shadowRoot.querySelector('a[name=order-document]').click()
   }
 
   _showToast({ type, message }) {
