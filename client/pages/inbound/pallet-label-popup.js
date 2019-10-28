@@ -10,8 +10,9 @@ import { PALLET_LABEL_SETTING_KEY } from '../../setting-constants'
 class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
   static get properties() {
     return {
-      config: String,
-      pallets: String,
+      config: Object,
+      data: Object,
+      pallets: Object,
       _palletLabel: Object
     }
   }
@@ -81,6 +82,13 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
           header: i18next.t('field.print_qty'),
           record: { editable: true, align: 'center' },
           width: 60
+        },
+        {
+          type: 'integer',
+          name: 'startSeq',
+          header: i18next.t('field.start_seq'),
+          record: { align: 'center', editable: true, options: { min: 1 } },
+          width: 60
         }
       ]
     }
@@ -97,7 +105,7 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
           id="grist"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
-          .data="${this.pallets}"
+          .data="${this.data}"
         ></data-grist>
       </div>
 
@@ -107,13 +115,28 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
     `
   }
 
+  updated(changeProps) {
+    if (changeProps.has('pallets')) {
+      if (this.pallets && this.pallets.records && this.pallets.records.length) {
+        this.data = {
+          records: this.pallets.records.map(record => {
+            return {
+              ...record,
+              startSeq: 1
+            }
+          })
+        }
+      }
+    }
+  }
+
   async _printLabel() {
     try {
       const _targetRows = this._validate()
       let labelId = this._palletLabel && this._palletLabel.id
 
       _targetRows.forEach(async record => {
-        for (let i = 1; i <= record.printQty; i++) {
+        for (let i = 0; i < record.printQty; i++) {
           let searchParams = new URLSearchParams()
           let batchId = record.batchId.replace(/[^a-zA-Z0-9 ]/g, '')
           searchParams.append(
@@ -122,7 +145,7 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
               .toISOString()
               .split('T')[0]
               .split('-')
-              .join('')}${i.toString().padStart(3, 0)}`
+              .join('')}${(i + record.startSeq).toString().padStart(3, 0)}`
           )
           searchParams.append('batch', record.batchId)
           searchParams.append('product', record.product.name)
@@ -156,7 +179,7 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
 
   _validate() {
     let _targetRows = this.dataGrist.selected.length > 0 ? this.dataGrist.selected : this.dataGrist.dirtyData.records
-    if (!_targetRows.every(row => row.printQty)) throw new Error(i18next.t('text.print_qty_is_empty'))
+    if (!_targetRows.every(row => row.printQty && row.startSeq)) throw new Error(i18next.t('text.print_qty_is_empty'))
     return _targetRows
   }
 
