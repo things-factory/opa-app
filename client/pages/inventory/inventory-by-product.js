@@ -1,11 +1,12 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import { openPopup } from '@things-factory/layout-base'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { CustomAlert } from '../../utils/custom-alert'
 import '../components/import-pop-up'
+import './inventory-by-product-detail'
 
 class InventoryByProduct extends localize(i18next)(PageView) {
   static get properties() {
@@ -100,8 +101,8 @@ class InventoryByProduct extends localize(i18next)(PageView) {
     ]
 
     this.config = {
-      pagination: { limit: 2 },
       rows: { appendable: false },
+      list: { fields: ['name', 'description', 'qty'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -109,9 +110,7 @@ class InventoryByProduct extends localize(i18next)(PageView) {
           gutterName: 'button',
           icon: 'reorder',
           handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              console.log('show detail view')
-            }
+            click: this._showInventoryInfo.bind(this)
           }
         },
         {
@@ -240,6 +239,19 @@ class InventoryByProduct extends localize(i18next)(PageView) {
     })
 
     return { header: headerSetting, data: data }
+  }
+
+  _showInventoryInfo(columns, data, column, record, rowIndex) {
+    openPopup(
+      html`
+        <inventory-by-product-detail .productId="${record.id}"></inventory-by-product-detail>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: `${record.name} ${record.description ? `(${record.description})` : ''}`
+      }
+    )
   }
 }
 
