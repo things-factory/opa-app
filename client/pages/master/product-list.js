@@ -148,23 +148,23 @@ class ProductList extends localize(i18next)(PageView) {
           record: { editable: true },
           imex: { header: 'Description', key: 'description', width: 50, type: 'string' },
           header: i18next.t('field.description'),
-          width: 250
+          width: 300
         },
         {
           type: 'float',
           name: 'weight',
-          record: { editable: true },
+          record: { editable: true, align: 'center' },
           imex: { header: 'Weight', key: 'weight', width: 50, type: 'float' },
           header: i18next.t('field.packing_weight'),
-          width: 250
+          width: 80
         },
         {
           type: 'string',
           name: 'unit',
-          record: { editable: true },
+          record: { editable: true, align: 'center' },
           imex: { header: 'Unit', key: 'unit', width: 50, type: 'string' },
           header: i18next.t('field.unit'),
-          width: 250
+          width: 80
         },
         {
           type: 'string',
@@ -172,7 +172,7 @@ class ProductList extends localize(i18next)(PageView) {
           record: { align: 'center', editable: true },
           imex: { header: 'Type', key: 'type', width: 50, type: 'string' },
           header: i18next.t('field.type'),
-          width: 150
+          width: 80
         },
         {
           type: 'object',
