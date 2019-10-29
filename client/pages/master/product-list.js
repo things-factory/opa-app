@@ -151,6 +151,22 @@ class ProductList extends localize(i18next)(PageView) {
           width: 250
         },
         {
+          type: 'float',
+          name: 'weight',
+          record: { editable: true },
+          imex: { header: 'Weight', key: 'weight', width: 50, type: 'float' },
+          header: i18next.t('field.packing_weight'),
+          width: 250
+        },
+        {
+          type: 'string',
+          name: 'unit',
+          record: { editable: true },
+          imex: { header: 'Unit', key: 'unit', width: 50, type: 'string' },
+          header: i18next.t('field.unit'),
+          width: 250
+        },
+        {
           type: 'string',
           name: 'type',
           record: { align: 'center', editable: true },
@@ -222,6 +238,8 @@ class ProductList extends localize(i18next)(PageView) {
                 name
                 description
               }
+              unit
+              weight
               description
               type
               updater {
@@ -258,7 +276,9 @@ class ProductList extends localize(i18next)(PageView) {
   }
 
   async importHandler(patches) {
-    debugger
+    patches.map(itm => {
+      itm.weight = parseFloat(itm.weight)
+    })
     const response = await client.query({
       query: gql`
           mutation {

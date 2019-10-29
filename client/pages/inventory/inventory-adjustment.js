@@ -62,6 +62,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
           .fetchHandler="${this.fetchHandler.bind(this)}"
+          @record-change="${this._onInventoryChangeHandler.bind(this)}"
         ></data-grist>
       </div>
     `
@@ -104,6 +105,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     this.location = await this.fetchLocation()
 
     this.packingType = await getCodeByName('PACKING_TYPES')
+
     this.config = {
       list: {
         fields: ['palletId', 'product', 'bizplace', 'location']
@@ -203,6 +205,23 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           width: 150
         },
         {
+          type: 'float',
+          name: 'productWeight',
+          header: i18next.t('field.packing_weight'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'code',
+          name: 'unit',
+          header: i18next.t('field.unit'),
+          record: {
+            align: 'center'
+          },
+          width: 150
+        },
+        {
           type: 'number',
           name: 'qty',
           header: i18next.t('field.qty'),
@@ -211,6 +230,20 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           imex: {
             header: i18next.t('field.qty'),
             key: 'qty',
+            width: 10,
+            type: 'float'
+          },
+          width: 80
+        },
+        {
+          type: 'float',
+          name: 'weight',
+          header: i18next.t('field.total_weight'),
+          record: { align: 'center' },
+          sortable: true,
+          imex: {
+            header: i18next.t('field.total_weight'),
+            key: 'weight',
             width: 10,
             type: 'float'
           },
@@ -364,6 +397,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
               palletId
               batchId
               packingType
+              weight
               bizplace {
                 id
                 name
@@ -373,6 +407,8 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
                 id
                 name
                 description
+                weight
+                unit
               }
               qty
               warehouse {
@@ -399,14 +435,38 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     })
 
     return {
+      data: response.data.inventories.items.map(inventory => {
+        return {
+          ...inventory,
+          productWeight: inventory.product.weight
+        }
+      }),
       total: response.data.inventories.total || 0,
       records: response.data.inventories.items || []
+    }
+  }
+
+  _onInventoryChangeHandler(event) {
+    const changeRecord = event.detail.after
+    const changedColumn = event.detail.column.name
+
+    if (changedColumn === 'productWeight' || changedColumn === 'unit' || changedColumn === 'qty') {
+      changeRecord.weight = this._calcTotalWeight(changeRecord.productWeight, changeRecord.unit, changeRecord.qty)
+    }
+  }
+
+  _calcTotalWeight(productWeight, unit, qty) {
+    if (productWeight && unit && qty) {
+      return `${(productWeight * qty).toFixed(2)}`
+    } else {
+      return null
     }
   }
 
   async _saveInventories() {
     var patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
     patches.map(x => {
+      delete x.productWeight
       if (x.bizplace) {
         delete x.bizplace['__seq__']
         delete x.bizplace['__origin__']
@@ -420,10 +480,12 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         delete x.location['__selected__']
       }
       if (x.product) {
+        delete x.product['productWeight']
         delete x.product['__seq__']
         delete x.product['__origin__']
         delete x.product['__selected__']
       }
+      x.weight = parseFloat(x.weight)
     })
     if (patches && patches.length) {
       const response = await client.query({
@@ -540,6 +602,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   async importHandler(patches) {
     patches.map(itm => {
       itm.qty = parseFloat(itm.qty)
+      itm.weight = parseFloat(itm.weight)
     })
 
     const response = await client.query({
