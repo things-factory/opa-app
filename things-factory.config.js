@@ -281,6 +281,10 @@ export default {
       tagname: 'inventory-adjustment',
       page: 'inventory_adjustment'
     },
+    {
+      tagname: 'inventory-by-product',
+      page: 'inventory_by_product'
+    },
 
     /**
      * System Menus Section

@@ -116,7 +116,7 @@ class ProductList extends localize(i18next)(PageView) {
 
     this.config = {
       rows: {
-        handlers: { click: this._setProductRefConfition.bind(this) },
+        handlers: { click: this._setProductRefCondition.bind(this) },
         selectable: { multiple: true }
       },
       columns: [
@@ -263,7 +263,7 @@ class ProductList extends localize(i18next)(PageView) {
     }
   }
 
-  _setProductRefConfition(columns, data, column, record, rowIndex) {
+  _setProductRefCondition(columns, data, column, record, rowIndex) {
     this.config.columns.map(column => {
       if (column.name === 'productRef') {
         if (record && record.id) {

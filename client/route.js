@@ -272,6 +272,10 @@ export default function route(page) {
       import('./pages/inventory/inventory-adjustment')
       return page
 
+    case 'inventory_by_product':
+      import('./pages/inventory/inventory-by-product')
+      return page
+
     /**
      * System Menus Section
      */

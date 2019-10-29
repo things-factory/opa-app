@@ -86,7 +86,6 @@ class CustomerIntransitInventory extends localize(i18next)(PageView) {
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
-        { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'object',
           name: 'product',
