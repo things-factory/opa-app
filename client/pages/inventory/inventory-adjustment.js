@@ -62,7 +62,6 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
           .fetchHandler="${this.fetchHandler.bind(this)}"
-          @record-change="${this._onInventoryChangeHandler.bind(this)}"
         ></data-grist>
       </div>
     `
@@ -239,7 +238,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           type: 'float',
           name: 'weight',
           header: i18next.t('field.total_weight'),
-          record: { align: 'center' },
+          record: { align: 'center', editable: true },
           sortable: true,
           imex: {
             header: i18next.t('field.total_weight'),
@@ -407,7 +406,6 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
                 id
                 name
                 description
-                weight
                 unit
               }
               qty
@@ -435,31 +433,8 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     })
 
     return {
-      data: response.data.inventories.items.map(inventory => {
-        return {
-          ...inventory,
-          productWeight: inventory.product.weight
-        }
-      }),
       total: response.data.inventories.total || 0,
       records: response.data.inventories.items || []
-    }
-  }
-
-  _onInventoryChangeHandler(event) {
-    const changeRecord = event.detail.after
-    const changedColumn = event.detail.column.name
-
-    if (changedColumn === 'productWeight' || changedColumn === 'unit' || changedColumn === 'qty') {
-      changeRecord.weight = this._calcTotalWeight(changeRecord.productWeight, changeRecord.unit, changeRecord.qty)
-    }
-  }
-
-  _calcTotalWeight(productWeight, unit, qty) {
-    if (productWeight && unit && qty) {
-      return `${(productWeight * qty).toFixed(2)}`
-    } else {
-      return null
     }
   }
 
