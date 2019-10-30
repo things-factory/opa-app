@@ -293,9 +293,10 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                 { name: 'location', type: 'object', queryName: 'locations', record: { align: 'center' } },
                 { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
                 { name: 'bizplace', type: 'object', record: { align: 'center' } },
-                { name: 'qty', type: 'float', record: { align: 'center' } }
+                { name: 'qty', type: 'float', record: { align: 'center' } },
+                { name: 'weight', type: 'float', header: i18next.t('field.total_weight'), record: { align: 'center' } }
               ],
-              list: { fields: ['palletId', 'product', 'batchId', 'location'] }
+              list: { fields: ['palletId', 'product', 'batchId', 'location', 'weight'] }
             }
           },
           width: 250
@@ -336,6 +337,13 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
           name: 'releaseQty',
           header: i18next.t('field.release_qty'),
           record: { editable: true, align: 'center', options: { min: 0 } },
+          width: 100
+        },
+        {
+          type: 'float',
+          name: 'weight',
+          header: i18next.t('field.total_weight'),
+          record: { align: 'center' },
           width: 100
         }
       ]
