@@ -250,6 +250,25 @@ export default {
       tagname: 'receival-note-detail',
       page: 'receival_note_detail'
     },
+    {
+      tagname: 'upload-receival-note',
+      page: 'upload_receival_note'
+    },
+    /**
+     * GDN Menus Section
+     */
+    {
+      tagname: 'delivery-note-list',
+      page: 'delivery_note_list'
+    },
+    {
+      tagname: 'create-delivery-note',
+      page: 'create_delivery_note'
+    },
+    {
+      tagname: 'delivery-note-detail',
+      page: 'delivery_note_detail'
+    },
     /**
      * Billing Menus Section
      */
