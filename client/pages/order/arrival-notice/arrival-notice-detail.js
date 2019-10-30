@@ -181,6 +181,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
   async pageUpdated(changes) {
     if (this.active) {
       this._ganNo = changes.resourceId || this._ganNo || ''
+      this._template = null
       await this._fetchGAN()
       this._updateContext()
     }

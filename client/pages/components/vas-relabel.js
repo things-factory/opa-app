@@ -64,16 +64,33 @@ class VasRelabel extends localize(i18next)(LitElement) {
   render() {
     return html`
       <div class="container">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.relabel')}</h2>
-
         <form class="single-column-form" @submit="${e => e.preventDefault()}">
           <fieldset>
-            <legend>${i18next.t('title.product')}</legend>
-            <label>${i18next.t('label.from_product')}</label>
-            <input readonly name="fromProduct" value="${this.fromProdut}" />
+            <legend>${i18next.t('title.relabel')}</legend>
+            <label>${i18next.t('label.from_batch_id')}</label>
+            <input readonly name="fromBatchId" value="${this.fromBatchId}" />
 
-            <label>${i18next.t('label.to_product')}</label>
-            <input readonly name="product" @click="${this._openProductPopup.bind(this)}" value="${this.toProduct}" />
+            ${(!this._isEditable && this.toBatchId) || this._isEditable
+              ? html`
+                  <label>${i18next.t('label.to_batch_id')}</label>
+                  <input
+                    name="batchId"
+                    value="${this.toBatchId}"
+                    @change="${e => (this._selectedBatchId = e.currentTarget.value)}"
+                  />
+                `
+              : ''}
+            ${(!this._isEditable && this.toProduct) || this._isEditable
+              ? html`
+                  <label>${i18next.t('label.to_product')}</label>
+                  <input
+                    readonly
+                    name="product"
+                    @click="${this._openProductPopup.bind(this)}"
+                    value="${this.toProduct}"
+                  />
+                `
+              : ''}
 
             <label ?hidden="${!this._isEditable}">${i18next.t('label.new-label')}</label>
             <file-uploader
@@ -86,9 +103,8 @@ class VasRelabel extends localize(i18next)(LitElement) {
           </fieldset>
         </form>
 
-        ${this._isEditable
-          ? ''
-          : html`
+        ${!this._isEditable && this._newLabelPath
+          ? html`
               <div class="label-preview" ?hidden="${this._isEditable}">
                 <image-viewer
                   name="${this._newLabelName}"
@@ -96,7 +112,8 @@ class VasRelabel extends localize(i18next)(LitElement) {
                   .downloadable="${this._isDownloadable}"
                 ></image-viewer>
               </div>
-            `}
+            `
+          : ''}
       </div>
     `
   }
@@ -113,31 +130,55 @@ class VasRelabel extends localize(i18next)(LitElement) {
     return this.shadowRoot.querySelector('file-uploader[name=newLabel]')
   }
 
-  get fromProdut() {
-    if (this.record && this.record.inventory && this.record.inventory.product) {
-      const product = this.record.inventory.product
-      this._selectedFromProduct = product
-      return `${product.name} ${product.description ? `(${product.description})` : ''}`
-    } else if (this.record && this.record.operationGuide.data.fromProduct) {
-      const product = this.record.operationGuide.data.fromProduct
-      return `${product.name} ${product.description ? `(${product.description})` : ''}`
+  get fromBatchId() {
+    if (this.record && this.record.batchId) {
+      return this.record.batchId
+    } else if (this.record && this.record.inventory) {
+      return this.record.inventory.batchId
     } else {
       return ''
     }
   }
 
   get toProduct() {
-    if (this.record && this.record.operationGuide) {
-      const product = this.record.operationGuide.data.toProduct
-      this._selectedProduct = product
-      return `${product.name} ${product.description ? `(${product.description})` : ''}`
+    if (
+      this.record &&
+      this.record.operationGuide &&
+      this.record.operationGuide.data &&
+      this.record.operationGuide.data.toProduct
+    ) {
+      const toProduct = this.record.operationGuide.data.toProduct
+      this._selectedProduct = toProduct
+      return `${toProduct.name} ${toProduct.description ? `(${toProduct.description})` : ''}`
+    } else {
+      return ''
+    }
+  }
+
+  get toBatchId() {
+    if (
+      this.record &&
+      this.record.operationGuide &&
+      this.record.operationGuide.data &&
+      this.record.operationGuide.data.toBatchId
+    ) {
+      const toBatchId = this.record.operationGuide.data.toBatchId
+      this._selectedBatchId = toBatchId
+      return this._selectedBatchId
     } else {
       return ''
     }
   }
 
   get newLabelFile() {
-    if (this.record && this.record.operationGuide) {
+    if (
+      this.record &&
+      this.record.operationGuide &&
+      this.record.operationGuide.data &&
+      this.record.operationGuide.data.newLabel &&
+      this.record.operationGuide.data.newLabel.files &&
+      this.record.operationGuide.data.newLabel.files.length
+    ) {
       return this.record.operationGuide.data.newLabel.files
     }
   }
@@ -185,15 +226,20 @@ class VasRelabel extends localize(i18next)(LitElement) {
     }
     const confirmCallback = selected => {
       this._selectedProduct = selected
-      this.productInput.value = `${this._selectedProduct.name} ${
-        this._selectedProduct.description ? `(${this._selectedProduct.description})` : ''
-      }`
+      if (this._selectedProduct) {
+        this.productInput.value = `${this._selectedProduct.name} ${
+          this._selectedProduct.description ? `(${this._selectedProduct.description})` : ''
+        }`
+      } else {
+        this.productInput.value = ''
+      }
     }
     openPopup(
       html`
         <object-selector
           .queryName="${queryName}"
           .basicArgs="${basicArgs}"
+          .value="${(this._selectedProduct && this._selectedProduct.id) || ''}"
           .confirmCallback="${confirmCallback}"
         ></object-selector>
       `,
@@ -205,13 +251,13 @@ class VasRelabel extends localize(i18next)(LitElement) {
     )
   }
 
-  adjust() {
+  async adjust() {
     try {
-      this._validateAdjust()
+      await this._validateAdjust()
       return {
         data: {
-          fromProduct: this._selectedFromProduct,
           toProduct: this._selectedProduct,
+          toBatchId: this._selectedBatchId,
           newLabel: {
             files: this.newLabelInput.files
           }
@@ -223,13 +269,56 @@ class VasRelabel extends localize(i18next)(LitElement) {
     }
   }
 
-  _validateAdjust() {
-    if (!this._selectedProduct) throw new Error(i18next.t('text.to_product_is_empty'))
-    if (!this.newLabelInput.files) throw new Error(i18next.t('text.new_label_does_not_selected'))
+  async _validateAdjust() {
+    if (!this._selectedProduct && !this._selectedBatchId) {
+      throw new Error(i18next.t('text.target_does_not_selected'))
+    }
+
+    if (this._selectedBatchId) {
+      if (await this._checkBatchIdDuplication()) {
+        throw new Error(i18next.t('text.batch_id_is_duplicated'))
+      }
+    }
+  }
+
+  async _checkBatchIdDuplication() {
+    const response = await client.query({
+      query: gql`
+        query {
+          inventories(${gqlBuilder.buildArgs({
+            filters: [
+              {
+                name: 'batchId',
+                operator: 'eq',
+                value: this._selectedBatchId
+              }
+            ],
+            pagination: {
+              limit: 1
+            }
+          })}) {
+            items {
+              batchId
+            }
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      if (response.data.inventories.items.length) {
+        return true // there's duplicated batch id already
+      } else {
+        return false // there's no duplicated batch id
+      }
+    } else {
+      return false
+    }
   }
 
   async createNewLabel(operationGuide) {
     try {
+      if (!operationGuide.data.newLabel.files || !operationGuide.data.newLabel.files.length) return operationGuide
       const attachment = {
         file: operationGuide.data.newLabel.files[0],
         category: 'LABEL',

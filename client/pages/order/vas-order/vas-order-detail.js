@@ -102,6 +102,7 @@ class VasOrderDetail extends localize(i18next)(PageView) {
   async pageUpdated(changes) {
     if (this.active) {
       this._vasNo = changes.resourceId || this._vasNo || ''
+      this._template = null
       await this.fetchVasOrder()
       this._updateContext()
     }

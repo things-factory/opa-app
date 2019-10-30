@@ -93,20 +93,24 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   get adjustButton() {
     return {
       title: i18next.t('button.adjust'),
-      action: () => {
-        this.vasData = {
-          ...this.vasData,
-          records: this.vasGrist.dirtyData.records.map((record, idx) => {
-            if (idx === this._selectedRecordIdx) {
-              try {
-                record.operationGuide = this._template.adjust()
-                record.ready = this._isReadyToCreate(record)
-              } catch (e) {
-                this._showToast(e)
-              }
-            }
-            return record
-          })
+      action: async () => {
+        const copied = Object.assign(this.vasData, {})
+        try {
+          this.vasData = {
+            ...this.vasData,
+            records: await Promise.all(
+              this.vasGrist.dirtyData.records.map(async (record, idx) => {
+                if (idx === this._selectedVasRecordIdx) {
+                  record.operationGuide = await this._template.adjust()
+                  record.ready = this._isReadyToCreate(record)
+                }
+                return record
+              })
+            )
+          }
+        } catch (e) {
+          this._showToast(e)
+          this.vasData = Object.assign(copied)
         }
       }
     }
@@ -357,8 +361,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             } else {
               this._template = null
             }
-            this._selectedRecord = record
-            this._selectedRecordIdx = rowIndex
+            this._selectedVasRecord = record
+            this._selectedVasRecordIdx = rowIndex
             this._updateContext()
           }
         }
@@ -443,7 +447,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
   _updateContext() {
     this._actions = []
-    if (this._selectedRecord && this._selectedRecord.vas && this._selectedRecord.vas.operationGuideType) {
+    if (this._selectedVasRecord && this._selectedVasRecord.vas && this._selectedVasRecord.vas.operationGuideType) {
       this._actions = [this.adjustButton]
     }
 
@@ -729,10 +733,12 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
   _clearView() {
     this._template = null
-    this._selectedRecord = null
-    this._selectedRecordIdx = null
+    this._selectedVasRecord = null
+    this._selectedVasRecordIdx = null
     this.releaseOrderForm.reset()
     this.shippingOrderForm.reset()
+    this.inventoryData = { ...this.inventoryData, records: [] }
+    this.vasData = { ...this.vasData, records: [] }
   }
 
   _showToast({ type, message }) {

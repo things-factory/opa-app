@@ -55,12 +55,12 @@ class CreateVasOrder extends localize(i18next)(PageView) {
   static get properties() {
     return {
       config: Object,
-      data: Object,
+      vasData: Object,
       _template: Object
     }
   }
 
-  get dataGrist() {
+  get vasGrist() {
     return this.shadowRoot.querySelector('data-grist')
   }
 
@@ -71,7 +71,7 @@ class CreateVasOrder extends localize(i18next)(PageView) {
         <data-grist
           .mode="${isMobileDevice() ? 'LIST' : 'GRID'}"
           .config="${this.config}"
-          .data="${this.data}"
+          .data="${this.vasData}"
           @field-change="${this._onFieldChange.bind(this)}"
         ></data-grist>
       </div>
@@ -96,20 +96,24 @@ class CreateVasOrder extends localize(i18next)(PageView) {
   get adjustButton() {
     return {
       title: i18next.t('button.adjust'),
-      action: () => {
-        this.data = {
-          ...this.data,
-          records: this.dataGrist.dirtyData.records.map((record, idx) => {
-            if (idx === this._selectedRecordIdx) {
-              try {
-                record.operationGuide = this._template.adjust()
-                record.ready = this._isReadyToCreate(record)
-              } catch (e) {
-                this._showToast(e)
-              }
-            }
-            return record
-          })
+      action: async () => {
+        const copied = Object.assign(this.vasData, {})
+        try {
+          this.vasData = {
+            ...this.vasData,
+            records: await Promise.all(
+              this.vasGrist.dirtyData.records.map(async (record, idx) => {
+                if (idx === this._selectedVasRecordIdx) {
+                  record.operationGuide = await this._template.adjust()
+                  record.ready = this._isReadyToCreate(record)
+                }
+                return record
+              })
+            )
+          }
+        } catch (e) {
+          this._showToast(e)
+          this.vasData = Object.assign(copied)
         }
       }
     }
@@ -117,7 +121,7 @@ class CreateVasOrder extends localize(i18next)(PageView) {
 
   constructor() {
     super()
-    this.data = { records: [] }
+    this.vasData = { records: [] }
     this._actions = [this.createButton]
   }
 
@@ -141,8 +145,8 @@ class CreateVasOrder extends localize(i18next)(PageView) {
             } else {
               this._template = null
             }
-            this._selectedRecord = record
-            this._selectedRecordIdx = rowIndex
+            this._selectedVasRecord = record
+            this._selectedVasRecordIdx = rowIndex
             this._updateContext()
           }
         }
@@ -155,7 +159,7 @@ class CreateVasOrder extends localize(i18next)(PageView) {
           icon: 'close',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              this.data = { ...this.data, records: data.records.filter((_, idx) => idx !== rowIndex) }
+              this.vasData = { ...this.vasData, records: data.records.filter((_, idx) => idx !== rowIndex) }
             }
           }
         },
@@ -247,7 +251,7 @@ class CreateVasOrder extends localize(i18next)(PageView) {
 
   _updateContext() {
     this._actions = []
-    if (this._selectedRecord && this._selectedRecord.vas && this._selectedRecord.vas.operationGuideType) {
+    if (this._selectedVasRecord && this._selectedVasRecord.vas && this._selectedVasRecord.vas.operationGuideType) {
       this._actions = [this.adjustButton]
     }
 
@@ -260,9 +264,9 @@ class CreateVasOrder extends localize(i18next)(PageView) {
   }
 
   _onFieldChange() {
-    this.data = {
-      ...this.dataGrist.dirtyData,
-      records: this.dataGrist.dirtyData.records.map(record => {
+    this.vasData = {
+      ...this.vasGrist.dirtyData,
+      records: this.vasGrist.dirtyData.records.map(record => {
         return {
           ...record,
           ...record.inventory,
@@ -310,10 +314,10 @@ class CreateVasOrder extends localize(i18next)(PageView) {
       })
 
       if (!response.errors) {
-        this.data = { records: [] }
+        this.vasData = { records: [] }
         this._template = null
-        this._selectedRecord = null
-        this._selectedRecordIdx = null
+        this._selectedVasRecord = null
+        this._selectedVasRecordIdx = null
         navigate(`vas_order_detail/${response.data.generateVasOrder.name}`)
         this._showToast({ message: i18next.t('vas_order_created') })
       }
@@ -323,17 +327,17 @@ class CreateVasOrder extends localize(i18next)(PageView) {
   }
 
   _validate() {
-    if (!this.data.records.every(record => record.ready)) throw new Error(i18next.t('text.invalid_data_in_list'))
+    if (!this.vasData.records.every(record => record.ready)) throw new Error(i18next.t('text.invalid_data_in_list'))
   }
 
   async _executeRelatedTrxs() {
     try {
-      this.data = {
-        ...this.data,
+      this.vasData = {
+        ...this.vasData,
         records: await (async () => {
           let records = []
-          for (let i = 0; i < this.dataGrist.dirtyData.records.length; i++) {
-            const record = this.dataGrist.dirtyData.records[i]
+          for (let i = 0; i < this.vasGrist.dirtyData.records.length; i++) {
+            const record = this.vasGrist.dirtyData.records[i]
 
             if (record.vas.operationGuide && record.operationGuide && record.operationGuide.transactions) {
               const trxs = record.operationGuide.transactions || []
@@ -356,7 +360,7 @@ class CreateVasOrder extends localize(i18next)(PageView) {
 
   _getVasOrder() {
     return {
-      orderVass: this.data.records.map(record => {
+      orderVass: this.vasData.records.map(record => {
         let orderVas = {
           batchId: record.inventory.batchId,
           remark: record.remark,
