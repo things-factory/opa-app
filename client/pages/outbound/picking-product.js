@@ -240,7 +240,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
         }
       },
       pagination: { infinite: true },
-      list: { fields: ['palletId', 'batchId', 'releaseQty'] },
+      list: { fields: ['completed', 'locationName', 'palletId', 'batchId', 'releaseQty'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -248,6 +248,13 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
           name: 'completed',
           header: i18next.t('field.done'),
           width: 40
+        },
+        {
+          type: 'string',
+          name: 'locationName',
+          header: i18next.t('field.location'),
+          record: { align: 'center' },
+          width: 80
         },
         {
           type: 'string',
@@ -351,7 +358,8 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
         records: response.data.pickingWorksheet.worksheetDetailInfos.map(record => {
           return {
             ...record,
-            completed: record.status === WORKSHEET_STATUS.DONE.value
+            completed: record.status === WORKSHEET_STATUS.DONE.value,
+            locationName: record.location.name
           }
         })
       }

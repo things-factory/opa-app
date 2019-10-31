@@ -95,20 +95,24 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   get adjustButton() {
     return {
       title: i18next.t('button.adjust'),
-      action: () => {
-        this.vasData = {
-          ...this.vasData,
-          records: this.vasGrist.dirtyData.records.map((record, idx) => {
-            if (idx === this._selectedVasRecordIdx) {
-              try {
-                record.operationGuide = this._template.adjust()
-                record.ready = this._isReadyToCreate(record)
-              } catch (e) {
-                this._showToast(e)
-              }
-            }
-            return record
-          })
+      action: async () => {
+        const copied = Object.assign(this.vasData, {})
+        try {
+          this.vasData = {
+            ...this.vasData,
+            records: await Promise.all(
+              this.vasGrist.dirtyData.records.map(async (record, idx) => {
+                if (idx === this._selectedVasRecordIdx) {
+                  record.operationGuide = await this._template.adjust()
+                  record.ready = this._isReadyToCreate(record)
+                }
+                return record
+              })
+            )
+          }
+        } catch (e) {
+          this._showToast(e)
+          this.vasData = Object.assign(copied)
         }
       }
     }
