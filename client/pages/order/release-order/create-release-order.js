@@ -4,10 +4,9 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { connect } from 'pwa-helpers/connect-mixin.js'
 import { CustomAlert } from '../../../utils/custom-alert'
-import { ORDER_PRODUCT_STATUS, ORDER_VAS_STATUS, ORDER_TYPES } from '../constants/order'
 import '../../components/vas-relabel'
+import { INVENTORY_STATUS, ORDER_PRODUCT_STATUS, ORDER_TYPES } from '../constants/'
 
 class CreateReleaseOrder extends localize(i18next)(PageView) {
   static get properties() {
@@ -282,6 +281,12 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             align: 'center',
             options: {
               queryName: 'inventories',
+              basicArgs: {
+                filters: [
+                  { name: 'status', operator: 'eq', value: INVENTORY_STATUS.STORED.value },
+                  { name: 'qty', operator: 'gt', value: 0 }
+                ]
+              },
               nameField: 'batchId',
               descriptionField: 'palletId',
               select: [
@@ -657,8 +662,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       columns: this.inventoryGristConfig.columns.map(column => {
         if (column.name === 'inventory') {
           column.record.options.basicArgs = {
-            ...column.record.options.basicArgs,
             filters: [
+              ...column.record.options.basicArgs.filters,
               {
                 name: 'id',
                 value: _selectedInventories.length ? _selectedInventories : [null],
