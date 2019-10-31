@@ -655,8 +655,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       columns: this.inventoryGristConfig.columns.map(column => {
         if (column.name === 'inventory') {
           column.record.options.basicArgs = {
-            ...column.record.options.basicArgs,
             filters: [
+              ...column.record.options.basicArgs.filters,
               {
                 name: 'id',
                 value: _selectedInventories.length ? _selectedInventories : [null],
