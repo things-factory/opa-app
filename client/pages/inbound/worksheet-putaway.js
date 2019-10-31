@@ -305,8 +305,17 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
       }
     })
 
-    if (this._worksheetStatus !== WORKSHEET_STATUS.DEACTIVATED.value) {
+    if (
+      !this.preConfig.columns.some(e => e.name === 'status') &&
+      this._worksheetStatus !== WORKSHEET_STATUS.DEACTIVATED.value
+    ) {
       this.preConfig.columns = [...this.preConfig.columns, currentLocationColumn, statusColumnConfig]
+    } else if (
+      this.preConfig.columns.some(e => e.name === 'status') &&
+      this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value
+    ) {
+      this.preConfig.columns.splice(this.preConfig.columns.map(e => e.name).indexOf('location'))
+      this.preConfig.columns.splice(this.preConfig.columns.map(e => e.name).indexOf('status'))
     }
 
     this.config = { ...this.preConfig }

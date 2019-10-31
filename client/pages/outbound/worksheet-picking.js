@@ -201,6 +201,13 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           width: 60
         },
         {
+          type: 'float',
+          name: 'releaseWeight',
+          header: i18next.t('field.release_weight'),
+          record: { align: 'center' },
+          width: 60
+        },
+        {
           type: 'string',
           name: 'description',
           header: i18next.t('field.comment'),
@@ -242,6 +249,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               description
               targetInventory {
                 releaseQty
+                releaseWeight                
                 inventory {
                   palletId
                   batchId
@@ -282,7 +290,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             name: worksheetDetail.name,
             description: worksheetDetail.description,
             status: worksheetDetail.status,
-            releaseQty: worksheetDetail.targetInventory.releaseQty
+            releaseQty: worksheetDetail.targetInventory.releaseQty,
+            releaseWeight: worksheetDetail.targetInventory.releaseWeight
           }
         })
       }
@@ -319,8 +328,16 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       }
     })
 
-    if (this._worksheetStatus !== WORKSHEET_STATUS.DEACTIVATED.value) {
+    if (
+      !this.preConfig.columns.some(e => e.name === 'status') &&
+      this._worksheetStatus !== WORKSHEET_STATUS.DEACTIVATED.value
+    ) {
       this.preConfig.columns = [...this.preConfig.columns, statusColumnConfig]
+    } else if (
+      this.preConfig.columns.some(e => e.name === 'status') &&
+      this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value
+    ) {
+      this.preConfig.columns.splice(this.preConfig.columns.map(e => e.name).indexOf('status'))
     }
 
     this.config = { ...this.preConfig }

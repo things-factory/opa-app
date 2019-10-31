@@ -270,11 +270,11 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
                 { name: 'description', hidden: true },
                 { name: 'name', header: i18next.t('field.name'), sortable: true, record: { align: 'center' } },
                 { name: 'zone', header: i18next.t('field.zone'), sortable: true, record: { align: 'center' } },
-                { name: 'row', header: i18next.t('field.row'), sortable: true, record: { align: 'center' } }
+                { name: 'row', header: i18next.t('field.row'), sortable: true, record: { align: 'center' } },
+                { name: 'column', header: i18next.t('field.column'), sortable: true, record: { align: 'center' } }
               ],
-              list: { fields: ['z', 'product', 'batchId', 'location'] }
-            },
-            list: { fields: ['location'] }
+              list: { fields: ['name', 'zone', 'row', 'column'] }
+            }
           },
           imex: {
             header: i18next.t('field.location'),
@@ -450,6 +450,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       if (x.location) {
         delete x.location['row']
         delete x.location['zone']
+        delete x.location['column']
         delete x.location['__seq__']
         delete x.location['__origin__']
         delete x.location['__selected__']
