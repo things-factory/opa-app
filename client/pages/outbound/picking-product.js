@@ -240,7 +240,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
         }
       },
       pagination: { infinite: true },
-      list: { fields: ['locationName', 'palletId', 'batchId', 'releaseQty'] },
+      list: { fields: ['completed', 'locationName', 'palletId', 'batchId', 'releaseQty'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
