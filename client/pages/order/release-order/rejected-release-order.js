@@ -265,6 +265,20 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
           header: i18next.t('field.release_qty'),
           record: { align: 'center', options: { min: 0 } },
           width: 100
+        },
+        {
+          type: 'float',
+          name: 'weight',
+          header: i18next.t('field.available_weight'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'float',
+          name: 'releaseWeight',
+          header: i18next.t('field.release_weight'),
+          record: { align: 'center', options: { min: 0 } },
+          width: 100
         }
       ]
     }
@@ -341,7 +355,9 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
               batchId
               packingType
               qty
+              weight
               releaseQty
+              releaseWeight
               product {
                 name
                 description
