@@ -338,6 +338,13 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
           width: 100
         },
         {
+          type: 'float',
+          name: 'weight',
+          header: 'Total Weight(Kg)',
+          record: { align: 'center' },
+          width: 100
+        },
+        {
           type: 'integer',
           name: 'releaseQty',
           header: i18next.t('field.release_qty'),
@@ -346,9 +353,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'weight',
-          header: i18next.t('field.total_weight'),
-          record: { align: 'center' },
+          name: 'releaseWeight',
+          header: 'Release Weight(Kg)',
+          record: { editable: true, align: 'center', options: { min: 0 } },
           width: 100
         }
       ]
@@ -699,6 +706,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
       return {
         releaseQty: record.releaseQty,
+        releaseWeight: record.releaseWeight,
         seq,
         inventory: {
           id: record.id
