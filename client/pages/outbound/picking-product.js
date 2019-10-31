@@ -254,7 +254,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
           name: 'locationName',
           header: i18next.t('field.location'),
           record: { align: 'center' },
-          width: 80
+          width: 120
         },
         {
           type: 'string',
