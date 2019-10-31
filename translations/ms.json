@@ -750,5 +750,6 @@
   "title.worksheet_unloading": "pemunggahan worksheet",
   "title.worksheet_vas": "VALUE ADDED SERVICE worksheet",
   "title.worksheet": "lembaran kerja",
-  "vas_order_created": "pesanan value added service telah dicipta"
+  "vas_order_created": "pesanan value added service telah dicipta",
+  "title.goods_delivery_order_details": "perincian pesanan penghantaran barang"
 }

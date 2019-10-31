@@ -41,7 +41,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           text-align: left;
         }
 
-        [goods-delivery-note] {
+        [goods-delivery-order] {
           overflow: scroll;
         }
 
@@ -104,6 +104,10 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           padding-bottom: 10px;
         }
 
+        [verification] {
+          text-align: center;
+        }
+
         [customer_confirmation] {
           flex: 1;
           padding-top: 10px;
@@ -130,6 +134,10 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
         td {
           padding: 15px;
           align: left;
+        }
+
+        em {
+          font-weight: bold;
         }
 
         [agreement] {
@@ -208,7 +216,6 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
     var customer = 'HATIO SEA SDN. BHD.'
 
-    var deliveredBy = 'container'
     var doNo = this._doNo
     var refNo = this._releaseOrderName
     this._date = new Date('dd/MM/yyyy')
@@ -218,7 +225,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     var truckNo = this._truckNo
 
     return html`
-      <div goods-delivery-note>
+      <div goods-delivery-order>
         <div business-info>
           <h2 business-name>${company}</h2>
           <span business-brn>(${brn})</span>
@@ -229,7 +236,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
         <div brief>
           <div left>
             <label>M/s</label>
-            <label>To be delivered to/collected by: </label>
+            <span>To be delivered to/collected by: </span>
             <div customer>&nbsp;</div>
           </div>
 
@@ -275,23 +282,23 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
         <div business_verification>
           <label>Verification by ${company}</label>
-          <table>
+          <table verification>
             <thead>
               <tr>
-                <th>Issued By</th>
-                <th>Loaded By</th>
-                <th>Checked By</th>
-                <th>Truck Number</th>
-                <th>Driver's Signature</th>
+                <th width="15%">Issued By</th>
+                <th width="15%">Loaded By</th>
+                <th width="15%">Checked By</th>
+                <th width="15%">Truck Number</th>
+                <th width="40%">Driver's Signature</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td>${truckNo}</td>
-                <td>${driverName}</td>
+                <td height="70px"></td>
+                <td height="70px"></td>
+                <td height="70px"></td>
+                <td height="70px">${truckNo}</td>
+                <td height="70px">${driverName}</td>
               </tr>
             </tbody>
           </table>
@@ -300,15 +307,20 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
         <div customer_confirmation>
           <label>Confirmation by ${customer}</label>
           <table>
-            <tr width="70%">
-              <td rowspan="2">
-                Please examine the goods before acceptance as we will not be responsible for any damage or defect after
-                delivery. Goods once accepted are not returnable.
+            <tr>
+              <td width="65%" height="60px" rowspan="2">
+                <em>
+                  Please examine the goods before acceptance as we will not be responsible for any damage or defect
+                  after delivery. Goods once accepted are not returnable.
+                </em>
               </td>
-              <td></td>
+              <td height="60px">[CUSTOMER SIGNATURE]</td>
             </tr>
-            <tr width="30%">
-              <td>Please sign & stamp here in receipt</td>
+            <tr>
+              <td width="35%" height="60px" text-align="center">Please sign & stamp here in receipt</td>
+            </tr>
+            <tr>
+              <td colspan="2">[DO No:]</td>
             </tr>
           </table>
         </div>

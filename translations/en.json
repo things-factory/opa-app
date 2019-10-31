@@ -750,5 +750,6 @@
   "title.worksheet_unloading": "worksheet unloading",
   "title.worksheet_vas": "worksheet vas",
   "title.worksheet": "worksheet",
-  "vas_order_created": "vas order created"
+  "vas_order_created": "vas order created",
+  "title.goods_delivery_order_details": "goods delivery order details"
 }
