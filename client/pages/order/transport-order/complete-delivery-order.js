@@ -69,6 +69,10 @@ class CompleteDeliveryOrder extends localize(i18next)(PageView) {
       title: i18next.t('title.delivery_order_detail'),
       actions: [
         {
+          title: i18next.t('button.print_do'),
+          action: () => navigate(`print_delivery_order/${this._doNo}`)
+        },
+        {
           title: i18next.t('button.completed'),
           action: this._checkDeliveredOrder.bind(this)
         },

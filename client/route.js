@@ -215,6 +215,10 @@ export default function route(page) {
       import('./pages/order/transport-order/completed-collection-order')
       return page
 
+    case 'print_delivery_order':
+      import('./pages/order/transport-order/print-delivery-order')
+      return page
+
     /**
      * GRN Menus Section
      */
@@ -232,21 +236,6 @@ export default function route(page) {
 
     case 'upload_receival_note':
       import('./pages/order/receival-note/upload-receival-note')
-      return page
-
-    /**
-     * GDN Menus Section
-     */
-    case 'delivery_note_list':
-      import('./pages/order/delivery-note/delivery-note-list')
-      return page
-
-    case 'create_delivery_note':
-      import('./pages/order/delivery-note/create-delivery-note')
-      return page
-
-    case 'delivery_note_detail':
-      import('./pages/order/delivery-note/delivery-note-detail')
       return page
 
     /**

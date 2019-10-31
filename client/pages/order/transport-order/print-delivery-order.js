@@ -3,27 +3,27 @@ import { client, PageView, gqlBuilder } from '@things-factory/shell'
 import { css, html } from 'lit-element'
 import gql from 'graphql-tag'
 
-class DeliveryNoteDetail extends localize(i18next)(PageView) {
+class PrintDeliveryOrder extends localize(i18next)(PageView) {
   static get properties() {
     return {
-      _grnNo: String,
-      _products: Array,
-      _bizplace: Object,
-      _arrivalNotice: Object,
-      _grnName: String,
-      _refNo: String,
-      _date: Date
+      _releaseOrderId: String,
+      _releaseOrderName: String,
+      _doNo: String,
+      _driverName: String,
+      _truckNo: String,
+      _date: Date,
+      _orderInventories: Object
     }
   }
 
   constructor() {
     super()
-    this._products = []
-    this._bizplace = {}
-    this._arrivalNotice = {}
-    this._grnName = ''
-    this._refNo = ''
+    this._releaseOrderId = ''
+    this._driverName = ''
+    this._truckNo = ''
     this._date = ''
+    this._orderInventories = {}
+    this._releaseOrderName = ''
   }
 
   static get styles() {
@@ -41,7 +41,7 @@ class DeliveryNoteDetail extends localize(i18next)(PageView) {
           text-align: left;
         }
 
-        [goods-receival-note] {
+        [goods-delivery-note] {
           overflow: scroll;
         }
 
@@ -80,14 +80,14 @@ class DeliveryNoteDetail extends localize(i18next)(PageView) {
         }
 
         [customer-company],
-        [grn-no],
+        [ref-no],
         [delivered-by] {
           font-size: 1.2em;
           font-weight: bold;
           text-transform: uppercase;
         }
 
-        [grn-no] {
+        [ref-no] {
           font-size: 1em;
           line-height: 0.5;
         }
@@ -185,7 +185,13 @@ class DeliveryNoteDetail extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.goods_receival_note_details'),
+      title: i18next.t('title.goods_delivery_order_details'),
+      actions: [
+        {
+          title: i18next.t('button.back'),
+          action: () => history.back()
+        }
+      ],
       printable: {
         accept: ['preview'],
         content: this
@@ -203,36 +209,41 @@ class DeliveryNoteDetail extends localize(i18next)(PageView) {
     var customer = 'HATIO SEA SDN. BHD.'
 
     var deliveredBy = 'container'
-    var grnName = this._grnName
-    var refNo = this._refNo
+    var doNo = this._doNo
+    var refNo = this._releaseOrderName
+    this._date = new Date('dd/MM/yyyy')
     var date = this._date
+
+    var driverName = this._driverName
+    var truckNo = this._truckNo
 
     var footer = i18next.t('text.please_write_down_full_name_clearly')
 
     return html`
-      <div goods-receival-note>
+      <div goods-delivery-note>
         <div business-info>
           <h2 business-name>${company}</h2>
+          <span business-brn>(${brn})</span>
         </div>
 
-        <h1 title>GOODS DELIVERY NOTE</h1>
+        <h1 title>GOODS DELIVERY ORDER</h1>
 
-        <label>M/s</label>
         <div brief>
           <div left>
+            <label>M/s</label>
             <label>To be delivered to/collected by: </label>
             <div customer>&nbsp;</div>
           </div>
 
           <div right>
-            <label>GRN No. : </label>
-            <span grn-no>${grnName}</span>
+            <label>DO No. : </label>
+            <span ref-no>${doNo}</span>
 
             <label>Reference No. : </label>
-            <span grn-no>${refNo}</span>
+            <span ref-no>${refNo}</span>
 
             <label>Date : </label>
-            <span>30/10/2019</span>
+            <span>${date}</span>
           </div>
         </div>
 
@@ -241,27 +252,25 @@ class DeliveryNoteDetail extends localize(i18next)(PageView) {
             <thead>
               <tr>
                 <th idx>#</th>
-                <th>SKU</th>
+                <th>Items</th>
                 <th>Description</th>
                 <th>Packing Type</th>
-                <th>Loose Quantity</th>
+                <th>Quantity</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>1</td>
-                <td>the SKU-001</td>
-                <td>any description here</td>
-                <td>the packing type here</td>
-                <td>the loose quantity here</td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td>the SKU-002</td>
-                <td>any description here</td>
-                <td>the packing type here</td>
-                <td>the loose quantity here</td>
-              </tr>
+              ${Object.keys(this._orderInventories || {}).map((key, index) => {
+                let sku = this._orderInventories[key]
+                return html`
+                  <tr>
+                    <td idx>${index + 1}</td>
+                    <td>${sku.inventory.product.name}</td>
+                    <td>${sku.inventory.product.description}</td>
+                    <td>${sku.inventory.packingType}</td>
+                    <td>${sku.releaseQty}</td>
+                  </tr>
+                `
+              })}
             </tbody>
           </table>
         </div>
@@ -283,8 +292,8 @@ class DeliveryNoteDetail extends localize(i18next)(PageView) {
                 <td></td>
                 <td></td>
                 <td></td>
-                <td></td>
-                <td></td>
+                <td>${truckNo}</td>
+                <td>${driverName}</td>
               </tr>
             </tbody>
           </table>
@@ -309,111 +318,96 @@ class DeliveryNoteDetail extends localize(i18next)(PageView) {
     `
   }
 
-  // async pageUpdated(changes) {
-  //   if (this.active) {
-  //     this._grnNo = changes.resourceId || this._grnNo || ''
-  //     await this._fetchGRN(this._grnNo)
-  //   }
-  // }
+  async pageUpdated(changes) {
+    if (this.active) {
+      this._doNo = changes.resourceId || this._doNo || ''
+      this._fetchDeliveryOrder()
+    }
+  }
 
-  // async _fetchGRN(grnNo) {
-  //   if (!grnNo) return
-  //   const response = await client.query({
-  //     query: gql`
-  //       query {
-  //         goodsReceivalNote(${gqlBuilder.buildArgs({
-  //           name: grnNo
-  //         })}) {
-  //           id
-  //           name
-  //           description
-  //           refNo
-  //           bizplace {
-  //             id
-  //             name
-  //             description
-  //             company {
-  //               id
-  //               name
-  //               address
-  //               brn
-  //             }
-  //           }
-  //           arrivalNotice {
-  //             id
-  //             name
-  //             description
-  //           }
-  //           createdAt
-  //         }
-  //       }
-  //     `
-  //   })
+  async _fetchDeliveryOrder(doNo) {
+    const response = await client.query({
+      query: gql`
+        query {
+          deliveryOrder(${gqlBuilder.buildArgs({
+            name: this._doNo
+          })}) {
+            id
+            name
+            releaseGood {
+              id
+              name
+            }
+            transportOrderDetails {
+              id
+              name
+              description
+              transportDriver {
+                id
+                name
+              }
+              transportVehicle {
+                id
+                name
+              }
+            }
+          }
+        }
+      `
+    })
 
-  //   if (!response.errors) {
-  //     const goodsReceivalNote = response.data.goodsReceivalNote
-  //     this._bizplace = goodsReceivalNote.bizplace
-  //     this._arrivalNotice = goodsReceivalNote.arrivalNotice
-  //     this._grnName = goodsReceivalNote.name
-  //     this._refNo = goodsReceivalNote.refNo
-  //     const date = goodsReceivalNote.createdAt
-  //     this._date = new Date(parseInt(date))
-  //     this._date = new Date(this._date).toUTCString()
-  //     this._date = this._date
-  //       .split(' ')
-  //       .slice(1, 4)
-  //       .join(' ')
+    if (!response.errors) {
+      const _deliveryOrder = response.data.deliveryOrder
+      this._releaseOrderId = _deliveryOrder.releaseGood.id
+      this._releaseOrderName = _deliveryOrder.releaseGood.name
 
-  //     await this._fetchOrderProducts()
-  //   }
-  // }
+      const _transportOrderDetails = _deliveryOrder.transportOrderDetails
+      this._driverName = _transportOrderDetails[0].transportDriver.name
+      this._truckNo = _transportOrderDetails[0].transportVehicle.name
+      this._orderInventories = { ...(await this._fetchOrderInventories(this._releaseOrderId)) }
+    }
+  }
 
-  // async _fetchOrderProducts() {
-  //   const filters = [
-  //     {
-  //       name: 'arrivalNotice',
-  //       operator: 'eq',
-  //       value: this._arrivalNotice.id
-  //     }
-  //   ]
+  async _fetchOrderInventories(releaseGoodsId) {
+    const filters = [
+      {
+        name: 'releaseGood',
+        operator: 'eq',
+        value: releaseGoodsId
+      }
+    ]
 
-  //   const response = await client.query({
-  //     query: gql`
-  //       query {
-  //         orderProducts(${gqlBuilder.buildArgs({
-  //           filters
-  //         })}) {
-  //           items {
-  //             id
-  //             batchId
-  //             product {
-  //               id
-  //               name
-  //             }
-  //             packingType
-  //             packQty
-  //             remark
-  //             bizplace {
-  //               id
-  //               name
-  //               company {
-  //                 id
-  //                 name
-  //                 address
-  //                 brn
-  //               }
-  //             }
-  //           }
-  //           total
-  //         }
-  //       }
-  //     `
-  //   })
+    const response = await client.query({
+      query: gql`
+        query {
+          orderInventories(${gqlBuilder.buildArgs({
+            filters
+          })}) {
+            items {
+              id
+              name
+              description
+              inventory {
+                id
+                name
+                batchId
+                packingType
+                product {
+                  id
+                  name
+                  description
+                }
+              }
+              releaseQty
+            }
+            total
+          }
+        }
+      `
+    })
 
-  //   if (!response.errors) {
-  //     this._products = response.data.orderProducts.items || []
-  //   }
-  // }
+    return response.data.orderInventories.items
+  }
 }
 
-window.customElements.define('delivery-note-detail', DeliveryNoteDetail)
+window.customElements.define('print-delivery-order', PrintDeliveryOrder)

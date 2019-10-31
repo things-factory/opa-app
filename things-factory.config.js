@@ -184,6 +184,10 @@ export default {
       page: 'delivery_orders'
     },
     {
+      tagname: 'print-delivery-order',
+      page: 'print_delivery_order'
+    },
+    {
       tagname: 'collection-order-list',
       page: 'collection_orders'
     },
@@ -253,21 +257,6 @@ export default {
     {
       tagname: 'upload-receival-note',
       page: 'upload_receival_note'
-    },
-    /**
-     * GDN Menus Section
-     */
-    {
-      tagname: 'delivery-note-list',
-      page: 'delivery_note_list'
-    },
-    {
-      tagname: 'create-delivery-note',
-      page: 'create_delivery_note'
-    },
-    {
-      tagname: 'delivery-note-detail',
-      page: 'delivery_note_detail'
     },
     /**
      * Billing Menus Section
