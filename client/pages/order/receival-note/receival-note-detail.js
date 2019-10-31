@@ -199,7 +199,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
     var refNo = this._refNo
     var date = this._date
 
-    var footer = i18next.t('text.please_write_down_full_name_clearly')
+    var footer = 'please right down full name clearly'
 
     return html`
       <div goods-receival-note>
@@ -286,7 +286,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
           </div>
         </div>
 
-        <h4 footer>** ${footer} **</h4>
+        <h5 footer>** ${footer} **</h5>
       </div>
     `
   }

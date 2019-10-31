@@ -113,7 +113,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
         table {
           width: 100%;
           height: 100%;
-          border: 1px solid black;
+          border: 1px solid #424242;
           border-spacing: 0;
         }
 
@@ -124,7 +124,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
         th,
         td {
-          border: 1px solid black;
+          border: 1px solid #424242;
         }
 
         td {
@@ -145,7 +145,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
         [signature] {
           height: 100px;
-          border-bottom: 1px solid black;
+          border-bottom: 1px solid #424242;
         }
 
         [desc] {
@@ -216,8 +216,6 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
     var driverName = this._driverName
     var truckNo = this._truckNo
-
-    var footer = i18next.t('text.please_write_down_full_name_clearly')
 
     return html`
       <div goods-delivery-note>
@@ -317,6 +315,8 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       </div>
     `
   }
+
+  pageInitialized() {}
 
   async pageUpdated(changes) {
     if (this.active) {
