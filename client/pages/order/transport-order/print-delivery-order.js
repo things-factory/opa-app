@@ -66,17 +66,22 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
         [brief] {
           display: grid;
-          grid-template-columns: 4fr 1fr;
+          grid-template-columns: 3fr 1fr;
         }
 
         [brief] > div {
           display: grid;
-          grid-template-columns: 1fr 10fr;
           grid-gap: 1px;
         }
 
         [brief] > div[right] {
-          grid-auto-rows: 20px 20px;
+          grid-template-columns: 5fr 8fr;
+          grid-auto-rows: 30px 30px 30px;
+        }
+
+        [brief] > div[left] {
+          grid-template-columns: 1fr 15fr;
+          padding-left: 0;
         }
 
         [customer-company],
@@ -114,10 +119,15 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           padding-bottom: 10px;
         }
 
+        table [product-table] td {
+          padding-top: 10px;
+          padding-bottom: 10px;
+        }
+
         table {
           width: 100%;
           height: 100%;
-          border: 1px solid #424242;
+          border: 1px solid black;
           border-spacing: 0;
         }
 
@@ -128,11 +138,11 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
         th,
         td {
-          border: 1px solid #424242;
+          border: 1px solid black;
         }
 
         td {
-          padding: 15px;
+          padding-left: 15px;
           align: left;
         }
 
@@ -153,7 +163,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
         [signature] {
           height: 100px;
-          border-bottom: 1px solid #424242;
+          border-bottom: 1px solid black;
         }
 
         [desc] {
@@ -218,8 +228,17 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
     var doNo = this._doNo
     var refNo = this._releaseOrderName
-    this._date = new Date('dd/MM/yyyy')
-    var date = this._date
+    this._date = new Date()
+
+    var date =
+      this._date
+        .getDate()
+        .toString()
+        .padStart(2, '0') +
+      '/' +
+      (this._date.getMonth() + 1).toString().padStart(2, '0') +
+      '/' +
+      this._date.getFullYear()
 
     var driverName = this._driverName
     var truckNo = this._truckNo
@@ -236,24 +255,21 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
         <div brief>
           <div left>
             <label>M/s</label>
-            <span>To be delivered to/collected by: </span>
+            <strong>To be delivered to/collected by:</strong>
             <div customer>&nbsp;</div>
           </div>
 
           <div right>
-            <label>DO No. : </label>
-            <span ref-no>${doNo}</span>
+            <label>DO No. : </label><b>${doNo}</b>
 
-            <label>Reference No. : </label>
-            <span ref-no>${refNo}</span>
+            <label>Reference No. : </label><b>${refNo}</b>
 
-            <label>Date : </label>
-            <span>${date}</span>
+            <label>Date : </label>${date}
           </div>
         </div>
 
         <div detail>
-          <table product>
+          <table product-table>
             <thead>
               <tr>
                 <th idx>#</th>
@@ -268,7 +284,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
                 let sku = this._orderInventories[key]
                 return html`
                   <tr>
-                    <td idx>${index + 1}</td>
+                    <td idx style="padding:10px;">${index + 1}</td>
                     <td>${sku.inventory.product.name}</td>
                     <td>${sku.inventory.product.description}</td>
                     <td>${sku.inventory.packingType}</td>
@@ -294,11 +310,13 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             </thead>
             <tbody>
               <tr>
-                <td height="70px"></td>
-                <td height="70px"></td>
-                <td height="70px"></td>
-                <td height="70px">${truckNo}</td>
-                <td height="70px">${driverName}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>${truckNo}</td>
+                <td style="padding-top:50px; padding-bottom:5px;">
+                  <span><hr width="85%"/></span>${driverName}
+                </td>
               </tr>
             </tbody>
           </table>
@@ -308,19 +326,22 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           <label>Confirmation by ${customer}</label>
           <table>
             <tr>
-              <td width="65%" height="60px" rowspan="2">
+              <td width="65%" rowspan="2" style="padding-top:5px; padding-bottom:200px;">
                 <em>
                   Please examine the goods before acceptance as we will not be responsible for any damage or defect
                   after delivery. Goods once accepted are not returnable.
                 </em>
+                <br /><br />[REMARK]:
               </td>
-              <td height="60px">[CUSTOMER SIGNATURE]</td>
+              <td style="padding-top:90px; padding-bottom:5px;"><hr width="75%" /></td>
             </tr>
             <tr>
-              <td width="35%" height="60px" text-align="center">Please sign & stamp here in receipt</td>
+              <td width="35%" style="text-align:center; padding-top:90px; padding-bottom:5px;">
+                Please sign & stamp here in receipt
+              </td>
             </tr>
             <tr>
-              <td colspan="2">[DO No:]</td>
+              <td colspan="2">[Customer DO No./PO No.]:</td>
             </tr>
           </table>
         </div>
