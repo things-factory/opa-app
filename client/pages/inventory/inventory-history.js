@@ -203,13 +203,15 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
           type: 'integer',
           name: 'seq',
           header: i18next.t('field.seq'),
+          record: { align: 'center' },
           sortable: true,
-          width: 100
+          width: 80
         },
         {
           type: 'string',
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
+          record: { align: 'center' },
           sortable: true,
           width: 150
         },
@@ -217,6 +219,7 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_no'),
+          record: { align: 'center' },
           sortable: true,
           width: 150
         },
@@ -224,7 +227,7 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
           type: 'number',
           name: 'qty',
           header: i18next.t('field.qty'),
-          record: { align: 'right' },
+          record: { align: 'center' },
           sortable: true,
           width: 80
         },
@@ -232,6 +235,7 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'zone',
           header: i18next.t('field.zone'),
+          record: { align: 'center' },
           sortable: true,
           width: 80
         },
@@ -239,8 +243,9 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
           type: 'object',
           name: 'location',
           header: i18next.t('field.location'),
+          record: { align: 'center' },
           sortable: true,
-          width: 200
+          width: 150
         },
         {
           type: 'string',
@@ -248,7 +253,7 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.status'),
           record: { align: 'center' },
           sortable: true,
-          width: 200
+          width: 150
         },
         {
           type: 'string',
@@ -262,6 +267,7 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
+          record: { align: 'center' },
           sortable: true,
           width: 150
         },
