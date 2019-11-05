@@ -166,6 +166,7 @@
   "field.receipt_reference_no": "receipt reference no",
   "field.receive_date": "receive date",
   "field.ref_order": "ref order",
+  "field.ref_no": "ref no",
   "field.registration_number": "registration number",
   "field.reject_date": "reject date",
   "field.release_date": "release date",
