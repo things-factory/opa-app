@@ -123,7 +123,6 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
       list: {
         fields: ['bizplace', 'status', 'updatedAt']
       },
-      pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
