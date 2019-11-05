@@ -325,6 +325,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
               id
               name
               description
+              refNo
             }
             createdAt
           }
@@ -337,7 +338,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
       this._bizplace = goodsReceivalNote.bizplace
       this._arrivalNotice = goodsReceivalNote.arrivalNotice
       this._grnName = goodsReceivalNote.name
-      this._refNo = goodsReceivalNote.refNo
+      this._refNo = goodsReceivalNote.arrivalNotice.refNo
       const date = goodsReceivalNote.createdAt
       this._date = new Date(parseInt(date))
       this._date = new Date(this._date).toUTCString()

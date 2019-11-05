@@ -77,6 +77,12 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
+        label: i18next.t('field.ref_no'),
+        name: 'refNo',
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
         label: i18next.t('field.eta'),
         name: 'etaDate',
         type: 'date',
@@ -146,12 +152,20 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           width: 180
         },
         {
+          type: 'string',
+          name: 'refNo',
+          header: i18next.t('field.ref_no'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 150
+        },
+        {
           type: 'date',
           name: 'etaDate',
           header: i18next.t('field.eta'),
           record: { align: 'center' },
           sortable: true,
-          width: 160
+          width: 120
         },
         {
           type: 'boolean',
@@ -159,7 +173,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           header: i18next.t('field.import_cargo'),
           record: { align: 'center' },
           sortable: true,
-          width: 200
+          width: 100
         },
         {
           type: 'boolean',
@@ -219,6 +233,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
               name
               etaDate
               status
+              refNo
               ownTransport
               importCargo
               updatedAt

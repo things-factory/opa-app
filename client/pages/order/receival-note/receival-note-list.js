@@ -129,8 +129,8 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'refNo',
-          header: i18next.t('field.gan'),
-          record: { align: 'left' },
+          header: i18next.t('field.ref_no'),
+          record: { align: 'center' },
           sortable: true,
           width: 160
         },
@@ -182,7 +182,12 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
             items {
               id
               name
-              refNo
+              arrivalNotice {
+                id
+                name
+                description
+                refNo
+              }
               description
               bizplace {
                 id
@@ -204,6 +209,12 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       return {
+        data: response.data.goodsReceivalNotes.items.map(grn => {
+          return {
+            ...grn,
+            refNo: grn.arrivalNotice.refNo
+          }
+        }),
         total: response.data.goodsReceivalNotes.total || 0,
         records: response.data.goodsReceivalNotes.items || []
       }
