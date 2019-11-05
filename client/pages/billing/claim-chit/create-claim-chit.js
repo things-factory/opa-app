@@ -1,9 +1,10 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
+import { getCodeByName } from '@things-factory/code-base'
 import { TRIP_CLAIM } from '../constants/claim'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store, flattenObject } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
@@ -26,9 +27,13 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
           flex-direction: column;
           overflow-y: auto;
         }
+
         .summary {
           align-items: flex-end;
           padding: var(--data-list-item-padding);
+          display: grid;
+          grid-template-columns: repeat(12, 1fr);
+          grid-auto-rows: minmax(24px, auto);
         }
 
         .grist-claim-orders {
@@ -69,6 +74,17 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
+
+        .summary label {
+          text-align: right;
+          text-transform: capitalize;
+          color: #394e64;
+          grid-column: span 2 / auto;
+        }
+
+        .multi-column-form .filler {
+          grid-column: span 12 / auto;
+        }
       `
     ]
   }
@@ -86,7 +102,12 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
       _bizplaceList: Object,
       _selectedDriver: String,
       _selectedTruck: String,
-      _totalClaim: Float64Array
+      _totalClaim: Float32Array,
+      _totalToll: Float32Array,
+      _totalDieselFC: Float32Array,
+      _totalDieselCash: Float32Array,
+      _totalHandling: Float32Array,
+      _totalOther: Float32Array
     }
   }
 
@@ -121,9 +142,16 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async pageInitialized() {
+    this._claimTypes = await getCodeByName('CLAIM_TYPES')
     this._driverList = { ...(await this.fetchDriverList()) }
     this._vehicleList = { ...(await this.fetchVehicleList()) }
     this._bizplaceList = { ...(await this.fetchBizplaceList()) }
+
+    this._totalToll = 0
+    this._totalDieselFC = 0
+    this._totalDieselCash = 0
+    this._totalHandling = 0
+    this._totalOther = 0
     this._totalClaim = 0
 
     this._claimOrderGristConfig = {
@@ -172,6 +200,26 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
                 ...this._claimDetailsData,
                 records: data.records.filter((record, idx) => idx !== rowIndex)
               }
+              let name = data.records[rowIndex].name
+              let amount = data.records[rowIndex].amount
+
+              switch (name) {
+                case 'Toll':
+                  this._totalToll = this._totalToll - amount
+                  break
+                case 'Diesel FC':
+                  this._totalDieselFC = this._totalDieselFC - amount
+                  break
+                case 'Diesel Cash':
+                  this._totalDieselCash = this._totalDieselCash - amount
+                  break
+                case 'Handling':
+                  this._totalHandling = this._totalHandling - amount
+                  break
+                default:
+                  this._totalOther = this._totalOther - amount
+                  break
+              }
 
               this._totalClaim = this._claimDetailsData.records
                 .map(item => {
@@ -189,7 +237,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
           record: {
             editable: true,
             align: 'center',
-            options: ['', ...Object.keys(TRIP_CLAIM).map(key => TRIP_CLAIM[key].value)]
+            options: ['', ...Object.keys(this._claimTypes).map(key => this._claimTypes[key].name)]
           },
           width: 300
         },
@@ -271,6 +319,25 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
           <label>${i18next.t('label.charges')}</label>
           <input name="charges" value="" type="number" step="0.01" />
 
+          <div class="filler"></div>
+
+          <label>${i18next.t('label.drum')}</label>
+          <input name="drum" value="" type="number" step="0.01" />
+
+          <label>${i18next.t('label.pallet')}</label>
+          <input name="pallet" value="" type="number" step="0.01" />
+
+          <label>${i18next.t('label.carton')}</label>
+          <input name="carton" value="" type="number" step="0.01" />
+
+          <label>${i18next.t('label.bag')}</label>
+          <input name="bag" value="" type="number" step="0.01" />
+
+          <label>${i18next.t('label.other')}</label>
+          <input name="other" value="" type="number" step="0.01" />
+
+          <div class="filler"></div>
+
           <label>${i18next.t('label.from')}</label>
           <textarea name="from" value="" type="text"></textarea>
 
@@ -304,17 +371,46 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
       </div>
 
       <div class="summary">
-        <h2>${i18next.t('label.total')} : ${this._totalClaim.toFixed(2)}</h2>
+        <label>${i18next.t('label.toll')} : ${this._totalToll.toFixed(2)}</label>
+        <label>${i18next.t('label.diesel_fc')} : ${this._totalDieselFC.toFixed(2)}</label>
+        <label>${i18next.t('label.diesel_cash')} : ${this._totalDieselCash.toFixed(2)}</label>
+        <label>${i18next.t('label.handling')} : ${this._totalHandling.toFixed(2)}</label>
+        <label>${i18next.t('label.other')} : ${this._totalOther.toFixed(2)}</label>
+        <label>${i18next.t('label.total')} : ${this._totalClaim.toFixed(2)}</label>
       </div>
     `
   }
 
   _updateAmount(e) {
     if (e.detail.column.name === 'amount') {
-      let valBefore = typeof e.detail.before === 'string' ? parseFloat(e.detail.before) : e.detail.before
-      let valAfter = typeof e.detail.after === 'string' ? parseFloat(e.detail.after) : e.detail.after
+      let valBefore = typeof e.detail.before === 'string' ? parseFloat(e.detail.before || 0) : e.detail.before || 0
+      let valAfter = typeof e.detail.after === 'string' ? parseFloat(e.detail.after || 0) : e.detail.after || 0
       this._totalClaim =
         this._totalClaim - (Number.isNaN(valBefore) ? 0 : valBefore) + (Number.isNaN(valAfter) ? 0 : valAfter)
+
+      switch (e.detail.record.name) {
+        case 'Toll':
+          this._totalToll =
+            this._totalToll - (Number.isNaN(valBefore) ? 0 : valBefore) + (Number.isNaN(valAfter) ? 0 : valAfter)
+          break
+        case 'Diesel FC':
+          this._totalDieselFC =
+            this._totalDieselFC - (Number.isNaN(valBefore) ? 0 : valBefore) + (Number.isNaN(valAfter) ? 0 : valAfter)
+          break
+        case 'Diesel Cash':
+          this._totalDieselCash =
+            this._totalDieselCash - (Number.isNaN(valBefore) ? 0 : valBefore) + (Number.isNaN(valAfter) ? 0 : valAfter)
+          break
+        case 'Handling':
+          this._totalHandling =
+            this._totalHandling - (Number.isNaN(valBefore) ? 0 : valBefore) + (Number.isNaN(valAfter) ? 0 : valAfter)
+          break
+
+        default:
+          this._totalOther =
+            this._totalOther - (Number.isNaN(valBefore) ? 0 : valBefore) + (Number.isNaN(valAfter) ? 0 : valAfter)
+          break
+      }
     }
   }
 
