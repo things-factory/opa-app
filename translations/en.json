@@ -449,6 +449,7 @@
   "text.arrival_notice_is_arrived": "arrival notice is arrived",
   "text.arrival_notice_received": "arrival notice received",
   "text.arrival_notice_rejected": "arrival notice rejected",
+  "text.assign_warehouse": "assign warehouse",
   "text.assign_buffer_location": "assign buffer location",
   "text.available_quantity_insufficient": "available quantity insufficient",
   "text.batch_id_is_duplicated": "batch id is duplicated",

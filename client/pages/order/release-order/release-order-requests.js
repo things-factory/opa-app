@@ -158,7 +158,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'refNo',
-          header: i18next.t('field.refNo'),
+          header: i18next.t('field.ref_no'),
           record: { align: 'center' },
           sortable: true,
           width: 180
@@ -250,6 +250,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
               name
               releaseDate
               status
+              refNo
               ownTransport
               exportOption
               updatedAt

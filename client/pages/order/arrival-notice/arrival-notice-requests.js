@@ -252,6 +252,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
               }
               name
               etaDate
+              refNo
               status
               ownTransport
               importCargo
