@@ -75,6 +75,12 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
+        label: i18next.t('field.ref_no'),
+        name: 'refNo',
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
         label: i18next.t('field.customer'),
         name: 'bizplace',
         type: 'object',
@@ -145,6 +151,14 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.release_good_no'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 180
+        },
+        {
+          type: 'string',
+          name: 'refNo',
+          header: i18next.t('field.ref_no'),
           record: { align: 'center' },
           sortable: true,
           width: 180
@@ -236,6 +250,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
               name
               releaseDate
               status
+              refNo
               ownTransport
               exportOption
               updatedAt

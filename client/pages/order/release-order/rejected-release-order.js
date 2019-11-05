@@ -103,6 +103,9 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
       <form name="releaseOrder" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.release_order_no')}: ${this._releaseOrderNo}</legend>
+          <label>${i18next.t('label.ref_no')}</label>
+          <input name="refNo" readonly />
+
           <label>${i18next.t('label.release_date')}</label>
           <input name="releaseDate" type="date" readonly />
 
@@ -348,6 +351,7 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
             ownTransport
             exportOption
             releaseDate
+            refNo
             collectionOrderNo
             remark
             inventoryInfos {
