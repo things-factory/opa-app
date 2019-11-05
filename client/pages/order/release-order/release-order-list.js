@@ -77,6 +77,12 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
+        label: i18next.t('field.ref_no'),
+        name: 'refNo',
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
         label: i18next.t('field.release_date'),
         name: 'releaseDate',
         type: 'date',
@@ -143,6 +149,14 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.release_order_no'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 180
+        },
+        {
+          type: 'string',
+          name: 'refNo',
+          header: i18next.t('field.ref_no'),
           record: { align: 'center' },
           sortable: true,
           width: 180
@@ -228,6 +242,7 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
                 name
               }
               ownTransport
+              refNo
               exportOption
               releaseDate
               status

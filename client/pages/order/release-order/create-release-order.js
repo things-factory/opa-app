@@ -120,14 +120,17 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       <form name="releaseOrder" class="multi-column-form" autocomplete="off">
         <fieldset>
           <legend>${i18next.t('title.release_order')}</legend>
+          <label>${i18next.t('label.ref_no')}</label>
+          <input name="refNo" />
+
           <label>${i18next.t('label.release_date')}</label>
           <input name="releaseDate" type="date" min="${this._getStdDate()}" />
 
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
-          <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" />
+          <label ?hidden="${!this._ownTransport || this._exportOption}">${i18next.t('label.co_no')}</label>
+          <input name="collectionOrderNo" ?hidden="${!this._ownTransport || this._exportOption}" />
 
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
-          <input name="truckNo" ?hidden="${!this._ownTransport}" />
+          <label ?hidden="${!this._ownTransport || this._exportOption}">${i18next.t('label.truck_no')}</label>
+          <input name="truckNo" ?hidden="${!this._ownTransport || this._exportOption}" />
 
           <input
             id="exportOption"
@@ -136,10 +139,6 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             ?checked="${this._exportOption}"
             @change="${e => {
               this._exportOption = e.currentTarget.checked
-              if (this._exportOption) {
-                this._ownTransportInput.checked = true
-                this._ownTransport = true
-              }
             }}"
           />
           <label for="exportOption">${i18next.t('label.export')}</label>

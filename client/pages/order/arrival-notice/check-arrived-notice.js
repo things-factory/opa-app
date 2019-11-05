@@ -99,7 +99,7 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
         <fieldset>
           <legend>${i18next.t('title.gan_no')}: ${this._ganNo}</legend>
           <label>${i18next.t('label.ref_no')}</label>
-          <input name="refNo" />
+          <input name="refNo" readonly />
 
           <label ?hidden="${!this._importCargo}">${i18next.t('label.container_no')}</label>
           <input name="containerNo" ?hidden="${!this._importCargo}" readonly />
