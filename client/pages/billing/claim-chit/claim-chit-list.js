@@ -206,7 +206,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  async fetchHandler({ page, limit, sorters = [] }) {
+  async fetchHandler({ page, limit, sorters = [{ name: 'createdAt', desc: true }] }) {
     try {
       let args = gqlBuilder.buildArgs({
         filters: [...this.searchForm.queryFilters],

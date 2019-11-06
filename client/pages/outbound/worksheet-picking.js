@@ -140,7 +140,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
   pageInitialized() {
     this.preConfig = {
       rows: { appendable: false },
-      list: { fields: ['batchId', 'palletId', 'product'] },
+      list: { fields: ['batchId', 'palletId', 'product', 'location'] },
       pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
