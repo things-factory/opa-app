@@ -66,11 +66,12 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
         [brief] {
           display: grid;
-          grid-template-columns: 3fr 1fr;
+          grid-template-columns: 4fr 1fr;
         }
 
         [brief] > div {
           display: grid;
+          grid-template-columns: 1fr 10fr;
           grid-gap: 1px;
         }
 
