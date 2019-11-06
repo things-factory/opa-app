@@ -58,6 +58,7 @@
   "field.brand_name": "brand name",
   "field.brn": "brn",
   "field.buffer_location": "buffer location",
+  "field.cargo_type": "cargo type",
   "field.category": "category",
   "field.charges": "charges",
   "field.check_box": "check box",
