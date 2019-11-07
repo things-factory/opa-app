@@ -197,7 +197,7 @@ class VasWorksheetList extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  async fetchHandler({ page, limit, sorters = [] }) {
+  async fetchHandler({ page, limit, sorters = [{ name: 'createdAt', desc: true }] }) {
     const filters = this.searchForm.queryFilters
     filters.push({
       name: 'type',
@@ -234,6 +234,7 @@ class VasWorksheetList extends localize(i18next)(PageView) {
               status
               startedAt
               endedAt
+              createdAt
               updatedAt
               updater {
                 name

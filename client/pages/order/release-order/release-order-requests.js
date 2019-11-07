@@ -231,7 +231,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  async fetchHandler({ page, limit, sorters = [] }) {
+  async fetchHandler({ page, limit, sorters = [{ name: 'updatedAt', desc: true }] }) {
     const response = await client.query({
       query: gql`
         query {

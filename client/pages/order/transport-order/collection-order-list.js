@@ -254,7 +254,7 @@ class CollectionOrderList extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  async fetchHandler({ page, limit, sorters = [] }) {
+  async fetchHandler({ page, limit, sorters = [{ name: 'createdAt', desc: true }] }) {
     const response = await client.query({
       query: gql`
         query {
@@ -275,6 +275,7 @@ class CollectionOrderList extends localize(i18next)(PageView) {
               urgency
               loadWeight
               looseItem
+              createdAt
               updatedAt
               updater {
                 id

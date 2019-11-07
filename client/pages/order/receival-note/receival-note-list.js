@@ -170,7 +170,7 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  async fetchHandler({ page, limit, sorters = [] }) {
+  async fetchHandler({ page, limit, sorters = [{ name: 'createdAt', desc: true }] }) {
     const response = await client.query({
       query: gql`
         query {
@@ -194,6 +194,7 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
                 name
                 description
               }
+              createdAt
               updatedAt
               updater {
                 id
