@@ -86,6 +86,12 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
         name: 'name',
         type: 'text',
         props: { searchOper: 'i_like', placeholder: i18next.t('label.name') }
+      },
+      {
+        label: i18next.t('label.status'),
+        name: 'status',
+        type: 'text',
+        props: { searchOper: 'i_like', placeholder: i18next.t('label.status') }
       }
     ]
 
@@ -181,6 +187,14 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
           width: 100
         },
         {
+          type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: { editable: false, align: 'center' },
+          sortable: true,
+          width: 200
+        },
+        {
           type: 'datetime',
           name: 'createdAt',
           header: i18next.t('field.created_at'),
@@ -238,6 +252,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
                   name
                 }
                 charges
+                status
                 createdAt
                 updatedAt
                 updater {

@@ -549,7 +549,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
       })
       if (!response.errors) {
         this._resetAll()
-        this._showToast({ message: i18next.t('new_claim_created') })
+        this._showToast({ message: i18next.t('claim_created') })
       }
     } catch (e) {
       this._showToast(e)
@@ -563,9 +563,6 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
     this._dataClaimOrdersGrist.fetch()
     this._dataClaimDetailsGrist.fetch()
     this._totalClaim = 0
-    // this._driverList = { ...(await this.fetchDriverList()) }
-    // this._vehicleList = { ...(await this.fetchVehicleList()) }
-    // this._bizplaceList = { ...(await this.fetchBizplaceList()) }
   }
 
   _validateData(data) {
