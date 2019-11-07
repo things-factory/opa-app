@@ -103,9 +103,9 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
           gutterName: 'button',
           icon: 'reorder',
           handlers: {
-            // click: (columns, data, column, record, rowIndex) => {
-            //   if (record.id) navigate(`claim_chit_detail?id=${record.id}`)
-            // }
+            click: (columns, data, column, record, rowIndex) => {
+              if (record.id) navigate(`claim_chit_detail/${record.id}`)
+            }
           }
         },
         {
@@ -174,7 +174,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'string',
-          name: 'total',
+          name: 'totalAmt',
           header: i18next.t('field.total'),
           record: { editable: false, align: 'center' },
           sortable: true,
@@ -257,7 +257,16 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
           total: response.data.claims.total || 0,
           records:
             response.data.claims.items.map(item => {
-              return flattenObject(item)
+              return flattenObject({
+                ...item,
+                charges: item.charges.toFixed(2),
+                totalAmt: item.claimDetails
+                  .map(claimDet => {
+                    return parseFloat(claimDet.amount)
+                  })
+                  .reduce((a, b) => a + b, 0)
+                  .toFixed(2)
+              })
             }) || {}
         }
       }
