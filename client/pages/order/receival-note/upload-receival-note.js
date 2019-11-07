@@ -1,4 +1,3 @@
-import '@things-factory/barcode-ui'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
@@ -18,6 +17,7 @@ class UploadReceivalNote extends localize(i18next)(PageView) {
           display: flex;
           flex-direction: column;
           overflow-x: auto;
+          background-color: white;
         }
         .container {
           flex: 1;
@@ -50,7 +50,6 @@ class UploadReceivalNote extends localize(i18next)(PageView) {
           border: var(--grist-title-border);
           color: var(--secondary-color);
         }
-
         .grist h2 mwc-icon {
           vertical-align: middle;
           margin: var(--grist-title-icon-margin);
@@ -61,12 +60,20 @@ class UploadReceivalNote extends localize(i18next)(PageView) {
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
+        .button-container {
+          display: flex;
+          margin-left: auto;
+        }
+        .button-container > mwc-button {
+          padding: 10px;
+        }
       `
     ]
   }
 
   static get properties() {
     return {
+      grnId: String,
       _ganNo: String,
       config: Object,
       _arrivalNoticeList: Object
@@ -96,23 +103,11 @@ class UploadReceivalNote extends localize(i18next)(PageView) {
       <form class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.upload_goods_receival_note')}</legend>
-
-          <label>${i18next.t('label.grn_no')}</label>
-          <barcode-scanable-input
-            name="grnNo"
-            custom-input
-            @keypress="${async e => {
-              if (e.keyCode === 13) {
-                e.preventDefault()
-                if (this._grnInput.value) this._fetchReceivalNote(this._grnInput.value)
-              }
-            }}"
-          ></barcode-scanable-input>
-
           <label>${i18next.t('label.upload_co')}</label>
           <file-uploader custom-input id="grnUpload" name="attachments"></file-uploader>
         </fieldset>
       </form>
+
       <div class="container">
         <div class="grist">
           <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product_info')}</h2>
@@ -125,6 +120,12 @@ class UploadReceivalNote extends localize(i18next)(PageView) {
         </div>
       </div>
     `
+  }
+
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
+      this.dataGrist.fetch()
+    }
   }
 
   async pageInitialized() {
@@ -181,11 +182,11 @@ class UploadReceivalNote extends localize(i18next)(PageView) {
     let filters = []
 
     filters = [
-      {
-        name: 'arrivalNotice',
-        operator: 'eq',
-        value: this._fetchReceivalNote.refNo
-      }
+      // {
+      //   name: 'arrivalNotice',
+      //   operator: 'eq',
+      //   value: this._fetchReceivalNote.refNo
+      // }
     ]
 
     if (bizplaceId && bizplaceId !== '' && arrivalNoticeId && arrivalNoticeId !== '') {
@@ -225,10 +226,6 @@ class UploadReceivalNote extends localize(i18next)(PageView) {
     }
   }
 
-  get _grnInput() {
-    return this.shadowRoot.querySelector('barcode-scanable-input[name=grnNo]').shadowRoot.querySelector('input')
-  }
-
   get dataGrist() {
     return this.shadowRoot.querySelector('#product-grist')
   }
@@ -246,7 +243,6 @@ class UploadReceivalNote extends localize(i18next)(PageView) {
           })}) {
             id
             name
-            refNo
             description
             bizplace {
               id
@@ -271,10 +267,9 @@ class UploadReceivalNote extends localize(i18next)(PageView) {
 
   async _saveGRNAttachment() {
     const attachmentFile = this.uploadGRNAttachment.files[0]
-    const grnId = this._receivalNote.id
 
     try {
-      let attachment = { refBy: grnId, file: attachmentFile, category: 'ORDER' }
+      let attachment = { refBy: this.grnId, file: attachmentFile, category: 'ORDER' }
 
       const response = await client.query({
         query: gql`

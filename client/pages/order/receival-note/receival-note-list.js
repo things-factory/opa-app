@@ -1,9 +1,11 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
+import { openPopup } from '@things-factory/layout-base'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import './upload-receival-note'
 
 class ReceivalNoteList extends localize(i18next)(PageView) {
   static get styles() {
@@ -98,8 +100,17 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
       pagination: { infinite: false },
       rows: { appendable: false, selectable: { multiple: true } },
       columns: [
-        { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'post_add',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              if (record.id) this._uploadGRN(record.id)
+            }
+          }
+        },
         {
           type: 'gutter',
           gutterName: 'button',
@@ -220,6 +231,19 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
         records: response.data.goodsReceivalNotes.items || []
       }
     }
+  }
+
+  _uploadGRN(grnId) {
+    openPopup(
+      html`
+        <upload-receival-note .grnId="${grnId}"></upload-receival-note>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.upload_signed_grn')
+      }
+    )
   }
 
   get _columns() {

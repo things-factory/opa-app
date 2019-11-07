@@ -81,29 +81,6 @@ export class ContactPointList extends localize(i18next)(LitElement) {
     `
   }
 
-  // get context() {
-  //   return {
-  //     title: i18next.t('title.contact_point'),
-  //     actions: [
-  //       {
-  //         title: i18next.t('button.save'),
-  //         action: this._saveContactPoints.bind(this)
-  //       },
-  //       {
-  //         title: i18next.t('button.delete'),
-  //         action: this._deleteContactPoints.bind(this)
-  //       }
-  //     ],
-  //     exportable: {
-  //       name: i18next.t('title.contact_point'),
-  //       data: this._exportableData.bind(this)
-  //     },
-  //     importable: {
-  //       handler: this._importableData.bind(this)
-  //     }
-  //   }
-  // }
-
   pageUpdated(changes, lifecycle) {
     if (this.active) {
       this.dataGrist.fetch()
@@ -161,14 +138,8 @@ export class ContactPointList extends localize(i18next)(LitElement) {
         }
       },
       columns: [
-        {
-          type: 'gutter',
-          gutterName: 'dirty'
-        },
-        {
-          type: 'gutter',
-          gutterName: 'sequence'
-        },
+        { type: 'gutter', gutterName: 'dirty' },
+        { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'gutter',
           gutterName: 'row-selector',
