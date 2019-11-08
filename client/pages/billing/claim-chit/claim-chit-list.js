@@ -91,18 +91,6 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
         props: { searchOper: 'i_like', placeholder: i18next.t('label.claim') }
       },
       {
-        label: i18next.t('field.status'),
-        name: 'status',
-        type: 'select',
-        options: [
-          { value: '', name: 'ALL' },
-          { value: 'PENDING', name: 'PENDING' },
-          { value: 'APPROVE', name: 'APPROVE' },
-          { value: 'REJECT', name: 'REJECT' }
-        ],
-        props: { searchOper: 'eq' }
-      },
-      {
         label: i18next.t('field.driver'),
         name: 'transportDriver',
         type: 'select',
@@ -118,7 +106,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
         props: { searchOper: 'eq' }
       },
       {
-        label: i18next.t('truck_no'),
+        label: i18next.t('label.truck_no'),
         name: 'transportVehicle',
         type: 'select',
         options: [
@@ -129,6 +117,18 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
               value: vehicleList.id
             }
           })
+        ],
+        props: { searchOper: 'eq' }
+      },
+      {
+        label: i18next.t('field.status'),
+        name: 'status',
+        type: 'select',
+        options: [
+          { value: '', name: 'ALL' },
+          { value: 'PENDING', name: 'PENDING' },
+          { value: 'APPROVE', name: 'APPROVE' },
+          { value: 'REJECT', name: 'REJECT' }
         ],
         props: { searchOper: 'eq' }
       }
@@ -200,7 +200,6 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
           name: 'billingMode',
           header: i18next.t('field.billing_mode'),
           record: { editable: false, align: 'left' },
-          sortable: true,
           width: 100
         },
         {
@@ -215,7 +214,6 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
           name: 'totalAmt',
           header: i18next.t('field.total'),
           record: { editable: false, align: 'center' },
-          sortable: true,
           width: 100
         },
         {
