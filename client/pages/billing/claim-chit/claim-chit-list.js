@@ -68,6 +68,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
       _companyId: String,
       _searchFields: Array,
       _gristConfig: Object,
+      _email: String,
       data: Object,
       importHandler: Object
     }
@@ -79,19 +80,57 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    const _driverList = await this.fetchDriverList()
+    const _vehicleList = await this.fetchVehicleList()
     this._searchFields = [
       {
-        label: i18next.t('label.name'),
+        label: i18next.t('label.claim'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'i_like', placeholder: i18next.t('label.name') }
+        props: { searchOper: 'i_like', placeholder: i18next.t('label.claim') }
       },
       {
-        label: i18next.t('label.status'),
+        label: i18next.t('field.status'),
         name: 'status',
-        type: 'text',
-        props: { searchOper: 'i_like', placeholder: i18next.t('label.status') }
+        type: 'select',
+        options: [
+          { value: '', name: 'ALL' },
+          { value: 'PENDING', name: 'PENDING' },
+          { value: 'APPROVE', name: 'APPROVE' },
+          { value: 'REJECT', name: 'REJECT' }
+        ],
+        props: { searchOper: 'eq' }
+      },
+      {
+        label: i18next.t('field.driver'),
+        name: 'transportDriver',
+        type: 'select',
+        options: [
+          { value: '', name: 'ALL' },
+          ..._driverList.map(driverList => {
+            return {
+              name: driverList.name,
+              value: driverList.id
+            }
+          })
+        ],
+        props: { searchOper: 'eq' }
+      },
+      {
+        label: i18next.t('truck_no'),
+        name: 'transportVehicle',
+        type: 'select',
+        options: [
+          { value: '', name: 'ALL' },
+          ..._vehicleList.map(vehicleList => {
+            return {
+              name: vehicleList.name,
+              value: vehicleList.id
+            }
+          })
+        ],
+        props: { searchOper: 'eq' }
       }
     ]
 
@@ -117,9 +156,8 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'string',
           name: 'name',
-          header: i18next.t('field.name'),
+          header: i18next.t('field.claim'),
           record: { editable: false, align: 'center' },
-          sortable: true,
           width: 200
         },
         {
@@ -127,7 +165,6 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
           name: 'transportDriver|name',
           header: i18next.t('field.driver_name'),
           record: { editable: false, align: 'left' },
-          sortable: true,
           width: 200
         },
         {
@@ -135,7 +172,6 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
           name: 'transportVehicle|name',
           header: i18next.t('field.truck_no'),
           record: { editable: false, align: 'center' },
-          sortable: true,
           width: 150
         },
         {
@@ -143,7 +179,6 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
           name: 'bizplace|name',
           header: i18next.t('field.customer'),
           record: { editable: false, align: 'center' },
-          sortable: true,
           width: 300
         },
         {
@@ -151,7 +186,6 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
           name: 'from',
           header: i18next.t('field.from'),
           record: { editable: false, align: 'left' },
-          sortable: true,
           width: 150
         },
         {
@@ -159,7 +193,6 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
           name: 'to',
           header: i18next.t('field.to'),
           record: { editable: false, align: 'left' },
-          sortable: true,
           width: 150
         },
         {
@@ -175,7 +208,6 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
           name: 'charges',
           header: i18next.t('field.charges'),
           record: { editable: false, align: 'center' },
-          sortable: true,
           width: 100
         },
         {
@@ -191,7 +223,6 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
           name: 'status',
           header: i18next.t('field.status'),
           record: { editable: false, align: 'center' },
-          sortable: true,
           width: 200
         },
         {
@@ -199,7 +230,6 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
           name: 'createdAt',
           header: i18next.t('field.created_at'),
           record: { editable: false, align: 'center' },
-          sortable: true,
           width: 175
         }
       ]
@@ -219,6 +249,35 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
   get dataGrist() {
     return this.shadowRoot.querySelector('data-grist')
   }
+  async fetchDriverList() {
+    let result = await client.query({
+      query: gql`
+        query {
+          transportDrivers (${gqlBuilder.buildArgs({ filters: [], pagination: { page: 1, limit: 9999 } })}){
+            items{
+              id
+              name
+            }
+          }
+        }`
+    })
+    return result.data.transportDrivers.items
+  }
+
+  async fetchVehicleList() {
+    let result = await client.query({
+      query: gql`
+        query {
+          transportVehicles (${gqlBuilder.buildArgs({ filters: [], pagination: { page: 1, limit: 9999 } })}){
+            items{
+              id
+              name
+            }
+          }
+        }`
+    })
+    return result.data.transportVehicles.items
+  }
 
   async fetchHandler({ page, limit, sorters = [{ name: 'createdAt', desc: true }] }) {
     try {
@@ -237,9 +296,11 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
                 description
                 billingMode
                 transportDriver{
+                  id
                   name
                 }
                 transportVehicle{
+                  id
                   name
                 }
                 claimDetails{
@@ -313,6 +374,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
   stateChanged(state) {
     if (JSON.parse(this.active)) {
       this._companyId = state && state.route && state.route.resourceId
+      this._email = state.auth && state.auth.user && state.auth.user.email
     }
   }
 

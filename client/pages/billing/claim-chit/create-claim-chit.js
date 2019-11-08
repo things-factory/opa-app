@@ -381,36 +381,43 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
     `
   }
 
-  _updateAmount(e) {
-    if (e.detail.column.name === 'amount') {
-      let valBefore = typeof e.detail.before === 'string' ? parseFloat(e.detail.before || 0) : e.detail.before || 0
-      let valAfter = typeof e.detail.after === 'string' ? parseFloat(e.detail.after || 0) : e.detail.after || 0
-      this._totalClaim =
-        this._totalClaim - (Number.isNaN(valBefore) ? 0 : valBefore) + (Number.isNaN(valAfter) ? 0 : valAfter)
+  _updateClaimSummary(data) {
+    this._totalClaim = 0
+    this._totalToll = 0
+    this._totalDieselFC = 0
+    this._totalDieselCash = 0
+    this._totalHandling = 0
+    this._totalOther = 0
 
-      switch (e.detail.record.name) {
-        case 'Toll':
-          this._totalToll =
-            this._totalToll - (Number.isNaN(valBefore) ? 0 : valBefore) + (Number.isNaN(valAfter) ? 0 : valAfter)
-          break
-        case 'Diesel FC':
-          this._totalDieselFC =
-            this._totalDieselFC - (Number.isNaN(valBefore) ? 0 : valBefore) + (Number.isNaN(valAfter) ? 0 : valAfter)
-          break
-        case 'Diesel Cash':
-          this._totalDieselCash =
-            this._totalDieselCash - (Number.isNaN(valBefore) ? 0 : valBefore) + (Number.isNaN(valAfter) ? 0 : valAfter)
-          break
-        case 'Handling':
-          this._totalHandling =
-            this._totalHandling - (Number.isNaN(valBefore) ? 0 : valBefore) + (Number.isNaN(valAfter) ? 0 : valAfter)
-          break
+    data.map(item => {
+      if (item.amount) {
+        let amount = parseFloat(item.amount)
+        this._totalClaim = parseFloat(this._totalClaim) + parseFloat(item.amount)
 
-        default:
-          this._totalOther =
-            this._totalOther - (Number.isNaN(valBefore) ? 0 : valBefore) + (Number.isNaN(valAfter) ? 0 : valAfter)
-          break
+        switch (item.name) {
+          case 'Toll':
+            this._totalToll = this._totalToll + amount
+            break
+          case 'Diesel FC':
+            this._totalDieselFC = this._totalDieselFC + amount
+            break
+          case 'Diesel Cash':
+            this._totalDieselCash = this._totalDieselCash + amount
+            break
+          case 'Handling':
+            this._totalHandling = this._totalHandling + amount
+            break
+          default:
+            this._totalOther = this._totalOther + amount
+            break
+        }
       }
+    })
+  }
+
+  _updateAmount(e) {
+    if (e.detail.column.name === 'amount' || e.detail.column.name === 'name') {
+      this._updateClaimSummary(this._dataClaimDetailsGrist.dirtyData.records)
     }
   }
 

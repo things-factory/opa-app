@@ -13,6 +13,10 @@ class ClaimChitDetail extends connect(store)(localize(i18next)(PageView)) {
     return [
       MultiColumnFormStyles,
       css`
+        select {
+          color: black;
+        }
+
         :host {
           display: flex;
           flex-direction: column;
@@ -107,8 +111,7 @@ class ClaimChitDetail extends connect(store)(localize(i18next)(PageView)) {
       _totalDieselCash: Float32Array,
       _totalHandling: Float32Array,
       _totalOther: Float32Array,
-      _totalClaim: Float32Array,
-      _editable: Boolean
+      _totalClaim: Float32Array
     }
   }
 
@@ -148,7 +151,7 @@ class ClaimChitDetail extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async pageInitialized() {
-    this._editable = true
+    // this._editable = true
     this._claimTypes = await getCodeByName('CLAIM_TYPES')
     this._driverList = {}
     this._vehicleList = {}
@@ -282,6 +285,9 @@ class ClaimChitDetail extends connect(store)(localize(i18next)(PageView)) {
         <fieldset>
           <legend>${i18next.t('title.claim_chit')}</legend>
 
+          <label>${i18next.t('label.name')}</label>
+          <input readonly name="name" value="" />
+
           <label>${i18next.t('label.driver_name')}</label>
           <input readonly name="transportDriverName" value="" />
 
@@ -289,7 +295,7 @@ class ClaimChitDetail extends connect(store)(localize(i18next)(PageView)) {
           <input readonly name="transportVehicleName" value="" />
 
           <label>${i18next.t('label.customer')}</label>
-          <select name="bizplace">
+          <select ?disabled="${!this._editable}" name="bizplace">
             <option value="">-- ${i18next.t('text.please_select_a_customer')} --</option>
 
             ${Object.keys(this._bizplaceList.data ? this._bizplaceList.data.bizplaces.items : {}).map(key => {
@@ -302,43 +308,41 @@ class ClaimChitDetail extends connect(store)(localize(i18next)(PageView)) {
           </select>
 
           <label>${i18next.t('label.billing_mode')}</label>
-          <input name="billingMode" value="" />
+          <input ?readonly="${!this._editable}" name="billingMode" value="" />
 
           <label>${i18next.t('label.charges')}</label>
-          <input name="charges" value="" type="number" step="0.01" />
+          <input ?readonly="${!this._editable}" name="charges" value="" type="number" step="0.01" />
+
+          <label>${i18next.t('label.drum')}</label>
+          <input ?readonly="${!this._editable}" name="drum" value="" type="number" step="0.01" />
+
+          <label>${i18next.t('label.pallet')}</label>
+          <input ?readonly="${!this._editable}" name="pallet" value="" type="number" step="0.01" />
+
+          <label>${i18next.t('label.carton')}</label>
+          <input ?readonly="${!this._editable}" name="carton" value="" type="number" step="0.01" />
+
+          <label>${i18next.t('label.bag')}</label>
+          <input ?readonly="${!this._editable}" name="bag" value="" type="number" step="0.01" />
+
+          <label>${i18next.t('label.other')}</label>
+          <input ?readonly="${!this._editable}" name="other" value="" type="number" step="0.01" />
 
           <label>${i18next.t('label.status')}</label>
-          <select name="status">
+          <select ?disabled="${!this._editable}" name="status">
             <option value="PENDING">PENDING</option>
             <option value="APPROVE">APPROVE</option>
             <option value="REJECT">REJECT</option>
           </select>
 
-          <label>${i18next.t('label.drum')}</label>
-          <input name="drum" value="" type="number" step="0.01" />
-
-          <label>${i18next.t('label.pallet')}</label>
-          <input name="pallet" value="" type="number" step="0.01" />
-
-          <label>${i18next.t('label.carton')}</label>
-          <input name="carton" value="" type="number" step="0.01" />
-
-          <label>${i18next.t('label.bag')}</label>
-          <input name="bag" value="" type="number" step="0.01" />
-
-          <label>${i18next.t('label.other')}</label>
-          <input name="other" value="" type="number" step="0.01" />
-
-          <div class="filler"></div>
-
           <label>${i18next.t('label.from')}</label>
-          <textarea name="from" value="" type="text"></textarea>
+          <textarea ?readonly="${!this._editable}" name="from" value="" type="text"></textarea>
 
           <label>${i18next.t('label.to')}</label>
-          <textarea name="to" value="" type="text"></textarea>
+          <textarea ?readonly="${!this._editable}" name="to" value="" type="text"></textarea>
 
           <label>${i18next.t('label.remark')}</label>
-          <textarea name="remark"></textarea>
+          <textarea ?readonly="${!this._editable}" name="remark"></textarea>
         </fieldset>
       </form>
 
@@ -427,7 +431,11 @@ class ClaimChitDetail extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      response.data.claim.status == 'PENDING' ? (this._editable = true) : (this._editable = true)
+      if (response.data.claim.status !== 'APPROVE') {
+        this._editable = true
+      } else {
+        this._editable = false
+      }
 
       this._selectedDriver = response.data.claim.transportDriver.id
       this._selectedTruck = response.data.claim.transportVehicle.id
@@ -447,37 +455,32 @@ class ClaimChitDetail extends connect(store)(localize(i18next)(PageView)) {
           response.data.claim.transportDriver.name + ' - ' + response.data.claim.transportDriver.driverCode,
         transportVehicleName: response.data.claim.transportVehicle.name
       })
-
-      response.data.claim.claimDetails.map(item => {
-        if (item.amount) {
-          let amount = parseFloat(item.amount)
-          this._totalClaim = parseFloat(this._totalClaim) + parseFloat(item.amount)
-
-          switch (item.name) {
-            case 'Toll':
-              this._totalToll = this._totalToll + amount
-              break
-            case 'Diesel FC':
-              this._totalDieselFC = this._totalDieselFC + amount
-              break
-            case 'Diesel Cash':
-              this._totalDieselCash = this._totalDieselCash + amount
-              break
-            case 'Handling':
-              this._totalHandling = this._totalHandling + amount
-              break
-            default:
-              this._totalOther = this._totalOther + amount
-              break
-          }
-        }
-      })
-      this._updateContext()
-      this.fetchOrderList()
+      this._updateClaimSummary(response.data.claim.claimDetails)
+      this._updatePageConfig()
+      await this.fetchOrderList()
     }
   }
 
-  _updateContext() {
+  _updatePageConfig() {
+    this._claimOrderGristConfig = {
+      ...this._claimOrderGristConfig,
+      columns: this._claimOrderGristConfig.columns.map(column => {
+        if (column.type !== 'gutter') {
+          column.record = { ...column.record, editable: this._editable }
+        }
+        return column
+      })
+    }
+    this._claimDetailGristConfig = {
+      ...this._claimDetailGristConfig,
+      columns: this._claimDetailGristConfig.columns.map(column => {
+        if (column.type !== 'gutter') {
+          column.record = { ...column.record, editable: this._editable }
+        }
+        return column
+      })
+    }
+
     let actions = [{ title: i18next.t('button.back'), action: () => history.back() }]
     let newContext = this.context
 
@@ -577,36 +580,43 @@ class ClaimChitDetail extends connect(store)(localize(i18next)(PageView)) {
     })
   }
 
-  _updateAmount(e) {
-    if (e.detail.column.name === 'amount') {
-      let valBefore = typeof e.detail.before === 'string' ? parseFloat(e.detail.before || 0) : e.detail.before || 0
-      let valAfter = typeof e.detail.after === 'string' ? parseFloat(e.detail.after || 0) : e.detail.after || 0
-      this._totalClaim =
-        this._totalClaim - (Number.isNaN(valBefore) ? 0 : valBefore) + (Number.isNaN(valAfter) ? 0 : valAfter)
+  _updateClaimSummary(data) {
+    this._totalClaim = 0
+    this._totalToll = 0
+    this._totalDieselFC = 0
+    this._totalDieselCash = 0
+    this._totalHandling = 0
+    this._totalOther = 0
 
-      switch (e.detail.record.name) {
-        case 'Toll':
-          this._totalToll =
-            this._totalToll - (Number.isNaN(valBefore) ? 0 : valBefore) + (Number.isNaN(valAfter) ? 0 : valAfter)
-          break
-        case 'Diesel FC':
-          this._totalDieselFC =
-            this._totalDieselFC - (Number.isNaN(valBefore) ? 0 : valBefore) + (Number.isNaN(valAfter) ? 0 : valAfter)
-          break
-        case 'Diesel Cash':
-          this._totalDieselCash =
-            this._totalDieselCash - (Number.isNaN(valBefore) ? 0 : valBefore) + (Number.isNaN(valAfter) ? 0 : valAfter)
-          break
-        case 'Handling':
-          this._totalHandling =
-            this._totalHandling - (Number.isNaN(valBefore) ? 0 : valBefore) + (Number.isNaN(valAfter) ? 0 : valAfter)
-          break
+    data.map(item => {
+      if (item.amount) {
+        let amount = parseFloat(item.amount)
+        this._totalClaim = parseFloat(this._totalClaim) + parseFloat(item.amount)
 
-        default:
-          this._totalOther =
-            this._totalOther - (Number.isNaN(valBefore) ? 0 : valBefore) + (Number.isNaN(valAfter) ? 0 : valAfter)
-          break
+        switch (item.name) {
+          case 'Toll':
+            this._totalToll = this._totalToll + amount
+            break
+          case 'Diesel FC':
+            this._totalDieselFC = this._totalDieselFC + amount
+            break
+          case 'Diesel Cash':
+            this._totalDieselCash = this._totalDieselCash + amount
+            break
+          case 'Handling':
+            this._totalHandling = this._totalHandling + amount
+            break
+          default:
+            this._totalOther = this._totalOther + amount
+            break
+        }
       }
+    })
+  }
+
+  _updateAmount(e) {
+    if (e.detail.column.name === 'amount' || e.detail.column.name === 'name') {
+      this._updateClaimSummary(this._dataClaimDetailsGrist.dirtyData.records)
     }
   }
 
