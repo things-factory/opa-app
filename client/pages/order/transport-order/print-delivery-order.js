@@ -36,11 +36,6 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           font-family: 'Times New Roman', Times;
         }
 
-        label {
-          text-transform: capitalize;
-          text-align: left;
-        }
-
         [goods-delivery-order] {
           overflow: scroll;
         }
@@ -81,7 +76,8 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
         }
 
         [brief] > div[left] {
-          grid-template-columns: 1fr 15fr;
+          border: solid;
+          grid-template-columns: 1fr;
           padding-left: 0;
         }
 
@@ -255,8 +251,8 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
         <div brief>
           <div left>
-            <label>M/s</label>
-            <strong>To be delivered to/collected by:</strong>
+            <label>M/s</label>${customer}
+            <label><strong>To be delivered to/collected by:</strong></label>
             <div customer>&nbsp;</div>
           </div>
 
