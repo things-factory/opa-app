@@ -107,7 +107,7 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
           icon: 'post_add',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              if (record.id) this._uploadGRN(record.id)
+              if (record.id) this._uploadGRN(record.name, record.id)
             }
           }
         },
@@ -233,10 +233,10 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
     }
   }
 
-  _uploadGRN(grnId) {
+  _uploadGRN(grnName, grnId) {
     openPopup(
       html`
-        <upload-receival-note .grnId="${grnId}"></upload-receival-note>
+        <upload-receival-note .grnName="${grnName}" .grnId="${grnId}"></upload-receival-note>
       `,
       {
         backdrop: true,

@@ -87,7 +87,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
     }
   }
 
-  pageInitialized() {
+  firstUpdated() {
     this._searchFields = [
       {
         label: i18next.t('field.name'),

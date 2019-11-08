@@ -229,9 +229,6 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
               <div customer-contact>${customerContact}</div>
               <div customer-email>${customerEmail}</div>
             </div>
-
-            <!-- <label>delivered by : </label>
-            <span delivered-by>${deliveredBy}</span> -->
           </div>
 
           <div right>
