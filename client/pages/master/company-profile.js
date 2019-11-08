@@ -32,7 +32,7 @@ class CompanyProfile extends localize(i18next)(PageView) {
           background-color: var(--main-section-background-color);
         }
         .profile-brand {
-          background: url('../assets/images/brand.png') center center no-repeat;
+          background: url('/assets/images/brand.png') center center no-repeat;
           width: var(--profile-brand-width);
           height: var(--profile-brand-height);
           margin: var(--profile-brand-padding);
