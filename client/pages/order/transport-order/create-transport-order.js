@@ -248,8 +248,8 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             filters: [
               {
                 name: 'status',
-                operator: 'eq',
-                value: ORDER_STATUS.PENDING.value
+                operator: 'in',
+                value: [ORDER_STATUS.PENDING.value, ORDER_STATUS.PENDING_RECEIVE.value]
               },
               {
                 name: 'ownTransport',
@@ -290,8 +290,8 @@ class CreateTransportOrder extends localize(i18next)(PageView) {
             filters: [
               {
                 name: 'status',
-                operator: 'eq',
-                value: ORDER_STATUS.PENDING.value
+                operator: 'in',
+                value: [ORDER_STATUS.PENDING.value, ORDER_STATUS.PENDING_RECEIVE.value]
               },
               {
                 name: 'ownTransport',

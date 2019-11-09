@@ -1,9 +1,11 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
+import { openPopup } from '@things-factory/layout-base'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import './upload-receival-note'
 
 class ReceivalNoteList extends localize(i18next)(PageView) {
   static get styles() {
@@ -98,8 +100,17 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
       pagination: { infinite: false },
       rows: { appendable: false, selectable: { multiple: true } },
       columns: [
-        { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'post_add',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              if (record.id) this._uploadGRN(record.name, record.id)
+            }
+          }
+        },
         {
           type: 'gutter',
           gutterName: 'button',
@@ -129,8 +140,8 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'refNo',
-          header: i18next.t('field.gan'),
-          record: { align: 'left' },
+          header: i18next.t('field.ref_no'),
+          record: { align: 'center' },
           sortable: true,
           width: 160
         },
@@ -170,7 +181,7 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  async fetchHandler({ page, limit, sorters = [] }) {
+  async fetchHandler({ page, limit, sorters = [{ name: 'createdAt', desc: true }] }) {
     const response = await client.query({
       query: gql`
         query {
@@ -182,13 +193,19 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
             items {
               id
               name
-              refNo
+              arrivalNotice {
+                id
+                name
+                description
+                refNo
+              }
               description
               bizplace {
                 id
                 name
                 description
               }
+              createdAt
               updatedAt
               updater {
                 id
@@ -204,10 +221,29 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       return {
+        data: response.data.goodsReceivalNotes.items.map(grn => {
+          return {
+            ...grn,
+            refNo: grn.arrivalNotice.refNo
+          }
+        }),
         total: response.data.goodsReceivalNotes.total || 0,
         records: response.data.goodsReceivalNotes.items || []
       }
     }
+  }
+
+  _uploadGRN(grnName, grnId) {
+    openPopup(
+      html`
+        <upload-receival-note .grnName="${grnName}" .grnId="${grnId}"></upload-receival-note>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.upload_signed_grn')
+      }
+    )
   }
 
   get _columns() {

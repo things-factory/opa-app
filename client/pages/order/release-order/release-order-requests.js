@@ -75,6 +75,12 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
+        label: i18next.t('field.ref_no'),
+        name: 'refNo',
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
         label: i18next.t('field.customer'),
         name: 'bizplace',
         type: 'object',
@@ -150,6 +156,14 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           width: 180
         },
         {
+          type: 'string',
+          name: 'refNo',
+          header: i18next.t('field.ref_no'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 180
+        },
+        {
           type: 'object',
           name: 'bizplace',
           header: i18next.t('field.customer'),
@@ -217,7 +231,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  async fetchHandler({ page, limit, sorters = [] }) {
+  async fetchHandler({ page, limit, sorters = [{ name: 'updatedAt', desc: true }] }) {
     const response = await client.query({
       query: gql`
         query {
@@ -236,6 +250,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
               name
               releaseDate
               status
+              refNo
               ownTransport
               exportOption
               updatedAt

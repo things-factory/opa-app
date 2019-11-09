@@ -77,6 +77,12 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
+        label: i18next.t('field.ref_no'),
+        name: 'refNo',
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
         label: i18next.t('field.release_date'),
         name: 'releaseDate',
         type: 'date',
@@ -148,6 +154,14 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
           width: 180
         },
         {
+          type: 'string',
+          name: 'refNo',
+          header: i18next.t('field.ref_no'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 180
+        },
+        {
           type: 'date',
           name: 'releaseDate',
           header: i18next.t('field.release_date'),
@@ -211,7 +225,7 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
     return this.config.columns
   }
 
-  async fetchHandler({ page, limit, sorters = [] }) {
+  async fetchHandler({ page, limit, sorters = [{ name: 'createdAt', desc: true }] }) {
     const response = await client.query({
       query: gql`
         query {
@@ -228,9 +242,11 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
                 name
               }
               ownTransport
+              refNo
               exportOption
               releaseDate
               status
+              createdAt
               updatedAt
               updater {
                 id

@@ -77,6 +77,12 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
+        label: i18next.t('field.ref_no'),
+        name: 'refNo',
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
         label: i18next.t('field.eta'),
         name: 'etaDate',
         type: 'date',
@@ -146,12 +152,20 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           width: 180
         },
         {
+          type: 'string',
+          name: 'refNo',
+          header: i18next.t('field.ref_no'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 150
+        },
+        {
           type: 'date',
           name: 'etaDate',
           header: i18next.t('field.eta'),
           record: { align: 'center' },
           sortable: true,
-          width: 160
+          width: 120
         },
         {
           type: 'boolean',
@@ -159,7 +173,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           header: i18next.t('field.import_cargo'),
           record: { align: 'center' },
           sortable: true,
-          width: 200
+          width: 100
         },
         {
           type: 'boolean',
@@ -205,7 +219,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  async fetchHandler({ page, limit, sorters = [] }) {
+  async fetchHandler({ page, limit, sorters = [{ name: 'createdAt', desc: true }] }) {
     const response = await client.query({
       query: gql`
         query {
@@ -219,8 +233,10 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
               name
               etaDate
               status
+              refNo
               ownTransport
               importCargo
+              createdAt
               updatedAt
               updater {
                 id

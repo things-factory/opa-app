@@ -123,6 +123,9 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       <form name="arrivalNotice" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.arrival_notice')}</legend>
+          <label>${i18next.t('label.ref_no')}</label>
+          <input name="refNo" />
+
           <label ?hidden="${!this._importedOrder}">${i18next.t('label.container_no')}</label>
           <input name="containerNo" ?hidden="${!this._importedOrder}" />
 

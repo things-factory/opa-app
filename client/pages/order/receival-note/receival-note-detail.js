@@ -10,6 +10,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
       _products: Array,
       _bizplace: Object,
       _arrivalNotice: Object,
+      _contactPoints: Object,
       _grnName: String,
       _refNo: String,
       _date: Date
@@ -21,6 +22,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
     this._products = []
     this._bizplace = {}
     this._arrivalNotice = {}
+    this._contactPoints = {}
     this._grnName = ''
     this._refNo = ''
     this._date = ''
@@ -76,14 +78,19 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
         }
 
         [brief] > div[right] {
-          grid-auto-rows: 20px 20px;
+          grid-template-columns: 5fr 8fr;
+          grid-auto-rows: 30px 30px 30px;
+        }
+
+        [brief] > div[left] {
+          grid-template-columns: 1fr 15fr;
+          padding-left: 0;
         }
 
         [customer-company],
         [grn-no],
         [delivered-by] {
           font-size: 1.2em;
-          font-weight: bold;
           text-transform: uppercase;
         }
 
@@ -191,15 +198,15 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
     var customerCompany = this._bizplace.company.name
     var customerBrn = this._bizplace.company.brn
     var customerAddress = this._bizplace.company.address
-    var customerContact = 'Phone: 603-5191-2911 | Fax: 603-5192-5811'
-    var customerEmail = 'Email: public@chem.com.my'
+    var customerContact = 'Phone: ' + this._contactPoints.phone + ' | Fax: ' + this._contactPoints.fax
+    var customerEmail = 'Email: ' + this._contactPoints.email
 
     var deliveredBy = 'container'
     var grnName = this._grnName
     var refNo = this._refNo
     var date = this._date
 
-    var footer = 'please right down full name clearly'
+    var footer = 'please write down full name clearly'
 
     return html`
       <div goods-receival-note>
@@ -217,26 +224,19 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
           <div left>
             <label>to : </label>
             <div customer>
-              <div customer-company>${customerCompany}</div>
-              <span customer-brn>(${customerBrn})</span>
+              <div customer-company><b>${customerCompany}</b> <small customer-brn>(${customerBrn})</small></div>
               <div customer-address>${customerAddress}</div>
               <div customer-contact>${customerContact}</div>
               <div customer-email>${customerEmail}</div>
             </div>
-
-            <!-- <label>delivered by : </label>
-            <span delivered-by>${deliveredBy}</span> -->
           </div>
 
           <div right>
-            <label>GRN No. : </label>
-            <span grn-no>${grnName}</span>
+            <label>GRN No. : </label><b>${grnName}</b>
 
-            <label>Reference No. : </label>
-            <span grn-no>${refNo}</span>
+            <label>Reference No. : </label><b>${refNo}</b>
 
-            <label>Date : </label>
-            <span>${date}</span>
+            <label>Date : </label>${date}
           </div>
         </div>
 
@@ -325,6 +325,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
               id
               name
               description
+              refNo
             }
             createdAt
           }
@@ -337,7 +338,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
       this._bizplace = goodsReceivalNote.bizplace
       this._arrivalNotice = goodsReceivalNote.arrivalNotice
       this._grnName = goodsReceivalNote.name
-      this._refNo = goodsReceivalNote.refNo
+      this._refNo = goodsReceivalNote.arrivalNotice.refNo
       const date = goodsReceivalNote.createdAt
       this._date = new Date(parseInt(date))
       this._date = new Date(this._date).toUTCString()
@@ -347,6 +348,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
         .join(' ')
 
       await this._fetchOrderProducts()
+      await this._fetchContactPoints()
     }
   }
 
@@ -394,6 +396,43 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       this._products = response.data.orderProducts.items || []
+    }
+  }
+  async _fetchContactPoints() {
+    const filters = [
+      {
+        name: 'bizplace',
+        operator: 'eq',
+        value: this._bizplace.id
+      }
+    ]
+
+    const response = await client.query({
+      query: gql`
+        query {
+          contactPoints(${gqlBuilder.buildArgs({
+            filters
+          })}) {
+            items {
+              id
+              name
+              bizplace {
+                id
+                name
+              }
+              description
+              email
+              phone
+              fax
+            }
+            total
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      this._contactPoints = response.data.contactPoints.items[0] || []
     }
   }
 }

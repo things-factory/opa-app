@@ -337,7 +337,7 @@ class TransportSummaryReport extends connect(store)(localize(i18next)(PageView))
       })
       if (!response.errors) {
         this._resetAll()
-        this._showToast({ message: i18next.t('new_claim_created') })
+        this._showToast({ message: i18next.t('claim_created') })
       }
     } catch (e) {
       this._showToast(e)

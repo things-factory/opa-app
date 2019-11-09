@@ -95,6 +95,9 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       <form name="arrivalNotice" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.gan_no')}: ${this._ganNo}</legend>
+          <label>${i18next.t('label.ref_no')}</label>
+          <input name="refNo" readonly />
+
           <label ?hidden="${!this._importedOrder}">${i18next.t('label.container_no')}</label>
           <input name="containerNo" ?hidden="${!this._importedOrder}" readonly />
 
@@ -329,6 +332,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             deliveryOrderNo
             status
             truckNo
+            refNo
             importCargo
             orderProducts {
               batchId

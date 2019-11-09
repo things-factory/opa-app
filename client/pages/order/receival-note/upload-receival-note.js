@@ -1,15 +1,14 @@
-import '@things-factory/barcode-ui'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { navigate, client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice } from '@things-factory/shell'
 import gql from 'graphql-tag'
-import { css, html } from 'lit-element'
+import { css, html, LitElement } from 'lit-element'
 import { CustomAlert } from '../../../utils/custom-alert'
 import { elementType } from 'prop-types'
 
-class UploadReceivalNote extends localize(i18next)(PageView) {
+class UploadReceivalNote extends localize(i18next)(LitElement) {
   static get styles() {
     return [
       MultiColumnFormStyles,
@@ -18,6 +17,7 @@ class UploadReceivalNote extends localize(i18next)(PageView) {
           display: flex;
           flex-direction: column;
           overflow-x: auto;
+          background-color: white;
         }
         .container {
           flex: 1;
@@ -50,7 +50,6 @@ class UploadReceivalNote extends localize(i18next)(PageView) {
           border: var(--grist-title-border);
           color: var(--secondary-color);
         }
-
         .grist h2 mwc-icon {
           vertical-align: middle;
           margin: var(--grist-title-icon-margin);
@@ -61,33 +60,35 @@ class UploadReceivalNote extends localize(i18next)(PageView) {
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
+        .button-container {
+          display: flex;
+          margin-left: auto;
+        }
+        .button-container > mwc-button {
+          padding: 10px;
+        }
       `
     ]
   }
 
   static get properties() {
     return {
-      _ganNo: String,
+      grnId: String,
+      grnName: String,
       config: Object,
-      _arrivalNoticeList: Object
+      _arrivalNotice: Object
     }
   }
 
   constructor() {
     super()
-    this._arrivalNoticeList = {}
-    this._receivalNote = {}
+    this._arrivalNotice = {}
+    this._loadedFlag = {}
   }
 
   get context() {
     return {
-      title: i18next.t('title.create_receival_note'),
-      actions: [
-        {
-          title: i18next.t('button.create'),
-          action: this._saveGRNAttachment.bind(this)
-        }
-      ]
+      title: i18next.t('title.create_receival_note')
     }
   }
 
@@ -96,23 +97,11 @@ class UploadReceivalNote extends localize(i18next)(PageView) {
       <form class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.upload_goods_receival_note')}</legend>
-
-          <label>${i18next.t('label.grn_no')}</label>
-          <barcode-scanable-input
-            name="grnNo"
-            custom-input
-            @keypress="${async e => {
-              if (e.keyCode === 13) {
-                e.preventDefault()
-                if (this._grnInput.value) this._fetchReceivalNote(this._grnInput.value)
-              }
-            }}"
-          ></barcode-scanable-input>
-
           <label>${i18next.t('label.upload_co')}</label>
           <file-uploader custom-input id="grnUpload" name="attachments"></file-uploader>
         </fieldset>
       </form>
+
       <div class="container">
         <div class="grist">
           <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product_info')}</h2>
@@ -124,10 +113,27 @@ class UploadReceivalNote extends localize(i18next)(PageView) {
           ></data-grist>
         </div>
       </div>
+
+      <div class="button-container">
+        <mwc-button @click=${this._saveGRNAttachment}>${i18next.t('button.create')}</mwc-button>
+      </div>
     `
   }
 
-  async pageInitialized() {
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
+      this.dataGrist.fetch()
+    }
+  }
+
+  async firstUpdated() {
+    if (this.grnName) {
+      this._loadedFlag = true
+      await this._fetchArrivalNotice(this.grnName)
+    } else {
+      this._loadedFlag = false
+    }
+
     this.config = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true }, appendable: false },
@@ -177,56 +183,77 @@ class UploadReceivalNote extends localize(i18next)(PageView) {
     }
   }
 
-  async fetchHandler() {
-    let filters = []
-
-    filters = [
-      {
-        name: 'arrivalNotice',
-        operator: 'eq',
-        value: this._fetchReceivalNote.refNo
+  async _fetchArrivalNotice(grnName) {
+    const response = await client.query({
+      query: gql`
+      query {
+        goodsReceivalNote(${gqlBuilder.buildArgs({
+          name: grnName
+        })}) {
+          id
+          name
+          description
+          refNo
+          arrivalNotice {
+            id
+            name
+            description
+          }
+          updatedAt
+          updater {
+            id
+            name
+            description
+          }
+        }
       }
-    ]
+    `
+    })
 
-    if (bizplaceId && bizplaceId !== '' && arrivalNoticeId && arrivalNoticeId !== '') {
+    if (!response.errors) {
+      this._arrivalNotice = response.data.goodsReceivalNote.arrivalNotice
+    }
+  }
+
+  async fetchHandler() {
+    if (this._loadedFlag) {
+      const filters = [
+        {
+          name: 'arrivalNotice',
+          operator: 'eq',
+          value: this._arrivalNotice.id
+        }
+      ]
+
       const response = await client.query({
         query: gql`
-          query {
-            orderProducts(${gqlBuilder.buildArgs({
-              filters
-            })}) {
-              items {
+        query {
+          orderProducts(${gqlBuilder.buildArgs({
+            filters
+          })}) {
+            items {
+              id
+              name
+              batchId
+              description
+              packingType
+              packQty
+              remark
+              product {
                 id
                 name
-                batchId
-                description
-                packingType
-                packQty
-                remark
-                product {
-                  id
-                  name
-                }
               }
-              total
             }
+            total
           }
-        `
+        }
+      `
       })
       return {
         total: response.data.orderProducts.total || 0,
         records: response.data.orderProducts.items || []
       }
-    } else {
-      return {
-        total: 0,
-        records: []
-      }
     }
-  }
-
-  get _grnInput() {
-    return this.shadowRoot.querySelector('barcode-scanable-input[name=grnNo]').shadowRoot.querySelector('input')
   }
 
   get dataGrist() {
@@ -237,44 +264,16 @@ class UploadReceivalNote extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('#grnUpload')
   }
 
-  async _fetchReceivalNote(grnNo) {
-    const response = await client.query({
-      query: gql`
-        query {
-          goodsReceivalNote(${gqlBuilder.buildArgs({
-            name: grnNo
-          })}) {
-            id
-            name
-            refNo
-            description
-            bizplace {
-              id
-              name
-              description
-            }
-            updatedAt
-            updater {
-              id
-              name
-              description
-            }
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      this._receivalNote = response.data.goodsReceivalNote
-    }
-  }
-
   async _saveGRNAttachment() {
+    // if (!attachmentFile) {
     const attachmentFile = this.uploadGRNAttachment.files[0]
-    const grnId = this._receivalNote.id
-
     try {
-      let attachment = { refBy: grnId, file: attachmentFile, category: 'ORDER' }
+      let attachment = {
+        refBy: this.grnId,
+        file: attachmentFile,
+        category: 'ORDER'
+        // description: 'Goods Receival Note'
+      }
 
       const response = await client.query({
         query: gql`
@@ -295,12 +294,15 @@ class UploadReceivalNote extends localize(i18next)(PageView) {
       })
 
       if (!response.errors) {
-        // navigate(`receival_note_detail/${response.data.generateGoodsReceivalNote.name}`)
+        history.back()
         this._showToast({ message: i18next.t('text.receival_note_uploaded') })
       }
     } catch (e) {
       this._showToast(e)
     }
+    // } else {
+    //   this._showToast({ message: i18next.t('text.please_add_the_file') })
+    // }
   }
 
   _showToast({ type, message }) {

@@ -175,7 +175,7 @@ class VasOrderRequests extends localize(i18next)(PageView) {
     return this.config.columns
   }
 
-  async fetchHandler({ page, limit, sorters = [] }) {
+  async fetchHandler({ page, limit, sorters = [{ name: 'updatedAt', desc: true }] }) {
     const response = await client.query({
       query: gql`
         query {
