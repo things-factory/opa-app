@@ -21,10 +21,7 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="application-name" content="OPAONE" />
     <meta name="application-description" content="Reimagining Logistics" />
-    <meta
-      name="application-copyright"
-      content="Copyright © hatiolab.com. All Rights Reserved."
-    />
+    <meta name="application-copyright" content="Copyright © hatiolab.com. All Rights Reserved." />
     <link rel="application-icon" href="/assets/manifest/icon-96x96.png" />
 
     <!-- Add to homescreen for Safari on iOS -->
@@ -34,32 +31,13 @@
 
     <!-- Homescreen icons -->
     <link rel="apple-touch-icon" href="/assets/manifest/icon-48x48.png" />
-    <link
-      rel="apple-touch-icon"
-      sizes="72x72"
-      href="/assets/manifest/icon-72x72.png"
-    />
-    <link
-      rel="apple-touch-icon"
-      sizes="96x96"
-      href="/assets/manifest/icon-96x96.png"
-    />
-    <link
-      rel="apple-touch-icon"
-      sizes="144x144"
-      href="/assets/manifest/icon-144x144.png"
-    />
-    <link
-      rel="apple-touch-icon"
-      sizes="192x192"
-      href="/assets/manifest/icon-192x192.png"
-    />
+    <link rel="apple-touch-icon" sizes="72x72" href="/assets/manifest/icon-72x72.png" />
+    <link rel="apple-touch-icon" sizes="96x96" href="/assets/manifest/icon-96x96.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="/assets/manifest/icon-144x144.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/assets/manifest/icon-192x192.png" />
 
     <!-- Tile icon for Windows 8 (144x144 + tile color) -->
-    <meta
-      name="msapplication-TileImage"
-      content="assets/manifest/icon-144x144.png"
-    />
+    <meta name="msapplication-TileImage" content="assets/manifest/icon-144x144.png" />
     <meta name="msapplication-TileColor" content="#22a6a7" />
     <meta name="msapplication-tap-highlight" content="no" />
 
@@ -67,34 +45,28 @@
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:site" content="@username" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="things-app" />
+    <meta property="og:site_name" content="OPAONE, Reimagining Logistics" />
     <meta property="og:image" content="/assets/manifest/image-metaog.png" />
 
     <!-- Performance tip: hint to the browser to start the handshake for the fonts site -->
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
 
-    <link
-      href="https://fonts.googleapis.com/css?family=Roboto:300,400,500"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css?family=Material+Icons&display=block"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Material+Icons&display=block" rel="stylesheet" />
 
     <script>
       // Load and register pre-caching Service Worker
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", function() {
-          navigator.serviceWorker.register("service-worker.js", {
-            scope: "/"
-          });
-        });
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('service-worker.js', {
+            scope: '/'
+          })
+        })
       }
 
       // Redux assumes `process.env.NODE_ENV` exists in the ES module build.
       // https://github.com/reactjs/redux/issues/2907
-      window.process = { env: { NODE_ENV: "production" } };
+      window.process = { env: { NODE_ENV: 'production' } }
     </script>
 
     <!-- Add any global styles for body, document, etc. -->
@@ -105,8 +77,7 @@
         overflow: hidden;
 
         /* This is a font-stack that tries to use the system-default sans-serifs first */
-        font-family: Helvetica, Arial, sans-serif, "Apple Color Emoji",
-          "Segoe UI Emoji", "Segoe UI Symbol";
+        font-family: Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
         line-height: 1.5;
         -webkit-font-smoothing: antialiased;
       }
@@ -127,83 +98,81 @@
 
     <script>
       function urlBase64ToUint8Array(base64String) {
-        var padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-        var base64 = (base64String + padding)
-          .replace(/\-/g, "+")
-          .replace(/_/g, "/");
+        var padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+        var base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/')
 
-        var rawData = window.atob(base64);
-        var outputArray = new Uint8Array(rawData.length);
+        var rawData = window.atob(base64)
+        var outputArray = new Uint8Array(rawData.length)
 
         for (var i = 0; i < rawData.length; ++i) {
-          outputArray[i] = rawData.charCodeAt(i);
+          outputArray[i] = rawData.charCodeAt(i)
         }
-        return outputArray;
+        return outputArray
       }
 
       navigator.serviceWorker.ready
         .then(function(registration) {
-          console.log("service worker registered");
+          console.log('service worker registered')
 
-          return registration.pushManager.getSubscription();
+          return registration.pushManager.getSubscription()
         })
         .then(function(subscription) {
           if (subscription) {
-            console.log("Already subscribed", subscription.endpoint);
+            console.log('Already subscribed', subscription.endpoint)
             // setUnsubscribeButton()
-            unsubscribe();
+            unsubscribe()
           }
-          subscribe();
-        });
+          subscribe()
+        })
 
       function subscribe() {
         navigator.serviceWorker.ready
           .then(async function(registration) {
-            const response = await fetch("./vapidPublicKey");
-            const vapidPublicKey = await response.text();
+            const response = await fetch('./vapidPublicKey')
+            const vapidPublicKey = await response.text()
 
-            const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
+            const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey)
 
             return registration.pushManager.subscribe({
               userVisibleOnly: true,
               applicationServerKey: convertedVapidKey
-            });
+            })
           })
           .then(function(subscription) {
-            console.log("Subscribed", subscription.endpoint);
-            return fetch("register", {
-              method: "post",
+            console.log('Subscribed', subscription.endpoint)
+            return fetch('register', {
+              method: 'post',
               headers: {
-                "Content-type": "application/json"
+                'Content-type': 'application/json'
               },
               body: JSON.stringify({
                 subscription: subscription
               })
-            });
+            })
           })
-          .then(() => {});
+          .then(() => {})
       }
 
       function unsubscribe() {
         navigator.serviceWorker.ready
           .then(function(registration) {
-            return registration.pushManager.getSubscription();
+            return registration.pushManager.getSubscription()
           })
           .then(function(subscription) {
             return subscription.unsubscribe().then(function() {
-              console.log("Unsubscribed", subscription.endpoint);
-              return fetch("unregister", {
-                method: "post",
+              console.log('Unsubscribed', subscription.endpoint)
+              return fetch('unregister', {
+                method: 'post',
                 headers: {
-                  "Content-type": "application/json"
+                  'Content-type': 'application/json'
                 },
                 body: JSON.stringify({
                   subscription: subscription
                 })
-              });
-            });
+              })
+            })
           })
-          .then(() => {});
+          .then(() => {})
       }
     </script>
   </body>
