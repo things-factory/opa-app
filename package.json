@@ -1,6 +1,6 @@
 {
   "name": "@things-factory/opa-app",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "main": "dist-server/index.js",
   "browser": "client/index.js",
   "things-factory": true,
@@ -67,7 +67,6 @@
     "@things-scene/gauge": "*",
     "@things-scene/google-map": "*",
     "@things-scene/graphql": "*",
-    "@things-scene/grist": "*",
     "@things-scene/half-roundrect": "*",
     "@things-scene/indoor-map": "*",
     "@things-scene/label": "*",
