@@ -249,7 +249,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
     let filters = []
     if (this.bizplaceId) {
       filters.push({
-        name: 'bizplace_id',
+        name: 'bizplace',
         operator: 'eq',
         value: this.bizplaceId
       })
