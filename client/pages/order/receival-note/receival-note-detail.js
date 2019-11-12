@@ -218,7 +218,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
           <div business-email>${email}</div>
         </div>
 
-        <h1 title>GOODS RECEIVAL NOTE</h1>
+        <h1 title>GOODS RECEIVE NOTE</h1>
 
         <div brief>
           <div left>
