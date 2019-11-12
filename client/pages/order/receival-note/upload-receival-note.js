@@ -88,7 +88,7 @@ class UploadReceivalNote extends localize(i18next)(LitElement) {
 
   get context() {
     return {
-      title: i18next.t('title.create_receival_note')
+      title: i18next.t('title.create_goods_received_note')
     }
   }
 
@@ -96,7 +96,7 @@ class UploadReceivalNote extends localize(i18next)(LitElement) {
     return html`
       <form class="multi-column-form">
         <fieldset>
-          <legend>${i18next.t('title.upload_goods_receival_note')}</legend>
+          <legend>${i18next.t('title.upload_goods_received_note')}</legend>
           <label>${i18next.t('label.upload_co')}</label>
           <file-uploader custom-input id="grnUpload" name="attachments"></file-uploader>
         </fieldset>
@@ -295,7 +295,7 @@ class UploadReceivalNote extends localize(i18next)(LitElement) {
 
       if (!response.errors) {
         history.back()
-        this._showToast({ message: i18next.t('text.receival_note_uploaded') })
+        this._showToast({ message: i18next.t('text.goods_received_note_uploaded') })
       }
     } catch (e) {
       this._showToast(e)

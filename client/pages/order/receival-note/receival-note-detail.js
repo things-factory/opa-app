@@ -180,7 +180,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.goods_receival_note_details'),
+      title: i18next.t('title.goods_received_note_details'),
       printable: {
         accept: ['preview'],
         content: this
@@ -218,7 +218,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
           <div business-email>${email}</div>
         </div>
 
-        <h1 title>GOODS RECEIVE NOTE</h1>
+        <h1 title>GOODS RECEIVED NOTE</h1>
 
         <div brief>
           <div left>
