@@ -121,10 +121,10 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           imex: { header: i18next.t('field.pallet_id'), key: 'palletId', width: 25, type: 'string' },
           sortable: true,
-          width: 150
+          width: 120
         },
         {
           type: 'string',
@@ -132,11 +132,11 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.batch_no'),
           record: {
             editable: true,
-            align: 'center'
+            align: 'left'
           },
           imex: { header: i18next.t('field.batch_no'), key: 'batchId', width: 30, type: 'string' },
           sortable: true,
-          width: 150
+          width: 120
         },
         {
           type: 'object',
@@ -144,7 +144,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.customer'),
           record: {
             editable: true,
-            align: 'center',
+            align: 'left',
             options: {
               queryName: 'bizplaces'
             }
@@ -157,7 +157,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
             arrData: this.bizplace
           },
           sortable: true,
-          width: 200
+          width: 250
         },
         {
           type: 'object',
@@ -186,7 +186,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.packing_type'),
           record: {
             editable: true,
-            align: 'center',
+            align: 'left',
             codeName: 'PACKING_TYPES'
           },
           imex: {
@@ -201,7 +201,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
               }
             })
           },
-          width: 150
+          width: 120
         },
         {
           type: 'float',
@@ -284,7 +284,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
             arrData: this.location
           },
           sortable: true,
-          width: 150
+          width: 120
         },
         {
           type: 'datetime',
@@ -300,7 +300,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.updater'),
           record: { align: 'center' },
           sortable: true,
-          width: 150
+          width: 120
         }
       ]
     }
