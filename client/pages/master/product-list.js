@@ -54,6 +54,7 @@ class ProductList extends localize(i18next)(PageView) {
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
+          .data=${this.data}
           .fetchHandler="${this.fetchHandler.bind(this)}"
         ></data-grist>
       </div>
@@ -190,6 +191,8 @@ class ProductList extends localize(i18next)(PageView) {
         }
       ]
     }
+
+    this.data = { records: [] }
   }
 
   get searchForm() {
