@@ -155,25 +155,25 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.gan'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
-          width: 180
+          width: 160
         },
         {
           type: 'object',
           name: 'bizplace',
           header: i18next.t('field.customer'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
-          width: 200
+          width: 250
         },
         {
           type: 'string',
           name: 'refNo',
           header: i18next.t('field.ref_no'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
-          width: 150
+          width: 120
         },
         {
           type: 'date',
@@ -181,7 +181,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.eta'),
           record: { align: 'center' },
           sortable: true,
-          width: 150
+          width: 100
         },
         {
           type: 'boolean',
@@ -189,7 +189,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.import_cargo'),
           record: { align: 'center' },
           sortable: true,
-          width: 150
+          width: 120
         },
         {
           type: 'boolean',
@@ -197,7 +197,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.own_transport'),
           record: { align: 'center' },
           sortable: true,
-          width: 150
+          width: 120
         },
         {
           type: 'string',
@@ -205,7 +205,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.status'),
           record: { align: 'center' },
           sortable: true,
-          width: 150
+          width: 120
         },
         {
           type: 'datetime',
@@ -219,9 +219,9 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           type: 'object',
           name: 'updater',
           header: i18next.t('field.updater'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
-          width: 160
+          width: 200
         }
       ]
     }

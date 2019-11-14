@@ -147,7 +147,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.gan'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
           width: 180
         },
@@ -155,7 +155,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'refNo',
           header: i18next.t('field.ref_no'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
           width: 150
         },
@@ -195,9 +195,9 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           type: 'object',
           name: 'updater',
           header: i18next.t('field.updater'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
-          width: 160
+          width: 200
         },
         {
           type: 'string',
@@ -205,7 +205,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           header: i18next.t('field.status'),
           record: { align: 'center' },
           sortable: true,
-          width: 150
+          width: 120
         }
       ]
     }

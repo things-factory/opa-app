@@ -132,12 +132,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
           <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" />
 
-          <label ?hidden="${this._importedOrder || !this._ownTransport}">${i18next.t('label.truck_no')}</label>
-          <input
-            ?hidden="${this._importedOrder || !this._ownTransport}"
-            name="truckNo"
-            ?required="${this._ownTransport}"
-          />
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
+          <input ?hidden="${!this._ownTransport}" name="truckNo" />
 
           <label>${i18next.t('label.eta_date')}</label>
           <input name="etaDate" type="date" min="${this._getStdDate()}" required />
