@@ -152,6 +152,9 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
           <label>${i18next.t('label.customer')}</label>
           <input name="bizplaceName" readonly />
 
+          <label>${i18next.t('label.ref_no')}</label>
+          <input name="refNo" readonly />
+
           <label>${i18next.t('label.started_at')}</label>
           <input name="startedAt" type="datetime-local" readonly />
         </fieldset>
@@ -394,6 +397,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
           })}) {
             worksheetInfo {
               bizplaceName
+              refNo
               startedAt
             }
             worksheetDetailInfos {

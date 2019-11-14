@@ -111,6 +111,9 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
             <label>${i18next.t('label.staging_area')}</label>
             <input name="bufferLocation" readonly />
 
+            <label>${i18next.t('label.ref_no')}</label>
+            <input name="refNo" readonly />
+
             <label>${i18next.t('label.status')}</label>
             <select name="status" disabled>
               ${this._statusOptions.map(
@@ -178,16 +181,15 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_no'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           width: 150
         },
         {
           type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
-          width: 250
+          width: 350
         },
-
         {
           type: 'string',
           name: 'packingType',
@@ -200,20 +202,20 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
           name: 'palletQty',
           header: i18next.t('field.pallet_qty'),
           record: { align: 'center' },
-          width: 60
+          width: 80
         },
         {
           type: 'integer',
           name: 'packQty',
           header: i18next.t('field.pack_qty'),
           record: { align: 'center' },
-          width: 60
+          width: 80
         },
         {
           type: 'integer',
           name: 'totalWeight',
           header: i18next.t('field.total_weight'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           width: 80
         },
         {
@@ -249,6 +251,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
               id
               name
               description
+              refNo
             }
             bizplace {
               id
@@ -302,7 +305,8 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
         arrivalNotice: worksheet.arrivalNotice.name,
         bizplace: worksheet.bizplace.name,
         bufferLocation: worksheet.bufferLocation.name,
-        warehouse: worksheet.bufferLocation.warehouse.name
+        warehouse: worksheet.bufferLocation.warehouse.name,
+        refNo: worksheet.arrivalNotice.refNo
       })
 
       this.data = {

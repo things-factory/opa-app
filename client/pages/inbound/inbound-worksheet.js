@@ -2,7 +2,15 @@ import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
+import {
+  client,
+  gqlBuilder,
+  isMobileDevice,
+  navigate,
+  PageView,
+  ScrollbarStyles,
+  flattenObject
+} from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { WORKSHEET_TYPE } from './constants/worksheet'
@@ -143,36 +151,44 @@ class InboundWorksheet extends localize(i18next)(PageView) {
           }
         },
         {
-          type: 'object',
-          name: 'arrivalNotice',
-          header: i18next.t('field.arrival_notice'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 200
-        },
-        {
-          type: 'object',
-          name: 'bizplace',
-          header: i18next.t('field.customer'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 200
-        },
-        {
           type: 'string',
-          name: 'type',
-          header: i18next.t('field.type'),
-          record: { align: 'center' },
+          name: 'arrivalNotice|name',
+          header: i18next.t('field.arrival_notice'),
+          record: { align: 'left' },
           sortable: true,
           width: 160
         },
         {
           type: 'string',
+          name: 'arrivalNotice|refNo',
+          header: i18next.t('field.ref_no'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 120
+        },
+        {
+          type: 'string',
+          name: 'bizplace|name',
+          header: i18next.t('field.customer'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 250
+        },
+        {
+          type: 'string',
+          name: 'type',
+          header: i18next.t('field.type'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 120
+        },
+        {
+          type: 'string',
           name: 'status',
           header: i18next.t('field.status'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
-          width: 150
+          width: 120
         },
         {
           type: 'datetime',
@@ -191,10 +207,10 @@ class InboundWorksheet extends localize(i18next)(PageView) {
           width: 160
         },
         {
-          type: 'object',
-          name: 'updater',
+          type: 'string',
+          name: 'updater|name',
           header: i18next.t('field.updater'),
-          record: { editable: false, align: 'center' },
+          record: { editable: false, align: 'left' },
           sortable: true,
           width: 150
         },
@@ -202,7 +218,7 @@ class InboundWorksheet extends localize(i18next)(PageView) {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
-          record: { editable: false, align: 'center' },
+          record: { editable: false, align: 'left' },
           sortable: true,
           width: 200
         }
@@ -243,6 +259,7 @@ class InboundWorksheet extends localize(i18next)(PageView) {
                 id
                 name
                 description
+                refNo
               }
               bizplace {
                 id
@@ -269,7 +286,12 @@ class InboundWorksheet extends localize(i18next)(PageView) {
     if (!response.errors) {
       return {
         total: response.data.worksheets.total || 0,
-        records: response.data.worksheets.items || []
+        records:
+          response.data.worksheets.items.map(item => {
+            return flattenObject({
+              ...item
+            })
+          }) || {}
       }
     }
   }
