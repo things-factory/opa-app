@@ -264,6 +264,13 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
           header: i18next.t('field.release_weight'),
           record: { align: 'center', options: { min: 0 } },
           width: 100
+        },
+        {
+          type: 'float',
+          name: 'roundedWeight',
+          header: i18next.t('field.rounded_weight'),
+          record: { align: 'center', options: { min: 0 } },
+          width: 100
         }
       ]
     }
@@ -379,7 +386,13 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
     if (!response.errors) {
       const releaseOrder = response.data.releaseGoodDetail
       const shippingOrder = releaseOrder.shippingOrder
-      const orderInventories = releaseOrder.inventoryInfos
+      const orderInventories = releaseOrder.inventoryInfos.map(inventoryInfo => {
+        return {
+          ...inventoryInfo,
+          roundedWeight: inventoryInfo.releaseQty * (inventoryInfo.weight / inventoryInfo.qty)
+        }
+      })
+
       const orderVass = releaseOrder.orderVass
 
       this._exportOption = response.data.releaseGoodDetail.exportOption

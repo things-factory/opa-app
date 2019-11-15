@@ -356,6 +356,13 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
           header: i18next.t('field.release_weight'),
           record: { editable: true, align: 'center', options: { min: 0 } },
           width: 100
+        },
+        {
+          type: 'float',
+          name: 'roundedWeight',
+          header: i18next.t('field.rounded_weight'),
+          record: { editable: false, align: 'center', options: { min: 0 } },
+          width: 100
         }
       ]
     }
@@ -484,10 +491,27 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     return date.toISOString().split('T')[0]
   }
 
-  _onInventoryFieldChanged() {
+  _onInventoryFieldChanged(e) {
+    let columnName = e.detail.column.name
+    let currentTargetId = e.detail.record.id
+    let roundedWeight = e.detail.record.roundedWeight || 0
+    let releaseQty = 0
+
+    if (columnName == 'releaseWeight' || columnName == 'releaseQty') {
+      let packageWeight = e.detail.record.weight / e.detail.record.qty
+      if (e.detail.record.weight && e.detail.record.qty && e.detail.record.weight > 0 && e.detail.record.qty > 0) {
+        releaseQty = Math.ceil(e.detail.after / packageWeight)
+        roundedWeight = (columnName == 'releaseQty' ? e.detail.after : releaseQty) * packageWeight
+      }
+    }
+
     this.inventoryData = {
       ...this.inventoryGrist.dirtyData,
       records: this.inventoryGrist.dirtyData.records.map(record => {
+        if ((columnName == 'releaseWeight' || columnName == 'releaseQty') && record.id == currentTargetId) {
+          if (columnName == 'releaseWeight') record.releaseQty = releaseQty
+          record.roundedWeight = roundedWeight
+        }
         return {
           ...record,
           ...record.inventory
