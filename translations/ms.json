@@ -180,6 +180,7 @@
   "field.resource_name": "nama sumber",
   "field.resource_type": "jenis sumber",
   "field.resource_url": "sumber url",
+  "field.rounded_weight": "berat bulat",
   "field.routing_type": "jenis penghalaan",
   "field.routing": "penghalaan",
   "field.row_end": "pengakhiran baris",
