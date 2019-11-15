@@ -167,6 +167,7 @@
   "field.ready": "completed",
   "field.receipt_reference_no": "receipt reference no",
   "field.receive_date": "receive date",
+  "field.remainQty": "remaining qty",
   "field.ref_order": "ref order",
   "field.ref_no": "ref no",
   "field.registration_number": "registration number",

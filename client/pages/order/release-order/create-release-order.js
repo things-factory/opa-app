@@ -297,7 +297,6 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                 { name: 'location', type: 'object', queryName: 'locations', record: { align: 'center' } },
                 { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
                 { name: 'bizplace', type: 'object', record: { align: 'center' } },
-                { name: 'qty', type: 'float', record: { align: 'center' } },
                 { name: 'remainQty', type: 'float', record: { align: 'center' } },
                 {
                   name: 'remainWeight',
@@ -361,13 +360,6 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
           name: 'releaseWeight',
           header: i18next.t('field.release_weight'),
           record: { editable: true, align: 'center', options: { min: 0 } },
-          width: 100
-        },
-        {
-          type: 'float',
-          name: 'roundedWeight',
-          header: i18next.t('field.rounded_weight'),
-          record: { editable: false, align: 'center', options: { min: 0 } },
           width: 100
         }
       ]
@@ -504,8 +496,13 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     let releaseQty = 0
 
     if (columnName == 'releaseWeight' || columnName == 'releaseQty') {
-      let packageWeight = e.detail.record.weight / e.detail.record.qty
-      if (e.detail.record.weight && e.detail.record.qty && e.detail.record.weight > 0 && e.detail.record.qty > 0) {
+      let packageWeight = e.detail.record.remainWeight / e.detail.record.remainQty
+      if (
+        e.detail.record.remainWeight &&
+        e.detail.record.remainQty &&
+        e.detail.record.remainWeight > 0 &&
+        e.detail.record.remainQty > 0
+      ) {
         releaseQty = Math.ceil(e.detail.after / packageWeight)
         roundedWeight = (columnName == 'releaseQty' ? e.detail.after : releaseQty) * packageWeight
       }
@@ -516,7 +513,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       records: this.inventoryGrist.dirtyData.records.map(record => {
         if ((columnName == 'releaseWeight' || columnName == 'releaseQty') && record.id == currentTargetId) {
           if (columnName == 'releaseWeight') record.releaseQty = releaseQty
-          record.roundedWeight = roundedWeight
+          record.releaseWeight = roundedWeight
         }
         return {
           ...record,
