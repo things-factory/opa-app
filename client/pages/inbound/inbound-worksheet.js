@@ -90,6 +90,12 @@ class InboundWorksheet extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
+        name: 'arrivalNoticeRefNo',
+        label: i18next.t('field.ref_no'),
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
         name: 'bizplaceName',
         label: i18next.t('field.customer'),
         type: 'text',
