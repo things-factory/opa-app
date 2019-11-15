@@ -746,6 +746,8 @@
   "title.transport_order": "transport order",
   "title.transport_vehicle": "transport vehicle",
   "title.unloaded": "unloaded",
+  "title.upload_signed_grn": "upload signed grn",
+  "title.upload_goods_received_note": "upload grn",
   "title.unloading_issue": "unloading issue",
   "title.unloading_worksheet": "unloading worksheet",
   "title.unloading": "unloading",

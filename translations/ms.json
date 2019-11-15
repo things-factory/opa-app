@@ -569,6 +569,8 @@
   "text.to_pallet_id_is_empty": "ke pallet id tiada nilai",
   "text.turn_to_pdf_successfully": "berjaya tukar kepada PDF",
   "text.undo_unloading": "undur balik pemunggahan",
+  "title.upload_signed_grn": "muat naik grn yang telah ditandangani",
+  "title.upload_goods_received_note": "muat naik grn",
   "text.unloading_completed": "pemunggahan selesai",
   "text.user_bizplaces_updated": "pengguna bizplace dikemaskini",
   "text.user_info_not_valid": "butiran pengguna tidak sah",
