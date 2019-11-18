@@ -1,3 +1,4 @@
+import { html } from 'lit-element'
 import { addRoutingType, updateMenuProvider } from '@things-factory/menu-base'
 import { client, store, isMobileDevice, UPDATE_BASE_URL } from '@things-factory/shell'
 import gql from 'graphql-tag'
@@ -7,6 +8,9 @@ import { fetchBoardSettings } from './fetch-board-settings'
 import { auth } from '@things-factory/auth-base'
 import { TOOL_POSITION } from '@things-factory/layout-base'
 import { APPEND_APP_TOOL } from '@things-factory/apptool-base'
+import { ADD_SETTING } from '@things-factory/setting-base'
+
+import './viewparts/domain-switch-let'
 
 export default function bootstrap() {
   store.addReducers({
@@ -90,4 +94,15 @@ export default function bootstrap() {
       })
     })
   }
+
+  /* add domain-switch-let into settings */
+  store.dispatch({
+    type: ADD_SETTING,
+    setting: {
+      seq: 30,
+      template: html`
+        <domain-switch-let></domain-switch-let>
+      `
+    }
+  })
 }
