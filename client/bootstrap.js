@@ -10,7 +10,7 @@ import { TOOL_POSITION } from '@things-factory/layout-base'
 import { APPEND_APP_TOOL } from '@things-factory/apptool-base'
 import { ADD_SETTING } from '@things-factory/setting-base'
 
-import './viewparts/domain-switch-let'
+import '@things-factory/setting-ui/client/setting-lets/domain-switch-let'
 
 export default function bootstrap() {
   store.addReducers({
