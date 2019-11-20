@@ -128,7 +128,9 @@ class InboundWorksheet extends localize(i18next)(PageView) {
     ]
 
     this.config = {
-      list: { fields: ['arrivalNotice|name', 'bizplace|name', 'type', 'refNo', 'status', 'startedAt', 'endedAt'] },
+      list: {
+        fields: ['arrivalNotice|name', 'bizplace|name', 'type', 'arrivalNotice|refNo', 'status', 'startedAt', 'endedAt']
+      },
       rows: { appendable: false },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
