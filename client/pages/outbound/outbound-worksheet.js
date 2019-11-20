@@ -111,7 +111,7 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
     ]
 
     this.config = {
-      list: { fields: ['releaseGood', 'bizplace', 'status'] },
+      list: { fields: ['releaseGood|name', 'bizplace|name', 'type', 'refNo', 'status', 'startedAt', 'endedAt'] },
       rows: { appendable: false },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
