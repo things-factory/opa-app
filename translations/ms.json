@@ -764,5 +764,7 @@
   "title.worksheet": "lembaran kerja",
   "vas_order_created": "pesanan value added service telah dicipta",
   "title.goods_delivery_order_details": "perincian pesanan penghantaran barang",
-  "text.warehouse_not_found": "gudang tidak dijumpai!"
+  "text.warehouse_not_found": "gudang tidak dijumpai!",
+  "button.okay": "okay",
+  "text.your_work_has_completed": "kerja anda telah selesai"
 }
