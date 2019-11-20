@@ -298,8 +298,6 @@ class WarehouseList extends localize(i18next)(PageView) {
       `
     })
 
-    this.rawWarehouseData = response.data.warehouses.items
-
     return {
       total: response.data.warehouses.total || 0,
       records: response.data.warehouses.items || []

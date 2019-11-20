@@ -491,7 +491,7 @@
   "text.data_deleted_successfully": "data deleted successfully",
   "text.data_imported_successfully": "data imported successfully",
   "text.data_updated_successfully": "data updated successfully",
-  "text.delete_all_locations?": "delete all lolcations",
+  "text.delete_all_locations?": "delete all locations",
   "text.delivery_order_completed": "delivery order completed",
   "text.delivery_order_confirmed": "delivery order confirmed",
   "text.delivery_order_dispatched": "delivery order dispatched",
@@ -776,5 +776,6 @@
   "title.worksheet_vas": "worksheet vas",
   "title.worksheet": "worksheet",
   "vas_order_created": "vas order created",
-  "title.goods_delivery_order_details": "goods delivery order details"
+  "title.goods_delivery_order_details": "goods delivery order details",
+  "text.warehouse_not_found": "warehouse not found!"
 }
