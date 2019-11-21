@@ -782,5 +782,7 @@
   "title.worksheet": "worksheet",
   "vas_order_created": "vas order created",
   "title.goods_delivery_order_details": "goods delivery order details",
-  "text.warehouse_not_found": "warehouse not found!"
+  "text.warehouse_not_found": "warehouse not found!",
+  "button.okay": "okay",
+  "text.your_work_has_completed": "your work has completed"
 }
