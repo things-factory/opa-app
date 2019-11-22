@@ -8,6 +8,20 @@ import { css, html, LitElement } from 'lit-element'
 import Swal from 'sweetalert2'
 
 export class GenerateLocationList extends localize(i18next)(LitElement) {
+  static get properties() {
+    return {
+      warehouseId: String,
+      _searchFields: Array,
+      formatAConfig: Object,
+      formatBConfig: Object,
+      formatCConfig: Object,
+      formatDConfig: Object,
+      previewConfig: Object,
+      callback: Object,
+      _locationFormat: String
+    }
+  }
+
   constructor() {
     super()
     this.locationList = []
@@ -15,6 +29,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
     this.rowSuffix = ''
     this.columnSuffix = ''
     this.caseSensitive = false
+    this._locationFormat = ''
   }
 
   static get styles() {
@@ -28,11 +43,14 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           overflow: hidden;
           background-color: white;
         }
+        .location-formatting {
+          overflow-y: auto;
+        }
         .grist {
           display: flex;
           flex-direction: column;
           flex: 1;
-          overflow-y: auto;
+          min-height: 220px;
         }
         data-grist {
           overflow-y: hidden;
@@ -69,21 +87,19 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
     ]
   }
 
-  static get properties() {
-    return {
-      warehouseId: String,
-      _searchFields: Array,
-      config: Object,
-      previewConfig: Object,
-      callback: Object
-    }
-  }
-
   render() {
     return html`
       <form class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.generate_location_list')}</legend>
+          <label>${i18next.t('label.location_format')}</label>
+          <select name="locationFormat" @change="${e => (this._locationFormat = e.currentTarget.value)}">
+            <option value=""></option>
+            <option value="1">Z-0#-0#-0#</option>
+            <option value="2">Z-0#-0#-A</option>
+            <option value="3">Z-A#-A#-0#</option>
+            <option value="4">Z-A#-A#-A</option>
+          </select>
           <label>${i18next.t('label.zone_name')}</label>
           <input
             placeholder="${i18next.t('text.enter_zone_name')}"
@@ -98,56 +114,85 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
               }
             }}"
           />
-          <label>${i18next.t('label.row_suffix')}</label>
+          <!-- <label>${i18next.t('label.row_suffix')}</label>
           <input
             placeholder="${i18next.t('text.enter_row_suffix_if_any')}"
             @input="${event => {
-              this.rowSuffix = event.currentTarget.value
-            }}"
+            this.rowSuffix = event.currentTarget.value
+          }}"
             @keypress="${this._keyPressHandler.bind(this)}"
           />
           <label>${i18next.t('label.column_suffix')}</label>
           <input
             placeholder="${i18next.t('text.enter_column_suffix_if_any')}"
             @input="${event => {
-              this.columnSuffix = event.currentTarget.value
-            }}"
+            this.columnSuffix = event.currentTarget.value
+          }}"
             @keypress="${this._keyPressHandler.bind(this)}"
           />
           <label>${i18next.t('label.case_sensitive')}</label>
           <input
             type="checkbox"
             @input="${event => {
-              this.caseSensitive = event.currentTarget.checked
-            }}"
+            this.caseSensitive = event.currentTarget.checked
+          }}"
             @keypress="${this._keyPressHandler.bind(this)}"
-          />
+          /> -->
         </fieldset>
       </form>
 
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.generator')}</h2>
+      <div class="location-formatting" ?hidden="${this._locationFormat !== '1'}">
+        <div class="grist">
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.generator')}</h2>
 
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .data=${this.data}
-          @record-change="${this._onChangeHandler.bind(this)}"
-        ></data-grist>
+          <data-grist
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.formatAConfig}
+            .data=${this.data}
+            @record-change="${this._onChangeHandler.bind(this)}"
+          ></data-grist>
+        </div>
+
+        <div class="grist">
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.preview')}</h2>
+
+          <data-grist
+            id="preview_grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.previewConfig}
+            .fetchHandler="${this.fetchHandler.bind(this)}"
+            @limit-changed=${e => {
+              this.limit = e.detail
+            }}
+          ></data-grist>
+        </div>
       </div>
 
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.preview')}</h2>
+      <div class="location-formatting" ?hidden="${this._locationFormat !== '2'}">
+        <div class="grist">
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.generator')}</h2>
 
-        <data-grist
-          id="preview_grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.previewConfig}
-          .fetchHandler="${this.fetchHandler.bind(this)}"
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
-        ></data-grist>
+          <data-grist
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.formatBConfig}
+            .data=${this.data}
+            @record-change="${this._onChangeHandler.bind(this)}"
+          ></data-grist>
+        </div>
+
+        <div class="grist">
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.preview')}</h2>
+
+          <data-grist
+            id="preview_grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.previewConfig}
+            .fetchHandler="${this.fetchHandler.bind(this)}"
+            @limit-changed=${e => {
+              this.limit = e.detail
+            }}
+          ></data-grist>
+        </div>
       </div>
 
       <div class="button-container">
@@ -187,7 +232,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
 
   async firstUpdated() {
     this.data = { records: [] }
-    this.config = {
+    this.formatAConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
       columns: [
@@ -232,6 +277,56 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
             editable: true
           },
           header: i18next.t('field.number_of_cell'),
+          width: 250
+        }
+      ]
+    }
+
+    this.formatBConfig = {
+      pagination: { infinite: true },
+      rows: { selectable: { multiple: true } },
+      columns: [
+        { type: 'gutter', gutterName: 'dirty' },
+        { type: 'gutter', gutterName: 'sequence' },
+        { type: 'gutter', gutterName: 'row-selector', multiple: true },
+        {
+          type: 'integer',
+          name: 'start',
+          record: {
+            align: 'center',
+            editable: true
+          },
+          header: i18next.t('field.level_start'),
+          width: 250
+        },
+        {
+          type: 'integer',
+          name: 'end',
+          record: {
+            align: 'center',
+            editable: true
+          },
+          header: i18next.t('field.level_end'),
+          width: 250
+        },
+        {
+          type: 'integer',
+          name: 'column',
+          record: {
+            align: 'center',
+            editable: true
+          },
+          header: i18next.t('field.number_of_row'),
+          width: 250
+        },
+        {
+          type: 'integer',
+          name: 'cell',
+          record: {
+            align: 'center',
+            editable: true
+          },
+          header: i18next.t('field.number_of_depth'),
           width: 250
         }
       ]
@@ -368,72 +463,103 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
     if (!validationError) this._generateLocationList()
   }
 
+  // async _generateLocationList() {
+  //   let locationData = this.data.records
+  //   let validationError = false
+  //   let tempLocationList = []
+
+  //   if (locationData && locationData.length) {
+  //     locationData = locationData.forEach(locations => {
+  //       if (locations.start <= locations.end) {
+  //         if (locations.column && locations.cell) {
+  //           for (let i = locations.start; i <= locations.end; i++) {
+  //             for (let j = 1; j <= locations.column; j++) {
+  //               for (let k = 1; k <= locations.cell; k++) {
+  //                 const locationObj = {}
+  //                 const row = this.caseSensitive ? this.rowSuffix : this.rowSuffix.toUpperCase()
+  //                 const column = this.caseSensitive ? this.columnSuffix : this.columnSuffix.toUpperCase()
+
+  //                 locationObj['row'] =
+  //                   this.rowSuffix === '' ? i.toString().padStart(2, '0') : i.toString().padStart(2, '0') + row
+
+  //                 locationObj['column'] =
+  //                   this.columnSuffix === '' ? j.toString().padStart(2, '0') : j.toString().padStart(2, '0') + column
+
+  //                 locationObj['shelf'] = this._getCellInstance(k)
+  //                 locationObj['zone'] = this.caseSensitive ? this.zoneName : this.zoneName.toString().toUpperCase()
+
+  //                 locationObj['name'] =
+  //                   locationObj.zone + '-' + locationObj.row + '-' + locationObj.column + '-' + locationObj.shelf
+
+  //                 locationObj['status'] = 'EMPTY'
+  //                 locationObj['type'] = 'SHELF'
+  //                 locationObj['warehouse'] = { id: this.warehouseId }
+  //                 locationObj['cuFlag'] = '+'
+
+  //                 tempLocationList.push(locationObj)
+  //               }
+  //             }
+  //           }
+  //         } else {
+  //           validationError = true
+  //           tempLocationList = []
+
+  //           document.dispatchEvent(
+  //             new CustomEvent('notify', {
+  //               detail: {
+  //                 level: 'error',
+  //                 message: i18next.t('text.missing_input')
+  //               }
+  //             })
+  //           )
+  //           return false
+  //         }
+  //       } else {
+  //         validationError = true
+  //         tempLocationList = []
+
+  //         document.dispatchEvent(
+  //           new CustomEvent('notify', {
+  //             detail: {
+  //               level: 'error',
+  //               message: i18next.t('text.row_end_must_greater_than_row_start')
+  //             }
+  //           })
+  //         )
+  //         return false
+  //       }
+  //     })
+
+  //     if (!validationError) {
+  //       this.locationList = tempLocationList
+  //       tempLocationList = []
+  //       this.dataGrist.fetch()
+  //     }
+  //   }
+  // }
+
   async _generateLocationList() {
     let locationData = this.data.records
     let validationError = false
     let tempLocationList = []
 
     if (locationData && locationData.length) {
-      locationData = locationData.forEach(locations => {
-        if (locations.start <= locations.end) {
-          if (locations.column && locations.cell) {
-            for (let i = locations.start; i <= locations.end; i++) {
-              for (let j = 1; j <= locations.column; j++) {
-                for (let k = 1; k <= locations.cell; k++) {
-                  const locationObj = {}
-                  const row = this.caseSensitive ? this.rowSuffix : this.rowSuffix.toUpperCase()
-                  const column = this.caseSensitive ? this.columnSuffix : this.columnSuffix.toUpperCase()
-
-                  locationObj['row'] =
-                    this.rowSuffix === '' ? i.toString().padStart(2, '0') : i.toString().padStart(2, '0') + row
-
-                  locationObj['column'] =
-                    this.columnSuffix === '' ? j.toString().padStart(2, '0') : j.toString().padStart(2, '0') + column
-
-                  locationObj['shelf'] = this._getCellInstance(k)
-                  locationObj['zone'] = this.caseSensitive ? this.zoneName : this.zoneName.toString().toUpperCase()
-
-                  locationObj['name'] =
-                    locationObj.zone + '-' + locationObj.row + '-' + locationObj.column + '-' + locationObj.shelf
-
-                  locationObj['status'] = 'EMPTY'
-                  locationObj['type'] = 'SHELF'
-                  locationObj['warehouse'] = { id: this.warehouseId }
-                  locationObj['cuFlag'] = '+'
-
-                  tempLocationList.push(locationObj)
-                }
-              }
-            }
-          } else {
-            validationError = true
-            tempLocationList = []
-
-            document.dispatchEvent(
-              new CustomEvent('notify', {
-                detail: {
-                  level: 'error',
-                  message: i18next.t('text.missing_input')
-                }
-              })
-            )
-            return false
-          }
-        } else {
-          validationError = true
-          tempLocationList = []
-
-          document.dispatchEvent(
-            new CustomEvent('notify', {
-              detail: {
-                level: 'error',
-                message: i18next.t('text.row_end_must_greater_than_row_start')
-              }
-            })
-          )
-          return false
-        }
-      })
+      switch (this._locationFormat) {
+        case '1':
+          this.generateFormatA(locationData, tempLocationList)
+          break
+        case '2':
+          this.generateFormatB(locationData, tempLocationList)
+          break
+        case '3':
+          // this.generateFormatC(locationData, tempLocationList)
+          break
+        case '4':
+          // this.generateFormatD(locationData, tempLocationList)
+          break
+        default:
+        // this.generateNormalFormat(locationData, tempLocationList)
+      }
 
       if (!validationError) {
         this.locationList = tempLocationList
@@ -443,73 +569,76 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
     }
   }
 
-  async _saveGeneratedLocation() {
-    let chunkPatches = this._chunkLocationList(this.locationList, 500)
+  generateFormatA(locations, temporaryLocations) {
+    locations = locations.forEach(location => {
+      if (location.start <= location.end) {
+        if (location.column && location.cell) {
+          for (let i = location.start; i <= location.end; i++) {
+            for (let j = 1; j <= location.column; j++) {
+              for (let k = 1; k <= location.cell; k++) {
+                let locationObj = {}
+                const row = this.caseSensitive ? this.rowSuffix : this.rowSuffix.toUpperCase()
+                const column = this.caseSensitive ? this.columnSuffix : this.columnSuffix.toUpperCase()
 
-    if (chunkPatches === []) {
-      Swal.fire({
-        type: 'warning',
-        title: 'List not previewed',
-        text: 'Please hit preview button first!',
-        showConfirmButton: false,
-        timer: 1500
-      })
-    } else {
-      try {
-        this.dataGrist.showSpinner()
-        // Swal.fire({
-        //   title: i18next.t('text.please_wait'),
-        //   text: i18next.t('text.saving_locations'),
-        //   allowEscapeKey: true,
-        //   allowOutsideClick: false,
-        //   showConfirmButton: false,
-        //   onOpen: () => {
-        //     Swal.showLoading()
-        //   }
-        // })
-        for (let x = 0; x < chunkPatches.length; x++) {
-          const patches = chunkPatches[x]
-          const response = await client.query({
-            query: gql`
-              mutation {
-                updateMultipleLocation(${gqlBuilder.buildArgs({
-                  patches
-                })}) {
-                  name
-                }
+                locationObj.row =
+                  this.rowSuffix === '' ? i.toString().padStart(2, '0') : i.toString().padStart(2, '0') + row
+
+                locationObj.column =
+                  this.columnSuffix === '' ? j.toString().padStart(2, '0') : j.toString().padStart(2, '0') + column
+
+                locationObj.shelf = this._getCellInstance(k)
+                locationObj.zone = this.caseSensitive ? this.zoneName : this.zoneName.toString().toUpperCase()
+
+                locationObj.name =
+                  locationObj.zone + '-' + locationObj.row + '-' + locationObj.column + '-' + locationObj.shelf
+
+                locationObj.status = 'EMPTY'
+                locationObj.type = 'SHELF'
+                locationObj.warehouse = { id: this.warehouseId }
+                locationObj.cuFlag = '+'
+
+                temporaryLocations.push(locationObj)
               }
-              `
-          })
-        }
-
-        // Swal.close()
-        if (this.callback && typeof this.callback === 'function') this.callback()
-        history.back()
-      } catch (e) {
-        // Swal.close()
-        document.dispatchEvent(
-          new CustomEvent('notify', {
-            detail: {
-              level: 'error',
-              message: e.message
             }
-          })
-        )
-      } finally {
-        this.dataGrist.hideSpinner()
+          }
+        }
       }
-    }
+    })
   }
 
-  _chunkLocationList(locationArray, chunk_size) {
-    let tempArray = []
-    let locationChunk = []
+  generateFormatB(locations, temporaryLocations) {
+    locations = locations.forEach(location => {
+      if (location.start <= location.end) {
+        if (location.column && location.cell) {
+          for (let i = location.start; i <= location.end; i++) {
+            for (let j = 1; j <= location.column; j++) {
+              for (let k = 1; k <= location.cell; k++) {
+                let locationObj = {}
+                const row = this.caseSensitive ? this.rowSuffix : this.rowSuffix.toUpperCase()
+                const column = this.caseSensitive ? this.columnSuffix : this.columnSuffix.toUpperCase()
 
-    for (let i = 0; i < locationArray.length; i += chunk_size) {
-      locationChunk = locationArray.slice(i, i + chunk_size)
-      tempArray.push(locationChunk)
-    }
-    return tempArray
+                locationObj.row = this.rowSuffix === '' ? 'L' + i.toString() : i.toString() + row
+
+                locationObj.column = this.columnSuffix === '' ? 'R' + j.toString() : j.toString() + column
+
+                locationObj.shelf = k.toString()
+                locationObj.zone = this.caseSensitive ? this.zoneName : this.zoneName.toString().toUpperCase()
+
+                locationObj.name =
+                  locationObj.zone + '-' + locationObj.row + '-' + locationObj.column + '-' + locationObj.shelf
+
+                locationObj.status = 'EMPTY'
+                locationObj.type = 'SHELF'
+                locationObj.warehouse = { id: this.warehouseId }
+                locationObj.cuFlag = '+'
+
+                temporaryLocations.push(locationObj)
+              }
+            }
+          }
+        }
+      }
+    })
   }
 
   _getCellInstance(column) {
@@ -607,6 +736,63 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
       total: this.locationList.length || 0,
       records: this.locationList || []
     }
+  }
+
+  async _saveGeneratedLocation() {
+    let chunkPatches = this._chunkLocationList(this.locationList, 500)
+
+    if (chunkPatches === []) {
+      Swal.fire({
+        type: 'warning',
+        title: 'List not previewed',
+        text: 'Please hit preview button first!',
+        showConfirmButton: false,
+        timer: 1500
+      })
+    } else {
+      try {
+        this.dataGrist.showSpinner()
+        for (let x = 0; x < chunkPatches.length; x++) {
+          const patches = chunkPatches[x]
+          const response = await client.query({
+            query: gql`
+              mutation {
+                updateMultipleLocation(${gqlBuilder.buildArgs({
+                  patches
+                })}) {
+                  name
+                }
+              }
+              `
+          })
+        }
+
+        if (this.callback && typeof this.callback === 'function') this.callback()
+        history.back()
+      } catch (e) {
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              level: 'error',
+              message: e.message
+            }
+          })
+        )
+      } finally {
+        this.dataGrist.hideSpinner()
+      }
+    }
+  }
+
+  _chunkLocationList(locationArray, chunk_size) {
+    let tempArray = []
+    let locationChunk = []
+
+    for (let i = 0; i < locationArray.length; i += chunk_size) {
+      locationChunk = locationArray.slice(i, i + chunk_size)
+      tempArray.push(locationChunk)
+    }
+    return tempArray
   }
 
   _deleteFromList() {
