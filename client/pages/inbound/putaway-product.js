@@ -152,6 +152,9 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
           <label>${i18next.t('label.customer')}</label>
           <input name="bizplaceName" readonly />
 
+          <label>${i18next.t('label.ref_no')}</label>
+          <input name="refNo" readonly />
+
           <label>${i18next.t('label.started_at')}</label>
           <input name="startedAt" type="datetime-local" readonly />
         </fieldset>
@@ -394,6 +397,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
           })}) {
             worksheetInfo {
               bizplaceName
+              refNo
               startedAt
             }
             worksheetDetailInfos {
@@ -625,11 +629,11 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       this._clearView()
       await Swal.fire({
         title: i18next.t('text.putaway'),
-        text: i18next.t('text.your_working_is_completed'),
+        text: i18next.t('text.your_work_has_completed'),
         type: 'info',
         allowOutsideClick: false,
         confirmButtonColor: '#22a6a7',
-        confirmButtonText: i18next.t('text.confirm')
+        confirmButtonText: i18next.t('button.okay')
       })
 
       this._clearView()

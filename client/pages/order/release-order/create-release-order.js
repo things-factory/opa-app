@@ -297,10 +297,15 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                 { name: 'location', type: 'object', queryName: 'locations', record: { align: 'center' } },
                 { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
                 { name: 'bizplace', type: 'object', record: { align: 'center' } },
-                { name: 'qty', type: 'float', record: { align: 'center' } },
-                { name: 'weight', type: 'float', header: i18next.t('field.total_weight'), record: { align: 'center' } }
+                { name: 'remainQty', type: 'float', record: { align: 'center' } },
+                {
+                  name: 'remainWeight',
+                  type: 'float',
+                  header: i18next.t('field.total_weight'),
+                  record: { align: 'center' }
+                }
               ],
-              list: { fields: ['palletId', 'product', 'batchId', 'location', 'weight'] }
+              list: { fields: ['palletId', 'product', 'batchId', 'location', 'remainWeight'] }
             }
           },
           width: 250
@@ -331,7 +336,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'qty',
+          name: 'remainQty',
           header: i18next.t('field.available_qty'),
           record: { align: 'center' },
           width: 100
@@ -345,7 +350,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'weight',
+          name: 'remainWeight',
           header: i18next.t('field.available_weight'),
           record: { align: 'center' },
           width: 100
@@ -484,10 +489,32 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     return date.toISOString().split('T')[0]
   }
 
-  _onInventoryFieldChanged() {
+  _onInventoryFieldChanged(e) {
+    let columnName = e.detail.column.name
+    let currentTargetId = e.detail.record.id
+    let roundedWeight = e.detail.record.roundedWeight || 0
+    let releaseQty = 0
+
+    if (columnName == 'releaseWeight' || columnName == 'releaseQty') {
+      let packageWeight = e.detail.record.remainWeight / e.detail.record.remainQty
+      if (
+        e.detail.record.remainWeight &&
+        e.detail.record.remainQty &&
+        e.detail.record.remainWeight > 0 &&
+        e.detail.record.remainQty > 0
+      ) {
+        releaseQty = Math.ceil(e.detail.after / packageWeight)
+        roundedWeight = (columnName == 'releaseQty' ? e.detail.after : releaseQty) * packageWeight
+      }
+    }
+
     this.inventoryData = {
       ...this.inventoryGrist.dirtyData,
       records: this.inventoryGrist.dirtyData.records.map(record => {
+        if ((columnName == 'releaseWeight' || columnName == 'releaseQty') && record.id == currentTargetId) {
+          if (columnName == 'releaseWeight') record.releaseQty = releaseQty
+          record.releaseWeight = roundedWeight
+        }
         return {
           ...record,
           ...record.inventory
@@ -661,14 +688,54 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       columns: this.inventoryGristConfig.columns.map(column => {
         if (column.name === 'inventory') {
           column.record.options.basicArgs = {
-            filters: [
+            filters: [...column.record.options.basicArgs.filters.filter(filter => filter.name !== 'id')]
+          }
+
+          if (_selectedInventories.length)
+            column.record.options.basicArgs.filters = [
               ...column.record.options.basicArgs.filters,
               {
                 name: 'id',
-                value: _selectedInventories.length ? _selectedInventories : [null],
+                value: _selectedInventories,
                 operator: 'notin'
               }
             ]
+        }
+
+        return column
+      })
+    }
+
+    this.vasGristConfig = {
+      ...this.vasGristConfig,
+      columns: this.vasGristConfig.columns.map(column => {
+        if (column.name === 'inventory') {
+          column.record.options.basicArgs = {
+            ...column.record.options.basicArgs,
+            filters: _selectedInventories.length
+              ? [
+                  {
+                    name: 'id',
+                    value: _selectedInventories,
+                    operator: 'in'
+                  }
+                ]
+              : []
+          }
+        }
+
+        return column
+      })
+    }
+  }
+
+  _clearGristConditions() {
+    this.inventoryGristConfig = {
+      ...this.inventoryGristConfig,
+      columns: this.inventoryGristConfig.columns.map(column => {
+        if (column.name === 'inventory') {
+          column.record.options.basicArgs = {
+            filters: [...column.record.options.basicArgs.filters.filter(filter => filter.name !== 'id')]
           }
         }
 
@@ -682,13 +749,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         if (column.name === 'inventory') {
           column.record.options.basicArgs = {
             ...column.record.options.basicArgs,
-            filters: [
-              {
-                name: 'id',
-                value: _selectedInventories.length ? _selectedInventories : [null],
-                operator: 'in'
-              }
-            ]
+            filters: []
           }
         }
 
@@ -759,6 +820,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     this.shippingOrderForm.reset()
     this.inventoryData = { ...this.inventoryData, records: [] }
     this.vasData = { ...this.vasData, records: [] }
+    this._clearGristConditions()
   }
 
   _showToast({ type, message }) {

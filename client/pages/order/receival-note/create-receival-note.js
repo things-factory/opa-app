@@ -76,7 +76,7 @@ class CreateReceivalNote extends localize(i18next)(PageView) {
     return html`
       <form class="multi-column-form">
         <fieldset>
-          <legend>${i18next.t('title.create_receival_note')}</legend>
+          <legend>${i18next.t('title.create_goods_received_note')}</legend>
 
           <label>${i18next.t('label.customer')}</label>
           <select name="bizplace" @change="${e => this._onValueChange(e.target.value)}">
@@ -119,7 +119,7 @@ class CreateReceivalNote extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.create_receival_note'),
+      title: i18next.t('title.create_goods_received_note'),
       actions: [
         {
           title: i18next.t('button.create'),
@@ -341,7 +341,7 @@ class CreateReceivalNote extends localize(i18next)(PageView) {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
-        text: i18next.t('text.create_goods_receival_note'),
+        text: i18next.t('text.create_goods_received_note'),
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
@@ -367,12 +367,10 @@ class CreateReceivalNote extends localize(i18next)(PageView) {
 
       if (!response.errors) {
         navigate(`receival_note_detail/${response.data.generateGoodsReceivalNote.name}`)
-        this._showToast({ message: i18next.t('text.receival_note_created') })
-      } else if (response.errors[0].extensions.exception.code === '23505') {
-        throw new Error(i18next.t('text.this_receival_note_already_existed'))
+        this._showToast({ message: i18next.t('text.goods_received_note_created') })
       }
     } catch (e) {
-      // this._showToast(e)
+      this._showToast(e)
     }
   }
 

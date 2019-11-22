@@ -149,7 +149,7 @@ class ClaimChitList extends connect(store)(localize(i18next)(PageView)) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              if (record.id) navigate(`claim_chit_detail/${record.id}`)
+              if (record.id) navigate(`claim_chit_detail?id=${record.id}`)
             }
           }
         },

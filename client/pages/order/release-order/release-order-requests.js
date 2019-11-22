@@ -151,7 +151,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.release_good_no'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
           width: 180
         },
@@ -159,15 +159,15 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           type: 'string',
           name: 'refNo',
           header: i18next.t('field.ref_no'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
-          width: 180
+          width: 160
         },
         {
           type: 'object',
           name: 'bizplace',
           header: i18next.t('field.customer'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
           width: 200
         },
@@ -177,7 +177,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.release_date'),
           record: { align: 'center' },
           sortable: true,
-          width: 160
+          width: 120
         },
         {
           type: 'boolean',
@@ -201,7 +201,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.status'),
           record: { align: 'center' },
           sortable: true,
-          width: 150
+          width: 120
         },
         {
           type: 'datetime',
@@ -215,9 +215,9 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           type: 'object',
           name: 'updater',
           header: i18next.t('field.updater'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
-          width: 160
+          width: 200
         }
       ]
     }

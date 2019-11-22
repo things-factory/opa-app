@@ -76,6 +76,10 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
+
+        fieldset[hidden] {
+          display: none;
+        }
       `
     ]
   }
@@ -134,6 +138,9 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
           <label>${i18next.t('label.customer')}</label>
           <input name="bizplaceName" readonly />
 
+          <label>${i18next.t('label.ref_no')}</label>
+          <input name="refNo" readonly />
+
           <label>${i18next.t('label.started_at')}</label>
           <input name="startedAt" type="datetime-local" readonly />
         </fieldset>
@@ -173,18 +180,13 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
               <input name="description" readonly />
             </fieldset>
 
-            <fieldset>
-              <legend style="display: ${this.scannable ? 'flex' : 'none'}">${i18next.t('title.input_section')}</legend>
-              <label style="display: ${this.scannable ? 'flex' : 'none'}">${i18next.t('label.pallet_barcode')}</label>
-              <barcode-scanable-input
-                style="display: ${this.scannable ? 'flex' : 'none'}"
-                name="palletId"
-                .value=${this._pallet}
-                custom-input
-              ></barcode-scanable-input>
+            <fieldset ?hidden=${!this.scannable}>
+              <legend>${i18next.t('title.input_section')}</legend>
+              <label>${i18next.t('label.pallet_barcode')}</label>
+              <barcode-scanable-input name="palletId" .value=${this._pallet} custom-input></barcode-scanable-input>
 
-              <label style="display: ${this.scannable ? 'flex' : 'none'}">${i18next.t('label.picked_qty')}</label>
-              <input style="display: ${this.scannable ? 'flex' : 'none'}" type="number" min="1" name="confirmedQty" />
+              <label>${i18next.t('label.picked_qty')}</label>
+              <input type="number" min="1" name="confirmedQty" />
             </fieldset>
           </form>
         </div>
@@ -324,6 +326,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
           })}) {
             worksheetInfo {
               bizplaceName
+              refNo
               startedAt
             }
             worksheetDetailInfos {

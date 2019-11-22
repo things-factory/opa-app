@@ -59,9 +59,9 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.goods_receival_notes'),
+      title: i18next.t('title.goods_received_notes'),
       exportable: {
-        name: i18next.t('title.goods_receival_notes'),
+        name: i18next.t('title.goods_received_notes'),
         data: this._exportableData.bind(this)
       }
     }

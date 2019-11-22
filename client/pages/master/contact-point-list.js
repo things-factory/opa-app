@@ -152,7 +152,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
             align: 'left',
             editable: true
           },
-          header: 'field.name',
+          header: i18next.t('field.name'),
           width: 120
         },
         {
@@ -162,7 +162,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
             align: 'left',
             editable: true
           },
-          header: 'field.description',
+          header: i18next.t('field.description'),
           width: 220
         },
         {
@@ -172,7 +172,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
             align: 'left',
             editable: true
           },
-          header: 'field.email',
+          header: i18next.t('field.email'),
           width: 120
         },
         {
@@ -182,7 +182,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
             align: 'left',
             editable: true
           },
-          header: 'field.fax',
+          header: i18next.t('field.fax'),
           width: 120
         },
         {
@@ -192,7 +192,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
             align: 'left',
             editable: true
           },
-          header: 'field.phone',
+          header: i18next.t('field.phone'),
           width: 120
         },
         {
@@ -202,7 +202,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
             align: 'left',
             editable: false
           },
-          header: 'field.updater',
+          header: i18next.t('field.updater'),
           width: 150
         },
         {
@@ -211,7 +211,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
           record: {
             align: 'left'
           },
-          header: 'field.updated_at',
+          header: i18next.t('field.updated_at'),
           width: 150
         }
       ]
@@ -249,7 +249,7 @@ export class ContactPointList extends localize(i18next)(LitElement) {
     let filters = []
     if (this.bizplaceId) {
       filters.push({
-        name: 'bizplace_id',
+        name: 'bizplace',
         operator: 'eq',
         value: this.bizplaceId
       })

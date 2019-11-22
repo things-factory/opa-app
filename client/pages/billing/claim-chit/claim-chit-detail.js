@@ -145,8 +145,11 @@ class ClaimChitDetail extends connect(store)(localize(i18next)(PageView)) {
     if (this.active) {
       this._bizplaceList = { ...(await this.fetchBizplaceList()) }
 
-      this._claimId = changes.resourceId || this._claimId || ''
-      await this._fetchClaimChit()
+      this._claimId = changes.params.id ? changes.param.id : this._claimId || ''
+
+      if (this._claimId) {
+        await this._fetchClaimChit()
+      }
     }
   }
 

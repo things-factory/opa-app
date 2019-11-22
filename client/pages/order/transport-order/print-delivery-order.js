@@ -76,7 +76,6 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
         }
 
         [brief] > div[left] {
-          border: solid;
           grid-template-columns: 1fr;
           padding-left: 0;
         }
@@ -310,7 +309,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
                 <td></td>
                 <td></td>
                 <td></td>
-                <td>${truckNo}</td>
+                <td></td>
                 <td style="padding-top:50px; padding-bottom:5px;">
                   <span><hr width="85%"/></span>${driverName}
                 </td>
@@ -345,8 +344,6 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       </div>
     `
   }
-
-  pageInitialized() {}
 
   async pageUpdated(changes) {
     if (this.active) {

@@ -102,6 +102,9 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
             <label>${i18next.t('label.staging_area')}</label>
             <input name="bufferLocation" readonly />
 
+            <label>${i18next.t('label.ref_no')}</label>
+            <input name="refNo" readonly />
+
             <label>${i18next.t('label.status')}</label>
             <select name="status" disabled>
               ${Object.keys(WORKSHEET_STATUS).map(
@@ -151,35 +154,35 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_no'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           width: 150
         },
         {
           type: 'string',
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           width: 150
         },
         {
           type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
-          width: 250
+          width: 350
         },
         {
           type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: { align: 'center' },
-          width: 120
+          width: 100
         },
         {
           type: 'integer',
           name: 'qty',
           header: i18next.t('field.qty'),
-          record: { align: 'right' },
-          width: 60
+          record: { align: 'center' },
+          width: 80
         },
         {
           type: 'string',
@@ -211,6 +214,7 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
             arrivalNotice {
               name
               description
+              refNo
             }
             bizplace {
               name
@@ -254,7 +258,13 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
       const worksheetDetails = worksheet.worksheetDetails
       this._worksheetStatus = worksheet.status
       this._ganNo = (worksheet.arrivalNotice && worksheet.arrivalNotice.name) || ''
-      this._fillupForm(worksheet)
+      this._fillupForm({
+        ...worksheet,
+        arrivalNotice: worksheet.arrivalNotice.name,
+        bizplace: worksheet.bizplace.name,
+        bufferLocation: worksheet.bufferLocation.name,
+        refNo: worksheet.arrivalNotice.refNo
+      })
       this.data = {
         records: worksheetDetails.map(worksheetDetail => {
           return {

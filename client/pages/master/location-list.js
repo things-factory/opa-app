@@ -406,7 +406,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
       text: i18next.t('text.you_wont_be_able_to_revert_this'),
       type: 'warning',
       confirmButton: { text: i18next.t('button.delete'), color: '#22a6a7' },
-      cancelButton: { text: 'cancel', color: '#cfcfcf' },
+      cancelButton: { text: i18next.t('button.cancel'), color: '#cfcfcf' },
       callback: async result => {
         if (result.value) {
           const names = this.dataGrist.selected.map(record => record.name)
@@ -438,43 +438,46 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
 
     const retrieve = await client.query({
       query: gql`
-          query {
-            warehouses(${gqlBuilder.buildArgs({
-              filters: [...filters],
-              pagination: {},
-              sortings: []
-            })}) {
-              items {
-                id
-                name
-              }
+        query {
+          warehouses(${gqlBuilder.buildArgs({
+            filters: [...filters],
+            pagination: {},
+            sortings: []
+          })}) {
+            items {
+              id
+              name
             }
           }
-        `
+        }
+      `
     })
     let name = retrieve.data.warehouses.items[0].name
 
-    Swal.fire({
-      title: i18next.t('text.delete_all_locations?'),
-      text: i18next.t('text.you_wont_be_able_to_revert_this'),
-      type: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#22a6a7',
-      cancelButtonColor: '#cfcfcf',
-      confirmButtonText: i18next.t('button.delete_all'),
-      cancelButtonText: i18next.t('button.cancel')
-    }).then(async result => {
-      if (result.value && name !== '') {
-        const response = await client.query({
-          query: gql`
-              mutation {
-                deleteAllLocations(${gqlBuilder.buildArgs({ name })})
-              }
-            `
-        })
-        if (!response.errors) this.dataGrist.fetch()
-      }
-    })
+    if(name) {
+      CustomAlert({
+        title: i18next.t('text.delete_all_locations?'),
+        text: i18next.t('text.you_wont_be_able_to_revert_this'),
+        type: 'warning',
+        confirmButton: { text: i18next.t('button.delete_all'), color: '#22a6a7' },
+        cancelButton: { text: i18next.t('button.cancel'), color: '#cfcfcf' },
+        callback: async result => {
+          if (result.value && name !== '') {
+            const response = await client.query({
+              query: gql`
+                mutation {
+                  deleteAllLocations(${gqlBuilder.buildArgs({ name })})
+                }
+              `
+            })
+            if (!response.errors) this.dataGrist.fetch()
+          }
+        }
+      })
+    }
+    else {
+      throw new Error(i18next.t('text.warehouse_not_found'))
+    }
   }
 
   async _printLocationLabel() {

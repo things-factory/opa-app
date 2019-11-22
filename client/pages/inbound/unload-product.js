@@ -145,6 +145,9 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           <label>${i18next.t('label.container_no')}</label>
           <input name="containerNo" readonly />
 
+          <label>${i18next.t('label.ref_no')}</label>
+          <input name="refNo" readonly />
+
           <label>${i18next.t('label.staging_area')}</label>
           <input name="bufferLocation" readonly />
 
@@ -390,6 +393,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
             worksheetInfo {
               bizplaceName
               containerNo
+              refNo
               bufferLocation
               startedAt
             }

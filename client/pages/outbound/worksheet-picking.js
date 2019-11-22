@@ -99,6 +99,9 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             <label>${i18next.t('label.customer')}</label>
             <input name="bizplace" readonly />
 
+            <label>${i18next.t('label.ref_no')}</label>
+            <input name="refNo" readonly />
+
             <label>${i18next.t('label.status')}</label>
             <select name="status" disabled>
               ${Object.keys(WORKSHEET_STATUS).map(
@@ -148,21 +151,21 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_no'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           width: 100
         },
         {
           type: 'string',
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
-          record: { align: 'center' },
-          width: 100
+          record: { align: 'left' },
+          width: 150
         },
         {
           type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           width: 350
         },
         {
@@ -170,7 +173,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           name: 'location',
           header: i18next.t('field.location'),
           record: { align: 'center' },
-          width: 100
+          width: 120
         },
         {
           type: 'string',
@@ -238,6 +241,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             releaseGood {
               name
               description
+              refNo
             }
             bizplace {
               name
@@ -282,7 +286,12 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       this._worksheetStatus = worksheet.status
       this._roNo = (worksheet.releaseGood && worksheet.releaseGood.name) || ''
 
-      this._fillupForm(worksheet)
+      this._fillupForm({
+        ...worksheet,
+        releaseGood: worksheet.releaseGood.name,
+        bizplace: worksheet.bizplace.name,
+        refNo: worksheet.releaseGood.refNo
+      })
       this.data = {
         records: worksheetDetails.map(worksheetDetail => {
           return {
