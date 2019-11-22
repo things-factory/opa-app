@@ -30,7 +30,7 @@
     "@things-factory/biz-ui": "^1.0.0-alpha.1",
     "@things-factory/board-service": "^1.0.0-alpha.1",
     "@things-factory/board-ui": "^1.0.0-alpha.1",
-    "@things-factory/code-base": "^1.0.0-alpha.1",
+    "@things-factory/code-ui": "^1.0.0-alpha.1",
     "@things-factory/component-ui": "^1.0.0-alpha.1",
     "@things-factory/context-ui": "^1.0.0-alpha.1",
     "@things-factory/export-ui": "^1.0.0-alpha.1",

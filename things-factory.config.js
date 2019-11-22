@@ -321,10 +321,6 @@ export default {
       tagname: 'system-setting',
       page: 'settings'
     },
-    {
-      tagname: 'system-code',
-      page: 'codes'
-    },
 
     /**
      * Inbound Menus Section

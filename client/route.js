@@ -311,10 +311,6 @@ export default function route(page) {
       import('./pages/system/system-setting')
       return page
 
-    case 'codes':
-      import('./pages/system/system-code')
-      return page
-
     /**
      * Inbound Menus Section
      */
