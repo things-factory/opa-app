@@ -2,13 +2,20 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
+import {
+  client,
+  CustomAlert,
+  gqlBuilder,
+  isMobileDevice,
+  PageView,
+  ScrollbarStyles,
+  store
+} from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
-import './contact-point-list'
 import '../components/import-pop-up'
-import { CustomAlert } from '../../utils/custom-alert'
+import './contact-point-list'
 
 class BizplaceList extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {

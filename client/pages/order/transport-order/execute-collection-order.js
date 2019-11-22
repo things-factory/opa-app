@@ -1,10 +1,9 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, PageView, isMobileDevice } from '@things-factory/shell'
+import { client, CustomAlert, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { CustomAlert } from '../../../utils/custom-alert'
 import '../../components/popup-note'
 
 class ExecuteCollectionOrder extends localize(i18next)(PageView) {

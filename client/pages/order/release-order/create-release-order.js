@@ -1,10 +1,18 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import {
+  client,
+  CustomAlert,
+  gqlBuilder,
+  isMobileDevice,
+  navigate,
+  PageView,
+  store,
+  UPDATE_CONTEXT
+} from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { CustomAlert } from '../../../utils/custom-alert'
 import '../../components/vas-relabel'
 import { INVENTORY_STATUS, ORDER_PRODUCT_STATUS, ORDER_TYPES } from '../constants/'
 

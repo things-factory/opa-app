@@ -107,8 +107,9 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
       {
         name: 'rank',
         label: i18next.t('field.rank'),
-        type: 'int',
+        type: 'number',
         props: {
+          min: '0',
           searchOper: 'i_like'
         }
       }
@@ -221,7 +222,7 @@ export class SystemCodeDetail extends localize(i18next)(LitElement) {
     }, 500)
   }
 
-  async fetchHandler({ page, limit, sorters = [] }) {
+  async fetchHandler({ page, limit, sorters = [{ name: 'rank' }] }) {
     let filters = []
     if (this.commonCodeId) {
       filters.push({

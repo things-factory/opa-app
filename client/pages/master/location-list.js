@@ -3,14 +3,21 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
+import {
+  client,
+  CustomAlert,
+  gqlBuilder,
+  isMobileDevice,
+  PageView,
+  ScrollbarStyles,
+  store
+} from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
 import { LOCATION_LABEL_SETTING_KEY } from '../../setting-constants'
-import { CustomAlert } from '../../utils/custom-alert'
-import './generate-location-list'
 import '../components/import-pop-up'
+import './generate-location-list'
 
 class LocationList extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -454,7 +461,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     })
     let name = retrieve.data.warehouses.items[0].name
 
-    if(name) {
+    if (name) {
       CustomAlert({
         title: i18next.t('text.delete_all_locations?'),
         text: i18next.t('text.you_wont_be_able_to_revert_this'),
@@ -474,8 +481,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           }
         }
       })
-    }
-    else {
+    } else {
       throw new Error(i18next.t('text.warehouse_not_found'))
     }
   }

@@ -1,12 +1,10 @@
 import '@things-factory/form-ui'
-import '@things-factory/grist-ui'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
+import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
-import { CustomAlert } from '../../../utils/custom-alert'
-import { elementType } from 'prop-types'
 
 class UploadReceivalNote extends localize(i18next)(LitElement) {
   static get styles() {

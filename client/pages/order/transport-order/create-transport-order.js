@@ -2,11 +2,10 @@ import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, navigate, PageView } from '@things-factory/shell'
+import { client, CustomAlert, gqlBuilder, navigate, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { CustomAlert } from '../../../utils/custom-alert'
-import { ORDER_TYPES, ORDER_STATUS } from '../constants/order'
+import { ORDER_STATUS, ORDER_TYPES } from '../constants/order'
 
 class CreateTransportOrder extends localize(i18next)(PageView) {
   static get properties() {

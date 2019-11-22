@@ -1,10 +1,17 @@
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import {
+  client,
+  CustomAlert,
+  gqlBuilder,
+  isMobileDevice,
+  navigate,
+  PageView,
+  store,
+  UPDATE_CONTEXT
+} from '@things-factory/shell'
 import gql from 'graphql-tag'
-import { connect } from 'pwa-helpers/connect-mixin.js'
 import { css, html } from 'lit-element'
-import { CustomAlert } from '../../../utils/custom-alert'
 import '../../components/vas-relabel'
 
 class CreateVasOrder extends localize(i18next)(PageView) {
