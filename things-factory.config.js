@@ -255,8 +255,8 @@ export default {
       page: 'receival_note_detail'
     },
     {
-      tagname: 'upload-receival-note',
-      page: 'upload_receival_note'
+      tagname: 'customer-receival-notes',
+      page: 'customer_receival_notes'
     },
     /**
      * Billing Menus Section

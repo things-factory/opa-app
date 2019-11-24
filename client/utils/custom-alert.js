@@ -34,7 +34,10 @@ export async function CustomAlert({
   confirmButton = {},
   cancelButton = {},
   invertButton = false,
+  html = '',
   callback,
+  focusConfirm = false,
+  preConfirm,
   onBeforeOpen,
   onOpen,
   onRender,
@@ -82,7 +85,12 @@ export async function CustomAlert({
       confirmButtonColor: confirmButton.hasOwnProperty('color') ? confirmButton.color : '#22a6a7',
       cancelButtonColor: cancelButton.hasOwnProperty('color') ? cancelButton.color : '#cfcfcf',
       toast: toast,
+      html: html,
+      focusConfirm: focusConfirm,
       reverseButtons: invertButton,
+      preConfirm: () => {
+        preConfirm ? preConfirm() : undefined
+      },
       onBeforeOpen: () => {
         onBeforeOpen ? onBeforeOpen() : undefined
       },
