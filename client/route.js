@@ -330,10 +330,6 @@ export default function route(page) {
       import('./pages/inbound/worksheet-unloading')
       return page
 
-    case 'worksheet_loading':
-      import('./pages/inbound/worksheet-loading')
-      return page
-
     case 'worksheet_putaway':
       import('./pages/inbound/worksheet-putaway')
       return page
@@ -363,6 +359,10 @@ export default function route(page) {
 
     case 'worksheet_picking':
       import('./pages/outbound/worksheet-picking')
+      return page
+
+    case 'worksheet_loading':
+      import('./pages/outbound/worksheet-loading')
       return page
 
     case 'picking':

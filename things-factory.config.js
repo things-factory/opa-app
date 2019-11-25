@@ -338,10 +338,6 @@ export default {
       page: 'worksheet_unloading'
     },
     {
-      tagname: 'worksheet-loading',
-      page: 'worksheet_loading'
-    },
-    {
       tagname: 'worksheet-putaway',
       page: 'worksheet_putaway'
     },
@@ -383,7 +379,11 @@ export default {
     {
       tagname: 'loading-product',
       page: 'loading'
-    }
+    },
+    {
+      tagname: 'worksheet-loading',
+      page: 'worksheet_loading'
+    },
   ],
   bootstrap
 }
