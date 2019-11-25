@@ -295,10 +295,6 @@ export default function route(page) {
       import('./pages/system/system-user-bizplaces')
       return page
 
-    case 'menus':
-      import('./pages/system/system-menu')
-      return page
-
     case 'domains':
       import('./pages/system/system-domain')
       return page

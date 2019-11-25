@@ -306,10 +306,6 @@ export default {
       page: 'user_bizplaces'
     },
     {
-      tagname: 'system-menu',
-      page: 'menus'
-    },
-    {
       tagname: 'system-domain',
       page: 'domains'
     },
