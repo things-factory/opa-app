@@ -12,7 +12,9 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       _driverName: String,
       _truckNo: String,
       _date: Date,
-      _orderInventories: Object
+      _orderInventories: Object,
+      _bizplaceId: String,
+      _bizplaceName: String
     }
   }
 
@@ -24,6 +26,8 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     this._date = ''
     this._orderInventories = {}
     this._releaseOrderName = ''
+    this._bizplaceId = ''
+    this._bizplaceName = ''
   }
 
   static get styles() {
@@ -66,7 +70,6 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
         [brief] > div {
           display: grid;
-          grid-template-columns: 1fr 10fr;
           grid-gap: 1px;
           grid-template-columns: 3fr 1fr;
         }
@@ -216,7 +219,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     var contact = '012-6059803 & 016-3320078'
     var email = 'support@kimeda.com'
 
-    var customer = 'HATIO SEA SDN. BHD.'
+    var customer = this._bizplaceName.toUpperCase()
 
     var doNo = this._doNo
     var refNo = this._releaseOrderName
@@ -388,6 +391,10 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       this._driverName = _transportOrderDetails[0].transportDriver.name
       this._truckNo = _transportOrderDetails[0].transportVehicle.name
       this._orderInventories = { ...(await this._fetchOrderInventories(this._releaseOrderId)) }
+
+      const _bizplace = _deliveryOrder.bizplace
+      this._bizplaceId = _bizplace.id
+      this._bizplaceName = _bizplace.name
     }
   }
 
