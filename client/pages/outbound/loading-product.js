@@ -9,7 +9,7 @@ import { connect } from 'pwa-helpers/connect-mixin.js'
 import { CustomAlert } from '../../utils/custom-alert'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
 
-class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
+class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       releaseGoodNo: String,
@@ -86,7 +86,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.picking')
+      title: i18next.t('title.loading')
     }
   }
 
@@ -179,11 +179,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
 
             <fieldset ?hidden=${!this.scannable}>
               <legend>${i18next.t('title.input_section')}</legend>
-              <label>${i18next.t('label.pallet_barcode')}</label>
-              <barcode-scanable-input name="palletId" .value=${this._pallet} custom-input></barcode-scanable-input>
-
-              <label>${i18next.t('label.picked_qty')}</label>
-              <input type="number" min="1" name="confirmedQty" />
+              <!-- include button to click load-->
             </fieldset>
           </form>
         </div>
@@ -272,7 +268,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'integer',
           name: 'releaseQty',
-          header: i18next.t('field.release_qty'),
+          header: i18next.t('field.picked_qty'),
           record: { align: 'center' },
           width: 80
         }
@@ -295,7 +291,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     store.dispatch({
       type: UPDATE_CONTEXT,
       context: {
-        title: i18next.t('title.picking'),
+        title: i18next.t('title.loading'),
         actions
       }
     })
@@ -318,7 +314,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     const response = await client.query({
       query: gql`
         query {
-          pickingWorksheet(${gqlBuilder.buildArgs({
+          loadingWorksheet(${gqlBuilder.buildArgs({
             releaseGoodNo
           })}) {
             worksheetInfo {
@@ -400,14 +396,14 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _picking(e) {
+  async _loading(e) {
     if (e.keyCode === 13) {
       try {
-        this._validatePicking()
+        this._validateLoading()
         const response = await client.query({
           query: gql`
               mutation {
-                picking(${gqlBuilder.buildArgs({
+                loading(${gqlBuilder.buildArgs({
                   worksheetDetailName: this._selectedOrderInventory.name,
                   palletId: this.palletInput.value,
                   releaseQty: parseInt(this.releaseQtyInput.value)
@@ -465,7 +461,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     if (!this.data.records.every(record => record.completed)) return
     this._updateContext()
     const result = await CustomAlert({
-      title: i18next.t('title.picking'),
+      title: i18next.t('title.loading'),
       text: i18next.t('text.do_you_want_to_complete?'),
       confirmButton: { text: i18next.t('button.complete') },
       cancelButton: { text: i18next.t('button.cancel') }
@@ -482,7 +478,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     const response = await client.query({
       query: gql`
         mutation {
-          completePicking(${gqlBuilder.buildArgs({
+          completeLoading(${gqlBuilder.buildArgs({
             releaseGoodNo: this.releaseGoodNo
           })})
         }
@@ -492,8 +488,8 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     if (!response.errors) {
       this._clearView()
       const result = await CustomAlert({
-        title: i18next.t('title.picking'),
-        text: i18next.t('text.picking_is_completed'),
+        title: i18next.t('title.loading'),
+        text: i18next.t('text.loading_is_completed'),
         confirmButton: { text: i18next.t('button.confirm') }
       })
 
@@ -514,4 +510,4 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 }
 
-window.customElements.define('picking-product', PickingProduct)
+window.customElements.define('loading-product', LoadingProduct)
