@@ -2,6 +2,7 @@ import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import '@things-factory/import-ui'
 import { openPopup } from '@things-factory/layout-base'
 import {
   client,
@@ -14,7 +15,6 @@ import {
 } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import '../components/import-pop-up'
 
 class CompanyList extends localize(i18next)(PageView) {
   static get styles() {

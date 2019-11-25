@@ -1,11 +1,11 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import '@things-factory/import-ui'
 import { openPopup } from '@things-factory/layout-base'
 import { client, CustomAlert, gqlBuilder, isMobileDevice, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
-import '../components/import-pop-up'
 
 export class ContactPointList extends localize(i18next)(LitElement) {
   static get styles() {
