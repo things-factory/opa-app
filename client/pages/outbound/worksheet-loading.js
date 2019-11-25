@@ -143,7 +143,7 @@ class WorksheetLoading extends localize(i18next)(PageView) {
   pageInitialized() {
     this.preConfig = {
       rows: { appendable: false },
-      list: { fields: ['batchId', 'palletId', 'product', 'location'] },
+      list: { fields: ['batchId', 'palletId', 'product'] },
       pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -169,13 +169,6 @@ class WorksheetLoading extends localize(i18next)(PageView) {
           width: 350
         },
         {
-          type: 'object',
-          name: 'location',
-          header: i18next.t('field.location'),
-          record: { align: 'center' },
-          width: 120
-        },
-        {
           type: 'string',
           name: 'zone',
           header: i18next.t('field.zone'),
@@ -193,13 +186,6 @@ class WorksheetLoading extends localize(i18next)(PageView) {
           type: 'integer',
           name: 'releaseQty',
           header: i18next.t('field.picked_qty'),
-          record: { align: 'center' },
-          width: 60
-        },
-        {
-          type: 'float',
-          name: 'releaseWeight',
-          header: i18next.t('field.release_weight'),
           record: { align: 'center' },
           width: 60
         },
@@ -246,16 +232,11 @@ class WorksheetLoading extends localize(i18next)(PageView) {
               description
               targetInventory {
                 releaseQty
-                releaseWeight                
                 inventory {
                   palletId
                   batchId
                   packingType
                   warehouse {
-                    name
-                    description
-                  }
-                  location {
                     name
                     description
                   }
@@ -292,8 +273,7 @@ class WorksheetLoading extends localize(i18next)(PageView) {
             name: worksheetDetail.name,
             description: worksheetDetail.description,
             status: worksheetDetail.status,
-            releaseQty: worksheetDetail.targetInventory.releaseQty,
-            releaseWeight: worksheetDetail.targetInventory.releaseWeight
+            releaseQty: worksheetDetail.targetInventory.releaseQty
           }
         })
       }
