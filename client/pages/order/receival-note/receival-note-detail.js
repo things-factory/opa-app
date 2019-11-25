@@ -68,13 +68,14 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
 
         [brief] {
           display: grid;
-          grid-template-columns: 4fr 1fr;
+          grid-template-columns: 3fr 1fr;
         }
 
         [brief] > div {
           display: grid;
           grid-template-columns: 1fr 10fr;
           grid-gap: 1px;
+          grid-template-columns: 3fr 1fr;
         }
 
         [brief] > div[right] {
@@ -190,7 +191,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
 
   render() {
     var company = 'KIMEDA SDN BHD'
-    var brn = '31810-W'
+    var brn = '120075T'
     var address = 'Lot 541, 7 3/4 Miles, Jalan Kapar, 42200 Kapar, Klang'
     var contact = '012-6059803 & 016-3320078'
     var email = 'support@kimeda.com'
@@ -247,8 +248,8 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
                 <th idx>#</th>
                 <th>Batch ID</th>
                 <th>Product</th>
-                <th>Pallet ID</th>
                 <th>Quantity</th>
+                <th>Total Weight</th>
                 <th>Remark</th>
               </tr>
             </thead>
@@ -259,9 +260,9 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
                   <tr>
                     <td idx>${index + 1}</td>
                     <td>${product.batchId}</td>
-                    <td>${product.product.name}</td>
-                    <td>${product.packingType}</td>
-                    <td>${product.packQty}</td>
+                    <td>${product.product.name} (${product.product.description})</td>
+                    <td>${product.packQty} ${product.packingType}</td>
+                    <td>${product.totalWeight}</td>
                     <td>${product.remark}</td>
                   </tr>
                 `
@@ -373,6 +374,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
               product {
                 id
                 name
+                description
               }
               packingType
               packQty
@@ -387,6 +389,8 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
                   brn
                 }
               }
+              unit
+              totalWeight
             }
             total
           }

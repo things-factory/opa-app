@@ -61,13 +61,14 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
         [brief] {
           display: grid;
-          grid-template-columns: 4fr 1fr;
+          grid-template-columns: 3fr 1fr;
         }
 
         [brief] > div {
           display: grid;
           grid-template-columns: 1fr 10fr;
           grid-gap: 1px;
+          grid-template-columns: 3fr 1fr;
         }
 
         [brief] > div[right] {
@@ -111,11 +112,6 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
         [customer_confirmation] {
           flex: 1;
-          padding-top: 10px;
-          padding-bottom: 10px;
-        }
-
-        table [product-table] td {
           padding-top: 10px;
           padding-bottom: 10px;
         }
@@ -215,7 +211,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
   render() {
     var company = 'KIMEDA SDN. BHD.'
-    var brn = '31810-W'
+    var brn = '120075T'
     var address = 'Lot 541, 7 3/4 Miles, Jalan Kapar, 42200 Kapar, Klang'
     var contact = '012-6059803 & 016-3320078'
     var email = 'support@kimeda.com'

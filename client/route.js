@@ -234,8 +234,8 @@ export default function route(page) {
       import('./pages/order/receival-note/receival-note-detail')
       return page
 
-    case 'upload_receival_note':
-      import('./pages/order/receival-note/upload-receival-note')
+    case 'customer_receival_notes':
+      import('./pages/order/receival-note/customer-receival-notes')
       return page
 
     /**
