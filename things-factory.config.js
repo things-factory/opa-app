@@ -12,10 +12,6 @@ export default {
       page: 'dashboard'
     },
     {
-      tagname: 'company-list',
-      page: 'companies'
-    },
-    {
       tagname: 'company-profile',
       page: 'company_profile'
     },
@@ -26,14 +22,6 @@ export default {
     {
       tagname: 'product-option-list',
       page: 'product_options'
-    },
-    {
-      tagname: 'vas-list',
-      page: 'vas'
-    },
-    {
-      tagname: 'bizplace-list',
-      page: 'bizplaces'
     },
     {
       tagname: 'transport-vehicle',

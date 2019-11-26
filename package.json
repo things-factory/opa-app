@@ -49,7 +49,7 @@
     "@things-factory/print-ui": "^1.0.0-alpha.1",
     "@things-factory/product-base": "^1.0.0-alpha.1",
     "@things-factory/resource-ui": "^1.0.0-alpha.1",
-    "@things-factory/sales-base": "^1.0.0-alpha.1",
+    "@things-factory/sales-ui": "^1.0.0-alpha.1",
     "@things-factory/setting-ui": "^1.0.0-alpha.1",
     "@things-factory/shell": "^1.0.0-alpha.1",
     "@things-factory/system-ui": "^1.0.0-alpha.1",
