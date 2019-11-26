@@ -191,8 +191,6 @@ class ProductList extends localize(i18next)(PageView) {
         }
       ]
     }
-
-    this.data = { records: [] }
   }
 
   get searchForm() {
