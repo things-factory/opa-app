@@ -795,6 +795,7 @@
   "title.worksheet_vas": "worksheet vas",
   "text.please_select_any_location_format": "please select any location format",
   "vas_order_created": "vas order created",
+  "label.location_format": "location format",
   "label.add_extension": "add extension",
   "label.add_leading_zero": "add leading zero"
 }
