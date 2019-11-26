@@ -1,6 +1,7 @@
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { isMobileDevice, store } from '@things-factory/shell'
+import { isMobileDevice, store, client, gqlBuilder } from '@things-factory/shell'
+import gql from 'graphql-tag'
 import { connect } from 'pwa-helpers/connect-mixin'
 import { css, html, LitElement } from 'lit-element'
 import { USBPrinter } from '@things-factory/barcode-base'
@@ -135,17 +136,42 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
       const _targetRows = this._validate()
       let labelId = this._palletLabel && this._palletLabel.id
 
+      let today = new Date()
+      let year = today.getFullYear()
+      let month = today.getMonth()
+      let date = today.getDate()
+      let seq = 0
+
+      const palletRecords = await client.query({
+        query: gql`
+          mutation {
+            updatePalletSeq (${gqlBuilder.buildArgs({
+              printQty: _targetRows.map(x => x.printQty).reduce((a, b) => a + b)
+            })}) {
+              seq
+            }
+          }
+        `
+      })
+      if (!palletRecords.error) {
+        seq = palletRecords.data.updatePalletSeq.seq ? palletRecords.data.updatePalletSeq.seq : 0
+      } else {
+        throw 'Unable to get pallet records.'
+      }
+
       _targetRows.forEach(async record => {
         for (let i = 0; i < record.printQty; i++) {
           let searchParams = new URLSearchParams()
           let batchId = record.batchId.replace(/[^a-zA-Z0-9 ]/g, '')
+          seq = seq + 1
           searchParams.append(
             'pallet',
-            `${batchId.substring(batchId.length - 8)}${new Date()
-              .toISOString()
-              .split('T')[0]
-              .split('-')
-              .join('')}${(i + record.startSeq).toString().padStart(3, 0)}`
+            `${'PA' +
+              year.toString().substr(year.toString().length - 2) +
+              ('0' + month.toString()).substr(('0' + month.toString()).toString().length - 2) +
+              ('0' + date.toString()).substr(('0' + date.toString()).length - 2) +
+              '/' +
+              ('0000' + seq.toString()).substr(('0000' + seq.toString()).length - 4)}`
           )
           searchParams.append('batch', record.batchId)
           searchParams.append('product', record.product.name)
