@@ -138,7 +138,6 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
         }
         .location-formatting .button-container {
           display: flex;
-          background-color: white;
           position: absolute;
           right: 0;
           bottom: 0;
