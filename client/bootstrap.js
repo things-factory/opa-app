@@ -12,6 +12,14 @@ import { ADD_SETTING } from '@things-factory/setting-base'
 
 import '@things-factory/setting-ui/client/setting-lets/domain-switch-let'
 
+console.log(`
+ ▄▄  ▄▄▄  ▄▄▄ ▄▄▄   ▄▄  ▄▄▄  ▄▄
+▓  ▓ ▓  ▓ ▓   ▓  ▓ ▓  ▓  ▓  ▓  ▓
+▓  ▓ ▓▀▀  ▓▀▀ ▓▀▀▄ ▓▀▀▓  ▓  ▓  ▓ 
+▓  ▓ ▓    ▓   ▓  ▓ ▓  ▓  ▓  ▓  ▓  
+ ▀▀  ▀    ▀▀▀ ▀  ▀ ▀  ▀  ▀   ▀▀ 
+`)
+
 export default function bootstrap() {
   store.addReducers({
     dashboard
