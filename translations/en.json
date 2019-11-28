@@ -597,6 +597,7 @@
   "text.to_pallet_id_is_empty": "to pallet id is empty",
   "text.turn_to_pdf_successfully": "turn to pdf successfully",
   "text.undo_unloading": "undo unloading",
+  "text.undo_vas": "undo vas",
   "text.unloading_completed": "unloading completed",
   "text.user_bizplaces_updated": "user bizplaces updated",
   "text.user_info_not_valid": "user infor not valid",
@@ -792,5 +793,9 @@
   "title.worksheet_putaway": "worksheet putaway",
   "title.worksheet_unloading": "worksheet unloading",
   "title.worksheet_vas": "worksheet vas",
-  "vas_order_created": "vas order created"
+  "text.please_select_any_location_format": "please select any location format",
+  "vas_order_created": "vas order created",
+  "label.location_format": "location format",
+  "label.add_extension": "add extension",
+  "label.add_leading_zero": "add leading zero"
 }

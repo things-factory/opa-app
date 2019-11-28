@@ -55,10 +55,6 @@ export default {
       tagname: 'location-list',
       page: 'locations'
     },
-    {
-      tagname: 'inventory-summary-report',
-      page: 'inventory_summary_reports'
-    },
 
     /**
      * Order Menus Section
