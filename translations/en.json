@@ -222,6 +222,7 @@
   "field.total_qty": "total qty",
   "field.total_quantity": "total quantity",
   "field.total_weight": "total weight",
+  "field.transaction": "transaction",
   "field.transaction_type": "transaction type",
   "field.transport_driver": "transport driver",
   "field.transport_vehicle": "transport vehicle",

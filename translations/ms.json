@@ -219,6 +219,7 @@
   "field.total_qty": "jumlah kuantiti",
   "field.total_quantity": "jumlah kuantiti",
   "field.total_weight": "jumlah berat",
+  "field.transaction": "transaksi",
   "field.transaction_type": "jenis transaksi",
   "field.transport_driver": "pemandu pengangkutan",
   "field.transport_vehicle": "transport vehicle",

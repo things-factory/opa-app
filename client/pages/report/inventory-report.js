@@ -52,6 +52,29 @@ class InventoryReport extends localize(i18next)(PageView) {
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
+          type: 'date',
+          name: 'createdAt',
+          header: i18next.t('field.date'),
+          record: { editable: false, align: 'left' },
+          sortable: true,
+          width: 130
+        },
+        {
+          type: 'string',
+          name: 'bizplace|name',
+          header: i18next.t('field.customer'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 300
+        },
+        {
+          type: 'string',
+          name: 'product|name',
+          header: i18next.t('field.product'),
+          sortable: true,
+          width: 400
+        },
+        {
           type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
@@ -59,14 +82,7 @@ class InventoryReport extends localize(i18next)(PageView) {
             editable: false,
             align: 'center'
           },
-          width: 200
-        },
-        {
-          type: 'string',
-          name: 'product|name',
-          header: i18next.t('field.product'),
-          sortable: true,
-          width: 300
+          width: 180
         },
         {
           type: 'string',
@@ -76,33 +92,14 @@ class InventoryReport extends localize(i18next)(PageView) {
           sortable: true,
           width: 200
         },
-        {
-          type: 'string',
-          name: 'transactionType',
-          header: i18next.t('field.transaction_type'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 250
-        },
-        {
-          type: 'datetime',
-          name: 'createdAt',
-          header: i18next.t('field.date'),
-          record: { editable: false, align: 'left' },
-          sortable: true,
-          width: 150
-        },
-        {
-          type: 'string',
-          name: 'bizplace|name',
-          header: i18next.t('field.customer'),
-          record: {
-            editable: false,
-            align: 'left'
-          },
-          sortable: true,
-          width: 300
-        },
+        // {
+        //   type: 'string',
+        //   name: 'transactionFlow',
+        //   header: i18next.t('field.transaction'),
+        //   record: { align: 'center' },
+        //   sortable: true,
+        //   width: 120
+        // },
         {
           type: 'number',
           name: 'qty',
@@ -113,9 +110,12 @@ class InventoryReport extends localize(i18next)(PageView) {
         }
       ],
       rows: {
+        selectable: false,
         groups: [
+          { column: 'createdAt', name: 'Date' },
+          { column: 'bizplace|name', name: 'Customer' },
+          { column: 'product|name', name: 'Product' },
           { column: 'packingType', name: 'Packing Type' },
-          { column: 'product|name', name: 'Product Name' },
           { column: 'batchId', name: 'Batch' }
         ],
         totals: ['qty']
@@ -156,6 +156,7 @@ class InventoryReport extends localize(i18next)(PageView) {
               status
               packingType
               transactionType
+              transactionFlow
               createdAt
             }
           }
@@ -166,7 +167,8 @@ class InventoryReport extends localize(i18next)(PageView) {
         records:
           response.data.inventoryHistoryReport.map(item => {
             return flattenObject({
-              ...item
+              ...item,
+              productName: item.product.name + ' ( ' + item.product.description + ' )'
             })
           }) || []
       }
@@ -177,7 +179,6 @@ class InventoryReport extends localize(i18next)(PageView) {
       // }
     } catch (e) {
       console.log(e)
-      // this._showToast(e)
     }
   }
 }
