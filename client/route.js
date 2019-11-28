@@ -372,5 +372,12 @@ export default function route(page) {
     case 'loading':
       import('./pages/outbound/loading-product')
       return page
+
+    /**
+     * Report Menus Section
+     */
+    case 'inventory_report':
+      import('./pages/report/inventory-report')
+      return page
   }
 }

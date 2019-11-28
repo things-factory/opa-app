@@ -361,6 +361,7 @@ export default {
       tagname: 'vas-worksheet-list',
       page: 'vas_worksheets'
     },
+
     /**
      * Outbound Menus Section
      */
@@ -384,6 +385,14 @@ export default {
       tagname: 'worksheet-loading',
       page: 'worksheet_loading'
     },
+
+    /**
+     * Report Menus Section
+     */
+    {
+      tagname: 'inventory-report',
+      page: 'inventory_report'
+    }
   ],
   bootstrap
 }
