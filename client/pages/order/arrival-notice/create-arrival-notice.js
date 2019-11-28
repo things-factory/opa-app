@@ -89,7 +89,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   get createButton() {
-    return { title: i18next.t('button.create'), action: this._generateArrivalNotice.bind(this) }
+    return { title: i18next.t('button.submit'), action: this._generateArrivalNotice.bind(this) }
   }
 
   get adjustButton() {
