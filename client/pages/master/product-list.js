@@ -2,7 +2,7 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import '@things-factory/import-ui'
-import { openPopup } from '@things-factory/layout-base'
+import { openImportPopUp } from '@things-factory/import-ui'
 import { client, CustomAlert, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
@@ -10,10 +10,8 @@ import { css, html } from 'lit-element'
 class ProductList extends localize(i18next)(PageView) {
   static get properties() {
     return {
-      _searchFields: Array,
-      config: Object,
-      data: Object,
-      importHandler: Object
+      searchFields: Array,
+      config: Object
     }
   }
 
@@ -24,21 +22,13 @@ class ProductList extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-
           overflow: hidden;
         }
-
         search-form {
           overflow: visible;
         }
-        .grist {
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-          overflow-y: auto;
-        }
         data-grist {
-          overflow-y: hidden;
+          overflow-y: auto;
           flex: 1;
         }
       `
@@ -47,16 +37,14 @@ class ProductList extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
+      <search-form .fields=${this.searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
-      <div class="grist">
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .data=${this.data}
-          .fetchHandler="${this.fetchHandler.bind(this)}"
-        ></data-grist>
-      </div>
+      <data-grist
+        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+        .config=${this.config}
+        .data=${this.data}
+        .fetchHandler="${this.fetchHandler.bind(this)}"
+      ></data-grist>
     `
   }
 
@@ -66,7 +54,7 @@ class ProductList extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.save'),
-          action: this._saveProducts.bind(this)
+          action: () => this._saveProducts(this.dataGrist.exportPatchList({ flagName: 'cuFlag ' }))
         },
         {
           title: i18next.t('button.delete'),
@@ -78,19 +66,30 @@ class ProductList extends localize(i18next)(PageView) {
         data: this._exportableData.bind(this)
       },
       importable: {
-        handler: this._importableData.bind(this)
+        handler: records => {
+          const config = {
+            rows: this.config.rows,
+            columns: [...this.config.columns.filter(column => column.imex !== undefined)]
+          }
+          openImportPopUp(records, config, async patches => {
+            await this._saveVas(patches)
+            history.back()
+          })
+        }
       }
     }
   }
 
-  pageUpdated(changes, lifecycle) {
-    if (this.active) {
-      this.dataGrist.fetch()
-    }
+  get searchForm() {
+    return this.shadowRoot.querySelector('search-form')
+  }
+
+  get dataGrist() {
+    return this.shadowRoot.querySelector('data-grist')
   }
 
   pageInitialized() {
-    this._searchFields = [
+    this.searchFields = [
       {
         label: i18next.t('field.name'),
         name: 'name',
@@ -197,37 +196,13 @@ class ProductList extends localize(i18next)(PageView) {
     }
   }
 
-  get searchForm() {
-    return this.shadowRoot.querySelector('search-form')
+  pageUpdated(changes, lifecycle) {
+    if (this.active) {
+      this.dataGrist.fetch()
+    }
   }
 
-  get dataGrist() {
-    return this.shadowRoot.querySelector('data-grist')
-  }
-
-  _importableData(records) {
-    setTimeout(() => {
-      openPopup(
-        html`
-          <import-pop-up
-            .records=${records}
-            .config=${{
-              rows: this.config.rows,
-              columns: [...this.config.columns.filter(column => column.imex !== undefined)]
-            }}
-            .importHandler="${this.importHandler.bind(this)}"
-          ></import-pop-up>
-        `,
-        {
-          backdrop: true,
-          size: 'large',
-          title: i18next.t('title.import')
-        }
-      )
-    }, 500)
-  }
-
-  async fetchHandler({ page, limit, sorters = [] }) {
+  async fetchHandler({ page, limit, sorters = [{ name: 'name' }] }) {
     const response = await client.query({
       query: gql`
         query {
@@ -268,7 +243,7 @@ class ProductList extends localize(i18next)(PageView) {
     }
   }
 
-  _setProductRefCondition(columns, data, column, record, rowIndex) {
+  _setProductRefCondition(_columns, _data, _column, record, _rowIndex) {
     this.config.columns.map(column => {
       if (column.name === 'productRef') {
         if (record && record.id) {
@@ -280,54 +255,8 @@ class ProductList extends localize(i18next)(PageView) {
     })
   }
 
-  async importHandler(patches) {
-    patches.map(itm => {
-      itm.weight = parseFloat(itm.weight)
-    })
-    const response = await client.query({
-      query: gql`
-          mutation {
-            updateMultipleProduct(${gqlBuilder.buildArgs({
-              patches
-            })}) {
-              name
-            }
-          }
-        `
-    })
-
-    if (!response.errors) {
-      history.back()
-      this.dataGrist.fetch()
-      document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            message: i18next.t('text.data_imported_successfully')
-          }
-        })
-      )
-    }
-  }
-
-  async _saveProducts() {
-    let patches = this.dataGrist.dirtyRecords
+  async _saveProducts(patches) {
     if (patches && patches.length) {
-      patches = patches.map(product => {
-        let patchField = product.id ? { id: product.id } : {}
-        const dirtyFields = product.__dirtyfields__
-        for (let key in dirtyFields) {
-          if (dirtyFields[key].after instanceof Object) {
-            for (let objKey in dirtyFields[key].after) {
-              if (objKey.startsWith('__')) delete dirtyFields[key].after[objKey]
-            }
-          }
-          patchField[key] = dirtyFields[key].after
-        }
-        patchField.cuFlag = product.__dirty__
-
-        return patchField
-      })
-
       const response = await client.query({
         query: gql`
             mutation {
@@ -342,54 +271,47 @@ class ProductList extends localize(i18next)(PageView) {
 
       if (!response.errors) {
         this.dataGrist.fetch()
-        document.dispatchEvent(
-          new CustomEvent('notify', {
-            detail: {
-              message: i18next.t('text.data_updated_successfully')
-            }
-          })
-        )
+        this.showToast(i18next.t('text.data_updated_successfully'))
       }
+    } else {
+      CustomAlert({
+        title: i18next.t('text.nothing_changed'),
+        text: i18next.t('text.there_is_nothing_to_save')
+      })
     }
   }
 
   async _deleteProducts() {
-    CustomAlert({
-      title: i18next.t('text.are_you_sure'),
-      text: i18next.t('text.you_wont_be_able_to_revert_this'),
-      type: 'warning',
-      confirmButton: { text: i18next.t('button.delete'), color: '#22a6a7' },
-      cancelButton: { text: 'cancel', color: '#cfcfcf' },
-      callback: async result => {
-        if (result.value) {
-          const names = this.dataGrist.selected.map(record => record.name)
-          if (names && names.length > 0) {
-            const response = await client.query({
-              query: gql`
-            mutation {
-              deleteProducts(${gqlBuilder.buildArgs({ names })})
-            }
-          `
-            })
+    const ids = this.dataGrist.selected.map(record => record.id)
+    if (ids && ids.length) {
+      const anwer = await CustomAlert({
+        type: 'warning',
+        title: i18next.t('button.delete'),
+        text: i18next.t('text.are_you_sure'),
+        confirmButton: { text: i18next.t('button.delete') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
 
-            if (!response.errors) {
-              this.dataGrist.fetch()
-              document.dispatchEvent(
-                new CustomEvent('notify', {
-                  detail: {
-                    message: i18next.t('text.data_deleted_successfully')
-                  }
-                })
-              )
-            }
+      if (!anwer.value) return
+    } else {
+      CustomAlert({
+        title: i18next.t('text.nothing_selected'),
+        text: i18next.t('text.there_is_nothing_to_delete')
+      })
+
+      const response = await client.query({
+        query: gql`
+          mutation {
+            deleteProducts(${gqlBuilder.buildArgs({ names })})
           }
-        }
-      }
-    })
-  }
+        `
+      })
 
-  get _columns() {
-    return this.config.columns
+      if (!response.errors) {
+        this.dataGrist.fetch()
+        this.showToast(i18next.t('text.data_deleted_successfully'))
+      }
+    }
   }
 
   _exportableData() {
@@ -409,7 +331,7 @@ class ProductList extends localize(i18next)(PageView) {
     var data = records.map(item => {
       return {
         id: item.id,
-        ...this._columns
+        ...this.config.columns
           .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
           .reduce((record, column) => {
             record[column.imex.key] = column.imex.key
@@ -421,6 +343,10 @@ class ProductList extends localize(i18next)(PageView) {
     })
 
     return { header: headerSetting, data: data }
+  }
+
+  showToast(message) {
+    document.dispatchEvent(new CustomEvent('notify', { detail: { message } }))
   }
 }
 
