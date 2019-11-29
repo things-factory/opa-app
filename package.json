@@ -1,6 +1,6 @@
 {
   "name": "@things-factory/opa-app",
-  "version": "0.9.16",
+  "version": "0.9.17",
   "main": "dist-server/index.js",
   "browser": "client/index.js",
   "things-factory": true,
@@ -55,7 +55,7 @@
     "@things-factory/system-ui": "^0.9.0",
     "@things-factory/transport-base": "^0.9.0",
     "@things-factory/warehouse-base": "^0.9.0",
-    "@things-factory/worksheet-base": "^0.9.0",
+    "@things-factory/worksheet-base": "0.9.18",
     "@things-scene/chartjs": "*",
     "@things-scene/clock": "*",
     "@things-scene/clone": "*",
