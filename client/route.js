@@ -44,10 +44,6 @@ export default function route(page) {
       import('./pages/master/location-list')
       return page
 
-    case 'inventory_summary_reports':
-      import('./pages/master/inventory-summary-report')
-      return page
-
     /**
      * Order Menus Section
      */
@@ -222,8 +218,8 @@ export default function route(page) {
       import('./pages/order/receival-note/receival-note-detail')
       return page
 
-    case 'upload_receival_note':
-      import('./pages/order/receival-note/upload-receival-note')
+    case 'customer_receival_notes':
+      import('./pages/order/receival-note/customer-receival-notes')
       return page
 
     /**
@@ -341,8 +337,23 @@ export default function route(page) {
       import('./pages/outbound/worksheet-picking')
       return page
 
+    case 'worksheet_loading':
+      import('./pages/outbound/worksheet-loading')
+      return page
+
     case 'picking':
       import('./pages/outbound/picking-product')
+      return page
+
+    case 'loading':
+      import('./pages/outbound/loading-product')
+      return page
+
+    /**
+     * Report Menus Section
+     */
+    case 'inventory_report':
+      import('./pages/report/inventory-report')
       return page
   }
 }

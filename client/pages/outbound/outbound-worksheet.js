@@ -127,9 +127,11 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
               if (!record.id) return
               const type = record.type
 
-              // Handle UNLOADING
+              // Handle PICKING
               if (type === WORKSHEET_TYPE.PICKING.value) {
                 navigate(`worksheet_picking/${record.name}`)
+              } else if (type === WORKSHEET_TYPE.UNLOADING.value) {
+                navigate(`worksheet_loading/${record.name}`)
               }
             }
           }

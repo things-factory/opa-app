@@ -6,15 +6,36 @@ import { client, gqlBuilder, isMobileDevice, ScrollbarStyles, sleep } from '@thi
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import Swal from 'sweetalert2'
+import { getCodeByName } from '@things-factory/code-base'
 
 export class GenerateLocationList extends localize(i18next)(LitElement) {
+  static get properties() {
+    return {
+      warehouseId: String,
+      _searchFields: Array,
+      _formatsFromCode: Array,
+      _generatorConfig: Object,
+      _previewConfig: Object,
+      callback: Object,
+      _selectedFormat: String
+    }
+  }
+
   constructor() {
     super()
-    this.locationList = []
-    this.zoneName = ''
-    this.rowSuffix = ''
-    this.columnSuffix = ''
-    this.caseSensitive = false
+    this._locationList = []
+    this._zoneName = ''
+    this._rowExtension = ''
+    this._columnExtension = ''
+    this._shelfExtension = ''
+    this._caseSensitive = false
+    this._useAlphabet = false
+    this._rowLeadingZeroes = false
+    this._columnLeadingZeroes = false
+    this._shelfLeadingZeroes = false
+    this._generatorConfig = {}
+    this._formatsFromCode = []
+    this._selectedFormat = ''
   }
 
   static get styles() {
@@ -28,18 +49,75 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           overflow: hidden;
           background-color: white;
         }
-        .grist {
+
+        /*.location-formatting {
+          border-style: none;
+        }*/
+
+        .location-formatting fieldset {
+          border-style: none;
+          margin: 0;
+          padding: 0;
+        }
+
+        .location-formatting label {
+          font: normal 14px var(--theme-font);
+          color: var(--secondary-color);
+          padding: 3px 0;
+        }
+
+        .location-formatting input {
+          font: normal 14px var(--theme-font);
+          border: 1px solid rgba(0, 0, 0, 0.2);
+          border-radius: var(--border-radius);
+          padding: 2px 9px;
+        }
+
+        .location-formatting .parent {
+          display: flex;
+          flex-direction: row;
+          margin: 0px 5px;
+        }
+
+        .location-formatting .parent .section {
+          flex-grow: 1;
+          width: 33%;
+          margin: 10px;
+        }
+
+        .location-formatting .parent .section legend {
+          padding: 0px 5px 3px 10px;
+          font: var(--subtitle-font);
+          color: var(--secondary-color);
+          border-bottom: var(--subtitle-border-bottom);
+          position: relative;
+        }
+
+        .location-formatting .parent .section .child {
+          padding-left: 10px;
+        }
+
+        .location-formatting .parent .section .child:first-of-type {
+          padding-top: 5px;
+        }
+
+        .location-formatting .grist {
           display: flex;
           flex-direction: column;
           flex: 1;
           overflow-y: auto;
+          height: 220px;
         }
-        data-grist {
+
+        .location-formatting data-grist {
+          background-color: white;
+          padding: 0px 15px 0px 15px;
           overflow-y: hidden;
           flex: 1;
         }
+
         h2 {
-          padding: var(--subtitle-padding);
+          padding: 10px 5px 3px 5px;
           font: var(--subtitle-font);
           color: var(--subtitle-text-color);
           border-bottom: var(--subtitle-border-bottom);
@@ -58,25 +136,18 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
-        .button-container {
+        .location-formatting .button-container {
           display: flex;
-          margin-left: auto;
+          position: absolute;
+          right: 0;
+          bottom: 0;
         }
-        .button-container > mwc-button {
+        .location-formatting .button-container > mwc-button {
           padding: 10px;
+          position: relative;
         }
       `
     ]
-  }
-
-  static get properties() {
-    return {
-      warehouseId: String,
-      _searchFields: Array,
-      config: Object,
-      previewConfig: Object,
-      callback: Object
-    }
   }
 
   render() {
@@ -84,12 +155,27 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
       <form class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.generate_location_list')}</legend>
+          <label>${i18next.t('label.location_format')}</label>
+
+          <select name="locationFormat" @change="${e => this._validateForm(e.currentTarget.value)}">
+            <option value="">-- ${i18next.t('text.please_select_any_location_format')} --</option>
+            ${(this._formatsFromCode || []).map(
+              format =>
+                html`
+                  <option value="${format && format.name}"
+                    >${format && format.name}
+                    ${format && format.description ? ` ${format && format.description}` : ''}</option
+                  >
+                `
+            )}
+          </select>
+
           <label>${i18next.t('label.zone_name')}</label>
           <input
             placeholder="${i18next.t('text.enter_zone_name')}"
             @input="${event => {
               const input = event.currentTarget
-              this.zoneName = input.value
+              this._zoneName = input.value
             }}"
             @keypress="${event => {
               if (event.keyCode === 13) {
@@ -98,102 +184,149 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
               }
             }}"
           />
-          <label>${i18next.t('label.row_suffix')}</label>
-          <input
-            placeholder="${i18next.t('text.enter_row_suffix_if_any')}"
-            @input="${event => {
-              this.rowSuffix = event.currentTarget.value
-            }}"
-            @keypress="${this._keyPressHandler.bind(this)}"
-          />
-          <label>${i18next.t('label.column_suffix')}</label>
-          <input
-            placeholder="${i18next.t('text.enter_column_suffix_if_any')}"
-            @input="${event => {
-              this.columnSuffix = event.currentTarget.value
-            }}"
-            @keypress="${this._keyPressHandler.bind(this)}"
-          />
+
           <label>${i18next.t('label.case_sensitive')}</label>
           <input
             type="checkbox"
             @input="${event => {
-              this.caseSensitive = event.currentTarget.checked
+              this._caseSensitive = event.currentTarget.checked
             }}"
             @keypress="${this._keyPressHandler.bind(this)}"
           />
         </fieldset>
       </form>
 
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.generator')}</h2>
+      <div class="location-formatting" ?hidden="${this._selectedFormat === ''}">
+        <fieldset>
+          <div class="parent">
+            <!-- =========== section for location row =========== -->
+            <div class="section">
+              <legend>${this._rowInstance}</legend>
+              <div class="child">
+                <label>${i18next.t('label.add_extension')}</label>
+                <input
+                  placeholder="${i18next.t('row extension')}"
+                  @input="${event => {
+                    this._rowExtension = event.currentTarget.value
+                  }}"
+                  @keypress="${this._keyPressHandler.bind(this)}"
+                />
+              </div>
+              <div class="child">
+                <label>${i18next.t('label.add_leading_zero')}</label>
+                <input
+                  type="checkbox"
+                  @input="${event => {
+                    this._rowLeadingZeroes = event.currentTarget.checked
+                  }}"
+                  @keypress="${this._keyPressHandler.bind(this)}"
+                />
+              </div>
+            </div>
+            <!-- ================================================ -->
 
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .data=${this.data}
-          @record-change="${this._onChangeHandler.bind(this)}"
-        ></data-grist>
-      </div>
+            <!-- ========== section for location column ========= -->
+            <div class="section">
+              <legend>${this._columnInstance}</legend>
+              <div class="child">
+                <label>${i18next.t('label.add_extension')}</label>
+                <input
+                  placeholder="${i18next.t('column extension')}"
+                  @input="${event => {
+                    this._columnExtension = event.currentTarget.value
+                  }}"
+                  @keypress="${this._keyPressHandler.bind(this)}"
+                />
+              </div>
+              <div class="child">
+                <label>${i18next.t('label.add_leading_zero')}</label>
+                <input
+                  type="checkbox"
+                  @input="${event => {
+                    this._columnLeadingZeroes = event.currentTarget.checked
+                  }}"
+                  @keypress="${this._keyPressHandler.bind(this)}"
+                />
+              </div>
+            </div>
+            <!-- ================================================ -->
 
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.preview')}</h2>
+            <!-- ========== section for location shelf ========== -->
+            <div class="section">
+              <legend>${this._shelfInstance}</legend>
+              <div class="child">
+                <label>${i18next.t('label.add_extension')}</label>
+                <input
+                  placeholder="${i18next.t('shelf extension')}"
+                  @input="${event => {
+                    this._shelfExtension = event.currentTarget.value
+                  }}"
+                  @keypress="${this._keyPressHandler.bind(this)}"
+                />
+              </div>
+              <div class="child">
+                <label>${i18next.t('label.add_leading_zero')}</label>
+                <input
+                  type="checkbox"
+                  @input="${event => {
+                    this._shelfLeadingZeroes = event.currentTarget.checked
+                  }}"
+                  @keypress="${this._keyPressHandler.bind(this)}"
+                  ?disabled="${this._useAlphabet === true}"
+                />
+              </div>
+            </div>
+            <!-- ================================================ -->
+          </div>
+        </fieldset>
 
-        <data-grist
-          id="preview_grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.previewConfig}
-          .fetchHandler="${this.fetchHandler.bind(this)}"
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
-        ></data-grist>
-      </div>
+        <div class="grist">
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.generator')}</h2>
+          <data-grist
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this._generatorConfig}
+            .data=${this.data}
+            @record-change="${this._onChangeHandler.bind(this)}"
+          ></data-grist>
+        </div>
 
-      <div class="button-container">
-        <mwc-button
-          @click=${async () => {
-            this.dataGrist.showSpinner()
-            await sleep(1)
-            this._validateGenerator()
-            this.dataGrist.hideSpinner()
-          }}
-          >${i18next.t('button.preview')}</mwc-button
-        >
-        <mwc-button @click=${this._saveGeneratedLocation}>${i18next.t('button.save')}</mwc-button>
-        <mwc-button @click=${this._deleteFromList}>${i18next.t('button.clear_list')}</mwc-button>
+        <div class="grist">
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.preview')}</h2>
+          <data-grist
+            id="preview_grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this._previewConfig}
+            .fetchHandler="${this._fetchHandler.bind(this)}"
+            @limit-changed=${e => {
+              this.limit = e.detail
+            }}
+          ></data-grist>
+        </div>
+
+        <div class="button-container">
+          <mwc-button
+            @click=${async () => {
+              this.dataGrist.showSpinner()
+              await sleep(1)
+              this._validateGenerator()
+              this.dataGrist.hideSpinner()
+            }}
+            >${i18next.t('button.preview')}</mwc-button
+          >
+          <mwc-button @click=${this._saveGeneratedLocation}>${i18next.t('button.save')}</mwc-button>
+          <mwc-button @click=${this._clearGeneratedList}>${i18next.t('button.remove_selected')}</mwc-button>
+        </div>
       </div>
     `
   }
 
-  get context() {
-    return {
-      title: i18next.t('title.generate_location'),
-      actions: [
-        {
-          title: i18next.t('button.save'),
-          action: this._generateLocationList.bind(this)
-        }
-      ],
-      exportable: {
-        name: i18next.t('title.generate_location'),
-        data: this._exportableData.bind(this)
-      },
-      importable: {
-        handler: () => {}
-      }
-    }
-  }
-
   async firstUpdated() {
+    this._formatsFromCode = await getCodeByName('LOCATION_FORMAT')
     this.data = { records: [] }
-    this.config = {
+    this._generatorConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
       columns: [
-        { type: 'gutter', gutterName: 'dirty' },
-        { type: 'gutter', gutterName: 'sequence' },
-        { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'integer',
           name: 'start',
@@ -226,23 +359,21 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
         },
         {
           type: 'integer',
-          name: 'cell',
+          name: 'shelf',
           record: {
             align: 'center',
             editable: true
           },
-          header: i18next.t('field.number_of_cell'),
+          header: i18next.t('field.number_of_shelf'),
           width: 250
         }
       ]
     }
 
-    this.previewConfig = {
+    this._previewConfig = {
       pagination: { pages: [100, 200, 500] },
       rows: { selectable: { multiple: true }, appendable: false },
       columns: [
-        { type: 'gutter', gutterName: 'dirty' },
-        { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'string',
@@ -252,7 +383,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
             editable: false
           },
           header: i18next.t('field.name'),
-          width: 250
+          width: 200
         },
         {
           type: 'string',
@@ -262,7 +393,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
             editable: false
           },
           header: i18next.t('field.zone'),
-          width: 250
+          width: 200
         },
         {
           type: 'string',
@@ -272,7 +403,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
             editable: false
           },
           header: i18next.t('field.row'),
-          width: 250
+          width: 200
         },
         {
           type: 'string',
@@ -282,7 +413,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
             editable: false
           },
           header: i18next.t('field.column'),
-          width: 250
+          width: 200
         },
         {
           type: 'string',
@@ -292,7 +423,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
             editable: false
           },
           header: i18next.t('field.shelf'),
-          width: 250
+          width: 200
         },
         {
           type: 'string',
@@ -302,7 +433,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
             editable: false
           },
           header: i18next.t('field.status'),
-          width: 250
+          width: 200
         }
       ]
     }
@@ -332,6 +463,76 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
     }
   }
 
+  _validateForm(selectedFormat) {
+    this._selectedFormat = selectedFormat
+
+    const instances = selectedFormat.split('-')
+    this._zoneInstance = instances[0]
+    this._rowInstance = instances[1]
+    this._columnInstance = instances[2]
+    this._shelfInstance = instances[3]
+
+    this._formatsFromCode.map(formatFromCode => {
+      if (formatFromCode.name === selectedFormat) {
+        this._locationFormat = formatFromCode.description
+      }
+    })
+
+    const namePortions = this._locationFormat.split('-')
+    const rowPortion = namePortions[1].match(/[a-zA-Z]+/g)
+    const columnPortion = namePortions[2].match(/[a-zA-Z]+/g)
+    const shelfPortion = namePortions[3].match(/[a-zA-Z]+/g)
+
+    const useAlphabet = this._locationFormat.match(/@/g)
+    this._useAlphabet = useAlphabet == '@' ? true : false
+
+    this._rowLabel = rowPortion ? rowPortion[0] : ''
+    this._columnLabel = columnPortion ? columnPortion[0] : ''
+    this._shelfLabel = shelfPortion ? shelfPortion[0] : ''
+
+    this._generatorConfig = {
+      ...this._generatorConfig,
+      columns: this._generatorConfig.columns.map(column => {
+        switch (column.name) {
+          case 'start':
+            column.header = this._rowInstance + ' start'
+            break
+          case 'end':
+            column.header = this._rowInstance + ' end'
+            break
+          case 'column':
+            column.header = 'number of ' + this._columnInstance
+            break
+          case 'shelf':
+            column.header = 'number of ' + this._shelfInstance
+            break
+        }
+        return column
+      })
+    }
+
+    this._previewConfig = {
+      ...this._previewConfig,
+      columns: this._previewConfig.columns.map(column => {
+        switch (column.name) {
+          case 'zone':
+            column.header = this._zoneInstance
+            break
+          case 'row':
+            column.header = this._rowInstance
+            break
+          case 'column':
+            column.header = this._columnInstance
+            break
+          case 'shelf':
+            column.header = this._shelfInstance
+            break
+        }
+        return column
+      })
+    }
+  }
+
   _validateGenerator() {
     let dataFromGrist = this.data.records
     let validationError = false
@@ -353,7 +554,7 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
       }
     }
 
-    if (this.zoneName === '') {
+    if (this._zoneName === '') {
       document.dispatchEvent(
         new CustomEvent('notify', {
           detail: {
@@ -369,82 +570,166 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
   }
 
   async _generateLocationList() {
-    let locationData = this.data.records
+    let locations = this.data.records
     let validationError = false
     let tempLocationList = []
 
-    if (locationData && locationData.length) {
-      locationData = locationData.forEach(locations => {
-        if (locations.start <= locations.end) {
-          if (locations.column && locations.cell) {
-            for (let i = locations.start; i <= locations.end; i++) {
-              for (let j = 1; j <= locations.column; j++) {
-                for (let k = 1; k <= locations.cell; k++) {
-                  const locationObj = {}
-                  const row = this.caseSensitive ? this.rowSuffix : this.rowSuffix.toUpperCase()
-                  const column = this.caseSensitive ? this.columnSuffix : this.columnSuffix.toUpperCase()
+    if (locations && locations.length) {
+      locations = locations.forEach(location => {
+        if (location.start <= location.end) {
+          if (location.column && location.shelf) {
+            for (let i = location.start; i <= location.end; i++) {
+              for (let j = 1; j <= location.column; j++) {
+                for (let k = 1; k <= location.shelf; k++) {
+                  let locationObj = {}
+                  const rowExtension = this._caseSensitive ? this._rowExtension : this._rowExtension.toUpperCase()
+                  const columnExtension = this._caseSensitive
+                    ? this._columnExtension
+                    : this._columnExtension.toUpperCase()
 
-                  locationObj['row'] =
-                    this.rowSuffix === '' ? i.toString().padStart(2, '0') : i.toString().padStart(2, '0') + row
+                  const shelfExtension = this._caseSensitive ? this._shelfExtension : this._shelfExtension.toUpperCase()
 
-                  locationObj['column'] =
-                    this.columnSuffix === '' ? j.toString().padStart(2, '0') : j.toString().padStart(2, '0') + column
+                  const row = this._rowLeadingZeroes ? i.toString().padStart(2, '0') : i.toString()
+                  const column = this._columnLeadingZeroes ? j.toString().padStart(2, '0') : j.toString()
+                  const shelf = this._shelfLeadingZeroes ? k.toString().padStart(2, '0') : k.toString()
 
-                  locationObj['shelf'] = this._getCellInstance(k)
-                  locationObj['zone'] = this.caseSensitive ? this.zoneName : this.zoneName.toString().toUpperCase()
+                  locationObj.row =
+                    this._rowExtension === '' ? this._rowLabel + row : this._rowLabel + row + rowExtension
+                  locationObj.column =
+                    this._columnExtension === ''
+                      ? this._columnLabel + column
+                      : this._columnLabel + column + columnExtension
 
-                  locationObj['name'] =
+                  if (this._useAlphabet) locationObj.shelf = this._getCellInstance(k)
+                  else
+                    locationObj.shelf =
+                      this._shelfExtension === '' ? this._shelfLabel + shelf : this._shelfLabel + shelf + shelfExtension
+
+                  locationObj.zone = this._caseSensitive ? this._zoneName : this._zoneName.toString().toUpperCase()
+
+                  locationObj.name =
                     locationObj.zone + '-' + locationObj.row + '-' + locationObj.column + '-' + locationObj.shelf
 
-                  locationObj['status'] = 'EMPTY'
-                  locationObj['type'] = 'SHELF'
-                  locationObj['warehouse'] = { id: this.warehouseId }
-                  locationObj['cuFlag'] = '+'
+                  locationObj.status = 'EMPTY'
+                  locationObj.type = 'SHELF'
+                  locationObj.warehouse = { id: this.warehouseId }
+                  locationObj.cuFlag = '+'
 
                   tempLocationList.push(locationObj)
                 }
               }
             }
-          } else {
-            validationError = true
-            tempLocationList = []
-
-            document.dispatchEvent(
-              new CustomEvent('notify', {
-                detail: {
-                  level: 'error',
-                  message: i18next.t('text.missing_input')
-                }
-              })
-            )
-            return false
           }
-        } else {
-          validationError = true
-          tempLocationList = []
-
-          document.dispatchEvent(
-            new CustomEvent('notify', {
-              detail: {
-                level: 'error',
-                message: i18next.t('text.row_end_must_greater_than_row_start')
-              }
-            })
-          )
-          return false
         }
       })
 
       if (!validationError) {
-        this.locationList = tempLocationList
+        this._locationList = tempLocationList
         tempLocationList = []
         this.dataGrist.fetch()
       }
     }
   }
 
+  _getCellInstance(column) {
+    var shelfInstance = ''
+    switch (column) {
+      case 1:
+        shelfInstance = 'A'
+        break
+      case 2:
+        shelfInstance = 'B'
+        break
+      case 3:
+        shelfInstance = 'C'
+        break
+      case 4:
+        shelfInstance = 'D'
+        break
+      case 5:
+        shelfInstance = 'E'
+        break
+      case 6:
+        shelfInstance = 'F'
+        break
+      case 7:
+        shelfInstance = 'G'
+        break
+      case 8:
+        shelfInstance = 'H'
+        break
+      case 9:
+        shelfInstance = 'I'
+        break
+      case 10:
+        shelfInstance = 'J'
+        break
+      case 11:
+        shelfInstance = 'K'
+        break
+      case 12:
+        shelfInstance = 'L'
+        break
+      case 13:
+        shelfInstance = 'M'
+        break
+      case 14:
+        shelfInstance = 'N'
+        break
+      case 15:
+        shelfInstance = 'O'
+        break
+      case 16:
+        shelfInstance = 'P'
+        break
+      case 17:
+        shelfInstance = 'Q'
+        break
+      case 18:
+        shelfInstance = 'R'
+        break
+      case 19:
+        shelfInstance = 'S'
+        break
+      case 20:
+        shelfInstance = 'T'
+        break
+      case 21:
+        shelfInstance = 'U'
+        break
+      case 22:
+        shelfInstance = 'V'
+        break
+      case 23:
+        shelfInstance = 'W'
+        break
+      case 24:
+        shelfInstance = 'X'
+        break
+      case 25:
+        shelfInstance = 'Y'
+        break
+      case 26:
+        shelfInstance = 'Z'
+        break
+      case 14:
+        shelfInstance = 'N'
+        break
+      default:
+        shelfInstance = column.toString()
+    }
+    return shelfInstance
+  }
+
+  _fetchHandler() {
+    return {
+      total: this._locationList.length || 0,
+      records: this._locationList || []
+    }
+  }
+
   async _saveGeneratedLocation() {
-    let chunkPatches = this._chunkLocationList(this.locationList, 500)
+    let chunkPatches = this._chunkLocationList(this._locationList, 500)
 
     if (chunkPatches === []) {
       Swal.fire({
@@ -457,16 +742,6 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
     } else {
       try {
         this.dataGrist.showSpinner()
-        // Swal.fire({
-        //   title: i18next.t('text.please_wait'),
-        //   text: i18next.t('text.saving_locations'),
-        //   allowEscapeKey: true,
-        //   allowOutsideClick: false,
-        //   showConfirmButton: false,
-        //   onOpen: () => {
-        //     Swal.showLoading()
-        //   }
-        // })
         for (let x = 0; x < chunkPatches.length; x++) {
           const patches = chunkPatches[x]
           const response = await client.query({
@@ -482,11 +757,9 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           })
         }
 
-        // Swal.close()
         if (this.callback && typeof this.callback === 'function') this.callback()
         history.back()
       } catch (e) {
-        // Swal.close()
         document.dispatchEvent(
           new CustomEvent('notify', {
             detail: {
@@ -512,111 +785,14 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
     return tempArray
   }
 
-  _getCellInstance(column) {
-    var cellInstance = ''
-    switch (column) {
-      case 1:
-        cellInstance = 'A'
-        break
-      case 2:
-        cellInstance = 'B'
-        break
-      case 3:
-        cellInstance = 'C'
-        break
-      case 4:
-        cellInstance = 'D'
-        break
-      case 5:
-        cellInstance = 'E'
-        break
-      case 6:
-        cellInstance = 'F'
-        break
-      case 7:
-        cellInstance = 'G'
-        break
-      case 8:
-        cellInstance = 'H'
-        break
-      case 9:
-        cellInstance = 'I'
-        break
-      case 10:
-        cellInstance = 'J'
-        break
-      case 11:
-        cellInstance = 'K'
-        break
-      case 12:
-        cellInstance = 'L'
-        break
-      case 13:
-        cellInstance = 'M'
-        break
-      case 14:
-        cellInstance = 'N'
-        break
-      case 15:
-        cellInstance = 'O'
-        break
-      case 16:
-        cellInstance = 'P'
-        break
-      case 17:
-        cellInstance = 'Q'
-        break
-      case 18:
-        cellInstance = 'R'
-        break
-      case 19:
-        cellInstance = 'S'
-        break
-      case 20:
-        cellInstance = 'T'
-        break
-      case 21:
-        cellInstance = 'U'
-        break
-      case 22:
-        cellInstance = 'V'
-        break
-      case 23:
-        cellInstance = 'W'
-        break
-      case 24:
-        cellInstance = 'X'
-        break
-      case 25:
-        cellInstance = 'Y'
-        break
-      case 26:
-        cellInstance = 'Z'
-        break
-      case 14:
-        cellInstance = 'N'
-        break
-      default:
-        cellInstance = column.toString()
-    }
-    return cellInstance
-  }
-
-  fetchHandler() {
-    return {
-      total: this.locationList.length || 0,
-      records: this.locationList || []
-    }
-  }
-
-  _deleteFromList() {
+  _clearGeneratedList() {
     const selections = []
     this.dataGrist.selected.forEach(selection => {
       selections.push(selection.__seq__ - 1)
     })
 
     for (let i = selections.length - 1; i >= 0; i--) {
-      this.locationList.splice(selections[i], 1)
+      this._locationList.splice(selections[i], 1)
     }
     this.dataGrist.fetch()
   }

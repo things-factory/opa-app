@@ -129,6 +129,7 @@ class ProductList extends localize(i18next)(PageView) {
           record: { editable: true },
           imex: { header: 'Name', key: 'name', width: 50, type: 'string' },
           header: i18next.t('field.name'),
+          sortable: true,
           width: 180
         },
         {
@@ -140,6 +141,7 @@ class ProductList extends localize(i18next)(PageView) {
           },
           imex: { header: 'Product Ref', key: 'productRef', width: 50, type: 'string' },
           header: i18next.t('field.product_ref'),
+          sortable: true,
           width: 230
         },
         {
@@ -148,6 +150,7 @@ class ProductList extends localize(i18next)(PageView) {
           record: { editable: true },
           imex: { header: 'Description', key: 'description', width: 50, type: 'string' },
           header: i18next.t('field.description'),
+          sortable: true,
           width: 300
         },
         {
@@ -172,6 +175,7 @@ class ProductList extends localize(i18next)(PageView) {
           record: { align: 'center', editable: true },
           imex: { header: 'Type', key: 'type', width: 50, type: 'string' },
           header: i18next.t('field.type'),
+          sortable: true,
           width: 80
         },
         {
@@ -186,12 +190,11 @@ class ProductList extends localize(i18next)(PageView) {
           name: 'updatedAt',
           record: { align: 'center', editable: false },
           header: i18next.t('field.updated_at'),
+          sortable: true,
           width: 180
         }
       ]
     }
-
-    this.data = { records: [] }
   }
 
   get searchForm() {

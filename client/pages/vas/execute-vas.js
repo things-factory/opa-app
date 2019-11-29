@@ -345,7 +345,6 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
     if (this._selectedTaskStatus === WORKSHEET_STATUS.EXECUTING.value) {
       actions = [
         ...actions,
-        { title: i18next.t('button.complete'), action: this._complete.bind(this) },
         { title: i18next.t('button.issue'), action: this._openIssueEditor.bind(this) },
         { title: i18next.t('button.done'), action: this._executeVas.bind(this) }
       ]

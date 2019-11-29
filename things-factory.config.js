@@ -43,10 +43,6 @@ export default {
       tagname: 'location-list',
       page: 'locations'
     },
-    {
-      tagname: 'inventory-summary-report',
-      page: 'inventory_summary_reports'
-    },
 
     /**
      * Order Menus Section
@@ -243,8 +239,8 @@ export default {
       page: 'receival_note_detail'
     },
     {
-      tagname: 'upload-receival-note',
-      page: 'upload_receival_note'
+      tagname: 'customer-receival-notes',
+      page: 'customer_receival_notes'
     },
     /**
      * Billing Menus Section
@@ -341,6 +337,7 @@ export default {
       tagname: 'vas-worksheet-list',
       page: 'vas_worksheets'
     },
+
     /**
      * Outbound Menus Section
      */
@@ -355,6 +352,22 @@ export default {
     {
       tagname: 'picking-product',
       page: 'picking'
+    },
+    {
+      tagname: 'loading-product',
+      page: 'loading'
+    },
+    {
+      tagname: 'worksheet-loading',
+      page: 'worksheet_loading'
+    },
+
+    /**
+     * Report Menus Section
+     */
+    {
+      tagname: 'inventory-report',
+      page: 'inventory_report'
     }
   ],
   bootstrap
