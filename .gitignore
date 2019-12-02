@@ -15,3 +15,5 @@ config.production.*
 .pid
 db.sqlite-journal
 nohup.out
+config.development.js
+config.production.js
