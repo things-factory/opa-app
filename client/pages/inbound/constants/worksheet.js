@@ -14,6 +14,10 @@ export const WORKSHEET_TYPE = {
   PICKING: {
     name: 'picking',
     value: 'PICKING'
+  },
+  LOADING: {
+    name: 'loading',
+    value: 'LOADING'
   }
 }
 
