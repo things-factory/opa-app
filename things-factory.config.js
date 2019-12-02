@@ -16,10 +16,6 @@ export default {
       page: 'company_profile'
     },
     {
-      tagname: 'product-list',
-      page: 'products'
-    },
-    {
       tagname: 'product-option-list',
       page: 'product_options'
     },

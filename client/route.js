@@ -16,10 +16,6 @@ export default function route(page) {
       import('./pages/master/company-profile')
       return page
 
-    case 'products':
-      import('./pages/master/product-list')
-      return page
-
     case 'product_options':
       import('./pages/master/product-option-list')
       return page
