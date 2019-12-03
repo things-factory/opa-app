@@ -33,7 +33,7 @@ class SystemCode extends localize(i18next)(PageView) {
         }
 
         data-grist {
-          overflow-y: hidden;
+          overflow-y: auto;
           flex: 1;
         }
       `
