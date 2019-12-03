@@ -132,7 +132,6 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
   get reportConfig() {
     return {
       columns: [
-        { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'string',
           name: 'bizplace|name',
