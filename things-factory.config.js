@@ -12,10 +12,6 @@ export default {
       page: 'dashboard'
     },
     {
-      tagname: 'product-option-list',
-      page: 'product_options'
-    },
-    {
       tagname: 'transport-vehicle',
       page: 'transport_vehicle'
     },
@@ -35,6 +31,10 @@ export default {
       tagname: 'location-list',
       page: 'locations'
     },
+    {
+      tagname: 'product-list',
+      page: 'products'
+    },
 
     /**
      * Order Menus Section
@@ -42,10 +42,6 @@ export default {
     {
       tagname: 'create-arrival-notice',
       page: 'create_arrival_notice'
-    },
-    {
-      tagname: 'gan-official-view',
-      page: 'gan-official-view'
     },
     {
       tagname: 'arrival-notice-list',

@@ -12,9 +12,6 @@ export default function route(page) {
     /**
      * Master Menus Section
      */
-    case 'product_options':
-      import('./pages/master/product-option-list')
-      return page
 
     case 'transport_vehicle':
       import('./pages/master/transport-vehicle')
@@ -24,8 +21,8 @@ export default function route(page) {
       import('./pages/master/transport-driver')
       return page
 
-    case 'workers':
-      import('./pages/master/worker-list')
+    case 'products':
+      import('./pages/master/product-list')
       return page
 
     case 'warehouses':
@@ -41,10 +38,6 @@ export default function route(page) {
      */
     case 'create_arrival_notice':
       import('./pages/order/arrival-notice/create-arrival-notice')
-      return page
-
-    case 'gan-official-view':
-      import('./pages/order/arrival-notice/gan-official-view')
       return page
 
     case 'arrival_notices':
