@@ -44,10 +44,11 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
       ScrollbarStyles,
       css`
         :host {
+          padding: 0 15px;
           display: flex;
           flex-direction: column;
-          overflow: hidden;
-          background-color: white;
+          overflow-x: overlay;
+          background-color: var(--main-section-background-color);
         }
 
         /*.location-formatting {
@@ -101,50 +102,52 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           padding-top: 5px;
         }
 
-        .location-formatting .grist {
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-          overflow-y: auto;
-          height: 220px;
-        }
-
         .location-formatting data-grist {
           background-color: white;
           padding: 0px 15px 0px 15px;
-          overflow-y: hidden;
+          overflow-y: auto;
           flex: 1;
         }
 
         h2 {
-          padding: 10px 5px 3px 5px;
+          margin: var(--subtitle-margin);
+          padding: var(--subtitle-padding);
           font: var(--subtitle-font);
           color: var(--subtitle-text-color);
           border-bottom: var(--subtitle-border-bottom);
         }
-        .grist h2 {
-          margin: var(--grist-title-margin);
-          border: var(--grist-title-border);
-          color: var(--secondary-color);
-        }
-        .grist h2 mwc-icon {
-          vertical-align: middle;
-          margin: var(--grist-title-icon-margin);
-          font-size: var(--grist-title-icon-size);
-          color: var(--grist-title-icon-color);
-        }
-        h2 + data-grist {
-          padding-top: var(--grist-title-with-grid-padding);
-        }
-        .location-formatting .button-container {
+        .grist {
           display: flex;
-          position: absolute;
-          right: 0;
-          bottom: 0;
+          flex-direction: column;
+          flex: 1;
+          overflow-y: auto;
         }
-        .location-formatting .button-container > mwc-button {
-          padding: 10px;
-          position: relative;
+        data-grist {
+          overflow-y: hidden;
+          flex: 1;
+        }
+        .button-container {
+          padding: var(--button-container-padding);
+          margin: var(--button-container-margin);
+          text-align: var(--button-container-align);
+          background-color: var(--button-container-background);
+          height: var(--button-container-height);
+        }
+        .button-container button {
+          background-color: var(--button-container-button-background-color);
+          border-radius: var(--button-container-button-border-radius);
+          height: var(--button-container-button-height);
+          border: var(--button-container-button-border);
+          margin: var(--button-container-button-margin);
+
+          padding: var(--button-padding);
+          color: var(--button-color);
+          font: var(--button-font);
+          text-transform: var(--button-text-transform);
+        }
+        .button-container button:hover,
+        .button-container button:active {
+          background-color: var(--button-background-focus-color);
         }
       `
     ]
@@ -152,49 +155,50 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
 
   render() {
     return html`
-      <form class="multi-column-form">
-        <fieldset>
-          <legend>${i18next.t('title.generate_location_list')}</legend>
-          <label>${i18next.t('label.location_format')}</label>
+      <div>
+        <h2>${i18next.t('title.location_format_details')}</h2>
+        <form class="multi-column-form">
+          <fieldset>
+            <label>${i18next.t('label.location_format')}</label>
+            <select name="locationFormat" @change="${e => this._validateForm(e.currentTarget.value)}">
+              <option value="">-- ${i18next.t('text.please_select_any_location_format')} --</option>
+              ${(this._formatsFromCode || []).map(
+                format =>
+                  html`
+                    <option value="${format && format.name}"
+                      >${format && format.name}
+                      ${format && format.description ? ` ${format && format.description}` : ''}</option
+                    >
+                  `
+              )}
+            </select>
 
-          <select name="locationFormat" @change="${e => this._validateForm(e.currentTarget.value)}">
-            <option value="">-- ${i18next.t('text.please_select_any_location_format')} --</option>
-            ${(this._formatsFromCode || []).map(
-              format =>
-                html`
-                  <option value="${format && format.name}"
-                    >${format && format.name}
-                    ${format && format.description ? ` ${format && format.description}` : ''}</option
-                  >
-                `
-            )}
-          </select>
+            <label>${i18next.t('label.zone_name')}</label>
+            <input
+              placeholder="${i18next.t('text.enter_zone_name')}"
+              @input="${event => {
+                const input = event.currentTarget
+                this._zoneName = input.value
+              }}"
+              @keypress="${event => {
+                if (event.keyCode === 13) {
+                  event.preventDefault()
+                  return false
+                }
+              }}"
+            />
 
-          <label>${i18next.t('label.zone_name')}</label>
-          <input
-            placeholder="${i18next.t('text.enter_zone_name')}"
-            @input="${event => {
-              const input = event.currentTarget
-              this._zoneName = input.value
-            }}"
-            @keypress="${event => {
-              if (event.keyCode === 13) {
-                event.preventDefault()
-                return false
-              }
-            }}"
-          />
-
-          <label>${i18next.t('label.case_sensitive')}</label>
-          <input
-            type="checkbox"
-            @input="${event => {
-              this._caseSensitive = event.currentTarget.checked
-            }}"
-            @keypress="${this._keyPressHandler.bind(this)}"
-          />
-        </fieldset>
-      </form>
+            <label>${i18next.t('label.case_sensitive')}</label>
+            <input
+              type="checkbox"
+              @input="${event => {
+                this._caseSensitive = event.currentTarget.checked
+              }}"
+              @keypress="${this._keyPressHandler.bind(this)}"
+            />
+          </fieldset>
+        </form>
+      </div>
 
       <div class="location-formatting" ?hidden="${this._selectedFormat === ''}">
         <fieldset>
@@ -203,9 +207,9 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
             <div class="section">
               <legend>${this._rowInstance}</legend>
               <div class="child">
-                <label>${i18next.t('label.add_extension')}</label>
+                <label>${i18next.t('label.add_level_extension')}:</label>
                 <input
-                  placeholder="${i18next.t('row extension')}"
+                  placeholder="${i18next.t('label.enter_extension')}"
                   @input="${event => {
                     this._rowExtension = event.currentTarget.value
                   }}"
@@ -229,9 +233,9 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
             <div class="section">
               <legend>${this._columnInstance}</legend>
               <div class="child">
-                <label>${i18next.t('label.add_extension')}</label>
+                <label>${i18next.t('label.add_row_extension')}:</label>
                 <input
-                  placeholder="${i18next.t('column extension')}"
+                  placeholder="${i18next.t('label.enter_extension')}"
                   @input="${event => {
                     this._columnExtension = event.currentTarget.value
                   }}"
@@ -255,9 +259,9 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
             <div class="section">
               <legend>${this._shelfInstance}</legend>
               <div class="child">
-                <label>${i18next.t('label.add_extension')}</label>
+                <label>${i18next.t('label.add_shelf_extension')}:</label>
                 <input
-                  placeholder="${i18next.t('shelf extension')}"
+                  placeholder="${i18next.t('label.enter_extension')}"
                   @input="${event => {
                     this._shelfExtension = event.currentTarget.value
                   }}"
@@ -279,43 +283,44 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
             <!-- ================================================ -->
           </div>
         </fieldset>
+      </div>
 
-        <div class="grist">
-          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.generator')}</h2>
-          <data-grist
-            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-            .config=${this._generatorConfig}
-            .data=${this.data}
-            @record-change="${this._onChangeHandler.bind(this)}"
-          ></data-grist>
-        </div>
+      <div class="grist">
+        <h2>${i18next.t('title.generator')}</h2>
+        <data-grist
+          mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+          .config=${this._generatorConfig}
+          .data=${this.data}
+          @record-change="${this._onChangeHandler.bind(this)}"
+        ></data-grist>
+      </div>
 
-        <div class="grist">
-          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.preview')}</h2>
-          <data-grist
-            id="preview_grist"
-            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-            .config=${this._previewConfig}
-            .fetchHandler="${this._fetchHandler.bind(this)}"
-            @limit-changed=${e => {
-              this.limit = e.detail
-            }}
-          ></data-grist>
-        </div>
+      <div class="grist">
+        <h2>${i18next.t('title.preview')}</h2>
+        <data-grist
+          id="preview_grist"
+          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+          .config=${this._previewConfig}
+          .fetchHandler="${this._fetchHandler.bind(this)}"
+          @limit-changed=${e => {
+            this.limit = e.detail
+          }}
+        ></data-grist>
+      </div>
 
-        <div class="button-container">
-          <mwc-button
-            @click=${async () => {
-              this.dataGrist.showSpinner()
-              await sleep(1)
-              this._validateGenerator()
-              this.dataGrist.hideSpinner()
-            }}
-            >${i18next.t('button.preview')}</mwc-button
-          >
-          <mwc-button @click=${this._saveGeneratedLocation}>${i18next.t('button.save')}</mwc-button>
-          <mwc-button @click=${this._clearGeneratedList}>${i18next.t('button.remove_selected')}</mwc-button>
-        </div>
+      <div class="button-container">
+        <button
+          @click="${async () => {
+            this.dataGrist.showSpinner()
+            await sleep(1)
+            this._validateGenerator()
+            this.dataGrist.hideSpinner()
+          }}"
+        >
+          ${i18next.t('button.preview')}
+        </button>
+        <button @click="${this._saveGeneratedLocation}">${i18next.t('button.save')}</button>
+        <button @click="${this._clearGeneratedList}">${i18next.t('button.remove_selected')}</button>
       </div>
     `
   }
