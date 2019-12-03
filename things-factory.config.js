@@ -12,10 +12,6 @@ export default {
       page: 'dashboard'
     },
     {
-      tagname: 'company-profile',
-      page: 'company_profile'
-    },
-    {
       tagname: 'product-option-list',
       page: 'product_options'
     },

@@ -12,10 +12,6 @@ export default function route(page) {
     /**
      * Master Menus Section
      */
-    case 'company_profile':
-      import('./pages/master/company-profile')
-      return page
-
     case 'product_options':
       import('./pages/master/product-option-list')
       return page

@@ -32,15 +32,9 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
         search-form {
           overflow: visible;
         }
-        .grist {
-          background-color: var(--main-section-background-color);
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-          overflow-y: auto;
-        }
+
         data-grist {
-          overflow-y: hidden;
+          overflow-y: auto;
           flex: 1;
         }
       `
@@ -65,15 +59,13 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
         @submit=${e => this.dataGrist.fetch()}
       ></search-form>
 
-      <div class="grist">
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .fetchHandler="${this.fetchHandler.bind(this)}"
-          @select-record-change=${e => (this._selectedRecords = e.detail.selectedRecords)}
-          }
-        ></data-grist>
-      </div>
+      <data-grist
+        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+        .config=${this.config}
+        .fetchHandler="${this.fetchHandler.bind(this)}"
+        @select-record-change=${e => (this._selectedRecords = e.detail.selectedRecords)}
+        }
+      ></data-grist>
     `
   }
 

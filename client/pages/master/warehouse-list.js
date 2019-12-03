@@ -24,7 +24,6 @@ class WarehouseList extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-
           overflow: hidden;
         }
 
@@ -91,7 +90,6 @@ class WarehouseList extends localize(i18next)(PageView) {
 
   async pageInitialized() {
     this._warehouseTypes = await getCodeByName('WAREHOUSE_TYPES')
-    this.bizplace = await this.fetchBizplace()
 
     this._searchFields = [
       {
@@ -158,26 +156,6 @@ class WarehouseList extends localize(i18next)(PageView) {
           width: 150
         },
         {
-          type: 'object',
-          name: 'bizplace',
-          header: i18next.t('field.customer'),
-          record: {
-            align: 'center',
-            editable: true,
-            options: {
-              queryName: 'bizplaces'
-            }
-          },
-          imex: {
-            header: i18next.t('field.customer'),
-            key: 'bizplace.name',
-            width: 50,
-            type: 'array',
-            arrData: this.bizplace
-          },
-          width: 200
-        },
-        {
           type: 'code',
           name: 'type',
           header: i18next.t('field.type'),
@@ -234,23 +212,7 @@ class WarehouseList extends localize(i18next)(PageView) {
   get dataGrist() {
     return this.shadowRoot.querySelector('data-grist')
   }
-  async fetchBizplace() {
-    const response = await client.query({
-      query: gql`
-          query {
-            bizplaces(${gqlBuilder.buildArgs({
-              filters: []
-            })}) {
-              items {
-                id
-                name
-              }
-            }
-          }
-        `
-    })
-    return response.data.bizplaces.items
-  }
+
   _importableData(records) {
     setTimeout(() => {
       openPopup(
@@ -285,11 +247,6 @@ class WarehouseList extends localize(i18next)(PageView) {
             items {
               id
               name
-              bizplace
-              {
-                id
-                name
-              }
               type
               description
               updatedAt
@@ -312,14 +269,6 @@ class WarehouseList extends localize(i18next)(PageView) {
   }
 
   async importHandler(patches) {
-    patches = patches.map(patch => {
-      if (patch.bizplace) {
-        delete patch.bizplace.__seq__
-        delete patch.bizplace.__origin__
-        delete patch.bizplace.__selected__
-      }
-      return patch
-    })
     const response = await client.query({
       query: gql`
           mutation {
@@ -348,15 +297,6 @@ class WarehouseList extends localize(i18next)(PageView) {
   async _saveWarehouse() {
     let patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
     if (patches && patches.length) {
-      patches = patches.map(patch => {
-        if (patch.bizplace) {
-          delete patch.bizplace.__seq__
-          delete patch.bizplace.__origin__
-          delete patch.bizplace.__selected__
-        }
-        return patch
-      })
-
       const response = await client.query({
         query: gql`
             mutation {

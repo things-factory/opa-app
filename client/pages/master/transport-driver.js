@@ -12,8 +12,7 @@ class TransportDriver extends localize(i18next)(PageView) {
     return {
       config: Object,
       data: Object,
-      importHandler: Object,
-      bizplace: Array
+      importHandler: Object
     }
   }
 
@@ -24,19 +23,11 @@ class TransportDriver extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-
           overflow: hidden;
         }
 
         search-form {
           overflow: visible;
-        }
-
-        .grist {
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-          overflow-y: auto;
         }
 
         data-grist {
@@ -51,13 +42,11 @@ class TransportDriver extends localize(i18next)(PageView) {
     return html`
       <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
-      <div class="grist">
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .fetchHandler="${this.fetchHandler.bind(this)}"
-        ></data-grist>
-      </div>
+      <data-grist
+        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+        .config=${this.config}
+        .fetchHandler="${this.fetchHandler.bind(this)}"
+      ></data-grist>
     `
   }
 
@@ -91,8 +80,6 @@ class TransportDriver extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
-    this.bizplace = await this.fetchBizplace()
-
     this._searchFields = [
       {
         label: i18next.t('field.name'),
@@ -131,26 +118,6 @@ class TransportDriver extends localize(i18next)(PageView) {
           imex: { header: i18next.t('field.name'), key: 'name', width: 50, type: 'string' },
           sortable: true,
           width: 250
-        },
-        {
-          type: 'object',
-          name: 'bizplace',
-          record: {
-            align: 'center',
-            editable: true,
-            options: {
-              queryName: 'bizplaces'
-            }
-          },
-          imex: {
-            header: i18next.t('field.branch'),
-            key: 'bizplace.name',
-            width: 50,
-            type: 'array',
-            arrData: this.bizplace
-          },
-          header: i18next.t('field.branch'),
-          width: 200
         },
         {
           type: 'string',
@@ -238,10 +205,6 @@ class TransportDriver extends localize(i18next)(PageView) {
             items {
               id
               name
-              bizplace{
-                id
-                name
-              }
               driverCode
               description
               updatedAt
@@ -264,14 +227,6 @@ class TransportDriver extends localize(i18next)(PageView) {
   }
 
   async importHandler(patches) {
-    patches = patches.map(patch => {
-      if (patch.bizplace) {
-        delete patch.bizplace.__seq__
-        delete patch.bizplace.__origin__
-        delete patch.bizplace.__selected__
-      }
-      return patch
-    })
     const response = await client.query({
       query: gql`
           mutation {
@@ -296,30 +251,9 @@ class TransportDriver extends localize(i18next)(PageView) {
     }
   }
 
-  _openContactPoints(bizplaceId, bizplaceName) {
-    openPopup(
-      html`
-        <contact-point-list .bizplaceId="${bizplaceId}" .bizplaceName="${bizplaceName}"></contact-point-list>
-      `,
-      {
-        backdrop: true,
-        size: 'large',
-        title: i18next.t('title.contact_point_list')
-      }
-    )
-  }
-
   async _saveTransportDriver() {
     let patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
     if (patches && patches.length) {
-      patches = patches.map(patch => {
-        if (patch.bizplace) {
-          delete patch.bizplace.__seq__
-          delete patch.bizplace.__origin__
-          delete patch.bizplace.__selected__
-        }
-        return patch
-      })
       const response = await client.query({
         query: gql`
           mutation {
@@ -413,24 +347,6 @@ class TransportDriver extends localize(i18next)(PageView) {
     })
 
     return { header: headerSetting, data: data }
-  }
-
-  async fetchBizplace() {
-    const response = await client.query({
-      query: gql`
-          query {
-            bizplaces(${gqlBuilder.buildArgs({
-              filters: []
-            })}) {
-              items {
-                id
-                name
-              }
-            }
-          }
-        `
-    })
-    return response.data.bizplaces.items
   }
 }
 
