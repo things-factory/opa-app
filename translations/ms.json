@@ -773,9 +773,10 @@
   "title.warehouse_name": "name gudang",
   "title.worker": "pekerja",
   "title.worksheet": "lembaran kerja",
-  "title.worksheet_picking": "pengambilan stok worksheet",
+  "title.worksheet_picking": "pengambilan stok lembaran kerja",
+  "title.worksheet_loading": "muat naik stok lembaran kerja",
   "title.worksheet_putaway": "putaway lembaran kerja",
-  "title.worksheet_unloading": "pemunggahan worksheet",
+  "title.worksheet_unloading": "pemunggahan lembaran kerja",
   "title.worksheet_vas": "VALUE ADDED SERVICE worksheet",
   "vas_order_created": "pesanan value added service telah dicipta"
 }
