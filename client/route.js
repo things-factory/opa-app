@@ -21,10 +21,6 @@ export default function route(page) {
       import('./pages/master/transport-driver')
       return page
 
-    case 'products':
-      import('./pages/master/product-list')
-      return page
-
     case 'warehouses':
       import('./pages/master/warehouse-list')
       return page
