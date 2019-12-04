@@ -19,14 +19,13 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
     return css`
       :host {
-        display: block;
-
+        display: flex;
+        flex-direction: column;
         width: 100%;
       }
 
       data-report {
-        width: 100%;
-        height: 100%;
+        flex: 1;
       }
     `
   }
@@ -208,6 +207,7 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
       }
     }
   }
+
   async pageInitialized() {
     this._userBizplaces = [...(await this._fetchBizplaceList())]
 
@@ -265,7 +265,6 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
             let date = new Date(parseInt(item.createdAt))
             return flattenObject({
               ...item,
-              productName: item.product.name + ' ( ' + item.product.description + ' )',
               createdAt:
                 date.getDate().toString() + '/' + (date.getMonth() + 1).toString() + '/' + date.getFullYear().toString()
             })
@@ -286,6 +285,7 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
             id
             name
             description
+            assigned
             mainBizplace
           }
         }
@@ -293,7 +293,7 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      return response.data.userBizplaces
+      return response.data.userBizplaces.filter(x => x.assigned == true)
     }
   }
 
