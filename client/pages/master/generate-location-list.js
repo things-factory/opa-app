@@ -1,18 +1,16 @@
+import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/form-ui'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, ScrollbarStyles, sleep } from '@things-factory/shell'
-import gql from 'graphql-tag'
+import { isMobileDevice, ScrollbarStyles, sleep } from '@things-factory/shell'
 import { css, html, LitElement } from 'lit-element'
-import Swal from 'sweetalert2'
-import { getCodeByName } from '@things-factory/code-base'
 
 export class GenerateLocationList extends localize(i18next)(LitElement) {
   static get properties() {
     return {
       warehouseId: String,
-      _searchFields: Array,
+      _locationList: Array,
       _formatsFromCode: Array,
       _generatorConfig: Object,
       _previewConfig: Object,
@@ -50,65 +48,6 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
           overflow-x: overlay;
           background-color: var(--main-section-background-color);
         }
-
-        /*.location-formatting {
-          border-style: none;
-        }*/
-
-        .location-formatting fieldset {
-          border-style: none;
-          margin: 0;
-          padding: 0;
-        }
-
-        .location-formatting label {
-          font: normal 14px var(--theme-font);
-          color: var(--secondary-color);
-          padding: 3px 0;
-        }
-
-        .location-formatting input {
-          font: normal 14px var(--theme-font);
-          border: 1px solid rgba(0, 0, 0, 0.2);
-          border-radius: var(--border-radius);
-          padding: 2px 9px;
-        }
-
-        .location-formatting .parent {
-          display: flex;
-          flex-direction: row;
-          margin: 0px 5px;
-        }
-
-        .location-formatting .parent .section {
-          flex-grow: 1;
-          width: 33%;
-          margin: 10px;
-        }
-
-        .location-formatting .parent .section legend {
-          padding: 0px 5px 3px 10px;
-          font: var(--subtitle-font);
-          color: var(--secondary-color);
-          border-bottom: var(--subtitle-border-bottom);
-          position: relative;
-        }
-
-        .location-formatting .parent .section .child {
-          padding-left: 10px;
-        }
-
-        .location-formatting .parent .section .child:first-of-type {
-          padding-top: 5px;
-        }
-
-        .location-formatting data-grist {
-          background-color: white;
-          padding: 0px 15px 0px 15px;
-          overflow-y: auto;
-          flex: 1;
-        }
-
         h2 {
           margin: var(--subtitle-margin);
           padding: var(--subtitle-padding);
@@ -156,12 +95,12 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
   render() {
     return html`
       <div>
-        <h2>${i18next.t('title.location_format_details')}</h2>
+        <h2>${i18next.t('title.format_settings')}</h2>
         <form class="multi-column-form">
           <fieldset>
             <label>${i18next.t('label.location_format')}</label>
             <select name="locationFormat" @change="${e => this._validateForm(e.currentTarget.value)}">
-              <option value="">-- ${i18next.t('text.please_select_any_location_format')} --</option>
+              <option value="">-- ${i18next.t('text.select_location_format')} --</option>
               ${(this._formatsFromCode || []).map(
                 format =>
                   html`
@@ -188,7 +127,6 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
               }}"
             />
 
-            <label>${i18next.t('label.case_sensitive')}</label>
             <input
               type="checkbox"
               @input="${event => {
@@ -196,93 +134,68 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
               }}"
               @keypress="${this._keyPressHandler.bind(this)}"
             />
+            <label>${i18next.t('label.case_sensitive')}</label>
           </fieldset>
         </form>
       </div>
 
-      <div class="location-formatting" ?hidden="${this._selectedFormat === ''}">
-        <fieldset>
-          <div class="parent">
-            <!-- =========== section for location row =========== -->
-            <div class="section">
-              <legend>${this._rowInstance}</legend>
-              <div class="child">
-                <label>${i18next.t('label.add_level_extension')}:</label>
-                <input
-                  placeholder="${i18next.t('label.enter_extension')}"
-                  @input="${event => {
-                    this._rowExtension = event.currentTarget.value
-                  }}"
-                  @keypress="${this._keyPressHandler.bind(this)}"
-                />
-              </div>
-              <div class="child">
-                <label>${i18next.t('label.add_leading_zero')}</label>
-                <input
-                  type="checkbox"
-                  @input="${event => {
-                    this._rowLeadingZeroes = event.currentTarget.checked
-                  }}"
-                  @keypress="${this._keyPressHandler.bind(this)}"
-                />
-              </div>
-            </div>
-            <!-- ================================================ -->
+      <div>
+        <h2>${i18next.t('title.extension_settings')}</h2>
+        <form class="multi-column-form" ?hidden="${this._selectedFormat === ''}">
+          <fieldset>
+            <label>${this._rowInstance}:</label>
+            <input
+              placeholder="${i18next.t('label.enter_extension')}"
+              @input="${event => {
+                this._rowExtension = event.currentTarget.value
+              }}"
+              @keypress="${this._keyPressHandler.bind(this)}"
+            />
+            <input
+              type="checkbox"
+              @input="${event => {
+                this._rowLeadingZeroes = event.currentTarget.checked
+              }}"
+              @keypress="${this._keyPressHandler.bind(this)}"
+            />
+            <label>${i18next.t('label.add_leading_zero')}</label>
 
-            <!-- ========== section for location column ========= -->
-            <div class="section">
-              <legend>${this._columnInstance}</legend>
-              <div class="child">
-                <label>${i18next.t('label.add_row_extension')}:</label>
-                <input
-                  placeholder="${i18next.t('label.enter_extension')}"
-                  @input="${event => {
-                    this._columnExtension = event.currentTarget.value
-                  }}"
-                  @keypress="${this._keyPressHandler.bind(this)}"
-                />
-              </div>
-              <div class="child">
-                <label>${i18next.t('label.add_leading_zero')}</label>
-                <input
-                  type="checkbox"
-                  @input="${event => {
-                    this._columnLeadingZeroes = event.currentTarget.checked
-                  }}"
-                  @keypress="${this._keyPressHandler.bind(this)}"
-                />
-              </div>
-            </div>
-            <!-- ================================================ -->
+            <label>${this._columnInstance}:</label>
+            <input
+              placeholder="${i18next.t('label.enter_extension')}"
+              @input="${event => {
+                this._columnExtension = event.currentTarget.value
+              }}"
+              @keypress="${this._keyPressHandler.bind(this)}"
+            />
+            <input
+              type="checkbox"
+              @input="${event => {
+                this._columnLeadingZeroes = event.currentTarget.checked
+              }}"
+              @keypress="${this._keyPressHandler.bind(this)}"
+            />
+            <label>${i18next.t('label.add_leading_zero')}</label>
 
-            <!-- ========== section for location shelf ========== -->
-            <div class="section">
-              <legend>${this._shelfInstance}</legend>
-              <div class="child">
-                <label>${i18next.t('label.add_shelf_extension')}:</label>
-                <input
-                  placeholder="${i18next.t('label.enter_extension')}"
-                  @input="${event => {
-                    this._shelfExtension = event.currentTarget.value
-                  }}"
-                  @keypress="${this._keyPressHandler.bind(this)}"
-                />
-              </div>
-              <div class="child">
-                <label>${i18next.t('label.add_leading_zero')}</label>
-                <input
-                  type="checkbox"
-                  @input="${event => {
-                    this._shelfLeadingZeroes = event.currentTarget.checked
-                  }}"
-                  @keypress="${this._keyPressHandler.bind(this)}"
-                  ?disabled="${this._useAlphabet === true}"
-                />
-              </div>
-            </div>
-            <!-- ================================================ -->
-          </div>
-        </fieldset>
+            <label>${this._shelfInstance}:</label>
+            <input
+              placeholder="${i18next.t('label.enter_extension')}"
+              @input="${event => {
+                this._shelfExtension = event.currentTarget.value
+              }}"
+              @keypress="${this._keyPressHandler.bind(this)}"
+            />
+            <input
+              type="checkbox"
+              @input="${event => {
+                this._shelfLeadingZeroes = event.currentTarget.checked
+              }}"
+              @keypress="${this._keyPressHandler.bind(this)}"
+              ?disabled="${this._useAlphabet === true}"
+            />
+            <label>${i18next.t('label.add_leading_zero')}</label>
+          </fieldset>
+        </form>
       </div>
 
       <div class="grist">
@@ -295,32 +208,10 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
         ></data-grist>
       </div>
 
-      <div class="grist">
-        <h2>${i18next.t('title.preview')}</h2>
-        <data-grist
-          id="preview_grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this._previewConfig}
-          .fetchHandler="${this._fetchHandler.bind(this)}"
-          @limit-changed=${e => {
-            this.limit = e.detail
-          }}
-        ></data-grist>
-      </div>
-
       <div class="button-container">
-        <button
-          @click="${async () => {
-            this.dataGrist.showSpinner()
-            await sleep(1)
-            this._validateGenerator()
-            this.dataGrist.hideSpinner()
-          }}"
-        >
+        <button @click="${this._generatedLocation.bind(this)}">
           ${i18next.t('button.preview')}
         </button>
-        <button @click="${this._saveGeneratedLocation}">${i18next.t('button.save')}</button>
-        <button @click="${this._clearGeneratedList}">${i18next.t('button.remove_selected')}</button>
       </div>
     `
   }
@@ -374,78 +265,6 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
         }
       ]
     }
-
-    this._previewConfig = {
-      pagination: { pages: [100, 200, 500] },
-      rows: { selectable: { multiple: true }, appendable: false },
-      columns: [
-        { type: 'gutter', gutterName: 'row-selector', multiple: true },
-        {
-          type: 'string',
-          name: 'name',
-          record: {
-            align: 'center',
-            editable: false
-          },
-          header: i18next.t('field.name'),
-          width: 200
-        },
-        {
-          type: 'string',
-          name: 'zone',
-          record: {
-            align: 'center',
-            editable: false
-          },
-          header: i18next.t('field.zone'),
-          width: 200
-        },
-        {
-          type: 'string',
-          name: 'row',
-          record: {
-            align: 'center',
-            editable: false
-          },
-          header: i18next.t('field.row'),
-          width: 200
-        },
-        {
-          type: 'string',
-          name: 'column',
-          record: {
-            align: 'center',
-            editable: false
-          },
-          header: i18next.t('field.column'),
-          width: 200
-        },
-        {
-          type: 'string',
-          name: 'shelf',
-          record: {
-            align: 'center',
-            editable: false
-          },
-          header: i18next.t('field.shelf'),
-          width: 200
-        },
-        {
-          type: 'string',
-          name: 'status',
-          record: {
-            align: 'center',
-            editable: false
-          },
-          header: i18next.t('field.status'),
-          width: 200
-        }
-      ]
-    }
-  }
-
-  get dataGrist() {
-    return this.shadowRoot.querySelector('#preview_grist')
   }
 
   _onChangeHandler(e) {
@@ -500,37 +319,16 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
       columns: this._generatorConfig.columns.map(column => {
         switch (column.name) {
           case 'start':
-            column.header = this._rowInstance + ' start'
+            column.header = (this._rowInstance || '') + ' start'
             break
           case 'end':
-            column.header = this._rowInstance + ' end'
+            column.header = (this._rowInstance || '') + ' end'
             break
           case 'column':
-            column.header = 'number of ' + this._columnInstance
+            column.header = 'number of ' + (this._columnInstance || '')
             break
           case 'shelf':
-            column.header = 'number of ' + this._shelfInstance
-            break
-        }
-        return column
-      })
-    }
-
-    this._previewConfig = {
-      ...this._previewConfig,
-      columns: this._previewConfig.columns.map(column => {
-        switch (column.name) {
-          case 'zone':
-            column.header = this._zoneInstance
-            break
-          case 'row':
-            column.header = this._rowInstance
-            break
-          case 'column':
-            column.header = this._columnInstance
-            break
-          case 'shelf':
-            column.header = this._shelfInstance
+            column.header = 'number of ' + (this._shelfInstance || '')
             break
         }
         return column
@@ -631,7 +429,6 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
       if (!validationError) {
         this._locationList = tempLocationList
         tempLocationList = []
-        this.dataGrist.fetch()
       }
     }
   }
@@ -726,56 +523,11 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
     return shelfInstance
   }
 
-  _fetchHandler() {
-    return {
-      total: this._locationList.length || 0,
-      records: this._locationList || []
-    }
-  }
-
-  async _saveGeneratedLocation() {
-    let chunkPatches = this._chunkLocationList(this._locationList, 500)
-
-    if (chunkPatches === []) {
-      Swal.fire({
-        type: 'warning',
-        title: 'List not previewed',
-        text: 'Please hit preview button first!',
-        showConfirmButton: false,
-        timer: 1500
-      })
-    } else {
-      try {
-        this.dataGrist.showSpinner()
-        for (let x = 0; x < chunkPatches.length; x++) {
-          const patches = chunkPatches[x]
-          const response = await client.query({
-            query: gql`
-              mutation {
-                updateMultipleLocation(${gqlBuilder.buildArgs({
-                  patches
-                })}) {
-                  name
-                }
-              }
-              `
-          })
-        }
-
-        if (this.callback && typeof this.callback === 'function') this.callback()
-        history.back()
-      } catch (e) {
-        document.dispatchEvent(
-          new CustomEvent('notify', {
-            detail: {
-              level: 'error',
-              message: e.message
-            }
-          })
-        )
-      } finally {
-        this.dataGrist.hideSpinner()
-      }
+  _generatedLocation() {
+    this._validateGenerator()
+    if (this._locationList) {
+      this.dispatchEvent(new CustomEvent('generated', { detail: this._locationList }))
+      history.back()
     }
   }
 
@@ -788,18 +540,6 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
       tempArray.push(locationChunk)
     }
     return tempArray
-  }
-
-  _clearGeneratedList() {
-    const selections = []
-    this.dataGrist.selected.forEach(selection => {
-      selections.push(selection.__seq__ - 1)
-    })
-
-    for (let i = selections.length - 1; i >= 0; i--) {
-      this._locationList.splice(selections[i], 1)
-    }
-    this.dataGrist.fetch()
   }
 }
 

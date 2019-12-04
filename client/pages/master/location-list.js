@@ -45,6 +45,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     return {
       _warehouseName: String,
       _searchFields: Array,
+      _locationList: Array,
       config: Object,
       _selectedRecords: Array
     }
@@ -538,7 +539,9 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
       html`
         <generate-location-list
           .warehouseId="${this._warehouseId}"
-          .callback="${this.dataGrist.fetch.bind(this.dataGrist)}"
+          @generated="${e => {
+            console.log(e.detail)
+          }}"
         ></generate-location-list>
       `,
       {
