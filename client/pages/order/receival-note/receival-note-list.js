@@ -90,7 +90,6 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
     ]
 
     this.config = {
-      pagination: { infinite: false },
       rows: { appendable: false, selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
