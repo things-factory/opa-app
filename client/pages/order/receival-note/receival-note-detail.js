@@ -257,21 +257,22 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
   }
 
   render() {
-    var company = this._bizplace.name
-    var brn = this._bizplace.description
-    var address = this._bizplace.address
-    var contact = this._businessContactPoints.phone
-    var email = this._businessContactPoints.email
+    var company = this._bizplace.name || ''
+    var brn = this._bizplace.description || ''
+    var address = this._bizplace.address || ''
+    var contact = this._businessContactPoints.phone || ''
+    var email = this._businessContactPoints.email || ''
 
-    var customerCompany = this._customer.name
-    var customerBrn = this._customer.company.brn
-    var customerAddress = this._customer.address
-    var customerContact = 'Phone: ' + this._customerContactPoints.phone + ' | Fax: ' + this._customerContactPoints.fax
-    var customerEmail = 'Email: ' + this._customerContactPoints.email
+    var customerCompany = this._customer.name || ''
+    var customerBrn = this._customer.company.brn || ''
+    var customerAddress = this._customer.address || ''
+    var customerContact =
+      'Phone: ' + (this._customerContactPoints.phone || '') + ' | Fax: ' + (this._customerContactPoints.fax || '')
+    var customerEmail = 'Email: ' + (this._customerContactPoints.email || '')
 
-    var grnName = this._grnName
-    var refNo = this._refNo
-    var date = this._date
+    var grnName = this._grnName || ''
+    var refNo = this._refNo || ''
+    var date = this._date || ''
 
     var footer = 'please write down full name clearly'
 
@@ -365,12 +366,6 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
               Date:
               <input id="signed_date" />
             </div>
-          </div>
-
-          <div customer-side>
-            <div>For <span customer-name>${customerCompany}</span></div>
-            <div signature></div>
-            <div desc>Authorized Signature</div>
           </div>
         </div>
 
