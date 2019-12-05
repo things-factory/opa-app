@@ -151,14 +151,6 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
               }}"
               @keypress="${this._keyPressHandler.bind(this)}"
             />
-            <input
-              type="checkbox"
-              @input="${event => {
-                this._rowLeadingZeroes = event.currentTarget.checked
-              }}"
-              @keypress="${this._keyPressHandler.bind(this)}"
-            />
-            <label>${i18next.t('label.add_leading_zero')}</label>
 
             <label>${this._columnInstance}:</label>
             <input
@@ -168,14 +160,6 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
               }}"
               @keypress="${this._keyPressHandler.bind(this)}"
             />
-            <input
-              type="checkbox"
-              @input="${event => {
-                this._columnLeadingZeroes = event.currentTarget.checked
-              }}"
-              @keypress="${this._keyPressHandler.bind(this)}"
-            />
-            <label>${i18next.t('label.add_leading_zero')}</label>
 
             <label>${this._shelfInstance}:</label>
             <input
@@ -185,6 +169,25 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
               }}"
               @keypress="${this._keyPressHandler.bind(this)}"
             />
+
+            <input
+              type="checkbox"
+              @input="${event => {
+                this._rowLeadingZeroes = event.currentTarget.checked
+              }}"
+              @keypress="${this._keyPressHandler.bind(this)}"
+            />
+            <label>${i18next.t('label.add_leading_zero')}</label>
+
+            <input
+              type="checkbox"
+              @input="${event => {
+                this._columnLeadingZeroes = event.currentTarget.checked
+              }}"
+              @keypress="${this._keyPressHandler.bind(this)}"
+            />
+            <label>${i18next.t('label.add_leading_zero')}</label>
+
             <input
               type="checkbox"
               @input="${event => {
