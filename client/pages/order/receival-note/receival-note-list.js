@@ -2,7 +2,15 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { openPopup } from '@things-factory/layout-base'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
+import {
+  client,
+  gqlBuilder,
+  isMobileDevice,
+  navigate,
+  PageView,
+  ScrollbarStyles,
+  flattenObject
+} from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import './upload-receival-note'
@@ -82,7 +90,7 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
         field: 'name'
       },
       {
-        label: i18next.t('field.gan'),
+        label: i18next.t('field.ref_no'),
         name: 'refNo',
         type: 'text',
         props: { searchOper: 'i_like' }
@@ -90,6 +98,9 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
     ]
 
     this.config = {
+      list: {
+        fields: ['name', 'bizplace|name', 'arrivalNotice|refNo', 'arrivalNotice|name', 'updater', 'updatedAt']
+      },
       rows: { appendable: false, selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -122,8 +133,8 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
           width: 180
         },
         {
-          type: 'object',
-          name: 'bizplace',
+          type: 'string',
+          name: 'bizplace|name',
           header: i18next.t('field.customer'),
           record: { align: 'left' },
           sortable: true,
@@ -131,19 +142,19 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'refNo',
+          name: 'arrivalNotice|refNo',
           header: i18next.t('field.ref_no'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
-          width: 160
+          width: 100
         },
         {
           type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: { align: 'center' },
+          name: 'arrivalNotice|name',
+          header: i18next.t('field.gan'),
+          record: { align: 'left' },
           sortable: true,
-          width: 150
+          width: 180
         },
         {
           type: 'datetime',
@@ -154,8 +165,8 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
           width: 160
         },
         {
-          type: 'object',
-          name: 'updater',
+          type: 'string',
+          name: 'updater|name',
           header: i18next.t('field.updater'),
           record: { align: 'center' },
           sortable: true,
@@ -213,14 +224,13 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       return {
-        data: response.data.goodsReceivalNotes.items.map(grn => {
-          return {
-            ...grn,
-            refNo: grn.arrivalNotice.refNo
-          }
-        }),
         total: response.data.goodsReceivalNotes.total || 0,
-        records: response.data.goodsReceivalNotes.items || []
+        records:
+          response.data.goodsReceivalNotes.items.map(item => {
+            return flattenObject({
+              ...item
+            })
+          }) || {}
       }
     }
   }

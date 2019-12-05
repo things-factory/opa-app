@@ -135,14 +135,6 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
           width: 160
         },
         {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 150
-        },
-        {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
