@@ -22,13 +22,9 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
         search-form {
           overflow: visible;
         }
-        .grist {
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-        }
+
         data-grist {
-          overflow-y: hidden;
+          overflow-y: auto;
           flex: 1;
         }
       `
@@ -47,13 +43,11 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
     return html`
       <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
-      <div class="grist">
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .fetchHandler="${this.fetchHandler.bind(this)}"
-        ></data-grist>
-      </div>
+      <data-grist
+        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+        .config=${this.config}
+        .fetchHandler="${this.fetchHandler.bind(this)}"
+      ></data-grist>
       <!-- <a href="/attachment/${this._path}" target="_blank"><mwc-icon>cloud_download</mwc-icon></a> -->
     `
   }
@@ -128,7 +122,7 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'refNo',
+          name: 'ganRefNo',
           header: i18next.t('field.ref_no'),
           record: { align: 'center' },
           sortable: true,
@@ -211,7 +205,7 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
         data: response.data.customerReceivalNotes.items.map(grn => {
           return {
             ...grn,
-            refNo: grn.arrivalNotice.refNo
+            ganRefNo: grn.arrivalNotice.refNo
           }
         }),
         total: response.data.customerReceivalNotes.total || 0,
