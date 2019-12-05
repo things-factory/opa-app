@@ -712,9 +712,6 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
       case 26:
         shelfInstance = 'Z'
         break
-      case 14:
-        shelfInstance = 'N'
-        break
       default:
         shelfInstance = column.toString()
     }

@@ -799,5 +799,6 @@
   "vas_order_created": "vas order created",
   "label.location_format": "location format",
   "label.add_extension": "add extension",
-  "label.add_leading_zero": "add leading zero"
+  "label.add_leading_zero": "add leading zero",
+  "label.select_file": "select file"
 }

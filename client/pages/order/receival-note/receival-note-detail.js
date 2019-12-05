@@ -2,15 +2,20 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, PageView, gqlBuilder } from '@things-factory/shell'
 import { css, html } from 'lit-element'
 import gql from 'graphql-tag'
+import '@things-factory/attachment-ui/client/components/file-selector'
+import '@things-factory/image-uploader-ui/client/image-upload-previewer'
 
 class ReceivalNoteDetail extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _grnNo: String,
+      _files: Array,
       _products: Array,
+      _customer: Object,
       _bizplace: Object,
       _arrivalNotice: Object,
-      _contactPoints: Object,
+      _businessContactPoints: Object,
+      _customerContactPoints: Object,
       _grnName: String,
       _refNo: String,
       _date: Date
@@ -19,10 +24,13 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
 
   constructor() {
     super()
+    this._files = []
     this._products = []
+    this._customer = {}
     this._bizplace = {}
     this._arrivalNotice = {}
-    this._contactPoints = {}
+    this._businessContactPoints = {}
+    this._customerContactPoints = {}
     this._grnName = ''
     this._refNo = ''
     this._date = ''
@@ -47,6 +55,16 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
           overflow: scroll;
         }
 
+        /* Hide scrollbar for Chrome, Safari and Opera*/
+        [goods-receival-note]::-webkit-scrollbar {
+          display: none;
+        }
+
+        /* Hide scrollbar for IE and Edge */
+        [goods-receival-note] {
+          -ms-overflow-style: none;
+        }
+
         [business-info] {
           width: 40%;
           white-space: nowrap;
@@ -68,18 +86,16 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
 
         [brief] {
           display: grid;
-          grid-template-columns: 3fr 1fr;
+          grid-template-columns: 3fr 2fr;
         }
 
         [brief] > div {
           display: grid;
-          grid-template-columns: 1fr 10fr;
           grid-gap: 1px;
-          grid-template-columns: 3fr 1fr;
         }
 
         [brief] > div[right] {
-          grid-template-columns: 5fr 8fr;
+          grid-template-columns: 3fr 5fr;
           grid-auto-rows: 30px 30px 30px;
         }
 
@@ -109,8 +125,10 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
         table {
           width: 100%;
           height: 100%;
-          border: 1px solid black;
           border-spacing: 0;
+          border-collapse: collapse;
+          margin-top: 20px;
+          margin-bottom: 20px;
         }
 
         th {
@@ -118,13 +136,14 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
           text-transform: capitalize;
         }
 
+        table,
         th,
         td {
-          border: 1px solid black;
+          border: 1px solid #ddd;
         }
 
         td {
-          padding: 15px;
+          padding: 5px;
           align: left;
         }
 
@@ -141,7 +160,46 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
 
         [signature] {
           height: 100px;
-          border-bottom: 1px solid black;
+          border-bottom: 1px solid #ddd;
+        }
+
+        #signature {
+          mix-blend-mode: multiply;
+          filter: contrast(200%);
+          position: relative;
+        }
+
+        [signature] > image-upload-previewer {
+          vertical-align: middle;
+          mix-blend-mode: multiply;
+          display: block;
+          margin-left: auto;
+          margin-right: auto;
+          overflow: auto;
+          height: 120px;
+        }
+
+        [goods-receival-note] [agreement] > file-selector {
+          grid-column: span 6;
+          font: var(--card-list-create-input-font);
+          border: none;
+          box-sizing: border-box;
+          padding: 0;
+        }
+
+        #thumbnail-area {
+          grid-column: span 10;
+          align-self: stretch;
+          text-align: center;
+          overflow: hidden;
+          overflow-x: auto;
+          white-space: nowrap;
+          overflow: visible;
+        }
+
+        image-upload-previewer {
+          display: inline-block;
+          height: 100%;
         }
 
         [desc] {
@@ -164,12 +222,21 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
           text-align: center;
         }
 
+        #signee_name,
+        #signed_date {
+          font-size: 1em;
+          font-family: 'Times New Roman', Times;
+          border: none;
+          width: 80%;
+        }
+
         @media print {
           :host {
-            font-size: 0.6em;
+            font-size: 0.8em;
             padding: 0;
             -webkit-print-color-adjust: exact;
           }
+          file-selector,
           #Header,
           #Footer {
             display: none !important;
@@ -190,19 +257,18 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
   }
 
   render() {
-    var company = 'KIMEDA SDN BHD'
-    var brn = '120075T'
-    var address = 'Lot 541, 7 3/4 Miles, Jalan Kapar, 42200 Kapar, Klang'
-    var contact = '012-6059803 & 016-3320078'
-    var email = 'support@kimeda.com'
+    var company = this._bizplace.name
+    var brn = this._bizplace.description
+    var address = this._bizplace.address
+    var contact = this._businessContactPoints.phone
+    var email = this._businessContactPoints.email
 
-    var customerCompany = this._bizplace.company.name
-    var customerBrn = this._bizplace.company.brn
-    var customerAddress = this._bizplace.company.address
-    var customerContact = 'Phone: ' + this._contactPoints.phone + ' | Fax: ' + this._contactPoints.fax
-    var customerEmail = 'Email: ' + this._contactPoints.email
+    var customerCompany = this._customer.name
+    var customerBrn = this._customer.company.brn
+    var customerAddress = this._customer.address
+    var customerContact = 'Phone: ' + this._customerContactPoints.phone + ' | Fax: ' + this._customerContactPoints.fax
+    var customerEmail = 'Email: ' + this._customerContactPoints.email
 
-    var deliveredBy = 'container'
     var grnName = this._grnName
     var refNo = this._refNo
     var date = this._date
@@ -237,7 +303,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
 
             <label>Reference No. : </label><b>${refNo}</b>
 
-            <label>Date : </label>${date}
+            <label>Date : </label><b>${date}</b>
           </div>
         </div>
 
@@ -274,10 +340,31 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
         <div agreement>
           <div business-side>
             <div notice>Goods received in good order & condition</div>
-            <div signature></div>
+            <div signature id="thumbnail-area">
+              ${this._files.map(
+                file => html`
+                  <image-upload-previewer id="signature" .file=${file}></image-upload-previewer>
+                `
+              )}
+            </div>
+            <file-selector
+              name="file"
+              label="${i18next.t('label.select_file')}"
+              accept="${this._currentCategory || '*'}/*"
+              multiple
+              @file-change=${e => {
+                this._files = Array.from(e.detail.files)
+              }}
+            ></file-selector>
             <div desc>Official Stamp & Signature</div>
-            <div name>Name:</div>
-            <div date>Date:</div>
+            <div name>
+              Name:
+              <input id="signee_name" />
+            </div>
+            <div date>
+              Date:
+              <input id="signed_date" />
+            </div>
           </div>
 
           <div customer-side>
@@ -290,6 +377,10 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
         <h5 footer>** ${footer} **</h5>
       </div>
     `
+  }
+
+  async pageInitialized() {
+    this._businessContactPoints = { ...(await this._fetchBusinessContact()) }
   }
 
   async pageUpdated(changes) {
@@ -315,10 +406,9 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
               id
               name
               description
+              address
               company {
                 id
-                name
-                address
                 brn
               }
             }
@@ -336,7 +426,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const goodsReceivalNote = response.data.goodsReceivalNote
-      this._bizplace = goodsReceivalNote.bizplace
+      this._customer = goodsReceivalNote.bizplace
       this._arrivalNotice = goodsReceivalNote.arrivalNotice
       this._grnName = goodsReceivalNote.name
       this._refNo = goodsReceivalNote.arrivalNotice.refNo
@@ -349,7 +439,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
         .join(' ')
 
       await this._fetchOrderProducts()
-      await this._fetchContactPoints()
+      await this._fetchCustomerContact()
     }
   }
 
@@ -402,7 +492,29 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
       this._products = response.data.orderProducts.items || []
     }
   }
-  async _fetchContactPoints() {
+
+  async _fetchBusinessBizplace() {
+    const name = ''
+    const response = await client.query({
+      query: gql`
+        query {
+          businessBizplace(${gqlBuilder.buildArgs({
+            name: name
+          })}) {
+            id
+            name
+            description
+            address
+          }
+        }
+      `
+    })
+
+    return response.data.businessBizplace
+  }
+
+  async _fetchBusinessContact() {
+    this._bizplace = { ...(await this._fetchBusinessBizplace()) }
     const filters = [
       {
         name: 'bizplace',
@@ -435,8 +547,44 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
       `
     })
 
+    return response.data.contactPoints.items[0] || []
+  }
+
+  async _fetchCustomerContact() {
+    const filters = [
+      {
+        name: 'bizplace',
+        operator: 'eq',
+        value: this._customer.id
+      }
+    ]
+
+    const response = await client.query({
+      query: gql`
+        query {
+          contactPoints(${gqlBuilder.buildArgs({
+            filters
+          })}) {
+            items {
+              id
+              name
+              bizplace {
+                id
+                name
+              }
+              description
+              email
+              phone
+              fax
+            }
+            total
+          }
+        }
+      `
+    })
+
     if (!response.errors) {
-      this._contactPoints = response.data.contactPoints.items[0] || []
+      this._customerContactPoints = response.data.contactPoints.items[0] || []
     }
   }
 }
