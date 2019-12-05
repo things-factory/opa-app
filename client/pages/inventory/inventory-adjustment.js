@@ -46,7 +46,6 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _searchFields: Array,
-      _email: String,
       config: Object,
       data: Object,
       _palletLabel: Object
@@ -62,6 +61,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
           .fetchHandler="${this.fetchHandler.bind(this)}"
+          @record-change="${this._customerChange.bind(this)}"
         ></data-grist>
       </div>
     `
@@ -110,6 +110,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         fields: ['palletId', 'product', 'bizplace', 'location']
       },
       rows: {
+        handlers: { click: this._setProductRefCondition.bind(this) },
         selectable: {
           multiple: true
         }
@@ -165,9 +166,18 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.product'),
           record: {
             editable: true,
-            align: 'left',
+            align: 'center',
             options: {
-              queryName: 'products'
+              queryName: 'productsByBizplace',
+              basicArgs: {
+                filters: [{ name: 'bizplace', operator: 'eq', value: '' }]
+              },
+              select: [
+                { name: 'id', hidden: true },
+                { name: 'name', header: i18next.t('field.name'), width: 450 },
+                { name: 'description', header: i18next.t('field.description'), width: 450 },
+                { name: 'type', header: i18next.t('field.type'), width: 300 }
+              ]
             }
           },
           imex: {
@@ -204,23 +214,6 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           width: 120
         },
         {
-          type: 'float',
-          name: 'productWeight',
-          header: i18next.t('field.packing_weight'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 80
-        },
-        {
-          type: 'code',
-          name: 'unit',
-          header: i18next.t('field.unit'),
-          record: {
-            align: 'center'
-          },
-          width: 150
-        },
-        {
           type: 'number',
           name: 'qty',
           header: i18next.t('field.qty'),
@@ -246,14 +239,6 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
             width: 10,
             type: 'float'
           },
-          width: 80
-        },
-        {
-          type: 'string',
-          name: 'zone',
-          header: i18next.t('field.zone'),
-          record: { align: 'center' },
-          sortable: true,
           width: 80
         },
         {
@@ -330,7 +315,8 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         name: 'product',
         type: 'object',
         queryName: 'products',
-        field: 'name'
+        field: 'name',
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.batch_no'),
@@ -349,14 +335,16 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         name: 'warehouse',
         type: 'object',
         queryName: 'warehouses',
-        field: 'name'
+        field: 'name',
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.location'),
         name: 'location',
         type: 'object',
         queryName: 'locations',
-        field: 'name'
+        field: 'name',
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.zone'),
@@ -435,6 +423,27 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     return {
       total: response.data.inventories.total || 0,
       records: response.data.inventories.items || []
+    }
+  }
+
+  _setProductRefCondition(columns, data, column, record, rowIndex) {
+    this.config.columns.map(column => {
+      if (column.name === 'product') {
+        if (record && record.bizplace && record.bizplace.id) {
+          column.record.options.basicArgs = {
+            filters: [{ name: 'bizplace', operator: 'eq', value: record.bizplace.id }]
+          }
+        }
+      }
+    })
+  }
+
+  _customerChange(event) {
+    const record = event.detail
+    const columnName = event.detail.column.name
+
+    if (columnName === 'bizplace' && record.before.bizplace.id != record.after.bizplace.id) {
+      delete this.dataGrist._data.records[event.detail.row].product
     }
   }
 
@@ -634,7 +643,6 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     } else {
       records = this.dataGrist.data.records
     }
-    // data structure // { //    header: {headerName, fieldName, type = string, arrData = []} //    data: [{fieldName: value}] // }
 
     var headerSetting = this.dataGrist._config.columns
       .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
@@ -657,13 +665,11 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     })
 
     return { header: headerSetting, data: data }
-    // return this.dataGrist.exportRecords()
   }
 
   stateChanged(state) {
     let palletLabelSetting = state.dashboard[PALLET_LABEL_SETTING_KEY]
     this._palletLabel = (palletLabelSetting && palletLabelSetting.board) || {}
-    this._email = state.auth && state.auth.user && state.auth.user.email
   }
 
   async fetchBizplace() {
@@ -685,12 +691,11 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _fetchUserBizplaces() {
-    if (!this._email) return
     const response = await client.query({
       query: gql`
         query {
           userBizplaces(${gqlBuilder.buildArgs({
-            email: this._email
+            email: ''
           })}) {
             id
             name
