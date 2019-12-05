@@ -54,6 +54,7 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
           .fetchHandler="${this.fetchHandler.bind(this)}"
         ></data-grist>
       </div>
+      <!-- <a href="/attachment/${this._path}" target="_blank"><mwc-icon>cloud_download</mwc-icon></a> -->
     `
   }
 
@@ -96,20 +97,11 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           gutterName: 'button',
-          icon: 'post_add',
+          icon: 'cloud_download',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              if (record.id) this._uploadGRN(record.name, record.id)
-            }
-          }
-        },
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'reorder',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              navigate(`receival_note_detail/${record.name}`)
+              if (record.attachments[0] && record.attachments[0].path)
+                navigate(`attachment/${record.attachments[0].path}`)
             }
           }
         },
@@ -126,6 +118,11 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
           name: 'arrivalNotice',
           header: i18next.t('field.gan'),
           record: { align: 'left' },
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              if (record.id) navigate(`arrival_notice_detail/${record.arrivalNotice.name}`)
+            }
+          },
           sortable: true,
           width: 200
         },
@@ -197,6 +194,12 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
                 name
                 description
               }
+              attachments {
+                id
+                name
+                refBy
+                path
+              }
               createdAt
               updatedAt
               updater {
@@ -223,19 +226,6 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
         records: response.data.customerReceivalNotes.items || []
       }
     }
-  }
-
-  _uploadGRN(grnName, grnId) {
-    openPopup(
-      html`
-        <upload-receival-note .grnName="${grnName}" .grnId="${grnId}"></upload-receival-note>
-      `,
-      {
-        backdrop: true,
-        size: 'large',
-        title: i18next.t('title.upload_signed_grn')
-      }
-    )
   }
 
   get _columns() {
