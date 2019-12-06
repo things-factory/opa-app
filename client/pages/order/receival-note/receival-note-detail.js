@@ -82,6 +82,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
         [title] {
           text-align: center;
           font-weight: bold;
+          text-transform: uppercase;
         }
 
         [brief] {
@@ -120,6 +121,10 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
           flex: 1;
           padding-top: 10px;
           padding-bottom: 10px;
+        }
+
+        [name] {
+          text-transform: capitalize;
         }
 
         table {
@@ -202,8 +207,17 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
           height: 100%;
         }
 
+        [notice] {
+          text-transform: capitalize;
+        }
+
+        [date] {
+          text-transform: capitalize;
+        }
+
         [desc] {
           font-style: italic;
+          text-transform: capitalize;
         }
 
         [footer] {
