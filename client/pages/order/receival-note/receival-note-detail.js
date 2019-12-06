@@ -267,11 +267,11 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
     var customerBrn = this._customer.company.brn || ''
     var customerAddress = this._customer.address || ''
     var customerContact =
-      'Phone: ' + (this._customerContactPoints.phone || '') + ' | Fax: ' + (this._customerContactPoints.fax || '')
-    var customerEmail = 'Email: ' + (this._customerContactPoints.email || '')
+      'Phone: ' + (this._customerContactPoints.phone || '-') + ' | Fax: ' + (this._customerContactPoints.fax || '-')
+    var customerEmail = 'Email: ' + (this._customerContactPoints.email || '-')
 
     var grnName = this._grnName || ''
-    var refNo = this._refNo || ''
+    var refNo = this._refNo || '-'
     var date = this._date || ''
 
     var footer = 'please write down full name clearly'

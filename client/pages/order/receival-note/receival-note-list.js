@@ -138,7 +138,7 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
           header: i18next.t('field.customer'),
           record: { align: 'left' },
           sortable: true,
-          width: 200
+          width: 230
         },
         {
           type: 'string',

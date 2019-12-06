@@ -1,6 +1,5 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
-import { openPopup } from '@things-factory/layout-base'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
@@ -122,7 +121,7 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'ganRefNo',
+          name: 'refNo',
           header: i18next.t('field.ref_no'),
           record: { align: 'center' },
           sortable: true,
@@ -205,7 +204,7 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
         data: response.data.customerReceivalNotes.items.map(grn => {
           return {
             ...grn,
-            ganRefNo: grn.arrivalNotice.refNo
+            refNo: grn.arrivalNotice.refNo
           }
         }),
         total: response.data.customerReceivalNotes.total || 0,
