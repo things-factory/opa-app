@@ -243,16 +243,12 @@ export default {
       page: 'receival_note_list'
     },
     {
-      tagname: 'create-receival-note',
-      page: 'create_receival_note'
-    },
-    {
       tagname: 'receival-note-detail',
       page: 'receival_note_detail'
     },
     {
       tagname: 'customer-receival-notes',
-      page: 'customer_receival_notes'
+      page: 'receival_notes'
     },
     /**
      * Billing Menus Section

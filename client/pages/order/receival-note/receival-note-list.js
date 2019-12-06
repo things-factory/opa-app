@@ -94,6 +94,12 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
         name: 'refNo',
         type: 'text',
         props: { searchOper: 'i_like' }
+      },
+      {
+        label: i18next.t('field.status'),
+        name: 'status',
+        type: 'text',
+        props: { searchOper: 'i_like' }
       }
     ]
 
@@ -150,6 +156,14 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 180
+        },
+        {
+          type: 'string',
           name: 'arrivalNotice|name',
           header: i18next.t('field.gan'),
           record: { align: 'left' },
@@ -202,6 +216,7 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
                 description
                 refNo
               }
+              status
               description
               bizplace {
                 id
@@ -238,7 +253,11 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
   _uploadGRN(grnName, grnId) {
     openPopup(
       html`
-        <upload-receival-note .grnName="${grnName}" .grnId="${grnId}"></upload-receival-note>
+        <upload-receival-note
+          .grnName="${grnName}"
+          .grnId="${grnId}"
+          .callback="${this.dataGrist.fetch.bind(this.dataGrist)}"
+        ></upload-receival-note>
       `,
       {
         backdrop: true,

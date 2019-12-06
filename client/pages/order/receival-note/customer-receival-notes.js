@@ -5,6 +5,7 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import './upload-receival-note'
+import { GRN_STATUS } from '../constants/order'
 
 class CustomerReceivalNotes extends localize(i18next)(PageView) {
   static get styles() {
@@ -47,7 +48,6 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
         .config=${this.config}
         .fetchHandler="${this.fetchHandler.bind(this)}"
       ></data-grist>
-      <!-- <a href="/attachment/${this._path}" target="_blank"><mwc-icon>cloud_download</mwc-icon></a> -->
     `
   }
 
@@ -93,8 +93,10 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
           icon: 'cloud_download',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              if (record.attachments[0] && record.attachments[0].path)
-                navigate(`attachment/${record.attachments[0].path}`)
+              if (record.attachments[0] && record.attachments[0].path) {
+                if (record.status === GRN_STATUS.NEW.value) this._receivedGRN(record.name)
+                window.open(`attachment/${record.attachments[0].path}`)
+              }
             }
           }
         },
@@ -126,6 +128,14 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
           record: { align: 'center' },
           sortable: true,
           width: 160
+        },
+        {
+          type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 180
         },
         {
           type: 'datetime',
@@ -173,6 +183,7 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
                 description
                 refNo
               }
+              status
               description
               bizplace {
                 id
@@ -211,6 +222,23 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
         records: response.data.customerReceivalNotes.items || []
       }
     }
+  }
+
+  async _receivedGRN(name) {
+    const response = await client.query({
+      query: gql`
+        mutation {
+          receivedGoodsReceivalNote(${gqlBuilder.buildArgs({
+            name
+          })}) {
+            id
+            status
+          }
+        }
+      `
+    })
+
+    if (!response.error) this.dataGrist.fetch()
   }
 
   get _columns() {

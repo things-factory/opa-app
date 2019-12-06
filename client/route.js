@@ -222,15 +222,11 @@ export default function route(page) {
       import('./pages/order/receival-note/receival-note-list')
       return page
 
-    case 'create_receival_note':
-      import('./pages/order/receival-note/create-receival-note')
-      return page
-
     case 'receival_note_detail':
       import('./pages/order/receival-note/receival-note-detail')
       return page
 
-    case 'customer_receival_notes':
+    case 'receival_notes':
       import('./pages/order/receival-note/customer-receival-notes')
       return page
 
