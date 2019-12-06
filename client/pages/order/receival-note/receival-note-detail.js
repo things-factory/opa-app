@@ -274,7 +274,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
     var refNo = this._refNo || '-'
     var date = this._date || ''
 
-    var footer = 'please write down full name clearly'
+    var footer = i18next.t('text.please_write_down_full_name_clearly')
 
     return html`
       <div goods-receival-note>
@@ -286,11 +286,11 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
           <div business-email>${email}</div>
         </div>
 
-        <h1 title>GOODS RECEIVED NOTE</h1>
+        <h1 title>${i18next.t('title.goods_received_note')}</h1>
 
         <div brief>
           <div left>
-            <label>to : </label>
+            <label>${i18next.t('label.to')}:</label>
             <div customer>
               <div customer-company><b>${customerCompany}</b> <small customer-brn>(${customerBrn})</small></div>
               <div customer-address>${customerAddress}</div>
@@ -300,11 +300,11 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
           </div>
 
           <div right>
-            <label>GRN No. : </label><b>${grnName}</b>
+            <label>${i18next.t('label.grn_no')} : </label><b>${grnName}</b>
 
-            <label>Reference No. : </label><b>${refNo}</b>
+            <label>${i18next.t('label.ref_no')} : </label><b>${refNo}</b>
 
-            <label>Date : </label><b>${date}</b>
+            <label>${i18next.t('label.date')} : </label><b>${date}</b>
           </div>
         </div>
 
@@ -313,11 +313,11 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
             <thead>
               <tr>
                 <th idx>#</th>
-                <th>Batch ID</th>
-                <th>Product</th>
-                <th>Quantity</th>
-                <th>Total Weight</th>
-                <th>Remark</th>
+                <th>${i18next.t('label.batch_id')}</th>
+                <th>${i18next.t('label.product')}</th>
+                <th>${i18next.t('label.quantity')}</th>
+                <th>${i18next.t('label.total_weight')}</th>
+                <th>${i18next.t('label.remark')}</th>
               </tr>
             </thead>
             <tbody>
@@ -340,7 +340,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
 
         <div agreement>
           <div business-side>
-            <div notice>Goods received in good order & condition</div>
+            <div notice>${i18next.t('text.goods_received_in_good_order_condition')}</div>
             <div signature id="thumbnail-area">
               ${this._files.map(
                 file => html`
@@ -357,13 +357,13 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
                 this._files = Array.from(e.detail.files)
               }}
             ></file-selector>
-            <div desc>Official Stamp & Signature</div>
+            <div desc>${i18next.t('text.official_stamp_signature')}</div>
             <div name>
-              Name:
+              ${i18next.t('label.name')}:
               <input id="signee_name" />
             </div>
             <div date>
-              Date:
+              ${i18next.t('label.date')}:
               <input id="signed_date" />
             </div>
           </div>
