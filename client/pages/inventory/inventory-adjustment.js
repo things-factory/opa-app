@@ -62,6 +62,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           .config=${this.config}
           .fetchHandler="${this.fetchHandler.bind(this)}"
           @record-change="${this._customerChange.bind(this)}"
+          @field-change="${this._updateAmount.bind(this)}"
         ></data-grist>
       </div>
     `
@@ -101,6 +102,8 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   async pageInitialized() {
     this.bizplace = await this.fetchBizplace()
     this.product = await this.fetchProduct()
+    // this.bizplace = []
+    // this.product = []
     this.location = await this.fetchLocation()
 
     this.packingType = await getCodeByName('PACKING_TYPES')
@@ -166,7 +169,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.product'),
           record: {
             editable: true,
-            align: 'center',
+            align: 'left',
             options: {
               queryName: 'productsByBizplace',
               basicArgs: {
@@ -426,6 +429,60 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
+  async fetchInventoriesForExport() {
+    const filters = await this.searchForm.getQueryFilters()
+    const response = await client.query({
+      query: gql`
+        query {
+          inventories(${gqlBuilder.buildArgs({
+            filters: [...filters, { name: 'status', operator: 'notin', value: ['INTRANSIT', 'TERMINATED', 'DELETED'] }],
+            pagination: { page: 1, limit: 9999999 },
+            sortings: []
+          })}) {
+            items {
+              id
+              palletId
+              batchId
+              packingType
+              weight
+              bizplace {
+                id
+                name
+                description
+              }
+              product {
+                id
+                name
+                description
+                unit
+              }
+              qty
+              warehouse {
+                id
+                name
+                description
+              }
+              zone
+              location {
+                id
+                name
+                description
+              }
+              updatedAt
+              updater {
+                name
+                description
+              }
+            }
+            total
+          }
+        }
+      `
+    })
+
+    return response.data.inventories.items || []
+  }
+
   _setProductRefCondition(columns, data, column, record, rowIndex) {
     this.config.columns.map(column => {
       if (column.name === 'product') {
@@ -444,6 +501,19 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
 
     if (columnName === 'bizplace' && record.before.bizplace.id != record.after.bizplace.id) {
       delete this.dataGrist._data.records[event.detail.row].product
+    }
+  }
+
+  _updateAmount(e) {
+    switch (e.detail.column.name) {
+      case 'weight':
+        if (e.detail.after < 0) this.dataGrist._data.records[e.detail.row].weight = 0
+        break
+      case 'qty':
+        if (e.detail.after < 0) this.dataGrist._data.records[e.detail.row].qty = 0
+        break
+      default:
+        break
     }
   }
 
@@ -469,8 +539,11 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         delete x.product['__seq__']
         delete x.product['__origin__']
         delete x.product['__selected__']
+        delete x.product['type']
       }
-      x.weight = parseFloat(x.weight)
+      if (x.weight) {
+        x.weight = parseFloat(x.weight)
+      }
     })
     if (patches && patches.length) {
       const response = await client.query({
@@ -636,12 +709,12 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     }, 500)
   }
 
-  _exportableData() {
+  async _exportableData() {
     let records = []
     if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
       records = this.dataGrist.selected
     } else {
-      records = this.dataGrist.data.records
+      records = await this.fetchInventoriesForExport()
     }
 
     var headerSetting = this.dataGrist._config.columns
