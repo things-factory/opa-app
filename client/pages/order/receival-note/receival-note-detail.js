@@ -315,7 +315,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
                 <th idx>#</th>
                 <th>${i18next.t('label.batch_id')}</th>
                 <th>${i18next.t('label.product')}</th>
-                <th>${i18next.t('label.quantity')}</th>
+                <th>${i18next.t('label.qty')}</th>
                 <th>${i18next.t('label.total_weight')}</th>
                 <th>${i18next.t('label.remark')}</th>
               </tr>
