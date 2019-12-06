@@ -663,6 +663,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     )
       throw new Error(i18next.t('text.empty_value_in_list'))
 
+    if (this.inventoryGrist.dirtyData.records.filter(record => record.releaseQty > record.remainQty).length)
+      throw new Error(i18next.t('text.invalid_quantity_input'))
+
     // duplication of pallet id
     const palletIds = this.inventoryGrist.dirtyData.records.map(inventory => inventory.palletId)
     if (palletIds.filter((palletId, idx, palletIds) => palletIds.indexOf(palletId) !== idx).length)
