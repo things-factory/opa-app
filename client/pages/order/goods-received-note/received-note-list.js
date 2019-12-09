@@ -151,7 +151,7 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              navigate(`receival_note_detail/${record.name}`)
+              navigate(`received_note_detail/${record.name}`)
             }
           }
         },

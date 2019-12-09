@@ -4,6 +4,7 @@ import { css, html } from 'lit-element'
 import gql from 'graphql-tag'
 import '@things-factory/attachment-ui/client/components/file-selector'
 import '@things-factory/image-uploader-ui/client/image-upload-previewer'
+import { WORKSHEET_TYPE } from '../../inbound/constants/worksheet'
 
 class ReceivedNoteDetail extends localize(i18next)(PageView) {
   static get properties() {
@@ -18,6 +19,7 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
       _customerContactPoints: Object,
       _grnName: String,
       _refNo: String,
+      _remark: String,
       _date: Date
     }
   }
@@ -33,6 +35,7 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
     this._customerContactPoints = {}
     this._grnName = ''
     this._refNo = ''
+    this._remark = ''
     this._date = ''
   }
 
@@ -341,10 +344,10 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
                   <tr>
                     <td idx>${index + 1}</td>
                     <td>${product.batchId}</td>
-                    <td>${product.product.name} (${product.product.description})</td>
+                    <td>${product.name} (${product.description})</td>
                     <td>${product.packQty} ${product.packingType}</td>
                     <td>${product.totalWeight}</td>
-                    <td>${product.remark}</td>
+                    <td>${product.issue}</td>
                   </tr>
                 `
               })}
@@ -426,6 +429,7 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
               name
               description
               refNo
+              remark
             }
             createdAt
           }
@@ -439,6 +443,7 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
       this._arrivalNotice = goodsReceivalNote.arrivalNotice
       this._grnName = goodsReceivalNote.name
       this._refNo = goodsReceivalNote.arrivalNotice.refNo
+      this._remark = goodsReceivalNote.arrivalNotice.remark
       const date = goodsReceivalNote.createdAt
       this._date = new Date(parseInt(date))
       this._date = new Date(this._date).toUTCString()
@@ -447,49 +452,51 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
         .slice(1, 4)
         .join(' ')
 
-      await this._fetchOrderProducts()
+      await this._fetchWorksheet()
       await this._fetchCustomerContact()
     }
   }
 
-  async _fetchOrderProducts() {
+  async _fetchWorksheet() {
     const filters = [
       {
         name: 'arrivalNotice',
         operator: 'eq',
         value: this._arrivalNotice.id
+      },
+      {
+        name: 'type',
+        operator: 'eq',
+        value: WORKSHEET_TYPE.UNLOADING.value
       }
     ]
 
     const response = await client.query({
       query: gql`
         query {
-          orderProducts(${gqlBuilder.buildArgs({
+          worksheets(${gqlBuilder.buildArgs({
             filters
           })}) {
             items {
               id
-              batchId
-              product {
+              name
+              worksheetDetails {
                 id
-                name
-                description
-              }
-              packingType
-              packQty
-              remark
-              bizplace {
-                id
-                name
-                company {
+                issue
+                targetProduct {
                   id
-                  name
-                  address
-                  brn
+                  batchId
+                  product {
+                    id
+                    name
+                    description
+                  }
+                  packingType
+                  packQty
+                  unit
+                  totalWeight
                 }
               }
-              unit
-              totalWeight
             }
             total
           }
@@ -498,7 +505,19 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
     })
 
     if (!response.errors) {
-      this._products = response.data.orderProducts.items || []
+      const _worksheet = response.data.worksheets.items[0]
+      this._products = _worksheet.worksheetDetails.map(worksheetDetail => {
+        const _product = worksheetDetail.targetProduct
+        return {
+          name: _product.product.name,
+          description: _product.product.description,
+          batchId: _product.batchId,
+          packingType: _product.packingType,
+          packQty: _product.packQty,
+          totalWeight: _product.totalWeight,
+          issue: worksheetDetail.issue || '-'
+        }
+      })
     }
   }
 
