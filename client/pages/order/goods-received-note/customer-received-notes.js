@@ -4,8 +4,8 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import './upload-received-note'
 import { GRN_STATUS } from '../constants/order'
+import './upload-received-note'
 
 class CustomerReceivedNotes extends localize(i18next)(PageView) {
   static get styles() {
@@ -75,15 +75,11 @@ class CustomerReceivedNotes extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
-        name: 'arrivalNoticeRefNo',
+        name: 'arrivalNotice',
         label: i18next.t('field.ref_no'),
-        type: 'text',
-        props: { searchOper: 'i_like' }
-      },
-      {
-        name: 'arrivalNoticeNo',
-        label: i18next.t('field.gan'),
-        type: 'text',
+        type: 'object',
+        queryName: 'arrivalNotices',
+        field: 'refNo',
         props: { searchOper: 'i_like' }
       }
     ]
@@ -175,7 +171,7 @@ class CustomerReceivedNotes extends localize(i18next)(PageView) {
       query: gql`
         query {
           customerReceivalNotes(${gqlBuilder.buildArgs({
-            filters: this.searchForm.queryFilters,
+            filters: await this.searchForm.getQueryFilters(),
             pagination: { page, limit },
             sortings: sorters
           })}) {
