@@ -100,11 +100,10 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async pageInitialized() {
-    this.bizplace = await this.fetchBizplace()
-    this.product = await this.fetchProduct()
-    // this.bizplace = []
-    // this.product = []
     this.location = await this.fetchLocation()
+
+    // const _products = await this.fetchProduct()
+    const _userBizplaces = await this._fetchUserBizplaces()
 
     this.packingType = await getCodeByName('PACKING_TYPES')
 
@@ -158,7 +157,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
             key: 'bizplace.name',
             width: 50,
             type: 'array',
-            arrData: this.bizplace
+            arrData: []
           },
           sortable: true,
           width: 250
@@ -188,7 +187,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
             key: 'product.name',
             width: 50,
             type: 'array',
-            arrData: this.product
+            arrData: []
           },
           sortable: true,
           width: 500
@@ -292,8 +291,6 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         }
       ]
     }
-
-    const _userBizplaces = await this._fetchUserBizplaces()
 
     this._searchFields = [
       {
@@ -609,54 +606,6 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     return this.config.columns
   }
 
-  async _printPalletLabel() {
-    const records = this.dataGrist.selected
-    var labelId = this._palletLabel && this._palletLabel.id
-
-    if (!labelId) {
-      document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            level: 'error',
-            message: `${i18next.t('text.no_label_setting_was_found')}. ${i18next.t('text.please_check_your_setting')}`
-          }
-        })
-      )
-    } else {
-      for (var record of records) {
-        var searchParams = new URLSearchParams()
-
-        /* for pallet record mapping */
-        searchParams.append('pallet', record.palletId)
-        searchParams.append('batch', record.batchId)
-        searchParams.append('product', record.product.name)
-
-        try {
-          const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
-            method: 'GET'
-          })
-
-          if (response.status !== 200) {
-            throw `Error : Can't get label command from server (response: ${response.status})`
-          }
-
-          var command = await response.text()
-
-          if (!this.printer) {
-            this.printer = new USBPrinter()
-          }
-
-          await this.printer.connectAndPrint(command)
-        } catch (e) {
-          this._showToast(e)
-
-          delete this.printer
-          break
-        }
-      }
-    }
-  }
-
   async importHandler(patches) {
     patches.map(itm => {
       itm.qty = parseFloat(itm.qty)
@@ -710,34 +659,65 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _exportableData() {
-    let records = []
-    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
-      records = this.dataGrist.selected
-    } else {
-      records = await this.fetchInventoriesForExport()
-    }
+    try {
+      let records = []
+      let data = []
 
-    var headerSetting = this.dataGrist._config.columns
-      .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
-      .map(column => {
-        return column.imex
+      var headerSetting = [
+        ...this.dataGrist._config.columns
+          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+          .map(column => {
+            return column.imex
+          })
+      ]
+
+      const bizplaceFilters = (await this.searchForm.getQueryFilters()).filter(x => x.name === 'bizplace')
+
+      if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+        records = this.dataGrist.selected
+        data = records
+      } else {
+        if (bizplaceFilters.length == 0) {
+          throw new Error(`Please select a customer for export.`)
+        }
+        data = await this.fetchInventoriesForExport()
+      }
+
+      let bizplace = await this.fetchBizplaces(bizplaceFilters)
+      let product = await this.fetchProduct(bizplaceFilters)
+
+      headerSetting = headerSetting.map(column => {
+        switch (column.key) {
+          case 'bizplace.name':
+            column.arrData = bizplace
+            break
+          case 'product.name':
+            column.arrData = product
+            break
+          default:
+            break
+        }
+        return column
       })
 
-    var data = records.map(item => {
-      return {
-        id: item.id,
-        ...this._columns
-          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
-          .reduce((record, column) => {
-            record[column.imex.key] = column.imex.key
-              .split('.')
-              .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
-            return record
-          }, {})
-      }
-    })
+      data = data.map(item => {
+        return {
+          id: item.id,
+          ...this._columns
+            .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+            .reduce((record, column) => {
+              record[column.imex.key] = column.imex.key
+                .split('.')
+                .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
+              return record
+            }, {})
+        }
+      })
 
-    return { header: headerSetting, data: data }
+      return { header: headerSetting, data: data }
+    } catch (e) {
+      this._showToast(e)
+    }
   }
 
   stateChanged(state) {
@@ -745,30 +725,12 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     this._palletLabel = (palletLabelSetting && palletLabelSetting.board) || {}
   }
 
-  async fetchBizplace() {
-    const response = await client.query({
-      query: gql`
-          query {
-            bizplaces(${gqlBuilder.buildArgs({
-              filters: []
-            })}) {
-              items {
-                id
-                name
-              }
-            }
-          }
-        `
-    })
-    return response.data.bizplaces.items
-  }
-
-  async _fetchUserBizplaces() {
+  async _fetchUserBizplaces(email = '') {
     const response = await client.query({
       query: gql`
         query {
           userBizplaces(${gqlBuilder.buildArgs({
-            email: ''
+            email: email
           })}) {
             id
             name
@@ -784,12 +746,31 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async fetchProduct() {
+  async fetchBizplaces(bizplace = []) {
     const response = await client.query({
       query: gql`
           query {
-            products(${gqlBuilder.buildArgs({
-              filters: []
+            bizplaces(${gqlBuilder.buildArgs({
+              filters: [...bizplace]
+            })}) {
+              items{
+                id
+                name
+                description
+              }
+            }
+          }
+        `
+    })
+    return response.data.bizplaces.items
+  }
+
+  async fetchProduct(bizplace = []) {
+    const response = await client.query({
+      query: gql`
+          query {
+            productsByBizplace(${gqlBuilder.buildArgs({
+              filters: [...bizplace]
             })}) {
               items {
                 id
@@ -799,7 +780,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           }
         `
     })
-    return response.data.products.items
+    return response.data.productsByBizplace.items
   }
 
   async fetchLocation() {
@@ -818,6 +799,54 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         `
     })
     return response.data.locations.items
+  }
+
+  async _printPalletLabel() {
+    const records = this.dataGrist.selected
+    var labelId = this._palletLabel && this._palletLabel.id
+
+    if (!labelId) {
+      document.dispatchEvent(
+        new CustomEvent('notify', {
+          detail: {
+            level: 'error',
+            message: `${i18next.t('text.no_label_setting_was_found')}. ${i18next.t('text.please_check_your_setting')}`
+          }
+        })
+      )
+    } else {
+      for (var record of records) {
+        var searchParams = new URLSearchParams()
+
+        /* for pallet record mapping */
+        searchParams.append('pallet', record.palletId)
+        searchParams.append('batch', record.batchId)
+        searchParams.append('product', record.product.name)
+
+        try {
+          const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
+            method: 'GET'
+          })
+
+          if (response.status !== 200) {
+            throw `Error : Can't get label command from server (response: ${response.status})`
+          }
+
+          var command = await response.text()
+
+          if (!this.printer) {
+            this.printer = new USBPrinter()
+          }
+
+          await this.printer.connectAndPrint(command)
+        } catch (e) {
+          this._showToast(e)
+
+          delete this.printer
+          break
+        }
+      }
+    }
   }
 
   _showToast({ type, message }) {
