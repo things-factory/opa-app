@@ -422,12 +422,12 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
       cancelButton: { text: i18next.t('button.cancel'), color: '#cfcfcf' },
       callback: async result => {
         if (result.value) {
-          const names = this.dataGrist.selected.map(record => record.name)
-          if (names && names.length > 0) {
+          const ids = this.dataGrist.selected.map(record => record.id)
+          if (ids && ids.length > 0) {
             const response = await client.query({
               query: gql`
             mutation {
-              deleteLocations(${gqlBuilder.buildArgs({ names })})
+              deleteLocations(${gqlBuilder.buildArgs({ ids })})
             }
           `
             })
