@@ -239,16 +239,16 @@ export default {
      * GRN Menus Section
      */
     {
-      tagname: 'receival-note-list',
-      page: 'receival_note_list'
+      tagname: 'received-note-list',
+      page: 'received_note_list'
     },
     {
-      tagname: 'receival-note-detail',
-      page: 'receival_note_detail'
+      tagname: 'received-note-detail',
+      page: 'received_note_detail'
     },
     {
-      tagname: 'customer-receival-notes',
-      page: 'receival_notes'
+      tagname: 'customer-received-notes',
+      page: 'received_notes'
     },
     /**
      * Billing Menus Section

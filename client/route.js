@@ -218,16 +218,16 @@ export default function route(page) {
     /**
      * GRN Menus Section
      */
-    case 'receival_note_list':
-      import('./pages/order/receival-note/receival-note-list')
+    case 'received_note_list':
+      import('./pages/order/goods-received-note/received-note-list')
       return page
 
-    case 'receival_note_detail':
-      import('./pages/order/receival-note/receival-note-detail')
+    case 'received_note_detail':
+      import('./pages/order/goods-received-note/received-note-detail')
       return page
 
-    case 'receival_notes':
-      import('./pages/order/receival-note/customer-receival-notes')
+    case 'received_notes':
+      import('./pages/order/goods-received-note/customer-received-notes')
       return page
 
     /**

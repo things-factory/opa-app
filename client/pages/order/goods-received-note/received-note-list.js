@@ -1,13 +1,22 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
+import { openPopup } from '@things-factory/layout-base'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
+import {
+  client,
+  gqlBuilder,
+  isMobileDevice,
+  navigate,
+  PageView,
+  ScrollbarStyles,
+  flattenObject
+} from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import './upload-receival-note'
-import { GRN_STATUS } from '../constants/order'
+import { getCodeByName } from '@things-factory/code-base'
+import './upload-received-note'
 
-class CustomerReceivalNotes extends localize(i18next)(PageView) {
+class ReceivedNoteList extends localize(i18next)(PageView) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -15,14 +24,12 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-
           overflow: hidden;
         }
 
         search-form {
           overflow: visible;
         }
-
         data-grist {
           overflow-y: auto;
           flex: 1;
@@ -68,6 +75,9 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
+    const _grnStatus = await getCodeByName('GRN_STATUS')
+    const _userBizplaces = await this._fetchUserBizplaces()
+
     this._searchFields = [
       {
         label: i18next.t('field.grn'),
@@ -76,27 +86,72 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
-        label: i18next.t('field.gan'),
-        name: 'refNo',
+        label: i18next.t('field.customer'),
+        name: 'bizplace',
+        type: 'select',
+        options: [
+          { value: '' },
+          ..._userBizplaces
+            .filter(userBizplaces => !userBizplaces.mainBizplace)
+            .map(userBizplace => {
+              return {
+                name: userBizplace.name,
+                value: userBizplace.id
+              }
+            })
+        ],
+        props: { searchOper: 'eq' }
+      },
+      {
+        name: 'arrivalNoticeRefNo',
+        label: i18next.t('field.ref_no'),
         type: 'text',
         props: { searchOper: 'i_like' }
+      },
+      {
+        name: 'arrivalNoticeNo',
+        label: i18next.t('field.gan'),
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
+        label: i18next.t('field.status'),
+        name: 'status',
+        type: 'select',
+        options: [
+          { value: '' },
+          ..._grnStatus.map(status => {
+            return { name: i18next.t(`label.${status.description}`), value: status.name }
+          })
+        ],
+        props: { searchOper: 'eq' }
       }
     ]
 
     this.config = {
+      list: {
+        fields: ['name', 'bizplace|name', 'arrivalNotice|refNo', 'arrivalNotice|name', 'updater', 'updatedAt']
+      },
       rows: { appendable: false, selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'gutter',
           gutterName: 'button',
-          icon: 'cloud_download',
+          icon: 'post_add',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              if (record.attachments[0] && record.attachments[0].path) {
-                if (record.status === GRN_STATUS.NEW.value) this._receivedGRN(record.name)
-                window.open(`attachment/${record.attachments[0].path}`)
-              }
+              if (record.id) this._uploadGRN(record.name, record.id)
+            }
+          }
+        },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'reorder',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              navigate(`receival_note_detail/${record.name}`)
             }
           }
         },
@@ -109,25 +164,28 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
           width: 180
         },
         {
-          type: 'object',
-          name: 'arrivalNotice',
-          header: i18next.t('field.gan'),
+          type: 'string',
+          name: 'bizplace|name',
+          header: i18next.t('field.customer'),
           record: { align: 'left' },
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              if (record.id) navigate(`arrival_notice_detail/${record.arrivalNotice.name}`)
-            }
-          },
           sortable: true,
-          width: 200
+          width: 230
         },
         {
           type: 'string',
-          name: 'refNo',
+          name: 'arrivalNotice|refNo',
           header: i18next.t('field.ref_no'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
-          width: 160
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'arrivalNotice|name',
+          header: i18next.t('field.gan'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 180
         },
         {
           type: 'string',
@@ -146,8 +204,8 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
           width: 160
         },
         {
-          type: 'object',
-          name: 'updater',
+          type: 'string',
+          name: 'updater|name',
           header: i18next.t('field.updater'),
           record: { align: 'center' },
           sortable: true,
@@ -169,7 +227,7 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
     const response = await client.query({
       query: gql`
         query {
-          customerReceivalNotes(${gqlBuilder.buildArgs({
+          goodsReceivalNotes(${gqlBuilder.buildArgs({
             filters: this.searchForm.queryFilters,
             pagination: { page, limit },
             sortings: sorters
@@ -190,12 +248,6 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
                 name
                 description
               }
-              attachments {
-                id
-                name
-                refBy
-                path
-              }
               createdAt
               updatedAt
               updater {
@@ -212,33 +264,53 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       return {
-        data: response.data.customerReceivalNotes.items.map(grn => {
-          return {
-            ...grn,
-            refNo: grn.arrivalNotice.refNo
-          }
-        }),
-        total: response.data.customerReceivalNotes.total || 0,
-        records: response.data.customerReceivalNotes.items || []
+        total: response.data.goodsReceivalNotes.total || 0,
+        records:
+          response.data.goodsReceivalNotes.items.map(item => {
+            return flattenObject({
+              ...item
+            })
+          }) || {}
       }
     }
   }
 
-  async _receivedGRN(name) {
+  async _fetchUserBizplaces() {
     const response = await client.query({
       query: gql`
-        mutation {
-          receivedGoodsReceivalNote(${gqlBuilder.buildArgs({
-            name
+        query {
+          userBizplaces(${gqlBuilder.buildArgs({
+            email: ''
           })}) {
             id
-            status
+            name
+            description
+            mainBizplace
           }
         }
       `
     })
 
-    if (!response.error) this.dataGrist.fetch()
+    if (!response.errors) {
+      return response.data.userBizplaces
+    }
+  }
+
+  _uploadGRN(grnName, grnId) {
+    openPopup(
+      html`
+        <upload-received-note
+          .grnName="${grnName}"
+          .grnId="${grnId}"
+          .callback="${this.dataGrist.fetch.bind(this.dataGrist)}"
+        ></upload-received-note>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.upload_signed_grn')
+      }
+    )
   }
 
   get _columns() {
@@ -250,4 +322,4 @@ class CustomerReceivalNotes extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('customer-receival-notes', CustomerReceivalNotes)
+window.customElements.define('received-note-list', ReceivedNoteList)

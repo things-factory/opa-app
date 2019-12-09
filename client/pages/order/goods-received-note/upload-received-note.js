@@ -6,7 +6,7 @@ import { client, gqlBuilder, isMobileDevice } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 
-class UploadReceivalNote extends localize(i18next)(LitElement) {
+class UploadReceivedNote extends localize(i18next)(LitElement) {
   static get styles() {
     return [
       MultiColumnFormStyles,
@@ -348,4 +348,4 @@ class UploadReceivalNote extends localize(i18next)(LitElement) {
   }
 }
 
-window.customElements.define('upload-receival-note', UploadReceivalNote)
+window.customElements.define('upload-received-note', UploadReceivedNote)
