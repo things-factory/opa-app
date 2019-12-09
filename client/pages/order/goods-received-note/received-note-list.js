@@ -13,9 +13,10 @@ import {
 } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import './upload-receival-note'
+import { getCodeByName } from '@things-factory/code-base'
+import './upload-received-note'
 
-class ReceivalNoteList extends localize(i18next)(PageView) {
+class ReceivedNoteList extends localize(i18next)(PageView) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -23,7 +24,6 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-
           overflow: hidden;
         }
 
@@ -75,6 +75,9 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
+    const _grnStatus = await getCodeByName('GRN_STATUS')
+    const _userBizplaces = await this._fetchUserBizplaces()
+
     this._searchFields = [
       {
         label: i18next.t('field.grn'),
@@ -85,15 +88,43 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
       {
         label: i18next.t('field.customer'),
         name: 'bizplace',
-        type: 'object',
-        queryName: 'bizplaces',
-        field: 'name'
+        type: 'select',
+        options: [
+          { value: '' },
+          ..._userBizplaces
+            .filter(userBizplaces => !userBizplaces.mainBizplace)
+            .map(userBizplace => {
+              return {
+                name: userBizplace.name,
+                value: userBizplace.id
+              }
+            })
+        ],
+        props: { searchOper: 'eq' }
       },
       {
+        name: 'arrivalNoticeRefNo',
         label: i18next.t('field.ref_no'),
-        name: 'refNo',
         type: 'text',
         props: { searchOper: 'i_like' }
+      },
+      {
+        name: 'arrivalNoticeNo',
+        label: i18next.t('field.gan'),
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
+        label: i18next.t('field.status'),
+        name: 'status',
+        type: 'select',
+        options: [
+          { value: '' },
+          ..._grnStatus.map(status => {
+            return { name: i18next.t(`label.${status.description}`), value: status.name }
+          })
+        ],
+        props: { searchOper: 'eq' }
       }
     ]
 
@@ -157,6 +188,14 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
           width: 180
         },
         {
+          type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 180
+        },
+        {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
@@ -202,6 +241,7 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
                 description
                 refNo
               }
+              status
               description
               bizplace {
                 id
@@ -235,10 +275,35 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
     }
   }
 
+  async _fetchUserBizplaces() {
+    const response = await client.query({
+      query: gql`
+        query {
+          userBizplaces(${gqlBuilder.buildArgs({
+            email: ''
+          })}) {
+            id
+            name
+            description
+            mainBizplace
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      return response.data.userBizplaces
+    }
+  }
+
   _uploadGRN(grnName, grnId) {
     openPopup(
       html`
-        <upload-receival-note .grnName="${grnName}" .grnId="${grnId}"></upload-receival-note>
+        <upload-received-note
+          .grnName="${grnName}"
+          .grnId="${grnId}"
+          .callback="${this.dataGrist.fetch.bind(this.dataGrist)}"
+        ></upload-received-note>
       `,
       {
         backdrop: true,
@@ -257,4 +322,4 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('receival-note-list', ReceivalNoteList)
+window.customElements.define('received-note-list', ReceivedNoteList)

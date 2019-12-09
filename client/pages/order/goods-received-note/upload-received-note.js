@@ -6,7 +6,7 @@ import { client, gqlBuilder, isMobileDevice } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 
-class UploadReceivalNote extends localize(i18next)(LitElement) {
+class UploadReceivedNote extends localize(i18next)(LitElement) {
   static get styles() {
     return [
       MultiColumnFormStyles,
@@ -90,6 +90,7 @@ class UploadReceivalNote extends localize(i18next)(LitElement) {
       grnId: String,
       grnName: String,
       config: Object,
+      callback: Object,
       _arrivalNotice: Object
     }
   }
@@ -128,7 +129,7 @@ class UploadReceivalNote extends localize(i18next)(LitElement) {
       </div>
 
       <div class="button-container">
-        <button @click=${this._saveGRNAttachment}>${i18next.t('button.send')}</button>
+        <button @click=${this._saveGRNAttachment}>${i18next.t('button.submit')}</button>
       </div>
     `
   }
@@ -285,9 +286,8 @@ class UploadReceivalNote extends localize(i18next)(LitElement) {
         refBy: this.grnId,
         file: attachmentFile,
         category: 'ORDER'
-        // description: 'Goods Receival Note'
       }
-
+      this.dataGrist.showSpinner()
       const response = await client.query({
         query: gql`
           mutation($attachment: NewAttachment!) {
@@ -307,15 +307,33 @@ class UploadReceivalNote extends localize(i18next)(LitElement) {
       })
 
       if (!response.errors) {
+        if (this.grnName) {
+          const name = this.grnName
+          const submit = await client.query({
+            query: gql`
+              mutation {
+                submittedGoodsReceivalNote(${gqlBuilder.buildArgs({
+                  name
+                })}) {
+                  id
+                  status
+                }
+              }
+            `
+          })
+
+          if (!submit.error) {
+            if (this.callback && typeof this.callback === 'function') this.callback()
+          }
+        }
         history.back()
         this._showToast({ message: i18next.t('text.goods_received_note_uploaded') })
       }
     } catch (e) {
       this._showToast(e)
+    } finally {
+      this.dataGrist.hideSpinner()
     }
-    // } else {
-    //   this._showToast({ message: i18next.t('text.please_add_the_file') })
-    // }
   }
 
   _showToast({ type, message }) {
@@ -330,4 +348,4 @@ class UploadReceivalNote extends localize(i18next)(LitElement) {
   }
 }
 
-window.customElements.define('upload-receival-note', UploadReceivalNote)
+window.customElements.define('upload-received-note', UploadReceivedNote)

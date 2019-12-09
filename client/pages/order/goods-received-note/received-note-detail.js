@@ -5,7 +5,7 @@ import gql from 'graphql-tag'
 import '@things-factory/attachment-ui/client/components/file-selector'
 import '@things-factory/image-uploader-ui/client/image-upload-previewer'
 
-class ReceivalNoteDetail extends localize(i18next)(PageView) {
+class ReceivedNoteDetail extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _grnNo: String,
@@ -51,17 +51,17 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
           text-align: left;
         }
 
-        [goods-receival-note] {
+        [goods-received-note] {
           overflow: scroll;
         }
 
         /* Hide scrollbar for Chrome, Safari and Opera*/
-        [goods-receival-note]::-webkit-scrollbar {
+        [goods-received-note]::-webkit-scrollbar {
           display: none;
         }
 
         /* Hide scrollbar for IE and Edge */
-        [goods-receival-note] {
+        [goods-received-note] {
           -ms-overflow-style: none;
         }
 
@@ -82,6 +82,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
         [title] {
           text-align: center;
           font-weight: bold;
+          text-transform: uppercase;
         }
 
         [brief] {
@@ -120,6 +121,10 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
           flex: 1;
           padding-top: 10px;
           padding-bottom: 10px;
+        }
+
+        [name] {
+          text-transform: capitalize;
         }
 
         table {
@@ -179,7 +184,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
           height: 120px;
         }
 
-        [goods-receival-note] [agreement] > file-selector {
+        [goods-received-note] [agreement] > file-selector {
           grid-column: span 6;
           font: var(--card-list-create-input-font);
           border: none;
@@ -202,8 +207,17 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
           height: 100%;
         }
 
+        [notice] {
+          text-transform: capitalize;
+        }
+
+        [date] {
+          text-transform: capitalize;
+        }
+
         [desc] {
           font-style: italic;
+          text-transform: capitalize;
         }
 
         [footer] {
@@ -277,7 +291,7 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
     var footer = i18next.t('text.please_write_down_full_name_clearly')
 
     return html`
-      <div goods-receival-note>
+      <div goods-received-note>
         <div business-info>
           <h2 business-name>${company}</h2>
           <span business-brn>(${brn})</span>
@@ -584,4 +598,4 @@ class ReceivalNoteDetail extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('receival-note-detail', ReceivalNoteDetail)
+window.customElements.define('received-note-detail', ReceivedNoteDetail)
