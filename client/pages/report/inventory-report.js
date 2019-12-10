@@ -133,14 +133,6 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
       columns: [
         {
           type: 'string',
-          name: 'bizplace|name',
-          header: i18next.t('field.customer'),
-          record: { align: 'left' },
-          sortable: false,
-          width: 250
-        },
-        {
-          type: 'string',
           name: 'product|name',
           header: i18next.t('field.product'),
           sortable: false,
@@ -169,14 +161,14 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
           name: 'orderName',
           header: i18next.t('field.order_no'),
           sortable: true,
-          width: 200
+          width: 300
         },
         {
           type: 'string',
           name: 'orderRefNo',
           header: i18next.t('field.ref_no'),
           sortable: true,
-          width: 200
+          width: 300
         },
         {
           type: 'string',
@@ -193,17 +185,24 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
           record: { align: 'center' },
           sortable: true,
           width: 100
+        },
+        {
+          type: 'number',
+          name: 'weight',
+          header: i18next.t('field.weight'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 100
         }
       ],
       rows: {
         selectable: false,
         groups: [
-          { column: 'bizplace|name' },
           { column: 'product|name' },
-          { column: 'packingType', title: 'Packing Type Total' },
+          { column: 'packingType', title: 'Sub Total' },
           { column: 'batchId', title: 'Batch Total' }
         ],
-        totals: ['qty']
+        totals: ['qty', 'weight']
       }
     }
   }
@@ -248,6 +247,7 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
                 description
               }
               qty
+              weight
               status
               packingType
               transactionType
