@@ -69,6 +69,7 @@
     "@things-scene/graphql": "*",
     "@things-scene/half-roundrect": "*",
     "@things-scene/indoor-map": "*",
+    "@things-scene/label": "*",
     "@things-scene/legend": "*",
     "@things-scene/marker": "*",
     "@things-scene/mqtt": "*",
