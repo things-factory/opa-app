@@ -130,7 +130,7 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
 
     this.config = {
       list: {
-        fields: ['name', 'bizplace|name', 'arrivalNotice|refNo', 'arrivalNotice|name', 'updater', 'updatedAt']
+        fields: ['name', 'bizplace', 'orderRefNo', 'arrivalNotice', 'updater', 'updatedAt']
       },
       rows: { appendable: false, selectable: { multiple: true } },
       columns: [
@@ -164,8 +164,8 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
           width: 180
         },
         {
-          type: 'string',
-          name: 'bizplace|name',
+          type: 'object',
+          name: 'bizplace',
           header: i18next.t('field.customer'),
           record: { align: 'left' },
           sortable: true,
@@ -173,15 +173,15 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'arrivalNotice|refNo',
+          name: 'orderRefNo',
           header: i18next.t('field.ref_no'),
-          record: { align: 'left' },
+          record: { align: 'center' },
           sortable: true,
-          width: 100
+          width: 160
         },
         {
-          type: 'string',
-          name: 'arrivalNotice|name',
+          type: 'object',
+          name: 'arrivalNotice',
           header: i18next.t('field.gan'),
           record: { align: 'left' },
           sortable: true,
@@ -204,8 +204,8 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
           width: 160
         },
         {
-          type: 'string',
-          name: 'updater|name',
+          type: 'object',
+          name: 'updater',
           header: i18next.t('field.updater'),
           record: { align: 'center' },
           sortable: true,
@@ -266,11 +266,12 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
       return {
         total: response.data.goodsReceivalNotes.total || 0,
         records:
-          response.data.goodsReceivalNotes.items.map(item => {
-            return flattenObject({
-              ...item
-            })
-          }) || {}
+          response.data.customerReceivalNotes.items.map(grn => {
+            return {
+              ...grn,
+              orderRefNo: grn.arrivalNotice.refNo || ''
+            }
+          }) || []
       }
     }
   }
