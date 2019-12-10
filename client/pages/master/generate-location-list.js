@@ -9,7 +9,6 @@ import { css, html, LitElement } from 'lit-element'
 export class GenerateLocationList extends localize(i18next)(LitElement) {
   static get properties() {
     return {
-      warehouseId: String,
       _locationList: Array,
       _formatsFromCode: Array,
       _generatorConfig: Object,
@@ -418,8 +417,19 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
 
                   locationObj.status = 'EMPTY'
                   locationObj.type = 'SHELF'
-                  locationObj.warehouse = { id: this.warehouseId }
-                  locationObj.cuFlag = '+'
+                  locationObj.__dirty__ = '+'
+
+                  const dirtyfields = {
+                    name: { before: null, after: locationObj.name },
+                    row: { before: null, after: locationObj.row },
+                    column: { before: null, after: locationObj.column },
+                    shelf: { before: null, after: locationObj.shelf },
+                    zone: { before: null, after: locationObj.zone },
+                    status: { before: null, after: locationObj.status },
+                    type: { before: null, after: locationObj.type }
+                  }
+
+                  locationObj.__dirtyfields__ = dirtyfields
 
                   tempLocationList.push(locationObj)
                 }

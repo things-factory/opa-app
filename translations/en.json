@@ -803,5 +803,6 @@
   "label.level_extension": "level extension",
   "label.shelf_extension": "shelf extension",
   "label.enter_extension": "enter extension",
-  "label.add_leading_zero": "add leading zero"
+  "label.add_leading_zero": "add leading zero",
+  "text.cannot_delete_unsaved_location(s)": "cannot delete unsaved location(s)"
 }

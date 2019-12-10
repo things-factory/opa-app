@@ -62,7 +62,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
         id="search-form"
         .fields=${this._searchFields}
         initFocus="description"
-        @submit=${e => this.dataGrist.fetch()}
+        @submit=${this._clearTempLocation.bind(this)}
       ></search-form>
 
       <data-grist
@@ -289,58 +289,65 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async fetchHandler({ page, limit, sorters = [] }) {
-    let records = []
-    let total = []
+    let filters = []
+    if (this._warehouseId) {
+      filters.push({
+        name: 'warehouse_id',
+        operator: 'eq',
+        value: this._warehouseId
+      })
+    }
 
-    if (this._locationList !== []) {
-      ;(records = this._locationList), (total = this._locationList.length)
-    } else if (this._locationList === []) {
-      let filters = []
-      if (this._warehouseId) {
-        filters.push({
-          name: 'warehouse_id',
-          operator: 'eq',
-          value: this._warehouseId
-        })
-      }
-
-      const response = await client.query({
-        query: gql`
-        query {
-          locations(${gqlBuilder.buildArgs({
-            filters: [...filters, ...this.searchForm.queryFilters],
-            pagination: { page, limit },
-            sortings: sorters
-          })}) {
-            items {
+    const response = await client.query({
+      query: gql`
+      query {
+        locations(${gqlBuilder.buildArgs({
+          filters: [...filters, ...this.searchForm.queryFilters],
+          pagination: { page, limit },
+          sortings: sorters
+        })}) {
+          items {
+            id
+            name
+            zone
+            row
+            type
+            column
+            shelf
+            status
+            updatedAt
+            updater{
               id
               name
-              zone
-              row
-              type
-              column
-              shelf
-              status
-              updatedAt
-              updater{
-                id
-                name
-                description
-              }
+              description
             }
-            total
           }
+          total
         }
-      `
-      })
+      }
+    `
+    })
 
-      ;(total = response.data.locations.total || 0), (records = response.data.locations.items || [])
+    if (!response.errors) {
+      var responseItems = response.data.locations.items || []
+      var total = response.data.locations.total || 0
+
+      if (this._locationList !== []) {
+        let generatedItems = this._locationList
+        var records = [...responseItems, ...generatedItems]
+        total += generatedItems.length
+      }
     }
 
     return {
       records: records,
       total: total
     }
+  }
+
+  _clearTempLocation() {
+    this._locationList = []
+    this.dataGrist.fetch()
   }
 
   async importHandler(patches) {
@@ -365,7 +372,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
 
       if (!response.errors) {
         history.back()
-        this.dataGrist.fetch()
+        this._clearTempLocation()
         document.dispatchEvent(
           new CustomEvent('notify', {
             detail: {
@@ -377,40 +384,39 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  _saveLocation() {
-    // let patches = this.dataGrist._data.records.filter(x => x.cuFlag === '+')
+  async _saveLocation() {
     let patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
-    // if (patches && patches.length) {
-    //   patches = patches.map(patch => {
-    //     if (this._warehouseId && !patch.warehouse) {
-    //       patch.warehouse = { id: this._warehouseId }
-    //     }
-    //     return patch
-    //   })
+    if (patches && patches.length) {
+      patches = patches.map(patch => {
+        if (this._warehouseId && !patch.warehouse) {
+          patch.warehouse = { id: this._warehouseId }
+        }
+        return patch
+      })
 
-    //   const response = await client.query({
-    //     query: gql`
-    //         mutation {
-    //           updateMultipleLocation(${gqlBuilder.buildArgs({
-    //             patches
-    //           })}) {
-    //             name
-    //           }
-    //         }
-    //       `
-    //   })
+      const response = await client.query({
+        query: gql`
+            mutation {
+              updateMultipleLocation(${gqlBuilder.buildArgs({
+                patches
+              })}) {
+                name
+              }
+            }
+          `
+      })
 
-    //   if (!response.errors) {
-    //     this.dataGrist.fetch()
-    //     document.dispatchEvent(
-    //       new CustomEvent('notify', {
-    //         detail: {
-    //           message: i18next.t('text.data_updated_successfully')
-    //         }
-    //       })
-    //     )
-    //   }
-    // }
+      if (!response.errors) {
+        this._clearTempLocation()
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              message: i18next.t('text.data_updated_successfully')
+            }
+          })
+        )
+      }
+    }
   }
 
   async _deleteLocation() {
@@ -422,18 +428,32 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
       cancelButton: { text: i18next.t('button.cancel'), color: '#cfcfcf' },
       callback: async result => {
         if (result.value) {
-          const ids = this.dataGrist.selected.map(record => record.id)
+          let ids = []
+          this.dataGrist.selected.map(record => {
+            if (record.id) ids.push(record.id)
+          })
           if (ids && ids.length > 0) {
             const response = await client.query({
               query: gql`
-            mutation {
-              deleteLocations(${gqlBuilder.buildArgs({ ids })})
-            }
-          `
+                mutation {
+                  deleteLocations(${gqlBuilder.buildArgs({ ids })})
+                }
+              `
             })
 
-            if (!response.errors) this.dataGrist.fetch()
-          }
+            if (!response.errors) {
+              ids = []
+              this._clearTempLocation()
+            }
+          } else
+            document.dispatchEvent(
+              new CustomEvent('notify', {
+                detail: {
+                  level: 'error',
+                  message: `${i18next.t('text.cannot_delete_unsaved_location(s)')}`
+                }
+              })
+            )
         }
       }
     })
@@ -483,7 +503,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
                 }
               `
             })
-            if (!response.errors) this.dataGrist.fetch()
+            if (!response.errors) this._clearTempLocation()
           }
         }
       })
@@ -551,7 +571,6 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     openPopup(
       html`
         <generate-location-list
-          .warehouseId="${this._warehouseId}"
           @generated="${e => {
             this._locationList = e.detail
             this.dataGrist.fetch()
