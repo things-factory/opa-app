@@ -161,7 +161,14 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
           header: i18next.t('field.grn'),
           record: { align: 'left' },
           sortable: true,
-          width: 180
+          width: 180,
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              if (record.attachments[0] && record.attachments[0].path) {
+                window.open(`attachment/${record.attachments[0].path}`)
+              }
+            }
+          }
         },
         {
           type: 'object',
@@ -248,6 +255,12 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
                 name
                 description
               }
+              attachments {
+                id
+                name
+                refBy
+                path
+              }
               createdAt
               updatedAt
               updater {
@@ -266,7 +279,7 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
       return {
         total: response.data.goodsReceivalNotes.total || 0,
         records:
-          response.data.customerReceivalNotes.items.map(grn => {
+          response.data.goodsReceivalNotes.items.map(grn => {
             return {
               ...grn,
               orderRefNo: grn.arrivalNotice.refNo || ''
