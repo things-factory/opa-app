@@ -138,7 +138,7 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
 
       let today = new Date()
       let year = today.getFullYear()
-      let month = today.getMonth()
+      let month = today.getMonth() + 1
       let date = today.getDate()
       let seq = 0
 
