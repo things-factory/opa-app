@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>OPAONE</title>
+    <meta name="generator" content="Things Factory Starter Kit" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Reimagining Logistics" />
+
+    <base href="/" />
+
+    <link rel="icon" href="/assets/favicon.ico" />
+
+    <!-- See https://goo.gl/OOhYW5 -->
+    <link rel="manifest" href="/assets/manifest.json" />
+
+    <!-- See https://goo.gl/qRE0vM -->
+    <meta name="theme-color" content="#22a6a7" />
+
+    <!-- Add to homescreen for Chrome on Android. Fallback for manifest.json -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="OPAONE" />
+    <meta name="application-description" content="Reimagining Logistics" />
+    <meta name="application-copyright" content="Copyright © hatiolab.com. All Rights Reserved." />
+    <link rel="application-icon" href="/assets/manifest/icon-96x96.png" />
+
+    <!-- Add to homescreen for Safari on iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="OPAONE" />
+
+    <!-- Homescreen icons -->
+    <link rel="apple-touch-icon" href="/assets/manifest/icon-48x48.png" />
+    <link rel="apple-touch-icon" sizes="72x72" href="/assets/manifest/icon-72x72.png" />
+    <link rel="apple-touch-icon" sizes="96x96" href="/assets/manifest/icon-96x96.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="/assets/manifest/icon-144x144.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/assets/manifest/icon-192x192.png" />
+
+    <!-- Tile icon for Windows 8 (144x144 + tile color) -->
+    <meta name="msapplication-TileImage" content="assets/manifest/icon-144x144.png" />
+    <meta name="msapplication-TileColor" content="#22a6a7" />
+    <meta name="msapplication-tap-highlight" content="no" />
+
+    <!-- Default twitter cards -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:site" content="@username" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="OPAONE, Reimagining Logistics" />
+    <meta property="og:image" content="/assets/manifest/image-metaog.png" />
+
+    <!-- Performance tip: hint to the browser to start the handshake for the fonts site -->
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
+
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Material+Icons&display=block" rel="stylesheet" />
+    <link rel="stylesheet" href="/theme.css" />
+
+    <script>
+      // Redux assumes `process.env.NODE_ENV` exists in the ES module build.
+      // https://github.com/reactjs/redux/issues/2907
+      window.process = { env: { NODE_ENV: 'production' } }
+    </script>
+
+    <!-- Add any global styles for body, document, etc. -->
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+
+        /* This is a font-stack that tries to use the system-default sans-serifs first */
+        font-family: Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+    </style>
+
+    <!--- prefetch -->
+    <link rel="prefetch" href="/signin.js">
+    <link rel="prefetch" href="/signup.js">
+    <link rel="prefetch" href="/forgot-password.js">
+    <link rel="prefetch" href="/domain-select.js">
+  </head>
+  <body>
+    <<%- pageElement %> id="page"></<%- pageElement %>>
+    <noscript>
+      Please enable JavaScript to view this website.
+    </noscript>
+    <!-- Load webcomponents-loader.js to check and load any polyfills your browser needs -->
+    <script src="node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="node_modules/web-animations-js/web-animations-next.min.js"></script>
+    <!-- Built with love using PWA Starter Kit -->
+
+    <script src="<%- elementScript %>"></script>
+    <script src="/theme.js"></script>
+    <script>
+      var pageEl = document.querySelector('#page')
+      page.data = <%- JSON.stringify(data) %>
+    </script>
+  </body>
+</html>
