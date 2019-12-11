@@ -92,7 +92,7 @@ class VasRelabel extends localize(i18next)(LitElement) {
                 `
               : ''}
 
-            <label ?hidden="${!this._isEditable}">${i18next.t('label.new-label')}</label>
+            <label ?hidden="${!this._isEditable}">${i18next.t('label.new_label')}</label>
             <file-uploader
               ?hidden="${!this._isEditable}"
               custom-input
@@ -222,7 +222,10 @@ class VasRelabel extends localize(i18next)(LitElement) {
     if (this.record.status === ORDER_VAS_STATUS.PENDING.value) return
     const queryName = 'products'
     const basicArgs = {
-      filters: [{ name: 'productRef', operator: 'noteq', value: '' }, { name: 'productRef', operator: 'is_not_null' }]
+      filters: [
+        { name: 'productRef', operator: 'noteq', value: '' },
+        { name: 'productRef', operator: 'is_not_null' }
+      ]
     }
     const confirmCallback = selected => {
       this._selectedProduct = selected

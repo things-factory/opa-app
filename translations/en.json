@@ -332,6 +332,8 @@
   "label.fleet_spec": "fleet spec",
   "label.from": "from",
   "label.from_date": "from date",
+  "label.from_batch_id": "from batch id",
+  "label.to_batch_id": "to batch id",
   "label.from_product": "from product",
   "label.from_warehouse": "from warehouse",
   "label.full_container_load": "full container load",
