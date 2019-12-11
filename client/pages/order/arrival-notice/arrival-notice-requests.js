@@ -203,7 +203,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           type: 'string',
           name: 'status',
           header: i18next.t('field.status'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
           width: 120
         },
