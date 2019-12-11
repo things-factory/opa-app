@@ -237,7 +237,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         }
       },
       pagination: { infinite: true },
-      list: { fields: ['completed', 'palletId', 'batchId', 'releaseQty'] },
+      list: { fields: ['completed', 'palletId', 'product', 'batchId', 'releaseQty'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
@@ -246,6 +246,13 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
           record: { align: 'center' },
+          width: 140
+        },
+        {
+          type: 'object',
+          name: 'product',
+          header: i18next.t('field.product'),
+          record: { align: 'left' },
           width: 140
         },
         {
