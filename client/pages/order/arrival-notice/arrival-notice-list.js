@@ -183,6 +183,14 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           width: 100
         },
         {
+          type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 120
+        },
+        {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
@@ -197,14 +205,6 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           record: { align: 'left' },
           sortable: true,
           width: 200
-        },
-        {
-          type: 'string',
-          name: 'status',
-          header: i18next.t('field.status'),
-          record: { align: 'left' },
-          sortable: true,
-          width: 120
         }
       ]
     }
