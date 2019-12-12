@@ -79,10 +79,6 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         {
           title: i18next.t('button.save'),
           action: this._saveInventories.bind(this)
-        },
-        {
-          title: i18next.t('button.delete'),
-          action: this._deleteInventories.bind(this)
         }
       ],
       printable: {
@@ -566,40 +562,6 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         )
       }
     }
-  }
-
-  async _deleteInventories() {
-    CustomAlert({
-      title: i18next.t('text.are_you_sure'),
-      text: i18next.t('text.you_wont_be_able_to_revert_this'),
-      type: 'warning',
-      confirmButton: { text: i18next.t('button.delete'), color: '#22a6a7' },
-      cancelButton: { text: 'cancel', color: '#cfcfcf' },
-      callback: async result => {
-        if (result.value) {
-          const id = this.dataGrist.selected.map(record => record.id)
-          if (id && id.length > 0) {
-            const response = await client.query({
-              query: gql`
-                mutation {
-                  deleteInventories(${gqlBuilder.buildArgs({ id })})
-                }
-              `
-            })
-            if (!response.errors) {
-              this.dataGrist.fetch()
-              document.dispatchEvent(
-                new CustomEvent('notify', {
-                  detail: {
-                    message: i18next.t('text.data_deleted_successfully')
-                  }
-                })
-              )
-            }
-          }
-        }
-      }
-    })
   }
 
   get _columns() {
