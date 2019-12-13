@@ -366,20 +366,24 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
                 orderRefNo
                 orderNo
                 bizplace {
+                  id
                   name
                   description
                 }
                 product {
+                  id
                   name
                   description
                 }
                 qty
                 warehouse {
+                  id
                   name
                   description
                 }
                 zone
                 location {
+                  id
                   name
                   description
                 }
@@ -387,6 +391,7 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
                 transactionType
                 updatedAt
                 updater {
+                  id
                   name
                   description
                 }
