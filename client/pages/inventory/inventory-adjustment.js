@@ -1,15 +1,14 @@
+import { USBPrinter } from '@things-factory/barcode-base'
+import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { getCodeByName } from '@things-factory/code-base'
-import { connect } from 'pwa-helpers/connect-mixin'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
-import { PALLET_LABEL_SETTING_KEY } from '../../setting-constants'
-import { CustomAlert } from '../../utils/custom-alert'
-import gql from 'graphql-tag'
-import { USBPrinter } from '@things-factory/barcode-base'
-import { css, html } from 'lit-element'
 import { openPopup } from '@things-factory/layout-base'
+import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
+import gql from 'graphql-tag'
+import { css, html } from 'lit-element'
+import { connect } from 'pwa-helpers/connect-mixin'
+import { PALLET_LABEL_SETTING_KEY } from '../../setting-constants'
 import '../components/import-pop-up'
 
 class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
@@ -20,7 +19,6 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         :host {
           display: flex;
           flex-direction: column;
-
           overflow: hidden;
         }
 
@@ -28,15 +26,8 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           overflow: visible;
         }
 
-        .grist {
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-          overflow-y: auto;
-        }
-
         data-grist {
-          overflow-y: hidden;
+          overflow-y: auto;
           flex: 1;
         }
       `
@@ -56,15 +47,13 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     return html`
       <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
-      <div class="grist">
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .fetchHandler="${this.fetchHandler.bind(this)}"
-          @record-change="${this._customerChange.bind(this)}"
-          @field-change="${this._updateAmount.bind(this)}"
-        ></data-grist>
-      </div>
+      <data-grist
+        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+        .config=${this.config}
+        .fetchHandler="${this.fetchHandler.bind(this)}"
+        @record-change="${this._customerChange.bind(this)}"
+        @field-change="${this._updateAmount.bind(this)}"
+      ></data-grist>
     `
   }
 
@@ -100,7 +89,6 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
 
     // const _products = await this.fetchProduct()
     const _userBizplaces = await this._fetchUserBizplaces()
-
     this.packingType = await getCodeByName('PACKING_TYPES')
 
     this.config = {

@@ -53,6 +53,7 @@ class InventoryByProductDetailMovement extends localize(i18next)(LitElement) {
       rows: { appendable: false },
       pagination: { infinite: true },
       columns: [
+        { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'string',
           name: 'palletId',
