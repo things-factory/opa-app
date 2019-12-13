@@ -279,55 +279,34 @@ class UploadReceivedNote extends localize(i18next)(LitElement) {
   }
 
   async _saveGRNAttachment() {
-    // if (!attachmentFile) {
-    const attachmentFile = this.uploadGRNAttachment.files[0]
+    const file = this.uploadGRNAttachment.files
+    const name = this.grnName
     try {
-      let attachment = {
-        refBy: this.grnId,
-        file: attachmentFile,
-        category: 'ORDER'
-      }
       this.dataGrist.showSpinner()
-      const response = await client.query({
-        query: gql`
-          mutation($attachment: NewAttachment!) {
-            createAttachment(attachment: $attachment) {
-              id
-              name
-              path
-            }
-          }
-        `,
-        variables: {
-          attachment
-        },
-        context: {
-          hasUpload: true
-        }
-      })
 
-      if (!response.errors) {
-        if (this.grnName) {
-          const name = this.grnName
-          const submit = await client.query({
-            query: gql`
-              mutation {
-                submittedGoodsReceivalNote(${gqlBuilder.buildArgs({
-                  name
-                })}) {
-                  id
-                  status
-                }
+      if (this.grnName) {
+        const response = await client.query({
+          query: gql`
+            mutation {
+              submitGoodsReceivalNote(${gqlBuilder.buildArgs({ name })}) {
+                id
+                status
               }
-            `
-          })
-
-          if (!submit.error) {
-            if (this.callback && typeof this.callback === 'function') this.callback()
+            }
+          `,
+          variables: {
+            file
+          },
+          context: {
+            hasUpload: true
           }
+        })
+
+        if (!response.errors) {
+          if (this.callback && typeof this.callback === 'function') this.callback()
+          history.back()
+          this._showToast({ message: i18next.t('text.goods_received_note_uploaded') })
         }
-        history.back()
-        this._showToast({ message: i18next.t('text.goods_received_note_uploaded') })
       }
     } catch (e) {
       this._showToast(e)
