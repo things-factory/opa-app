@@ -542,6 +542,7 @@
   "text.info_delete_successfully": "info delete successfully",
   "text.info_update_successfully": "info update successfully",
   "text.invalid_form": "invalid form",
+  "text.invalid_form_value": "invalid form value",
   "text.invalid_quantity_input": "invalid quantity input",
   "text.inventory_is_not_selected": "inventory is not selected",
   "text.list_is_not_completed": "list is not completed",
