@@ -2,7 +2,7 @@ import '@material/mwc-button/mwc-button'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import './inventory-by-product-detail-movement'
@@ -15,7 +15,6 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
         :host {
           display: flex;
           flex-direction: column;
-
           overflow: hidden;
         }
 
@@ -23,15 +22,8 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
           overflow: visible;
         }
 
-        .grist {
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-          overflow-y: auto;
-        }
-
         data-grist {
-          overflow-y: hidden;
+          overflow-y: auto;
           flex: 1;
         }
       `
@@ -51,19 +43,17 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
     return html`
       <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
-      <div class="grist">
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .fetchHandler="${this.fetchHandler.bind(this)}"
-        ></data-grist>
-      </div>
+      <data-grist
+        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+        .config=${this.config}
+        .fetchHandler="${this.fetchHandler.bind(this)}"
+      ></data-grist>
     `
   }
 
   firstUpdated() {
     this.config = {
-      list: { fields: ['palletId', 'location', 'qty'] },
+      list: { fields: ['palletId', 'batchId', 'orderRefNo', 'orderNo', 'zone', 'location', 'qty'] },
       rows: { appendable: false },
       columns: [
         {
@@ -78,7 +68,7 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
           type: 'string',
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
           width: 200
         },
@@ -86,15 +76,7 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_no'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 200
-        },
-        {
-          type: 'object',
-          name: 'warehouse',
-          header: i18next.t('field.warehouse'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
           width: 200
         },
