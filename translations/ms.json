@@ -459,6 +459,7 @@
   "release_orders_requests": "permintaan pesanan keluar",
   "text.accept_release_order": "terima pelepasan peranan",
   "text.activate_putaway_worksheet": "aktifkan putaway worksheet",
+  "text.driver_and_vehicle_is_not_selected": "pemandu dan kenderaan belum dipilih",
   "text.activate_unloading_worksheet": "aktifkan ",
   "text.activate_vas_worksheet": "aktifkan value added service lembaran kerja",
   "text.already_existed": "baris {state.text} telah tersedia",

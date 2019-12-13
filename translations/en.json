@@ -470,6 +470,7 @@
   "release_orders_requests": "release orders requests",
   "text.accept_release_order": "accept release order",
   "text.activate_putaway_worksheet": "activate putaway worksheet",
+  "text.driver_and_vehicle_is_not_selected": "driver and vehicle is not selected",
   "text.activate_unloading_worksheet": "activate unloading worksheet",
   "text.activate_vas_worksheet": "activate value added service worksheet",
   "text.already_existed": "row {state.text} is already existed",
