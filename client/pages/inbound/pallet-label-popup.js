@@ -170,7 +170,6 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
               year.toString().substr(year.toString().length - 2) +
               ('0' + month.toString()).substr(('0' + month.toString()).toString().length - 2) +
               ('0' + date.toString()).substr(('0' + date.toString()).length - 2) +
-              '/' +
               ('0000' + seq.toString()).substr(('0000' + seq.toString()).length - 4)}`
           )
           searchParams.append('batch', record.batchId)
