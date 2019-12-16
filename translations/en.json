@@ -784,7 +784,7 @@
   "title.unloading": "unloading",
   "title.unloading_issue": "unloading issue",
   "title.unloading_worksheet": "unloading worksheet",
-  "title.upload_goods_received_note": "upload grn",
+  "title.upload_grn": "upload grn",
   "title.upload_signed_grn": "upload signed grn",
   "title.user": "user",
   "title.user_bizplaces": "user bizplaces",
@@ -814,5 +814,6 @@
   "label.location_format": "location format",
   "label.add_extension": "add extension",
   "label.add_leading_zero": "add leading zero",
-  "label.select_file": "select file"
+  "label.select_file": "select file",
+  "text.goods_received_note_uploaded": "text.goods_received_note_uploaded"
 }

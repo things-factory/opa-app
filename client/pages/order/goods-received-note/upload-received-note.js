@@ -101,17 +101,11 @@ class UploadReceivedNote extends localize(i18next)(LitElement) {
     this._loadedFlag = {}
   }
 
-  get context() {
-    return {
-      title: i18next.t('title.create_goods_received_note')
-    }
-  }
-
   render() {
     return html`
       <form class="multi-column-form">
         <fieldset>
-          <legend>${i18next.t('title.upload_goods_received_note')}</legend>
+          <legend>${i18next.t('title.upload_grn')}</legend>
           <file-uploader custom-input id="grnUpload" name="attachments"></file-uploader>
         </fieldset>
       </form>
@@ -279,7 +273,7 @@ class UploadReceivedNote extends localize(i18next)(LitElement) {
   }
 
   async _saveGRNAttachment() {
-    const file = this.uploadGRNAttachment.files
+    const file = this.uploadGRNAttachment.files[0]
     const name = this.grnName
     try {
       this.dataGrist.showSpinner()
