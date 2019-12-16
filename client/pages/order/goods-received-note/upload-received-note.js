@@ -287,8 +287,8 @@ class UploadReceivedNote extends localize(i18next)(LitElement) {
       if (this.grnName) {
         const response = await client.query({
           query: gql`
-            mutation {
-              submitGoodsReceivalNote(${gqlBuilder.buildArgs({ name })}) {
+            mutation($file: Upload!) {
+              submitGoodsReceivalNote(${gqlBuilder.buildArgs({ name })}, file: $file ) {
                 id
                 status
               }
