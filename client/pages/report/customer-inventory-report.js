@@ -15,7 +15,7 @@ import { localize, i18next } from '@things-factory/i18n-base'
 import gql from 'graphql-tag'
 import { getCodeByName } from '@things-factory/code-base'
 
-class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
+class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
     return css`
       :host {
@@ -388,4 +388,4 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
   }
 }
 
-window.customElements.define('inventory-report', InventoryReport)
+window.customElements.define('customer-inventory-report', CustomerInventoryReport)

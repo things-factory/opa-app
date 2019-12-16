@@ -24,7 +24,6 @@
     "generate:domain": "node ./scripts/generator/domain-generator"
   },
   "dependencies": {
-    "@things-factory/apptool-ui": "^1.0.0-alpha.1",
     "@things-factory/attachment-base": "^1.0.0-alpha.1",
     "@things-factory/auth-ui-jwt": "^1.0.0-alpha.1",
     "@things-factory/barcode-ui": "^1.0.0-alpha.1",
@@ -58,7 +57,6 @@
     "@things-factory/warehouse-base": "^1.0.0-alpha.1",
     "@things-factory/worksheet-base": "^1.0.0-alpha.1",
     "@things-scene/chartjs": "*",
-    "@things-scene/clock": "*",
     "@things-scene/clone": "*",
     "@things-scene/compass": "*",
     "@things-scene/data-transform": "*",

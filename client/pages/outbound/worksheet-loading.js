@@ -196,13 +196,6 @@ class WorksheetLoading extends localize(i18next)(PageView) {
           header: i18next.t('field.picked_qty'),
           record: { align: 'center' },
           width: 60
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.comment'),
-          record: { align: 'center' },
-          width: 300
         }
       ]
     }
@@ -281,7 +274,8 @@ class WorksheetLoading extends localize(i18next)(PageView) {
             name: worksheetDetail.name,
             description: worksheetDetail.description,
             status: worksheetDetail.status,
-            releaseQty: worksheetDetail.targetInventory.releaseQty
+            releaseQty: worksheetDetail.targetInventory.releaseQty,
+            packingType: worksheetDetail.targetInventory.inventory.packingType
           }
         })
       }

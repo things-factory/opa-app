@@ -91,7 +91,7 @@ class VasRelabel extends localize(i18next)(LitElement) {
                 `
               : ''}
 
-            <label ?hidden="${!this._isEditable}">${i18next.t('label.new-label')}</label>
+            <label ?hidden="${!this._isEditable}">${i18next.t('label.new_label')}</label>
             <file-uploader
               ?hidden="${!this._isEditable}"
               custom-input

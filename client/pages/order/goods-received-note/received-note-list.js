@@ -2,12 +2,21 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { openPopup } from '@things-factory/layout-base'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
+import {
+  client,
+  gqlBuilder,
+  isMobileDevice,
+  navigate,
+  PageView,
+  ScrollbarStyles,
+  flattenObject
+} from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import './upload-receival-note'
+import { getCodeByName } from '@things-factory/code-base'
+import './upload-received-note'
 
-class ReceivalNoteList extends localize(i18next)(PageView) {
+class ReceivedNoteList extends localize(i18next)(PageView) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -15,20 +24,14 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-
           overflow: hidden;
         }
 
         search-form {
           overflow: visible;
         }
-        .grist {
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-        }
         data-grist {
-          overflow-y: hidden;
+          overflow-y: auto;
           flex: 1;
         }
       `
@@ -47,13 +50,11 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
     return html`
       <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
-      <div class="grist">
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .fetchHandler="${this.fetchHandler.bind(this)}"
-        ></data-grist>
-      </div>
+      <data-grist
+        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+        .config=${this.config}
+        .fetchHandler="${this.fetchHandler.bind(this)}"
+      ></data-grist>
     `
   }
 
@@ -74,6 +75,9 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
+    const _grnStatus = await getCodeByName('GRN_STATUS')
+    const _userBizplaces = await this._fetchUserBizplaces()
+
     this._searchFields = [
       {
         label: i18next.t('field.grn'),
@@ -84,20 +88,50 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
       {
         label: i18next.t('field.customer'),
         name: 'bizplace',
-        type: 'object',
-        queryName: 'bizplaces',
-        field: 'name'
+        type: 'select',
+        options: [
+          { value: '' },
+          ..._userBizplaces
+            .filter(userBizplaces => !userBizplaces.mainBizplace)
+            .map(userBizplace => {
+              return {
+                name: userBizplace.name,
+                value: userBizplace.id
+              }
+            })
+        ],
+        props: { searchOper: 'eq' }
       },
       {
-        label: i18next.t('field.gan'),
-        name: 'refNo',
+        name: 'arrivalNoticeRefNo',
+        label: i18next.t('field.ref_no'),
         type: 'text',
         props: { searchOper: 'i_like' }
+      },
+      {
+        name: 'arrivalNoticeNo',
+        label: i18next.t('field.gan'),
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
+        label: i18next.t('field.status'),
+        name: 'status',
+        type: 'select',
+        options: [
+          { value: '' },
+          ..._grnStatus.map(status => {
+            return { name: i18next.t(`label.${status.description}`), value: status.name }
+          })
+        ],
+        props: { searchOper: 'eq' }
       }
     ]
 
     this.config = {
-      pagination: { infinite: false },
+      list: {
+        fields: ['name', 'bizplace', 'orderRefNo', 'arrivalNotice', 'updater', 'updatedAt']
+      },
       rows: { appendable: false, selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -117,7 +151,7 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              navigate(`receival_note_detail/${record.name}`)
+              navigate(`received_note_detail/${record.name}`)
             }
           }
         },
@@ -127,7 +161,14 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
           header: i18next.t('field.grn'),
           record: { align: 'left' },
           sortable: true,
-          width: 180
+          width: 180,
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              if (record.attachments[0] && record.attachments[0].path) {
+                window.open(`attachment/${record.attachments[0].path}`)
+              }
+            }
+          }
         },
         {
           type: 'object',
@@ -135,23 +176,31 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
           header: i18next.t('field.customer'),
           record: { align: 'left' },
           sortable: true,
-          width: 200
+          width: 230
         },
         {
           type: 'string',
-          name: 'refNo',
+          name: 'orderRefNo',
           header: i18next.t('field.ref_no'),
           record: { align: 'center' },
           sortable: true,
           width: 160
         },
         {
+          type: 'object',
+          name: 'arrivalNotice',
+          header: i18next.t('field.gan'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 180
+        },
+        {
           type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
+          name: 'status',
+          header: i18next.t('field.status'),
           record: { align: 'center' },
           sortable: true,
-          width: 150
+          width: 180
         },
         {
           type: 'datetime',
@@ -199,11 +248,18 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
                 description
                 refNo
               }
+              status
               description
               bizplace {
                 id
                 name
                 description
+              }
+              attachments {
+                id
+                name
+                refBy
+                path
               }
               createdAt
               updatedAt
@@ -221,22 +277,47 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       return {
-        data: response.data.goodsReceivalNotes.items.map(grn => {
-          return {
-            ...grn,
-            refNo: grn.arrivalNotice.refNo
-          }
-        }),
         total: response.data.goodsReceivalNotes.total || 0,
-        records: response.data.goodsReceivalNotes.items || []
+        records:
+          response.data.goodsReceivalNotes.items.map(grn => {
+            return {
+              ...grn,
+              orderRefNo: grn.arrivalNotice.refNo || ''
+            }
+          }) || []
       }
+    }
+  }
+
+  async _fetchUserBizplaces() {
+    const response = await client.query({
+      query: gql`
+        query {
+          userBizplaces(${gqlBuilder.buildArgs({
+            email: ''
+          })}) {
+            id
+            name
+            description
+            mainBizplace
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      return response.data.userBizplaces
     }
   }
 
   _uploadGRN(grnName, grnId) {
     openPopup(
       html`
-        <upload-receival-note .grnName="${grnName}" .grnId="${grnId}"></upload-receival-note>
+        <upload-received-note
+          .grnName="${grnName}"
+          .grnId="${grnId}"
+          .callback="${this.dataGrist.fetch.bind(this.dataGrist)}"
+        ></upload-received-note>
       `,
       {
         backdrop: true,
@@ -255,4 +336,4 @@ class ReceivalNoteList extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('receival-note-list', ReceivalNoteList)
+window.customElements.define('received-note-list', ReceivedNoteList)

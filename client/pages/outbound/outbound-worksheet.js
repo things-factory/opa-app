@@ -130,7 +130,7 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
               // Handle PICKING
               if (type === WORKSHEET_TYPE.PICKING.value) {
                 navigate(`worksheet_picking/${record.name}`)
-              } else if (type === WORKSHEET_TYPE.UNLOADING.value) {
+              } else if (type === WORKSHEET_TYPE.LOADING.value) {
                 navigate(`worksheet_loading/${record.name}`)
               }
             }
@@ -217,7 +217,7 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
     filters.push({
       name: 'type',
       operator: 'in',
-      value: [WORKSHEET_TYPE.PICKING.value]
+      value: [WORKSHEET_TYPE.PICKING.value, WORKSHEET_TYPE.LOADING.value]
     })
     const response = await client.query({
       query: gql`

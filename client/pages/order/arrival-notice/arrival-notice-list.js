@@ -122,7 +122,6 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
     this.config = {
       list: { fields: ['name', 'etaDate', 'importCargo', 'ownTransport', 'updatedAt', 'updater'] },
       rows: { appendable: false, selectable: { multiple: true } },
-      pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
@@ -184,6 +183,14 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           width: 100
         },
         {
+          type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 120
+        },
+        {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
@@ -198,14 +205,6 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           record: { align: 'left' },
           sortable: true,
           width: 200
-        },
-        {
-          type: 'string',
-          name: 'status',
-          header: i18next.t('field.status'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 120
         }
       ]
     }

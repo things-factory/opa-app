@@ -1,13 +1,11 @@
 import '@material/mwc-button/mwc-button'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { openPopup } from '@things-factory/layout-base'
 import { client, gqlBuilder, isMobileDevice, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
-import './inventory-by-product-detail-movement'
 
-class InventoryByProductDetail extends localize(i18next)(LitElement) {
+class InventoryByProductDetailMovement extends localize(i18next)(LitElement) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -23,7 +21,7 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
         }
 
         data-grist {
-          overflow-y: auto;
+          overflow-y: hidden;
           flex: 1;
         }
       `
@@ -35,14 +33,12 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
       _searchFields: Array,
       config: Object,
       data: Object,
-      productId: String
+      palletId: String
     }
   }
 
   render() {
     return html`
-      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
-
       <data-grist
         .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
         .config=${this.config}
@@ -53,17 +49,11 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
 
   firstUpdated() {
     this.config = {
-      list: { fields: ['palletId', 'batchId', 'orderRefNo', 'orderNo', 'zone', 'location', 'qty'] },
+      list: { fields: ['palletId', 'batchId', 'location', 'orderNo', 'orderRefNo', 'qty', 'weight', 'description'] },
       rows: { appendable: false },
+      pagination: { infinite: true },
       columns: [
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'reorder',
-          handlers: {
-            click: this._showInventoryMovement.bind(this)
-          }
-        },
+        { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'string',
           name: 'palletId',
@@ -81,14 +71,6 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
           width: 200
         },
         {
-          type: 'string',
-          name: 'zone',
-          header: i18next.t('field.zone'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 80
-        },
-        {
           type: 'object',
           name: 'location',
           header: i18next.t('field.location'),
@@ -103,59 +85,61 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
           record: { align: 'center' },
           sortable: true,
           width: 80
+        },
+        {
+          type: 'string',
+          name: 'orderNo',
+          header: i18next.t('field.order_no'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'orderRefNo',
+          header: i18next.t('field.ref_no'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.transaction_type'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'datetime',
+          name: 'updatedAt',
+          header: i18next.t('field.date'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 170
         }
       ]
     }
-
-    this._searchFields = [
-      {
-        label: i18next.t('field.batch_no'),
-        name: 'batchId',
-        type: 'text',
-        props: { searchOper: 'i_like' }
-      },
-      {
-        label: i18next.t('field.pallet_id'),
-        name: 'palletId',
-        type: 'text',
-        props: { searchOper: 'i_like' }
-      },
-      {
-        label: i18next.t('field.location'),
-        name: 'location',
-        type: 'object',
-        queryName: 'locations',
-        field: 'name'
-      },
-      {
-        label: i18next.t('field.zone'),
-        name: 'zone',
-        type: 'text',
-        props: { searchOper: 'i_like' }
-      }
-    ]
   }
 
   get dataGrist() {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  get searchForm() {
-    return this.shadowRoot.querySelector('search-form')
-  }
-
   async fetchHandler({ page, limit, sorters = [] }) {
     try {
-      if (!this.productId) return
-      const filters = await this.searchForm.getQueryFilters()
+      if (!this.palletId) return
       const response = await client.query({
         query: gql`
           query {
-            inventories(${gqlBuilder.buildArgs({
+            inventoryHistories(${gqlBuilder.buildArgs({
               filters: [
-                ...filters,
-                { name: 'product', operator: 'eq', value: this.productId },
-                { name: 'status', operator: 'notin', value: ['INTRANSIT', 'DELETED'] }
+                { name: 'palletId', operator: 'eq', value: this.palletId },
+                {
+                  name: 'transactionType',
+                  operator: 'in',
+                  value: ['ADJUSTMENT', 'UNLOADING', 'PICKING', 'UNDO_UNLOADING']
+                }
               ],
               pagination: { page, limit },
               sortings: sorters
@@ -164,6 +148,10 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
                 palletId
                 batchId
                 qty
+                orderRefNo
+                orderNo
+                weight
+                description
                 warehouse {
                   name
                   description
@@ -187,26 +175,13 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
 
       if (!response.errors) {
         return {
-          total: response.data.inventories.total || 0,
-          records: response.data.inventories.items || []
+          total: response.data.inventoryHistories.total || 0,
+          records: response.data.inventoryHistories.items || []
         }
       }
     } catch (e) {
       this._showToast(e)
     }
-  }
-
-  _showInventoryMovement(columns, data, column, record, rowIndex) {
-    openPopup(
-      html`
-        <inventory-by-product-detail-movement .palletId="${record.palletId}"></inventory-by-product-detail-movement>
-      `,
-      {
-        backdrop: true,
-        size: 'large',
-        title: `${record.palletId} - Movements`
-      }
-    )
   }
 
   _showToast({ type, message }) {
@@ -221,4 +196,4 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
   }
 }
 
-window.customElements.define('inventory-by-product-detail', InventoryByProductDetail)
+window.customElements.define('inventory-by-product-detail-movement', InventoryByProductDetailMovement)

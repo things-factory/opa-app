@@ -78,18 +78,23 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
         fields: ['palletId', 'product', 'location']
       },
       rows: {
-        selectable: {
-          multiple: true
-        },
-        appendable: false
+        appendable: false,
+        selectable: { multiple: true }
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
+        { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
           record: { align: 'left' },
+          imex: {
+            header: i18next.t('field.product'),
+            key: 'name',
+            width: 50,
+            type: 'string'
+          },
           sortable: true,
           width: 200
         },
@@ -98,6 +103,7 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
           record: { align: 'center' },
+          imex: { header: i18next.t('field.pallet_id'), key: 'palletId', width: 30, type: 'string' },
           sortable: true,
           width: 150
         },
@@ -106,6 +112,7 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
           name: 'batchId',
           header: i18next.t('field.batch_no'),
           record: { align: 'center' },
+          imex: { header: i18next.t('field.batch_no'), key: 'batchId', width: 30, type: 'string' },
           sortable: true,
           width: 150
         },
@@ -114,6 +121,12 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
           name: 'warehouse',
           header: i18next.t('field.warehouse'),
           record: { align: 'center' },
+          imex: {
+            header: i18next.t('field.warehouse'),
+            key: 'warehouse_name',
+            width: 50,
+            type: 'string'
+          },
           sortable: true,
           width: 200
         },
@@ -122,6 +135,7 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
           name: 'zone',
           header: i18next.t('field.zone'),
           record: { align: 'center' },
+          imex: { header: i18next.t('field.zone'), key: 'zone', width: 30, type: 'string' },
           sortable: true,
           width: 80
         },
@@ -130,6 +144,12 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
           name: 'location',
           header: i18next.t('field.location'),
           record: { align: 'center' },
+          imex: {
+            header: i18next.t('field.location'),
+            key: 'location.name',
+            width: 15,
+            type: 'string'
+          },
           sortable: true,
           width: 200
         },
@@ -138,6 +158,7 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
           name: 'qty',
           header: i18next.t('field.qty'),
           record: { align: 'center' },
+          imex: { header: i18next.t('field.qty'), key: 'qty', width: 30, type: 'number' },
           sortable: true,
           width: 80
         },
@@ -211,6 +232,10 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('search-form')
   }
 
+  get _columns() {
+    return this.config.columns
+  }
+
   async fetchHandler({ page, limit, sorters = [] }) {
     const filters = await this.searchForm.getQueryFilters()
     const response = await client.query({
@@ -256,12 +281,85 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
     }
   }
 
-  get _columns() {
-    return this.config.columns
+  async fetchInventoriesForExport() {
+    const response = await client.query({
+      query: gql`
+        query {
+          inventories(${gqlBuilder.buildArgs({
+            filters: []
+          })}) {
+            items {
+              palletId
+              batchId
+              product {
+                name
+                description
+              }
+              qty
+              warehouse {
+                name
+                description
+              }
+              zone
+              location {
+                name
+                description
+              }
+              updatedAt
+              updater {
+                name
+                description
+              }
+            }
+            total
+          }
+        }
+      `
+    })
+
+    return response.data.inventories.items || []
   }
 
-  _exportableData() {
-    return this.dataGrist.exportRecords()
+  async _exportableData() {
+    try {
+      let records = []
+      let data = []
+
+      var headerSetting = [
+        ...this.dataGrist._config.columns
+          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+          .map(column => {
+            return column.imex
+          })
+      ]
+
+      if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+        records = this.dataGrist.selected
+        data = records
+      } else {
+        data = await this.fetchInventoriesForExport()
+      }
+
+      data = data.map(item => {
+        return {
+          ...this._columns
+            .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+            .reduce((record, column) => {
+              record[column.imex.key] = column.imex.key
+                .split('.')
+                .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
+              return record
+            }, {}),
+          id: item.id,
+          name: item.product.name + ' (' + item.product.description + ')',
+          warehouse_name: item.warehouse.name + ' (' + item.warehouse.description + ')'
+        }
+      })
+
+      return { header: headerSetting, data: data }
+    } catch (e) {
+      this._showToast(e)
+    }
   }
 
   _showToast({ type, message }) {

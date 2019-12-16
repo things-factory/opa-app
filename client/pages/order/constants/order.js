@@ -207,3 +207,26 @@ export const PACKING_TYPES = {
     value: 'CAN'
   }
 }
+
+export const GRN_STATUS = {
+  PENDING_PROCESS: {
+    name: 'pending_process_status',
+    value: 'PENDING_PROCESS'
+  },
+  SUBMITTED: {
+    name: 'submitted_status',
+    value: 'SUBMITTED'
+  },
+  RECEIVED: {
+    name: 'received_status',
+    value: 'RECEIVED'
+  },
+  NEW: {
+    name: 'new_status',
+    value: 'NEW'
+  },
+  OPENED: {
+    name: 'opened_status',
+    value: 'OPENED'
+  }
+}

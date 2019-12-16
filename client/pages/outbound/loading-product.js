@@ -23,8 +23,9 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       releaseGoodNo: String,
       config: Object,
       data: Object,
-      _productName: String,
-      _selectedTaskStatus: String
+      _selectedTaskStatus: String,
+      _driverList: Object,
+      _vehicleList: Object
     }
   }
 
@@ -114,12 +115,12 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  get palletInput() {
-    return this.shadowRoot.querySelector('barcode-scanable-input[name=palletId]').shadowRoot.querySelector('input')
+  get vehicle() {
+    return this.shadowRoot.querySelector('input[name=transportVehicle]')
   }
 
-  get releaseQtyInput() {
-    return this.shadowRoot.querySelector('input[name=confirmedQty]')
+  get driver() {
+    return this.shadowRoot.querySelector('input[name=transportDriver]')
   }
 
   render() {
@@ -156,7 +157,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
 
       <div class="grist">
         <div class="left-column">
-          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.picking')}</h2>
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.loading')}</h2>
           <data-grist
             .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
             .config=${this.config}
@@ -165,29 +166,33 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         </div>
 
         <div class="right-column">
-          <form id="input-form" class="single-column-form" @keypress="${this._picking.bind(this)}">
+          <form id="input-form" class="single-column-form" @keypress="${this._loading.bind(this)}">
             <fieldset>
-              <legend>${i18next.t('label.product')}: ${this._productName}</legend>
+              <legend>${i18next.t('label.assign_truck_driver')}</legend>
 
-              <label>${i18next.t('label.batch_no')}</label>
-              <input name="batchId" readonly />
+              <label>${i18next.t('label.driver_name')}</label>
+              <select @change=${e => (this._selectedDriver = e.target.value)} name="transportDriver">
+                <option value="">-- ${i18next.t('text.please_select_a_driver')} --</option>
 
-              <label>${i18next.t('label.packing_type')}</label>
-              <input name="packingType" readonly />
+                ${Object.keys(this._driverList.data.transportDrivers.items || {}).map(key => {
+                  let driver = this._driverList.data.transportDrivers.items[key]
+                  return html`
+                    <option value="${driver.id}">${driver.name} - ${driver.driverCode}</option>
+                  `
+                })}
+              </select>
 
-              <label>${i18next.t('label.current_location')}</label>
-              <input name="location" readonly />
+              <label>${i18next.t('label.lorry_no')}</label>
+              <select @change=${e => (this._selectedTruck = e.target.value)} name="transportVehicle">
+                <option value="">-- ${i18next.t('text.please_select_a_truck')} --</option>
 
-              <label>${i18next.t('label.release_qty')}</label>
-              <input name="releaseQty" readonly />
-
-              <label>${i18next.t('label.comment')}</label>
-              <input name="description" readonly />
-            </fieldset>
-
-            <fieldset ?hidden=${!this.scannable}>
-              <legend>${i18next.t('title.input_section')}</legend>
-              <!-- include button to click load-->
+                ${Object.keys(this._vehicleList.data.transportVehicles.items || {}).map(key => {
+                  let vehicle = this._vehicleList.data.transportVehicles.items[key]
+                  return html`
+                    <option value="${vehicle.id}">${vehicle.name}</option>
+                  `
+                })}
+              </select>
             </fieldset>
           </form>
         </div>
@@ -198,7 +203,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   constructor() {
     super()
     this.data = { records: [] }
-    this._productName = ''
     this.releaseGoodNo = ''
     this._selectedOrderInventory = null
     this._selectedTaskStatus = null
@@ -218,10 +222,14 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    this._driverList = { ...(await this.fetchDriverList()) }
+    this._vehicleList = { ...(await this.fetchVehicleList()) }
+
     this.config = {
       rows: {
         appendable: false,
+        selectable: { multiple: true },
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
             if (data.records.length && record) {
@@ -232,38 +240,27 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               this._selectedOrderInventory = record
               this._selectedTaskStatus = null
               this._selectedTaskStatus = record.status
-              this._productName = `${record.product.name} ${
-                record.product.description ? `(${record.product.description})` : ''
-              }`
-
-              this._fillUpForm(this.inputForm, record)
-              this._focusOnPalletInput()
             }
           }
         }
       },
       pagination: { infinite: true },
-      list: { fields: ['completed', 'locationName', 'palletId', 'batchId', 'releaseQty'] },
+      list: { fields: ['completed', 'palletId', 'product', 'batchId', 'releaseQty'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
-        {
-          type: 'boolean',
-          name: 'completed',
-          header: i18next.t('field.done'),
-          width: 40
-        },
-        {
-          type: 'string',
-          name: 'locationName',
-          header: i18next.t('field.location'),
-          record: { align: 'center' },
-          width: 120
-        },
+        { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'string',
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
           record: { align: 'center' },
+          width: 140
+        },
+        {
+          type: 'object',
+          name: 'product',
+          header: i18next.t('field.product'),
+          record: { align: 'left' },
           width: 140
         },
         {
@@ -309,14 +306,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     setTimeout(() => this.releaseGoodNoInput.focus(), 100)
   }
 
-  _focusOnPalletInput() {
-    setTimeout(() => this.palletInput.focus(), 100)
-  }
-
-  _focusOnReleaseQtyInput() {
-    setTimeout(() => this.releaseQtyInput.focus(), 100)
-  }
-
   async _fetchInventories(releaseGoodNo) {
     this._clearView()
     const response = await client.query({
@@ -356,14 +345,13 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       this.releaseGoodNo = releaseGoodNo
-      this._fillUpForm(this.infoForm, response.data.pickingWorksheet.worksheetInfo)
+      this._fillUpForm(this.infoForm, response.data.loadingWorksheet.worksheetInfo)
 
       this.data = {
-        records: response.data.pickingWorksheet.worksheetDetailInfos.map(record => {
+        records: response.data.loadingWorksheet.worksheetDetailInfos.map(record => {
           return {
             ...record,
-            completed: record.status === WORKSHEET_STATUS.DONE.value,
-            locationName: record.location.name
+            completed: record.status === WORKSHEET_STATUS.DONE.value
           }
         })
       }
@@ -376,7 +364,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     this.data = { records: [] }
     this.infoForm.reset()
     this.inputForm.reset()
-    this._productName = ''
     this.releaseGoodNo = ''
     this._selectedOrderInventory = null
     this._selectedTaskStatus = null
@@ -414,7 +401,8 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
                 loading(${gqlBuilder.buildArgs({
                   worksheetDetailName: this._selectedOrderInventory.name,
                   palletId: this.palletInput.value,
-                  releaseQty: parseInt(this.releaseQtyInput.value)
+                  transportDriver: this.driver.value,
+                  transportVehicle: this.vehicle.value
                 })})
               }
             `
@@ -425,8 +413,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
           this._focusOnPalletInput()
           this._selectedTaskStatus = null
           this._selectedOrderInventory = null
-          this.palletInput.value = ''
-          this.releaseQtyInput.value = ''
         }
       } catch (e) {
         this._showToast(e)
@@ -434,35 +420,10 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  _validatePicking() {
-    // 1. validate for order selection
-    if (!this._selectedOrderInventory) throw new Error(i18next.t('text.target_doesnt_selected'))
-
-    // 2. pallet id existing
-    if (!this.palletInput.value) {
-      this._focusOnPalletInput()
-      throw new Error(i18next.t('text.pallet_id_is_empty'))
-    }
-
-    // 3. Equality of pallet id
-    if (this._selectedOrderInventory.palletId !== this.palletInput.value) {
-      setTimeout(() => this.palletInput.select(), 100)
-      throw new Error(i18next.t('text.wrong_pallet_id'))
-    }
-
-    // 4. Release qty existing
-    if (!parseInt(this.releaseQtyInput.value)) {
-      this._focusOnReleaseQtyInput()
-      throw new Error(i18next.t('text.release_qty_is_empty'))
-    }
-
-    // 5. typed qty should be matched with release qty.
-    if (parseInt(this.releaseQtyInput.value) !== this._selectedOrderInventory.releaseQty) {
-      setTimeout(() => this.releaseQtyInput.select(), 100)
-      throw new Error(i18next.t('text.wrong_release_qty'))
-    }
-
-    if (!this.releaseQtyInput.checkValidity()) throw new Error(i18next.t('text.release_qty_invalid'))
+  _validateLoading() {
+    // 1. validate for input for driver and truck
+    if (!this._selectedDriver && !this._selectedTruck)
+      throw new Error(i18next.t('text.driver_and_vehicle_is_not_selected'))
   }
 
   async _completeHandler() {
@@ -480,6 +441,45 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     }
 
     this._complete()
+  }
+
+  async fetchDriverList() {
+    return await client.query({
+      query: gql`
+        query {
+          transportDrivers (${gqlBuilder.buildArgs({ filters: [], pagination: { page: 1, limit: 9999 } })}){
+            items{
+              id
+              name
+              description
+              driverCode
+              bizplace{
+                id
+                name
+              }
+            }
+          }
+        }`
+    })
+  }
+
+  async fetchVehicleList() {
+    return await client.query({
+      query: gql`
+        query {
+          transportVehicles (${gqlBuilder.buildArgs({ filters: [], pagination: { page: 1, limit: 9999 } })}){
+            items{
+              id
+              name
+              description
+              bizplace{
+                id
+                name
+              }
+            }
+          }
+        }`
+    })
   }
 
   async _complete() {
