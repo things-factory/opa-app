@@ -279,7 +279,7 @@ class UploadReceivedNote extends localize(i18next)(LitElement) {
   }
 
   async _saveGRNAttachment() {
-    const file = this.uploadGRNAttachment.files
+    const file = this.uploadGRNAttachment.files[0]
     const name = this.grnName
     try {
       this.dataGrist.showSpinner()
