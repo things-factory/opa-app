@@ -35,7 +35,6 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
       _searchFields: Object,
       _config: Object,
       _userBizplaces: Object,
-      _email: String,
       data: Object
     }
   }
@@ -93,6 +92,14 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
             }
           })
         ],
+        handlers: { change: this._bizplaceChange.bind(this) },
+        props: { searchOper: 'eq' }
+      },
+      {
+        label: i18next.t('field.product'),
+        name: 'product',
+        type: 'select',
+        options: [{ name: 'All', value: '' }],
         props: { searchOper: 'eq' }
       },
       {
@@ -208,6 +215,7 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async pageInitialized() {
+    this._products = []
     this._userBizplaces = [...(await this._fetchBizplaceList())]
 
     this._searchFields = this.searchFields
@@ -297,6 +305,28 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
+  async _fetchBizplaceList() {
+    const response = await client.query({
+      query: gql`
+        query {
+          userBizplaces(${gqlBuilder.buildArgs({
+            email: ''
+          })}) {
+            id
+            name
+            description
+            assigned
+            mainBizplace
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      return response.data.userBizplaces.filter(x => x.assigned == true)
+    }
+  }
+
   _validate() {
     if (!this.searchForm.shadowRoot.querySelector('form').checkValidity())
       throw new Error(i18next.t('text.invalid_form_value'))
@@ -317,6 +347,44 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
     min = min.toISOString().split('T')[0]
 
     this._toDateInput.min = min
+  }
+
+  async _bizplaceChange(e) {
+    let bizplace = [{ name: 'bizplace', operator: 'eq', value: e.currentTarget.value }]
+    if (e.currentTarget.value == '') {
+      this.searchFields
+      this._searchFields.filter(x => x.name == 'product')[0].options = [{ name: 'All', value: '' }]
+      this._searchFields = [...this._searchFields]
+    } else {
+      const response = await client.query({
+        query: gql`
+            query {
+              productsByBizplace(${gqlBuilder.buildArgs({
+                filters: [...bizplace]
+              })}) {
+                items {
+                  id
+                  name
+                }
+              }
+            }
+          `
+      })
+
+      if (!response.errors) {
+        this.searchFields
+        this._searchFields.filter(x => x.name == 'product')[0].options = [
+          { name: 'All', value: '' },
+          ...response.data.productsByBizplace.items.map(item => {
+            return {
+              name: item.name,
+              value: item.id
+            }
+          })
+        ]
+        this._searchFields = [...this._searchFields]
+      }
+    }
   }
 }
 
