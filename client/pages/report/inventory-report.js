@@ -305,28 +305,6 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _fetchBizplaceList() {
-    const response = await client.query({
-      query: gql`
-        query {
-          userBizplaces(${gqlBuilder.buildArgs({
-            email: ''
-          })}) {
-            id
-            name
-            description
-            assigned
-            mainBizplace
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      return response.data.userBizplaces.filter(x => x.assigned == true)
-    }
-  }
-
   _validate() {
     if (!this.searchForm.shadowRoot.querySelector('form').checkValidity())
       throw new Error(i18next.t('text.invalid_form_value'))
