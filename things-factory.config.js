@@ -384,6 +384,10 @@ export default {
     {
       tagname: 'inventory-report',
       page: 'inventory_report'
+    },
+    {
+      tagname: 'customer-inventory-report',
+      page: 'customer_inventory_report'
     }
   ],
   bootstrap

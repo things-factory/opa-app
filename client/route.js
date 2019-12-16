@@ -371,5 +371,8 @@ export default function route(page) {
     case 'inventory_report':
       import('./pages/report/inventory-report')
       return page
+    case 'customer_inventory_report':
+      import('./pages/report/customer-inventory-report')
+      return page
   }
 }
