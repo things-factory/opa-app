@@ -20,7 +20,8 @@
     "migration:create": "node ./node_modules/typeorm/cli.js migration:create",
     "migration:generate": "node ./node_modules/typeorm/cli.js migration:generate",
     "migration:run": "node ./node_modules/typeorm/cli.js migration:run",
-    "migration:revert": "node ./node_modules/typeorm/cli.js migration:revert"
+    "migration:revert": "node ./node_modules/typeorm/cli.js migration:revert",
+    "generate:domain": "node ./scripts/generator/domain-generator"
   },
   "dependencies": {
     "@things-factory/apptool-ui": "^1.0.0-alpha.1",
@@ -87,6 +88,8 @@
     "sweetalert2": "*"
   },
   "devDependencies": {
-    "@things-factory/opa-test": "^1.0.0-alpha.1"
+    "@things-factory/opa-test": "^1.0.0-alpha.1",
+    "chalk": "^3.0.0",
+    "inquirer": "^7.0.0"
   }
 }
