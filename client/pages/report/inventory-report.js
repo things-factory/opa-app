@@ -92,15 +92,13 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
             }
           })
         ],
-        handlers: { change: this._bizplaceChange.bind(this) },
         props: { searchOper: 'eq' }
       },
       {
         label: i18next.t('field.product'),
         name: 'product',
-        type: 'select',
-        options: [{ name: 'All', value: '' }],
-        props: { searchOper: 'eq' }
+        type: 'string',
+        props: { searchOper: 'in' }
       },
       {
         label: i18next.t('field.from_date'),

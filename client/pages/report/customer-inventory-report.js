@@ -1,19 +1,11 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { html, css } from 'lit-element'
-import {
-  client,
-  gqlBuilder,
-  isMobileDevice,
-  PageView,
-  ScrollbarStyles,
-  store,
-  flattenObject
-} from '@things-factory/shell'
+import { client, gqlBuilder, PageView, store, flattenObject } from '@things-factory/shell'
 import { connect } from 'pwa-helpers/connect-mixin'
 import { localize, i18next } from '@things-factory/i18n-base'
 import gql from 'graphql-tag'
-import { getCodeByName } from '@things-factory/code-base'
+import '../test/tag-input'
 
 class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -65,6 +57,10 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
     return this.searchForm.shadowRoot.querySelector('input[name=toDate]')
   }
 
+  constructor() {
+    super()
+  }
+
   render() {
     return html`
       <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.report.fetch()}></search-form>
@@ -78,9 +74,8 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
       {
         label: i18next.t('field.product'),
         name: 'product',
-        type: 'select',
-        options: [{ name: 'All', value: '' }],
-        props: { searchOper: 'eq' }
+        type: 'string',
+        props: { searchOper: 'in' }
       },
       {
         label: i18next.t('field.from_date'),
@@ -203,7 +198,6 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
   async pageUpdated(changes, lifecycle) {
     if (this.active) {
       this.report.fetch()
-      await this.fetchProducts()
     }
   }
 
