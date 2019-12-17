@@ -5,7 +5,6 @@ import { client, gqlBuilder, PageView, store, flattenObject } from '@things-fact
 import { connect } from 'pwa-helpers/connect-mixin'
 import { localize, i18next } from '@things-factory/i18n-base'
 import gql from 'graphql-tag'
-import '../test/tag-input'
 
 class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
