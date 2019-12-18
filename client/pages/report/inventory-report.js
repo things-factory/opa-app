@@ -92,15 +92,13 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
             }
           })
         ],
-        handlers: { change: this._bizplaceChange.bind(this) },
         props: { searchOper: 'eq' }
       },
       {
         label: i18next.t('field.product'),
         name: 'product',
-        type: 'select',
-        options: [{ name: 'All', value: '' }],
-        props: { searchOper: 'eq' }
+        type: 'string',
+        props: { searchOper: 'in' }
       },
       {
         label: i18next.t('field.from_date'),
@@ -280,28 +278,6 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
       }
     } catch (e) {
       console.log(e)
-    }
-  }
-
-  async _fetchBizplaceList() {
-    const response = await client.query({
-      query: gql`
-        query {
-          userBizplaces(${gqlBuilder.buildArgs({
-            email: ''
-          })}) {
-            id
-            name
-            description
-            assigned
-            mainBizplace
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      return response.data.userBizplaces.filter(x => x.assigned == true)
     }
   }
 

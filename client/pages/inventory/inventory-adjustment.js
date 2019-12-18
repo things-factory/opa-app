@@ -3,13 +3,13 @@ import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import '@things-factory/import-ui'
 import { openPopup } from '@things-factory/layout-base'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
 import { PALLET_LABEL_SETTING_KEY } from '../../setting-constants'
+import '../components/import-pop-up'
 
 class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
