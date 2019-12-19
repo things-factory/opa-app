@@ -2,10 +2,9 @@ import { html } from 'lit-element'
 import { addRoutingType, updateMenuProvider } from '@things-factory/menu-base'
 import { client, store, isMobileDevice, UPDATE_BASE_URL } from '@things-factory/shell'
 import gql from 'graphql-tag'
-import { UPDATE_DASHBOARD_SETTINGS, CLEAR_DASHBOARD_SETTINGS } from './actions/dashboard-settings'
+import { UPDATE_DASHBOARD_SETTINGS } from './actions/dashboard-settings'
 import dashboard from './reducers/dashboard-settings'
 import { fetchBoardSettings } from './fetch-board-settings'
-import { auth } from '@things-factory/auth-base'
 import { TOOL_POSITION } from '@things-factory/layout-base'
 import { APPEND_APP_TOOL } from '@things-factory/apptool-base'
 import { ADD_SETTING } from '@things-factory/setting-base'
@@ -25,8 +24,8 @@ export default function bootstrap() {
     dashboard
   })
 
-  /* 사용자 signin/signout 에 따라서, setting 변경 */
-  auth.on('signin', async () => {
+  /* 사용자가 로그인 되어있는 경우에만 실행되는 방법 필요할 듯. */
+  ;(async () => {
     // fetch dashboard settings
     var settings = await fetchBoardSettings()
 
@@ -37,14 +36,7 @@ export default function bootstrap() {
         return settings
       }, {})
     })
-  })
-
-  auth.on('signout', async () => {
-    // clear dashboard settings
-    store.dispatch({
-      type: CLEAR_DASHBOARD_SETTINGS
-    })
-  })
+  })()
 
   /*
    * things-board 기능을 메뉴에서 지원하기 위해서, VIEWER, PLAYER routing type을 추가함.
