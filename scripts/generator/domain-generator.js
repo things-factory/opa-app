@@ -27,6 +27,16 @@ const inquirer = require('inquirer')
 const chalk = require('chalk')
 
 const validators = {
+  bizplaceName: async bizplaceName => {
+    const { Bizplace } = require('@things-factory/biz-base')
+    const bizplace = await getRepository(Bizplace).findOne({
+      where: {
+        name: Raw(alias => `LOWER(${alias}) LIKE '${bizplaceName.toLowerCase()}'`)
+      }
+    })
+
+    return bizplace ? true : chalk.redBright(`There's a bizplace named ${chalk.cyan(bizplaceName)} already.`)
+  },
   name: async name => {
     if (/^[a-zA-Z ]+$/.test(name)) {
       const { Domain } = require('@things-factory/shell')
@@ -67,6 +77,12 @@ const validators = {
 }
 
 const questions = {
+  bizplaceName: {
+    type: 'text',
+    name: 'bizplaceName',
+    message: chalk.cyanBright.bold('Bizplace name: '),
+    validate: validators.bizplaceName
+  },
   name: {
     type: 'text',
     name: 'name',
@@ -165,7 +181,8 @@ async function generateDomain() {
     logging: true
   }).then(async connection => {
     console.log(chalk.cyanBright.bold('Database connection established'))
-    let { name, subdomain, description, email } = await promptDomainInfo(
+    let { bizplaceName, name, subdomain, description, email } = await promptDomainInfo(
+      opts.bizplaceName,
       opts.name,
       opts.subdomain,
       opts.description,
@@ -174,7 +191,7 @@ async function generateDomain() {
 
     // Start transaction
     await getManager().transaction(async trxMgr => {
-      const domain = await createDomain(trxMgr, name, subdomain, description)
+      const domain = await createDomain(trxMgr, bizplaceName, name, subdomain, description)
       /* 3. Start to initialize required data to create new domain
        *    1) Domain
        *    2) Menu
@@ -222,8 +239,17 @@ function parseOptions() {
  * @description: prompt domain info from user.
  * @returns name, subdomain, description, email
  */
-async function promptDomainInfo(name, subdomain, description, email) {
+async function promptDomainInfo(bizplaceName, name, subdomain, description, email) {
   let neededQuestions = []
+
+  if (!bizplaceName) {
+    neededQuestions.push(questions.bizplaceName)
+  } else {
+    let result = await validators.bizplaceName(bizplaceName)
+    if (typeof result === 'string') {
+      throw new Error(result)
+    }
+  }
 
   if (!name) {
     neededQuestions.push(questions.name)
@@ -259,11 +285,12 @@ async function promptDomainInfo(name, subdomain, description, email) {
   const answers = await inquirer.prompt(neededQuestions)
 
   return {
-    ...answers,
+    bizplaceName,
     name,
     subdomain,
     description,
-    email
+    email,
+    ...answers
   }
 }
 
@@ -275,14 +302,23 @@ async function promptDomainInfo(name, subdomain, description, email) {
  * @param {string} description
  * @returns Domain object
  */
-async function createDomain(trxMgr, name, subdomain, description) {
+async function createDomain(trxMgr, bizplaceName, name, subdomain, description) {
   const { Domain } = require('@things-factory/shell')
+  const { Bizplace } = require('@things-factory/biz-base')
 
-  return await trxMgr.getRepository(Domain).save({
+  const domain = await trxMgr.getRepository(Domain).save({
     name,
     subdomain,
     description
   })
+
+  const bizplace = await trxMgr.getRepository(Bizplace).findOne({ where: { name: bizplaceName } })
+  await trxMgr.getRepository(Bizplace).save({
+    ...bizplace,
+    domain
+  })
+
+  return domain
 }
 
 async function initData(trxMgr, domain, filePath = './initializers') {
@@ -294,6 +330,8 @@ async function initData(trxMgr, domain, filePath = './initializers') {
 
 async function createRelations(trxMgr, domain, email) {
   const { User, Role, Priviledge } = require('@things-factory/auth-base')
+  const { Bizplace } = require('@things-factory/biz-base')
+  const { Manager } = require('@things-factory/biz-base')
 
   // 1) roles_priviledges table
   const roleRepo = trxMgr.getRepository(Role)
@@ -331,6 +369,14 @@ async function createRelations(trxMgr, domain, email) {
     ...user,
     domains: [...user.domains, domain],
     roles: [...user.roles, superAdminRole]
+  })
+
+  // 4) Set user as domain manager
+  const bizplace = await trxMgr.getRepository(Bizplace).findOne({ where: { domain } })
+  await trxMgr.getRepository(Manager).save({
+    type: 'domain manager',
+    user,
+    bizplace
   })
 }
 

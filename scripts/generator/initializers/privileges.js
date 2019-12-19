@@ -30,8 +30,7 @@ let privileges = [
   { name: 'mutation', category: 'warehouse', description: 'to edit warehouse data' },
   { name: 'query', category: 'warehouse', description: 'to read warehouse data' },
   { name: 'mutation', category: 'worker', description: 'to edit worker data' },
-  { name: 'query', category: 'worker', description: 'to read worker data' },
-  { name: 'role', category: 'bizplace manager', description: 'to manager own company users and roles' }
+  { name: 'query', category: 'worker', description: 'to read worker data' }
 ]
 
 module.exports = async function initPrivileges(trxMgr, domain) {

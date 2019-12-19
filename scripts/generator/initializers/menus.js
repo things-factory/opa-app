@@ -106,6 +106,36 @@ let menus = [
     ]
   },
   {
+    name: 'VAS Order',
+    menuType: 'MENU',
+    childrens: [
+      {
+        name: 'Create VAS Order',
+        template: 'create-vas-order',
+        menuType: 'SCREEN',
+        category: 'customer',
+        routingType: 'STATIC',
+        resourceUrl: 'create_vas_order'
+      },
+      {
+        name: 'VAS Orders',
+        template: 'vas-order-list',
+        menuType: 'SCREEN',
+        category: 'customer',
+        routingType: 'STATIC',
+        resourceUrl: 'vas_orders'
+      },
+      {
+        name: 'VAS Requests',
+        template: 'vas-order-requests',
+        menuType: 'SCREEN',
+        category: 'owner',
+        routingType: 'STATIC',
+        resourceUrl: 'vas_requests'
+      }
+    ]
+  },
+  {
     name: 'Billing',
     menuType: 'MENU',
     childrens: [
@@ -194,60 +224,6 @@ let menus = [
         category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'inventory_adjustment'
-      }
-    ]
-  },
-  {
-    name: 'System',
-    menuType: 'MENU',
-    childrens: [
-      {
-        name: 'User',
-        template: 'system-user',
-        menuType: 'SCREEN',
-        category: 'bizplace manager',
-        routingType: 'STATIC',
-        resourceUrl: 'users'
-      },
-      {
-        name: 'Role',
-        template: 'system-role',
-        menuType: 'SCREEN',
-        category: 'bizplace manager',
-        routingType: 'STATIC',
-        resourceUrl: 'roles'
-      },
-      {
-        name: 'Menu',
-        template: 'menu-management',
-        menuType: 'SCREEN',
-        category: 'owner',
-        routingType: 'STATIC',
-        resourceUrl: 'menus'
-      },
-      {
-        name: 'Code',
-        template: 'code-management',
-        menuType: 'SCREEN',
-        category: 'owner',
-        routingType: 'STATIC',
-        resourceUrl: 'codes'
-      },
-      {
-        name: 'Setting',
-        template: 'system-setting',
-        menuType: 'SCREEN',
-        category: 'owner',
-        routingType: 'STATIC',
-        resourceUrl: 'settings'
-      },
-      {
-        name: 'Partner',
-        template: 'partner-list',
-        menuType: 'SCREEN',
-        category: 'bizplace manager',
-        routingType: 'STATIC',
-        resourceUrl: 'partners'
       }
     ]
   },
@@ -344,6 +320,66 @@ let menus = [
         category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'execute_vas'
+      }
+    ]
+  },
+  {
+    name: 'Domain Managerment',
+    menuType: 'MENU',
+    childrens: [
+      {
+        name: 'Partner',
+        template: 'partner-list',
+        menuType: 'SCREEN',
+        category: 'domain manager',
+        routingType: 'STATIC',
+        resourceUrl: 'partners'
+      },
+      {
+        name: 'Role',
+        template: 'system-role',
+        menuType: 'SCREEN',
+        category: 'domain manager',
+        routingType: 'STATIC',
+        resourceUrl: 'roles'
+      },
+      {
+        name: 'Menu',
+        template: 'menu-management',
+        menuType: 'SCREEN',
+        category: 'domain manager',
+        routingType: 'STATIC',
+        resourceUrl: 'menus'
+      },
+      {
+        name: 'Code',
+        template: 'code-management',
+        menuType: 'SCREEN',
+        category: 'domain manager',
+        routingType: 'STATIC',
+        resourceUrl: 'codes'
+      },
+      {
+        name: 'Setting',
+        template: 'system-setting',
+        menuType: 'SCREEN',
+        category: 'domain manager',
+        routingType: 'STATIC',
+        resourceUrl: 'settings'
+      }
+    ]
+  },
+  {
+    name: 'Bizplace Management',
+    menuType: 'MENU',
+    childrens: [
+      {
+        name: 'User',
+        template: 'system-user',
+        menuType: 'SCREEN',
+        category: 'bizplace manager',
+        routingType: 'STATIC',
+        resourceUrl: 'users'
       }
     ]
   }

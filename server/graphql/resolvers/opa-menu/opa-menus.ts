@@ -1,6 +1,8 @@
 import { Priviledge } from '@things-factory/auth-base'
 import { Menu } from '@things-factory/menu-base'
+import { BizplaceUser, Bizplace } from '@things-factory/biz-base'
 import { Equal, getRepository, In, IsNull } from 'typeorm'
+import { getManagerRoles } from './get-manager-roles'
 
 export const opaMenusResolver = {
   async opaMenus(_: any, _params: any, context: any) {
@@ -28,7 +30,8 @@ export const opaMenusResolver = {
         ) AND NAME = 'role'
         AND domain_id = '${context.state.domain.id}'
     `)
-      const userRoles = response.map((priviledge: Priviledge) => priviledge.category)
+      let userRoles = response.map((priviledge: Priviledge) => priviledge.category)
+      userRoles.push(...(await getManagerRoles(context.state.user, context.state.domain)))
 
       if (userRoles.length) {
         menus = await getRepository(Menu).find({
