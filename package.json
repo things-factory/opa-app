@@ -21,7 +21,8 @@
     "migration:generate": "node ./node_modules/typeorm/cli.js migration:generate",
     "migration:run": "node ./node_modules/typeorm/cli.js migration:run",
     "migration:revert": "node ./node_modules/typeorm/cli.js migration:revert",
-    "generate:domain": "node ./scripts/generator/domain-generator"
+    "generate:domain": "node ./scripts/generator/domain-generator",
+    "generate:bizplace": "node ./scripts/generator/bizplace-generator"
   },
   "dependencies": {
     "@things-factory/apptool-ui": "^1.0.0-alpha.1",
