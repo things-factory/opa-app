@@ -535,10 +535,10 @@ export class GenerateLocationList extends localize(i18next)(LitElement) {
 
   _generatedLocation() {
     this._validateGenerator()
-    if (this._locationList) {
+    if (this._locationList.length > 0) {
       this.dispatchEvent(new CustomEvent('generated', { detail: this._locationList }))
       history.back()
-    }
+    } else return
   }
 
   _chunkLocationList(locationArray, chunk_size) {
