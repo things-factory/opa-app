@@ -16,6 +16,8 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       config: Object,
       data: Object,
       _selectedTaskStatus: String,
+      _selectedDriver: String,
+      _selectedTruck: String,
       _driverList: Object,
       _vehicleList: Object
     }
@@ -107,12 +109,12 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  get vehicle() {
-    return this.shadowRoot.querySelector('input[name=transportVehicle]')
+  get scannable() {
+    return this._selectedTaskStatus && this._selectedTaskStatus === WORKSHEET_STATUS.EXECUTING.value
   }
 
-  get driver() {
-    return this.shadowRoot.querySelector('input[name=transportDriver]')
+  get completed() {
+    return this.data.records.every(record => record.completed)
   }
 
   render() {
@@ -200,14 +202,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     this._selectedTaskStatus = null
   }
 
-  get scannable() {
-    return this._selectedTaskStatus && this._selectedTaskStatus === WORKSHEET_STATUS.EXECUTING.value
-  }
-
-  get completed() {
-    return this.data.records.every(record => record.completed)
-  }
-
   updated(changedProps) {
     if (changedProps.has('_selectedTaskStatus') && this._selectedTaskStatus) {
       this._updateContext()
@@ -237,7 +231,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         }
       },
       pagination: { infinite: true },
-      list: { fields: ['completed', 'palletId', 'product', 'batchId', 'releaseQty'] },
+      list: { fields: ['palletId', 'product', 'batchId', 'releaseQty'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
@@ -387,22 +381,22 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     if (e.keyCode === 13) {
       try {
         this._validateLoading()
+        let args = {
+          worksheetDetailName: this._selectedOrderInventory.name,
+          palletId: this._getSelectedPallet(),
+          deliveryOrder: { transportVehicle: this._selectedTruck, transportDriver: this._selectedDriver }
+        }
+
         const response = await client.query({
           query: gql`
               mutation {
-                loading(${gqlBuilder.buildArgs({
-                  worksheetDetailName: this._selectedOrderInventory.name,
-                  palletId: this.palletInput.value,
-                  transportDriver: this.driver.value,
-                  transportVehicle: this.vehicle.value
-                })})
+                loading(${gqlBuilder.buildArgs(args)})
               }
             `
         })
 
         if (!response.errors) {
           this._fetchInventories(this.releaseGoodNo)
-          this._focusOnPalletInput()
           this._selectedTaskStatus = null
           this._selectedOrderInventory = null
         }
@@ -414,8 +408,19 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
 
   _validateLoading() {
     // 1. validate for input for driver and truck
-    if (!this._selectedDriver && !this._selectedTruck)
+    if (!this._selectedDriver || !this._selectedTruck)
       throw new Error(i18next.t('text.driver_and_vehicle_is_not_selected'))
+  }
+
+  _getSelectedPallet() {
+    let palletId = {}
+    releaseGood.orderInventories = this.grist.selected.map(record => {
+      return {
+        palletId: record.palletId
+      }
+    })
+
+    return releaseGood
   }
 
   async _completeHandler() {
