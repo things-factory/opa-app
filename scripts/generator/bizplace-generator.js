@@ -247,8 +247,7 @@ async function createRelations(trxMgr, bizplace, email) {
 
   await trxMgr.getRepository(BizplaceUser).save({
     user,
-    bizplace,
-    adminFlag: true
+    bizplace
   })
 
   // 2. Set user as Bizplace manager
