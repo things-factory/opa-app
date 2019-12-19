@@ -9,6 +9,7 @@ const validators = {
     if (/^[a-zA-Z ]+$/.test(name)) {
       const { Bizplace } = require('@things-factory/biz-base')
       const bizplace = await getRepository(Bizplace).findOne({
+        where: {
           name: Raw(alias => `LOWER(${alias}) LIKE '${name.toLowerCase()}'`)
         }
       })
