@@ -88,14 +88,6 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
 
     this._searchFields = [
       {
-        name: 'domain',
-        label: i18next.t('field.domain'),
-        type: 'text',
-        props: {
-          searchOper: 'i_like'
-        }
-      },
-      {
         name: 'name',
         label: i18next.t('field.name'),
         type: 'text',
@@ -174,16 +166,6 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
           }
         },
         {
-          type: 'object',
-          name: 'domain',
-          header: i18next.t('field.domain'),
-          record: {
-            editable: false,
-            align: 'center'
-          },
-          width: 150
-        },
-        {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),
@@ -251,11 +233,10 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async fetchHandler({ page, limit, sorters = [] }) {
-    console.log(this.searchForm.queryFilters)
     const response = await client.query({
       query: gql`
         query {
-          users(${gqlBuilder.buildArgs({
+          bizplaceUsers(${gqlBuilder.buildArgs({
             filters: this.searchForm.queryFilters,
             pagination: { page, limit },
             sortings: sorters
@@ -266,6 +247,15 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
                 id
                 name
                 description
+              }
+              roles {
+                name
+                priviledges {
+                  name
+                }
+                users {
+                  name
+                }
               }
               name
               description
@@ -286,8 +276,8 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       return {
-        total: response.data.users.total || 0,
-        records: response.data.users.items || []
+        total: response.data.bizplaceUsers.total || 0,
+        records: response.data.bizplaceUsers.items || []
       }
     } else {
       return {

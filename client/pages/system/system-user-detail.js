@@ -202,12 +202,16 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
     const response = await client.query({
       query: gql`
         query {
-          userRoles(${gqlBuilder.buildArgs({
-            userId: this.userId
+          assignedRolesByUser(${gqlBuilder.buildArgs({
+            user: {
+              id: this.userId
+            }
           })}) {
-            id
-            name
-            description
+            role {
+              id
+              name
+              description
+            }
             assigned
           }
         }
@@ -216,8 +220,12 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
 
     if (!response.errors) {
       return {
-        records: response.data.userRoles || [],
-        total: response.data.userRoles.length || 0
+        records: (response.data.assignedRolesByUser || []).map(assignedRole => {
+          return {
+            ...assignedRole.role,
+            assigned: assignedRole.assigned
+          }
+        })
       }
     }
   }
