@@ -198,7 +198,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     super()
     this.data = { records: [] }
     this.releaseGoodNo = ''
-    this._selectedOrderInventory = null
     this._selectedTaskStatus = null
   }
 
@@ -222,8 +221,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               if (this._selectedOrderInventory && this._selectedOrderInventory.name === record) {
                 return
               }
-
-              this._selectedOrderInventory = record
               this._selectedTaskStatus = null
               this._selectedTaskStatus = record.status
             }
@@ -351,7 +348,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     this.infoForm.reset()
     this.inputForm.reset()
     this.releaseGoodNo = ''
-    this._selectedOrderInventory = null
     this._selectedTaskStatus = null
   }
 
@@ -381,10 +377,12 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     if (e.keyCode === 13) {
       try {
         this._validateLoading()
+        const worksheetDetailNames = this.grist.selected.map(record => record.name)
         let args = {
-          worksheetDetailName: this._selectedOrderInventory.name,
-          palletId: this._getSelectedPallet(),
-          deliveryOrder: { transportVehicle: this._selectedTruck, transportDriver: this._selectedDriver }
+          worksheetDetailNames,
+          releaseGoodNo: this.releaseGoodNo,
+          transportDriver: { id: this._selectedDriver },
+          transportVehicle: { id: this._selectedTruck }
         }
 
         const response = await client.query({
@@ -398,7 +396,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         if (!response.errors) {
           this._fetchInventories(this.releaseGoodNo)
           this._selectedTaskStatus = null
-          this._selectedOrderInventory = null
         }
       } catch (e) {
         this._showToast(e)
@@ -410,17 +407,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     // 1. validate for input for driver and truck
     if (!this._selectedDriver || !this._selectedTruck)
       throw new Error(i18next.t('text.driver_and_vehicle_is_not_selected'))
-  }
-
-  _getSelectedPallet() {
-    let palletId = {}
-    releaseGood.orderInventories = this.grist.selected.map(record => {
-      return {
-        palletId: record.palletId
-      }
-    })
-
-    return releaseGood
   }
 
   async _completeHandler() {
