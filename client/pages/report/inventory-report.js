@@ -34,7 +34,7 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
     return {
       _searchFields: Object,
       _config: Object,
-      _userBizplaces: Object,
+      _bizplaces: Object,
       data: Object
     }
   }
@@ -85,7 +85,7 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
         type: 'select',
         options: [
           { value: '' },
-          ...this._userBizplaces.map(bizplaceList => {
+          ...this._bizplaces.map(bizplaceList => {
             return {
               name: bizplaceList.name,
               value: bizplaceList.id
@@ -214,7 +214,7 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
 
   async pageInitialized() {
     this._products = []
-    this._userBizplaces = [...(await this._fetchBizplaceList())]
+    this._bizplaces = [...(await this._fetchBizplaceList())]
 
     this._searchFields = this.searchFields
     this._config = this.reportConfig
@@ -284,22 +284,22 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
   async _fetchBizplaceList() {
     const response = await client.query({
       query: gql`
-        query {
-          userBizplaces(${gqlBuilder.buildArgs({
-            email: ''
-          })}) {
-            id
-            name
-            description
-            assigned
-            mainBizplace
+          query {
+            bizplaces(${gqlBuilder.buildArgs({
+              filters: []
+            })}) {
+              items{
+                id
+                name
+                description
+              }
+            }
           }
-        }
-      `
+        `
     })
 
     if (!response.errors) {
-      return response.data.userBizplaces.filter(x => x.assigned == true)
+      return response.data.bizplaces.items
     }
   }
 
