@@ -40,8 +40,18 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           font-family: 'Times New Roman', Times;
         }
 
-        [goods-delivery-order] {
+        [goods-delivery-note] {
           overflow: scroll;
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera*/
+        [goods-delivery-note]::-webkit-scrollbar {
+          display: none;
+        }
+
+        /* Hide scrollbar for IE and Edge */
+        [goods-delivery-note] {
+          -ms-overflow-style: none;
         }
 
         [business-info] {
@@ -109,10 +119,6 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           padding-bottom: 10px;
         }
 
-        [verification] {
-          text-align: center;
-        }
-
         [customer_confirmation] {
           flex: 1;
           padding-top: 10px;
@@ -122,8 +128,46 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
         table {
           width: 100%;
           height: 100%;
-          border: 1px solid black;
           border-spacing: 0;
+          border-collapse: collapse;
+          margin-top: 20px;
+          margin-bottom: 20px;
+        }
+
+        [verification_head] > th:nth-child(-n + 4) {
+          text-align: center;
+          width: 15%;
+        }
+
+        [verification_body] > td:nth-child(-n + 5) {
+          text-align: center;
+          max-height: 100px;
+          padding: 93px 0px 7px;
+        }
+
+        [confirmation_head] > td:nth-child(1) {
+          text-align: justify;
+          text-justify: inter-word;
+          width: 65%;
+          padding: 10px 10px 200px;
+        }
+
+        [confirmation_head] > td:nth-child(2) {
+          text-align: center;
+          width: 35%;
+          max-height: 100px;
+          padding: 90px 0px 0px;
+        }
+
+        [confirmation_body] > td:nth-child(1) {
+          text-align: center;
+          width: 35%;
+          max-height: 100px;
+          padding: 90px 0px 0px;
+        }
+
+        [dopono] > td:nth-child(1) {
+          padding: 10px;
         }
 
         th {
@@ -136,13 +180,12 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           border: 1px solid black;
         }
 
-        td {
-          padding-left: 15px;
-          align: left;
-        }
-
         em {
           font-weight: bold;
+        }
+
+        hr {
+          width: 75%;
         }
 
         [agreement] {
@@ -198,7 +241,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.goods_delivery_order_details'),
+      title: i18next.t('title.goods_delivery_note_details'),
       actions: [
         {
           title: i18next.t('button.back'),
@@ -239,13 +282,13 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     var truckNo = this._truckNo
 
     return html`
-      <div goods-delivery-order>
+      <div goods-delivery-note>
         <div business-info>
           <h2 business-name>${company}</h2>
           <span business-brn>(${brn})</span>
         </div>
 
-        <h1 title>GOODS DELIVERY ORDER</h1>
+        <h1 title>GOODS DELIVERY NOTE</h1>
 
         <div brief>
           <div left>
@@ -293,23 +336,23 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
         <div business_verification>
           <label>Verification by ${company}</label>
-          <table verification>
+          <table>
             <thead>
-              <tr>
-                <th width="15%">Issued By</th>
-                <th width="15%">Loaded By</th>
-                <th width="15%">Checked By</th>
-                <th width="15%">Truck Number</th>
-                <th width="40%">Driver's Signature</th>
+              <tr verification_head>
+                <th>Issued By</th>
+                <th>Loaded By</th>
+                <th>Checked By</th>
+                <th>Truck Number</th>
+                <th>Driver's Signature</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
+              <tr verification_body>
                 <td></td>
                 <td></td>
                 <td></td>
                 <td></td>
-                <td style="padding-top:50px; padding-bottom:5px;">
+                <td>
                   <span><hr width="85%"/></span>${driverName}
                 </td>
               </tr>
@@ -319,23 +362,23 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
         <div customer_confirmation>
           <label>Confirmation by ${customer}</label>
-          <table>
-            <tr>
-              <td width="65%" rowspan="2" style="padding-top:5px; padding-bottom:200px;">
+          <table confirmation_table>
+            <tr confirmation_head>
+              <td rowspan="2">
                 <em>
                   Please examine the goods before acceptance as we will not be responsible for any damage or defect
                   after delivery. Goods once accepted are not returnable.
                 </em>
                 <br /><br />[REMARK]:
               </td>
-              <td style="padding-top:90px; padding-bottom:5px;"><hr width="75%" /></td>
+              <td><hr /></td>
             </tr>
-            <tr>
-              <td width="35%" style="text-align:center; padding-top:90px; padding-bottom:5px;">
+            <tr confirmation_body>
+              <td>
                 Please sign & stamp here in receipt
               </td>
             </tr>
-            <tr>
+            <tr dopono>
               <td colspan="2">[Customer DO No./PO No.]:</td>
             </tr>
           </table>
@@ -440,4 +483,4 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('print-delivery-order', PrintDeliveryOrder)
+window.customElements.define('print-delivery-note', PrintDeliveryOrder)

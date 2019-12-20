@@ -180,8 +180,8 @@ export default {
       page: 'delivery_orders'
     },
     {
-      tagname: 'print-delivery-order',
-      page: 'print_delivery_order'
+      tagname: 'print-delivery-note',
+      page: 'print_delivery_note'
     },
     {
       tagname: 'collection-order-list',

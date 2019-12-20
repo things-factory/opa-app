@@ -211,8 +211,8 @@ export default function route(page) {
       import('./pages/order/transport-order/completed-collection-order')
       return page
 
-    case 'print_delivery_order':
-      import('./pages/order/transport-order/print-delivery-order')
+    case 'print_delivery_note':
+      import('./pages/order/transport-order/print-delivery-note')
       return page
 
     /**
