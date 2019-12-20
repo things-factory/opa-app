@@ -127,6 +127,7 @@ class SystemRole extends localize(i18next)(PageView) {
                     }}"
                     .roleId="${record.id}"
                     .name="${record.name}"
+                    .description="${record.description}"
                   ></system-role-detail>
                 `,
                 {

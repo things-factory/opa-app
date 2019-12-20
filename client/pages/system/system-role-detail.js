@@ -9,7 +9,8 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
     return {
       roleId: String,
       name: String,
-      roleInfo: Object,
+      description: Object,
+      assigned: Boolean,
       priviledgeConfig: Object
     }
   }
@@ -27,8 +28,13 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
         }
         .grist {
           display: flex;
-          flex-direction: column;
           flex: 1;
+          overflow-y: auto;
+        }
+        .grist-column {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
           overflow-y: auto;
         }
         data-grist {
@@ -69,6 +75,14 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
     ]
   }
 
+  get priviledgeGrist() {
+    return this.shadowRoot.querySelector('data-grist#priviledge-grist')
+  }
+
+  get partnerGrist() {
+    return this.shadowRoot.querySelector('data-grist#partner-grist')
+  }
+
   render() {
     return html`
       <div>
@@ -76,30 +90,46 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
         <form class="multi-column-form">
           <fieldset>
             <label>${i18next.t('label.name')}</label>
-            <input name="name" required />
+            <input name="name" readonly value="${this.name}" />
 
             <label>${i18next.t('label.description')}</label>
-            <input name="description" />
+            <input name="description" readonly value="${this.description}" />
+
+            <input type="checkbox" ?checked="${this.assigned}" />
+            <label>${i18next.t('label.assigned')}</label>
           </fieldset>
         </form>
       </div>
 
       <div class="grist">
-        <h2>${i18next.t('title.priviledge')}</h2>
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config="${this.priviledgeConfig}"
-          .fetchHandler="${this.fetchHandler.bind(this)}"
-        ></data-grist>
+        <div class="grist-column">
+          <h2>${i18next.t('title.priviledge')}</h2>
+          <data-grist
+            id="priviledge-grist"
+            .mode="${isMobileDevice() ? 'LIST' : 'GRID'}"
+            .config="${this.priviledgeConfig}"
+            .fetchHandler="${this.priviledgeFetchHandler.bind(this)}"
+          ></data-grist>
+        </div>
+
+        <div class="grist-column">
+          <h2>${i18next.t('title.partners')}</h2>
+          <data-grist
+            id="partner-grist"
+            .mode="${isMobileDevice() ? 'LIST' : 'GRID'}"
+            .config="${this.partnerConfig}"
+            .fetchHandler="${this.partnerFetchHandler.bind(this)}"
+          ></data-grist>
+        </div>
       </div>
 
       <div class="button-container">
-        <button @click="${this._saveRoleInfo}">${i18next.t('button.update')}</button>
+        <button @click="${this.save}">${i18next.t('button.update')}</button>
       </div>
     `
   }
 
-  async firstUpdated() {
+  firstUpdated() {
     this.priviledgeConfig = {
       list: { fields: ['description', 'category', 'assigned'] },
       pagination: { infinite: true },
@@ -138,41 +168,38 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
         }
       ]
     }
-  }
 
-  async updated(changedProps) {
-    if (changedProps.has('name')) {
-      this.roleInfo = await this._fetchRoleInfo()
-    }
-
-    if (changedProps.has('roleInfo')) {
-      this._fillupView()
-    }
-  }
-
-  get dataGrist() {
-    return this.shadowRoot.querySelector('data-grist')
-  }
-
-  async _fetchDomains() {
-    const response = await client.query({
-      query: gql`
-        query {
-          domains(filters: []) {
-            items {
-              id
-              name
-              description
-            }
-          }
+    this.partnerConfig = {
+      list: { fields: ['partnerBizplace', 'type', 'assigned'] },
+      pagination: { infinite: true },
+      rows: { appendable: false },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'object',
+          name: 'partnerBizplace',
+          header: i18next.t('field.partner'),
+          width: 250
+        },
+        {
+          type: 'string',
+          name: 'type',
+          header: i18next.t('field.type'),
+          record: { editable: false },
+          width: 200
+        },
+        {
+          type: 'boolean',
+          name: 'assigned',
+          header: i18next.t('label.assigned'),
+          record: { editable: true },
+          width: 100
         }
-      `
-    })
-
-    return response.data.domains.items
+      ]
+    }
   }
 
-  async fetchHandler() {
+  async priviledgeFetchHandler() {
     const response = await client.query({
       query: gql`
         query {
@@ -197,6 +224,36 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
     }
   }
 
+  async partnerFetchHandler() {
+    const response = await client.query({
+      query: gql`
+        query {
+          bizplaceRoleAssignment(${gqlBuilder.buildArgs({
+            role: { id: this.roleId }
+          })}) {
+            partners {
+              partnerBizplace {
+                id
+                name
+                description
+              }
+              type
+              assigned
+            }
+            assigned
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      this.assigned = response.data.bizplaceRoleAssignment.assigned
+      return {
+        records: [...response.data.bizplaceRoleAssignment.partners]
+      }
+    }
+  }
+
   async _fetchRoleInfo() {
     const response = await client.query({
       query: gql`
@@ -217,90 +274,65 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
         }
       `
     })
-    return response.data.role
+
+    const roleInfo = response.data.role
+    this.name = roleInfo.name
+    this.description = roleInfo.description
   }
 
-  _fillupView() {
-    Array.from(this.shadowRoot.querySelectorAll('input')).forEach(input => {
-      const roleInfo = this.roleInfo[input.name]
-      input.value =
-        roleInfo instanceof Object
-          ? `${roleInfo.name} ${roleInfo.description ? `(${roleInfo.description})` : ''}`
-          : roleInfo
-    })
-  }
-
-  async _saveRoleInfo() {
+  async save() {
     try {
-      const patch = this._getRoleInfo()
+      await this._saveRolePriviledges()
+      await this._savePartnerAssignement()
+      this.dispatchEvent(new CustomEvent('role-updated', { bubbles: true, composed: true, cancelable: true }))
+    } catch (e) {
+      this.showToast(e.message)
+    }
+  }
 
+  async _saveRolePriviledges() {
+    try {
       const response = await client.query({
         query: gql`
           mutation {
-            updateRole(${gqlBuilder.buildArgs({
-              name: this.name,
-              patch
-            })}) {
-              id
-              domain {
-                id
-                name
-                description
+            updateRolePriviledges($${gqlBuilder.buildArgs({
+              id: this.roleId,
+              patch: {
+                priviledges: this.getCheckedPriviledges()
               }
-              name
-              description
-              priviledges {
-                id
-                name
-                category
-                description
-              }
-            }
+            })})
           }
         `
       })
-
-      this.roleInfo = { ...response.data.updateRole }
-      this.name = this.roleInfo.name
-
-      this.dispatchEvent(new CustomEvent('role-updated', { bubbles: true, composed: true, cancelable: true }))
-      history.back()
     } catch (e) {
-      document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            level: 'error',
-            message: e.message
+      throw e
+    }
+  }
+
+  async _savePartnerAssignement() {
+    try {
+      const response = await client.query({
+        query: gql`
+          mutation {
+            updateAssignedRole(${gqlBuilder.buildArgs({})})
           }
-        })
-      )
-    }
-  }
-
-  _getRoleInfo() {
-    if (this.shadowRoot.querySelector('form').checkValidity()) {
-      return {
-        name: this._getInputByName('name').value,
-        description: this._getInputByName('description').value,
-        priviledges: this._getCheckedPriviledges()
-      }
-    } else {
-      throw new Error(i18next.t('text.role_info_not_valid'))
-    }
-  }
-
-  _getInputByName(name) {
-    return this.shadowRoot.querySelector(`input[name=${name}]`)
-  }
-
-  _getCheckedPriviledges() {
-    const grist = this.shadowRoot.querySelector('data-grist')
-    grist.commit()
-    return grist.data.records
-      .filter(priviledge => priviledge.assigned)
-      .map(priviledge => {
-        return { id: priviledge.id }
+        `
       })
+    } catch (e) {
+      throw e
+    }
+  }
+
+  getCheckedPriviledges() {
+    this.priviledgeGrist.dirtyRecords
+  }
+
+  showToast(message, level = 'error') {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: { level, message }
+      })
+    )
   }
 }
 
