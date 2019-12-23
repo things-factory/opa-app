@@ -80,6 +80,9 @@ class SystemCreateRole extends localize(i18next)(LitElement) {
 
   async firstUpdated() {
     this.priviledgeConfig = {
+      pagination: { infinite: true },
+      list: { fields: ['name', 'description', 'assigned'] },
+      rows: { appendable: false },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -120,7 +123,6 @@ class SystemCreateRole extends localize(i18next)(LitElement) {
         query {
           priviledges(${gqlBuilder.buildArgs({
             filters: [],
-            pagination: { page, limit },
             sortings: sorters
           })}) {
             items {
