@@ -83,6 +83,18 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
     return this.shadowRoot.querySelector('data-grist#partner-grist')
   }
 
+  get nameInput() {
+    return this.shadowRoot.querySelector('input#name')
+  }
+
+  get descriptionInput() {
+    return this.shadowRoot.querySelector('input#description')
+  }
+
+  get assignedInput() {
+    return this.shadowRoot.querySelector('input#assigned')
+  }
+
   render() {
     return html`
       <div>
@@ -90,13 +102,13 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
         <form class="multi-column-form">
           <fieldset>
             <label>${i18next.t('label.name')}</label>
-            <input name="name" readonly value="${this.name}" />
+            <input id="name" name="name" value="${this.name}" />
 
             <label>${i18next.t('label.description')}</label>
-            <input name="description" readonly value="${this.description}" />
+            <input id="description" name="description" value="${this.description}" />
 
-            <input type="checkbox" ?checked="${this.assigned}" />
-            <label>${i18next.t('label.assigned')}</label>
+            <input id="assigned" type="checkbox" ?checked="${this.assigned}" />
+            <label for="assigned">${i18next.t('label.assigned')}</label>
           </fieldset>
         </form>
       </div>
@@ -179,14 +191,14 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
           type: 'object',
           name: 'partnerBizplace',
           header: i18next.t('field.partner'),
-          width: 250
+          width: 200
         },
         {
           type: 'string',
           name: 'type',
           header: i18next.t('field.type'),
           record: { editable: false },
-          width: 200
+          width: 150
         },
         {
           type: 'boolean',
@@ -292,15 +304,16 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
 
   async _saveRolePriviledges() {
     try {
-      const response = await client.query({
+      const patch = this.getRoleInfo()
+      await client.query({
         query: gql`
           mutation {
-            updateRolePriviledges($${gqlBuilder.buildArgs({
+            updateRole(${gqlBuilder.buildArgs({
               id: this.roleId,
-              patch: {
-                priviledges: this.getCheckedPriviledges()
-              }
-            })})
+              patch
+            })}) {
+              name
+            }
           }
         `
       })
@@ -314,17 +327,62 @@ class SystemRoleDetail extends localize(i18next)(LitElement) {
       const response = await client.query({
         query: gql`
           mutation {
-            updateAssignedRole(${gqlBuilder.buildArgs({})})
+            updateAssignedRole(${gqlBuilder.buildArgs({
+              role: { id: this.roleId },
+              bizplaces: this.getCheckedBizplaces(),
+              selfAssignment: this.assignedInput.checked
+            })}) {
+              partners {
+                partnerBizplace {
+                  id
+                  name
+                  description
+                }
+                type
+                assigned
+              }
+              assigned
+            }
           }
         `
       })
+
+      if (!response.errors) {
+        this.assigned = response.data.updateAssignedRole.assigned
+        this.data = {
+          ...this.data,
+          records: [...response.data.updateAssignedRole.partners]
+        }
+      }
     } catch (e) {
       throw e
     }
   }
 
+  getRoleInfo() {
+    return {
+      name: this.nameInput.value,
+      description: this.descriptionInput.value,
+      priviledges: this.getCheckedPriviledges()
+    }
+  }
+
   getCheckedPriviledges() {
-    this.priviledgeGrist.dirtyRecords
+    this.priviledgeGrist.commit()
+    return this.priviledgeGrist.dirtyData.records
+      .filter(priviledge => priviledge.assigned)
+      .map(priviledge => {
+        return { id: priviledge.id }
+      })
+  }
+
+  getCheckedBizplaces() {
+    this.partnerGrist.commit()
+    return this.partnerGrist.dirtyData.records
+      .filter(partner => partner.assigned)
+      .map(partner => {
+        return { id: partner.partnerBizplace.id }
+      })
   }
 
   showToast(message, level = 'error') {
