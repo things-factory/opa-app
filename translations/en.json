@@ -822,5 +822,7 @@
   "text.cannot_delete_unsaved_location(s)": "cannot delete unsaved location(s)",
   "label.add_extension": "add extension",
   "label.select_file": "select file",
-  "text.goods_received_note_uploaded": "text.goods_received_note_uploaded"
+  "text.goods_received_note_uploaded": "text.goods_received_note_uploaded",
+  "title.rejected_arrival_notice_detail": "rejected arrival notice detail",
+  "title.rejection_reason": "rejection reason"
 }

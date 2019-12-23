@@ -95,7 +95,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
   render() {
     return html`
       <popup-note
-        .title="${i18next.t('title.reject_reason')}"
+        .title="${i18next.t('title.rejection_reason')}"
         .value="${this._rejectReason}"
         .readonly="${true}"
       ></popup-note>
