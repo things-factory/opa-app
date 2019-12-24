@@ -1,12 +1,21 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { html, css } from 'lit-element'
-import { client, gqlBuilder, PageView, store, flattenObject } from '@things-factory/shell'
+import {
+  client,
+  gqlBuilder,
+  isMobileDevice,
+  PageView,
+  ScrollbarStyles,
+  store,
+  flattenObject
+} from '@things-factory/shell'
 import { connect } from 'pwa-helpers/connect-mixin'
 import { localize, i18next } from '@things-factory/i18n-base'
 import gql from 'graphql-tag'
+import { getCodeByName } from '@things-factory/code-base'
 
-class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)) {
+class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
     return css`
       :host {
@@ -25,7 +34,7 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
     return {
       _searchFields: Object,
       _config: Object,
-      _products: Object,
+      _userBizplaces: Object,
       data: Object
     }
   }
@@ -48,6 +57,10 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
     return this.shadowRoot.querySelector('search-form')
   }
 
+  get _bizplaceSelector() {
+    return this.searchForm.shadowRoot.querySelector('select[name=bizplace]')
+  }
+
   get _fromDateInput() {
     return this.searchForm.shadowRoot.querySelector('input[name=fromDate]')
   }
@@ -66,6 +79,27 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
 
   get searchFields() {
     return [
+      {
+        label: i18next.t('field.customer'),
+        name: 'bizplace',
+        type: 'select',
+        options: [
+          { value: '' },
+          ...this._userBizplaces.map(bizplaceList => {
+            return {
+              name: bizplaceList.name,
+              value: bizplaceList.id
+            }
+          })
+        ],
+        props: { searchOper: 'eq' }
+      },
+      {
+        label: i18next.t('field.product'),
+        name: 'product',
+        type: 'string',
+        props: { searchOper: 'in' }
+      },
       {
         label: i18next.t('field.from_date'),
         name: 'fromDate',
@@ -95,12 +129,6 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
           max: new Date().toISOString().split('T')[0]
         },
         value: new Date().toISOString().split('T')[0]
-      },
-      {
-        label: i18next.t('field.product'),
-        name: 'product',
-        type: 'string',
-        props: { searchOper: 'in' }
       }
     ]
   }
@@ -185,8 +213,10 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
   }
 
   async pageInitialized() {
-    this._searchFields = this.searchFields
+    this._products = []
+    this._userBizplaces = [...(await this._fetchBizplaceList())]
 
+    this._searchFields = this.searchFields
     this._config = this.reportConfig
   }
 
@@ -196,13 +226,10 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
     }
   }
 
-  stateChanged(state) {
-    if (state.auth.user) this._user = state.auth && state.auth.user && state.auth.user.id
-  }
-
   async fetchHandler({ page, limit, sorters = [] }) {
     try {
       this._validate()
+
       const response = await client.query({
         query: gql`
           query {
@@ -210,8 +237,7 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
               filters: [
                 ...this.searchForm.queryFilters.map(filter => {
                   return filter
-                }),
-                ...[{ name: 'user', value: this._user, operator: 'eq' }]
+                })
               ],
               pagination: { page, limit },
               sortings: sorters
@@ -255,10 +281,32 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
     }
   }
 
+  async _fetchBizplaceList() {
+    const response = await client.query({
+      query: gql`
+        query {
+          userBizplaces(${gqlBuilder.buildArgs({
+            email: ''
+          })}) {
+            id
+            name
+            description
+            assigned
+            mainBizplace
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      return response.data.userBizplaces.filter(x => x.assigned == true)
+    }
+  }
+
   _validate() {
     if (!this.searchForm.shadowRoot.querySelector('form').checkValidity())
       throw new Error(i18next.t('text.invalid_form_value'))
-    if (!this._user) throw new Error(i18next.t('text.customer_does_not_selected'))
+    if (!this._bizplaceSelector.value) throw new Error(i18next.t('text.customer_does_not_selected'))
     if (!this._fromDateInput.value) throw new Error(i18next.t('text.from_date_is_empty'))
     if (!this._toDateInput.value) throw new Error(i18next.t('text.to_date_is_empty'))
   }
@@ -277,12 +325,18 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
     this._toDateInput.min = min
   }
 
-  async fetchProducts() {
-    const response = await client.query({
-      query: gql`
+  async _bizplaceChange(e) {
+    let bizplace = [{ name: 'bizplace', operator: 'eq', value: e.currentTarget.value }]
+    if (e.currentTarget.value == '') {
+      this.searchFields
+      this._searchFields.filter(x => x.name == 'product')[0].options = [{ name: 'All', value: '' }]
+      this._searchFields = [...this._searchFields]
+    } else {
+      const response = await client.query({
+        query: gql`
             query {
-              products(${gqlBuilder.buildArgs({
-                filters: []
+              productsByBizplace(${gqlBuilder.buildArgs({
+                filters: [...bizplace]
               })}) {
                 items {
                   id
@@ -291,22 +345,23 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
               }
             }
           `
-    })
+      })
 
-    if (!response.errors) {
-      this.searchFields
-      this._searchFields.filter(x => x.name == 'product')[0].options = [
-        { name: 'All', value: '' },
-        ...response.data.products.items.map(item => {
-          return {
-            name: item.name,
-            value: item.id
-          }
-        })
-      ]
-      this._searchFields = [...this._searchFields]
+      if (!response.errors) {
+        this.searchFields
+        this._searchFields.filter(x => x.name == 'product')[0].options = [
+          { name: 'All', value: '' },
+          ...response.data.productsByBizplace.items.map(item => {
+            return {
+              name: item.name,
+              value: item.id
+            }
+          })
+        ]
+        this._searchFields = [...this._searchFields]
+      }
     }
   }
 }
 
-window.customElements.define('customer-inventory-report', CustomerInventoryReport)
+window.customElements.define('inventory-pallet-report', InventoryPalletReport)

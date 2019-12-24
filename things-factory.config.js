@@ -386,6 +386,10 @@ export default {
       page: 'inventory_report'
     },
     {
+      tagname: 'inventory-pallet-report',
+      page: 'inventory_pallet_report'
+    },
+    {
       tagname: 'customer-inventory-report',
       page: 'customer_inventory_report'
     }
