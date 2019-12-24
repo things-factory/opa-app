@@ -454,7 +454,7 @@ class ProductList extends localize(i18next)(PageView) {
             return record
           }, {}),
         id: item.id,
-        product_ref: item.productRef.name + ' (' + item.productRef.description + ')'
+        product_ref: item.productRef ? item.productRef.name + ' (' + item.productRef.description + ')' : ''
       }
     })
 
