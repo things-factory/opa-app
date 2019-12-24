@@ -140,7 +140,7 @@ class ProductList extends localize(i18next)(PageView) {
             editable: true,
             options: { queryName: 'products' }
           },
-          imex: { header: 'Product Ref', key: 'productRef', width: 50, type: 'string' },
+          imex: { header: 'Product Ref', key: 'product_ref', width: 50, type: 'string' },
           header: i18next.t('field.product_ref'),
           sortable: true,
           width: 230
@@ -445,7 +445,6 @@ class ProductList extends localize(i18next)(PageView) {
 
     var data = records.map(item => {
       return {
-        id: item.id,
         ...this._columns
           .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
           .reduce((record, column) => {
@@ -453,7 +452,9 @@ class ProductList extends localize(i18next)(PageView) {
               .split('.')
               .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
             return record
-          }, {})
+          }, {}),
+        id: item.id,
+        product_ref: item.productRef.name + ' (' + item.productRef.description + ')'
       }
     })
 
