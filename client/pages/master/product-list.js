@@ -393,12 +393,48 @@ class ProductList extends localize(i18next)(PageView) {
     return this.config.columns
   }
 
-  _exportableData() {
+  async _fetchProductsToExport() {
+    const response = await client.query({
+      query: gql`
+        query {
+          products(${gqlBuilder.buildArgs({
+            filters: []
+          })}) {
+            items {
+              id
+              name
+              productRef {
+                name
+                description
+              }
+              unit
+              weight
+              description
+              type
+              updater {
+                id
+                name
+                description
+              }
+              updatedAt
+            }
+            total
+          }
+        }
+        `
+    })
+
+    if (!response.errors) {
+      return response.data.products.items || []
+    }
+  }
+
+  async _exportableData() {
     let records = []
     if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
       records = this.dataGrist.selected
     } else {
-      records = this.dataGrist.data.records
+      records = await this._fetchProductsToExport()
     }
 
     var headerSetting = this.dataGrist._config.columns

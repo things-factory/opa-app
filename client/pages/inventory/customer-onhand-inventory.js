@@ -286,7 +286,7 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
       query: gql`
         query {
           inventories(${gqlBuilder.buildArgs({
-            filters: []
+            filters: [{ name: 'status', operator: 'notin', value: ['INTRANSIT', 'TERMINATED', 'DELETED'] }]
           })}) {
             items {
               palletId
