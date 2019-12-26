@@ -12,7 +12,7 @@ import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
 class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
-      releaseGoodNo: String,
+      _releaseGoodNo: String,
       pickedProductConfig: Object,
       pickedProductData: Object,
       loadedProductConfig: Object,
@@ -119,10 +119,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     return this._selectedTaskStatus && this._selectedTaskStatus === WORKSHEET_STATUS.EXECUTING.value
   }
 
-  get completed() {
-    return this.data.records.every(record => record.completed)
-  }
-
   render() {
     return html`
       <form id="info-form" class="multi-column-form">
@@ -142,7 +138,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         </fieldset>
 
         <fieldset>
-          <legend>${`${i18next.t('title.release_order')}: ${this.releaseGoodNo}`}</legend>
+          <legend>${`${i18next.t('title.release_order')}: ${this._releaseGoodNo}`}</legend>
 
           <label>${i18next.t('label.customer')}</label>
           <input name="bizplaceName" readonly />
@@ -212,14 +208,29 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   constructor() {
     super()
     this.pickedProductData = { records: [] }
-    this.releaseGoodNo = ''
+    this._releaseGoodNo = ''
     this._selectedTaskStatus = null
   }
 
   updated(changedProps) {
-    if (changedProps.has('_selectedTaskStatus') && this._selectedTaskStatus) {
+    if (changedProps.has('_releaseGoodNo')) {
       this._updateContext()
     }
+  }
+
+  _updateContext() {
+    let actions = []
+    if (this._releaseGoodNo) {
+      actions = [{ title: i18next.t('button.complete'), action: this._complete.bind(this) }]
+    }
+
+    store.dispatch({
+      type: UPDATE_CONTEXT,
+      context: {
+        title: i18next.t('title.loading'),
+        actions
+      }
+    })
   }
 
   async pageInitialized() {
@@ -300,13 +311,35 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
+          record: { align: 'left' },
+          width: 140
+        },
+        {
+          type: 'string',
+          name: 'batchId',
+          header: i18next.t('field.batch_no'),
+          record: { align: 'left' },
+          width: 140
+        },
+        {
+          type: 'object',
+          name: 'product',
+          header: i18next.t('field.product'),
+          record: { align: 'left' },
           width: 140
         },
         {
           type: 'string',
           name: 'truckNo',
           header: i18next.t('field.truck_no'),
-          record: { align: 'center' },
+          record: { align: 'left' },
+          width: 140
+        },
+        {
+          type: 'string',
+          name: 'driver',
+          header: i18next.t('field.driver'),
+          record: { align: 'left' },
           width: 140
         }
       ]
@@ -317,21 +350,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     if (this.active) {
       this._focusOnReleaseGoodField()
     }
-  }
-
-  _updateContext() {
-    let actions = []
-    if (this._releaseGoodNo) {
-      actions = [{ title: i18next.t('button.complete'), action: this._complete.bind(this) }]
-    }
-
-    store.dispatch({
-      type: UPDATE_CONTEXT,
-      context: {
-        title: i18next.t('title.loading'),
-        actions
-      }
-    })
   }
 
   _focusOnReleaseGoodField() {
@@ -376,8 +394,11 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      this.releaseGoodNo = releaseGoodNo
+      this._releaseGoodNo = releaseGoodNo
       this._fillUpForm(this.infoForm, response.data.loadingWorksheet.worksheetInfo)
+      this.pickedProductData = {
+        records: response.data.loadingWorksheet.worksheetDetailInfos
+      }
     }
   }
 
@@ -407,10 +428,10 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     if (e.keyCode === 13) {
       try {
         this._validateLoading()
-        const worksheetDetailNames = this.grist.selected.map(record => record.name)
+        const worksheetDetailNames = this.pickedProductGrist.selected.map(record => record.name)
         let args = {
           worksheetDetailNames,
-          releaseGood: { name: this.releaseGoodNo },
+          releaseGoodNo: this._releaseGoodNo,
           transportDriver: { id: this._selectedDriver },
           transportVehicle: { id: this._selectedTruck }
         }
@@ -424,7 +445,8 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         })
 
         if (!response.errors) {
-          this._fetchInventories(this.releaseGoodNo)
+          this._fetchInventories(this._releaseGoodNo)
+          this._fetchLoadedInventories(this._releaseGoodNo, this._selectedDriver, this._selectedVehicle)
           this._selectedTaskStatus = null
         }
       } catch (e) {
@@ -439,18 +461,27 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       throw new Error(i18next.t('text.driver_and_vehicle_is_not_selected'))
   }
 
-  async _fetchLoadedInventories() {
-    if (!this._selectedOrderProduct.name) return
-
+  async _fetchLoadedInventories(releaseGoodNo, transportDriver, transportVehicle) {
+    this._clearView()
     const response = await client.query({
       query: gql`
         query {
           loadedInventories(${gqlBuilder.buildArgs({
-            worksheetDetailName: this._selectedOrderProduct.name
+            releaseGoodNo,
+            transportDriver,
+            transportVehicle
           })}) {
-            batchId
-            palletId
-            qty
+            deliveryInfo {
+              palletId
+              batchId
+              product {
+                id
+                name
+                description
+              }
+              driver
+              truckNo
+            }
           }
         }
       `
@@ -459,7 +490,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     if (!response.errors) {
       this._selectedInventory = null
       this.loadedProductData = {
-        records: response.data.loadedInventories
+        records: response.data.loadedInventories.items
       }
     }
   }
@@ -468,7 +499,10 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     return await client.query({
       query: gql`
         query {
-          transportDrivers (${gqlBuilder.buildArgs({ filters: [], pagination: { page: 1, limit: 9999 } })}){
+          transportDrivers (${gqlBuilder.buildArgs({
+            filters: [],
+            pagination: { page: 1, limit: 9999 }
+          })}){
             items{
               id
               name
@@ -488,7 +522,10 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     return await client.query({
       query: gql`
         query {
-          transportVehicles (${gqlBuilder.buildArgs({ filters: [], pagination: { page: 1, limit: 9999 } })}){
+          transportVehicles (${gqlBuilder.buildArgs({
+            filters: [],
+            pagination: { page: 1, limit: 9999 }
+          })}){
             items{
               id
               name
@@ -554,7 +591,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     this.loadedProductData = { records: [] }
     this.infoForm.reset()
     this.inputForm.reset()
-    this.releaseGoodNo = ''
+    this._releaseGoodNo = ''
     this._selectedTaskStatus = null
     this._updateContext()
   }

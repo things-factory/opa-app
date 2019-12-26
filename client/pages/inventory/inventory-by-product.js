@@ -264,8 +264,9 @@ class InventoryByProduct extends localize(i18next)(PageView) {
     var data = records.map(item => {
       if (item.productRef) {
         var refName = item.productRef.name ? item.productRef.name : ''
-        var refDesc = item.productRef.description ? ' (' + item.productRef.description + ')' : ''
+        var refDesc = item.productRef.description ? ` (${item.productRef.description})` : ''
       }
+
       return {
         ...this._columns
           .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
