@@ -13,8 +13,9 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       _truckNo: String,
       _date: Date,
       _orderInventories: Object,
-      _bizplaceId: String,
-      _bizplaceName: String
+      _bizplace: Object,
+      _customerId: String,
+      _customerName: String
     }
   }
 
@@ -26,8 +27,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     this._date = ''
     this._orderInventories = {}
     this._releaseOrderName = ''
-    this._bizplaceId = ''
-    this._bizplaceName = ''
+    this._customerName = ''
   }
 
   static get styles() {
@@ -256,13 +256,11 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   }
 
   render() {
-    var company = 'KIMEDA SDN. BHD.'
-    var brn = '120075T'
-    var address = 'Lot 541, 7 3/4 Miles, Jalan Kapar, 42200 Kapar, Klang'
-    var contact = '012-6059803 & 016-3320078'
-    var email = 'support@kimeda.com'
+    var company = this._bizplace.name || ''
+    var brn = this._bizplace.description || ''
 
-    var customer = this._bizplaceName.toUpperCase()
+    var customer = this._customerName.toUpperCase()
+    var address = ''
 
     var doNo = this._doNo
     var refNo = this._releaseOrderName
@@ -294,7 +292,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           <div left>
             <label>M/s</label>${customer}
             <label><strong>To be delivered to/collected by:</strong></label>
-            <div customer>&nbsp;</div>
+            <div customer>${address}</div>
           </div>
 
           <div right>
@@ -322,7 +320,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
                 let sku = this._orderInventories[key]
                 return html`
                   <tr>
-                    <td idx style="padding:10px;">${index + 1}</td>
+                    <td idx>${index + 1}</td>
                     <td>${sku.inventory.product.name}</td>
                     <td>${sku.inventory.product.description}</td>
                     <td>${sku.inventory.packingType}</td>
@@ -330,6 +328,11 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
                   </tr>
                 `
               })}
+              <tr>
+                <td colspan="5">
+                  total pallet(s)
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -387,11 +390,35 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     `
   }
 
+  async pageInitialized() {
+    this._bizplace = { ...(await this._fetchBusinessBizplace()) }
+  }
+
   async pageUpdated(changes) {
     if (this.active) {
       this._doNo = changes.resourceId || this._doNo || ''
       this._fetchDeliveryOrder()
     }
+  }
+
+  async _fetchBusinessBizplace() {
+    const name = ''
+    const response = await client.query({
+      query: gql`
+        query {
+          businessBizplace(${gqlBuilder.buildArgs({
+            name
+          })}) {
+            id
+            name
+            description
+            address
+          }
+        }
+      `
+    })
+
+    return response.data.businessBizplace
   }
 
   async _fetchDeliveryOrder(doNo) {
@@ -436,8 +463,8 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       this._orderInventories = { ...(await this._fetchOrderInventories(this._releaseOrderId)) }
 
       const _bizplace = _deliveryOrder.bizplace
-      this._bizplaceId = _bizplace.id
-      this._bizplaceName = _bizplace.name
+      this._customerId = _bizplace.id
+      this._customerName = _bizplace.name
     }
   }
 
