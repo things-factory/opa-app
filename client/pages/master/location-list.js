@@ -394,27 +394,42 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
         return patch
       })
 
-      const response = await client.query({
-        query: gql`
-            mutation {
-              updateMultipleLocation(${gqlBuilder.buildArgs({
-                patches
-              })}) {
-                name
-              }
-            }
-          `
-      })
+      try {
+        this.dataGrist.showSpinner()
 
-      if (!response.errors) {
-        this._clearTempLocation()
+        const response = await client.query({
+          query: gql`
+              mutation {
+                updateMultipleLocation(${gqlBuilder.buildArgs({
+                  patches
+                })}) {
+                  name
+                }
+              }
+            `
+        })
+
+        if (!response.errors) {
+          this._clearTempLocation()
+          document.dispatchEvent(
+            new CustomEvent('notify', {
+              detail: {
+                message: i18next.t('text.data_updated_successfully')
+              }
+            })
+          )
+        }
+      } catch (e) {
         document.dispatchEvent(
           new CustomEvent('notify', {
             detail: {
-              message: i18next.t('text.data_updated_successfully')
+              level: error,
+              message: e
             }
           })
         )
+      } finally {
+        this.dataGrist.hideSpinner()
       }
     }
   }
@@ -513,7 +528,14 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _printLocationLabel() {
-    const records = this.dataGrist.selected
+    let records = []
+
+    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+      records = this.dataGrist.selected
+    } else {
+      records = await this._fetchLocationsToPrint()
+    }
+
     var labelId = this._locationLabel && this._locationLabel.id
 
     if (!labelId) {
@@ -530,8 +552,9 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
         var searchParams = new URLSearchParams()
 
         /* for location record mapping */
-        searchParams.append('location', record.name)
-        ;[('row', 'type', 'zone', 'column', 'shelf')].forEach(key => searchParams.append(key, record[key]))
+        record.newName = `${record.zone}-${record.row}-${record.column}`
+        searchParams.append('location', record.newName)
+        searchParams.append('row', record.row)
 
         try {
           const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
@@ -563,6 +586,60 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
           delete this.printer
           break
         }
+      }
+    }
+  }
+
+  async _fetchLocationsToPrint() {
+    if (this._warehouseId) {
+      const filters = [
+        {
+          name: 'warehouse_id',
+          operator: 'eq',
+          value: this._warehouseId
+        },
+        {
+          name: 'shelf',
+          operator: 'eq',
+          value: '01'
+        },
+        {
+          name: 'type',
+          operator: 'eq',
+          value: 'SHELF'
+        }
+      ]
+
+      const response = await client.query({
+        query: gql`
+      query {
+        locations(${gqlBuilder.buildArgs({
+          filters
+        })}) {
+          items {
+            id
+            name
+            zone
+            row
+            type
+            column
+            shelf
+            status
+            updatedAt
+            updater{
+              id
+              name
+              description
+            }
+          }
+          total
+        }
+      }
+    `
+      })
+
+      if (!response.errors) {
+        return response.data.locations.items || []
       }
     }
   }
