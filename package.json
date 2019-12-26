@@ -21,6 +21,7 @@
     "migration:generate": "node ./node_modules/typeorm/cli.js migration:generate",
     "migration:run": "node ./node_modules/typeorm/cli.js migration:run",
     "migration:revert": "node ./node_modules/typeorm/cli.js migration:revert",
+    "generate:system-domain": "node ./scripts/generator/system-domain-generator",
     "generate:domain": "node ./scripts/generator/domain-generator",
     "generate:bizplace": "node ./scripts/generator/bizplace-generator",
     "stop:dev": "kill $(lsof -t -i:3000,3001)",

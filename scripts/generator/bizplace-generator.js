@@ -241,19 +241,24 @@ async function createBizplace(trxMgr, name, description, address, postalCode, la
 
 async function createRelations(trxMgr, bizplace, email) {
   // 1. Assign user as bizplace manager
-  const { User } = require('@things-factory/auth-base')
+  const { User, Role } = require('@things-factory/auth-base')
   const { BizplaceUser, Manager } = require('@things-factory/biz-base')
-  const user = await trxMgr.getRepository(User).findOne({ where: { email } })
+  const { Domain } = require('@things-factory/shell')
+  const systemDomain = await trxMgr.getRepository(Domain).findOne({ where: { systemFlag: true } })
+  const bizplaceManagerRole = await trxMgr.getRepository(Role).findOne({
+    where: { domain: systemDomain, name: 'Bizplace Manager' }
+  })
+
+  const userRepo = trxMgr.getRepository(User)
+  const user = await userRepo.findOne({ where: { email }, relations: ['roles'] })
+  await userRepo.save({
+    ...user,
+    roles: [...user.roles, bizplaceManagerRole]
+  })
 
   await trxMgr.getRepository(BizplaceUser).save({
     user,
     bizplace
-  })
-
-  // 2. Set user as Bizplace manager
-  await trxMgr.getRepository(Manager).save({
-    type: 'bizplace manager',
-    user
   })
 }
 

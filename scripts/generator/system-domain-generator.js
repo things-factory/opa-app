@@ -22,30 +22,30 @@
  */
 const path = require('path')
 const appRootPath = require('app-root-path').path
-const { getManager, Raw, createConnection, getRepository } = require('typeorm')
+const { getManager, Not, Equal, Raw, createConnection, getRepository } = require('typeorm')
 const inquirer = require('inquirer')
 const chalk = require('chalk')
 
 const validators = {
-  bizplaceName: async bizplaceName => {
-    const { Bizplace } = require('@things-factory/biz-base')
-    const bizplace = await getRepository(Bizplace).findOne({
-      where: {
-        name: Raw(alias => `LOWER(${alias}) LIKE '${bizplaceName.toLowerCase()}'`)
-      }
-    })
-
-    return bizplace ? true : chalk.redBright(`There's a bizplace named ${chalk.cyan(bizplaceName)} already.`)
-  },
   name: async name => {
     if (/^[a-zA-Z ]+$/.test(name)) {
       const { Domain } = require('@things-factory/shell')
       const domain = await getRepository(Domain).findOne({
-        where: {
-          name: Raw(alias => `LOWER(${alias}) LIKE '${name.toLowerCase()}'`)
-        }
+        where: [
+          {
+            name: Raw(alias => `LOWER(${alias}) LIKE '${name.toLowerCase()}'`)
+          },
+          {
+            systemFlag: true
+          }
+        ]
       })
-      return domain ? chalk.redBright(`There's a domain named ${chalk.cyan(name)} already.`) : true
+
+      return domain && domain.name === name
+        ? chalk.redBright(`There's a domain named ${chalk.cyan(name)} already.`)
+        : domain && domain.systemFlag
+        ? chalk.redBright(`There's a system domain named already.`)
+        : true
     } else {
       return chalk.redBright('Domain name must be only characters and spaces')
     }
@@ -77,12 +77,6 @@ const validators = {
 }
 
 const questions = {
-  bizplaceName: {
-    type: 'text',
-    name: 'bizplaceName',
-    message: chalk.cyanBright.bold('Bizplace name: '),
-    validate: validators.bizplaceName
-  },
   name: {
     type: 'text',
     name: 'name',
@@ -103,7 +97,7 @@ const questions = {
   email: {
     type: 'text',
     name: 'email',
-    message: chalk.cyanBright.bold('User email for manager of new domain: '),
+    message: chalk.cyanBright.bold('User email for manager of new system domain: '),
     validate: validators.email
   }
 }
@@ -181,8 +175,7 @@ async function generateDomain() {
     logging: true
   }).then(async connection => {
     console.log(chalk.cyanBright.bold('Database connection established'))
-    let { bizplaceName, name, subdomain, description, email } = await promptDomainInfo(
-      opts.bizplaceName,
+    let { name, subdomain, description, email } = await promptDomainInfo(
       opts.name,
       opts.subdomain,
       opts.description,
@@ -191,7 +184,7 @@ async function generateDomain() {
 
     // Start transaction
     await getManager().transaction(async trxMgr => {
-      const domain = await createDomain(trxMgr, bizplaceName, name, subdomain, description)
+      const domain = await createDomain(trxMgr, name, subdomain, description)
       /* 3. Start to initialize required data to create new domain
        *    1) Domain
        *    2) Menu
@@ -239,17 +232,8 @@ function parseOptions() {
  * @description: prompt domain info from user.
  * @returns name, subdomain, description, email
  */
-async function promptDomainInfo(bizplaceName, name, subdomain, description, email) {
+async function promptDomainInfo(name, subdomain, description, email) {
   let neededQuestions = []
-
-  if (!bizplaceName) {
-    neededQuestions.push(questions.bizplaceName)
-  } else {
-    let result = await validators.bizplaceName(bizplaceName)
-    if (typeof result === 'string') {
-      throw new Error(result)
-    }
-  }
 
   if (!name) {
     neededQuestions.push(questions.name)
@@ -285,7 +269,6 @@ async function promptDomainInfo(bizplaceName, name, subdomain, description, emai
   const answers = await inquirer.prompt(neededQuestions)
 
   return {
-    bizplaceName,
     name,
     subdomain,
     description,
@@ -302,26 +285,18 @@ async function promptDomainInfo(bizplaceName, name, subdomain, description, emai
  * @param {string} description
  * @returns Domain object
  */
-async function createDomain(trxMgr, bizplaceName, name, subdomain, description) {
+async function createDomain(trxMgr, name, subdomain, description) {
   const { Domain } = require('@things-factory/shell')
-  const { Bizplace } = require('@things-factory/biz-base')
 
-  const domain = await trxMgr.getRepository(Domain).save({
+  return await trxMgr.getRepository(Domain).save({
     name,
     subdomain,
-    description
+    description,
+    systemFlag: true
   })
-
-  const bizplace = await trxMgr.getRepository(Bizplace).findOne({ where: { name: bizplaceName } })
-  await trxMgr.getRepository(Bizplace).save({
-    ...bizplace,
-    domain
-  })
-
-  return domain
 }
 
-async function initData(trxMgr, domain, filePath = './initializers') {
+async function initData(trxMgr, domain, filePath = './system-domain-initializers') {
   const initializers = require(filePath)
   for (let funcName in initializers) {
     await initializers[funcName](trxMgr, domain)
@@ -329,16 +304,50 @@ async function initData(trxMgr, domain, filePath = './initializers') {
 }
 
 async function createRelations(trxMgr, domain, email) {
-  const { Domain } = require('@things-factory/shell')
-  const { User, Role } = require('@things-factory/auth-base')
+  const { User, Role, Priviledge } = require('@things-factory/auth-base')
 
   // 1) roles_priviledges table
   const roleRepo = trxMgr.getRepository(Role)
-  const domainRepo = trxMgr.getRepository(Domain)
-  const systemDomain = await domainRepo.findOne({ where: { systemFlag: true } })
+  let superAdminRole = await roleRepo.findOne({
+    where: { domain, name: 'Super Admin' },
+    relations: ['priviledges']
+  })
 
-  const domainManagerRole = await roleRepo.findOne({
-    where: { domain: systemDomain, name: 'Domain Manager' }
+  const privilegeRepo = trxMgr.getRepository(Priviledge)
+
+  superAdminRole = await roleRepo.save({
+    ...superAdminRole,
+    priviledges: [...superAdminRole.priviledges, ...(await privilegeRepo.find())]
+  })
+
+  let domainManagerRole = await roleRepo.findOne({
+    where: { domain, name: 'Domain Manager' },
+    relations: ['priviledges']
+  })
+
+  domainManagerRole = await roleRepo.save({
+    ...domainManagerRole,
+    priviledges: [
+      ...domainManagerRole.priviledges,
+      ...(await privilegeRepo.find({
+        where: { category: 'setting' }
+      }))
+    ]
+  })
+
+  let bizplaceManagerRole = await roleRepo.findOne({
+    where: { domain, name: 'Bizplace Manager' },
+    relations: ['priviledges']
+  })
+
+  bizplaceManagerRole = await roleRepo.save({
+    ...bizplaceManagerRole,
+    priviledges: [
+      ...bizplaceManagerRole.priviledges,
+      ...(await privilegeRepo.find({
+        where: { category: 'user' }
+      }))
+    ]
   })
 
   // 2) users_domains table
@@ -348,7 +357,7 @@ async function createRelations(trxMgr, domain, email) {
   await userRepo.save({
     ...user,
     domains: [...user.domains, domain],
-    roles: [...user.roles, domainManagerRole]
+    roles: [...user.roles, superAdminRole, domainManagerRole, bizplaceManagerRole]
   })
 }
 

@@ -7,7 +7,6 @@ let menus = [
         name: 'Product',
         template: 'product-list',
         menuType: 'SCREEN',
-        category: 'customer',
         routingType: 'STATIC',
         resourceUrl: 'products'
       },
@@ -15,7 +14,6 @@ let menus = [
         name: 'VAS',
         template: 'vas-list',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'vas'
       },
@@ -23,7 +21,6 @@ let menus = [
         name: 'Warehouse',
         template: 'warehouse-list',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'warehouses'
       },
@@ -31,7 +28,6 @@ let menus = [
         name: 'Transport Vehicle',
         template: 'transport-vehicle',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'transport_vehicle'
       },
@@ -39,7 +35,6 @@ let menus = [
         name: 'Transport Driver',
         template: 'transport-driver',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'transport_driver'
       }
@@ -53,7 +48,6 @@ let menus = [
         name: 'Create Arrival Notice',
         template: 'create-arrival-notice',
         menuType: 'SCREEN',
-        category: 'customer',
         routingType: 'STATIC',
         resourceUrl: 'create_arrival_notice'
       },
@@ -61,7 +55,6 @@ let menus = [
         name: 'Arrival Notices',
         template: 'arrival-notice-list',
         menuType: 'SCREEN',
-        category: 'customer',
         routingType: 'STATIC',
         resourceUrl: 'arrival_notices'
       },
@@ -69,7 +62,6 @@ let menus = [
         name: 'Arrival Notice Requests',
         template: 'arrival-notice-requests',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'arrival_notice_requests'
       }
@@ -83,7 +75,6 @@ let menus = [
         name: 'Create Release Order',
         template: 'create-release-order',
         menuType: 'SCREEN',
-        category: 'customer',
         routingType: 'STATIC',
         resourceUrl: 'create_release_order'
       },
@@ -91,7 +82,6 @@ let menus = [
         name: 'Release Orders',
         template: 'release-order-list',
         menuType: 'SCREEN',
-        category: 'customer',
         routingType: 'STATIC',
         resourceUrl: 'release_orders'
       },
@@ -99,7 +89,6 @@ let menus = [
         name: 'Release Order Requests',
         template: 'release-order-requests',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'release_order_requests'
       }
@@ -113,7 +102,6 @@ let menus = [
         name: 'Create VAS Order',
         template: 'create-vas-order',
         menuType: 'SCREEN',
-        category: 'customer',
         routingType: 'STATIC',
         resourceUrl: 'create_vas_order'
       },
@@ -121,7 +109,6 @@ let menus = [
         name: 'VAS Orders',
         template: 'vas-order-list',
         menuType: 'SCREEN',
-        category: 'customer',
         routingType: 'STATIC',
         resourceUrl: 'vas_orders'
       },
@@ -129,7 +116,6 @@ let menus = [
         name: 'VAS Requests',
         template: 'vas-order-requests',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'vas_requests'
       }
@@ -143,7 +129,6 @@ let menus = [
         name: 'Create Quotation',
         template: 'create-quotation',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'create_quotation'
       },
@@ -151,7 +136,6 @@ let menus = [
         name: 'Quotations',
         template: 'quotation-list',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'quotations'
       },
@@ -159,7 +143,6 @@ let menus = [
         name: 'Invoices',
         template: 'invoice-list',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'invoices'
       },
@@ -167,7 +150,6 @@ let menus = [
         name: 'Create Claim Chit',
         template: 'create-claim-chit',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'create_claim_chit'
       },
@@ -175,7 +157,6 @@ let menus = [
         name: 'Claim Chits',
         template: 'claim-chit-list',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'claim_chit_list'
       },
@@ -183,7 +164,6 @@ let menus = [
         name: 'Summary Bill Amount',
         template: 'summary-bill-amount',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'bill'
       }
@@ -197,7 +177,6 @@ let menus = [
         name: 'Customer Onhand Inventory',
         template: 'customer-onhand-inventory',
         menuType: 'SCREEN',
-        category: 'customer',
         routingType: 'STATIC',
         resourceUrl: 'customer_onhand_inventory'
       },
@@ -205,7 +184,6 @@ let menus = [
         name: 'Customer Intransit Inventory',
         template: 'customer-intransit-inventory',
         menuType: 'SCREEN',
-        category: 'customer',
         routingType: 'STATIC',
         resourceUrl: 'customer_intransit_inventory'
       },
@@ -213,7 +191,6 @@ let menus = [
         name: 'Inventory Histories',
         template: 'inventory-history',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'inventory_histories'
       },
@@ -221,7 +198,6 @@ let menus = [
         name: 'Inventory Adjustment',
         template: 'inventory-adjustment',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'inventory_adjustment'
       }
@@ -235,7 +211,6 @@ let menus = [
         name: 'Inbound Worksheets',
         template: 'inbound-worksheet',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'inbound_worksheets'
       },
@@ -243,7 +218,6 @@ let menus = [
         name: 'Unloading',
         template: 'unload-product',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'unloading'
       },
@@ -251,7 +225,6 @@ let menus = [
         name: 'Putaway',
         template: 'putaway-product',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'putaway'
       },
@@ -259,7 +232,6 @@ let menus = [
         name: 'Goods Received Notes',
         template: 'receival-note-list',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'receival_note_list'
       }
@@ -273,7 +245,6 @@ let menus = [
         name: 'Outbound Worksheets',
         template: 'outbound-worksheet',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'outbound_worksheets'
       },
@@ -281,7 +252,6 @@ let menus = [
         name: 'Picking',
         template: 'picking-product',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'picking'
       }
@@ -295,7 +265,6 @@ let menus = [
         name: 'Inventory Report',
         template: 'inventory-report',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'inventory_report'
       }
@@ -309,7 +278,6 @@ let menus = [
         name: 'VAS Worksheets',
         template: 'vas-worksheet-list',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'vas_worksheets'
       },
@@ -317,69 +285,8 @@ let menus = [
         name: 'Execute VAS',
         template: 'execute-vas',
         menuType: 'SCREEN',
-        category: 'owner',
         routingType: 'STATIC',
         resourceUrl: 'execute_vas'
-      }
-    ]
-  },
-  {
-    name: 'Domain Managerment',
-    menuType: 'MENU',
-    childrens: [
-      {
-        name: 'Partner',
-        template: 'partner-list',
-        menuType: 'SCREEN',
-        category: 'domain manager',
-        routingType: 'STATIC',
-        resourceUrl: 'partners'
-      },
-      {
-        name: 'Role',
-        template: 'system-role',
-        menuType: 'SCREEN',
-        category: 'domain manager',
-        routingType: 'STATIC',
-        resourceUrl: 'roles'
-      },
-      {
-        name: 'Menu',
-        template: 'menu-management',
-        menuType: 'SCREEN',
-        category: 'domain manager',
-        routingType: 'STATIC',
-        resourceUrl: 'menus'
-      },
-      {
-        name: 'Code',
-        template: 'code-management',
-        menuType: 'SCREEN',
-        category: 'domain manager',
-        routingType: 'STATIC',
-        resourceUrl: 'codes'
-      },
-      {
-        name: 'Setting',
-        template: 'system-setting',
-        menuType: 'SCREEN',
-        category: 'domain manager',
-        routingType: 'STATIC',
-        resourceUrl: 'settings'
-      }
-    ]
-  },
-  {
-    name: 'Bizplace Management',
-    menuType: 'MENU',
-    childrens: [
-      {
-        name: 'User',
-        template: 'system-user',
-        menuType: 'SCREEN',
-        category: 'bizplace manager',
-        routingType: 'STATIC',
-        resourceUrl: 'users'
       }
     ]
   }

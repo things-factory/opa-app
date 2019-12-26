@@ -26,6 +26,7 @@ export const OpaMenu = gql`
     totalProp: String
     fixedColumns: Int
     iconPath: String
+    role: Role
     parent: Menu
     childrens: [Menu]
     buttons: [MenuButton]

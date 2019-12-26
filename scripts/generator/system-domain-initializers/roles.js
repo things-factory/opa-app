@@ -9,8 +9,13 @@ module.exports = async function initRoles(trxMgr, domain) {
       domain
     },
     {
-      name: 'Customer',
-      description: 'Role for customers',
+      name: 'Domain Manager',
+      description: 'Domain mananger priviledge',
+      domain
+    },
+    {
+      name: 'Bizplace Manager',
+      description: 'Bizplace manager priviledge',
       domain
     }
   ])

@@ -37,6 +37,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
         .grist {
           background-color: var(--main-section-background-color);
           display: flex;
+          overflow: hidden;
           flex: 1;
         }
         .left-column,

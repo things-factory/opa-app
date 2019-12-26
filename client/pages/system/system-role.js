@@ -144,7 +144,7 @@ class SystemRole extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),
-          record: { editable: true, align: 'left' },
+          record: { align: 'left' },
           sortable: true,
           width: 200
         },
@@ -152,7 +152,7 @@ class SystemRole extends localize(i18next)(PageView) {
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
-          record: { editable: true, align: 'left' },
+          record: { align: 'left' },
           sortable: true,
           width: 200
         },
@@ -160,20 +160,14 @@ class SystemRole extends localize(i18next)(PageView) {
           type: 'object',
           name: 'updater',
           header: i18next.t('field.updater'),
-          record: {
-            editable: false,
-            align: 'center'
-          },
+          record: { align: 'center' },
           width: 180
         },
         {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
-          record: {
-            editable: false,
-            align: 'center'
-          },
+          record: { align: 'center' },
           width: 180
         }
       ]
