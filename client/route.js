@@ -180,8 +180,8 @@ export default function route(page) {
       import('./pages/order/transport-order/completed-collection-order')
       return page
 
-    case 'print_delivery_order':
-      import('./pages/order/transport-order/print-delivery-order')
+    case 'print_delivery_note':
+      import('./pages/order/transport-order/print-delivery-note')
       return page
 
     /**
@@ -331,6 +331,9 @@ export default function route(page) {
      */
     case 'inventory_report':
       import('./pages/report/inventory-report')
+      return page
+    case 'inventory_pallet_report':
+      import('./pages/report/inventory-pallet-report')
       return page
     case 'customer_inventory_report':
       import('./pages/report/customer-inventory-report')

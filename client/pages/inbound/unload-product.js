@@ -275,7 +275,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
               this.actualQtyInput.value = ''
               this._fillUpInputForm(record)
               this._focusOnPalletInput()
-              this._fetchInvevtories()
+              this._fetchInventories()
             }
           }
         }
@@ -436,7 +436,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _fetchInvevtories() {
+  async _fetchInventories() {
     if (!this._selectedOrderProduct.name) return
 
     const response = await client.query({
@@ -544,7 +544,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           this.actualQtyInput.value = ''
 
           await this._fetchProducts(this._arrivalNoticeNo)
-          await this._fetchInvevtories()
+          await this._fetchInventories()
           this._focusOnPalletInput()
         }
       } catch (e) {
@@ -631,7 +631,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
         this.actualQtyInput.value = ''
       }
       await this._fetchProducts(this._arrivalNoticeNo)
-      await this._fetchInvevtories()
+      await this._fetchInventories()
       this._focusOnPalletInput()
     } catch (e) {
       this._showToast(e)

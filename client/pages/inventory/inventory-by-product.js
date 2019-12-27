@@ -93,10 +93,11 @@ class InventoryByProduct extends localize(i18next)(PageView) {
     ]
 
     this.config = {
-      rows: { appendable: false },
+      rows: { appendable: false, selectable: { multiple: true } },
       list: { fields: ['name', 'description', 'qty'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
+        { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'gutter',
           gutterName: 'button',
@@ -125,7 +126,7 @@ class InventoryByProduct extends localize(i18next)(PageView) {
           record: {
             options: { queryName: 'products' }
           },
-          imex: { header: 'Product Ref', key: 'productRef', width: 50, type: 'string' },
+          imex: { header: 'Product Ref', key: 'product_ref', width: 50, type: 'string' },
           header: i18next.t('field.product_ref'),
           width: 300
         },
@@ -202,12 +203,56 @@ class InventoryByProduct extends localize(i18next)(PageView) {
     return this.config.columns
   }
 
-  _exportableData() {
+  async _fetchInventoriesForExport() {
+    const page = 1
+    const limit = 999999
+    const response = await client.query({
+      query: gql`
+        query {
+          inventoriesByProduct(${gqlBuilder.buildArgs({
+            filters: [],
+            pagination: { page, limit }
+          })}) {
+            items {
+              product {
+                id
+                name
+                description
+                type
+                productRef {
+                  name
+                  description
+                }
+              }
+              qty
+            }
+            total
+          }
+        }
+        `
+    })
+
+    if (!response.errors) {
+      if (response.data.inventoriesByProduct.items.length > 0) {
+        const products = response.data.inventoriesByProduct.items.map(item => {
+          return {
+            ...item.product,
+            qty: item.qty
+          }
+        })
+        return products
+      } else {
+        return []
+      }
+    }
+  }
+
+  async _exportableData() {
     let records = []
     if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
       records = this.dataGrist.selected
     } else {
-      records = this.dataGrist.data.records
+      records = await this._fetchInventoriesForExport()
     }
 
     var headerSetting = this.dataGrist._config.columns
@@ -217,8 +262,12 @@ class InventoryByProduct extends localize(i18next)(PageView) {
       })
 
     var data = records.map(item => {
+      if (item.productRef) {
+        var refName = item.productRef.name ? item.productRef.name : ''
+        var refDesc = item.productRef.description ? ` (${item.productRef.description})` : ''
+      }
+
       return {
-        id: item.id,
         ...this._columns
           .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
           .reduce((record, column) => {
@@ -226,7 +275,11 @@ class InventoryByProduct extends localize(i18next)(PageView) {
               .split('.')
               .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
             return record
-          }, {})
+          }, {}),
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        product_ref: refName + refDesc
       }
     })
 

@@ -67,12 +67,6 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
   get searchFields() {
     return [
       {
-        label: i18next.t('field.product'),
-        name: 'product',
-        type: 'string',
-        props: { searchOper: 'in' }
-      },
-      {
         label: i18next.t('field.from_date'),
         name: 'fromDate',
         type: 'date',
@@ -101,6 +95,12 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
           max: new Date().toISOString().split('T')[0]
         },
         value: new Date().toISOString().split('T')[0]
+      },
+      {
+        label: i18next.t('field.product'),
+        name: 'product',
+        type: 'string',
+        props: { searchOper: 'in' }
       }
     ]
   }
@@ -215,8 +215,7 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
               ],
               pagination: { page, limit },
               sortings: sorters
-            })}) {
-              palletId
+            })}) {              
               batchId
               bizplace {
                 name

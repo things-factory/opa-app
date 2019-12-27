@@ -286,7 +286,7 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
       query: gql`
         query {
           inventories(${gqlBuilder.buildArgs({
-            filters: []
+            filters: [{ name: 'status', operator: 'notin', value: ['INTRANSIT', 'TERMINATED', 'DELETED'] }]
           })}) {
             items {
               palletId
@@ -351,8 +351,8 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
               return record
             }, {}),
           id: item.id,
-          name: item.product.name + ' (' + item.product.description + ')',
-          warehouse_name: item.warehouse.name + ' (' + item.warehouse.description + ')'
+          name: item.product ? `${item.product.name} (${item.product.description})` : '',
+          warehouse_name: item.warehouse ? `${item.warehouse.name} (${item.warehouse.description})` : ''
         }
       })
 

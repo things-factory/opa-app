@@ -20,10 +20,14 @@ import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
 class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
-      releaseGoodNo: String,
-      config: Object,
-      data: Object,
+      _releaseGoodNo: String,
+      pickedProductConfig: Object,
+      pickedProductData: Object,
+      loadedProductConfig: Object,
+      loadedProductData: Object,
       _selectedTaskStatus: String,
+      _selectedDriver: String,
+      _selectedTruck: String,
       _driverList: Object,
       _vehicleList: Object
     }
@@ -111,16 +115,16 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('form#input-form')
   }
 
-  get grist() {
-    return this.shadowRoot.querySelector('data-grist')
+  get pickedProductGrist() {
+    return this.shadowRoot.querySelector('data-grist#picked-product-grist')
   }
 
-  get vehicle() {
-    return this.shadowRoot.querySelector('input[name=transportVehicle]')
+  get loadedProductGrist() {
+    return this.shadowRoot.querySelector('data-grist#loaded-product-grist')
   }
 
-  get driver() {
-    return this.shadowRoot.querySelector('input[name=transportDriver]')
+  get scannable() {
+    return this._selectedTaskStatus && this._selectedTaskStatus === WORKSHEET_STATUS.EXECUTING.value
   }
 
   render() {
@@ -142,7 +146,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         </fieldset>
 
         <fieldset>
-          <legend>${`${i18next.t('title.release_order')}: ${this.releaseGoodNo}`}</legend>
+          <legend>${`${i18next.t('title.release_order')}: ${this._releaseGoodNo}`}</legend>
 
           <label>${i18next.t('label.customer')}</label>
           <input name="bizplaceName" readonly />
@@ -159,9 +163,19 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         <div class="left-column">
           <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.loading')}</h2>
           <data-grist
+            id="picked-product-grist"
             .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-            .config=${this.config}
-            .data=${this.data}
+            .config=${this.pickedProductConfig}
+            .data=${this.pickedProductData}
+            @record-change="${this._onProductChangeHandler.bind(this)}"
+          ></data-grist>
+
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.loaded')}</h2>
+          <data-grist
+            id="loaded-product-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.loadedProductConfig}
+            .data=${this.loadedProductData}
           ></data-grist>
         </div>
 
@@ -202,31 +216,37 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
 
   constructor() {
     super()
-    this.data = { records: [] }
-    this.releaseGoodNo = ''
-    this._selectedOrderInventory = null
+    this.pickedProductData = { records: [] }
+    this._releaseGoodNo = ''
     this._selectedTaskStatus = null
   }
 
-  get scannable() {
-    return this._selectedTaskStatus && this._selectedTaskStatus === WORKSHEET_STATUS.EXECUTING.value
-  }
-
-  get completed() {
-    return this.data.records.every(record => record.completed)
-  }
-
   updated(changedProps) {
-    if (changedProps.has('_selectedTaskStatus') && this._selectedTaskStatus) {
+    if (changedProps.has('_releaseGoodNo')) {
       this._updateContext()
     }
+  }
+
+  _updateContext() {
+    let actions = []
+    if (this._releaseGoodNo) {
+      actions = [{ title: i18next.t('button.complete'), action: this._complete.bind(this) }]
+    }
+
+    store.dispatch({
+      type: UPDATE_CONTEXT,
+      context: {
+        title: i18next.t('title.loading'),
+        actions
+      }
+    })
   }
 
   async pageInitialized() {
     this._driverList = { ...(await this.fetchDriverList()) }
     this._vehicleList = { ...(await this.fetchVehicleList()) }
 
-    this.config = {
+    this.pickedProductConfig = {
       rows: {
         appendable: false,
         selectable: { multiple: true },
@@ -236,8 +256,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               if (this._selectedOrderInventory && this._selectedOrderInventory.name === record) {
                 return
               }
-
-              this._selectedOrderInventory = record
               this._selectedTaskStatus = null
               this._selectedTaskStatus = record.status
             }
@@ -245,7 +263,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         }
       },
       pagination: { infinite: true },
-      list: { fields: ['completed', 'palletId', 'product', 'batchId', 'releaseQty'] },
+      list: { fields: ['palletId', 'product', 'batchId', 'releaseQty', 'loadedQty'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
@@ -275,7 +293,70 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
           name: 'releaseQty',
           header: i18next.t('field.picked_qty'),
           record: { align: 'center' },
-          width: 80
+          width: 100
+        },
+        {
+          type: 'integer',
+          name: 'loadedQty',
+          header: i18next.t('field.loaded_qty'),
+          record: { align: 'center', editable: true },
+          width: 100
+        }
+      ]
+    }
+
+    this.loadedProductConfig = {
+      rows: {
+        appendable: false,
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            if (record && record.palletId && this._selectedTruck) {
+              this._selectedInventory = record
+              this._selectedTruck = record.truckNo
+            }
+          }
+        }
+      },
+      list: { fields: ['palletId', 'truckNo'] },
+      pagination: {
+        infinite: true
+      },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'string',
+          name: 'palletId',
+          header: i18next.t('field.pallet_id'),
+          record: { align: 'left' },
+          width: 140
+        },
+        {
+          type: 'string',
+          name: 'batchId',
+          header: i18next.t('field.batch_no'),
+          record: { align: 'left' },
+          width: 140
+        },
+        {
+          type: 'object',
+          name: 'product',
+          header: i18next.t('field.product'),
+          record: { align: 'left' },
+          width: 140
+        },
+        {
+          type: 'string',
+          name: 'truckNo',
+          header: i18next.t('field.truck_no'),
+          record: { align: 'left' },
+          width: 140
+        },
+        {
+          type: 'string',
+          name: 'driver',
+          header: i18next.t('field.driver'),
+          record: { align: 'left' },
+          width: 140
         }
       ]
     }
@@ -285,21 +366,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     if (this.active) {
       this._focusOnReleaseGoodField()
     }
-  }
-
-  _updateContext() {
-    let actions = []
-    if (this.completed) {
-      actions = [{ title: i18next.t('button.complete'), action: this._complete.bind(this) }]
-    }
-
-    store.dispatch({
-      type: UPDATE_CONTEXT,
-      context: {
-        title: i18next.t('title.loading'),
-        actions
-      }
-    })
   }
 
   _focusOnReleaseGoodField() {
@@ -344,29 +410,17 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      this.releaseGoodNo = releaseGoodNo
+      this._releaseGoodNo = releaseGoodNo
       this._fillUpForm(this.infoForm, response.data.loadingWorksheet.worksheetInfo)
-
-      this.data = {
+      this.pickedProductData = {
         records: response.data.loadingWorksheet.worksheetDetailInfos.map(record => {
           return {
             ...record,
-            completed: record.status === WORKSHEET_STATUS.DONE.value
+            loadedQty: record.releaseQty
           }
         })
       }
-
-      this._completeHandler()
     }
-  }
-
-  _clearView() {
-    this.data = { records: [] }
-    this.infoForm.reset()
-    this.inputForm.reset()
-    this.releaseGoodNo = ''
-    this._selectedOrderInventory = null
-    this._selectedTaskStatus = null
   }
 
   _fillUpForm(form, data) {
@@ -395,24 +449,28 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     if (e.keyCode === 13) {
       try {
         this._validateLoading()
+        const worksheetDetails = this.pickedProductGrist.selected.map(record => {
+          record.name, record.loadedQty
+        })
+        let args = {
+          worksheetDetails,
+          releaseGoodNo: this._releaseGoodNo,
+          transportDriver: { id: this._selectedDriver },
+          transportVehicle: { id: this._selectedTruck }
+        }
+
         const response = await client.query({
           query: gql`
               mutation {
-                loading(${gqlBuilder.buildArgs({
-                  worksheetDetailName: this._selectedOrderInventory.name,
-                  palletId: this.palletInput.value,
-                  transportDriver: this.driver.value,
-                  transportVehicle: this.vehicle.value
-                })})
+                loading(${gqlBuilder.buildArgs(args)})
               }
             `
         })
 
         if (!response.errors) {
-          this._fetchInventories(this.releaseGoodNo)
-          this._focusOnPalletInput()
+          this._fetchInventories(this._releaseGoodNo)
+          this._fetchLoadedInventories(this._releaseGoodNo, this._selectedDriver, this._selectedVehicle)
           this._selectedTaskStatus = null
-          this._selectedOrderInventory = null
         }
       } catch (e) {
         this._showToast(e)
@@ -422,32 +480,52 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
 
   _validateLoading() {
     // 1. validate for input for driver and truck
-    if (!this._selectedDriver && !this._selectedTruck)
+    if (!this._selectedDriver || !this._selectedTruck)
       throw new Error(i18next.t('text.driver_and_vehicle_is_not_selected'))
   }
 
-  async _completeHandler() {
-    if (!this.data.records.every(record => record.completed)) return
-    this._updateContext()
-    const result = await CustomAlert({
-      title: i18next.t('title.loading'),
-      text: i18next.t('text.do_you_want_to_complete?'),
-      confirmButton: { text: i18next.t('button.complete') },
-      cancelButton: { text: i18next.t('button.cancel') }
+  async _fetchLoadedInventories(releaseGoodNo, transportDriver, transportVehicle) {
+    this._clearView()
+    const response = await client.query({
+      query: gql`
+        query {
+          loadedInventories(${gqlBuilder.buildArgs({
+            releaseGoodNo,
+            transportDriver,
+            transportVehicle
+          })}) {
+            deliveryInfo {
+              palletId
+              batchId
+              product {
+                id
+                name
+                description
+              }
+              driver
+              truckNo
+            }
+          }
+        }
+      `
     })
 
-    if (!result.value) {
-      return
+    if (!response.errors) {
+      this._selectedInventory = null
+      this.loadedProductData = {
+        records: response.data.loadedInventories.items
+      }
     }
-
-    this._complete()
   }
 
   async fetchDriverList() {
     return await client.query({
       query: gql`
         query {
-          transportDrivers (${gqlBuilder.buildArgs({ filters: [], pagination: { page: 1, limit: 9999 } })}){
+          transportDrivers (${gqlBuilder.buildArgs({
+            filters: [],
+            pagination: { page: 1, limit: 9999 }
+          })}){
             items{
               id
               name
@@ -467,7 +545,10 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     return await client.query({
       query: gql`
         query {
-          transportVehicles (${gqlBuilder.buildArgs({ filters: [], pagination: { page: 1, limit: 9999 } })}){
+          transportVehicles (${gqlBuilder.buildArgs({
+            filters: [],
+            pagination: { page: 1, limit: 9999 }
+          })}){
             items{
               id
               name
@@ -483,27 +564,82 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _complete() {
-    const response = await client.query({
-      query: gql`
-        mutation {
-          completeLoading(${gqlBuilder.buildArgs({
-            releaseGoodNo: this.releaseGoodNo
-          })})
-        }
-      `
-    })
+    try {
+      this._validateComplete()
 
-    if (!response.errors) {
-      this._clearView()
       const result = await CustomAlert({
-        title: i18next.t('title.loading'),
-        text: i18next.t('text.loading_is_completed'),
-        confirmButton: { text: i18next.t('button.confirm') }
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.complete_loading'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
       })
 
-      this._clearView()
-      navigate('outbound_worksheets')
+      if (!result.value) {
+        return
+      }
+
+      const response = await client.query({
+        query: gql`
+          mutation {
+            completeLoading(${gqlBuilder.buildArgs({
+              releaseGoodNo: this._releaseGoodNo
+            })}) {
+              name
+            }
+          }
+        `
+      })
+
+      if (!response.errors) {
+        await CustomAlert({
+          title: i18next.t('title.completed'),
+          text: i18next.t('text.loading_completed'),
+          confirmButton: { text: i18next.t('button.confirm') }
+        })
+
+        this._releaseGoodNo = null
+        this._clearView()
+      }
+    } catch (e) {
+      this._showToast(e)
     }
+  }
+
+  _onProductChangeHandler(event) {
+    const beforeChange = event.detail.before
+    const changeRecord = event.detail.after
+    const changedColumn = event.detail.column.name
+
+    if (changedColumn === 'loadedQty') {
+      try {
+        this._validateReleaseQty(changeRecord.loadedQty, beforeChange.releaseQty)
+      } catch (e) {
+        this._showToast(e)
+        delete event.detail.after.loadedQty
+      }
+    }
+  }
+
+  _validateReleaseQty(loadedQty, pickedQty) {
+    if (loadedQty > pickedQty || loadedQty <= 0) {
+      throw new Error(i18next.t('text.invalid_quantity_input'))
+    } else {
+      return
+    }
+  }
+
+  _validateComplete() {
+    if (!this._releaseGoodNo) throw new Error(i18next.t('text.there_is_no_release_order_no'))
+  }
+
+  _clearView() {
+    this.pickedProductData = { records: [] }
+    this.loadedProductData = { records: [] }
+    this.infoForm.reset()
+    this.inputForm.reset()
+    this._releaseGoodNo = ''
+    this._selectedTaskStatus = null
+    this._updateContext()
   }
 
   _showToast({ type, message }) {
