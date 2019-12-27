@@ -242,7 +242,7 @@ async function createBizplace(trxMgr, name, description, address, postalCode, la
 async function createRelations(trxMgr, bizplace, email) {
   // 1. Assign user as bizplace manager
   const { User, Role } = require('@things-factory/auth-base')
-  const { BizplaceUser, Manager } = require('@things-factory/biz-base')
+  const { BizplaceUser } = require('@things-factory/biz-base')
   const { Domain } = require('@things-factory/shell')
   const systemDomain = await trxMgr.getRepository(Domain).findOne({ where: { systemFlag: true } })
   const bizplaceManagerRole = await trxMgr.getRepository(Role).findOne({

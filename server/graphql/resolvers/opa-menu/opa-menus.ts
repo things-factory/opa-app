@@ -24,12 +24,14 @@ export const opaMenusResolver = {
         }
 
         // get system menus which are restricted by role declared from system domain.
-        const systemDomain: Domain = await getRepository(Domain).findOne({ where: { systemFlag: true } })
-        const userSystemRoleIds: string[] = user.roles
-          .filter((role: Role) => role.domain.id === systemDomain.id)
-          .map((role: Role) => role.id)
-        if (userSystemRoleIds?.length) {
-          menus.push(...(await getRestrictedMenus(systemDomain.id, userSystemRoleIds)))
+        if (!context?.state?.domain?.systemFlag) {
+          const systemDomain: Domain = await getRepository(Domain).findOne({ where: { systemFlag: true } })
+          const userSystemRoleIds: string[] = user.roles
+            .filter((role: Role) => role.domain.id === systemDomain.id)
+            .map((role: Role) => role.id)
+          if (userSystemRoleIds?.length) {
+            menus.push(...(await getRestrictedMenus(systemDomain.id, userSystemRoleIds)))
+          }
         }
 
         return menus.filter((groupMenu: Menu) => groupMenu?.childrens?.length)

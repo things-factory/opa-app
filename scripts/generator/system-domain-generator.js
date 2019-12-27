@@ -357,7 +357,7 @@ async function createRelations(trxMgr, domain, email) {
   await userRepo.save({
     ...user,
     domains: [...user.domains, domain],
-    roles: [...user.roles, superAdminRole, domainManagerRole, bizplaceManagerRole]
+    roles: [...user.roles, superAdminRole, domainManagerRole]
   })
 }
 
