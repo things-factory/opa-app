@@ -159,6 +159,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
             .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
             .config=${this.pickedProductConfig}
             .data=${this.pickedProductData}
+            @record-change="${this._onProductChangeHandler.bind(this)}"
           ></data-grist>
 
           <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.loaded')}</h2>
@@ -254,7 +255,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         }
       },
       pagination: { infinite: true },
-      list: { fields: ['palletId', 'product', 'batchId', 'releaseQty'] },
+      list: { fields: ['palletId', 'product', 'batchId', 'releaseQty', 'loadedQty'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
@@ -284,6 +285,13 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
           name: 'releaseQty',
           header: i18next.t('field.picked_qty'),
           record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'integer',
+          name: 'loadedQty',
+          header: i18next.t('field.loaded_qty'),
+          record: { align: 'center', editable: true },
           width: 100
         }
       ]
@@ -397,7 +405,12 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       this._releaseGoodNo = releaseGoodNo
       this._fillUpForm(this.infoForm, response.data.loadingWorksheet.worksheetInfo)
       this.pickedProductData = {
-        records: response.data.loadingWorksheet.worksheetDetailInfos
+        records: response.data.loadingWorksheet.worksheetDetailInfos.map(record => {
+          return {
+            ...record,
+            loadedQty: record.releaseQty
+          }
+        })
       }
     }
   }
@@ -428,9 +441,11 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     if (e.keyCode === 13) {
       try {
         this._validateLoading()
-        const worksheetDetailNames = this.pickedProductGrist.selected.map(record => record.name)
+        const worksheetDetails = this.pickedProductGrist.selected.map(record => {
+          record.name, record.loadedQty
+        })
         let args = {
-          worksheetDetailNames,
+          worksheetDetails,
           releaseGoodNo: this._releaseGoodNo,
           transportDriver: { id: this._selectedDriver },
           transportVehicle: { id: this._selectedTruck }
@@ -579,6 +594,29 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       }
     } catch (e) {
       this._showToast(e)
+    }
+  }
+
+  _onProductChangeHandler(event) {
+    const beforeChange = event.detail.before
+    const changeRecord = event.detail.after
+    const changedColumn = event.detail.column.name
+
+    if (changedColumn === 'loadedQty') {
+      try {
+        this._validateReleaseQty(changeRecord.loadedQty, beforeChange.releaseQty)
+      } catch (e) {
+        this._showToast(e)
+        delete event.detail.after.loadedQty
+      }
+    }
+  }
+
+  _validateReleaseQty(loadedQty, pickedQty) {
+    if (loadedQty > pickedQty || loadedQty <= 0) {
+      throw new Error(i18next.t('text.invalid_quantity_input'))
+    } else {
+      return
     }
   }
 

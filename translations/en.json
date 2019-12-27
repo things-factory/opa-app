@@ -131,6 +131,7 @@
   "field.latlng": "latlng",
   "field.level_end": "level end",
   "field.level_start": "level start",
+  "field.loaded_qty": "loaded qty",
   "field.load_type": "load type",
   "field.load_weight": "load weight",
   "field.location": "location",

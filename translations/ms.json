@@ -129,6 +129,7 @@
   "field.latlng": "latlng",
   "field.level_end": "pengakhiran peringkat",
   "field.level_start": "permulaan peringkat",
+  "field.loaded_qty": "jumlah kuantiti muatan",
   "field.load_type": "jenis muatan",
   "field.load_weight": "memuat barang",
   "field.location": "lokasi",
