@@ -1,19 +1,10 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { html, css } from 'lit-element'
-import {
-  client,
-  gqlBuilder,
-  isMobileDevice,
-  PageView,
-  ScrollbarStyles,
-  store,
-  flattenObject
-} from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, store, flattenObject } from '@things-factory/shell'
 import { connect } from 'pwa-helpers/connect-mixin'
 import { localize, i18next } from '@things-factory/i18n-base'
 import gql from 'graphql-tag'
-import { getCodeByName } from '@things-factory/code-base'
 
 class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -24,7 +15,7 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
         width: 100%;
       }
 
-      data-report {
+      data-grist {
         flex: 1;
       }
     `
@@ -41,7 +32,7 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
 
   get context() {
     return {
-      title: 'Inventory Report',
+      title: 'Inventory Pallet Report',
       printable: {
         accept: ['preview'],
         content: this
@@ -50,7 +41,7 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
   }
 
   get report() {
-    return this.shadowRoot.querySelector('data-report')
+    return this.shadowRoot.querySelector('data-grist')
   }
 
   get searchForm() {
@@ -73,7 +64,11 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
     return html`
       <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.report.fetch()}></search-form>
 
-      <data-report .config=${this._config} .fetchHandler=${this.fetchHandler.bind(this)}></data-report>
+      <data-grist
+        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+        .config=${this._config}
+        .fetchHandler="${this.fetchHandler.bind(this)}"
+      ></data-grist>
     `
   }
 
@@ -135,80 +130,51 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
 
   get reportConfig() {
     return {
+      pagination: { infinite: true },
+      rows: {
+        selectable: false
+      },
+      list: {
+        fields: ['product.name', 'product', 'bizplace', 'location']
+      },
       columns: [
+        { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'string',
           name: 'product|name',
-          header: i18next.t('field.product'),
-          sortable: false,
-          width: 400
+          record: { editable: false, align: 'left' },
+          header: 'Products',
+          width: 900
         },
         {
-          type: 'string',
-          name: 'packingType',
-          header: i18next.t('field.packing_type'),
-          record: {
-            editable: false,
-            align: 'center'
-          },
+          type: 'float',
+          name: 'openingBalance',
+          record: { editable: false, align: 'center' },
+          header: 'Opening Balance',
           width: 180
         },
         {
-          type: 'string',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
-          record: { align: 'center' },
-          sortable: false,
-          width: 200
+          type: 'float',
+          name: 'inBalance',
+          record: { editable: false, align: 'center' },
+          header: 'In Balance',
+          width: 180
         },
         {
-          type: 'string',
-          name: 'orderName',
-          header: i18next.t('field.order_no'),
-          sortable: true,
-          width: 300
+          type: 'float',
+          name: 'outBalance',
+          record: { editable: false, align: 'center' },
+          header: 'Out Balance',
+          width: 180
         },
         {
-          type: 'string',
-          name: 'orderRefNo',
-          header: i18next.t('field.ref_no'),
-          sortable: true,
-          width: 300
-        },
-        {
-          type: 'string',
-          name: 'createdAt',
-          header: i18next.t('field.date'),
-          record: { editable: false, align: 'left' },
-          sortable: true,
-          width: 110
-        },
-        {
-          type: 'number',
-          name: 'qty',
-          header: i18next.t('field.qty'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 100
-        },
-        {
-          type: 'number',
-          name: 'weight',
-          header: i18next.t('field.weight'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 100
+          type: 'float',
+          name: 'closingBalance',
+          record: { editable: false, align: 'center' },
+          header: 'Closing Balance',
+          width: 180
         }
-      ],
-      rows: {
-        selectable: false,
-        groups: [
-          { column: 'product|name' },
-          { column: 'packingType', title: 'Sub Total' },
-          { column: 'batchId', title: 'Batch Total' }
-        ],
-        totals: ['qty', 'weight']
-      }
+      ]
     }
   }
 
@@ -233,7 +199,7 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
       const response = await client.query({
         query: gql`
           query {
-            inventoryHistoryReport(${gqlBuilder.buildArgs({
+            inventoryHistoryPalletReport(${gqlBuilder.buildArgs({
               filters: [
                 ...this.searchForm.queryFilters.map(filter => {
                   return filter
@@ -242,8 +208,6 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
               pagination: { page, limit },
               sortings: sorters
             })}) {
-              palletId
-              batchId
               bizplace {
                 name
                 description
@@ -252,29 +216,17 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
                 name
                 description
               }
-              qty
-              weight
-              status
-              packingType
-              transactionType
-              orderName
-              orderRefNo
-              createdAt
+              openingBalance
+              inBalance
+              outBalance
+              closingBalance
             }
           }
         `
       })
       return {
         total: 0,
-        records:
-          response.data.inventoryHistoryReport.map(item => {
-            let date = new Date(parseInt(item.createdAt))
-            return flattenObject({
-              ...item,
-              createdAt:
-                date.getDate().toString() + '/' + (date.getMonth() + 1).toString() + '/' + date.getFullYear().toString()
-            })
-          }) || []
+        records: response.data.inventoryHistoryPalletReport.map(item => flattenObject(item)) || []
       }
     } catch (e) {
       console.log(e)
@@ -323,44 +275,6 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
     min = min.toISOString().split('T')[0]
 
     this._toDateInput.min = min
-  }
-
-  async _bizplaceChange(e) {
-    let bizplace = [{ name: 'bizplace', operator: 'eq', value: e.currentTarget.value }]
-    if (e.currentTarget.value == '') {
-      this.searchFields
-      this._searchFields.filter(x => x.name == 'product')[0].options = [{ name: 'All', value: '' }]
-      this._searchFields = [...this._searchFields]
-    } else {
-      const response = await client.query({
-        query: gql`
-            query {
-              productsByBizplace(${gqlBuilder.buildArgs({
-                filters: [...bizplace]
-              })}) {
-                items {
-                  id
-                  name
-                }
-              }
-            }
-          `
-      })
-
-      if (!response.errors) {
-        this.searchFields
-        this._searchFields.filter(x => x.name == 'product')[0].options = [
-          { name: 'All', value: '' },
-          ...response.data.productsByBizplace.items.map(item => {
-            return {
-              name: item.name,
-              value: item.id
-            }
-          })
-        ]
-        this._searchFields = [...this._searchFields]
-      }
-    }
   }
 }
 

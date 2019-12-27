@@ -215,8 +215,7 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
               ],
               pagination: { page, limit },
               sortings: sorters
-            })}) {
-              palletId
+            })}) {              
               batchId
               bizplace {
                 name
