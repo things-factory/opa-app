@@ -24,6 +24,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       _selectedTaskStatus: String,
       _operationType: String,
       incompleteLocationName: Boolean,
+      noLocationInput: Boolean,
       locations: Array
     }
   }
@@ -522,7 +523,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
   async _putaway(e) {
     try {
       this._validatePutaway()
-      if (!this.incompleteLocationName) {
+      if (!this.incompleteLocationName && !this.noLocationInput) {
         const response = await client.query({
           query: gql`
             mutation {
@@ -596,6 +597,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
 
     // 4. location code existing
     if (!this.locationInput.value) {
+      this.noLocationInput = true
       this._focusOnLocationInput()
       throw new Error(i18next.t('text.location_code_is_empty'))
     }
@@ -611,11 +613,11 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
         this.incompleteLocationName = true
         this.locations = await this._fetchLocations(zonePortions[0], rowPortions[0], columnPortions[0])
         this._focusOnNewLocationInput()
+        throw new Error(i18next.t('text.please_select_the_location_again'))
       } else if (locationNameSplit.length === 4) {
+        this.noLocationInput = false
         this.incompleteLocationName = false
       }
-
-      console.log(this.locationInput.value)
     }
   }
 
