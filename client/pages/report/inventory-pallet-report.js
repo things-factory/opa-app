@@ -149,29 +149,29 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
           type: 'float',
           name: 'openingBalance',
           record: { editable: false, align: 'center' },
-          header: 'Opening Balance',
-          width: 180
+          header: i18next.t('field.opening_balance'),
+          width: 160
         },
         {
           type: 'float',
           name: 'inBalance',
           record: { editable: false, align: 'center' },
-          header: 'Inbound',
-          width: 180
+          header: i18next.t('field.inbound'),
+          width: 160
         },
         {
           type: 'float',
           name: 'outBalance',
           record: { editable: false, align: 'center' },
-          header: 'Outbound',
-          width: 180
+          header: i18next.t('field.outbound'),
+          width: 160
         },
         {
           type: 'float',
           name: 'closingBalance',
           record: { editable: false, align: 'center' },
-          header: 'Closing Balance',
-          width: 180
+          header: i18next.t('field.closing_balance'),
+          width: 160
         }
       ]
     }
