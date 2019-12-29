@@ -15,7 +15,7 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
         width: 100%;
       }
 
-      data-grist {
+      data-report {
         flex: 1;
       }
     `
@@ -41,7 +41,7 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
   }
 
   get report() {
-    return this.shadowRoot.querySelector('data-grist')
+    return this.shadowRoot.querySelector('data-report')
   }
 
   get searchForm() {
@@ -64,8 +64,7 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
     return html`
       <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.report.fetch()}></search-form>
 
-      <data-grist
-        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+      <data-report
         .config=${this._config}
         .fetchHandler="${this.fetchHandler.bind(this)}"
       ></data-grist>
@@ -132,19 +131,19 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
     return {
       pagination: { infinite: true },
       rows: {
-        selectable: false
-      },
-      list: {
-        fields: ['product.name', 'product', 'bizplace', 'location']
+        selectable: false,
+        groups: [
+          { column: 'product|name' },
+        ],
+        totals: ['openingBalance', 'inBalance', 'outBalance', 'closingBalance']
       },
       columns: [
-        { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'string',
           name: 'product|name',
           record: { editable: false, align: 'left' },
           header: 'Products',
-          width: 900
+          width: 450
         },
         {
           type: 'float',
@@ -157,14 +156,14 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
           type: 'float',
           name: 'inBalance',
           record: { editable: false, align: 'center' },
-          header: 'In Balance',
+          header: 'Inbound',
           width: 180
         },
         {
           type: 'float',
           name: 'outBalance',
           record: { editable: false, align: 'center' },
-          header: 'Out Balance',
+          header: 'Outbound',
           width: 180
         },
         {
