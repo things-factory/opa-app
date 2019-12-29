@@ -296,7 +296,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
         operator: 'eq',
         value: this._warehouseId
       })
-    }
+    } else return
 
     const response = await client.query({
       query: gql`
@@ -332,7 +332,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
       var responseItems = response.data.locations.items || []
       var total = response.data.locations.total || 0
 
-      if (this._locationList !== []) {
+      if (this._locationList.length > 0) {
         let generatedItems = this._locationList
         var records = [...responseItems, ...generatedItems]
         total += generatedItems.length
@@ -340,8 +340,8 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     }
 
     return {
-      records: records,
-      total: total
+      records: records || responseItems || [],
+      total: total || 0
     }
   }
 

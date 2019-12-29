@@ -22,7 +22,8 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       data: Object,
       _productName: String,
       _selectedTaskStatus: String,
-      _operationType: String
+      _operationType: String,
+      incompleteLocationName: Boolean
     }
   }
 
@@ -117,6 +118,10 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
 
   get locationInput() {
     return this.shadowRoot.querySelector('barcode-scanable-input[name=locationCode]').shadowRoot.querySelector('input')
+  }
+
+  get newLocationInput() {
+    return this.shadowRoot.querySelector('select[name=newLocationCode]')
   }
 
   get toPalletInput() {
@@ -228,11 +233,27 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
                 >${i18next.t('label.location')}</label
               >
               <barcode-scanable-input
-                style="display: ${this.scannable && this._operationType === OPERATION_TYPE.PUTAWAY ? 'flex' : 'none'}"
+                style="display: ${this.scannable && !this.incompleteLocationName && this._operationType === OPERATION_TYPE.PUTAWAY ? 'flex' : 'none'}"
                 name="locationCode"
                 .value=${this._location}
                 custom-input
               ></barcode-scanable-input>
+
+              <select
+                style="display: ${this.incompleteLocationName && this._operationType === OPERATION_TYPE.PUTAWAY ? 'flex' : 'none'}"
+                name="newLocationCode"
+              >
+                <option value="">-- ${i18next.t('text.re_scan')} --</option>
+                ${(this.locations || []).map(
+                  location =>
+                    html`
+                      <option value="${location && location.name}"
+                        >${location && location.name}
+                        ${location && location.status ? ` ${location && location.status}` : ''}</option
+                      >
+                    `
+                )}
+              </select>
 
               <label
                 style="display: ${this.scannable && this._operationType === OPERATION_TYPE.TRANSFER ? 'flex' : 'none'}"
@@ -354,6 +375,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _updateContext() {
+    this.incompleteLocationName = false
     let actions = []
     if (this.completed) {
       actions = [{ title: i18next.t('button.complete'), action: this._completeHandler.bind(this) }]
@@ -378,6 +400,10 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
 
   _focusOnLocationInput() {
     setTimeout(() => this.locationInput.focus(), 100)
+  }
+
+  _focusOnNewLocationInput() {
+    setTimeout(() => this.newLocationInput.focus(), 100)
   }
 
   _focusOnToPalletInput() {
@@ -449,6 +475,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     this.arrivalNoticeNo = ''
     this._selectedOrderProduct = null
     this._selectedTaskStatus = null
+    this.incompleteLocationName = false
     this._updateContext()
   }
 
@@ -541,7 +568,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  _validatePutaway() {
+  async _validatePutaway() {
     // 1. validate for order selection
     if (!this._selectedOrderProduct) throw new Error(i18next.t('text.target_doesnt_selected'))
 
@@ -551,7 +578,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       throw new Error(i18next.t('text.pallet_id_is_empty'))
     }
 
-    // 3. Equality of pallet id
+    // 3. equality of pallet id
     if (this._selectedOrderProduct.palletId !== this.palletInput.value) {
       setTimeout(() => this.palletInput.select(), 100)
       throw new Error(i18next.t('text.wrong_pallet_id'))
@@ -561,6 +588,21 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     if (!this.locationInput.value) {
       this._focusOnLocationInput()
       throw new Error(i18next.t('text.location_code_is_empty'))
+    }
+
+    // 5. check for completeness of location input
+    else if(this.locationInput.value) {
+      const locationNameSplit = this.locationInput.value.split('-')
+      const zonePortion = locationNameSplit[0].match(/[a-zA-Z0-9]+/g)
+      const rowPortion = locationNameSplit[1].match(/[a-zA-Z0-9]+/g)
+      const columnPortion = locationNameSplit[2].match(/[a-zA-Z0-9]+/g)
+      
+      if(locationNameSplit.length === 3) {
+        this.locations = await this._fetchLocations(zonePortion, rowPortion, columnPortion)
+        this.incompleteLocationName = true
+        this._focusOnNewLocationInput()
+        throw new Error(i18next.t('text.please_select_the_location_again'))
+      }
     }
   }
 
@@ -596,6 +638,51 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       this._focusOnQtyInput()
       throw new Error(i18next.t('text.qty_exceed_limit'))
     }
+  }
+
+  async _fetchLocations(zone, row, column) {
+    const filters = [
+      {
+        name: 'zone',
+        operator: 'eq',
+        value: zone
+      },
+      {
+        name: 'row',
+        operator: 'eq',
+        value: row
+      },
+      {
+        name: 'column',
+        operator: 'eq',
+        value: column
+      }
+    ]
+
+    const response = await client.query({
+      query: gql`
+      query {
+        locations(${gqlBuilder.buildArgs({
+          filters
+        })}) {
+          items {
+            id
+            name
+            zone
+            row
+            column
+            shelf
+            status
+          }
+        }
+      }
+    `
+    })
+
+    if (!response.errors) {
+      return response.data.locations.items || []
+    }
+
   }
 
   async _completeHandler() {
