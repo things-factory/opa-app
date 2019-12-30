@@ -2,7 +2,7 @@ import '@things-factory/barcode-ui'
 import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
@@ -50,7 +50,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
 
         .right-column {
           flex: 1;
-          overflow: hidden;
+          overflow: auto;
           display: flex;
           flex-direction: column;
         }
@@ -441,11 +441,11 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     if (e.keyCode === 13) {
       try {
         this._validateLoading()
-        const worksheetDetails = this.pickedProductGrist.selected.map(record => {
-          record.name, record.loadedQty
+        const loadedWorksheetDetails = this.pickedProductGrist.selected.map(record => {
+          return { name: record.name, loadedQty: record.loadedQty }
         })
         let args = {
-          worksheetDetails,
+          loadedWorksheetDetails,
           releaseGoodNo: this._releaseGoodNo,
           transportDriver: { id: this._selectedDriver },
           transportVehicle: { id: this._selectedTruck }
@@ -471,7 +471,11 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _validateLoading() {
-    // 1. validate for input for driver and truck
+    // 1. validate whethere there's selected product or not
+    if (!this.pickedProductGrist.selected || !this.pickedProductGrist.selected.length) {
+      throw new Error(i18next.t('text.there_is_no_selected_items'))
+    }
+    // 2. validate for input for driver and truck
     if (!this._selectedDriver || !this._selectedTruck)
       throw new Error(i18next.t('text.driver_and_vehicle_is_not_selected'))
   }
