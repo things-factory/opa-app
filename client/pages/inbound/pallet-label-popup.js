@@ -159,10 +159,14 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
         throw 'Unable to get pallet records.'
       }
 
-      _targetRows.forEach(async record => {
-        for (let i = 0; i < record.printQty; i++) {
+      for (let i = 0; i < _targetRows.length; i++) {
+        let record = _targetRows[i]
+        for (let j = 0; j < record.printQty; j++) {
           let searchParams = new URLSearchParams()
+
+          /* CLARIFY-ME following 1 line logic. definitely not used. */
           let batchId = record.batchId.replace(/[^a-zA-Z0-9 ]/g, '')
+
           seq = seq + 1
           searchParams.append(
             'pallet',
@@ -196,7 +200,7 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
             throw ex
           }
         }
-      })
+      }
     } catch (e) {
       this._showToast(e)
     }
