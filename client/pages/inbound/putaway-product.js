@@ -86,6 +86,12 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
+
+        @media (max-width: 460px) {
+          :host {
+            display: block;
+          }
+        }
       `
     ]
   }
