@@ -471,15 +471,27 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
 
         const response = await client.query({
           query: gql`
-              mutation {
-                loading(${gqlBuilder.buildArgs(args)})
+             mutation {
+              loading(${gqlBuilder.buildArgs(args)}) {
+                releaseGoodNo
+                transportDriver {
+                  id
+                }
+                transportVehicle {
+                  id
+                }
               }
+            }
             `
         })
 
         if (!response.errors) {
           this._fetchInventories(this._releaseGoodNo)
-          this._fetchLoadedInventories(this._releaseGoodNo, this._selectedDriver, this._selectedVehicle)
+          this._fetchLoadedInventories(
+            response.data.loading.releaseGoodNo,
+            response.data.loading.transportDriver.id,
+            response.data.loading.transportVehicle.id
+          )
           this._selectedTaskStatus = null
         }
       } catch (e) {
