@@ -235,22 +235,22 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
   async _fetchBizplaceList() {
     const response = await client.query({
       query: gql`
-        query {
-          userBizplaces(${gqlBuilder.buildArgs({
-            email: ''
-          })}) {
-            id
-            name
-            description
-            assigned
-            mainBizplace
+          query {
+            bizplaces(${gqlBuilder.buildArgs({
+              filters: []
+            })}) {
+              items{
+                id
+                name
+                description
+              }
+            }
           }
-        }
-      `
+        `
     })
 
     if (!response.errors) {
-      return response.data.userBizplaces.filter(x => x.assigned == true)
+      return response.data.bizplaces.items
     }
   }
 

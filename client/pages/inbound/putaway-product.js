@@ -55,7 +55,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
 
         .right-column {
           flex: 1;
-          overflow: hidden;
+          overflow: auto;
           display: flex;
           flex-direction: column;
         }
