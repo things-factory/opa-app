@@ -93,6 +93,16 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         fieldset[hidden] {
           display: none;
         }
+
+        @media (max-width: 460px) {
+          :host {
+            display: block;
+          }
+
+          .grist {
+            min-height: 500px;
+          }
+        }
       `
     ]
   }
