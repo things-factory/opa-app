@@ -40,9 +40,14 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           overflow: hidden;
           flex: 1;
         }
-        .left-column,
-        .right-column {
+        .left-column {
           overflow: hidden;
+          display: flex;
+          flex: 1;
+          flex-direction: column;
+        }
+        .right-column {
+          overflow: auto;
           display: flex;
           flex: 1;
           flex-direction: column;
