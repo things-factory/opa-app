@@ -6,7 +6,6 @@ import gql from 'graphql-tag'
 class PrintDeliveryOrder extends localize(i18next)(PageView) {
   static get properties() {
     return {
-      _releaseOrderId: String,
       _releaseOrderName: String,
       _doNo: String,
       _driverName: String,
@@ -21,11 +20,9 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
   constructor() {
     super()
-    this._releaseOrderId = ''
     this._driverName = ''
     this._truckNo = ''
     this._date = ''
-    this._orderInventories = {}
     this._releaseOrderName = ''
     this._customerName = ''
   }
@@ -86,7 +83,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
         [brief] > div[right] {
           grid-template-columns: 5fr 8fr;
-          grid-auto-rows: 30px 30px 30px;
+          grid-auto-rows: 25px 25px 25px;
         }
 
         [brief] > div[left] {
@@ -257,10 +254,12 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
   render() {
     var company = this._bizplace.name || ''
-    var brn = this._bizplace.description || ''
+    var brn = `(${this._bizplace.description})` || ''
 
     var customer = this._customerName.toUpperCase()
     var address = ''
+
+    var totalPallet = 0
 
     var doNo = this._doNo
     var refNo = this._releaseOrderName
@@ -283,7 +282,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       <div goods-delivery-note>
         <div business-info>
           <h2 business-name>${company}</h2>
-          <span business-brn>(${brn})</span>
+          <span business-brn>${brn}</span>
         </div>
 
         <h1 title>GOODS DELIVERY NOTE</h1>
@@ -311,26 +310,28 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
                 <th idx>#</th>
                 <th>Items</th>
                 <th>Description</th>
-                <th>Packing Type</th>
+                <th>Batch ID</th>
                 <th>Quantity</th>
               </tr>
             </thead>
             <tbody>
               ${Object.keys(this._orderInventories || {}).map((key, index) => {
                 let sku = this._orderInventories[key]
+                totalPallet += sku.palletQty
                 return html`
                   <tr>
                     <td idx>${index + 1}</td>
                     <td>${sku.inventory.product.name}</td>
                     <td>${sku.inventory.product.description}</td>
-                    <td>${sku.inventory.packingType}</td>
-                    <td>${sku.releaseQty}</td>
+                    <td>${sku.inventory.batchId}</td>
+                    <td>${sku.releaseQty} ${sku.inventory.packingType}</td>
                   </tr>
                 `
               })}
               <tr>
-                <td colspan="5">
-                  total pallet(s)
+                <td colspan="2"><strong>Total Pallet</strong></td>
+                <td colspan="3">
+                  ${totalPallet}
                 </td>
               </tr>
             </tbody>
@@ -421,7 +422,84 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     return response.data.businessBizplace
   }
 
-  async _fetchDeliveryOrder(doNo) {
+  async _fetchBusinessContact() {
+    this._bizplace = { ...(await this._fetchBusinessBizplace()) }
+    const filters = [
+      {
+        name: 'bizplace',
+        operator: 'eq',
+        value: this._bizplace.id
+      }
+    ]
+
+    const response = await client.query({
+      query: gql`
+        query {
+          contactPoints(${gqlBuilder.buildArgs({
+            filters
+          })}) {
+            items {
+              id
+              name
+              bizplace {
+                id
+                name
+              }
+              description
+              email
+              phone
+              fax
+            }
+            total
+          }
+        }
+      `
+    })
+
+    return response.data.contactPoints.items[0] || []
+  }
+
+  async _fetchCustomerContact() {
+    if (this._customerId) {
+      const filters = [
+        {
+          name: 'bizplace',
+          operator: 'eq',
+          value: this._customerId
+        }
+      ]
+
+      const response = await client.query({
+        query: gql`
+        query {
+          contactPoints(${gqlBuilder.buildArgs({
+            filters
+          })}) {
+            items {
+              id
+              name
+              bizplace {
+                id
+                name
+              }
+              description
+              email
+              phone
+              fax
+            }
+            total
+          }
+        }
+      `
+      })
+
+      if (!response.errors) {
+        this._customerContactPoints = response.data.contactPoints.items[0] || []
+      }
+    }
+  }
+
+  async _fetchDeliveryOrder() {
     const response = await client.query({
       query: gql`
         query {
@@ -434,19 +512,6 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
               id
               name
             }
-            transportOrderDetails {
-              id
-              name
-              description
-              transportDriver {
-                id
-                name
-              }
-              transportVehicle {
-                id
-                name
-              }
-            }
           }
         }
       `
@@ -454,17 +519,29 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const _deliveryOrder = response.data.deliveryOrder
-      this._releaseOrderId = _deliveryOrder.releaseGood.id
+      const _releaseOrderId = _deliveryOrder.releaseGood.id
       this._releaseOrderName = _deliveryOrder.releaseGood.name
 
-      const _transportOrderDetails = _deliveryOrder.transportOrderDetails
-      this._driverName = _transportOrderDetails[0].transportDriver.name
-      this._truckNo = _transportOrderDetails[0].transportVehicle.name
-      this._orderInventories = { ...(await this._fetchOrderInventories(this._releaseOrderId)) }
+      if (_releaseOrderId) {
+        let orderInventories = await this._fetchOrderInventories(_releaseOrderId)
+
+        if (orderInventories.length > 0) {
+          orderInventories = await Promise.all(
+            orderInventories.map(async orderInventory => {
+              orderInventory.palletQty = await this._countPalletQuantity(orderInventory.id)
+              return orderInventory
+            })
+          )
+          this._orderInventories = orderInventories
+          console.log(orderInventories)
+        }
+      }
 
       const _bizplace = _deliveryOrder.bizplace
-      this._customerId = _bizplace.id
-      this._customerName = _bizplace.name
+      if (_bizplace) {
+        this._customerId = _bizplace.id
+        this._customerName = _bizplace.name
+      }
     }
   }
 
@@ -507,6 +584,37 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     })
 
     return response.data.orderInventories.items
+  }
+
+  async _countPalletQuantity(orderInventoryId) {
+    const filters = [
+      {
+        name: 'targetInventory',
+        operator: 'eq',
+        value: orderInventoryId
+      },
+      {
+        name: 'type',
+        operator: 'eq',
+        value: 'LOADING'
+      }
+    ]
+
+    const response = await client.query({
+      query: gql`
+        query {
+          worksheetDetails(${gqlBuilder.buildArgs({
+            filters
+          })}) {
+            total
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      return response.data.worksheetDetails.total || 0
+    }
   }
 }
 

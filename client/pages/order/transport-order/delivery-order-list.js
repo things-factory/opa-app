@@ -74,63 +74,63 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
 
   pageInitialized() {
     this._searchFields = [
-      {
-        label: i18next.t('field.do_no'),
-        name: 'name',
-        type: 'text',
-        props: { searchOper: 'i_like' }
-      },
-      {
-        label: i18next.t('field.ref_no'),
-        name: 'refNo',
-        type: 'text',
-        props: { searchOper: 'i_like' }
-      },
-      {
-        label: i18next.t('field.delivery_to'),
-        name: 'to',
-        type: 'text',
-        props: { searchOper: 'i_like' }
-      },
-      {
-        label: i18next.t('field.delivery_date'),
-        name: 'deliveryDate',
-        type: 'date',
-        props: { searchOper: 'i_like' }
-      },
-      {
-        label: i18next.t('field.cargo_type'),
-        name: 'cargoType',
-        type: 'text',
-        props: { searchOper: 'i_like' }
-      },
-      {
-        label: i18next.t('field.urgency'),
-        name: 'urgency',
-        type: 'checkbox',
-        props: { searchOper: 'eq' },
-        attrs: ['indeterminate']
-      },
-      {
-        label: i18next.t('field.loose_item'),
-        name: 'looseItem',
-        type: 'checkbox',
-        props: { searchOper: 'eq' },
-        attrs: ['indeterminate']
-      },
-      {
-        label: i18next.t('field.status'),
-        name: 'status',
-        type: 'select',
-        options: [
-          { value: '' },
-          ...Object.keys(ORDER_STATUS).map(key => {
-            const status = ORDER_STATUS[key]
-            return { name: i18next.t(`label.${status.name}`), value: status.value }
-          })
-        ],
-        props: { searchOper: 'eq' }
-      }
+      // {
+      //   label: i18next.t('field.do_no'),
+      //   name: 'name',
+      //   type: 'text',
+      //   props: { searchOper: 'i_like' }
+      // },
+      // {
+      //   label: i18next.t('field.ref_no'),
+      //   name: 'refNo',
+      //   type: 'text',
+      //   props: { searchOper: 'i_like' }
+      // },
+      // {
+      //   label: i18next.t('field.delivery_to'),
+      //   name: 'to',
+      //   type: 'text',
+      //   props: { searchOper: 'i_like' }
+      // },
+      // {
+      //   label: i18next.t('field.delivery_date'),
+      //   name: 'deliveryDate',
+      //   type: 'date',
+      //   props: { searchOper: 'i_like' }
+      // },
+      // {
+      //   label: i18next.t('field.cargo_type'),
+      //   name: 'cargoType',
+      //   type: 'text',
+      //   props: { searchOper: 'i_like' }
+      // },
+      // {
+      //   label: i18next.t('field.urgency'),
+      //   name: 'urgency',
+      //   type: 'checkbox',
+      //   props: { searchOper: 'eq' },
+      //   attrs: ['indeterminate']
+      // },
+      // {
+      //   label: i18next.t('field.loose_item'),
+      //   name: 'looseItem',
+      //   type: 'checkbox',
+      //   props: { searchOper: 'eq' },
+      //   attrs: ['indeterminate']
+      // },
+      // {
+      //   label: i18next.t('field.status'),
+      //   name: 'status',
+      //   type: 'select',
+      //   options: [
+      //     { value: '' },
+      //     ...Object.keys(ORDER_STATUS).map(key => {
+      //       const status = ORDER_STATUS[key]
+      //       return { name: i18next.t(`label.${status.name}`), value: status.value }
+      //     })
+      //   ],
+      //   props: { searchOper: 'eq' }
+      // }
     ]
 
     this.config = {
@@ -144,14 +144,7 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              const status = record.status
-              if (status === ORDER_STATUS.REJECTED.value) {
-                navigate(`rejected_delivery_order/${record.name}`) // 1. move to rejected detail page
-              } else if (status === ORDER_STATUS.EDITING.value) {
-                navigate(`edit_delivery_order/${record.name}`)
-              } else {
-                navigate(`delivery_order_detail/${record.name}`) // 2. move to order detail page
-              }
+              navigate(`print_delivery_note/${record.name}`)
             }
           }
         },
@@ -172,8 +165,8 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'to',
-          header: i18next.t('field.delivery_to'),
+          name: 'customer',
+          header: i18next.t('field.customer'),
           sortable: true,
           width: 250
         },
@@ -184,38 +177,6 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
           record: { align: 'center' },
           sortable: true,
           width: 160
-        },
-        {
-          type: 'string',
-          name: 'cargoType',
-          header: i18next.t('field.cargo_type'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 150
-        },
-        {
-          type: 'boolean',
-          name: 'urgency',
-          header: i18next.t('field.urgency'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 80
-        },
-        {
-          type: 'boolean',
-          name: 'looseItem',
-          header: i18next.t('field.loose_item'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 80
-        },
-        {
-          type: 'integer',
-          name: 'loadWeight',
-          header: i18next.t('label.load_weight'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 100
         },
         {
           type: 'string',
@@ -265,14 +226,13 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
             items {
               id
               name
-              to
+              customerBizplace {
+                id
+                name
+              }
               deliveryDate
               status
               refNo
-              urgency
-              cargoType
-              looseItem
-              loadWeight
               createdAt
               updatedAt
               updater {
@@ -288,9 +248,19 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
     })
 
     if (!response.errors) {
+      let total = response.data.deliveryOrders.total || 0
+      let deliveryOrders = response.data.deliveryOrders.items || []
+
+      deliveryOrders = deliveryOrders.map(deliveryOrder => {
+        if (deliveryOrder.customerBizplace) {
+          deliveryOrder.customer = deliveryOrder.customerBizplace.name
+        }
+        return deliveryOrder
+      })
+
       return {
-        total: response.data.deliveryOrders.total || 0,
-        records: response.data.deliveryOrders.items || []
+        total: total,
+        records: deliveryOrders
       }
     }
   }

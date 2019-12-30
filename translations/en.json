@@ -840,5 +840,6 @@
   "title.rejected_arrival_notice_detail": "rejected arrival notice detail",
   "title.rejection_reason": "rejection reason",
   "text.please_select_the_location_again": "please select the location again",
-  "text.please_select_the_location": "please select the location"
+  "text.please_select_the_location": "please select the location",
+  "field.delivery_to": "delivery to"
 }
