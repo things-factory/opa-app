@@ -29,6 +29,10 @@ export default function route(page) {
       import('./pages/master/location-list')
       return page
 
+    case 'workers':
+      import('./pages/master/worker-list')
+      return page
+
     /**
      * Order Menus Section
      */
