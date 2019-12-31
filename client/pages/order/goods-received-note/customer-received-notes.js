@@ -96,7 +96,7 @@ class CustomerReceivedNotes extends localize(i18next)(PageView) {
             click: (columns, data, column, record, rowIndex) => {
               if (record.attachments[0] && record.attachments[0].path) {
                 if (record.status === GRN_STATUS.NEW.value) this._receivedGRN(record.name)
-                window.open(`attachment/${record.attachments[0].path}`)
+                window.open(`/attachment/${record.attachments[0].path}`)
               }
             }
           }

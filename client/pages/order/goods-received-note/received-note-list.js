@@ -165,7 +165,7 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               if (record.attachments[0] && record.attachments[0].path) {
-                window.open(`attachment/${record.attachments[0].path}`)
+                window.open(`/attachment/${record.attachments[0].path}`)
               }
             }
           }
