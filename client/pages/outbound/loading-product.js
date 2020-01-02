@@ -37,6 +37,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         .grist {
           background-color: var(--main-section-background-color);
           display: flex;
+          overflow: auto;
           flex: 1;
         }
 
@@ -222,6 +223,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   constructor() {
     super()
     this.pickedProductData = { records: [] }
+    this.loadedProductData = { records: [] }
     this._releaseGoodNo = ''
     this._selectedTaskStatus = null
   }
@@ -316,17 +318,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     }
 
     this.loadedProductConfig = {
-      rows: {
-        appendable: false,
-        handlers: {
-          click: (columns, data, column, record, rowIndex) => {
-            if (record && record.palletId && this._selectedTruck) {
-              this._selectedInventory = record
-              this._selectedTruck = record.truckNo
-            }
-          }
-        }
-      },
+      rows: { appendable: false },
       list: { fields: ['palletId', 'truckNo'] },
       pagination: {
         infinite: true
@@ -398,20 +390,13 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               name
               palletId
               batchId
+              status
               product {
                 name
                 description
               }
               qty
               releaseQty
-              status
-              description
-              targetName
-              packingType
-              location {
-                name
-                description
-              }
             }
           }
         }
@@ -560,12 +545,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
             items{
               id
               name
-              description
               driverCode
-              bizplace{
-                id
-                name
-              }
             }
           }
         }`
@@ -583,11 +563,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
             items{
               id
               name
-              description
-              bizplace{
-                id
-                name
-              }
             }
           }
         }`
@@ -629,6 +604,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         })
 
         this._releaseGoodNo = null
+        this.releaseGoodNoInput.value = ''
         this._clearView()
       }
     } catch (e) {
