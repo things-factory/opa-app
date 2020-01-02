@@ -2,16 +2,7 @@ import '@things-factory/barcode-ui'
 import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import {
-  client,
-  CustomAlert,
-  gqlBuilder,
-  isMobileDevice,
-  navigate,
-  PageView,
-  store,
-  UPDATE_CONTEXT
-} from '@things-factory/shell'
+import { client, CustomAlert, gqlBuilder, isMobileDevice, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
@@ -149,7 +140,11 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
             @keypress="${async e => {
               if (e.keyCode === 13) {
                 e.preventDefault()
-                if (this.releaseGoodNoInput.value) this._fetchInventories(this.releaseGoodNoInput.value)
+                if (this.releaseGoodNoInput.value) {
+                  this._clearView()
+                  await this._fetchInventories(this.releaseGoodNoInput.value)
+                  await this._fetchLoadedInventories(this.releaseGoodNoInput.value)
+                }
               }
             }}"
           ></barcode-scanable-input>
@@ -190,7 +185,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         </div>
 
         <div class="right-column">
-          <form id="input-form" class="single-column-form" @keypress="${this._loading.bind(this)}">
+          <form id="input-form" class="single-column-form">
             <fieldset>
               <legend>${i18next.t('label.assign_truck_driver')}</legend>
 
@@ -198,7 +193,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               <select @change=${e => (this._selectedDriver = e.target.value)} name="transportDriver">
                 <option value="">-- ${i18next.t('text.please_select_a_driver')} --</option>
 
-                ${Object.keys(this._driverList.data.transportDrivers.items || {}).map(key => {
+                ${Object.keys(this._driverList.data.transportDrivers.items || []).map(key => {
                   let driver = this._driverList.data.transportDrivers.items[key]
                   return html`
                     <option value="${driver.id}">${driver.name} - ${driver.driverCode}</option>
@@ -210,7 +205,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               <select @change=${e => (this._selectedTruck = e.target.value)} name="transportVehicle">
                 <option value="">-- ${i18next.t('text.please_select_a_truck')} --</option>
 
-                ${Object.keys(this._vehicleList.data.transportVehicles.items || {}).map(key => {
+                ${Object.keys(this._vehicleList.data.transportVehicles.items || []).map(key => {
                   let vehicle = this._vehicleList.data.transportVehicles.items[key]
                   return html`
                     <option value="${vehicle.id}">${vehicle.name}</option>
@@ -243,6 +238,10 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       actions = [{ title: i18next.t('button.complete'), action: this._complete.bind(this) }]
     }
 
+    if (this._selectedTaskStatus === 'EXECUTING') {
+      actions = [...actions, { title: i18next.t('button.load'), action: this._loading.bind(this) }]
+    }
+
     store.dispatch({
       type: UPDATE_CONTEXT,
       context: {
@@ -268,6 +267,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               }
               this._selectedTaskStatus = null
               this._selectedTaskStatus = record.status
+              this._updateContext()
             }
           }
         }
@@ -356,13 +356,13 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'string',
-          name: 'truckNo',
+          name: 'regNumber',
           header: i18next.t('field.truck_no'),
-          record: { align: 'left' },
+          record: { align: 'center' },
           width: 140
         },
         {
-          type: 'string',
+          type: 'object',
           name: 'driver',
           header: i18next.t('field.driver'),
           record: { align: 'left' },
@@ -383,7 +383,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _fetchInventories(releaseGoodNo) {
-    this._clearView()
     const response = await client.query({
       query: gql`
         query {
@@ -455,48 +454,43 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _loading(e) {
-    if (e.keyCode === 13) {
-      try {
-        this._validateLoading()
-        const loadedWorksheetDetails = this.pickedProductGrist.selected.map(record => {
-          return { name: record.name, loadedQty: record.loadedQty }
-        })
-        let args = {
-          loadedWorksheetDetails,
-          releaseGoodNo: this._releaseGoodNo,
-          transportDriver: { id: this._selectedDriver },
-          transportVehicle: { id: this._selectedTruck }
-        }
+  async _loading() {
+    try {
+      this._validateLoading()
+      const loadedWorksheetDetails = this.pickedProductGrist.selected.map(record => {
+        return { name: record.name, loadedQty: record.loadedQty }
+      })
+      let args = {
+        loadedWorksheetDetails,
+        releaseGoodNo: this._releaseGoodNo,
+        transportDriver: { id: this._selectedDriver },
+        transportVehicle: { id: this._selectedTruck }
+      }
 
-        const response = await client.query({
-          query: gql`
-             mutation {
-              loading(${gqlBuilder.buildArgs(args)}) {
-                releaseGoodNo
-                transportDriver {
-                  id
-                }
-                transportVehicle {
-                  id
-                }
+      const response = await client.query({
+        query: gql`
+            mutation {
+            loading(${gqlBuilder.buildArgs(args)}) {
+              releaseGoodNo
+              transportDriver {
+                id
+              }
+              transportVehicle {
+                id
               }
             }
-            `
-        })
+          }
+          `
+      })
 
-        if (!response.errors) {
-          this._fetchInventories(this._releaseGoodNo)
-          this._fetchLoadedInventories(
-            response.data.loading.releaseGoodNo,
-            response.data.loading.transportDriver.id,
-            response.data.loading.transportVehicle.id
-          )
-          this._selectedTaskStatus = null
-        }
-      } catch (e) {
-        this._showToast(e)
+      if (!response.errors) {
+        this._clearView()
+        await this._fetchInventories(this._releaseGoodNo)
+        await this._fetchLoadedInventories(this._releaseGoodNo)
+        this._selectedTaskStatus = null
       }
+    } catch (e) {
+      this._showToast(e)
     }
   }
 
@@ -511,16 +505,11 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _fetchLoadedInventories(releaseGoodNo, transportDriver, transportVehicle) {
-    this._clearView()
     const response = await client.query({
       query: gql`
         query {
-          loadedInventories(${gqlBuilder.buildArgs({
-            releaseGoodNo,
-            transportDriver,
-            transportVehicle
-          })}) {
-            deliveryInfo {
+          loadedInventories(${gqlBuilder.buildArgs({ releaseGoodNo })}) {
+            inventory {
               palletId
               batchId
               product {
@@ -528,8 +517,17 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
                 name
                 description
               }
-              driver
-              truckNo
+            }
+            deliveryOrder {
+              transportDriver {
+                name
+                description
+              }
+              transportVehicle {
+                name
+                regNumber
+                description
+              }
             }
           }
         }
@@ -539,8 +537,15 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     if (!response.errors) {
       this._selectedInventory = null
       this.loadedProductData = {
-        records: response.data.loadedInventories.items
+        records: (response.data.loadedInventories || []).map(orderInventoy => {
+          return {
+            ...orderInventoy.inventory,
+            driver: orderInventoy.deliveryOrder.transportDriver,
+            regNumber: orderInventoy.deliveryOrder.transportVehicle.regNumber
+          }
+        })
       }
+      this._updateContext()
     }
   }
 
@@ -663,7 +668,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     this.loadedProductData = { records: [] }
     this.infoForm.reset()
     this.inputForm.reset()
-    this._releaseGoodNo = ''
     this._selectedTaskStatus = null
     this._updateContext()
   }
