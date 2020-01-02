@@ -145,7 +145,7 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
       const palletRecords = await client.query({
         query: gql`
           mutation {
-            updatePalletSeq (${gqlBuilder.buildArgs({
+            updatePalletCountSeq (${gqlBuilder.buildArgs({
               printQty: _targetRows.map(x => x.printQty).reduce((a, b) => a + b)
             })}) {
               seq
@@ -154,7 +154,7 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
         `
       })
       if (!palletRecords.error) {
-        seq = palletRecords.data.updatePalletSeq.seq ? palletRecords.data.updatePalletSeq.seq : 0
+        seq = palletRecords.data.updatePalletCountSeq.seq ? palletRecords.data.updatePalletCountSeq.seq : 0
       } else {
         throw 'Unable to get pallet records.'
       }
