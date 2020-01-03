@@ -14,12 +14,14 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       _orderInventories: Object,
       _bizplace: Object,
       _customerId: String,
-      _customerName: String
+      _customerName: String,
+      _workerName: String
     }
   }
 
   constructor() {
     super()
+    this._workerName = ''
     this._driverName = ''
     this._truckNo = ''
     this._date = ''
@@ -110,13 +112,17 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           padding-bottom: 10px;
         }
 
-        [business_verification] {
+        [pallet-quantity] {
+          text-align: right;
+        }
+
+        [business-verification] {
           flex: 1;
           padding-top: 10px;
           padding-bottom: 10px;
         }
 
-        [customer_confirmation] {
+        [customer-confirmation] {
           flex: 1;
           padding-top: 10px;
           padding-bottom: 10px;
@@ -217,7 +223,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
         }
 
         [idx] {
-          width: 15px;
+          width: 20px;
           text-align: center;
         }
 
@@ -329,16 +335,14 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
                 `
               })}
               <tr>
-                <td colspan="2"><strong>Total Pallet</strong></td>
-                <td colspan="3">
-                  ${totalPallet}
-                </td>
+                <td colspan="4" pallet-quantity><strong>Total Pallet</strong></td>
+                <td>${totalPallet}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <div business_verification>
+        <div business-verification>
           <label>Verification by ${company}</label>
           <table>
             <thead>
@@ -355,7 +359,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
                 <td></td>
                 <td></td>
                 <td></td>
-                <td></td>
+                <td>${truckNo}</td>
                 <td>
                   <span><hr width="85%"/></span>${driverName}
                 </td>
@@ -364,7 +368,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           </table>
         </div>
 
-        <div customer_confirmation>
+        <div customer-confirmation>
           <label>Confirmation by ${customer}</label>
           <table confirmation_table>
             <tr confirmation_head>
@@ -398,7 +402,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   async pageUpdated(changes) {
     if (this.active) {
       this._doNo = changes.resourceId || this._doNo || ''
-      this._fetchDeliveryOrder()
+      await this._fetchDeliveryOrder(this._doNo)
     }
   }
 
@@ -499,17 +503,23 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     }
   }
 
-  async _fetchDeliveryOrder() {
+  async _fetchDeliveryOrder(name) {
     const response = await client.query({
       query: gql`
         query {
           deliveryOrder(${gqlBuilder.buildArgs({
-            name: this._doNo
+            name
           })}) {
             id
             name
             releaseGood {
               id
+              name
+            }
+            transportVehicle {
+              regNumber
+            }
+            transportDriver {
               name
             }
           }
@@ -521,6 +531,8 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       const _deliveryOrder = response.data.deliveryOrder
       const _releaseOrderId = _deliveryOrder.releaseGood.id
       this._releaseOrderName = _deliveryOrder.releaseGood.name
+      this._truckNo = _deliveryOrder.transportVehicle.regNumber
+      this._driverName = _deliveryOrder.transportDriver.name
 
       if (_releaseOrderId) {
         let orderInventories = await this._fetchOrderInventories(_releaseOrderId)
@@ -528,7 +540,9 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
         if (orderInventories.length > 0) {
           orderInventories = await Promise.all(
             orderInventories.map(async orderInventory => {
-              orderInventory.palletQty = await this._countPalletQuantity(orderInventory.id)
+              const worksheetDetail = await this._fetchWorksheetDetail(orderInventory.id)
+              orderInventory.palletQty = worksheetDetail.total
+              if (worksheetDetail && worksheetDetail.items) this._workerName = worksheetDetail.items[0].worker.name
               return orderInventory
             })
           )
@@ -586,7 +600,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     return response.data.orderInventories.items
   }
 
-  async _countPalletQuantity(orderInventoryId) {
+  async _fetchWorksheetDetail(orderInventoryId) {
     const filters = [
       {
         name: 'targetInventory',
@@ -606,6 +620,12 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           worksheetDetails(${gqlBuilder.buildArgs({
             filters
           })}) {
+            items {
+              worker {
+                id
+                name  
+              }
+            }
             total
           }
         }
@@ -613,7 +633,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     })
 
     if (!response.errors) {
-      return response.data.worksheetDetails.total || 0
+      return response.data.worksheetDetails || {}
     }
   }
 }
