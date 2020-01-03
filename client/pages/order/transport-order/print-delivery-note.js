@@ -15,7 +15,9 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       _bizplace: Object,
       _customerId: String,
       _customerName: String,
-      _workerName: String
+      _workerName: String,
+      _receipient: String,
+      _customerContactPoints: Array
     }
   }
 
@@ -24,9 +26,10 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     this._workerName = ''
     this._driverName = ''
     this._truckNo = ''
-    this._date = ''
     this._releaseOrderName = ''
     this._customerName = ''
+    this._date = ''
+    this._customerContactPoints = []
   }
 
   static get styles() {
@@ -90,7 +93,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
         [brief] > div[left] {
           grid-template-columns: 1fr;
-          padding-left: 0;
+          grid-auto-rows: 25px 25px 25px;
         }
 
         [customer-company],
@@ -233,6 +236,8 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             padding: 0;
             -webkit-print-color-adjust: exact;
           }
+          #date,
+          #receipient_address,
           #Header,
           #Footer {
             display: none !important;
@@ -261,26 +266,13 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   render() {
     var company = this._bizplace.name || ''
     var brn = `(${this._bizplace.description})` || ''
-
     var customer = this._customerName.toUpperCase()
     var address = ''
-
     var totalPallet = 0
-
     var doNo = this._doNo
     var refNo = this._releaseOrderName
-    this._date = new Date()
-
-    var date =
-      this._date
-        .getDate()
-        .toString()
-        .padStart(2, '0') +
-      '/' +
-      (this._date.getMonth() + 1).toString().padStart(2, '0') +
-      '/' +
-      this._date.getFullYear()
-
+    var date = this._date
+    var workerName = this._workerName
     var driverName = this._driverName
     var truckNo = this._truckNo
 
@@ -295,9 +287,23 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
         <div brief>
           <div left>
-            <label>M/s</label>${customer}
+            <span>M/s <i>${customer}</i></span>
             <label><strong>To be delivered to/collected by:</strong></label>
-            <div customer>${address}</div>
+            <div customer>
+              <span>${this._receipient}</span>
+              <select id="receipient_address" @change="${e => this._receipient = e.currentTarget.value}">
+                <option value="">-- ${i18next.t('text.please_select')} --</option>
+                ${Object.keys(this._customerContactPoints || {}).map((key, index) => {
+                  let contactPoint = this._customerContactPoints[key]
+                  return html`
+                  <option value="${contactPoint && contactPoint.name} ${contactPoint && contactPoint.address}"
+                  >${contactPoint && contactPoint.name}
+                  ${contactPoint && contactPoint.address ? ` ${contactPoint && contactPoint.address}` : ''}</option
+                >
+                  `
+                })}
+              </select>
+            </div>
           </div>
 
           <div right>
@@ -306,6 +312,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             <label>Reference No. : </label><b>${refNo}</b>
 
             <label>Date : </label>${date}
+            <input id="date" name="deliveryDate" type="date" min="${this._getStdDate()}" @input="${e => this._date=e.currentTarget.value}" required />
           </div>
         </div>
 
@@ -357,7 +364,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             <tbody>
               <tr verification_body>
                 <td></td>
-                <td></td>
+                <td>${workerName}</td>
                 <td></td>
                 <td>${truckNo}</td>
                 <td>
@@ -404,6 +411,16 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       this._doNo = changes.resourceId || this._doNo || ''
       await this._fetchDeliveryOrder(this._doNo)
     }
+  }
+
+  _getStdDate() {
+    let date = new Date()
+    date.setDate(date.getDate())
+    return date.toISOString().split('T')[0]
+  }
+
+  get _deliveryDate() {
+    return this.shadowRoot.querySelector('input[name=deliveryDate]')
   }
 
   async _fetchBusinessBizplace() {
@@ -486,6 +503,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
                 id
                 name
               }
+              address
               description
               email
               phone
@@ -498,7 +516,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       })
 
       if (!response.errors) {
-        this._customerContactPoints = response.data.contactPoints.items[0] || []
+        return response.data.contactPoints.items || []
       }
     }
   }
@@ -513,6 +531,10 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             id
             name
             releaseGood {
+              id
+              name
+            }
+            bizplace {
               id
               name
             }
@@ -540,14 +562,14 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
         if (orderInventories.length > 0) {
           orderInventories = await Promise.all(
             orderInventories.map(async orderInventory => {
-              const worksheetDetail = await this._fetchWorksheetDetail(orderInventory.id)
-              orderInventory.palletQty = worksheetDetail.total
-              if (worksheetDetail && worksheetDetail.items) this._workerName = worksheetDetail.items[0].worker.name
+              const worksheetDetails = await this._fetchWorksheetDetail(orderInventory.id)
+              orderInventory.palletQty = worksheetDetails.total
+              if (worksheetDetails && worksheetDetails.items[0].updater)
+                this._workerName = worksheetDetails.items[0].updater.name
               return orderInventory
             })
           )
-          this._orderInventories = orderInventories
-          console.log(orderInventories)
+          this._orderInventories = orderInventories 
         }
       }
 
@@ -555,6 +577,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       if (_bizplace) {
         this._customerId = _bizplace.id
         this._customerName = _bizplace.name
+        this._customerContactPoints = { ...(await this._fetchCustomerContact()) }
       }
     }
   }
@@ -621,9 +644,9 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             filters
           })}) {
             items {
-              worker {
+              updater {
                 id
-                name  
+                name
               }
             }
             total

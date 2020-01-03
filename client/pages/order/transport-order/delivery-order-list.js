@@ -44,8 +44,6 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
-
       <div class="grist">
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
@@ -73,66 +71,6 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
   }
 
   pageInitialized() {
-    this._searchFields = [
-      // {
-      //   label: i18next.t('field.do_no'),
-      //   name: 'name',
-      //   type: 'text',
-      //   props: { searchOper: 'i_like' }
-      // },
-      // {
-      //   label: i18next.t('field.ref_no'),
-      //   name: 'refNo',
-      //   type: 'text',
-      //   props: { searchOper: 'i_like' }
-      // },
-      // {
-      //   label: i18next.t('field.delivery_to'),
-      //   name: 'to',
-      //   type: 'text',
-      //   props: { searchOper: 'i_like' }
-      // },
-      // {
-      //   label: i18next.t('field.delivery_date'),
-      //   name: 'deliveryDate',
-      //   type: 'date',
-      //   props: { searchOper: 'i_like' }
-      // },
-      // {
-      //   label: i18next.t('field.cargo_type'),
-      //   name: 'cargoType',
-      //   type: 'text',
-      //   props: { searchOper: 'i_like' }
-      // },
-      // {
-      //   label: i18next.t('field.urgency'),
-      //   name: 'urgency',
-      //   type: 'checkbox',
-      //   props: { searchOper: 'eq' },
-      //   attrs: ['indeterminate']
-      // },
-      // {
-      //   label: i18next.t('field.loose_item'),
-      //   name: 'looseItem',
-      //   type: 'checkbox',
-      //   props: { searchOper: 'eq' },
-      //   attrs: ['indeterminate']
-      // },
-      // {
-      //   label: i18next.t('field.status'),
-      //   name: 'status',
-      //   type: 'select',
-      //   options: [
-      //     { value: '' },
-      //     ...Object.keys(ORDER_STATUS).map(key => {
-      //       const status = ORDER_STATUS[key]
-      //       return { name: i18next.t(`label.${status.name}`), value: status.value }
-      //     })
-      //   ],
-      //   props: { searchOper: 'eq' }
-      // }
-    ]
-
     this.config = {
       rows: { selectable: { multiple: true }, appendable: false },
       columns: [
@@ -206,10 +144,6 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
     }
   }
 
-  get searchForm() {
-    return this.shadowRoot.querySelector('search-form')
-  }
-
   get dataGrist() {
     return this.shadowRoot.querySelector('data-grist')
   }
@@ -226,7 +160,7 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
             items {
               id
               name
-              customerBizplace {
+              bizplace {
                 id
                 name
               }
@@ -252,9 +186,7 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
       let deliveryOrders = response.data.deliveryOrders.items || []
 
       deliveryOrders = deliveryOrders.map(deliveryOrder => {
-        if (deliveryOrder.customerBizplace) {
-          deliveryOrder.customer = deliveryOrder.customerBizplace.name
-        }
+        if (deliveryOrder.bizplace) deliveryOrder.customer = deliveryOrder.bizplace.name
         return deliveryOrder
       })
 
