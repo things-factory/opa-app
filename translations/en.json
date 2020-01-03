@@ -841,5 +841,13 @@
   "title.rejection_reason": "rejection reason",
   "text.please_select_the_location_again": "please select the location again",
   "text.please_select_the_location": "please select the location",
-  "field.delivery_to": "delivery to"
+  "field.delivery_to": "delivery to",
+  "title.print_location_label": "print location label",
+  "text.full_format": "full format",
+  "text.partial_format": "partial format",
+  "title.location_label_format": "location label format",
+  "label.label_format": "label format",
+  "text.select_label_format": "select label format",
+  "title.print_preview": "print preview",
+  "text.please_select_the_label_format": "please select the label format"
 }

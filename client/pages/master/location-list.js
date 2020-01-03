@@ -1,4 +1,3 @@
-import { USBPrinter } from '@things-factory/barcode-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -16,8 +15,8 @@ import {
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
-import { LOCATION_LABEL_SETTING_KEY } from '../../setting-constants'
 import './generate-location-list'
+import './print-location-label'
 
 class LocationList extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -527,123 +526,6 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _printLocationLabel() {
-    let records = []
-
-    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
-      records = this.dataGrist.selected
-    } else {
-      records = await this._fetchLocationsToPrint()
-    }
-
-    var labelId = this._locationLabel && this._locationLabel.id
-
-    if (!labelId) {
-      document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            level: 'error',
-            message: `${i18next.t('text.no_label_setting_was_found')}. ${i18next.t('text.please_check_your_setting')}`
-          }
-        })
-      )
-    } else {
-      for (var record of records) {
-        var searchParams = new URLSearchParams()
-
-        /* for location record mapping */
-        record.newName = `${record.zone}-${record.row}-${record.column}`
-        searchParams.append('location', record.newName)
-        searchParams.append('row', record.row)
-
-        try {
-          const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
-            method: 'GET'
-          })
-
-          if (response.status !== 200) {
-            throw `Error : Can't get label command from server (response: ${response.status})`
-          }
-
-          var command = await response.text()
-
-          if (!this.printer) {
-            this.printer = new USBPrinter()
-          }
-
-          await this.printer.connectAndPrint(command)
-        } catch (ex) {
-          document.dispatchEvent(
-            new CustomEvent('notify', {
-              detail: {
-                level: 'error',
-                message: ex,
-                ex
-              }
-            })
-          )
-
-          delete this.printer
-          break
-        }
-      }
-    }
-  }
-
-  async _fetchLocationsToPrint() {
-    if (this._warehouseId) {
-      const filters = [
-        {
-          name: 'warehouse_id',
-          operator: 'eq',
-          value: this._warehouseId
-        },
-        {
-          name: 'shelf',
-          operator: 'eq',
-          value: '01'
-        },
-        {
-          name: 'type',
-          operator: 'eq',
-          value: 'SHELF'
-        }
-      ]
-
-      const response = await client.query({
-        query: gql`
-      query {
-        locations(${gqlBuilder.buildArgs({
-          filters
-        })}) {
-          items {
-            id
-            name
-            zone
-            row
-            type
-            column
-            shelf
-            status
-            updatedAt
-            updater{
-              id
-              name
-              description
-            }
-          }
-          total
-        }
-      }
-    `
-      })
-
-      if (!response.errors) {
-        return response.data.locations.items || []
-      }
-    }
-  }
-
   async _generateLocation() {
     openPopup(
       html`
@@ -658,6 +540,29 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
         backdrop: true,
         size: 'large',
         title: i18next.t('title.generate_location_list')
+      }
+    )
+  }
+
+  async _printLocationLabel() {
+    let records = []
+
+    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+      records = this.dataGrist.selected
+    }
+
+    openPopup(
+      html`
+        <print-location-label
+          .selectedLocations="${records}"
+          .warehouseId="${this._warehouseId}"
+          @printed="${this.dataGrist.fetch()}"
+        ></print-location-label>
+      `,
+      {
+        backdrop: true,
+        size: 'medium',
+        title: i18next.t('title.print_location_label')
       }
     )
   }
@@ -695,11 +600,6 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
     })
 
     return { header: headerSetting, data: data }
-  }
-
-  stateChanged(state) {
-    var locationLabelSetting = state.dashboard[LOCATION_LABEL_SETTING_KEY]
-    this._locationLabel = (locationLabelSetting && locationLabelSetting.board) || {}
   }
 }
 
