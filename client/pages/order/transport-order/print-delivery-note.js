@@ -252,6 +252,10 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       title: i18next.t('title.goods_delivery_note_details'),
       actions: [
         {
+          title: i18next.t('button.save'),
+          action: this._updateDeliveryOrder.bind(this)
+        },
+        {
           title: i18next.t('button.back'),
           action: () => history.back()
         }
@@ -290,8 +294,8 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             <span>M/s <i>${customer}</i></span>
             <label><strong>To be delivered to/collected by:</strong></label>
             <div customer>
-              <span>${this._receipient}</span>
-              <select id="receipient_address" @change="${e => this._receipient = e.currentTarget.value}">
+              <span>${this._receipient}</span><br>
+              <select id="receipient_address" name="receipient" @change="${e => this._receipient = e.currentTarget.value}">
                 <option value="">-- ${i18next.t('text.please_select')} --</option>
                 ${Object.keys(this._customerContactPoints || {}).map((key, index) => {
                   let contactPoint = this._customerContactPoints[key]
@@ -413,14 +417,26 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     }
   }
 
+  get _deliveryDateInput() {
+    return this.shadowRoot.querySelector('input[name=deliveryDate]')
+  }
+
+  get _receipientInput() {
+    return this.shadowRoot.querySelector('input[name=receipient]')
+  }
+
+  _focusOnDateInput() {
+    setTimeout(() => this._deliveryDateInput.focus(), 100)
+  }
+
+  _focusOnReceipientInput() {
+    setTimeout(() => this._receipientInput.focus(), 100)
+  }
+
   _getStdDate() {
     let date = new Date()
     date.setDate(date.getDate())
     return date.toISOString().split('T')[0]
-  }
-
-  get _deliveryDate() {
-    return this.shadowRoot.querySelector('input[name=deliveryDate]')
   }
 
   async _fetchBusinessBizplace() {
@@ -530,6 +546,8 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           })}) {
             id
             name
+            to
+            deliveryDate
             releaseGood {
               id
               name
@@ -555,6 +573,8 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       this._releaseOrderName = _deliveryOrder.releaseGood.name
       this._truckNo = _deliveryOrder.transportVehicle.regNumber
       this._driverName = _deliveryOrder.transportDriver.name
+      this._receipient = _deliveryOrder.to
+      this._date = _deliveryOrder.deliveryDate
 
       if (_releaseOrderId) {
         let orderInventories = await this._fetchOrderInventories(_releaseOrderId)
@@ -657,6 +677,72 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       return response.data.worksheetDetails || {}
+    }
+  }
+
+  async _updateDeliveryOrder() {
+    if (this._doNo && this._receipient && this._date) {
+      var name = this._doNo
+      var patch = {
+        to: this._receipient,
+        deliveryDate: this._date
+      }
+      try {
+        const response = await client.query({
+          query: gql`
+            mutation {
+              updateDeliveryOrder(${gqlBuilder.buildArgs({
+                name, patch
+              })}) {
+                id
+                name
+              }
+            }
+          `
+        })
+  
+        if (!response.errors) {
+          document.dispatchEvent(
+            new CustomEvent('notify', {
+              detail: {
+                message: i18next.t('text.save_successful')
+              }
+            })
+          )
+        }
+  
+      } catch(e) {
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              level: error,
+              message: e
+            }
+          })
+        )
+      }
+
+    } else if (!this._receipient) {
+      document.dispatchEvent(
+        new CustomEvent('notify', {
+          detail: {
+            level: error,
+            message: i18next.t('text.please_select_a_receipient')
+          }
+        })
+      )
+      this._focusOnReceipientInput()
+
+    } else if (!this._date) {
+      document.dispatchEvent(
+        new CustomEvent('notify', {
+          detail: {
+            level: error,
+            message: i18next.t('text.please_select_a_delivery_date')
+          }
+        })
+      )
+      this._focusOnDateInput()
     }
   }
 }

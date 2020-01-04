@@ -1,10 +1,12 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
+import { openPopup } from '@things-factory/layout-base'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { ORDER_STATUS } from '../constants/order'
+import './upload-delivery-note'
 
 class DeliveryOrderList extends localize(i18next)(PageView) {
   static get styles() {
@@ -79,6 +81,16 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           gutterName: 'button',
+          icon: 'post_add',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              if (record.id) this._uploadDeliveryNote(record.name, record.id)
+            }
+          }
+        },
+        {
+          type: 'gutter',
+          gutterName: 'button',
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
@@ -107,6 +119,14 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
           header: i18next.t('field.customer'),
           sortable: true,
           width: 250
+        },
+        {
+          type: 'string',
+          name: 'to',
+          header: i18next.t('field.delivery_to'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 300
         },
         {
           type: 'date',
@@ -153,7 +173,7 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
       query: gql`
         query {
           deliveryOrders(${gqlBuilder.buildArgs({
-            filters: this.searchForm.queryFilters,
+            filters: [],
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -164,6 +184,7 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
                 id
                 name
               }
+              to
               deliveryDate
               status
               refNo
@@ -196,6 +217,23 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
       }
     }
   }
+
+  _uploadDeliveryNote(dnName, dnId) {
+    openPopup(
+      html`
+        <upload-delivery-note
+          .dnName="${dnName}"
+          .dnId="${dnId}"
+          .callback="${this.dataGrist.fetch.bind(this.dataGrist)}"
+        ></upload-delivery-note>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.upload_signed_grn')
+      }
+    )
+  }  
 
   get _columns() {
     return this.config.columns

@@ -849,5 +849,8 @@
   "label.label_format": "label format",
   "text.select_label_format": "select label format",
   "title.print_preview": "print preview",
-  "text.please_select_the_label_format": "please select the label format"
+  "text.please_select_the_label_format": "please select the label format",
+  "text.save_successful": "save successful",
+  "text.please_select_a_delivery_date": "please select a delivery date",
+  "text.please_select_a_receipient": "please select a receipient"
 }
