@@ -702,6 +702,23 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
         })
   
         if (!response.errors) {
+          const orderInfo = {
+            name: name
+          }
+          
+          const dispatch = await client.query({
+            query: gql`
+              mutation {
+                dispatchDeliveryOrder(${gqlBuilder.buildArgs({
+                  orderInfo
+                })}) {
+                  id
+                  name
+                }
+              }
+            `
+          })
+          
           document.dispatchEvent(
             new CustomEvent('notify', {
               detail: {
