@@ -14,12 +14,12 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       _releaseGoodNo: String,
       pickedProductConfig: Object,
       pickedProductData: Object,
+      deliveryOrderConfig: Object,
+      deliveryOrderData: Object,
       loadedProductConfig: Object,
       loadedProductData: Object,
       _selectedTaskStatus: String,
-      _selectedDriver: String,
       _selectedTruck: String,
-      _driverList: Object,
       _vehicleList: Object
     }
   }
@@ -33,32 +33,27 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
           display: flex;
           flex-direction: column;
         }
-
         .grist {
           background-color: var(--main-section-background-color);
           display: flex;
           overflow: auto;
           flex: 1;
         }
-
         .left-column {
           flex: 1;
           overflow: hidden;
           display: flex;
           flex-direction: column;
         }
-
         .right-column {
           flex: 1;
           overflow: auto;
           display: flex;
           flex-direction: column;
         }
-
         data-grist {
           flex: 1;
         }
-
         h2 {
           padding: var(--subtitle-padding);
           font: var(--subtitle-font);
@@ -70,27 +65,22 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
           border: var(--grist-title-border);
           color: var(--secondary-color);
         }
-
         .grist h2 mwc-icon {
           vertical-align: middle;
           margin: var(--grist-title-icon-margin);
           font-size: var(--grist-title-icon-size);
           color: var(--grist-title-icon-color);
         }
-
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
-
         fieldset[hidden] {
           display: none;
         }
-
         @media (max-width: 460px) {
           :host {
             display: block;
           }
-
           .grist {
             min-height: 500px;
           }
@@ -121,8 +111,8 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('data-grist#picked-product-grist')
   }
 
-  get loadedProductGrist() {
-    return this.shadowRoot.querySelector('data-grist#loaded-product-grist')
+  get deliveryOrderGrist() {
+    return this.shadowRoot.querySelector('data-grist#delivery-order-grist')
   }
 
   get scannable() {
@@ -143,8 +133,8 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
                 e.preventDefault()
                 if (this.releaseGoodNoInput.value) {
                   this._clearView()
-                  await this._fetchInventories(this.releaseGoodNoInput.value)
-                  await this._fetchLoadedInventories(this.releaseGoodNoInput.value)
+                  await this._fetchLoadingWorksheet(this.releaseGoodNoInput.value)
+                  await this._fetchDeliveryOrders(this.releaseGoodNoInput.value)
                 }
               }
             }}"
@@ -176,32 +166,19 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
             @record-change="${this._onProductChangeHandler.bind(this)}"
           ></data-grist>
 
-          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.loaded')}</h2>
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.delivery_orders')}</h2>
           <data-grist
-            id="loaded-product-grist"
+            id="delivery-order-grist"
             .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-            .config=${this.loadedProductConfig}
-            .data=${this.loadedProductData}
+            .config=${this.deliveryOrderConfig}
+            .data=${this.deliveryOrderData}
           ></data-grist>
         </div>
 
         <div class="right-column">
           <form id="input-form" class="single-column-form">
             <fieldset>
-              <legend>${i18next.t('label.assign_truck_driver')}</legend>
-
-              <label>${i18next.t('label.driver_name')}</label>
-              <select @change=${e => (this._selectedDriver = e.target.value)} name="transportDriver">
-                <option value="">-- ${i18next.t('text.please_select_a_driver')} --</option>
-
-                ${Object.keys(this._driverList.data.transportDrivers.items || []).map(key => {
-                  let driver = this._driverList.data.transportDrivers.items[key]
-                  return html`
-                    <option value="${driver.id}">${driver.name} - ${driver.driverCode}</option>
-                  `
-                })}
-              </select>
-
+              <legend>${i18next.t('label.assign_truck')}</legend>
               <label>${i18next.t('label.lorry_no')}</label>
               <select @change=${e => (this._selectedTruck = e.target.value)} name="transportVehicle">
                 <option value="">-- ${i18next.t('text.please_select_a_truck')} --</option>
@@ -215,6 +192,17 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               </select>
             </fieldset>
           </form>
+          ${this._selectedDeliveryOrder
+            ? html`
+                <h2><mwc-icon>list_alt</mwc-icon>${this._selectedDeliveryOrder.name} - ${i18next.t('title.loaded')}</h2>
+                <data-grist
+                  id="loaded-product-grist"
+                  .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+                  .config=${this.loadedProductConfig}
+                  .data=${this.loadedProductData}
+                ></data-grist>
+              `
+            : ''}
         </div>
       </div>
     `
@@ -223,6 +211,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   constructor() {
     super()
     this.pickedProductData = { records: [] }
+    this.deliveryOrderData = { records: [] }
     this.loadedProductData = { records: [] }
     this._releaseGoodNo = ''
     this._selectedTaskStatus = null
@@ -254,7 +243,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async pageInitialized() {
-    this._driverList = { ...(await this.fetchDriverList()) }
     this._vehicleList = { ...(await this.fetchVehicleList()) }
 
     this.pickedProductConfig = {
@@ -264,7 +252,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
             if (data.records.length && record) {
-              if (this._selectedOrderInventory && this._selectedOrderInventory.name === record) {
+              if (this._selectedOrderInventory && this._selectedOrderInventory.name === record.name) {
                 return
               }
               this._selectedTaskStatus = null
@@ -301,6 +289,20 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
           width: 140
         },
         {
+          type: 'string',
+          name: 'releaseWeight',
+          header: i18next.t('field.release_weight'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'unit',
+          header: i18next.t('field.weight_unit'),
+          record: { align: 'center' },
+          width: 80
+        },
+        {
           type: 'integer',
           name: 'releaseQty',
           header: i18next.t('field.picked_qty'),
@@ -317,14 +319,49 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       ]
     }
 
-    this.loadedProductConfig = {
-      rows: { appendable: false },
-      list: { fields: ['palletId', 'truckNo'] },
-      pagination: {
-        infinite: true
+    this.deliveryOrderConfig = {
+      rows: {
+        appendable: false,
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            if (data.records.length && record) {
+              if (this._selectedDeliveryOrder && this._selectedDeliveryOrder.id === record.id) {
+                return
+              }
+              this._selectedDeliveryOrder = record
+              this._fetchLoadedProducts()
+            }
+          }
+        }
       },
+      list: { fields: ['name', 'regNumber'] },
+      pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'string',
+          name: 'name',
+          header: i18next.t('field.name'),
+          record: { align: 'left' },
+          width: 200
+        },
+        {
+          type: 'string',
+          name: 'regNumber',
+          header: i18next.t('field.truck_no'),
+          record: { align: 'center' },
+          width: 140
+        }
+      ]
+    }
+
+    this.loadedProductConfig = {
+      rows: { appendable: false, selectable: { multiple: true } },
+      list: { fields: ['palletId', 'batchId', 'releaseQty'] },
+      pagination: { infinite: true },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'string',
           name: 'palletId',
@@ -347,18 +384,25 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
           width: 140
         },
         {
-          type: 'string',
-          name: 'regNumber',
-          header: i18next.t('field.truck_no'),
+          type: 'number',
+          name: 'releaseQty',
+          header: i18next.t('field.qty'),
           record: { align: 'center' },
-          width: 140
+          width: 80
         },
         {
-          type: 'object',
-          name: 'driver',
-          header: i18next.t('field.driver'),
-          record: { align: 'left' },
-          width: 140
+          type: 'number',
+          name: 'releaseWeight',
+          header: i18next.t('field.weight'),
+          record: { align: 'center' },
+          width: 80
+        },
+        {
+          type: 'string',
+          name: 'unit',
+          header: i18next.t('field.weight_unit'),
+          record: { align: 'center' },
+          weight: 80
         }
       ]
     }
@@ -374,7 +418,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     setTimeout(() => this.releaseGoodNoInput.focus(), 100)
   }
 
-  async _fetchInventories(releaseGoodNo) {
+  async _fetchLoadingWorksheet(releaseGoodNo) {
     const response = await client.query({
       query: gql`
         query {
@@ -397,6 +441,10 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               }
               qty
               releaseQty
+              releaseWeight
+              inventory {
+                unit
+              }
             }
           }
         }
@@ -410,10 +458,13 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         records: response.data.loadingWorksheet.worksheetDetailInfos.map(record => {
           return {
             ...record,
-            loadedQty: record.releaseQty
+            loadedQty: record.releaseQty,
+            ...record.inventory
           }
         })
       }
+    } else {
+      throw new Error(response.errors[0])
     }
   }
 
@@ -448,30 +499,21 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       let args = {
         loadedWorksheetDetails,
         releaseGoodNo: this._releaseGoodNo,
-        transportDriver: { id: this._selectedDriver },
         transportVehicle: { id: this._selectedTruck }
       }
 
       const response = await client.query({
         query: gql`
             mutation {
-            loading(${gqlBuilder.buildArgs(args)}) {
-              releaseGoodNo
-              transportDriver {
-                id
-              }
-              transportVehicle {
-                id
-              }
-            }
+            loading(${gqlBuilder.buildArgs(args)})
           }
           `
       })
 
       if (!response.errors) {
         this._clearView()
-        await this._fetchInventories(this._releaseGoodNo)
-        await this._fetchLoadedInventories(this._releaseGoodNo)
+        await this._fetchLoadingWorksheet(this._releaseGoodNo)
+        await this._fetchDeliveryOrders(this._releaseGoodNo)
         this._selectedTaskStatus = null
       }
     } catch (e) {
@@ -479,39 +521,21 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  _validateLoading() {
-    // 1. validate whethere there's selected product or not
-    if (!this.pickedProductGrist.selected || !this.pickedProductGrist.selected.length) {
-      throw new Error(i18next.t('text.there_is_no_selected_items'))
-    }
-    // 2. validate for input for driver and truck
-    if (!this._selectedDriver || !this._selectedTruck)
-      throw new Error(i18next.t('text.driver_and_vehicle_is_not_selected'))
-  }
-
-  async _fetchLoadedInventories(releaseGoodNo, transportDriver, transportVehicle) {
+  async _fetchDeliveryOrders(releaseGoodNo) {
     const response = await client.query({
       query: gql`
         query {
-          loadedInventories(${gqlBuilder.buildArgs({ releaseGoodNo })}) {
-            inventory {
-              palletId
-              batchId
-              product {
-                id
-                name
-                description
-              }
-            }
-            deliveryOrder {
-              transportDriver {
-                name
-                description
-              }
+          deliveryOrderByReleaseGood(${gqlBuilder.buildArgs({
+            releaseGoodNo
+          })}) {
+            items {
+              id
+              name
               transportVehicle {
-                name
                 regNumber
-                description
+              }
+              targetInventories {
+                name
               }
             }
           }
@@ -520,36 +544,64 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      this._selectedInventory = null
-      this.loadedProductData = {
-        records: (response.data.loadedInventories || []).map(orderInventoy => {
+      this.deliveryOrderData = {
+        records: response.data.deliveryOrderByReleaseGood.items.map(item => {
           return {
-            ...orderInventoy.inventory,
-            driver: orderInventoy.deliveryOrder.transportDriver,
-            regNumber: orderInventoy.deliveryOrder.transportVehicle.regNumber
+            id: item.id,
+            name: item.name,
+            ...item.transportVehicle
           }
         })
       }
       this._updateContext()
+    } else {
+      throw new Error(response.errors[0])
     }
   }
 
-  async fetchDriverList() {
-    return await client.query({
+  async _fetchLoadedProducts() {
+    if (!this._selectedDeliveryOrder || !this._selectedDeliveryOrder.id) return
+
+    const response = await client.query({
       query: gql`
         query {
-          transportDrivers (${gqlBuilder.buildArgs({
-            filters: [],
-            pagination: { page: 1, limit: 9999 }
-          })}){
-            items{
-              id
-              name
-              driverCode
+          orderInventories(${gqlBuilder.buildArgs({
+            filters: [
+              {
+                name: 'deliveryOrder',
+                operator: 'eq',
+                value: this._selectedDeliveryOrder.id
+              }
+            ]
+          })}) {
+            items {
+              releaseQty
+              releaseWeight
+              inventory {
+                palletId
+                batchId
+                unit
+                product {
+                  name
+                  description
+                }
+              }
             }
           }
-        }`
+        }
+      `
     })
+
+    if (!response.errors) {
+      this.loadedProductData = {
+        records: response.data.orderInventories.items.map(orderInventory => {
+          return {
+            ...orderInventory,
+            ...orderInventory.inventory
+          }
+        })
+      }
+    }
   }
 
   async fetchVehicleList() {
@@ -569,6 +621,15 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     })
   }
 
+  _validateLoading() {
+    // 1. validate whethere there's selected product or not
+    if (!this.pickedProductGrist.selected || !this.pickedProductGrist.selected.length) {
+      throw new Error(i18next.t('text.there_is_no_selected_items'))
+    }
+    // 2. validate for input for truck
+    if (!this._selectedTruck) throw new Error(i18next.t('text.vehicle_is_not_selected'))
+  }
+
   async _complete() {
     try {
       this._validateComplete()
@@ -583,6 +644,19 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       if (!result.value) {
         return
       }
+
+      // if (this.pickedProductData && this.pickedProductData.records) {
+      //   const result = await CustomAlert({
+      //     title: i18next.t('title.are_you_sure'),
+      //     text: i18next.t('text.there_are_remain_products'),
+      //     confirmButton: { text: i18next.t('button.confirm') },
+      //     cancelButton: { text: i18next.t('button.cancel') }
+      //   })
+
+      //   if (!result.value) {
+      //     return
+      //   }
+      // }
 
       const response = await client.query({
         query: gql`
@@ -635,16 +709,19 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  _validateComplete() {
+  async _validateComplete() {
     if (!this._releaseGoodNo) throw new Error(i18next.t('text.there_is_no_release_order_no'))
+    if (this.pickedProductGrist.dirtyData.records) throw new Error(i18next.t('text.there_is_remain_product'))
   }
 
   _clearView() {
     this.pickedProductData = { records: [] }
+    this.deliveryOrderData = { records: [] }
     this.loadedProductData = { records: [] }
     this.infoForm.reset()
     this.inputForm.reset()
     this._selectedTaskStatus = null
+    this._selectedDeliveryOrder = null
     this._updateContext()
   }
 
