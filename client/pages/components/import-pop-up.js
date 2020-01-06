@@ -24,7 +24,6 @@ class ImportPopUp extends localize(i18next)(LitElement) {
           overflow: hidden;
           background-color: white;
         }
-
         .grist {
           display: flex;
           flex-direction: column;
@@ -59,11 +58,9 @@ class ImportPopUp extends localize(i18next)(LitElement) {
   render() {
     return html`
       <h2>${i18next.t('title.import_new_data')}</h2>
-
       <div class="grist">
         <data-grist .mode=${isMobileDevice() ? 'LIST' : 'GRID'} .config=${this._config}></data-grist>
       </div>
-
       <div class="button-container">
         <mwc-button
           @click=${() => {

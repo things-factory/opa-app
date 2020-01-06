@@ -88,7 +88,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     this.location = await this.fetchLocation()
 
     // const _products = await this.fetchProduct()
-    const _userBizplaces = await this._fetchUserBizplaces()
+    const _userBizplaces = await this.fetchBizplaces()
     this.packingType = await getCodeByName('PACKING_TYPES')
 
     this.config = {
@@ -377,8 +377,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
               product {
                 id
                 name
-                description
-                unit
+                description                
               }
               qty
               warehouse {
@@ -673,27 +672,6 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   stateChanged(state) {
     let palletLabelSetting = state.dashboard[PALLET_LABEL_SETTING_KEY]
     this._palletLabel = (palletLabelSetting && palletLabelSetting.board) || {}
-  }
-
-  async _fetchUserBizplaces(email = '') {
-    const response = await client.query({
-      query: gql`
-        query {
-          userBizplaces(${gqlBuilder.buildArgs({
-            email: email
-          })}) {
-            id
-            name
-            description
-            mainBizplace
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      return response.data.userBizplaces
-    }
   }
 
   async fetchBizplaces(bizplace = []) {

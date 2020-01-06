@@ -12,30 +12,6 @@ export default {
       page: 'dashboard'
     },
     {
-      tagname: 'company-list',
-      page: 'companies'
-    },
-    {
-      tagname: 'company-profile',
-      page: 'company_profile'
-    },
-    {
-      tagname: 'product-list',
-      page: 'products'
-    },
-    {
-      tagname: 'product-option-list',
-      page: 'product_options'
-    },
-    {
-      tagname: 'vas-list',
-      page: 'vas'
-    },
-    {
-      tagname: 'bizplace-list',
-      page: 'bizplaces'
-    },
-    {
       tagname: 'transport-vehicle',
       page: 'transport_vehicle'
     },
@@ -62,10 +38,6 @@ export default {
     {
       tagname: 'create-arrival-notice',
       page: 'create_arrival_notice'
-    },
-    {
-      tagname: 'gan-official-view',
-      page: 'gan-official-view'
     },
     {
       tagname: 'arrival-notice-list',
@@ -298,10 +270,6 @@ export default {
       page: 'user_bizplaces'
     },
     {
-      tagname: 'system-menu',
-      page: 'menus'
-    },
-    {
       tagname: 'system-domain',
       page: 'domains'
     },
@@ -312,10 +280,6 @@ export default {
     {
       tagname: 'system-setting',
       page: 'settings'
-    },
-    {
-      tagname: 'system-code',
-      page: 'codes'
     },
 
     /**
@@ -392,6 +356,10 @@ export default {
     {
       tagname: 'customer-inventory-report',
       page: 'customer_inventory_report'
+    },
+    {
+      tagname: 'customer-inventory-pallet-report',
+      page: 'customer_inventory_pallet_report'
     }
   ],
   bootstrap

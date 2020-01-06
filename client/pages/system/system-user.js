@@ -1,12 +1,19 @@
 import { getCodeByName } from '@things-factory/code-base'
+import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
+import {
+  client,
+  CustomAlert,
+  gqlBuilder,
+  isMobileDevice,
+  PageView,
+  ScrollbarStyles,
+  store
+} from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
-import { CustomAlert } from '../../utils/custom-alert'
-import '@things-factory/grist-ui'
 import './system-create-user'
 import './system-user-detail'
 
@@ -80,14 +87,6 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
     this.userTypes = await getCodeByName('USER_TYPES')
 
     this._searchFields = [
-      {
-        name: 'domain',
-        label: i18next.t('field.domain'),
-        type: 'text',
-        props: {
-          searchOper: 'i_like'
-        }
-      },
       {
         name: 'name',
         label: i18next.t('field.name'),
@@ -167,16 +166,6 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
           }
         },
         {
-          type: 'object',
-          name: 'domain',
-          header: i18next.t('field.domain'),
-          record: {
-            editable: false,
-            align: 'center'
-          },
-          width: 150
-        },
-        {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),
@@ -244,11 +233,10 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async fetchHandler({ page, limit, sorters = [] }) {
-    console.log(this.searchForm.queryFilters)
     const response = await client.query({
       query: gql`
         query {
-          users(${gqlBuilder.buildArgs({
+          bizplaceUsers(${gqlBuilder.buildArgs({
             filters: this.searchForm.queryFilters,
             pagination: { page, limit },
             sortings: sorters
@@ -259,6 +247,15 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
                 id
                 name
                 description
+              }
+              roles {
+                name
+                priviledges {
+                  name
+                }
+                users {
+                  name
+                }
               }
               name
               description
@@ -279,8 +276,8 @@ class SystemUser extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       return {
-        total: response.data.users.total || 0,
-        records: response.data.users.items || []
+        total: response.data.bizplaceUsers.total || 0,
+        records: response.data.bizplaceUsers.items || []
       }
     } else {
       return {

@@ -15,7 +15,7 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
         width: 100%;
       }
 
-      data-grist {
+      data-report {
         flex: 1;
       }
     `
@@ -41,7 +41,7 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
   }
 
   get report() {
-    return this.shadowRoot.querySelector('data-grist')
+    return this.shadowRoot.querySelector('data-report')
   }
 
   get searchForm() {
@@ -64,8 +64,7 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
     return html`
       <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.report.fetch()}></search-form>
 
-      <data-grist
-        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+      <data-report
         .config=${this._config}
         .fetchHandler="${this.fetchHandler.bind(this)}"
       ></data-grist>
@@ -132,47 +131,47 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
     return {
       pagination: { infinite: true },
       rows: {
-        selectable: false
-      },
-      list: {
-        fields: ['product.name', 'product', 'bizplace', 'location']
+        selectable: false,
+        groups: [
+          { column: 'product|name' },
+        ],
+        totals: ['openingBalance', 'inBalance', 'outBalance', 'closingBalance']
       },
       columns: [
-        { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'string',
           name: 'product|name',
           record: { editable: false, align: 'left' },
           header: 'Products',
-          width: 900
+          width: 450
         },
         {
           type: 'float',
           name: 'openingBalance',
           record: { editable: false, align: 'center' },
-          header: 'Opening Balance',
-          width: 180
+          header: i18next.t('field.opening_balance'),
+          width: 160
         },
         {
           type: 'float',
           name: 'inBalance',
           record: { editable: false, align: 'center' },
-          header: 'In Balance',
-          width: 180
+          header: i18next.t('field.inbound'),
+          width: 160
         },
         {
           type: 'float',
           name: 'outBalance',
           record: { editable: false, align: 'center' },
-          header: 'Out Balance',
-          width: 180
+          header: i18next.t('field.outbound'),
+          width: 160
         },
         {
           type: 'float',
           name: 'closingBalance',
           record: { editable: false, align: 'center' },
-          header: 'Closing Balance',
-          width: 180
+          header: i18next.t('field.closing_balance'),
+          width: 160
         }
       ]
     }
@@ -236,22 +235,22 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
   async _fetchBizplaceList() {
     const response = await client.query({
       query: gql`
-        query {
-          userBizplaces(${gqlBuilder.buildArgs({
-            email: ''
-          })}) {
-            id
-            name
-            description
-            assigned
-            mainBizplace
+          query {
+            bizplaces(${gqlBuilder.buildArgs({
+              filters: []
+            })}) {
+              items{
+                id
+                name
+                description
+              }
+            }
           }
-        }
-      `
+        `
     })
 
     if (!response.errors) {
-      return response.data.userBizplaces.filter(x => x.assigned == true)
+      return response.data.bizplaces.items
     }
   }
 

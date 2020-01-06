@@ -12,29 +12,6 @@ export default function route(page) {
     /**
      * Master Menus Section
      */
-    case 'companies':
-      import('./pages/master/company-list')
-      return page
-
-    case 'company_profile':
-      import('./pages/master/company-profile')
-      return page
-
-    case 'products':
-      import('./pages/master/product-list')
-      return page
-
-    case 'product_options':
-      import('./pages/master/product-option-list')
-      return page
-
-    case 'vas':
-      import('./pages/master/vas-list')
-      return page
-
-    case 'bizplaces':
-      import('./pages/master/bizplace-list')
-      return page
 
     case 'transport_vehicle':
       import('./pages/master/transport-vehicle')
@@ -42,10 +19,6 @@ export default function route(page) {
 
     case 'transport_driver':
       import('./pages/master/transport-driver')
-      return page
-
-    case 'workers':
-      import('./pages/master/worker-list')
       return page
 
     case 'warehouses':
@@ -56,15 +29,15 @@ export default function route(page) {
       import('./pages/master/location-list')
       return page
 
+    case 'workers':
+      import('./pages/master/worker-list')
+      return page
+
     /**
      * Order Menus Section
      */
     case 'create_arrival_notice':
       import('./pages/order/arrival-notice/create-arrival-notice')
-      return page
-
-    case 'gan-official-view':
-      import('./pages/order/arrival-notice/gan-official-view')
       return page
 
     case 'arrival_notices':
@@ -287,10 +260,6 @@ export default function route(page) {
       import('./pages/system/system-user-bizplaces')
       return page
 
-    case 'menus':
-      import('./pages/system/system-menu')
-      return page
-
     case 'domains':
       import('./pages/system/system-domain')
       return page
@@ -301,10 +270,6 @@ export default function route(page) {
 
     case 'settings':
       import('./pages/system/system-setting')
-      return page
-
-    case 'codes':
-      import('./pages/system/system-code')
       return page
 
     /**
@@ -376,6 +341,9 @@ export default function route(page) {
       return page
     case 'customer_inventory_report':
       import('./pages/report/customer-inventory-report')
+      return page
+    case 'customer_inventory_pallet_report':
+      import('./pages/report/customer-inventory-pallet-report')
       return page
   }
 }

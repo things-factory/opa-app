@@ -78,6 +78,10 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
           font-weight: bold;
         }
 
+        [business-address] {
+          white-space: pre-line;
+        }
+
         [business-info] [address] {
           white-space: normal;
         }
@@ -100,7 +104,11 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
 
         [brief] > div[right] {
           grid-template-columns: 3fr 5fr;
-          grid-auto-rows: 30px 30px 30px;
+          grid-auto-rows: 25px 25px 25px;
+        }
+
+        [brief] > div[right] > label {
+          padding-left: 50px;
         }
 
         [brief] > div[left] {
@@ -113,6 +121,10 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
         [delivered-by] {
           font-size: 1.2em;
           text-transform: uppercase;
+        }
+
+        [customer-address] {
+          padding-right: 10px;
         }
 
         [grn-no] {
@@ -275,13 +287,13 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
 
   render() {
     var company = this._bizplace.name || ''
-    var brn = this._bizplace.description || ''
+    var brn = `(${this._bizplace.description})` || ''
     var address = this._bizplace.address || ''
     var contact = this._businessContactPoints.phone || ''
     var email = this._businessContactPoints.email || ''
 
     var customerCompany = this._customer.name || ''
-    var customerBrn = this._customer.company.brn || ''
+    var customerBrn = `(${this._customer.description})` || ''
     var customerAddress = this._customer.address || ''
     var customerContact =
       'Phone: ' + (this._customerContactPoints.phone || '-') + ' | Fax: ' + (this._customerContactPoints.fax || '-')
@@ -297,7 +309,7 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
       <div goods-received-note>
         <div business-info>
           <h2 business-name>${company}</h2>
-          <span business-brn>(${brn})</span>
+          <span business-brn>${brn}</span>
           <div business-address>${address}</div>
           <div business-contact>${contact}</div>
           <div business-email>${email}</div>
@@ -309,7 +321,7 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
           <div left>
             <label>${i18next.t('label.to')}:</label>
             <div customer>
-              <div customer-company><b>${customerCompany}</b> <small customer-brn>(${customerBrn})</small></div>
+              <div customer-company><b>${customerCompany}</b> <small customer-brn>${customerBrn}</small></div>
               <div customer-address>${customerAddress}</div>
               <div customer-contact>${customerContact}</div>
               <div customer-email>${customerEmail}</div>
@@ -318,10 +330,8 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
 
           <div right>
             <label>${i18next.t('label.grn_no')} : </label><b>${grnName}</b>
-
-            <label>${i18next.t('label.ref_no')} : </label><b>${refNo}</b>
-
-            <label>${i18next.t('label.date')} : </label><b>${date}</b>
+            <label>${i18next.t('label.ref_no')} : </label><b>${refNo}</b> <label>${i18next.t('label.date')} : </label
+            ><b>${date}</b>
           </div>
         </div>
 
@@ -419,10 +429,6 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
               name
               description
               address
-              company {
-                id
-                brn
-              }
             }
             arrivalNotice {
               id

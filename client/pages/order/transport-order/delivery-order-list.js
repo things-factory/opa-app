@@ -1,10 +1,12 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
+import { openPopup } from '@things-factory/layout-base'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { ORDER_STATUS } from '../constants/order'
+import './upload-delivery-note'
 
 class DeliveryOrderList extends localize(i18next)(PageView) {
   static get styles() {
@@ -44,8 +46,6 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
-
       <div class="grist">
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
@@ -73,66 +73,6 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
   }
 
   pageInitialized() {
-    this._searchFields = [
-      {
-        label: i18next.t('field.do_no'),
-        name: 'name',
-        type: 'text',
-        props: { searchOper: 'i_like' }
-      },
-      {
-        label: i18next.t('field.ref_no'),
-        name: 'refNo',
-        type: 'text',
-        props: { searchOper: 'i_like' }
-      },
-      {
-        label: i18next.t('field.delivery_to'),
-        name: 'to',
-        type: 'text',
-        props: { searchOper: 'i_like' }
-      },
-      {
-        label: i18next.t('field.delivery_date'),
-        name: 'deliveryDate',
-        type: 'date',
-        props: { searchOper: 'i_like' }
-      },
-      {
-        label: i18next.t('field.cargo_type'),
-        name: 'cargoType',
-        type: 'text',
-        props: { searchOper: 'i_like' }
-      },
-      {
-        label: i18next.t('field.urgency'),
-        name: 'urgency',
-        type: 'checkbox',
-        props: { searchOper: 'eq' },
-        attrs: ['indeterminate']
-      },
-      {
-        label: i18next.t('field.loose_item'),
-        name: 'looseItem',
-        type: 'checkbox',
-        props: { searchOper: 'eq' },
-        attrs: ['indeterminate']
-      },
-      {
-        label: i18next.t('field.status'),
-        name: 'status',
-        type: 'select',
-        options: [
-          { value: '' },
-          ...Object.keys(ORDER_STATUS).map(key => {
-            const status = ORDER_STATUS[key]
-            return { name: i18next.t(`label.${status.name}`), value: status.value }
-          })
-        ],
-        props: { searchOper: 'eq' }
-      }
-    ]
-
     this.config = {
       rows: { selectable: { multiple: true }, appendable: false },
       columns: [
@@ -141,17 +81,20 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
         {
           type: 'gutter',
           gutterName: 'button',
+          icon: 'post_add',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              if (record.id) this._uploadDeliveryNote(record.name, record.id)
+            }
+          }
+        },
+        {
+          type: 'gutter',
+          gutterName: 'button',
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              const status = record.status
-              if (status === ORDER_STATUS.REJECTED.value) {
-                navigate(`rejected_delivery_order/${record.name}`) // 1. move to rejected detail page
-              } else if (status === ORDER_STATUS.EDITING.value) {
-                navigate(`edit_delivery_order/${record.name}`)
-              } else {
-                navigate(`delivery_order_detail/${record.name}`) // 2. move to order detail page
-              }
+              navigate(`print_delivery_note/${record.name}`)
             }
           }
         },
@@ -159,6 +102,13 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.do_no'),
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              if (record.attachments[0] && record.attachments[0].path) {
+                window.open(`/attachment/${record.attachments[0].path}`)
+              }
+            }
+          },
           sortable: true,
           width: 200
         },
@@ -172,10 +122,18 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'to',
-          header: i18next.t('field.delivery_to'),
+          name: 'customer',
+          header: i18next.t('field.customer'),
           sortable: true,
           width: 250
+        },
+        {
+          type: 'string',
+          name: 'to',
+          header: i18next.t('field.delivery_to'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 300
         },
         {
           type: 'date',
@@ -184,38 +142,6 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
           record: { align: 'center' },
           sortable: true,
           width: 160
-        },
-        {
-          type: 'string',
-          name: 'cargoType',
-          header: i18next.t('field.cargo_type'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 150
-        },
-        {
-          type: 'boolean',
-          name: 'urgency',
-          header: i18next.t('field.urgency'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 80
-        },
-        {
-          type: 'boolean',
-          name: 'looseItem',
-          header: i18next.t('field.loose_item'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 80
-        },
-        {
-          type: 'integer',
-          name: 'loadWeight',
-          header: i18next.t('label.load_weight'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 100
         },
         {
           type: 'string',
@@ -245,10 +171,6 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
     }
   }
 
-  get searchForm() {
-    return this.shadowRoot.querySelector('search-form')
-  }
-
   get dataGrist() {
     return this.shadowRoot.querySelector('data-grist')
   }
@@ -258,21 +180,27 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
       query: gql`
         query {
           deliveryOrders(${gqlBuilder.buildArgs({
-            filters: this.searchForm.queryFilters,
+            filters: [],
             pagination: { page, limit },
             sortings: sorters
           })}) {
             items {
               id
               name
+              bizplace {
+                id
+                name
+              }
+              attachments {
+                id
+                name
+                refBy
+                path
+              }
               to
               deliveryDate
               status
               refNo
-              urgency
-              cargoType
-              looseItem
-              loadWeight
               createdAt
               updatedAt
               updater {
@@ -288,12 +216,37 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
     })
 
     if (!response.errors) {
+      let total = response.data.deliveryOrders.total || 0
+      let deliveryOrders = response.data.deliveryOrders.items || []
+
+      deliveryOrders = deliveryOrders.map(deliveryOrder => {
+        if (deliveryOrder.bizplace) deliveryOrder.customer = deliveryOrder.bizplace.name
+        return deliveryOrder
+      })
+
       return {
-        total: response.data.deliveryOrders.total || 0,
-        records: response.data.deliveryOrders.items || []
+        total: total,
+        records: deliveryOrders
       }
     }
   }
+
+  _uploadDeliveryNote(dnName, dnId) {
+    openPopup(
+      html`
+        <upload-delivery-note
+          .dnName="${dnName}"
+          .dnId="${dnId}"
+          .callback="${this.dataGrist.fetch.bind(this.dataGrist)}"
+        ></upload-delivery-note>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.upload_signed_grn')
+      }
+    )
+  }  
 
   get _columns() {
     return this.config.columns

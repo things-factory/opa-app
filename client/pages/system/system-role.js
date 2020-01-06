@@ -2,10 +2,9 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, CustomAlert, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { CustomAlert } from '../../utils/custom-alert'
 import './system-create-role'
 import './system-role-detail'
 
@@ -102,7 +101,8 @@ class SystemRole extends localize(i18next)(PageView) {
     ]
 
     this.config = {
-      rows: { selectable: { multiple: true } },
+      list: { fields: ['name', 'description'] },
+      rows: { appendable: false, selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
@@ -128,6 +128,7 @@ class SystemRole extends localize(i18next)(PageView) {
                     }}"
                     .roleId="${record.id}"
                     .name="${record.name}"
+                    .description="${record.description}"
                   ></system-role-detail>
                 `,
                 {
@@ -143,7 +144,7 @@ class SystemRole extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.name'),
-          record: { editable: true, align: 'left' },
+          record: { align: 'left' },
           sortable: true,
           width: 200
         },
@@ -151,7 +152,7 @@ class SystemRole extends localize(i18next)(PageView) {
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
-          record: { editable: true, align: 'left' },
+          record: { align: 'left' },
           sortable: true,
           width: 200
         },
@@ -159,20 +160,14 @@ class SystemRole extends localize(i18next)(PageView) {
           type: 'object',
           name: 'updater',
           header: i18next.t('field.updater'),
-          record: {
-            editable: false,
-            align: 'center'
-          },
+          record: { align: 'center' },
           width: 180
         },
         {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
-          record: {
-            editable: false,
-            align: 'center'
-          },
+          record: { align: 'center' },
           width: 180
         }
       ]
@@ -264,12 +259,12 @@ class SystemRole extends localize(i18next)(PageView) {
       cancelButton: { text: 'cancel', color: '#cfcfcf' },
       callback: async result => {
         if (result.value) {
-          const names = this.dataGrist.selected.map(record => record.name)
-          if (names && names.length > 0) {
+          const ids = this.dataGrist.selected.map(record => record.id)
+          if (ids && ids.length > 0) {
             const response = await client.query({
               query: gql`
               mutation {
-                deleteRoles(${gqlBuilder.buildArgs({ names })})
+                deleteRoles(${gqlBuilder.buildArgs({ ids })})
               }
             `
             })

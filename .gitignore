@@ -1,6 +1,7 @@
 dist-client/
 dist-server/
 node_modules/
+logs/
 attachments/
 licenses/
 yarn*.*
@@ -14,3 +15,5 @@ config.production.*
 .pid
 db.sqlite-journal
 nohup.out
+config.development.js
+config.production.js

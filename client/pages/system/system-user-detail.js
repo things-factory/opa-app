@@ -18,6 +18,7 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
 
   constructor() {
     super()
+    this.userInfo = {}
     this.userTypes = []
   }
 
@@ -82,24 +83,21 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
         <h2>${i18next.t('title.user')}</h2>
         <form class="multi-column-form">
           <fieldset>
-            <label>${i18next.t('field.domain')}</label>
-            <input name="domain" readonly />
-
             <label>${i18next.t('field.name')}</label>
-            <input name="name" required />
+            <input name="name" required value="${this.userInfo.name}" />
 
             <label>${i18next.t('field.description')}</label>
-            <input name="description" />
+            <input name="description" value="${this.userInfo.description}" />
 
             <label>${i18next.t('field.email')}</label>
-            <input name="email" required />
+            <input name="email" value="${this.userInfo.email}" required />
 
             <label>${i18next.t('label.user_type')}</label>
             <select name="userType">
               ${(this.userTypes || []).map(
                 userType =>
                   html`
-                    <option value="${userType && userType.name}"
+                    <option ?selected="${this.userInfo.userType === userType.name}" value="${userType && userType.name}"
                       >${userType && userType.name}
                       ${userType && userType.description ? ` (${userType && userType.description})` : ''}</option
                     >
@@ -167,12 +165,8 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
 
   async updated(changedProps) {
     if (changedProps.has('email')) {
-      this.userInfo = await this._fetchUserInfo()
+      await this._fetchUserInfo()
       this.dataGrist.fetch()
-    }
-
-    if (changedProps.has('userInfo')) {
-      this._fillupView()
     }
   }
 
@@ -180,34 +174,20 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  async _fetchDomains() {
-    const response = await client.query({
-      query: gql`
-        query {
-          domains(filters: []) {
-            items {
-              id
-              name
-              description
-            }
-          }
-        }
-      `
-    })
-
-    return response.data.domains.items
-  }
-
   async fetchHandler() {
     const response = await client.query({
       query: gql`
         query {
-          userRoles(${gqlBuilder.buildArgs({
-            userId: this.userId
+          assignedRolesByUser(${gqlBuilder.buildArgs({
+            user: {
+              id: this.userId
+            }
           })}) {
-            id
-            name
-            description
+            role {
+              id
+              name
+              description
+            }
             assigned
           }
         }
@@ -216,8 +196,12 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
 
     if (!response.errors) {
       return {
-        records: response.data.userRoles || [],
-        total: response.data.userRoles.length || 0
+        records: (response.data.assignedRolesByUser || []).map(assignedRole => {
+          return {
+            ...assignedRole.role,
+            assigned: assignedRole.assigned
+          }
+        })
       }
     }
   }
@@ -230,11 +214,6 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
             email: this.email
           })}) {
             id
-            domain {
-              id
-              name
-              description
-            }
             name
             description
             email
@@ -248,17 +227,7 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
         }
       `
     })
-    return response.data.user
-  }
-
-  _fillupView() {
-    Array.from(this.shadowRoot.querySelectorAll('input')).forEach(input => {
-      const userInfo = this.userInfo[input.name]
-      input.value =
-        userInfo instanceof Object
-          ? `${userInfo.name} ${userInfo.description ? `(${userInfo.description})` : ''}`
-          : userInfo
-    })
+    this.userInfo = response.data.user
   }
 
   async _saveUserInfo() {
@@ -273,11 +242,6 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
               patch
             })}) {
               id
-              domain {
-                id
-                name
-                description
-              }
               name
               description
               email
@@ -328,9 +292,8 @@ class SystemUserDetail extends localize(i18next)(LitElement) {
   }
 
   _getCheckedRoles() {
-    const grist = this.shadowRoot.querySelector('data-grist')
-    grist.commit()
-    return grist.data.records
+    this.dataGrist.commit()
+    return this.dataGrist.dirtyData.records
       .filter(role => role.assigned)
       .map(role => {
         return { id: role.id }

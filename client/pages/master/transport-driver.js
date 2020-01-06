@@ -1,20 +1,18 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import '@things-factory/import-ui'
 import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, CustomAlert, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { CustomAlert } from '../../utils/custom-alert'
-import '../components/import-pop-up'
 
 class TransportDriver extends localize(i18next)(PageView) {
   static get properties() {
     return {
       config: Object,
       data: Object,
-      importHandler: Object,
-      bizplace: Array
+      importHandler: Object
     }
   }
 
@@ -82,8 +80,6 @@ class TransportDriver extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
-    this.bizplace = await this.fetchBizplace()
-
     this._searchFields = [
       {
         label: i18next.t('field.name'),
@@ -122,26 +118,6 @@ class TransportDriver extends localize(i18next)(PageView) {
           imex: { header: i18next.t('field.name'), key: 'name', width: 50, type: 'string' },
           sortable: true,
           width: 250
-        },
-        {
-          type: 'object',
-          name: 'bizplace',
-          record: {
-            align: 'center',
-            editable: true,
-            options: {
-              queryName: 'bizplaces'
-            }
-          },
-          imex: {
-            header: i18next.t('field.branch'),
-            key: 'bizplace.name',
-            width: 50,
-            type: 'array',
-            arrData: this.bizplace
-          },
-          header: i18next.t('field.branch'),
-          width: 200
         },
         {
           type: 'string',
@@ -229,10 +205,6 @@ class TransportDriver extends localize(i18next)(PageView) {
             items {
               id
               name
-              bizplace{
-                id
-                name
-              }
               driverCode
               description
               updatedAt
@@ -255,14 +227,6 @@ class TransportDriver extends localize(i18next)(PageView) {
   }
 
   async importHandler(patches) {
-    patches = patches.map(patch => {
-      if (patch.bizplace) {
-        delete patch.bizplace.__seq__
-        delete patch.bizplace.__origin__
-        delete patch.bizplace.__selected__
-      }
-      return patch
-    })
     const response = await client.query({
       query: gql`
           mutation {
@@ -287,30 +251,9 @@ class TransportDriver extends localize(i18next)(PageView) {
     }
   }
 
-  _openContactPoints(bizplaceId, bizplaceName) {
-    openPopup(
-      html`
-        <contact-point-list .bizplaceId="${bizplaceId}" .bizplaceName="${bizplaceName}"></contact-point-list>
-      `,
-      {
-        backdrop: true,
-        size: 'large',
-        title: i18next.t('title.contact_point_list')
-      }
-    )
-  }
-
   async _saveTransportDriver() {
     let patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
     if (patches && patches.length) {
-      patches = patches.map(patch => {
-        if (patch.bizplace) {
-          delete patch.bizplace.__seq__
-          delete patch.bizplace.__origin__
-          delete patch.bizplace.__selected__
-        }
-        return patch
-      })
       const response = await client.query({
         query: gql`
           mutation {
@@ -345,12 +288,12 @@ class TransportDriver extends localize(i18next)(PageView) {
       cancelButton: { text: 'cancel', color: '#cfcfcf' },
       callback: async result => {
         if (result.value) {
-          const names = this.dataGrist.selected.map(record => record.name)
-          if (names && names.length > 0) {
+          const ids = this.dataGrist.selected.map(record => record.id)
+          if (ids && ids.length > 0) {
             const response = await client.query({
               query: gql`
               mutation {
-                deleteTransportDrivers(${gqlBuilder.buildArgs({ names })})
+                deleteTransportDrivers(${gqlBuilder.buildArgs({ ids })})
               }
             `
             })
@@ -404,24 +347,6 @@ class TransportDriver extends localize(i18next)(PageView) {
     })
 
     return { header: headerSetting, data: data }
-  }
-
-  async fetchBizplace() {
-    const response = await client.query({
-      query: gql`
-          query {
-            bizplaces(${gqlBuilder.buildArgs({
-              filters: []
-            })}) {
-              items {
-                id
-                name
-              }
-            }
-          }
-        `
-    })
-    return response.data.bizplaces.items
   }
 }
 

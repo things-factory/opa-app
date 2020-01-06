@@ -6,7 +6,6 @@ import gql from 'graphql-tag'
 class PrintDeliveryOrder extends localize(i18next)(PageView) {
   static get properties() {
     return {
-      _releaseOrderId: String,
       _releaseOrderName: String,
       _doNo: String,
       _driverName: String,
@@ -15,19 +14,22 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       _orderInventories: Object,
       _bizplace: Object,
       _customerId: String,
-      _customerName: String
+      _customerName: String,
+      _workerName: String,
+      _receipient: String,
+      _customerContactPoints: Array
     }
   }
 
   constructor() {
     super()
-    this._releaseOrderId = ''
+    this._workerName = ''
     this._driverName = ''
     this._truckNo = ''
-    this._date = ''
-    this._orderInventories = {}
     this._releaseOrderName = ''
     this._customerName = ''
+    this._date = ''
+    this._customerContactPoints = []
   }
 
   static get styles() {
@@ -86,12 +88,12 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
         [brief] > div[right] {
           grid-template-columns: 5fr 8fr;
-          grid-auto-rows: 30px 30px 30px;
+          grid-auto-rows: 25px 25px 25px;
         }
 
         [brief] > div[left] {
           grid-template-columns: 1fr;
-          padding-left: 0;
+          grid-auto-rows: 25px 25px 25px;
         }
 
         [customer-company],
@@ -113,13 +115,17 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           padding-bottom: 10px;
         }
 
-        [business_verification] {
+        [pallet-quantity] {
+          text-align: right;
+        }
+
+        [business-verification] {
           flex: 1;
           padding-top: 10px;
           padding-bottom: 10px;
         }
 
-        [customer_confirmation] {
+        [customer-confirmation] {
           flex: 1;
           padding-top: 10px;
           padding-bottom: 10px;
@@ -220,7 +226,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
         }
 
         [idx] {
-          width: 15px;
+          width: 20px;
           text-align: center;
         }
 
@@ -230,6 +236,8 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             padding: 0;
             -webkit-print-color-adjust: exact;
           }
+          #date,
+          #receipient_address,
           #Header,
           #Footer {
             display: none !important;
@@ -244,6 +252,10 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       title: i18next.t('title.goods_delivery_note_details'),
       actions: [
         {
+          title: i18next.t('button.save'),
+          action: this._updateDeliveryOrder.bind(this)
+        },
+        {
           title: i18next.t('button.back'),
           action: () => history.back()
         }
@@ -257,25 +269,14 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
   render() {
     var company = this._bizplace.name || ''
-    var brn = this._bizplace.description || ''
-
+    var brn = `(${this._bizplace.description})` || ''
     var customer = this._customerName.toUpperCase()
     var address = ''
-
+    var totalPallet = 0
     var doNo = this._doNo
     var refNo = this._releaseOrderName
-    this._date = new Date()
-
-    var date =
-      this._date
-        .getDate()
-        .toString()
-        .padStart(2, '0') +
-      '/' +
-      (this._date.getMonth() + 1).toString().padStart(2, '0') +
-      '/' +
-      this._date.getFullYear()
-
+    var date = this._date
+    var workerName = this._workerName
     var driverName = this._driverName
     var truckNo = this._truckNo
 
@@ -283,16 +284,30 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       <div goods-delivery-note>
         <div business-info>
           <h2 business-name>${company}</h2>
-          <span business-brn>(${brn})</span>
+          <span business-brn>${brn}</span>
         </div>
 
         <h1 title>GOODS DELIVERY NOTE</h1>
 
         <div brief>
           <div left>
-            <label>M/s</label>${customer}
+            <span>M/s <i>${customer}</i></span>
             <label><strong>To be delivered to/collected by:</strong></label>
-            <div customer>${address}</div>
+            <div customer>
+              <span>${this._receipient}</span><br>
+              <select id="receipient_address" name="receipient" @change="${e => this._receipient = e.currentTarget.value}">
+                <option value="">-- ${i18next.t('text.please_select')} --</option>
+                ${Object.keys(this._customerContactPoints || {}).map((key, index) => {
+                  let contactPoint = this._customerContactPoints[key]
+                  return html`
+                  <option value="${contactPoint && contactPoint.name} ${contactPoint && contactPoint.address}"
+                  >${contactPoint && contactPoint.name}
+                  ${contactPoint && contactPoint.address ? ` ${contactPoint && contactPoint.address}` : ''}</option
+                >
+                  `
+                })}
+              </select>
+            </div>
           </div>
 
           <div right>
@@ -301,6 +316,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             <label>Reference No. : </label><b>${refNo}</b>
 
             <label>Date : </label>${date}
+            <input id="date" name="deliveryDate" type="date" min="${this._getStdDate()}" @input="${e => this._date=e.currentTarget.value}" required />
           </div>
         </div>
 
@@ -311,33 +327,33 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
                 <th idx>#</th>
                 <th>Items</th>
                 <th>Description</th>
-                <th>Packing Type</th>
+                <th>Batch ID</th>
                 <th>Quantity</th>
               </tr>
             </thead>
             <tbody>
               ${Object.keys(this._orderInventories || {}).map((key, index) => {
                 let sku = this._orderInventories[key]
+                totalPallet += sku.palletQty
                 return html`
                   <tr>
                     <td idx>${index + 1}</td>
                     <td>${sku.inventory.product.name}</td>
                     <td>${sku.inventory.product.description}</td>
-                    <td>${sku.inventory.packingType}</td>
-                    <td>${sku.releaseQty}</td>
+                    <td>${sku.inventory.batchId}</td>
+                    <td>${sku.releaseQty} ${sku.inventory.packingType}</td>
                   </tr>
                 `
               })}
               <tr>
-                <td colspan="5">
-                  total pallet(s)
-                </td>
+                <td colspan="4" pallet-quantity><strong>Total Pallet</strong></td>
+                <td>${totalPallet}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <div business_verification>
+        <div business-verification>
           <label>Verification by ${company}</label>
           <table>
             <thead>
@@ -352,9 +368,9 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             <tbody>
               <tr verification_body>
                 <td></td>
+                <td>${workerName}</td>
                 <td></td>
-                <td></td>
-                <td></td>
+                <td>${truckNo}</td>
                 <td>
                   <span><hr width="85%"/></span>${driverName}
                 </td>
@@ -363,7 +379,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           </table>
         </div>
 
-        <div customer_confirmation>
+        <div customer-confirmation>
           <label>Confirmation by ${customer}</label>
           <table confirmation_table>
             <tr confirmation_head>
@@ -397,8 +413,30 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   async pageUpdated(changes) {
     if (this.active) {
       this._doNo = changes.resourceId || this._doNo || ''
-      this._fetchDeliveryOrder()
+      await this._fetchDeliveryOrder(this._doNo)
     }
+  }
+
+  get _deliveryDateInput() {
+    return this.shadowRoot.querySelector('input[name=deliveryDate]')
+  }
+
+  get _receipientInput() {
+    return this.shadowRoot.querySelector('input[name=receipient]')
+  }
+
+  _focusOnDateInput() {
+    setTimeout(() => this._deliveryDateInput.focus(), 100)
+  }
+
+  _focusOnReceipientInput() {
+    setTimeout(() => this._receipientInput.focus(), 100)
+  }
+
+  _getStdDate() {
+    let date = new Date()
+    date.setDate(date.getDate())
+    return date.toISOString().split('T')[0]
   }
 
   async _fetchBusinessBizplace() {
@@ -421,31 +459,108 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     return response.data.businessBizplace
   }
 
-  async _fetchDeliveryOrder(doNo) {
+  async _fetchBusinessContact() {
+    this._bizplace = { ...(await this._fetchBusinessBizplace()) }
+    const filters = [
+      {
+        name: 'bizplace',
+        operator: 'eq',
+        value: this._bizplace.id
+      }
+    ]
+
+    const response = await client.query({
+      query: gql`
+        query {
+          contactPoints(${gqlBuilder.buildArgs({
+            filters
+          })}) {
+            items {
+              id
+              name
+              bizplace {
+                id
+                name
+              }
+              description
+              email
+              phone
+              fax
+            }
+            total
+          }
+        }
+      `
+    })
+
+    return response.data.contactPoints.items[0] || []
+  }
+
+  async _fetchCustomerContact() {
+    if (this._customerId) {
+      const filters = [
+        {
+          name: 'bizplace',
+          operator: 'eq',
+          value: this._customerId
+        }
+      ]
+
+      const response = await client.query({
+        query: gql`
+        query {
+          contactPoints(${gqlBuilder.buildArgs({
+            filters
+          })}) {
+            items {
+              id
+              name
+              bizplace {
+                id
+                name
+              }
+              address
+              description
+              email
+              phone
+              fax
+            }
+            total
+          }
+        }
+      `
+      })
+
+      if (!response.errors) {
+        return response.data.contactPoints.items || []
+      }
+    }
+  }
+
+  async _fetchDeliveryOrder(name) {
     const response = await client.query({
       query: gql`
         query {
           deliveryOrder(${gqlBuilder.buildArgs({
-            name: this._doNo
+            name
           })}) {
             id
             name
+            to
+            deliveryDate
             releaseGood {
               id
               name
             }
-            transportOrderDetails {
+            bizplace {
               id
               name
-              description
-              transportDriver {
-                id
-                name
-              }
-              transportVehicle {
-                id
-                name
-              }
+            }
+            transportVehicle {
+              regNumber
+            }
+            transportDriver {
+              name
             }
           }
         }
@@ -454,17 +569,36 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const _deliveryOrder = response.data.deliveryOrder
-      this._releaseOrderId = _deliveryOrder.releaseGood.id
+      const _releaseOrderId = _deliveryOrder.releaseGood.id
       this._releaseOrderName = _deliveryOrder.releaseGood.name
+      this._truckNo = _deliveryOrder.transportVehicle.regNumber
+      this._driverName = _deliveryOrder.transportDriver.name
+      this._receipient = _deliveryOrder.to
+      this._date = _deliveryOrder.deliveryDate
 
-      const _transportOrderDetails = _deliveryOrder.transportOrderDetails
-      this._driverName = _transportOrderDetails[0].transportDriver.name
-      this._truckNo = _transportOrderDetails[0].transportVehicle.name
-      this._orderInventories = { ...(await this._fetchOrderInventories(this._releaseOrderId)) }
+      if (_releaseOrderId) {
+        let orderInventories = await this._fetchOrderInventories(_releaseOrderId)
+
+        if (orderInventories.length > 0) {
+          orderInventories = await Promise.all(
+            orderInventories.map(async orderInventory => {
+              const worksheetDetails = await this._fetchWorksheetDetail(orderInventory.id)
+              orderInventory.palletQty = worksheetDetails.total
+              if (worksheetDetails && worksheetDetails.items[0].updater)
+                this._workerName = worksheetDetails.items[0].updater.name
+              return orderInventory
+            })
+          )
+          this._orderInventories = orderInventories 
+        }
+      }
 
       const _bizplace = _deliveryOrder.bizplace
-      this._customerId = _bizplace.id
-      this._customerName = _bizplace.name
+      if (_bizplace) {
+        this._customerId = _bizplace.id
+        this._customerName = _bizplace.name
+        this._customerContactPoints = { ...(await this._fetchCustomerContact()) }
+      }
     }
   }
 
@@ -507,6 +641,109 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     })
 
     return response.data.orderInventories.items
+  }
+
+  async _fetchWorksheetDetail(orderInventoryId) {
+    const filters = [
+      {
+        name: 'targetInventory',
+        operator: 'eq',
+        value: orderInventoryId
+      },
+      {
+        name: 'type',
+        operator: 'eq',
+        value: 'LOADING'
+      }
+    ]
+
+    const response = await client.query({
+      query: gql`
+        query {
+          worksheetDetails(${gqlBuilder.buildArgs({
+            filters
+          })}) {
+            items {
+              updater {
+                id
+                name
+              }
+            }
+            total
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      return response.data.worksheetDetails || {}
+    }
+  }
+
+  async _updateDeliveryOrder() {
+    if (this._doNo && this._receipient && this._date) {
+      var name = this._doNo
+      var patch = {
+        to: this._receipient,
+        deliveryDate: this._date
+      }
+      try {
+        const response = await client.query({
+          query: gql`
+            mutation {
+              updateDeliveryOrder(${gqlBuilder.buildArgs({
+                name, patch
+              })}) {
+                id
+                name
+              }
+            }
+          `
+        })
+  
+        if (!response.errors) {
+          document.dispatchEvent(
+            new CustomEvent('notify', {
+              detail: {
+                message: i18next.t('text.save_successful')
+              }
+            })
+          )
+        }
+  
+      } catch(e) {
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              level: error,
+              message: e
+            }
+          })
+        )
+      }
+
+    } else if (!this._receipient) {
+      document.dispatchEvent(
+        new CustomEvent('notify', {
+          detail: {
+            level: error,
+            message: i18next.t('text.please_select_a_receipient')
+          }
+        })
+      )
+      this._focusOnReceipientInput()
+
+    } else if (!this._date) {
+      document.dispatchEvent(
+        new CustomEvent('notify', {
+          detail: {
+            level: error,
+            message: i18next.t('text.please_select_a_delivery_date')
+          }
+        })
+      )
+      this._focusOnDateInput()
+    }
   }
 }
 

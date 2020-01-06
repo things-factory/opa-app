@@ -5,7 +5,6 @@ import { client, gqlBuilder } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import '../components/image-viewer'
-import '../master/product-list'
 import { ORDER_VAS_STATUS } from '../order/constants/order'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
 

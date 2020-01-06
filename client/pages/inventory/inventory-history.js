@@ -1,12 +1,11 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
+import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { connect } from 'pwa-helpers/connect-mixin'
 
-class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
+class InventoryHistory extends localize(i18next)(PageView) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -39,7 +38,6 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
 
   static get properties() {
     return {
-      _email: String,
       _searchFields: Array,
       config: Object,
       data: Object
@@ -83,110 +81,106 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
     return this.searchForm.shadowRoot.querySelector('input[name=toDate]')
   }
 
-  async updated(changedProps) {
-    if (changedProps.has('_email')) {
-      const _userBizplaces = await this._fetchUserBizplaces()
+  async pageInitialized() {
+    const partners = await this._fetchPartners()
 
-      this._searchFields = [
-        {
-          label: i18next.t('field.customer'),
-          name: 'bizplace',
-          type: 'select',
-          options: [
-            { value: '' },
-            ..._userBizplaces
-              .filter(userBizplaces => !userBizplaces.mainBizplace)
-              .map(userBizplace => {
-                return {
-                  name: userBizplace.name,
-                  value: userBizplace.id
-                }
-              })
-          ],
-          props: { searchOper: 'eq' },
-          attrs: ['custom']
+    this._searchFields = [
+      {
+        label: i18next.t('field.customer'),
+        name: 'bizplace',
+        type: 'select',
+        options: [
+          { value: '' },
+          ...partners.map(partner => {
+            return {
+              name: `${partner.partnerBizplace.name} ${
+                partner.partnerBizplace.description ? `(${partner.partnerBizplace.description})` : ''
+              }`,
+              value: partner.partnerBizplace.id
+            }
+          })
+        ],
+        props: { searchOper: 'eq' },
+        attrs: ['custom']
+      },
+      {
+        label: i18next.t('field.from_date'),
+        name: 'fromDate',
+        type: 'date',
+        props: {
+          searchOper: 'eq',
+          max: new Date().toISOString().split('T')[0]
         },
-        {
-          label: i18next.t('field.from_date'),
-          name: 'fromDate',
-          type: 'date',
-          props: {
-            searchOper: 'eq',
-            max: new Date().toISOString().split('T')[0]
-          },
-          attrs: ['custom'],
-          value: (() => {
+        attrs: ['custom'],
+        value: (() => {
+          let date = new Date()
+          date.setMonth(date.getMonth() - 1)
+          return date.toISOString().split('T')[0]
+        })(),
+        handlers: { change: this._modifyDateRange.bind(this) }
+      },
+      {
+        label: i18next.t('field.to_date'),
+        name: 'toDate',
+        type: 'date',
+        props: {
+          searchOper: 'eq',
+          min: (() => {
             let date = new Date()
             date.setMonth(date.getMonth() - 1)
             return date.toISOString().split('T')[0]
           })(),
-          handlers: { change: this._modifyDateRange.bind(this) }
+          max: new Date().toISOString().split('T')[0]
         },
-        {
-          label: i18next.t('field.to_date'),
-          name: 'toDate',
-          type: 'date',
-          props: {
-            searchOper: 'eq',
-            min: (() => {
-              let date = new Date()
-              date.setMonth(date.getMonth() - 1)
-              return date.toISOString().split('T')[0]
-            })(),
-            max: new Date().toISOString().split('T')[0]
-          },
-          attrs: ['custom'],
-          value: new Date().toISOString().split('T')[0]
-        },
-        {
-          label: i18next.t('field.zone'),
-          name: 'zone',
-          type: 'text',
-          props: { searchOper: 'i_like' }
-        },
-        {
-          label: i18next.t('field.location'),
-          name: 'locationName',
-          type: 'text',
-          props: { searchOper: 'i_like' },
-          attrs: ['custom']
-        },
-        {
-          label: i18next.t('field.pallet_id'),
-          name: 'palletId',
-          type: 'text',
-          props: { searchOper: 'i_like' }
-        },
-        {
-          label: i18next.t('field.batch_no'),
-          name: 'batchId',
-          type: 'text',
-          props: { searchOper: 'i_like' }
-        },
-        {
-          label: i18next.t('field.product'),
-          name: 'productName',
-          type: 'text',
-          props: { searchOper: 'i_like' },
-          attrs: ['custom']
-        },
-        {
-          label: i18next.t('field.status'),
-          name: 'status',
-          type: 'text',
-          props: { searchOper: 'i_like' }
-        },
-        {
-          label: i18next.t('field.transaction_type'),
-          name: 'transactionType',
-          type: 'text',
-          props: { searchOper: 'i_like' }
-        }
-      ]
-    }
-  }
+        attrs: ['custom'],
+        value: new Date().toISOString().split('T')[0]
+      },
+      {
+        label: i18next.t('field.zone'),
+        name: 'zone',
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
+        label: i18next.t('field.location'),
+        name: 'locationName',
+        type: 'text',
+        props: { searchOper: 'i_like' },
+        attrs: ['custom']
+      },
+      {
+        label: i18next.t('field.pallet_id'),
+        name: 'palletId',
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
+        label: i18next.t('field.batch_no'),
+        name: 'batchId',
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
+        label: i18next.t('field.product'),
+        name: 'productName',
+        type: 'text',
+        props: { searchOper: 'i_like' },
+        attrs: ['custom']
+      },
+      {
+        label: i18next.t('field.status'),
+        name: 'status',
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
+        label: i18next.t('field.transaction_type'),
+        name: 'transactionType',
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      }
+    ]
 
-  pageInitialized() {
     this.config = {
       rows: { appendable: false },
       list: { fields: ['product', 'location', 'updatedAt'] },
@@ -308,25 +302,27 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('search-form')
   }
 
-  async _fetchUserBizplaces() {
-    if (!this._email) return
+  async _fetchPartners() {
     const response = await client.query({
       query: gql`
         query {
-          userBizplaces(${gqlBuilder.buildArgs({
-            email: this._email
+          partners(${gqlBuilder.buildArgs({
+            filters: []
           })}) {
-            id
-            name
-            description
-            mainBizplace
+            items {
+              partnerBizplace {
+                id
+                name
+                description
+              }
+            }
           }
         }
       `
     })
 
     if (!response.errors) {
-      return response.data.userBizplaces
+      return response.data.partners.items
     }
   }
 
@@ -427,6 +423,7 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
     max.setMonth(max.getMonth() + 1)
     max.setHours(0, 0, 0, 0)
     let today = new Date()
+    today.setDate(today.getDate() + 1)
     today.setHours(0, 0, 0, 0)
 
     if (max >= today) max = today
@@ -436,10 +433,6 @@ class InventoryHistory extends connect(store)(localize(i18next)(PageView)) {
     this._fromDateInput.max = max
     this._toDateInput.min = min
     this._toDateInput.max = max
-  }
-
-  stateChanged(state) {
-    this._email = state.auth && state.auth.user && state.auth.user.email
   }
 
   get _columns() {

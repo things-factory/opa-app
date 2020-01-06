@@ -1,10 +1,10 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import '@things-factory/import-ui'
 import { client, gqlBuilder, isMobileDevice, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
-import '../../components/import-pop-up'
 import { LOCATION_TYPE } from '../constants/location'
 
 export class BufferLocationSelector extends localize(i18next)(LitElement) {

@@ -2,13 +2,11 @@ import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
-import gql from 'graphql-tag'
+import '@things-factory/import-ui'
 import { openPopup } from '@things-factory/layout-base'
+import { client, CustomAlert, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
+import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import '../components/import-pop-up'
-import { CustomAlert } from '../../utils/custom-alert'
-import { O_WRONLY } from 'constants'
 
 class WorkerList extends localize(i18next)(PageView) {
   static get styles() {
@@ -304,12 +302,12 @@ class WorkerList extends localize(i18next)(PageView) {
       cancelButton: { text: 'cancel', color: '#cfcfcf' },
       callback: async result => {
         if (result.value) {
-          const names = this.dataGrist.selected.map(record => record.name)
-          if (names && names.length > 0) {
+          const ids = this.dataGrist.selected.map(record => record.id)
+          if (ids && ids.length > 0) {
             const response = await client.query({
               query: gql`
                 mutation {
-                  deleteWorkers(${gqlBuilder.buildArgs({ names })})
+                  deleteWorkers(${gqlBuilder.buildArgs({ ids })})
                 }
               `
             })

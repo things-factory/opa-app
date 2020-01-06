@@ -1,20 +1,32 @@
+import { html } from 'lit-element'
 import { addRoutingType, updateMenuProvider } from '@things-factory/menu-base'
 import { client, store, isMobileDevice, UPDATE_BASE_URL } from '@things-factory/shell'
 import gql from 'graphql-tag'
-import { UPDATE_DASHBOARD_SETTINGS, CLEAR_DASHBOARD_SETTINGS } from './actions/dashboard-settings'
+import { UPDATE_DASHBOARD_SETTINGS } from './actions/dashboard-settings'
 import dashboard from './reducers/dashboard-settings'
 import { fetchBoardSettings } from './fetch-board-settings'
 import { auth } from '@things-factory/auth-base'
 import { TOOL_POSITION } from '@things-factory/layout-base'
 import { APPEND_APP_TOOL } from '@things-factory/apptool-base'
+import { ADD_SETTING } from '@things-factory/setting-base'
+
+import '@things-factory/setting-ui/client/setting-lets/domain-switch-let'
+
+console.log(`
+ ▄▄  ▄▄▄  ▄▄▄ ▄▄▄   ▄▄  ▄▄▄  ▄▄
+▓  ▓ ▓  ▓ ▓   ▓  ▓ ▓  ▓  ▓  ▓  ▓
+▓  ▓ ▓▀▀  ▓▀▀ ▓▀▀▄ ▓▀▀▓  ▓  ▓  ▓ 
+▓  ▓ ▓    ▓   ▓  ▓ ▓  ▓  ▓  ▓  ▓  
+ ▀▀  ▀    ▀▀▀ ▀  ▀ ▀  ▀  ▀   ▀▀ 
+`)
 
 export default function bootstrap() {
   store.addReducers({
     dashboard
   })
 
-  /* 사용자 signin/signout 에 따라서, setting 변경 */
-  auth.on('signin', async () => {
+  /* 사용자가 로그인 된 경우에 setting 변경 */
+  auth.on('profile', async () => {
     // fetch dashboard settings
     var settings = await fetchBoardSettings()
 
@@ -24,13 +36,6 @@ export default function bootstrap() {
         settings[setting.name] = setting
         return settings
       }, {})
-    })
-  })
-
-  auth.on('signout', async () => {
-    // clear dashboard settings
-    store.dispatch({
-      type: CLEAR_DASHBOARD_SETTINGS
     })
   })
 
@@ -90,4 +95,15 @@ export default function bootstrap() {
       })
     })
   }
+
+  /* add domain-switch-let into settings */
+  store.dispatch({
+    type: ADD_SETTING,
+    setting: {
+      seq: 30,
+      template: html`
+        <domain-switch-let></domain-switch-let>
+      `
+    }
+  })
 }
