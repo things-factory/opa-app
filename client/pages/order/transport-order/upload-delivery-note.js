@@ -246,7 +246,7 @@ class UploadDeliveryNote extends localize(i18next)(LitElement) {
                 ...dn,
                 batchId: dn.inventory.batchId,
                 quantity: `${dn.releaseQty} ${dn.inventory.packingType}`,
-                product: `${dn.inventory.product.name} (${dn.inventory.product.description})`,
+                product: `${dn.inventory.product.name} (${dn.inventory.product.description})`
               }
             }) || []
         }
@@ -272,7 +272,7 @@ class UploadDeliveryNote extends localize(i18next)(LitElement) {
         const response = await client.query({
           query: gql`
             mutation($file: Upload!) {
-              submitGoodsReceivalNote(${gqlBuilder.buildArgs({ name })}, file: $file ) {
+              submitGoodsDeliveryNote(${gqlBuilder.buildArgs({ name })}, file: $file ) {
                 id
                 status
               }
@@ -289,7 +289,7 @@ class UploadDeliveryNote extends localize(i18next)(LitElement) {
         if (!response.errors) {
           if (this.callback && typeof this.callback === 'function') this.callback()
           history.back()
-          this._showToast({ message: i18next.t('text.goods_received_note_uploaded') })
+          this._showToast({ message: i18next.t('text.goods_delivery_note_uploaded') })
         }
       }
     } catch (e) {

@@ -852,5 +852,6 @@
   "text.please_select_the_label_format": "please select the label format",
   "text.save_successful": "save successful",
   "text.please_select_a_delivery_date": "please select a delivery date",
-  "text.please_select_a_receipient": "please select a receipient"
+  "text.please_select_a_receipient": "please select a receipient",
+  "text.goods_delivery_note_uploaded": "goods delivery note uploaded"
 }
