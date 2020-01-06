@@ -720,6 +720,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     this.loadedProductData = { records: [] }
     this.infoForm.reset()
     this.inputForm.reset()
+    this._selectedTruck = null
     this._selectedTaskStatus = null
     this._selectedDeliveryOrder = null
     this._updateContext()
