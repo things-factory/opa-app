@@ -769,6 +769,17 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     }
   }
 
+  _showToast({ type, message }) {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: {
+          type,
+          message
+        }
+      })
+    )
+  }
+
   _validateInput() {
     // incomplete input
     if (!this._receipient || !this._date) throw new Error(i18next.t('text.delivery_note_is_incomplete'))
