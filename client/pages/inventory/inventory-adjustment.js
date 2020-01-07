@@ -86,10 +86,8 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
 
   async pageInitialized() {
     this.location = await this.fetchLocation()
-
-    // const _products = await this.fetchProduct()
     const _userBizplaces = await this.fetchBizplaces()
-    this.packingType = await getCodeByName('PACKING_TYPES')
+    const _packingType = await getCodeByName('PACKING_TYPES')
 
     this.config = {
       list: {
@@ -190,7 +188,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
             key: 'packingType',
             width: 25,
             type: 'array',
-            arrData: this.packingType.map(packingType => {
+            arrData: _packingType.map(packingType => {
               return {
                 name: packingType.name,
                 id: packingType.name
@@ -315,6 +313,21 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         props: { searchOper: 'i_like' }
       },
       {
+        label: i18next.t('field.packing_type'),
+        name: 'packingType',
+        type: 'select',
+        options: [
+          { value: '' },
+          ..._packingType.map(packingType => {
+            return {
+              name: packingType.name,
+              value: packingType.name
+            }
+          })
+        ],
+        props: { searchOper: 'eq' }
+      },
+      {
         label: i18next.t('field.warehouse'),
         name: 'warehouse',
         type: 'object',
@@ -433,8 +446,6 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
               product {
                 id
                 name
-                description
-                unit
               }
               qty
               warehouse {
