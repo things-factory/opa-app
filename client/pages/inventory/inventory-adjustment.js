@@ -277,7 +277,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     this._searchFields = [
       {
         label: i18next.t('field.customer'),
-        name: 'bizplace',
+        name: 'bizplace_id',
         type: 'select',
         options: [
           { value: '' },
@@ -295,9 +295,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       {
         label: i18next.t('field.product'),
         name: 'product',
-        type: 'object',
-        queryName: 'products',
-        field: 'name',
+        type: 'text',
         props: { searchOper: 'i_like' }
       },
       {
