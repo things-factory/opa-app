@@ -14,11 +14,12 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       _date: Date,
       _orderInventories: Object,
       _bizplace: Object,
+      _driverList: Object,
       _customerId: String,
       _customerName: String,
       _workerName: String,
       _receipient: String,
-      _customerContactPoints: Array,
+      _customerContactPoints: Array
     }
   }
 
@@ -254,7 +255,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.dispatch'),
-          action: this._updateDeliveryOrder.bind(this)
+          action: this._executeDeliveryOrder.bind(this)
         },
         {
           title: i18next.t('button.back'),
@@ -279,7 +280,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     var workerName = this._workerName || ''
     var driverName = this._driverName
     var truckNo = this._truckNo || ''
-    
+
     var address = this._receipient ? this._receipient.split(',') : ''
 
     return html`
@@ -297,23 +298,28 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             <label><strong>To be delivered to/collected by:</strong></label>
             <div customer>
               <address>
-              ${(address || []).map(
-                part =>
-                  html`
-                    ${part} <br>
-                  `
-              )}
-              </address><br/>
-              <select id="receipient_address" name="receipient" @change="${e => this._receipient = e.currentTarget.value}">
+                ${(address || []).map(
+                  part =>
+                    html`
+                      ${part} <br />
+                    `
+                )}
+              </address>
+              <br />
+              <select
+                id="receipient_address"
+                name="receipient"
+                @change="${e => (this._receipient = e.currentTarget.value)}"
+              >
                 <option value="">-- ${i18next.t('text.please_select')} --</option>
                 ${Object.keys(this._customerContactPoints || {}).map((key, index) => {
                   let contactPoint = this._customerContactPoints[key]
 
                   return html`
-                  <option value="${contactPoint && contactPoint.name} ${contactPoint && contactPoint.address}"
-                  >${contactPoint && contactPoint.name}
-                  ${contactPoint && contactPoint.address ? ` ${contactPoint && contactPoint.address}` : ''}</option
-                >
+                    <option value="${contactPoint && contactPoint.name} ${contactPoint && contactPoint.address}"
+                      >${contactPoint && contactPoint.name}
+                      ${contactPoint && contactPoint.address ? ` ${contactPoint && contactPoint.address}` : ''}</option
+                    >
                   `
                 })}
               </select>
@@ -326,11 +332,19 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             <label>Reference No. : </label><b>${refNo}</b>
 
             <label>Date : </label>${date}
-            <input id="date" name="deliveryDate" type="date" min="${this._getStdDate()}" @input="${e => this._date=e.currentTarget.value}" required />
+            <input
+              id="date"
+              name="deliveryDate"
+              type="date"
+              min="${this._getStdDate()}"
+              @input="${e => (this._date = e.currentTarget.value)}"
+              required
+            />
           </div>
         </div>
 
-        <div detail><br><br><br><br>
+        <div detail>
+          <br /><br /><br /><br />
           <table product-table>
             <thead>
               <tr>
@@ -382,16 +396,14 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
                 <td></td>
                 <td>${truckNo}</td>
                 <td>
-                  <span><hr width="85%"/></span>${driverName} <br/>
-                  <select id="driver_name" name="receipient" @change="${e => this._driverName = e.currentTarget.value}">
-                    <option value="">-- ${i18next.t('text.please_select')} --</option>
-                    ${Object.keys(this._truckDrivers || {}).map((key, index) => {
-                      let driver = this._truckDrivers[key]
+                  <span><hr width="85%"/></span>${driverName} <br />
+                  <select @change=${e => (this._driverName = e.target.value)} name="transportDriver">
+                    <option value="">-- ${i18next.t('text.please_select_a_driver')} --</option>
+
+                    ${Object.keys(this._driverList.data.transportDrivers.items || []).map(key => {
+                      let driver = this._driverList.data.transportDrivers.items[key]
                       return html`
-                      <option value="${driver && driver.name}"
-                      >${driver && driver.name}
-                      ${driver && driver.description ? ` ${driver && driver.description}` : ''}</option
-                    >
+                        <option value="${driver.name}">${driver.name}-${driver.driverCode}</option>
                       `
                     })}
                   </select>
@@ -435,7 +447,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   async pageUpdated(changes) {
     if (this.active) {
       this._doNo = changes.resourceId || this._doNo || ''
-      this._truckDrivers = await this._fetchTruckDriver() || ''
+      this._driverList = { ...(await this._fetchTruckDriver()) }
       await this._fetchDeliveryOrder(this._doNo)
     }
   }
@@ -446,14 +458,6 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
   get _receipientInput() {
     return this.shadowRoot.querySelector('input[name=receipient]')
-  }
-
-  _focusOnDateInput() {
-    setTimeout(() => this._deliveryDateInput.focus(), 100)
-  }
-
-  _focusOnReceipientInput() {
-    setTimeout(() => this._receipientInput.focus(), 100)
   }
 
   _getStdDate() {
@@ -561,27 +565,21 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   }
 
   async _fetchTruckDriver() {
-    const filters = []
-    const response = await client.query({
+    return await client.query({
       query: gql`
-      query {
-        transportDrivers(${gqlBuilder.buildArgs({
-          filters
-        })}) {
-          items {
-            id
-            name
-            description
+        query {
+          transportDrivers (${gqlBuilder.buildArgs({
+            filters: [],
+            pagination: { page: 1, limit: 9999 }
+          })}){
+            items{
+              id
+              name
+              driverCode
+            }
           }
-          total
-        }
-      }
-    `
+        }`
     })
-
-    if (!response.errors) {
-      return response.data.transportDrivers.items || []
-    }
   }
 
   async _fetchDeliveryOrder(name) {
@@ -615,15 +613,15 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     })
 
     if (!response.errors) {
-      const _deliveryOrder = response.data.deliveryOrder
-      const _releaseOrderId = _deliveryOrder.releaseGood.id
+      const _deliveryOrder = response.data.deliveryOrder || ''
+      const _releaseOrderId = _deliveryOrder.releaseGood.id || ''
       this._releaseOrderName = _deliveryOrder.releaseGood.name
       this._truckNo = _deliveryOrder.transportVehicle.regNumber
 
-      const _driver = _deliveryOrder.transportDriver
+      const _driver = _deliveryOrder.transportDriver || ''
       this._driverName = _driver && _driver.name ? _driver.name : ''
-      this._receipient = _deliveryOrder.to
-      this._date = _deliveryOrder.deliveryDate
+      this._receipient = _deliveryOrder.to || ''
+      this._date = _deliveryOrder.deliveryDate || ''
 
       if (_releaseOrderId) {
         let orderInventories = await this._fetchOrderInventories(_releaseOrderId)
@@ -638,7 +636,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
               return orderInventory
             })
           )
-          this._orderInventories = orderInventories 
+          this._orderInventories = orderInventories
         }
       }
 
@@ -729,88 +727,51 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     }
   }
 
-  async _updateDeliveryOrder() {
-    if (this._doNo && this._receipient && this._date) {
-      var name = this._doNo
-      var patch = {
-        to: this._receipient,
-        deliveryDate: this._date,
+  async _executeDeliveryOrder() {
+    try {
+      this._validateInput()
+
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.dispatch_delivery_order'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) {
+        return
       }
 
-      try {
-        const response = await client.query({
-          query: gql`
-            mutation {
-              updateDeliveryOrder(${gqlBuilder.buildArgs({
-                name, patch
-              })}) {
-                id
-                name
-              }
-            }
-          `
-        })
-  
-        if (!response.errors) {
-          const orderInfo = {
-            name: name
-          }
-          
-          const dispatch = await client.query({
-            query: gql`
-              mutation {
-                dispatchDeliveryOrder(${gqlBuilder.buildArgs({
-                  orderInfo
-                })}) {
-                  id
-                  name
-                }
-              }
-            `
-          })
-          
-          document.dispatchEvent(
-            new CustomEvent('notify', {
-              detail: {
-                message: i18next.t('text.ready_to_dispatch')
-              }
-            })
-          )
+      let args = {
+        orderInfo: {
+          name: this._doNo,
+          to: this._receipient,
+          deliveryDate: this._date,
+          driverName: this._driverName
         }
-  
-      } catch(e) {
-        document.dispatchEvent(
-          new CustomEvent('notify', {
-            detail: {
-              level: error,
-              message: e
-            }
-          })
-        )
       }
 
-    } else if (!this._receipient) {
-      document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            level: error,
-            message: i18next.t('text.please_select_a_receipient')
+      const response = await client.query({
+        query: gql`
+          mutation {
+            dispatchDeliveryOrder(${gqlBuilder.buildArgs(args)}) {
+              name
+            }
           }
-        })
-      )
-      this._focusOnReceipientInput()
+        `
+      })
 
-    } else if (!this._date) {
-      document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            level: error,
-            message: i18next.t('text.please_select_a_delivery_date')
-          }
-        })
-      )
-      this._focusOnDateInput()
+      if (!response.errors) {
+        this._showToast({ message: i18next.t('text.delivery_order_dispatched') })
+      }
+    } catch (e) {
+      this._showToast(e)
     }
+  }
+
+  _validateInput() {
+    // incomplete input
+    if (!this._receipient || !this._date) throw new Error(i18next.t('text.delivery_note_is_incomplete'))
   }
 }
 
