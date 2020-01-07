@@ -22,8 +22,9 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       _customerId: String,
       _customerName: String,
       _workerName: String,
-      _receipient: String,
-      _customerContactPoints: Array
+      _recipient: String,
+      _customerContactPoints: Array,
+      _companyCP: Object
     }
   }
 
@@ -35,7 +36,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     this._customerName = ''
     this._date = ''
     this._status = ''
-    this._customerContactPoints = []
+    this._companyCP = {}
   }
 
   static get styles() {
@@ -90,6 +91,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           display: grid;
           grid-gap: 1px;
           grid-template-columns: 3fr 1fr;
+          position: relative;
         }
 
         [brief] > div[right] {
@@ -99,7 +101,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
         [brief] > div[left] {
           grid-template-columns: 1fr;
-          grid-auto-rows: 25px 25px 25px;
+          grid-auto-rows: 25px 25px auto;
         }
 
         [customer-company],
@@ -146,32 +148,32 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           margin-bottom: 20px;
         }
 
-        [verification_head] > th:nth-child(-n + 4) {
+        [verification-head] > th:nth-child(-n + 4) {
           text-align: center;
           width: 15%;
         }
 
-        [verification_body] > td:nth-child(-n + 5) {
+        [verification-body] > td:nth-child(-n + 5) {
           text-align: center;
           max-height: 100px;
           padding: 93px 0px 7px;
         }
 
-        [confirmation_head] > td:nth-child(1) {
+        [confirmation-head] > td:nth-child(1) {
           text-align: justify;
           text-justify: inter-word;
           width: 65%;
           padding: 10px 10px 200px;
         }
 
-        [confirmation_head] > td:nth-child(2) {
+        [confirmation-head] > td:nth-child(2) {
           text-align: center;
           width: 35%;
           max-height: 100px;
           padding: 90px 0px 0px;
         }
 
-        [confirmation_body] > td:nth-child(1) {
+        [confirmation-body] > td:nth-child(1) {
           text-align: center;
           width: 35%;
           max-height: 100px;
@@ -190,6 +192,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
         th,
         td {
           border: 1px solid black;
+          padding: 0px 10px;
         }
 
         em {
@@ -266,8 +269,12 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   }
 
   render() {
-    var company = this._bizplace.name || ''
-    var brn = `(${this._bizplace.description})` || ''
+    var company = this._company && this._company.name ? this._company.name.toUpperCase() : ''
+    var brn = this._company && this._company.description ? `(${this._company.description})` : ''
+    var companyAddress = this._company && this._company.address ? this._company.address : ''
+    var phonefax = this._companyCP && this._companyCP.phone ? this._companyCP.phone : ''
+    var email = this._companyCP && this._companyCP.email ? this._companyCP.email : ''
+
     var customer = this._customerName.toUpperCase()
     var totalPallet = 0
     var doNo = this._doNo || ''
@@ -277,13 +284,16 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     var driverName = this._driverName
     var truckNo = this._truckNo || ''
 
-    var address = this._receipient ? this._receipient.split(',') : ''
+    var address = this._recipient ? this._recipient.split(',') : ''
 
     return html`
       <div goods-delivery-note>
         <div business-info>
           <h2 business-name>${company}</h2>
           <span business-brn>${brn}</span>
+          <div business-address>${companyAddress}</div>
+          <div business-contact>${phonefax}</div>
+          <div business-email>${email}</div>
         </div>
 
         <h1 title>GOODS DELIVERY NOTE</h1>
@@ -294,32 +304,40 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             <label><strong>To be delivered to/collected by:</strong></label>
             <div customer>
               <address>
-                ${(address || []).map(
-                  part =>
+              ${(address || []).map(
+                (part, index) => 
+                index == 0 ? 
+                  html`
+                    ${part} <br />
+                  `
+                  : 
+                  index == (address.length - 1) ?
                     html`
-                      ${part} <br />
+                      ${part}. <br />
                     `
-                )}
+                    :
+                    html`
+                      ${part}, <br />
+                    `
+              )}
               </address>
               <br />
               <select
                 id="receipient_address"
                 name="receipient"
-                @change="${e => (this._receipient = e.currentTarget.value)}"
-                ?hidden="${!this._status === ORDER_STATUS.READY_TO_DISPATCH.value}"
+                @change="${e => (this._recipient = e.currentTarget.value)}"
+                ?hidden="${this._status !== ORDER_STATUS.READY_TO_DISPATCH.value}"
               >
-                <option value="">-- ${i18next.t('text.please_select_destination')} --</option>
-                ${Object.keys(this._customerContactPoints || {}).map((key, index) => {
-                  let contactPoint = this._customerContactPoints[key]
-
-                  return html`
-                    <option value="${contactPoint && contactPoint.name} ${contactPoint && contactPoint.address}"
-                      >${contactPoint && contactPoint.name}
-                      ${contactPoint && contactPoint.address ? ` ${contactPoint && contactPoint.address}` : ''}</option
-                    >
-                  `
-                })}
-              </select>
+              <option value="">-- ${i18next.t('text.please_select_destination')} --</option>
+              ${(this._customerContactPoints || []).map( contactPoint => {
+                return html`
+                  <option value="${contactPoint && contactPoint.name} ${contactPoint && contactPoint.address}"
+                    >${contactPoint && contactPoint.name}
+                    ${contactPoint && contactPoint.address ? ` ${contactPoint && contactPoint.address}` : ''}</option
+                  >
+                `
+              })}
+            </select>
             </div>
           </div>
 
@@ -335,14 +353,13 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
               type="date"
               min="${this._getStdDate()}"
               @input="${e => (this._date = e.currentTarget.value)}"
-              ?hidden="${!this._status === ORDER_STATUS.READY_TO_DISPATCH.value}"
+              ?hidden="${this._status !== ORDER_STATUS.READY_TO_DISPATCH.value}"
               required
             />
           </div>
         </div>
 
         <div detail>
-          <br /><br /><br /><br />
           <table product-table>
             <thead>
               <tr>
@@ -379,7 +396,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           <label>Verification by ${company}</label>
           <table>
             <thead>
-              <tr verification_head>
+              <tr verification-head>
                 <th>Issued By</th>
                 <th>Loaded By</th>
                 <th>Checked By</th>
@@ -388,7 +405,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
               </tr>
             </thead>
             <tbody>
-              <tr verification_body>
+              <tr verification-body>
                 <td></td>
                 <td>${workerName}</td>
                 <td></td>
@@ -397,8 +414,8 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
                   <span><hr width="85%"/></span>${driverName} <br />
                   <select
                     @change=${e => (this._driverName = e.target.value)}
-                    name="transportDriver"
-                    ?hidden="${!this._status === ORDER_STATUS.READY_TO_DISPATCH.value}"
+                    id="driver_name"
+                    ?hidden="${this._status !== ORDER_STATUS.READY_TO_DISPATCH.value}"
                   >
                     <option value="">-- ${i18next.t('text.please_select_a_driver')} --</option>
 
@@ -418,7 +435,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
         <div customer-confirmation>
           <label>Confirmation by ${customer}</label>
           <table confirmation_table>
-            <tr confirmation_head>
+            <tr confirmation-head>
               <td rowspan="2">
                 <em>
                   Please examine the goods before acceptance as we will not be responsible for any damage or defect
@@ -428,7 +445,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
               </td>
               <td><hr /></td>
             </tr>
-            <tr confirmation_body>
+            <tr confirmation-body>
               <td>
                 Please sign & stamp here in receipt
               </td>
@@ -443,7 +460,9 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
-    this._bizplace = { ...(await this._fetchBusinessBizplace()) }
+    this._company = { ...(await this._fetchBusinessBizplace()) }
+    this._companyCP = { ...(await this._fetchBusinessContact()) }
+
   }
 
   async pageUpdated(changes) {
@@ -453,14 +472,6 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       await this._fetchDeliveryOrder(this._doNo)
       this._updateContext()
     }
-  }
-
-  get _deliveryDateInput() {
-    return this.shadowRoot.querySelector('input[name=deliveryDate]')
-  }
-
-  get _receipientInput() {
-    return this.shadowRoot.querySelector('input[name=receipient]')
   }
 
   _getStdDate() {
@@ -490,12 +501,11 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   }
 
   async _fetchBusinessContact() {
-    this._bizplace = { ...(await this._fetchBusinessBizplace()) }
     const filters = [
       {
         name: 'bizplace',
         operator: 'eq',
-        value: this._bizplace.id
+        value: this._company.id
       }
     ]
 
@@ -562,7 +572,12 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       })
 
       if (!response.errors) {
-        return response.data.contactPoints.items || []
+        return response.data.contactPoints.items.map( ccp => {
+          return {
+            ...ccp,
+            name: `${ccp.name},`
+          }
+        })
       }
     }
   }
@@ -586,7 +601,6 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   }
 
   async _fetchDeliveryOrder(name) {
-    this._status = ''
     const response = await client.query({
       query: gql`
         query {
@@ -626,7 +640,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
       const _driver = _deliveryOrder.transportDriver || ''
       this._driverName = _driver && _driver.name ? _driver.name : ''
-      this._receipient = _deliveryOrder.to || ''
+      this._recipient = _deliveryOrder.to || ''
       this._date = _deliveryOrder.deliveryDate || ''
 
       if (_releaseOrderId) {
@@ -650,7 +664,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       if (_bizplace) {
         this._customerId = _bizplace.id
         this._customerName = _bizplace.name
-        this._customerContactPoints = { ...(await this._fetchCustomerContact()) }
+        this._customerContactPoints = await this._fetchCustomerContact()
       }
     }
   }
@@ -751,7 +765,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       let args = {
         orderInfo: {
           name: this._doNo,
-          to: this._receipient,
+          to: this._recipient,
           deliveryDate: this._date,
           driverName: this._driverName
         }
@@ -865,7 +879,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
   _validateInput() {
     // incomplete input
-    if (!this._receipient || !this._date) throw new Error(i18next.t('text.delivery_note_is_incomplete'))
+    if (!this._recipient || !this._date) throw new Error(i18next.t('text.delivery_note_is_incomplete'))
   }
 }
 
