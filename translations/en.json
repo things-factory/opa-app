@@ -25,6 +25,7 @@
   "button.execute": "execute",
   "button.generate": "generate",
   "button.import": "import",
+  "button.load": "load",
   "button.issue": "issue",
   "button.okay": "okay",
   "button.pallet_label_print": "print pallet label",
