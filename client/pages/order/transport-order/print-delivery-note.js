@@ -1,7 +1,10 @@
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, PageView, gqlBuilder } from '@things-factory/shell'
-import { css, html } from 'lit-element'
+import { openPopup } from '@things-factory/layout-base'
+import { client, CustomAlert, gqlBuilder, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
+import { css, html } from 'lit-element'
+import '../../components/popup-note'
+import { ORDER_STATUS } from '../constants/order'
 
 class PrintDeliveryOrder extends localize(i18next)(PageView) {
   static get properties() {
@@ -11,6 +14,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       _driverName: String,
       _driver: String,
       _truckNo: String,
+      _status: String,
       _date: Date,
       _orderInventories: Object,
       _bizplace: Object,
@@ -30,6 +34,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     this._releaseOrderName = ''
     this._customerName = ''
     this._date = ''
+    this._status = ''
     this._customerContactPoints = []
   }
 
@@ -252,16 +257,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   get context() {
     return {
       title: i18next.t('title.goods_delivery_note_details'),
-      actions: [
-        {
-          title: i18next.t('button.dispatch'),
-          action: this._executeDeliveryOrder.bind(this)
-        },
-        {
-          title: i18next.t('button.back'),
-          action: () => history.back()
-        }
-      ],
+      actions: this._actions,
       printable: {
         accept: ['preview'],
         content: this
@@ -310,8 +306,9 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
                 id="receipient_address"
                 name="receipient"
                 @change="${e => (this._receipient = e.currentTarget.value)}"
+                ?hidden="${!this._status === ORDER_STATUS.READY_TO_DISPATCH.value}"
               >
-                <option value="">-- ${i18next.t('text.please_select')} --</option>
+                <option value="">-- ${i18next.t('text.please_select_destination')} --</option>
                 ${Object.keys(this._customerContactPoints || {}).map((key, index) => {
                   let contactPoint = this._customerContactPoints[key]
 
@@ -338,6 +335,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
               type="date"
               min="${this._getStdDate()}"
               @input="${e => (this._date = e.currentTarget.value)}"
+              ?hidden="${!this._status === ORDER_STATUS.READY_TO_DISPATCH.value}"
               required
             />
           </div>
@@ -397,7 +395,11 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
                 <td>${truckNo}</td>
                 <td>
                   <span><hr width="85%"/></span>${driverName} <br />
-                  <select @change=${e => (this._driverName = e.target.value)} name="transportDriver">
+                  <select
+                    @change=${e => (this._driverName = e.target.value)}
+                    name="transportDriver"
+                    ?hidden="${!this._status === ORDER_STATUS.READY_TO_DISPATCH.value}"
+                  >
                     <option value="">-- ${i18next.t('text.please_select_a_driver')} --</option>
 
                     ${Object.keys(this._driverList.data.transportDrivers.items || []).map(key => {
@@ -449,6 +451,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       this._doNo = changes.resourceId || this._doNo || ''
       this._driverList = { ...(await this._fetchTruckDriver()) }
       await this._fetchDeliveryOrder(this._doNo)
+      this._updateContext()
     }
   }
 
@@ -583,6 +586,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   }
 
   async _fetchDeliveryOrder(name) {
+    this._status = ''
     const response = await client.query({
       query: gql`
         query {
@@ -607,6 +611,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             transportDriver {
               name
             }
+            status
           }
         }
       `
@@ -617,6 +622,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       const _releaseOrderId = _deliveryOrder.releaseGood.id || ''
       this._releaseOrderName = _deliveryOrder.releaseGood.name
       this._truckNo = _deliveryOrder.transportVehicle.regNumber
+      this._status = _deliveryOrder.status || ''
 
       const _driver = _deliveryOrder.transportDriver || ''
       this._driverName = _driver && _driver.name ? _driver.name : ''
@@ -762,11 +768,88 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       })
 
       if (!response.errors) {
+        navigate('delivery_orders')
         this._showToast({ message: i18next.t('text.delivery_order_dispatched') })
       }
     } catch (e) {
       this._showToast(e)
     }
+  }
+
+  async _checkDeliveredOrder() {
+    const popup = openPopup(
+      html`
+        <popup-note
+          .title="${i18next.t('title.remark')}"
+          @submit="${async e => {
+            try {
+              const result = await CustomAlert({
+                title: i18next.t('title.are_you_sure'),
+                text: i18next.t('text.completed_delivery_order'),
+                confirmButton: { text: i18next.t('button.confirm') },
+                cancelButton: { text: i18next.t('button.cancel') }
+              })
+
+              if (!result.value) {
+                return
+              }
+
+              const response = await client.query({
+                query: gql`
+                mutation {
+                  checkDeliveredOrder(${gqlBuilder.buildArgs({
+                    name: this._doNo,
+                    patch: { remark: e.detail.value }
+                  })}) {
+                    name
+                  }
+                }
+              `
+              })
+
+              if (!response.errors) {
+                navigate('delivery_orders')
+                this._showToast({ message: i18next.t('text.delivery_order_completed') })
+              }
+            } catch (e) {
+              this._showToast(e)
+            }
+          }}"
+        ></popup-note>
+      `,
+      {
+        backdrop: true,
+        size: 'medium',
+        title: i18next.t('title.completed_delivery_order')
+      }
+    )
+    popup.onclosed
+  }
+
+  _updateContext() {
+    this._actions = []
+    if (this._status === ORDER_STATUS.READY_TO_DISPATCH.value) {
+      this._actions = [
+        {
+          title: i18next.t('button.dispatch'),
+          action: this._executeDeliveryOrder.bind(this)
+        }
+      ]
+    } else if (this._status === ORDER_STATUS.DELIVERING.value) {
+      this._actions = [
+        {
+          title: i18next.t('button.complete'),
+          action: this._checkDeliveredOrder.bind(this)
+        }
+      ]
+    }
+
+    this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
+
+    store.dispatch({
+      type: UPDATE_CONTEXT,
+      context: this.context
+    })
   }
 
   _showToast({ type, message }) {

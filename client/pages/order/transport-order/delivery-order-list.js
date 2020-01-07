@@ -1,11 +1,10 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
-import { openPopup } from '@things-factory/layout-base'
 import { i18next, localize } from '@things-factory/i18n-base'
+import { openPopup } from '@things-factory/layout-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { ORDER_STATUS } from '../constants/order'
 import './upload-delivery-note'
 
 class DeliveryOrderList extends localize(i18next)(PageView) {
@@ -16,20 +15,15 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-
           overflow: hidden;
         }
 
         search-form {
           overflow: visible;
         }
-        .grist {
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-        }
+
         data-grist {
-          overflow-y: hidden;
+          overflow-y: auto;
           flex: 1;
         }
       `
@@ -46,13 +40,11 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <div class="grist">
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .fetchHandler="${this.fetchHandler.bind(this)}"
-        ></data-grist>
-      </div>
+      <data-grist
+        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+        .config=${this.config}
+        .fetchHandler="${this.fetchHandler.bind(this)}"
+      ></data-grist>
     `
   }
 
@@ -110,15 +102,15 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
             }
           },
           sortable: true,
-          width: 200
+          width: 150
         },
         {
-          type: 'string',
-          name: 'refNo',
-          header: i18next.t('field.ref_no'),
-          record: { align: 'center' },
+          type: 'object',
+          name: 'releaseGood',
+          header: i18next.t('field.release_good_no'),
+          record: { align: 'left' },
           sortable: true,
-          width: 200
+          width: 150
         },
         {
           type: 'string',
@@ -126,14 +118,6 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
           header: i18next.t('field.customer'),
           sortable: true,
           width: 250
-        },
-        {
-          type: 'string',
-          name: 'to',
-          header: i18next.t('field.delivery_to'),
-          record: { align: 'left' },
-          sortable: true,
-          width: 300
         },
         {
           type: 'date',
@@ -200,6 +184,11 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
               to
               deliveryDate
               status
+              releaseGood {
+                id
+                name
+                description
+              }
               refNo
               createdAt
               updatedAt
@@ -243,10 +232,10 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
       {
         backdrop: true,
         size: 'large',
-        title: i18next.t('title.upload_signed_grn')
+        title: i18next.t('title.upload_signed_gdn')
       }
     )
-  }  
+  }
 
   get _columns() {
     return this.config.columns
