@@ -9,6 +9,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       _releaseOrderName: String,
       _doNo: String,
       _driverName: String,
+      _driver: String,
       _truckNo: String,
       _date: Date,
       _orderInventories: Object,
@@ -17,14 +18,13 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       _customerName: String,
       _workerName: String,
       _receipient: String,
-      _customerContactPoints: Array
+      _customerContactPoints: Array,
     }
   }
 
   constructor() {
     super()
     this._workerName = ''
-    this._driverName = ''
     this._truckNo = ''
     this._releaseOrderName = ''
     this._customerName = ''
@@ -237,6 +237,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             -webkit-print-color-adjust: exact;
           }
           #date,
+          #driver_name,
           #receipient_address,
           #Header,
           #Footer {
@@ -252,7 +253,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       title: i18next.t('title.goods_delivery_note_details'),
       actions: [
         {
-          title: i18next.t('button.save'),
+          title: i18next.t('button.dispatch'),
           action: this._updateDeliveryOrder.bind(this)
         },
         {
@@ -271,14 +272,15 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     var company = this._bizplace.name || ''
     var brn = `(${this._bizplace.description})` || ''
     var customer = this._customerName.toUpperCase()
-    var address = ''
     var totalPallet = 0
-    var doNo = this._doNo
-    var refNo = this._releaseOrderName
-    var date = this._date
-    var workerName = this._workerName
+    var doNo = this._doNo || ''
+    var refNo = this._releaseOrderName || ''
+    var date = this._date || ''
+    var workerName = this._workerName || ''
     var driverName = this._driverName
-    var truckNo = this._truckNo
+    var truckNo = this._truckNo || ''
+    
+    var address = this._receipient ? this._receipient.split(',') : ''
 
     return html`
       <div goods-delivery-note>
@@ -294,11 +296,19 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             <span>M/s <i>${customer}</i></span>
             <label><strong>To be delivered to/collected by:</strong></label>
             <div customer>
-              <span>${this._receipient}</span><br>
+              <address>
+              ${(address || []).map(
+                part =>
+                  html`
+                    ${part} <br>
+                  `
+              )}
+              </address><br/>
               <select id="receipient_address" name="receipient" @change="${e => this._receipient = e.currentTarget.value}">
                 <option value="">-- ${i18next.t('text.please_select')} --</option>
                 ${Object.keys(this._customerContactPoints || {}).map((key, index) => {
                   let contactPoint = this._customerContactPoints[key]
+
                   return html`
                   <option value="${contactPoint && contactPoint.name} ${contactPoint && contactPoint.address}"
                   >${contactPoint && contactPoint.name}
@@ -320,7 +330,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           </div>
         </div>
 
-        <div detail>
+        <div detail><br><br><br><br>
           <table product-table>
             <thead>
               <tr>
@@ -372,7 +382,19 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
                 <td></td>
                 <td>${truckNo}</td>
                 <td>
-                  <span><hr width="85%"/></span>${driverName}
+                  <span><hr width="85%"/></span>${driverName} <br/>
+                  <select id="driver_name" name="receipient" @change="${e => this._driverName = e.currentTarget.value}">
+                    <option value="">-- ${i18next.t('text.please_select')} --</option>
+                    ${Object.keys(this._truckDrivers || {}).map((key, index) => {
+                      let driver = this._truckDrivers[key]
+                      return html`
+                      <option value="${driver && driver.name}"
+                      >${driver && driver.name}
+                      ${driver && driver.description ? ` ${driver && driver.description}` : ''}</option
+                    >
+                      `
+                    })}
+                  </select>
                 </td>
               </tr>
             </tbody>
@@ -413,6 +435,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   async pageUpdated(changes) {
     if (this.active) {
       this._doNo = changes.resourceId || this._doNo || ''
+      this._truckDrivers = await this._fetchTruckDriver() || ''
       await this._fetchDeliveryOrder(this._doNo)
     }
   }
@@ -537,6 +560,30 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     }
   }
 
+  async _fetchTruckDriver() {
+    const filters = []
+    const response = await client.query({
+      query: gql`
+      query {
+        transportDrivers(${gqlBuilder.buildArgs({
+          filters
+        })}) {
+          items {
+            id
+            name
+            description
+          }
+          total
+        }
+      }
+    `
+    })
+
+    if (!response.errors) {
+      return response.data.transportDrivers.items || []
+    }
+  }
+
   async _fetchDeliveryOrder(name) {
     const response = await client.query({
       query: gql`
@@ -572,7 +619,9 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       const _releaseOrderId = _deliveryOrder.releaseGood.id
       this._releaseOrderName = _deliveryOrder.releaseGood.name
       this._truckNo = _deliveryOrder.transportVehicle.regNumber
-      this._driverName = _deliveryOrder.transportDriver.name
+
+      const _driver = _deliveryOrder.transportDriver
+      this._driverName = _driver && _driver.name ? _driver.name : ''
       this._receipient = _deliveryOrder.to
       this._date = _deliveryOrder.deliveryDate
 
@@ -685,8 +734,9 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       var name = this._doNo
       var patch = {
         to: this._receipient,
-        deliveryDate: this._date
+        deliveryDate: this._date,
       }
+
       try {
         const response = await client.query({
           query: gql`
@@ -722,7 +772,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           document.dispatchEvent(
             new CustomEvent('notify', {
               detail: {
-                message: i18next.t('text.save_successful')
+                message: i18next.t('text.ready_to_dispatch')
               }
             })
           )
