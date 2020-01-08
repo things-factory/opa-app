@@ -154,7 +154,7 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
             inventories(${gqlBuilder.buildArgs({
               filters: [
                 ...filters,
-                { name: 'product', operator: 'eq', value: this.productId },
+                { name: 'product_id', operator: 'eq', value: this.productId },
                 { name: 'status', operator: 'notin', value: ['INTRANSIT', 'DELETED'] }
               ],
               pagination: { page, limit },
