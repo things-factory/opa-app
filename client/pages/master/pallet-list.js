@@ -1,6 +1,7 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/import-ui'
 import { openPopup } from '@things-factory/layout-base'
 import { client, CustomAlert, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
@@ -73,22 +74,36 @@ class PalletList extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
+    const _palletStatus = await getCodeByName('PALLET_STATUS')
+
     this._searchFields = [
       {
-        label: i18next.t('field.name'),
+        label: i18next.t('field.ref_no'),
         name: 'name',
         type: 'text',
         props: { searchOper: 'i_like' }
       },
       {
-        label: i18next.t('field.description'),
-        name: 'description',
-        type: 'text',
-        props: { searchOper: 'i_like' }
+        label: i18next.t('field.status'),
+        name: 'status',
+        type: 'select',
+        options: [
+          { value: '' },
+          ..._palletStatus.map(status => {
+            return {
+              name: status.name,
+              value: status.name
+            }
+          })
+        ],
+        props: { searchOper: 'eq' }
       }
     ]
 
     this.config = {
+      list: {
+        fields: ['name', 'owner', 'holder', 'status']
+      },
       rows: { selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
@@ -97,24 +112,53 @@ class PalletList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'name',
-          header: i18next.t('field.name'),
+          header: i18next.t('field.ref_no'),
           record: {
             editable: true,
             align: 'left'
           },
           sortable: true,
-          width: 250
+          width: 100
         },
         {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.description'),
+          type: 'object',
+          name: 'owner',
+          header: i18next.t('field.owner'),
           record: {
             editable: true,
-            align: 'center'
+            align: 'left',
+            options: {
+              queryName: 'bizplaces'
+            }
           },
           sortable: true,
           width: 200
+        },
+        {
+          type: 'object',
+          name: 'holder',
+          header: i18next.t('field.holder'),
+          record: {
+            editable: true,
+            align: 'left',
+            options: {
+              queryName: 'bizplaces'
+            }
+          },
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'code',
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: {
+            editable: true,
+            align: 'left',
+            codeName: 'PALLET_STATUS'
+          },
+          sortable: true,
+          width: 130
         },
         {
           type: 'datetime',
@@ -122,7 +166,7 @@ class PalletList extends localize(i18next)(PageView) {
           header: i18next.t('field.updated_at'),
           record: {
             editable: false,
-            align: 'center'
+            align: 'left'
           },
           sortable: true,
           width: 150
@@ -131,7 +175,10 @@ class PalletList extends localize(i18next)(PageView) {
           type: 'object',
           name: 'updater',
           header: i18next.t('field.updater'),
-          record: { editable: false, align: 'center' },
+          record: {
+            editable: false,
+            align: 'left'
+          },
           sortable: true,
           width: 150
         }
@@ -181,7 +228,17 @@ class PalletList extends localize(i18next)(PageView) {
             items {
               id
               name              
-              description
+              owner{
+                id
+                name
+                description
+              }
+              holder{
+                id
+                name
+                description
+              }
+              status
               updatedAt
               updater{
                 id
@@ -263,12 +320,12 @@ class PalletList extends localize(i18next)(PageView) {
       cancelButton: { text: 'cancel', color: '#cfcfcf' },
       callback: async result => {
         if (result.value) {
-          const ids = this.dataGrist.selected.map(record => record.id)
-          if (ids && ids.length > 0) {
+          const id = this.dataGrist.selected.map(record => record.id)
+          if (id && id.length > 0) {
             const response = await client.query({
               query: gql`
               mutation {
-                deletePallets(${gqlBuilder.buildArgs({ ids })})
+                deletePallets(${gqlBuilder.buildArgs({ id })})
               }
             `
             })
