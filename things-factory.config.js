@@ -31,6 +31,10 @@ export default {
       tagname: 'location-list',
       page: 'locations'
     },
+    {
+      tagname: 'pallet-list',
+      page: 'pallets'
+    },
 
     /**
      * Order Menus Section
