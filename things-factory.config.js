@@ -238,12 +238,8 @@ export default {
       page: 'onhand_inventory'
     },
     {
-      tagname: 'customer-onhand-inventory',
-      page: 'customer_onhand_inventory'
-    },
-    {
-      tagname: 'customer-intransit-inventory',
-      page: 'customer_intransit_inventory'
+      tagname: 'inventory-by-product',
+      page: 'inventory_by_product'
     },
     {
       tagname: 'intransit-inventory',
@@ -258,8 +254,16 @@ export default {
       page: 'inventory_adjustment'
     },
     {
-      tagname: 'inventory-by-product',
-      page: 'inventory_by_product'
+      tagname: 'customer-onhand-inventory',
+      page: 'customer_onhand_inventory'
+    },
+    {
+      tagname: 'customer-inventory-by-product',
+      page: 'customer_inventory_by_product'
+    },
+    {
+      tagname: 'customer-intransit-inventory',
+      page: 'customer_intransit_inventory'
     },
 
     /**

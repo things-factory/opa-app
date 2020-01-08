@@ -229,16 +229,12 @@ export default function route(page) {
       import('./pages/inventory/onhand-inventory')
       return page
 
-    case 'customer_onhand_inventory':
-      import('./pages/inventory/customer-onhand-inventory')
+    case 'inventory_by_product':
+      import('./pages/inventory/inventory-by-product')
       return page
 
     case 'intransit_inventory':
       import('./pages/inventory/intransit-inventory')
-      return page
-
-    case 'customer_intransit_inventory':
-      import('./pages/inventory/customer-intransit-inventory')
       return page
 
     case 'inventory_histories':
@@ -249,8 +245,16 @@ export default function route(page) {
       import('./pages/inventory/inventory-adjustment')
       return page
 
-    case 'inventory_by_product':
-      import('./pages/inventory/inventory-by-product')
+    case 'customer_onhand_inventory':
+      import('./pages/inventory/customer-onhand-inventory')
+      return page
+
+    case 'customer_inventory_by_product':
+      import('./pages/inventory/customer-inventory-by-product')
+      return page
+
+    case 'customer_intransit_inventory':
+      import('./pages/inventory/customer-intransit-inventory')
       return page
 
     /**

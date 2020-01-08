@@ -1,5 +1,6 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
+import { getCodeByName } from '@things-factory/code-base'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
@@ -61,10 +62,6 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
   get context() {
     return {
       title: i18next.t('title.onhand_inventory'),
-      printable: {
-        accept: ['preview'],
-        content: this
-      },
       exportable: {
         name: i18next.t('title.onhand_inventory'),
         data: this._exportableData.bind(this)
@@ -73,6 +70,7 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
+    const _packingType = await getCodeByName('PACKING_TYPES')
     this.config = {
       list: {
         fields: ['palletId', 'product', 'location']
@@ -84,20 +82,6 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
-        {
-          type: 'object',
-          name: 'product',
-          header: i18next.t('field.product'),
-          record: { align: 'left' },
-          imex: {
-            header: i18next.t('field.product'),
-            key: 'name',
-            width: 50,
-            type: 'string'
-          },
-          sortable: true,
-          width: 200
-        },
         {
           type: 'string',
           name: 'palletId',
@@ -118,24 +102,50 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
         },
         {
           type: 'object',
-          name: 'warehouse',
-          header: i18next.t('field.warehouse'),
-          record: { align: 'center' },
+          name: 'product',
+          header: i18next.t('field.product'),
+          record: { align: 'left' },
           imex: {
-            header: i18next.t('field.warehouse'),
-            key: 'warehouse_name',
+            header: i18next.t('field.product'),
+            key: 'name',
             width: 50,
             type: 'string'
           },
           sortable: true,
-          width: 200
+          width: 500
         },
         {
-          type: 'string',
-          name: 'zone',
-          header: i18next.t('field.zone'),
+          type: 'code',
+          name: 'packingType',
+          header: i18next.t('field.packing_type'),
+          record: {
+            editable: false,
+            align: 'left',
+            codeName: 'PACKING_TYPES'
+          },
+          imex: {
+            header: i18next.t('field.product'),
+            key: 'packingType',
+            width: 50,
+            type: 'string'
+          },
+          width: 150
+        },
+        {
+          type: 'number',
+          name: 'qty',
+          header: i18next.t('field.qty'),
           record: { align: 'center' },
-          imex: { header: i18next.t('field.zone'), key: 'zone', width: 30, type: 'string' },
+          imex: { header: i18next.t('field.qty'), key: 'qty', width: 30, type: 'number' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'number',
+          name: 'weight',
+          header: i18next.t('field.total_weight'),
+          record: { align: 'center' },
+          imex: { header: i18next.t('field.total_weight'), key: 'weight', width: 30, type: 'number' },
           sortable: true,
           width: 80
         },
@@ -151,33 +161,7 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
             type: 'string'
           },
           sortable: true,
-          width: 200
-        },
-        {
-          type: 'number',
-          name: 'qty',
-          header: i18next.t('field.qty'),
-          record: { align: 'center' },
-          imex: { header: i18next.t('field.qty'), key: 'qty', width: 30, type: 'number' },
-          sortable: true,
-          width: 80
-        },
-
-        {
-          type: 'datetime',
-          name: 'updatedAt',
-          header: i18next.t('field.updated_at'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 150
-        },
-        {
-          type: 'object',
-          name: 'updater',
-          header: i18next.t('field.updater'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 150
+          width: 120
         }
       ]
     }
@@ -186,9 +170,8 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
       {
         label: i18next.t('field.product'),
         name: 'product',
-        type: 'object',
-        queryName: 'products',
-        field: 'name'
+        type: 'text',
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.batch_no'),
@@ -203,11 +186,25 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
+        label: i18next.t('field.packing_type'),
+        name: 'packingType',
+        type: 'select',
+        options: [
+          { value: '' },
+          ..._packingType.map(packingType => {
+            return {
+              name: packingType.name,
+              value: packingType.name
+            }
+          })
+        ],
+        props: { searchOper: 'eq' }
+      },
+      {
         label: i18next.t('field.location'),
         name: 'location',
-        type: 'object',
-        queryName: 'locations',
-        field: 'name'
+        type: 'text',
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.zone'),
@@ -253,11 +250,9 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
                 name
                 description
               }
+              packingType
               qty
-              warehouse {
-                name
-                description
-              }
+              weight
               zone
               location {
                 name
@@ -282,26 +277,39 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
   }
 
   async fetchInventoriesForExport() {
+    const filters = await this.searchForm.getQueryFilters()
     const response = await client.query({
       query: gql`
         query {
           inventories(${gqlBuilder.buildArgs({
-            filters: [{ name: 'status', operator: 'notin', value: ['INTRANSIT', 'TERMINATED', 'DELETED'] }]
+            filters: [...filters, { name: 'status', operator: 'notin', value: ['INTRANSIT', 'TERMINATED', 'DELETED'] }],
+            pagination: { page: 1, limit: 9999999 },
+            sortings: []
           })}) {
             items {
+              id
               palletId
               batchId
-              product {
+              packingType
+              weight
+              bizplace {
+                id
                 name
                 description
               }
+              product {
+                id
+                name
+              }
               qty
               warehouse {
+                id
                 name
                 description
               }
               zone
               location {
+                id
                 name
                 description
               }
