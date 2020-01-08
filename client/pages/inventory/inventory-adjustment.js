@@ -398,6 +398,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
                 name
                 description
               }
+              createdAt
               updatedAt
               updater {
                 name
@@ -749,10 +750,17 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       )
     } else {
       for (var record of records) {
-        var date = new Date()
-          .toJSON()
-          .slice(0, 10)
-          .replace(/-/g, '/')
+        let rawDate = record.createdAt
+        let date = new Date(parseInt(rawDate))
+
+        let month = '' + (date.getMonth() + 1)
+        let day = '' + date.getDate()
+        let year = date.getFullYear()
+
+        if (month.length < 2) month = '0' + month
+        if (day.length < 2) day = '0' + day
+
+        const dateIn = [year, month, day].join('/')
 
         var searchParams = new URLSearchParams()
 
@@ -763,7 +771,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         searchParams.append('type', record.product.type)
         searchParams.append('customer', record.bizplace.name)
         searchParams.append('packing', record.packingType)
-        searchParams.append('date', date)
+        searchParams.append('date', dateIn)
 
         try {
           const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
