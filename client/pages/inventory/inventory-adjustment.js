@@ -109,7 +109,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           record: { align: 'left' },
           imex: { header: i18next.t('field.pallet_id'), key: 'palletId', width: 25, type: 'string' },
           sortable: true,
-          width: 120
+          width: 150
         },
         {
           type: 'string',
@@ -142,7 +142,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
             arrData: []
           },
           sortable: true,
-          width: 250
+          width: 300
         },
         {
           type: 'object',
@@ -195,7 +195,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
               }
             })
           },
-          width: 120
+          width: 150
         },
         {
           type: 'number',
@@ -269,7 +269,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.updater'),
           record: { align: 'center' },
           sortable: true,
-          width: 120
+          width: 150
         }
       ]
     }
@@ -328,17 +328,13 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       {
         label: i18next.t('field.warehouse'),
         name: 'warehouse',
-        type: 'object',
-        queryName: 'warehouses',
-        field: 'name',
+        type: 'text',
         props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.location'),
         name: 'location',
-        type: 'object',
-        queryName: 'locations',
-        field: 'name',
+        type: 'text',
         props: { searchOper: 'i_like' }
       },
       {
