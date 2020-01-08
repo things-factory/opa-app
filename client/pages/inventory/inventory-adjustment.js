@@ -749,12 +749,21 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       )
     } else {
       for (var record of records) {
+        var date = new Date()
+          .toJSON()
+          .slice(0, 10)
+          .replace(/-/g, '/')
+
         var searchParams = new URLSearchParams()
 
         /* for pallet record mapping */
         searchParams.append('pallet', record.palletId)
         searchParams.append('batch', record.batchId)
         searchParams.append('product', record.product.name)
+        searchParams.append('type', record.product.type)
+        searchParams.append('customer', record.bizplace.name)
+        searchParams.append('packing', record.packingType)
+        searchParams.append('date', date)
 
         try {
           const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {

@@ -275,6 +275,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
                 product {
                   id
                   name
+                  type
                   description
                 }
                 batchId
@@ -298,6 +299,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       const worksheetDetails = worksheet.worksheetDetails
       this._worksheetStatus = worksheet.status
       this._ganNo = (worksheet.arrivalNotice && worksheet.arrivalNotice.name) || ''
+      this._bizplace = worksheet.bizplace.name
 
       this._fillupForm({
         ...worksheet,
@@ -514,7 +516,9 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
           batchId: record.batchId,
           product: record.product,
           palletQty: record.palletQty,
-          printQty: record.palletQty
+          printQty: record.palletQty,
+          packingType: record.packingType,
+          bizplace: this._bizplace
         }
       })
     }
