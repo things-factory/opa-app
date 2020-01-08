@@ -107,7 +107,7 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
           record: { align: 'left' },
           imex: {
             header: i18next.t('field.product'),
-            key: 'name',
+            key: 'product.name',
             width: 50,
             type: 'string'
           },
@@ -124,7 +124,7 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
             codeName: 'PACKING_TYPES'
           },
           imex: {
-            header: i18next.t('field.product'),
+            header: i18next.t('field.packing_type'),
             key: 'packingType',
             width: 50,
             type: 'string'
@@ -350,6 +350,7 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
 
       data = data.map(item => {
         return {
+          id: item.id,
           ...this._columns
             .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
             .reduce((record, column) => {
@@ -357,10 +358,7 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
                 .split('.')
                 .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
               return record
-            }, {}),
-          id: item.id,
-          name: item.product ? `${item.product.name} (${item.product.description})` : '',
-          warehouse_name: item.warehouse ? `${item.warehouse.name} (${item.warehouse.description})` : ''
+            }, {})
         }
       })
 
