@@ -626,7 +626,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           })
       ]
 
-      const bizplaceFilters = (await this.searchForm.getQueryFilters()).filter(x => x.name === 'bizplace')
+      const bizplaceFilters = (await this.searchForm.getQueryFilters()).filter(x => x.name === 'bizplace_id')
 
       if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
         records = this.dataGrist.selected

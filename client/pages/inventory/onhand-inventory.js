@@ -1,5 +1,6 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
+import { getCodeByName } from '@things-factory/code-base'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { connect } from 'pwa-helpers/connect-mixin'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
@@ -72,10 +73,6 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
           action: this._printPalletLabel.bind(this)
         }
       ],
-      printable: {
-        accept: ['preview'],
-        content: this
-      },
       exportable: {
         name: i18next.t('title.onhand_inventory'),
         data: this._exportableData.bind(this)
@@ -84,6 +81,8 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async pageInitialized() {
+    const _userBizplaces = await this.fetchBizplaces()
+    const _packingType = await getCodeByName('PACKING_TYPES')
     this.config = {
       list: {
         fields: ['palletId', 'product', 'bizplace', 'location']
@@ -96,27 +95,13 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
-        {
-          type: 'object',
-          name: 'bizplace',
-          header: i18next.t('field.customer'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 200
-        },
-        {
-          type: 'object',
-          name: 'product',
-          header: i18next.t('field.product'),
-          record: { align: 'left' },
-          sortable: true,
-          width: 200
-        },
+        { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'string',
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
-          record: { align: 'center' },
+          record: { align: 'left' },
+          imex: { header: i18next.t('field.pallet_id'), key: 'palletId', width: 25, type: 'string' },
           sortable: true,
           width: 150
         },
@@ -124,23 +109,79 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_no'),
-          record: { align: 'center' },
+          record: {
+            align: 'left'
+          },
+          imex: { header: i18next.t('field.batch_no'), key: 'batchId', width: 30, type: 'string' },
           sortable: true,
-          width: 150
+          width: 120
         },
         {
           type: 'object',
-          name: 'warehouse',
-          header: i18next.t('field.warehouse'),
-          record: { align: 'center' },
+          name: 'bizplace',
+          header: i18next.t('field.customer'),
+          record: {
+            align: 'left',
+            options: {
+              queryName: 'bizplaces'
+            }
+          },
+          imex: {
+            header: i18next.t('field.customer'),
+            key: 'bizplace.name',
+            width: 50,
+            type: 'array',
+            arrData: []
+          },
           sortable: true,
-          width: 200
+          width: 300
         },
         {
-          type: 'string',
-          name: 'zone',
-          header: i18next.t('field.zone'),
+          type: 'object',
+          name: 'product',
+          header: i18next.t('field.product'),
+          record: { align: 'left' },
+          imex: {
+            header: i18next.t('field.product'),
+            key: 'product.name',
+            width: 50,
+            type: 'string'
+          },
+          sortable: true,
+          width: 500
+        },
+        {
+          type: 'code',
+          name: 'packingType',
+          header: i18next.t('field.packing_type'),
+          record: {
+            editable: false,
+            align: 'left',
+            codeName: 'PACKING_TYPES'
+          },
+          imex: {
+            header: i18next.t('field.packing_type'),
+            key: 'packingType',
+            width: 50,
+            type: 'string'
+          },
+          width: 150
+        },
+        {
+          type: 'number',
+          name: 'qty',
+          header: i18next.t('field.qty'),
           record: { align: 'center' },
+          imex: { header: i18next.t('field.qty'), key: 'qty', width: 30, type: 'number' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'number',
+          name: 'weight',
+          header: i18next.t('field.total_weight'),
+          record: { align: 'center' },
+          imex: { header: i18next.t('field.total_weight'), key: 'weight', width: 30, type: 'number' },
           sortable: true,
           width: 80
         },
@@ -149,43 +190,22 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
           name: 'location',
           header: i18next.t('field.location'),
           record: { align: 'center' },
+          imex: {
+            header: i18next.t('field.location'),
+            key: 'location.name',
+            width: 15,
+            type: 'string'
+          },
           sortable: true,
-          width: 200
-        },
-        {
-          type: 'number',
-          name: 'qty',
-          header: i18next.t('field.qty'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 80
-        },
-
-        {
-          type: 'datetime',
-          name: 'updatedAt',
-          header: i18next.t('field.updated_at'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 150
-        },
-        {
-          type: 'object',
-          name: 'updater',
-          header: i18next.t('field.updater'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 150
+          width: 120
         }
       ]
     }
 
-    const _userBizplaces = await this._fetchUserBizplaces()
-
     this._searchFields = [
       {
         label: i18next.t('field.customer'),
-        name: 'bizplace',
+        name: 'bizplace_id',
         type: 'select',
         options: [
           { value: '' },
@@ -203,9 +223,8 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
       {
         label: i18next.t('field.product'),
         name: 'product',
-        type: 'object',
-        queryName: 'products',
-        field: 'name'
+        type: 'text',
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.batch_no'),
@@ -220,18 +239,25 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
         props: { searchOper: 'i_like' }
       },
       {
-        label: i18next.t('field.warehouse'),
-        name: 'warehouse',
-        type: 'object',
-        queryName: 'warehouses',
-        field: 'name'
+        label: i18next.t('field.packing_type'),
+        name: 'packingType',
+        type: 'select',
+        options: [
+          { value: '' },
+          ..._packingType.map(packingType => {
+            return {
+              name: packingType.name,
+              value: packingType.name
+            }
+          })
+        ],
+        props: { searchOper: 'eq' }
       },
       {
         label: i18next.t('field.location'),
         name: 'location',
-        type: 'object',
-        queryName: 'locations',
-        field: 'name'
+        type: 'text',
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.zone'),
@@ -267,23 +293,30 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
             sortings: sorters
           })}) {
             items {
+              id
               palletId
               batchId
+              packingType
+              weight
               bizplace {
+                id
                 name
                 description
               }
               product {
+                id
                 name
-                description
+                description                
               }
               qty
               warehouse {
+                id
                 name
                 description
               }
               zone
               location {
+                id
                 name
                 description
               }
@@ -303,6 +336,58 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
       total: response.data.inventories.total || 0,
       records: response.data.inventories.items || []
     }
+  }
+
+  async fetchInventoriesForExport() {
+    const filters = await this.searchForm.getQueryFilters()
+    const response = await client.query({
+      query: gql`
+        query {
+          inventories(${gqlBuilder.buildArgs({
+            filters: [...filters, { name: 'status', operator: 'notin', value: ['INTRANSIT', 'TERMINATED', 'DELETED'] }],
+            pagination: { page: 1, limit: 9999999 },
+            sortings: []
+          })}) {
+            items {
+              id
+              palletId
+              batchId
+              packingType
+              weight
+              bizplace {
+                id
+                name
+                description
+              }
+              product {
+                id
+                name
+              }
+              qty
+              warehouse {
+                id
+                name
+                description
+              }
+              zone
+              location {
+                id
+                name
+                description
+              }
+              updatedAt
+              updater {
+                name
+                description
+              }
+            }
+            total
+          }
+        }
+      `
+    })
+
+    return response.data.inventories.items || []
   }
 
   get _columns() {
@@ -357,30 +442,63 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  _exportableData() {
-    return this.dataGrist.exportRecords()
+  async _exportableData() {
+    try {
+      let records = []
+      let data = []
+
+      var headerSetting = [
+        ...this.dataGrist._config.columns
+          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+          .map(column => {
+            return column.imex
+          })
+      ]
+
+      if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+        records = this.dataGrist.selected
+        data = records
+      } else {
+        data = await this.fetchInventoriesForExport()
+      }
+
+      data = data.map(item => {
+        return {
+          id: item.id,
+          ...this._columns
+            .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+            .reduce((record, column) => {
+              record[column.imex.key] = column.imex.key
+                .split('.')
+                .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
+              return record
+            }, {})
+        }
+      })
+
+      return { header: headerSetting, data: data }
+    } catch (e) {
+      this._showToast(e)
+    }
   }
 
-  async _fetchUserBizplaces() {
-    if (!this._email) return
+  async fetchBizplaces() {
     const response = await client.query({
       query: gql`
-        query {
-          userBizplaces(${gqlBuilder.buildArgs({
-            email: this._email
-          })}) {
-            id
-            name
-            description
-            mainBizplace
+          query {
+            bizplaces(${gqlBuilder.buildArgs({
+              filters: []
+            })}) {
+              items{
+                id
+                name
+                description
+              }
+            }
           }
-        }
-      `
+        `
     })
-
-    if (!response.errors) {
-      return response.data.userBizplaces
-    }
+    return response.data.bizplaces.items
   }
 
   stateChanged(state) {
