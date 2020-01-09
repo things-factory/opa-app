@@ -532,10 +532,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
             items {
               id
               name
-              transportVehicle {
-                regNumber
-              }
-              truckNo
+              truck
               targetInventories {
                 name
               }
@@ -551,8 +548,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
           return {
             id: item.id,
             name: item.name,
-            ...item.transportVehicle,
-            ...item.truckNo
+            truck: item.truck
           }
         })
       }
