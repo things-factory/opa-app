@@ -1,4 +1,3 @@
-import { USBPrinter } from '@things-factory/barcode-base'
 import '@things-factory/form-ui'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
@@ -6,7 +5,6 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
-import { LOCATION_LABEL_SETTING_KEY } from '../../setting-constants'
 
 export class PrintLocationLabel extends localize(i18next)(LitElement) {
   static get properties() {
@@ -100,7 +98,7 @@ export class PrintLocationLabel extends localize(i18next)(LitElement) {
 
       <div class="button-container">
         <button @click="${this._printLocations.bind(this)}">
-          ${i18next.t('button.preview')}
+          ${i18next.t('button.print')}
         </button>
       </div>
     `
@@ -118,7 +116,17 @@ export class PrintLocationLabel extends localize(i18next)(LitElement) {
             editable: false
           },
           header: i18next.t('field.name'),
-          width: 400
+          width: 250
+        },
+        {
+          type: 'string',
+          name: 'indicator',
+          record: {
+            align: 'center',
+            editable: false
+          },
+          header: i18next.t('field.indicator'),
+          width: 250
         }
       ]
     }
@@ -141,32 +149,70 @@ export class PrintLocationLabel extends localize(i18next)(LitElement) {
   }
 
   async _validateForm(selectedFormat) {
-    let records = []
+    var records = []
+    var locations = []
 
     if (this.selectedLocations && this.selectedLocations.length > 0) {
       records = this.selectedLocations
     } else {
-      switch (selectedFormat) {
-        case 'withShelf':
-          records = await this._fetchLocationWithShelf()
-          break
+      if (this.warehouseId) {
+        switch (selectedFormat) {
+          case 'withShelf':
+            var filters = [
+              {
+                name: 'warehouse_id',
+                operator: 'eq',
+                value: this.warehouseId
+              },
+              {
+                name: 'type',
+                operator: 'eq',
+                value: 'SHELF'
+              }
+            ]
+            records = await this._fetchLocations(filters)
+            break
 
-        case 'withoutShelf':
-          records = await this._fetchLocationWithoutShelf()
-          break
+          case 'withoutShelf':
+            var filters = [
+              {
+                name: 'warehouse_id',
+                operator: 'eq',
+                value: this.warehouseId
+              },
+              {
+                name: 'shelf',
+                operator: 'eq',
+                value: '01'
+              },
+              {
+                name: 'type',
+                operator: 'eq',
+                value: 'SHELF'
+              }
+            ]
+            records = await this._fetchLocations(filters)
+            break
+        }
       }
     }
 
     switch (selectedFormat) {
       case 'withShelf':
-        this._records = records
+        locations = records.map(location => {
+          location.name = location.type === 'BUFFER' ? `${location.name}` : `${location.zone}-${location.row}-${location.column}-${location.shelf}`
+          location.indicator = location.type === 'BUFFER' ? location.zone : location.shelf
+          return location
+        })
+
+        this._records = locations
         this._total = records.length
         break
 
       case 'withoutShelf':
-        let locations = records
-        locations = locations.map(location => {
-          location.name = `${location.zone}-${location.row}-${location.column}`
+        locations = records.map(location => {
+          location.name = location.type === 'BUFFER' ? `${location.name}` : `${location.zone}-${location.row}-${location.column}`
+          location.indicator = location.type === 'BUFFER' ? location.zone : location.column
           return location
         })
 
@@ -186,96 +232,13 @@ export class PrintLocationLabel extends localize(i18next)(LitElement) {
 
     this.dataGrist.fetch()
     this._selectedFormat = selectedFormat
-  }
-  
-  async _printLocations() {
-    let records = []
-
-    if (this._selectedFormat === '') {
-      document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            level: 'error',
-            message: `${i18next.t('text.please_select_the_label_format')}`
-          }
-        })
-      )
-    } else {
-      records = this._records
-      var labelId = this._locationLabel && this._locationLabel.id
-
-      if (!labelId) {
-        document.dispatchEvent(
-          new CustomEvent('notify', {
-            detail: {
-              level: 'error',
-              message: `${i18next.t('text.no_label_setting_was_found')}. ${i18next.t('text.please_check_your_setting')}`
-            }
-          })
-        )
-      } else {
-        for (var record of records) {
-          var searchParams = new URLSearchParams()
-
-          /* for location record mapping */
-          record.newName = `${record.zone}-${record.row}-${record.column}`
-          searchParams.append('location', record.newName)
-          searchParams.append('row', record.row)
-
-          try {
-            const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
-              method: 'GET'
-            })
-
-            if (response.status !== 200) {
-              throw `Error : Can't get label command from server (response: ${response.status})`
-            }
-
-            var command = await response.text()
-
-            if (!this.printer) {
-              this.printer = new USBPrinter()
-            }
-
-            await this.printer.connectAndPrint(command)
-          } catch (ex) {
-            document.dispatchEvent(
-              new CustomEvent('notify', {
-                detail: {
-                  level: 'error',
-                  message: ex,
-                  ex
-                }
-              })
-            )
-
-            delete this.printer
-            break
-          }
-        }
-
-        this.dispatchEvent(new CustomEvent('printed'))
-        history.back()
-      }
-    }
+    selectedFormat = ''
   }
 
-  async _fetchLocationWithShelf() {
+  async _fetchLocations(filters) {
     const sorters = [{ name: 'name', desc: false }]
+    
     if (this.warehouseId) {
-      const filters = [
-        {
-          name: 'warehouse_id',
-          operator: 'eq',
-          value: this.warehouseId
-        },
-        {
-          name: 'type',
-          operator: 'eq',
-          value: 'SHELF'
-        }
-      ]
-
       try {
         this.dataGrist.showSpinner()
 
@@ -329,83 +292,20 @@ export class PrintLocationLabel extends localize(i18next)(LitElement) {
     }
   }
 
-  async _fetchLocationWithoutShelf() {
-    const sorters = [{ name: 'name', desc: false }]
-
-    if (this.warehouseId) {
-      const filters = [
-        {
-          name: 'warehouse_id',
-          operator: 'eq',
-          value: this.warehouseId
-        },
-        {
-          name: 'shelf',
-          operator: 'eq',
-          value: '01'
-        },
-        {
-          name: 'type',
-          operator: 'eq',
-          value: 'SHELF'
-        }
-      ]
-
-      try {
-        this.dataGrist.showSpinner()
-
-        const response = await client.query({
-          query: gql`
-            query {
-              locations(${gqlBuilder.buildArgs({
-                filters,
-                sortings: sorters
-              })}) {
-                items {
-                  id
-                  name
-                  zone
-                  row
-                  type
-                  column
-                  shelf
-                  status
-                  updatedAt
-                  updater{
-                    id
-                    name
-                    description
-                  }
-                }
-                total
-              }
-            }
-          `
+  _printLocations() {
+    if (this._records && this._records.length > 0) {
+      this.dispatchEvent(new CustomEvent('printing', { detail: this._records }))
+      history.back()
+    } else {
+      document.dispatchEvent(
+        new CustomEvent('notify', {
+          detail: {
+            level: 'error',
+            message: `${i18next.t('text.there_is_no_item_to_print')}`
+          }
         })
-  
-        if (!response.errors) {
-          return response.data.locations.items || []
-        }
-
-      } catch (e) {
-        document.dispatchEvent(
-          new CustomEvent('notify', {
-            detail: {
-              level: error,
-              message: e
-            }
-          })
-        )
-
-      } finally {
-        this.dataGrist.hideSpinner()
-      }
+      )
     }
-  }
-
-  stateChanged(state) {
-    var locationLabelSetting = state.dashboard[LOCATION_LABEL_SETTING_KEY]
-    this._locationLabel = (locationLabelSetting && locationLabelSetting.board) || {}
   }
 }
 
