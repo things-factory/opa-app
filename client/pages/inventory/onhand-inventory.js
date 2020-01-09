@@ -459,6 +459,10 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
         records = this.dataGrist.selected
         data = records
       } else {
+        const bizplaceFilters = (await this.searchForm.getQueryFilters()).filter(x => x.name === 'bizplace_id')
+        if (bizplaceFilters.length == 0) {
+          throw new Error(`Please select a customer for export.`)
+        }
         data = await this.fetchInventoriesForExport()
       }
 

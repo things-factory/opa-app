@@ -67,8 +67,26 @@ class InventoryByProduct extends localize(i18next)(PageView) {
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    const _userBizplaces = await this.fetchBizplaces()
     this._searchFields = [
+      {
+        label: i18next.t('field.customer'),
+        name: 'bizplace',
+        type: 'select',
+        options: [
+          { value: '' },
+          ..._userBizplaces
+            .filter(userBizplaces => !userBizplaces.mainBizplace)
+            .map(userBizplace => {
+              return {
+                name: userBizplace.name,
+                value: userBizplace.id
+              }
+            })
+        ],
+        props: { searchOper: 'eq' }
+      },
       {
         label: i18next.t('field.name'),
         name: 'name',
@@ -105,6 +123,26 @@ class InventoryByProduct extends localize(i18next)(PageView) {
           handlers: {
             click: this._showInventoryInfo.bind(this)
           }
+        },
+        {
+          type: 'object',
+          name: 'bizplace',
+          header: i18next.t('field.customer'),
+          record: {
+            align: 'left',
+            options: {
+              queryName: 'bizplaces'
+            }
+          },
+          imex: {
+            header: i18next.t('field.customer'),
+            key: 'bizplace.name',
+            width: 50,
+            type: 'array',
+            arrData: []
+          },
+          sortable: true,
+          width: 300
         },
         {
           type: 'string',
@@ -173,6 +211,9 @@ class InventoryByProduct extends localize(i18next)(PageView) {
                 name
                 description
                 type
+                bizplace{
+                  name
+                }
                 productRef {
                   name
                   description
@@ -204,14 +245,12 @@ class InventoryByProduct extends localize(i18next)(PageView) {
   }
 
   async _fetchInventoriesForExport() {
-    const page = 1
-    const limit = 999999
     const response = await client.query({
       query: gql`
         query {
           inventoriesByProduct(${gqlBuilder.buildArgs({
-            filters: [],
-            pagination: { page, limit }
+            filters: await this.searchForm.getQueryFilters(),
+            pagination: { page: 1, limit: 9999999 }
           })}) {
             items {
               product {
@@ -219,6 +258,9 @@ class InventoryByProduct extends localize(i18next)(PageView) {
                 name
                 description
                 type
+                bizplace{
+                  name
+                }
                 productRef {
                   name
                   description
@@ -247,43 +289,70 @@ class InventoryByProduct extends localize(i18next)(PageView) {
     }
   }
 
-  async _exportableData() {
-    let records = []
-    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
-      records = this.dataGrist.selected
-    } else {
-      records = await this._fetchInventoriesForExport()
-    }
+  async fetchBizplaces() {
+    const response = await client.query({
+      query: gql`
+          query {
+            bizplaces(${gqlBuilder.buildArgs({
+              filters: []
+            })}) {
+              items{
+                id
+                name
+                description
+              }
+            }
+          }
+        `
+    })
+    return response.data.bizplaces.items
+  }
 
-    var headerSetting = this.dataGrist._config.columns
-      .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
-      .map(column => {
-        return column.imex
+  async _exportableData() {
+    try {
+      let records = []
+      if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+        records = this.dataGrist.selected
+      } else {
+        const bizplaceFilters = (await this.searchForm.getQueryFilters()).filter(x => x.name === 'bizplace')
+        if (bizplaceFilters.length == 0) {
+          throw new Error(`Please select a customer for export.`)
+        }
+        records = await this._fetchInventoriesForExport()
+      }
+
+      var headerSetting = this.dataGrist._config.columns
+        .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+        .map(column => {
+          return column.imex
+        })
+
+      var data = records.map(item => {
+        if (item.productRef) {
+          var refName = item.productRef.name ? item.productRef.name : ''
+          var refDesc = item.productRef.description ? ` (${item.productRef.description})` : ''
+        }
+
+        return {
+          ...this._columns
+            .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+            .reduce((record, column) => {
+              record[column.imex.key] = column.imex.key
+                .split('.')
+                .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
+              return record
+            }, {}),
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          product_ref: refName + refDesc
+        }
       })
 
-    var data = records.map(item => {
-      if (item.productRef) {
-        var refName = item.productRef.name ? item.productRef.name : ''
-        var refDesc = item.productRef.description ? ` (${item.productRef.description})` : ''
-      }
-
-      return {
-        ...this._columns
-          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
-          .reduce((record, column) => {
-            record[column.imex.key] = column.imex.key
-              .split('.')
-              .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
-            return record
-          }, {}),
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        product_ref: refName + refDesc
-      }
-    })
-
-    return { header: headerSetting, data: data }
+      return { header: headerSetting, data: data }
+    } catch (e) {
+      this._showToast(e)
+    }
   }
 
   _showInventoryInfo(columns, data, column, record, rowIndex) {
@@ -296,6 +365,17 @@ class InventoryByProduct extends localize(i18next)(PageView) {
         size: 'large',
         title: `${record.name} ${record.description ? `(${record.description})` : ''}`
       }
+    )
+  }
+
+  _showToast({ type, message }) {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: {
+          type,
+          message
+        }
+      })
     )
   }
 }
