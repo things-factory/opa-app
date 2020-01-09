@@ -618,6 +618,10 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
               name
             }
             truckNo
+            transportVehicle {
+              id
+              name
+            }
             transportDriver {
               name
             }
@@ -632,7 +636,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       const _releaseOrderId = _deliveryOrder.releaseGood.id || ''
       this._releaseOrderName = _deliveryOrder.releaseGood.name
       this._ownCollection = _deliveryOrder.ownCollection
-      this._truckNo = _deliveryOrder.truckNo
+      this._truckNo = _deliveryOrder.truckNo || _deliveryOrder.transportVehicle.name
       this._status = _deliveryOrder.status || ''
 
       if (!this._ownCollection) {
