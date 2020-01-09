@@ -182,7 +182,7 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'orderRefNo',
           header: i18next.t('field.ref_no'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
           width: 160
         },
