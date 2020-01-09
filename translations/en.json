@@ -394,6 +394,7 @@
   "label.order_type": "order type",
   "label.other": "other",
   "label.own_transport": "own transport",
+  "label.own_collection": "own collection",
   "label.partner": "partner",
   "label.pack_qty": "pack qty",
   "label.packing_no": "packing no",

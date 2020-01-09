@@ -107,6 +107,14 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('form#input-form')
   }
 
+  get ownCollectionInput() {
+    return this.shadowRoot.querySelector('input[name=ownCollection]')
+  }
+
+  get truckInput() {
+    return this.shadowRoot.querySelector('input[name=truckNo]')
+  }
+
   get pickedProductGrist() {
     return this.shadowRoot.querySelector('data-grist#picked-product-grist')
   }
@@ -179,17 +187,11 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
           <form id="input-form" class="single-column-form">
             <fieldset>
               <legend>${i18next.t('label.assign_truck')}</legend>
-              <label>${i18next.t('label.lorry_no')}</label>
-              <select @change=${e => (this._selectedTruck = e.target.value)} name="transportVehicle">
-                <option value="">-- ${i18next.t('text.please_select_a_truck')} --</option>
+              <input id="ownCollection" type="checkbox" name="ownCollection" />
+              <label for="ownCollection">${i18next.t('label.own_collection')}</label>
 
-                ${Object.keys(this._vehicleList.data.transportVehicles.items || []).map(key => {
-                  let vehicle = this._vehicleList.data.transportVehicles.items[key]
-                  return html`
-                    <option value="${vehicle.id}">${vehicle.name}</option>
-                  `
-                })}
-              </select>
+              <label>${i18next.t('label.lorry_no')}</label>
+              <input name="truckNo" />
             </fieldset>
           </form>
           ${this._selectedDeliveryOrder
@@ -243,8 +245,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async pageInitialized() {
-    this._vehicleList = { ...(await this.fetchVehicleList()) }
-
     this.pickedProductConfig = {
       rows: {
         appendable: false,
@@ -496,10 +496,11 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       const loadedWorksheetDetails = this.pickedProductGrist.selected.map(record => {
         return { name: record.name, loadedQty: record.loadedQty }
       })
+      const _truckInput = this.truckInput.value.toUpperCase()
       let args = {
         loadedWorksheetDetails,
         releaseGoodNo: this._releaseGoodNo,
-        transportVehicle: { id: this._selectedTruck }
+        orderInfo: { truckNo: _truckInput, ownCollection: this.ownCollectionInput.checked }
       }
 
       const response = await client.query({
@@ -534,6 +535,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               transportVehicle {
                 regNumber
               }
+              truckNo
               targetInventories {
                 name
               }
@@ -549,7 +551,8 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
           return {
             id: item.id,
             name: item.name,
-            ...item.transportVehicle
+            ...item.transportVehicle,
+            ...item.truckNo
           }
         })
       }
@@ -604,30 +607,11 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async fetchVehicleList() {
-    return await client.query({
-      query: gql`
-        query {
-          transportVehicles (${gqlBuilder.buildArgs({
-            filters: [],
-            pagination: { page: 1, limit: 9999 }
-          })}){
-            items{
-              id
-              name
-            }
-          }
-        }`
-    })
-  }
-
   _validateLoading() {
     // 1. validate whethere there's selected product or not
     if (!this.pickedProductGrist.selected || !this.pickedProductGrist.selected.length) {
       throw new Error(i18next.t('text.there_is_no_selected_items'))
     }
-    // 2. validate for input for truck
-    if (!this._selectedTruck) throw new Error(i18next.t('text.vehicle_is_not_selected'))
   }
 
   async _complete() {
