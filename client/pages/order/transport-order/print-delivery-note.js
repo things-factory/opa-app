@@ -14,6 +14,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       _driverName: String,
       _driver: String,
       _truckNo: String,
+      _ownCollection: Boolean,
       _status: String,
       _date: Date,
       _orderInventories: Object,
@@ -304,22 +305,19 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             <label><strong>To be delivered to/collected by:</strong></label>
             <div customer>
               <address>
-              ${(address || []).map(
-                (part, index) => 
-                index == 0 ? 
-                  html`
-                    ${part} <br />
-                  `
-                  : 
-                  index == (address.length - 1) ?
-                    html`
-                      ${part}. <br />
-                    `
-                    :
-                    html`
-                      ${part}, <br />
-                    `
-              )}
+                ${(address || []).map((part, index) =>
+                  index == 0
+                    ? html`
+                        ${part} <br />
+                      `
+                    : index == address.length - 1
+                    ? html`
+                        ${part}. <br />
+                      `
+                    : html`
+                        ${part}, <br />
+                      `
+                )}
               </address>
               <br />
               <select
@@ -328,16 +326,16 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
                 @change="${e => (this._recipient = e.currentTarget.value)}"
                 ?hidden="${this._status !== ORDER_STATUS.READY_TO_DISPATCH.value}"
               >
-              <option value="">-- ${i18next.t('text.please_select_destination')} --</option>
-              ${(this._customerContactPoints || []).map( contactPoint => {
-                return html`
-                  <option value="${contactPoint && contactPoint.name} ${contactPoint && contactPoint.address}"
-                    >${contactPoint && contactPoint.name}
-                    ${contactPoint && contactPoint.address ? ` ${contactPoint && contactPoint.address}` : ''}</option
-                  >
-                `
-              })}
-            </select>
+                <option value="">-- ${i18next.t('text.please_select_destination')} --</option>
+                ${(this._customerContactPoints || []).map(contactPoint => {
+                  return html`
+                    <option value="${contactPoint && contactPoint.name} ${contactPoint && contactPoint.address}"
+                      >${contactPoint && contactPoint.name}
+                      ${contactPoint && contactPoint.address ? ` ${contactPoint && contactPoint.address}` : ''}</option
+                    >
+                  `
+                })}
+              </select>
             </div>
           </div>
 
@@ -415,7 +413,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
                   <select
                     @change=${e => (this._driverName = e.target.value)}
                     id="driver_name"
-                    ?hidden="${this._status !== ORDER_STATUS.READY_TO_DISPATCH.value}"
+                    ?hidden="${this._status !== ORDER_STATUS.READY_TO_DISPATCH.value || this._ownCollection}"
                   >
                     <option value="">-- ${i18next.t('text.please_select_a_driver')} --</option>
 
@@ -462,7 +460,6 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   async pageInitialized() {
     this._company = { ...(await this._fetchBusinessBizplace()) }
     this._companyCP = { ...(await this._fetchBusinessContact()) }
-
   }
 
   async pageUpdated(changes) {
@@ -572,7 +569,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       })
 
       if (!response.errors) {
-        return response.data.contactPoints.items.map( ccp => {
+        return response.data.contactPoints.items.map(ccp => {
           return {
             ...ccp,
             name: `${ccp.name},`
@@ -611,6 +608,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             name
             to
             deliveryDate
+            ownCollection
             releaseGood {
               id
               name
@@ -619,8 +617,10 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
               id
               name
             }
+            truckNo
             transportVehicle {
-              regNumber
+              id
+              name
             }
             transportDriver {
               name
@@ -635,11 +635,14 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       const _deliveryOrder = response.data.deliveryOrder || ''
       const _releaseOrderId = _deliveryOrder.releaseGood.id || ''
       this._releaseOrderName = _deliveryOrder.releaseGood.name
-      this._truckNo = _deliveryOrder.transportVehicle.regNumber
+      this._ownCollection = _deliveryOrder.ownCollection
+      this._truckNo = _deliveryOrder.truckNo || _deliveryOrder.transportVehicle.name
       this._status = _deliveryOrder.status || ''
 
-      const _driver = _deliveryOrder.transportDriver || ''
-      this._driverName = _driver && _driver.name ? _driver.name : ''
+      if (!this._ownCollection) {
+        const _driver = _deliveryOrder.transportDriver || ''
+        this._driverName = _driver && _driver.name ? _driver.name : ''
+      }
       this._recipient = _deliveryOrder.to || ''
       this._date = _deliveryOrder.deliveryDate || ''
 
@@ -767,7 +770,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           name: this._doNo,
           to: this._recipient,
           deliveryDate: this._date,
-          driverName: this._driverName
+          driverName: this._driverName || null
         }
       }
 

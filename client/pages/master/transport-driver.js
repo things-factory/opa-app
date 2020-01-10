@@ -125,7 +125,7 @@ class TransportDriver extends localize(i18next)(PageView) {
           header: i18next.t('field.description'),
           record: {
             editable: true,
-            align: 'center'
+            align: 'left'
           },
           imex: { header: i18next.t('field.description'), key: 'description', width: 100, type: 'string' },
           sortable: true,
