@@ -191,7 +191,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               <label for="ownCollection">${i18next.t('label.own_collection')}</label>
 
               <label>${i18next.t('label.lorry_no')}</label>
-              <input name="truckNo" />
+              <input name="truckNo" required />
             </fieldset>
           </form>
           ${this._selectedDeliveryOrder
@@ -497,10 +497,11 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         return { name: record.name, loadedQty: record.loadedQty }
       })
       const _truckInput = this.truckInput.value.toUpperCase()
+
       let args = {
         loadedWorksheetDetails,
         releaseGoodNo: this._releaseGoodNo,
-        orderInfo: { truckNo: _truckInput, ownCollection: this.ownCollectionInput.checked }
+        orderInfo: { truckNo: _truckInput.replace(/\s+/g, ''), ownCollection: this.ownCollectionInput.checked }
       }
 
       const response = await client.query({
@@ -607,6 +608,10 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     // 1. validate whethere there's selected product or not
     if (!this.pickedProductGrist.selected || !this.pickedProductGrist.selected.length) {
       throw new Error(i18next.t('text.there_is_no_selected_items'))
+    }
+
+    if (!this.truckInput.value) {
+      throw new Error(i18next.t('text.there_is_no_input_for_truck_no'))
     }
   }
 
