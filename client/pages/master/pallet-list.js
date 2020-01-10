@@ -132,7 +132,7 @@ class PalletList extends localize(i18next)(PageView) {
             }
           },
           sortable: true,
-          width: 200
+          width: 250
         },
         {
           type: 'object',
@@ -146,7 +146,7 @@ class PalletList extends localize(i18next)(PageView) {
             }
           },
           sortable: true,
-          width: 200
+          width: 250
         },
         {
           type: 'code',
@@ -221,7 +221,7 @@ class PalletList extends localize(i18next)(PageView) {
       query: gql`
         query {
           pallets(${gqlBuilder.buildArgs({
-            filters: this.searchForm.queryFilters,
+            filters: [...this.searchForm.queryFilters],
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -259,6 +259,7 @@ class PalletList extends localize(i18next)(PageView) {
   }
 
   async importHandler(patches) {
+    this.dataGrist.showSpinner()
     const response = await client.query({
       query: gql`
           mutation {
@@ -281,11 +282,13 @@ class PalletList extends localize(i18next)(PageView) {
         })
       )
     }
+    this.dataGrist.hideSpinner()
   }
 
   async _savePallet() {
     let patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
     if (patches && patches.length) {
+      this.dataGrist.showSpinner()
       const response = await client.query({
         query: gql`
           mutation {
@@ -308,6 +311,7 @@ class PalletList extends localize(i18next)(PageView) {
           })
         )
       }
+      this.dataGrist.hideSpinner()
     }
   }
 
@@ -320,6 +324,7 @@ class PalletList extends localize(i18next)(PageView) {
       cancelButton: { text: 'cancel', color: '#cfcfcf' },
       callback: async result => {
         if (result.value) {
+          this.dataGrist.showSpinner()
           const id = this.dataGrist.selected.map(record => record.id)
           if (id && id.length > 0) {
             const response = await client.query({
@@ -341,6 +346,7 @@ class PalletList extends localize(i18next)(PageView) {
               )
             }
           }
+          this.dataGrist.hideSpinner()
         }
       }
     })
