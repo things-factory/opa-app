@@ -63,6 +63,14 @@ class InventoryByProductDetailMovement extends localize(i18next)(LitElement) {
           width: 200
         },
         {
+          type: 'object',
+          name: 'product',
+          header: i18next.t('field.product'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 500
+        },
+        {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_no'),
@@ -152,6 +160,10 @@ class InventoryByProductDetailMovement extends localize(i18next)(LitElement) {
                 orderNo
                 weight
                 description
+                product{
+                  name
+                  description
+                }
                 warehouse {
                   name
                   description

@@ -1,7 +1,10 @@
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, PageView, gqlBuilder } from '@things-factory/shell'
-import { css, html } from 'lit-element'
+import { openPopup } from '@things-factory/layout-base'
+import { client, CustomAlert, gqlBuilder, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
+import { css, html } from 'lit-element'
+import '../../components/popup-note'
+import { ORDER_STATUS } from '../constants/order'
 
 class PrintDeliveryOrder extends localize(i18next)(PageView) {
   static get properties() {
@@ -9,27 +12,32 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       _releaseOrderName: String,
       _doNo: String,
       _driverName: String,
+      _driver: String,
       _truckNo: String,
+      _ownCollection: Boolean,
+      _status: String,
       _date: Date,
       _orderInventories: Object,
       _bizplace: Object,
+      _driverList: Object,
       _customerId: String,
       _customerName: String,
       _workerName: String,
-      _receipient: String,
-      _customerContactPoints: Array
+      _recipient: String,
+      _customerContactPoints: Array,
+      _companyCP: Object
     }
   }
 
   constructor() {
     super()
     this._workerName = ''
-    this._driverName = ''
     this._truckNo = ''
     this._releaseOrderName = ''
     this._customerName = ''
     this._date = ''
-    this._customerContactPoints = []
+    this._status = ''
+    this._companyCP = {}
   }
 
   static get styles() {
@@ -84,6 +92,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           display: grid;
           grid-gap: 1px;
           grid-template-columns: 3fr 1fr;
+          position: relative;
         }
 
         [brief] > div[right] {
@@ -93,7 +102,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
         [brief] > div[left] {
           grid-template-columns: 1fr;
-          grid-auto-rows: 25px 25px 25px;
+          grid-auto-rows: 25px 25px auto;
         }
 
         [customer-company],
@@ -140,32 +149,32 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           margin-bottom: 20px;
         }
 
-        [verification_head] > th:nth-child(-n + 4) {
+        [verification-head] > th:nth-child(-n + 4) {
           text-align: center;
           width: 15%;
         }
 
-        [verification_body] > td:nth-child(-n + 5) {
+        [verification-body] > td:nth-child(-n + 5) {
           text-align: center;
           max-height: 100px;
           padding: 93px 0px 7px;
         }
 
-        [confirmation_head] > td:nth-child(1) {
+        [confirmation-head] > td:nth-child(1) {
           text-align: justify;
           text-justify: inter-word;
           width: 65%;
           padding: 10px 10px 200px;
         }
 
-        [confirmation_head] > td:nth-child(2) {
+        [confirmation-head] > td:nth-child(2) {
           text-align: center;
           width: 35%;
           max-height: 100px;
           padding: 90px 0px 0px;
         }
 
-        [confirmation_body] > td:nth-child(1) {
+        [confirmation-body] > td:nth-child(1) {
           text-align: center;
           width: 35%;
           max-height: 100px;
@@ -184,6 +193,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
         th,
         td {
           border: 1px solid black;
+          padding: 0px 10px;
         }
 
         em {
@@ -237,6 +247,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             -webkit-print-color-adjust: exact;
           }
           #date,
+          #driver_name,
           #receipient_address,
           #Header,
           #Footer {
@@ -250,16 +261,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   get context() {
     return {
       title: i18next.t('title.goods_delivery_note_details'),
-      actions: [
-        {
-          title: i18next.t('button.save'),
-          action: this._updateDeliveryOrder.bind(this)
-        },
-        {
-          title: i18next.t('button.back'),
-          action: () => history.back()
-        }
-      ],
+      actions: this._actions,
       printable: {
         accept: ['preview'],
         content: this
@@ -268,23 +270,31 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   }
 
   render() {
-    var company = this._bizplace.name || ''
-    var brn = `(${this._bizplace.description})` || ''
+    var company = this._company && this._company.name ? this._company.name.toUpperCase() : ''
+    var brn = this._company && this._company.description ? `(${this._company.description})` : ''
+    var companyAddress = this._company && this._company.address ? this._company.address : ''
+    var phonefax = this._companyCP && this._companyCP.phone ? this._companyCP.phone : ''
+    var email = this._companyCP && this._companyCP.email ? this._companyCP.email : ''
+
     var customer = this._customerName.toUpperCase()
-    var address = ''
     var totalPallet = 0
-    var doNo = this._doNo
-    var refNo = this._releaseOrderName
-    var date = this._date
-    var workerName = this._workerName
+    var doNo = this._doNo || ''
+    var refNo = this._releaseOrderName || ''
+    var date = this._date || ''
+    var workerName = this._workerName || ''
     var driverName = this._driverName
-    var truckNo = this._truckNo
+    var truckNo = this._truckNo || ''
+
+    var address = this._recipient ? this._recipient.split(',') : ''
 
     return html`
       <div goods-delivery-note>
         <div business-info>
           <h2 business-name>${company}</h2>
           <span business-brn>${brn}</span>
+          <div business-address>${companyAddress}</div>
+          <div business-contact>${phonefax}</div>
+          <div business-email>${email}</div>
         </div>
 
         <h1 title>GOODS DELIVERY NOTE</h1>
@@ -294,16 +304,35 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             <span>M/s <i>${customer}</i></span>
             <label><strong>To be delivered to/collected by:</strong></label>
             <div customer>
-              <span>${this._receipient}</span><br>
-              <select id="receipient_address" name="receipient" @change="${e => this._receipient = e.currentTarget.value}">
-                <option value="">-- ${i18next.t('text.please_select')} --</option>
-                ${Object.keys(this._customerContactPoints || {}).map((key, index) => {
-                  let contactPoint = this._customerContactPoints[key]
+              <address>
+                ${(address || []).map((part, index) =>
+                  index == 0
+                    ? html`
+                        ${part} <br />
+                      `
+                    : index == address.length - 1
+                    ? html`
+                        ${part}. <br />
+                      `
+                    : html`
+                        ${part}, <br />
+                      `
+                )}
+              </address>
+              <br />
+              <select
+                id="receipient_address"
+                name="receipient"
+                @change="${e => (this._recipient = e.currentTarget.value)}"
+                ?hidden="${this._status !== ORDER_STATUS.READY_TO_DISPATCH.value}"
+              >
+                <option value="">-- ${i18next.t('text.please_select_destination')} --</option>
+                ${(this._customerContactPoints || []).map(contactPoint => {
                   return html`
-                  <option value="${contactPoint && contactPoint.name} ${contactPoint && contactPoint.address}"
-                  >${contactPoint && contactPoint.name}
-                  ${contactPoint && contactPoint.address ? ` ${contactPoint && contactPoint.address}` : ''}</option
-                >
+                    <option value="${contactPoint && contactPoint.name} ${contactPoint && contactPoint.address}"
+                      >${contactPoint && contactPoint.name}
+                      ${contactPoint && contactPoint.address ? ` ${contactPoint && contactPoint.address}` : ''}</option
+                    >
                   `
                 })}
               </select>
@@ -316,7 +345,15 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             <label>Reference No. : </label><b>${refNo}</b>
 
             <label>Date : </label>${date}
-            <input id="date" name="deliveryDate" type="date" min="${this._getStdDate()}" @input="${e => this._date=e.currentTarget.value}" required />
+            <input
+              id="date"
+              name="deliveryDate"
+              type="date"
+              min="${this._getStdDate()}"
+              @input="${e => (this._date = e.currentTarget.value)}"
+              ?hidden="${this._status !== ORDER_STATUS.READY_TO_DISPATCH.value}"
+              required
+            />
           </div>
         </div>
 
@@ -357,7 +394,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           <label>Verification by ${company}</label>
           <table>
             <thead>
-              <tr verification_head>
+              <tr verification-head>
                 <th>Issued By</th>
                 <th>Loaded By</th>
                 <th>Checked By</th>
@@ -366,13 +403,27 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
               </tr>
             </thead>
             <tbody>
-              <tr verification_body>
+              <tr verification-body>
                 <td></td>
                 <td>${workerName}</td>
                 <td></td>
                 <td>${truckNo}</td>
                 <td>
-                  <span><hr width="85%"/></span>${driverName}
+                  <span><hr width="85%"/></span>${driverName} <br />
+                  <select
+                    @change=${e => (this._driverName = e.target.value)}
+                    id="driver_name"
+                    ?hidden="${this._status !== ORDER_STATUS.READY_TO_DISPATCH.value || this._ownCollection}"
+                  >
+                    <option value="">-- ${i18next.t('text.please_select_a_driver')} --</option>
+
+                    ${Object.keys(this._driverList.data.transportDrivers.items || []).map(key => {
+                      let driver = this._driverList.data.transportDrivers.items[key]
+                      return html`
+                        <option value="${driver.name}">${driver.name}-${driver.driverCode}</option>
+                      `
+                    })}
+                  </select>
                 </td>
               </tr>
             </tbody>
@@ -382,7 +433,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
         <div customer-confirmation>
           <label>Confirmation by ${customer}</label>
           <table confirmation_table>
-            <tr confirmation_head>
+            <tr confirmation-head>
               <td rowspan="2">
                 <em>
                   Please examine the goods before acceptance as we will not be responsible for any damage or defect
@@ -392,7 +443,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
               </td>
               <td><hr /></td>
             </tr>
-            <tr confirmation_body>
+            <tr confirmation-body>
               <td>
                 Please sign & stamp here in receipt
               </td>
@@ -407,30 +458,17 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
-    this._bizplace = { ...(await this._fetchBusinessBizplace()) }
+    this._company = { ...(await this._fetchBusinessBizplace()) }
+    this._companyCP = { ...(await this._fetchBusinessContact()) }
   }
 
   async pageUpdated(changes) {
     if (this.active) {
       this._doNo = changes.resourceId || this._doNo || ''
+      this._driverList = { ...(await this._fetchTruckDriver()) }
       await this._fetchDeliveryOrder(this._doNo)
+      this._updateContext()
     }
-  }
-
-  get _deliveryDateInput() {
-    return this.shadowRoot.querySelector('input[name=deliveryDate]')
-  }
-
-  get _receipientInput() {
-    return this.shadowRoot.querySelector('input[name=receipient]')
-  }
-
-  _focusOnDateInput() {
-    setTimeout(() => this._deliveryDateInput.focus(), 100)
-  }
-
-  _focusOnReceipientInput() {
-    setTimeout(() => this._receipientInput.focus(), 100)
   }
 
   _getStdDate() {
@@ -460,12 +498,11 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   }
 
   async _fetchBusinessContact() {
-    this._bizplace = { ...(await this._fetchBusinessBizplace()) }
     const filters = [
       {
         name: 'bizplace',
         operator: 'eq',
-        value: this._bizplace.id
+        value: this._company.id
       }
     ]
 
@@ -532,9 +569,32 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       })
 
       if (!response.errors) {
-        return response.data.contactPoints.items || []
+        return response.data.contactPoints.items.map(ccp => {
+          return {
+            ...ccp,
+            name: `${ccp.name},`
+          }
+        })
       }
     }
+  }
+
+  async _fetchTruckDriver() {
+    return await client.query({
+      query: gql`
+        query {
+          transportDrivers (${gqlBuilder.buildArgs({
+            filters: [],
+            pagination: { page: 1, limit: 9999 }
+          })}){
+            items{
+              id
+              name
+              driverCode
+            }
+          }
+        }`
+    })
   }
 
   async _fetchDeliveryOrder(name) {
@@ -548,6 +608,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             name
             to
             deliveryDate
+            ownCollection
             releaseGood {
               id
               name
@@ -556,25 +617,34 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
               id
               name
             }
+            truckNo
             transportVehicle {
-              regNumber
+              id
+              name
             }
             transportDriver {
               name
             }
+            status
           }
         }
       `
     })
 
     if (!response.errors) {
-      const _deliveryOrder = response.data.deliveryOrder
-      const _releaseOrderId = _deliveryOrder.releaseGood.id
+      const _deliveryOrder = response.data.deliveryOrder || ''
+      const _releaseOrderId = _deliveryOrder.releaseGood.id || ''
       this._releaseOrderName = _deliveryOrder.releaseGood.name
-      this._truckNo = _deliveryOrder.transportVehicle.regNumber
-      this._driverName = _deliveryOrder.transportDriver.name
-      this._receipient = _deliveryOrder.to
-      this._date = _deliveryOrder.deliveryDate
+      this._ownCollection = _deliveryOrder.ownCollection
+      this._truckNo = _deliveryOrder.truckNo || _deliveryOrder.transportVehicle.name
+      this._status = _deliveryOrder.status || ''
+
+      if (!this._ownCollection) {
+        const _driver = _deliveryOrder.transportDriver || ''
+        this._driverName = _driver && _driver.name ? _driver.name : ''
+      }
+      this._recipient = _deliveryOrder.to || ''
+      this._date = _deliveryOrder.deliveryDate || ''
 
       if (_releaseOrderId) {
         let orderInventories = await this._fetchOrderInventories(_releaseOrderId)
@@ -589,7 +659,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
               return orderInventory
             })
           )
-          this._orderInventories = orderInventories 
+          this._orderInventories = orderInventories
         }
       }
 
@@ -597,7 +667,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       if (_bizplace) {
         this._customerId = _bizplace.id
         this._customerName = _bizplace.name
-        this._customerContactPoints = { ...(await this._fetchCustomerContact()) }
+        this._customerContactPoints = await this._fetchCustomerContact()
       }
     }
   }
@@ -680,70 +750,139 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     }
   }
 
-  async _updateDeliveryOrder() {
-    if (this._doNo && this._receipient && this._date) {
-      var name = this._doNo
-      var patch = {
-        to: this._receipient,
-        deliveryDate: this._date
+  async _executeDeliveryOrder() {
+    try {
+      this._validateInput()
+
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.dispatch_delivery_order'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) {
+        return
       }
-      try {
-        const response = await client.query({
-          query: gql`
-            mutation {
-              updateDeliveryOrder(${gqlBuilder.buildArgs({
-                name, patch
-              })}) {
-                id
-                name
-              }
-            }
-          `
-        })
-  
-        if (!response.errors) {
-          document.dispatchEvent(
-            new CustomEvent('notify', {
-              detail: {
-                message: i18next.t('text.save_successful')
-              }
-            })
-          )
+
+      let args = {
+        orderInfo: {
+          name: this._doNo,
+          to: this._recipient,
+          deliveryDate: this._date,
+          driverName: this._driverName || null
         }
-  
-      } catch(e) {
-        document.dispatchEvent(
-          new CustomEvent('notify', {
-            detail: {
-              level: error,
-              message: e
-            }
-          })
-        )
       }
 
-    } else if (!this._receipient) {
-      document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            level: error,
-            message: i18next.t('text.please_select_a_receipient')
+      const response = await client.query({
+        query: gql`
+          mutation {
+            dispatchDeliveryOrder(${gqlBuilder.buildArgs(args)}) {
+              name
+            }
           }
-        })
-      )
-      this._focusOnReceipientInput()
+        `
+      })
 
-    } else if (!this._date) {
-      document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            level: error,
-            message: i18next.t('text.please_select_a_delivery_date')
-          }
-        })
-      )
-      this._focusOnDateInput()
+      if (!response.errors) {
+        navigate('delivery_orders')
+        this._showToast({ message: i18next.t('text.delivery_order_dispatched') })
+      }
+    } catch (e) {
+      this._showToast(e)
     }
+  }
+
+  async _checkDeliveredOrder() {
+    const popup = openPopup(
+      html`
+        <popup-note
+          .title="${i18next.t('title.remark')}"
+          @submit="${async e => {
+            try {
+              const result = await CustomAlert({
+                title: i18next.t('title.are_you_sure'),
+                text: i18next.t('text.completed_delivery_order'),
+                confirmButton: { text: i18next.t('button.confirm') },
+                cancelButton: { text: i18next.t('button.cancel') }
+              })
+
+              if (!result.value) {
+                return
+              }
+
+              const response = await client.query({
+                query: gql`
+                mutation {
+                  checkDeliveredOrder(${gqlBuilder.buildArgs({
+                    name: this._doNo,
+                    patch: { remark: e.detail.value }
+                  })}) {
+                    name
+                  }
+                }
+              `
+              })
+
+              if (!response.errors) {
+                navigate('delivery_orders')
+                this._showToast({ message: i18next.t('text.delivery_order_completed') })
+              }
+            } catch (e) {
+              this._showToast(e)
+            }
+          }}"
+        ></popup-note>
+      `,
+      {
+        backdrop: true,
+        size: 'medium',
+        title: i18next.t('title.completed_delivery_order')
+      }
+    )
+    popup.onclosed
+  }
+
+  _updateContext() {
+    this._actions = []
+    if (this._status === ORDER_STATUS.READY_TO_DISPATCH.value) {
+      this._actions = [
+        {
+          title: i18next.t('button.dispatch'),
+          action: this._executeDeliveryOrder.bind(this)
+        }
+      ]
+    } else if (this._status === ORDER_STATUS.DELIVERING.value) {
+      this._actions = [
+        {
+          title: i18next.t('button.complete'),
+          action: this._checkDeliveredOrder.bind(this)
+        }
+      ]
+    }
+
+    this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
+
+    store.dispatch({
+      type: UPDATE_CONTEXT,
+      context: this.context
+    })
+  }
+
+  _showToast({ type, message }) {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: {
+          type,
+          message
+        }
+      })
+    )
+  }
+
+  _validateInput() {
+    // incomplete input
+    if (!this._recipient || !this._date) throw new Error(i18next.t('text.delivery_note_is_incomplete'))
   }
 }
 

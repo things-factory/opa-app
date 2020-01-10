@@ -105,7 +105,7 @@ class UploadDeliveryNote extends localize(i18next)(LitElement) {
     return html`
       <form class="multi-column-form">
         <fieldset>
-          <legend>${i18next.t('title.upload_grn')}</legend>
+          <legend>${i18next.t('title.upload_gdn')}</legend>
           <file-uploader custom-input id="dnUpload" name="attachments"></file-uploader>
         </fieldset>
       </form>

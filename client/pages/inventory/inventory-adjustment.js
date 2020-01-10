@@ -86,10 +86,8 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
 
   async pageInitialized() {
     this.location = await this.fetchLocation()
-
-    // const _products = await this.fetchProduct()
     const _userBizplaces = await this.fetchBizplaces()
-    this.packingType = await getCodeByName('PACKING_TYPES')
+    const _packingType = await getCodeByName('PACKING_TYPES')
 
     this.config = {
       list: {
@@ -111,7 +109,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           record: { align: 'left' },
           imex: { header: i18next.t('field.pallet_id'), key: 'palletId', width: 25, type: 'string' },
           sortable: true,
-          width: 120
+          width: 150
         },
         {
           type: 'string',
@@ -144,7 +142,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
             arrData: []
           },
           sortable: true,
-          width: 250
+          width: 300
         },
         {
           type: 'object',
@@ -190,14 +188,14 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
             key: 'packingType',
             width: 25,
             type: 'array',
-            arrData: this.packingType.map(packingType => {
+            arrData: _packingType.map(packingType => {
               return {
                 name: packingType.name,
                 id: packingType.name
               }
             })
           },
-          width: 120
+          width: 150
         },
         {
           type: 'number',
@@ -271,7 +269,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.updater'),
           record: { align: 'center' },
           sortable: true,
-          width: 120
+          width: 150
         }
       ]
     }
@@ -296,10 +294,8 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       },
       {
         label: i18next.t('field.product'),
-        name: 'product',
-        type: 'object',
-        queryName: 'products',
-        field: 'name',
+        name: 'product.name',
+        type: 'text',
         props: { searchOper: 'i_like' }
       },
       {
@@ -315,24 +311,23 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         props: { searchOper: 'i_like' }
       },
       {
-        label: i18next.t('field.warehouse'),
-        name: 'warehouse',
-        type: 'object',
-        queryName: 'warehouses',
-        field: 'name',
-        props: { searchOper: 'i_like' }
+        label: i18next.t('field.packing_type'),
+        name: 'packingType',
+        type: 'select',
+        options: [
+          { value: '' },
+          ..._packingType.map(packingType => {
+            return {
+              name: packingType.name,
+              value: packingType.name
+            }
+          })
+        ],
+        props: { searchOper: 'eq' }
       },
       {
         label: i18next.t('field.location'),
-        name: 'location',
-        type: 'object',
-        queryName: 'locations',
-        field: 'name',
-        props: { searchOper: 'i_like' }
-      },
-      {
-        label: i18next.t('field.zone'),
-        name: 'zone',
+        name: 'location.name',
         type: 'text',
         props: { searchOper: 'i_like' }
       }
@@ -391,6 +386,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
                 name
                 description
               }
+              createdAt
               updatedAt
               updater {
                 name
@@ -433,8 +429,6 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
               product {
                 id
                 name
-                description
-                unit
               }
               qty
               warehouse {
@@ -620,7 +614,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           })
       ]
 
-      const bizplaceFilters = (await this.searchForm.getQueryFilters()).filter(x => x.name === 'bizplace')
+      const bizplaceFilters = (await this.searchForm.getQueryFilters()).filter(x => x.name === 'bizplace_id')
 
       if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
         records = this.dataGrist.selected
@@ -744,12 +738,28 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       )
     } else {
       for (var record of records) {
+        let rawDate = record.createdAt
+        let date = new Date(parseInt(rawDate))
+
+        let month = '' + (date.getMonth() + 1)
+        let day = '' + date.getDate()
+        let year = date.getFullYear()
+
+        if (month.length < 2) month = '0' + month
+        if (day.length < 2) day = '0' + day
+
+        const dateIn = [year, month, day].join('/')
+
         var searchParams = new URLSearchParams()
 
         /* for pallet record mapping */
         searchParams.append('pallet', record.palletId)
         searchParams.append('batch', record.batchId)
         searchParams.append('product', record.product.name)
+        searchParams.append('type', record.product.type)
+        searchParams.append('customer', record.bizplace.name)
+        searchParams.append('packing', record.packingType)
+        searchParams.append('date', dateIn)
 
         try {
           const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {

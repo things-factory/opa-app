@@ -142,6 +142,11 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
       let date = today.getDate()
       let seq = 0
 
+      let dateStr = new Date()
+        .toJSON()
+        .slice(0, 10)
+        .replace(/-/g, '/')
+
       const palletRecords = await client.query({
         query: gql`
           mutation {
@@ -176,8 +181,17 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
               ('0' + date.toString()).substr(('0' + date.toString()).length - 2) +
               ('0000' + seq.toString()).substr(('0000' + seq.toString()).length - 4)}`
           )
+
+          /* for pallet record mapping */
           searchParams.append('batch', record.batchId)
           searchParams.append('product', record.product.name)
+          searchParams.append('type', record.product.type)
+          searchParams.append('packing', record.packingType)
+          searchParams.append('customer', record.bizplace)
+          searchParams.append('date', dateStr)
+
+          console.log(searchParams.toString())
+          debugger
 
           try {
             const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {

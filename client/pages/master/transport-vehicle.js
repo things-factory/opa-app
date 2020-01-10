@@ -105,7 +105,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
     this.config = {
       rows: { selectable: { multiple: true } },
       list: {
-        fields: ['regNumber', 'description', 'updatedAt']
+        fields: ['name', 'description', 'updatedAt']
       },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
@@ -113,10 +113,10 @@ class TransportVehicle extends localize(i18next)(PageView) {
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'string',
-          name: 'regNumber',
-          header: i18next.t('field.registration_number'),
+          name: 'name',
+          header: i18next.t('field.name'),
           record: { editable: true, align: 'center' },
-          imex: { header: i18next.t('field.registration_number'), key: 'regNumber', width: 50, type: 'string' },
+          imex: { header: i18next.t('field.name'), key: 'name', width: 50, type: 'string' },
           sortable: true,
           width: 150
         },
@@ -124,7 +124,7 @@ class TransportVehicle extends localize(i18next)(PageView) {
           type: 'string',
           name: 'description',
           header: i18next.t('field.description'),
-          record: { editable: true, align: 'center' },
+          record: { editable: true, align: 'left' },
           imex: { header: i18next.t('field.description'), key: 'description', width: 50, type: 'string' },
           sortable: true,
           width: 200
@@ -234,10 +234,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
 
   async importHandler(patches) {
     if (patches && patches.length) {
-      patches = patches.map(transportVehicle => {
-        transportVehicle.name = transportVehicle.regNumber
-        return transportVehicle
-      })
       const response = await client.query({
         query: gql`
           mutation {
@@ -267,11 +263,6 @@ class TransportVehicle extends localize(i18next)(PageView) {
   async _saveTransportVehicle() {
     let patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
     if (patches && patches.length) {
-      patches = patches.map(transportVehicle => {
-        transportVehicle.name = transportVehicle.regNumber
-        return transportVehicle
-      })
-
       const response = await client.query({
         query: gql`
           mutation {
