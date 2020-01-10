@@ -347,7 +347,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'string',
-          name: 'regNumber',
+          name: 'truck',
           header: i18next.t('field.truck_no'),
           record: { align: 'center' },
           width: 140
@@ -630,18 +630,18 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         return
       }
 
-      // if (this.pickedProductData && this.pickedProductData.records) {
-      //   const result = await CustomAlert({
-      //     title: i18next.t('title.are_you_sure'),
-      //     text: i18next.t('text.there_are_remain_products'),
-      //     confirmButton: { text: i18next.t('button.confirm') },
-      //     cancelButton: { text: i18next.t('button.cancel') }
-      //   })
+      if (this.pickedProductData && this.pickedProductData.records) {
+        const result = await CustomAlert({
+          title: i18next.t('title.are_you_sure'),
+          text: i18next.t('text.there_are_remain_products'),
+          confirmButton: { text: i18next.t('button.confirm') },
+          cancelButton: { text: i18next.t('button.cancel') }
+        })
 
-      //   if (!result.value) {
-      //     return
-      //   }
-      // }
+        if (!result.value) {
+          return
+        }
+      }
 
       const response = await client.query({
         query: gql`
