@@ -306,6 +306,10 @@ export default {
       page: 'worksheet_putaway'
     },
     {
+      tagname: 'worksheet-return',
+      page: 'worksheet_return'
+    },
+    {
       tagname: 'worksheet-vas',
       page: 'worksheet_vas'
     },

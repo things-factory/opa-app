@@ -11,6 +11,10 @@ export const WORKSHEET_TYPE = {
     name: 'vas',
     value: 'VAS'
   },
+  RETURN: {
+    name: 'return',
+    value: 'RETURN'
+  },
   PICKING: {
     name: 'picking',
     value: 'PICKING'
