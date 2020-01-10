@@ -78,6 +78,10 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           white-space: normal;
         }
 
+        [customer-address] {
+          min-height: 70px;
+        }
+
         [title] {
           text-align: center;
           font-weight: bold;
@@ -304,7 +308,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             <span>M/s <i>${customer}</i></span>
             <label><strong>To be delivered to/collected by:</strong></label>
             <div customer>
-              <address>
+              <address customer-address>
                 ${(address || []).map((part, index) =>
                   index == 0
                     ? html`
@@ -754,39 +758,48 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     try {
       this._validateInput()
 
-      const result = await CustomAlert({
-        title: i18next.t('title.are_you_sure'),
-        text: i18next.t('text.dispatch_delivery_order'),
-        confirmButton: { text: i18next.t('button.confirm') },
-        cancelButton: { text: i18next.t('button.cancel') }
-      })
+      if (!this._recipient) {
+        const result = await CustomAlert({
+          title: i18next.t('title.are_you_sure'),
+          text: i18next.t('text.dispatch_delivery_order_without_recipient'),
+          confirmButton: { text: i18next.t('button.confirm') },
+          cancelButton: { text: i18next.t('button.cancel') },
+          callback: async result => {
+            if (result.dismiss) {
+              return
+            }
 
-      if (!result.value) {
-        return
-      }
+            var args = {
+              orderInfo: { 
+                name: this._doNo,
+                to: this._recipient,
+                deliveryDate: this._date,
+                driverName: this._driverName || null
+              }
+            }
 
-      let args = {
-        orderInfo: {
-          name: this._doNo,
-          to: this._recipient,
-          deliveryDate: this._date,
-          driverName: this._driverName || null
-        }
-      }
-
-      const response = await client.query({
-        query: gql`
-          mutation {
-            dispatchDeliveryOrder(${gqlBuilder.buildArgs(args)}) {
-              name
+            const response = await client.query({
+              query: gql`
+                mutation {
+                  dispatchDeliveryOrder(${gqlBuilder.buildArgs(args)}) {
+                    name
+                  }
+                }
+              `
+            })
+      
+            if (!response.errors) {
+              this._status = ORDER_STATUS.DELIVERING
+              this._updateContext()
+              
+              const result = await CustomAlert({
+                title: i18next.t('title.dispatched'),
+                text: i18next.t('text.the_delivery_order_is_ready_to_print'),
+                confirmButton: { text: i18next.t('button.confirm') }
+              })
             }
           }
-        `
-      })
-
-      if (!response.errors) {
-        navigate('delivery_orders')
-        this._showToast({ message: i18next.t('text.delivery_order_dispatched') })
+        })
       }
     } catch (e) {
       this._showToast(e)
@@ -882,7 +895,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
   _validateInput() {
     // incomplete input
-    if (!this._recipient || !this._date) throw new Error(i18next.t('text.delivery_note_is_incomplete'))
+    if (!this._date) throw new Error(i18next.t('text.delivery_note_is_incomplete'))
   }
 }
 
