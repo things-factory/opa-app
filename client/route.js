@@ -342,6 +342,9 @@ export default function route(page) {
       import('./pages/outbound/loading-product')
       return page
 
+    case 'returning':
+      import('./pages/outbound/return-product')
+      return page
     /**
      * Report Menus Section
      */

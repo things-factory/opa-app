@@ -44,10 +44,27 @@ export class BufferLocationSelector extends localize(i18next)(LitElement) {
           border-bottom: var(--subtitle-border-bottom);
         }
         .button-container {
-          margin-left: auto;
+          padding: var(--button-container-padding);
+          margin: var(--button-container-margin);
+          text-align: var(--button-container-align);
+          background-color: var(--button-container-background);
+          height: var(--button-container-height);
         }
-        .button-container > mwc-button {
-          padding: 10px;
+        .button-container button {
+          background-color: var(--button-container-button-background-color);
+          border-radius: var(--button-container-button-border-radius);
+          height: var(--button-container-button-height);
+          border: var(--button-container-button-border);
+          margin: var(--button-container-button-margin);
+
+          padding: var(--button-padding);
+          color: var(--button-color);
+          font: var(--button-font);
+          text-transform: var(--button-text-transform);
+        }
+        .button-container button:hover,
+        .button-container button:active {
+          background-color: var(--button-background-focus-color);
         }
       `
     ]
@@ -92,13 +109,16 @@ export class BufferLocationSelector extends localize(i18next)(LitElement) {
       </div>
 
       <div class="button-container">
-        <mwc-button
+        <button
           @click=${() => {
             history.back()
           }}
-          >${i18next.t('button.cancel')}</mwc-button
         >
-        <mwc-button @click=${this._selectLocation.bind(this)}>${i18next.t('button.confirm')}</mwc-button>
+          ${i18next.t('button.cancel')}
+        </button>
+        <button @click=${this._selectLocation.bind(this)}>
+          ${i18next.t('button.confirm')}
+        </button>
       </div>
     `
   }
