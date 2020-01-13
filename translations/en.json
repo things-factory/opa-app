@@ -872,5 +872,8 @@
   "text.goods_delivery_note_uploaded": "goods delivery note uploaded",
   "text.ready_to_dispatch": "ready to dispatch",
   "field.indicator": "indicator",
-  "text.there_is_no_item_to_print:": "there is no item to print!"
+  "text.there_is_no_item_to_print:": "there is no item to print!",
+  "text.dispatch_delivery_order_without_recipient": "dispatch delivery order without recipient?",
+  "text.the_delivery_order_is_ready_to_print": "the delivery order is ready to print",
+  "title.dispatched": "dispatched"
 }

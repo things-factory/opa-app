@@ -372,7 +372,8 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
               product {
                 id
                 name
-                description                
+                description  
+                type              
               }
               qty
               warehouse {
