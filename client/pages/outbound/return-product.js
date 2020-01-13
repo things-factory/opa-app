@@ -174,7 +174,7 @@ class ReturnProduct extends connect(store)(localize(i18next)(PageView)) {
 
       <div class="grist">
         <div class="left-column">
-          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.putaway')}</h2>
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.return')}</h2>
           <data-grist
             .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
             .config=${this.config}
