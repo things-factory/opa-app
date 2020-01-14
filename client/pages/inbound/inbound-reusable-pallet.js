@@ -119,16 +119,6 @@ class InboundReusablePallet extends connect(store)(localize(i18next)(PageView)) 
           .data=${this.palletData}
         ></data-grist>
       </div>
-
-      <!-- <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.reusable_pallet')}</h2>
-        <data-grist
-          id="pallet-grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.returnPalletGristConfig}
-          .data=${this.palletData}
-        ></data-grist>
-      </div> -->
     `
   }
 
@@ -148,6 +138,19 @@ class InboundReusablePallet extends connect(store)(localize(i18next)(PageView)) 
       list: { fields: ['name', 'holder'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'close',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              this.palletData = {
+                ...this.palletData,
+                records: data.records.filter((record, idx) => idx !== rowIndex)
+              }
+            }
+          }
+        },
         {
           type: 'string',
           name: 'name',
@@ -224,7 +227,6 @@ class InboundReusablePallet extends connect(store)(localize(i18next)(PageView)) 
   }
 
   async _updateReturnPallet() {
-    debugger
     let patches = this.dataGrist.__data.records
     if (patches && patches.length) {
       this.dataGrist.showSpinner()
@@ -252,6 +254,10 @@ class InboundReusablePallet extends connect(store)(localize(i18next)(PageView)) 
       this.palletData = { records: [] }
       this.dataGrist.hideSpinner()
     }
+  }
+
+  _removeSelected() {
+    debugger
   }
 
   _showToast({ type, message }) {
