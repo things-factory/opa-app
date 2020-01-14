@@ -368,7 +368,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
         await this.fetchWorksheet()
         this._updateContext()
         this._updateGristConfig()
-        navigate(`inbound_worksheets`)
+        navigate(`outbound_worksheets`)
       }
     } catch (e) {
       this._showToast(e)

@@ -354,6 +354,10 @@ export default {
       page: 'loading'
     },
     {
+      tagname: 'return-product',
+      page: 'returning'
+    },
+    {
       tagname: 'worksheet-loading',
       page: 'worksheet_loading'
     },

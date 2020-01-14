@@ -25,7 +25,8 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       _workerName: String,
       _recipient: String,
       _customerContactPoints: Array,
-      _companyCP: Object
+      _companyCP: Object,
+      _proceedFlag: Boolean
     }
   }
 
@@ -651,7 +652,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       this._date = _deliveryOrder.deliveryDate || ''
 
       if (_releaseOrderId) {
-        let orderInventories = await this._fetchOrderInventories(_releaseOrderId)
+        let orderInventories = await this._fetchOrderInventories(_deliveryOrder.id)
 
         if (orderInventories.length > 0) {
           orderInventories = await Promise.all(
@@ -676,12 +677,12 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     }
   }
 
-  async _fetchOrderInventories(releaseGoodsId) {
+  async _fetchOrderInventories(deliveryOrderId) {
     const filters = [
       {
-        name: 'releaseGood',
+        name: 'deliveryOrder',
         operator: 'eq',
-        value: releaseGoodsId
+        value: deliveryOrderId
       }
     ]
 
@@ -757,49 +758,63 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   async _executeDeliveryOrder() {
     try {
       this._validateInput()
+      this._proceedFlag = false
 
       if (!this._recipient) {
-        const result = await CustomAlert({
+        await CustomAlert({
           title: i18next.t('title.are_you_sure'),
-          text: i18next.t('text.dispatch_delivery_order_without_recipient'),
+          text: i18next.t('text.dispatch_delivery_order_without_delivery_address'),
           confirmButton: { text: i18next.t('button.confirm') },
           cancelButton: { text: i18next.t('button.cancel') },
           callback: async result => {
-            if (result.dismiss) {
+            if (result.dismiss)
               return
-            }
-
-            var args = {
-              orderInfo: { 
-                name: this._doNo,
-                to: this._recipient,
-                deliveryDate: this._date,
-                driverName: this._driverName || null
-              }
-            }
-
-            const response = await client.query({
-              query: gql`
-                mutation {
-                  dispatchDeliveryOrder(${gqlBuilder.buildArgs(args)}) {
-                    name
-                  }
-                }
-              `
-            })
-      
-            if (!response.errors) {
-              this._status = ORDER_STATUS.DELIVERING
-              this._updateContext()
-              
-              const result = await CustomAlert({
-                title: i18next.t('title.dispatched'),
-                text: i18next.t('text.the_delivery_order_is_ready_to_print'),
-                confirmButton: { text: i18next.t('button.confirm') }
-              })
-            }
+            else if (result.value)
+              this._proceedFlag = true
           }
         })
+      }
+
+      else {
+        await CustomAlert({
+          title: i18next.t('title.are_you_sure'),
+          text: i18next.t('text.dispatch_delivery_order'),
+          confirmButton: { text: i18next.t('button.confirm') },
+          cancelButton: { text: i18next.t('button.cancel') },
+          callback: async result => {
+            if (result.dismiss)
+              return
+            else if (result.value)
+              this._proceedFlag = true
+          }
+        })
+      }
+
+      if (this._proceedFlag === true) {
+        var args = {
+          orderInfo: { 
+            name: this._doNo,
+            to: this._recipient,
+            deliveryDate: this._date,
+            driverName: this._driverName || null
+          }
+        }
+
+        const response = await client.query({
+          query: gql`
+            mutation {
+              dispatchDeliveryOrder(${gqlBuilder.buildArgs(args)}) {
+                name
+              }
+            }
+          `
+        })
+  
+        if (!response.errors) {
+          this._status = ORDER_STATUS.DELIVERING
+          this._updateContext()
+          this._showToast({ message: i18next.t('text.dispatch_successful') })
+        }
       }
     } catch (e) {
       this._showToast(e)
@@ -895,7 +910,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
   _validateInput() {
     // incomplete input
-    if (!this._date) throw new Error(i18next.t('text.delivery_note_is_incomplete'))
+    if (!this._date) throw new Error(i18next.t('text.please_select_a_delivery_date'))
   }
 }
 
