@@ -63,7 +63,14 @@ class PalletList extends localize(i18next)(PageView) {
           title: i18next.t('button.delete'),
           action: this._deletePallet.bind(this)
         }
-      ]
+      ],
+      exportable: {
+        name: i18next.t('title.pallet'),
+        data: this._exportableData.bind(this)
+      },
+      importable: {
+        handler: this._importableData.bind(this)
+      }
     }
   }
 
@@ -113,6 +120,7 @@ class PalletList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.ref_no'),
+          imex: { header: i18next.t('field.name'), key: 'name', width: 50, type: 'string' },
           record: {
             editable: true,
             align: 'left'
@@ -124,6 +132,7 @@ class PalletList extends localize(i18next)(PageView) {
           type: 'object',
           name: 'owner',
           header: i18next.t('field.owner'),
+          imex: { header: i18next.t('field.owner'), key: 'owner.name', width: 50, type: 'string' },
           record: {
             editable: true,
             align: 'left',
@@ -138,6 +147,7 @@ class PalletList extends localize(i18next)(PageView) {
           type: 'object',
           name: 'holder',
           header: i18next.t('field.holder'),
+          imex: { header: i18next.t('field.holder'), key: 'holder.name', width: 50, type: 'string' },
           record: {
             editable: true,
             align: 'left',
@@ -152,6 +162,7 @@ class PalletList extends localize(i18next)(PageView) {
           type: 'code',
           name: 'status',
           header: i18next.t('field.status'),
+          imex: { header: i18next.t('field.status'), key: 'status', width: 50, type: 'string' },
           record: {
             editable: true,
             align: 'left',
@@ -354,6 +365,37 @@ class PalletList extends localize(i18next)(PageView) {
 
   get _columns() {
     return this.config.columns
+  }
+
+  _exportableData() {
+    let records = []
+    if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+      records = this.dataGrist.selected
+    } else {
+      records = this.dataGrist.data.records
+    }
+
+    var headerSetting = this.dataGrist._config.columns
+      .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+      .map(column => {
+        return column.imex
+      })
+
+    var data = records.map(item => {
+      return {
+        id: item.id,
+        ...this._columns
+          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+          .reduce((record, column) => {
+            record[column.imex.key] = column.imex.key
+              .split('.')
+              .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
+            return record
+          }, {})
+      }
+    })
+
+    return { header: headerSetting, data: data }
   }
 }
 
