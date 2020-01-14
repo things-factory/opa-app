@@ -96,72 +96,12 @@ export default {
       page: 'rejected_release_order'
     },
     {
-      tagname: 'delivery-order-requests',
-      page: 'delivery_order_requests'
-    },
-    {
-      tagname: 'rejected-delivery-order',
-      page: 'rejected_delivery_order'
-    },
-    {
-      tagname: 'receive-delivery-order',
-      page: 'receive_delivery_order'
-    },
-    {
-      tagname: 'execute-delivery-order',
-      page: 'execute_delivery_order'
-    },
-    {
-      tagname: 'complete-delivery-order',
-      page: 'complete_delivery_order'
-    },
-    {
-      tagname: 'completed-delivery-order',
-      page: 'completed_delivery_order'
-    },
-    {
-      tagname: 'receive-collection-order',
-      page: 'receive_collection_order'
-    },
-    {
-      tagname: 'rejected-collection-order',
-      page: 'rejected_collection_order'
-    },
-    {
-      tagname: 'execute-collection-order',
-      page: 'execute_collection_order'
-    },
-    {
-      tagname: 'complete-collection-order',
-      page: 'complete_collection_order'
-    },
-    {
-      tagname: 'completed-collection-order',
-      page: 'completed_collection_order'
-    },
-    {
-      tagname: 'collection-order-requests',
-      page: 'collection_order_requests'
-    },
-    {
-      tagname: 'delivery-order-detail',
-      page: 'delivery_order_detail'
-    },
-    {
-      tagname: 'collection-order-detail',
-      page: 'collection_order_detail'
-    },
-    {
       tagname: 'delivery-order-list',
       page: 'delivery_orders'
     },
     {
       tagname: 'print-delivery-note',
       page: 'print_delivery_note'
-    },
-    {
-      tagname: 'collection-order-list',
-      page: 'collection_orders'
     },
     {
       tagname: 'vas-order-requests',
@@ -186,10 +126,6 @@ export default {
     {
       tagname: 'rejected-vas-order',
       page: 'rejected_vas_order'
-    },
-    {
-      tagname: 'create-transport-order',
-      page: 'create_transport_order'
     },
 
     /**
