@@ -315,6 +315,10 @@ export default function route(page) {
       import('./pages/vas/vas-worksheet-list')
       return page
 
+    case 'inbound_reusable_pallet':
+      import('./pages/inbound/inbound-reusable-pallet')
+      return page
+
     /**
      * Outbound Menus Section
      */

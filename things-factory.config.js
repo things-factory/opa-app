@@ -329,6 +329,10 @@ export default {
       tagname: 'vas-worksheet-list',
       page: 'vas_worksheets'
     },
+    {
+      tagname: 'inbound-reusable-pallet',
+      page: 'inbound_reusable_pallet'
+    },
 
     /**
      * Outbound Menus Section
