@@ -120,72 +120,8 @@ export default function route(page) {
       import('./pages/order/vas-order/rejected-vas-order')
       return page
 
-    case 'create_transport_order':
-      import('./pages/order/transport-order/create-transport-order')
-      return page
-
-    case 'delivery_order_detail':
-      import('./pages/order/transport-order/delivery-order-detail')
-      return page
-
-    case 'collection_order_detail':
-      import('./pages/order/transport-order/collection-order-detail')
-      return page
-
     case 'delivery_orders':
       import('./pages/order/transport-order/delivery-order-list')
-      return page
-
-    case 'collection_orders':
-      import('./pages/order/transport-order/collection-order-list')
-      return page
-
-    case 'delivery_order_requests':
-      import('./pages/order/transport-order/delivery-order-requests')
-      return page
-
-    case 'collection_order_requests':
-      import('./pages/order/transport-order/collection-order-requests')
-      return page
-
-    case 'receive_collection_order':
-      import('./pages/order/transport-order/receive-collection-order')
-      return page
-
-    case 'receive_delivery_order':
-      import('./pages/order/transport-order/receive-delivery-order')
-      return page
-
-    case 'rejected_delivery_order':
-      import('./pages/order/transport-order/rejected-delivery-order')
-      return page
-
-    case 'rejected_collection_order':
-      import('./pages/order/transport-order/rejected-collection-order')
-      return page
-
-    case 'execute_delivery_order':
-      import('./pages/order/transport-order/execute-delivery-order')
-      return page
-
-    case 'execute_collection_order':
-      import('./pages/order/transport-order/execute-collection-order')
-      return page
-
-    case 'complete_delivery_order':
-      import('./pages/order/transport-order/complete-delivery-order')
-      return page
-
-    case 'complete_collection_order':
-      import('./pages/order/transport-order/complete-collection-order')
-      return page
-
-    case 'completed_delivery_order':
-      import('./pages/order/transport-order/completed-delivery-order')
-      return page
-
-    case 'completed_collection_order':
-      import('./pages/order/transport-order/completed-collection-order')
       return page
 
     case 'print_delivery_note':
