@@ -146,7 +146,7 @@ class InventoryByProductDetailMovement extends localize(i18next)(LitElement) {
                 {
                   name: 'transactionType',
                   operator: 'in',
-                  value: ['ADJUSTMENT', 'UNLOADING', 'LOADING', 'UNDO_UNLOADING']
+                  value: ['ADJUSTMENT', 'UNLOADING', 'PICKING', 'LOADING', 'UNDO_UNLOADING']
                 }
               ],
               pagination: { page, limit },

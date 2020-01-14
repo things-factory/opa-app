@@ -28,6 +28,7 @@
   "button.load": "load",
   "button.issue": "issue",
   "button.okay": "okay",
+  "button.pallets": "pallets",
   "button.pallet_label_print": "print pallet label",
   "button.preview": "preview",
   "button.print": "print",
