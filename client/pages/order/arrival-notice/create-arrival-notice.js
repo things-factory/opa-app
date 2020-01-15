@@ -528,11 +528,6 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       ).length
     )
       throw new Error(i18next.t('text.empty_value_in_list'))
-
-    // duplication of batch id
-    const batchIds = this.productGrist.dirtyData.records.map(product => product.batchId)
-    if (batchIds.filter((batchId, idx, batchIds) => batchIds.indexOf(batchId) !== idx).length)
-      throw new Error(i18next.t('text.batch_id_is_duplicated'))
   }
 
   _validateVas() {
