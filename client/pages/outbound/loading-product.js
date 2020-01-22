@@ -496,18 +496,19 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       const loadedWorksheetDetails = this.pickedProductGrist.selected.map(record => {
         return { name: record.name, loadedQty: record.loadedQty }
       })
-      const _truckInput = this.truckInput.value.toUpperCase()
-
-      let args = {
-        loadedWorksheetDetails,
-        releaseGoodNo: this._releaseGoodNo,
-        orderInfo: { truckNo: _truckInput.replace(/\s+/g, ''), ownCollection: this.ownCollectionInput.checked }
-      }
+      const truckNo = this.truckInput.value.toUpperCase().replace(/\s+/g, '')
 
       const response = await client.query({
         query: gql`
             mutation {
-            loading(${gqlBuilder.buildArgs(args)})
+            loading(${gqlBuilder.buildArgs({
+              loadedWorksheetDetails,
+              releaseGoodNo: this._releaseGoodNo,
+              orderInfo: {
+                truckNo,
+                ownCollection: this.ownCollectionInput.checked
+              }
+            })})
           }
           `
       })
@@ -609,10 +610,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     if (!this.pickedProductGrist.selected || !this.pickedProductGrist.selected.length) {
       throw new Error(i18next.t('text.there_is_no_selected_items'))
     }
-
-    if (!this.truckInput.value) {
-      throw new Error(i18next.t('text.there_is_no_input_for_truck_no'))
-    }
   }
 
   async _complete() {
@@ -630,7 +627,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         return
       }
 
-      if (this.pickedProductData && this.pickedProductData.records) {
+      if (this.pickedProductData && this.pickedProductData.records && this.pickedProductData.records.length) {
         const result = await CustomAlert({
           title: i18next.t('title.are_you_sure'),
           text: i18next.t('text.there_are_remain_products'),
@@ -696,7 +693,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
 
   async _validateComplete() {
     if (!this._releaseGoodNo) throw new Error(i18next.t('text.there_is_no_release_order_no'))
-    if (this.pickedProductGrist.dirtyData.records) throw new Error(i18next.t('text.there_is_remain_product'))
   }
 
   _clearView() {
