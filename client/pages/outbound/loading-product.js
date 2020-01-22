@@ -7,6 +7,8 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
+import { openPopup } from '@things-factory/layout-base'
+import './return-pallet-check-popup'
 
 class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -191,7 +193,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               <label for="ownCollection">${i18next.t('label.own_collection')}</label>
 
               <label>${i18next.t('label.lorry_no')}</label>
-              <input name="truckNo" required />
+              <input name="truckNo" />
             </fieldset>
           </form>
           ${this._selectedDeliveryOrder
@@ -228,11 +230,17 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   _updateContext() {
     let actions = []
     if (this._releaseGoodNo) {
-      actions = [{ title: i18next.t('button.complete'), action: this._complete.bind(this) }]
+      actions = [{ title: i18next.t('button.complete'), action: this._completeHandler.bind(this) }]
     }
 
     if (this._selectedTaskStatus === 'EXECUTING') {
-      actions = [...actions, { title: i18next.t('button.load'), action: this._loading.bind(this) }]
+      actions = [
+        ...actions,
+        {
+          title: i18next.t('button.load'),
+          action: this._loading.bind(this)
+        }
+      ]
     }
 
     store.dispatch({
@@ -612,7 +620,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _complete() {
+  async _completeHandler() {
     try {
       this._validateComplete()
 
@@ -628,41 +636,11 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       }
 
       if (this.pickedProductData && this.pickedProductData.records && this.pickedProductData.records.length) {
-        const result = await CustomAlert({
-          title: i18next.t('title.are_you_sure'),
-          text: i18next.t('text.there_are_remain_products'),
-          confirmButton: { text: i18next.t('button.confirm') },
-          cancelButton: { text: i18next.t('button.cancel') }
-        })
-
-        if (!result.value) {
-          return
-        }
+        this._validateRemainPallets(this.pickedProductData)
+        return
       }
 
-      const response = await client.query({
-        query: gql`
-          mutation {
-            completeLoading(${gqlBuilder.buildArgs({
-              releaseGoodNo: this._releaseGoodNo
-            })}) {
-              name
-            }
-          }
-        `
-      })
-
-      if (!response.errors) {
-        await CustomAlert({
-          title: i18next.t('title.completed'),
-          text: i18next.t('text.loading_completed'),
-          confirmButton: { text: i18next.t('button.confirm') }
-        })
-
-        this._releaseGoodNo = null
-        this.releaseGoodNoInput.value = ''
-        this._clearView()
-      }
+      this._complete()
     } catch (e) {
       this._showToast(e)
     }
@@ -688,6 +666,54 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       throw new Error(i18next.t('text.invalid_quantity_input'))
     } else {
       return
+    }
+  }
+
+  _validateRemainPallets(data) {
+    openPopup(
+      html`
+        <return-pallet-check-popup
+          .data="${data}"
+          @complete="${() => {
+            this._complete()
+          }}"
+        ></return-pallet-check-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'medium',
+        title: i18next.t('title.check_return_pallet')
+      }
+    )
+  }
+
+  async _complete() {
+    try {
+      const response = await client.query({
+        query: gql`
+          mutation {
+            completeLoading(${gqlBuilder.buildArgs({
+              releaseGoodNo: this._releaseGoodNo
+            })}) {
+              name
+            }
+          }
+        `
+      })
+
+      if (!response.errors) {
+        await CustomAlert({
+          title: i18next.t('title.completed'),
+          text: i18next.t('text.loading_completed'),
+          confirmButton: { text: i18next.t('button.confirm') }
+        })
+
+        this._releaseGoodNo = null
+        this.releaseGoodNoInput.value = ''
+        this._clearView()
+      }
+    } catch (e) {
+      this._showToast(e)
     }
   }
 
