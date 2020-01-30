@@ -88,9 +88,7 @@
     "@things-scene/tab": "*",
     "@things-scene/table": "*",
     "@things-scene/visualizer": "*",
-    "@things-scene/wheel-sorter": "*",
-    "pg": "*",
-    "sweetalert2": "*"
+    "@things-scene/wheel-sorter": "*"
   },
   "devDependencies": {
     "@things-factory/opa-test": "^2.0.0",
