@@ -2,12 +2,11 @@ import '@things-factory/barcode-ui'
 import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store, UPDATE_CONTEXT, navigate } from '@things-factory/shell'
+import { client, CustomAlert, gqlBuilder, isMobileDevice, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
-import Swal from 'sweetalert2'
 import { connect } from 'pwa-helpers/connect-mixin.js'
+import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
 
 const OPERATION_TYPE = {
   PUTAWAY: 'putaway',
@@ -22,9 +21,7 @@ class ReturnProduct extends connect(store)(localize(i18next)(PageView)) {
       data: Object,
       _productName: String,
       _selectedTaskStatus: String,
-      _operationType: String,
       incompleteLocationName: Boolean,
-      noLocationInput: Boolean,
       locations: Array
     }
   }
@@ -126,18 +123,6 @@ class ReturnProduct extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('barcode-scanable-input[name=locationCode]').shadowRoot.querySelector('input')
   }
 
-  get newLocationInput() {
-    return this.shadowRoot.querySelector('select[name=newLocationCode]')
-  }
-
-  get toPalletInput() {
-    return this.shadowRoot.querySelector('barcode-scanable-input[name=toPalletId]').shadowRoot.querySelector('input')
-  }
-
-  get qtyInput() {
-    return this.shadowRoot.querySelector('input[name=transferQty]')
-  }
-
   render() {
     return html`
       <form id="info-form" class="multi-column-form">
@@ -183,28 +168,15 @@ class ReturnProduct extends connect(store)(localize(i18next)(PageView)) {
         </div>
 
         <div class="right-column">
-          <form class="multi-column-form">
-            <fieldset>
-              <legend>${i18next.t('title.operation_type')}</legend>
-              <input
-                id="putaway-radio"
-                type="radio"
-                name="operationType"
-                value="${OPERATION_TYPE.PUTAWAY}"
-                checked
-                @change="${e => (this._operationType = e.currentTarget.value)}"
-              /><label for="putaway-radio">${i18next.t('label.putaway')}</label>
-              <input
-                id="transfer-radio"
-                type="radio"
-                name="operationType"
-                value="${OPERATION_TYPE.TRANSFER}"
-                @change="${e => (this._operationType = e.currentTarget.value)}"
-              /><label for="transfer-radio">${i18next.t('label.transfer')}</label>
-            </fieldset>
-          </form>
-
-          <form id="input-form" class="single-column-form" @keypress="${this._transactionHandler.bind(this)}">
+          <form
+            id="input-form"
+            class="single-column-form"
+            @keypress="${async e => {
+              if (e.keyCode === 13) {
+                await this._returning()
+              }
+            }}"
+          >
             <fieldset>
               <legend>${i18next.t('label.product')}: ${this._productName}</legend>
 
@@ -225,70 +197,37 @@ class ReturnProduct extends connect(store)(localize(i18next)(PageView)) {
             </fieldset>
 
             <fieldset>
-              <legend style="display: ${this.scannable ? 'flex' : 'none'}">${i18next.t('title.input_section')}</legend>
-              <label style="display: ${this.scannable ? 'flex' : 'none'}">${i18next.t('label.pallet_barcode')}</label>
-              <barcode-scanable-input
-                style="display: ${this.scannable ? 'flex' : 'none'}"
-                name="palletId"
-                .value=${this._pallet}
-                custom-input
-              ></barcode-scanable-input>
+              ${this.scannable
+                ? html`
+                    <legend>${i18next.t('title.input_section')}</legend>
+                    <label>${i18next.t('label.pallet_barcode')}</label>
+                    <barcode-scanable-input name="palletId" custom-input></barcode-scanable-input>
 
-              <label
-                style="display: ${this.scannable && this._operationType === OPERATION_TYPE.PUTAWAY ? 'flex' : 'none'}"
-                >${i18next.t('label.location')}</label
-              >
-              <barcode-scanable-input
-                style="display: ${this.scannable &&
-                !this.incompleteLocationName &&
-                this._operationType === OPERATION_TYPE.PUTAWAY
-                  ? 'flex'
-                  : 'none'}"
-                name="locationCode"
-                .value=${this._location}
-                custom-input
-              ></barcode-scanable-input>
+                    <label>${i18next.t('label.location')}</label>
 
-              <select
-                style="display: ${this.incompleteLocationName && this._operationType === OPERATION_TYPE.PUTAWAY
-                  ? 'flex'
-                  : 'none'}"
-                name="newLocationCode"
-                @change="${e => (this.locationInput.value = e.currentTarget.value)}"
-              >
-                <option value="">-- ${i18next.t('text.please_select_the_location')} --</option>
-                ${(this.locations || []).map(
-                  location =>
-                    html`
-                      <option value="${location && location.name}"
-                        >${location && location.name}
-                        ${location && location.status ? ` (${location && location.status})` : ''}</option
-                      >
-                    `
-                )}
-              </select>
-
-              <label
-                style="display: ${this.scannable && this._operationType === OPERATION_TYPE.TRANSFER ? 'flex' : 'none'}"
-                >${i18next.t('label.to_pallet_barcode')}</label
-              >
-              <barcode-scanable-input
-                style="display: ${this.scannable && this._operationType === OPERATION_TYPE.TRANSFER ? 'flex' : 'none'}"
-                name="toPalletId"
-                .value=${this._location}
-                custom-input
-              ></barcode-scanable-input>
-
-              <label
-                style="display: ${this.scannable && this._operationType === OPERATION_TYPE.TRANSFER ? 'flex' : 'none'}"
-                >${i18next.t('label.qty')}</label
-              >
-              <input
-                style="display: ${this.scannable && this._operationType === OPERATION_TYPE.TRANSFER ? 'flex' : 'none'}"
-                type="number"
-                min="1"
-                name="transferQty"
-              />
+                    ${!this.incompleteLocationName
+                      ? html`
+                          <barcode-scanable-input name="locationCode" custom-input></barcode-scanable-input>
+                        `
+                      : html`
+                          <select
+                            name="newLocationCode"
+                            @change="${e => (this.locationInput.value = e.currentTarget.value)}"
+                          >
+                            <option value="">-- ${i18next.t('text.please_select_the_location')} --</option>
+                            ${(this.locations || []).map(
+                              location =>
+                                html`
+                                  <option value="${location && location.name}"
+                                    >${location && location.name}
+                                    ${location && location.status ? ` (${location && location.status})` : ''}</option
+                                  >
+                                `
+                            )}
+                          </select>
+                        `}
+                  `
+                : ''}
             </fieldset>
           </form>
         </div>
@@ -303,7 +242,6 @@ class ReturnProduct extends connect(store)(localize(i18next)(PageView)) {
     this.releaseGoodNo = ''
     this._selectedOrderProduct = null
     this._selectedTaskStatus = null
-    this._operationType = OPERATION_TYPE.PUTAWAY
   }
 
   get scannable() {
@@ -317,10 +255,6 @@ class ReturnProduct extends connect(store)(localize(i18next)(PageView)) {
   updated(changedProps) {
     if (changedProps.has('_selectedTaskStatus') && this._selectedTaskStatus) {
       this._updateContext()
-    }
-
-    if (changedProps.has('_operationType')) {
-      this._focusOnPalletInput()
     }
   }
 
@@ -415,18 +349,6 @@ class ReturnProduct extends connect(store)(localize(i18next)(PageView)) {
     setTimeout(() => this.locationInput.focus(), 100)
   }
 
-  _focusOnNewLocationInput() {
-    setTimeout(() => this.newLocationInput.focus(), 100)
-  }
-
-  _focusOnToPalletInput() {
-    setTimeout(() => this.toPalletInput.focus(), 100)
-  }
-
-  _focusOnQtyInput() {
-    setTimeout(() => this.qtyInput.focus(), 100)
-  }
-
   async _fetchProducts(releaseGoodNo) {
     this._clearView()
     const response = await client.query({
@@ -514,20 +436,10 @@ class ReturnProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  _transactionHandler(e) {
-    if (e.keyCode === 13) {
-      if (this._operationType === OPERATION_TYPE.PUTAWAY) {
-        this._returning()
-      } else if (this._operationType === OPERATION_TYPE.TRANSFER) {
-        this._transfer()
-      }
-    }
-  }
-
   async _returning(e) {
     try {
-      this._validateReturning()
-      if (!this.incompleteLocationName && !this.noLocationInput) {
+      await this._validateReturning()
+      if (!this.incompleteLocationName) {
         const response = await client.query({
           query: gql`
             mutation {
@@ -554,35 +466,6 @@ class ReturnProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _transfer() {
-    try {
-      this._validateTransfer()
-      const response = await client.query({
-        query: gql`
-          mutation {
-            transfer(${gqlBuilder.buildArgs({
-              palletId: this.palletInput.value,
-              toPalletId: this.toPalletInput.value,
-              qty: parseInt(this.qtyInput.value)
-            })})
-          }
-        `
-      })
-
-      if (!response.errors) {
-        this._fetchProducts(this.releaseGoodNo)
-        this._focusOnPalletInput()
-        this._selectedTaskStatus = null
-        this._selectedOrderProduct = null
-        this.palletInput.value = ''
-        this.toPalletInput.value = ''
-        this.qtyInput.value = ''
-      }
-    } catch (e) {
-      this._showToast(e)
-    }
-  }
-
   async _validateReturning() {
     // 1. validate for order selection
     if (!this._selectedOrderProduct) throw new Error(i18next.t('text.target_doesnt_selected'))
@@ -593,69 +476,28 @@ class ReturnProduct extends connect(store)(localize(i18next)(PageView)) {
       throw new Error(i18next.t('text.pallet_id_is_empty'))
     }
 
-    // 3. equality of pallet id
-    if (this._selectedOrderProduct.palletId !== this.palletInput.value) {
-      setTimeout(() => this.palletInput.select(), 100)
-      throw new Error(i18next.t('text.wrong_pallet_id'))
-    }
-
-    // 4. location code existing
+    // 3. location code existing
     if (!this.locationInput.value) {
-      this.noLocationInput = true
       this._focusOnLocationInput()
       throw new Error(i18next.t('text.location_code_is_empty'))
     }
 
-    // 5. check for completeness of location input
+    // 4. check for completeness of location input
     else if (this.locationInput.value) {
       const locationNameSplit = this.locationInput.value.split('-')
-      const zonePortions = locationNameSplit[0].match(/[a-zA-Z0-9]+/g)
-      const rowPortions = locationNameSplit[1].match(/[a-zA-Z0-9]+/g)
-      const columnPortions = locationNameSplit[2].match(/[a-zA-Z0-9]+/g)
 
       if (locationNameSplit.length === 3) {
+        const zonePortions = locationNameSplit[0].match(/[a-zA-Z0-9]+/g)
+        const rowPortions = locationNameSplit[1].match(/[a-zA-Z0-9]+/g)
+        const columnPortions = locationNameSplit[2].match(/[a-zA-Z0-9]+/g)
+
         this.incompleteLocationName = true
         this.locations = await this._fetchLocations(zonePortions[0], rowPortions[0], columnPortions[0])
         this._focusOnNewLocationInput()
         throw new Error(i18next.t('text.please_select_the_location_again'))
       } else if (locationNameSplit.length === 4) {
-        this.noLocationInput = false
         this.incompleteLocationName = false
       }
-    }
-  }
-
-  _validateTransfer() {
-    // 1. validate for order selection
-    if (!this._selectedOrderProduct) throw new Error(i18next.t('text.target_doesnt_selected'))
-
-    // 2. pallet id existing
-    if (!this.palletInput.value) {
-      this._focusOnPalletInput()
-      throw new Error(i18next.t('text.pallet_id_is_empty'))
-    }
-
-    // 3. Equality of pallet id
-    if (this._selectedOrderProduct.palletId !== this.palletInput.value) {
-      setTimeout(() => this.palletInput.select(), 100)
-      throw new Error(i18next.t('text.wrong_pallet_id'))
-    }
-
-    // 4. to pallet id existing
-    if (!this.toPalletInput.value) {
-      this._focusOnToPalletInput()
-      throw new Error(i18next.t('text.to_pallet_id_is_empty'))
-    }
-
-    // 5. qty existing
-    if (!this.qtyInput.value) {
-      this._focusOnQtyInput()
-      throw new Error(i18next.t('text.qty_is_empty'))
-    }
-
-    if (parseInt(this.qtyInput.value) > this._selectedOrderProduct.qty) {
-      this._focusOnQtyInput()
-      throw new Error(i18next.t('text.qty_exceed_limit'))
     }
   }
 
@@ -708,15 +550,11 @@ class ReturnProduct extends connect(store)(localize(i18next)(PageView)) {
   async _completeHandler() {
     if (!this.data.records.every(record => record.completed)) return
     this._updateContext()
-    const result = await Swal.fire({
+    const result = await CustomAlert({
       title: i18next.t('text.return'),
       text: i18next.t('text.do_you_want_to_complete?'),
-      type: 'warning',
-      allowOutsideClick: false,
-      showCancelButton: true,
-      confirmButtonColor: '#22a6a7',
-      cancelButtonColor: '#cfcfcf',
-      confirmButtonText: i18next.t('text.yes')
+      confirmButton: { text: i18next.t('text.yes') },
+      cancelButton: { text: i18next.t('button.cancel') }
     })
 
     if (result.value) this._complete()
@@ -734,14 +572,10 @@ class ReturnProduct extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      this._clearView()
-      await Swal.fire({
+      await CustomAlert({
         title: i18next.t('text.return'),
         text: i18next.t('text.your_work_has_completed'),
-        type: 'info',
-        allowOutsideClick: false,
-        confirmButtonColor: '#22a6a7',
-        confirmButtonText: i18next.t('button.okay')
+        confirmButton: { text: i18next.t('text.yes') }
       })
 
       this._clearView()

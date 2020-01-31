@@ -137,6 +137,10 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('barcode-scanable-input[name=palletId]').shadowRoot.querySelector('input')
   }
 
+  get locationInput() {
+    return this.shadowRoot.querySelector('barcode-scanable-input[name=locationName]').shadowRoot.querySelector('input')
+  }
+
   get releaseQtyInput() {
     return this.shadowRoot.querySelector('input[name=confirmedQty]')
   }
@@ -217,10 +221,13 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
             <fieldset ?hidden=${!this.scannable}>
               <legend>${i18next.t('title.input_section')}</legend>
               <label>${i18next.t('label.pallet_barcode')}</label>
-              <barcode-scanable-input name="palletId" .value=${this._pallet} custom-input></barcode-scanable-input>
+              <barcode-scanable-input name="palletId" custom-input></barcode-scanable-input>
 
               <label>${i18next.t('label.picked_qty')}</label>
               <input type="number" min="1" name="confirmedQty" />
+
+              <label>${i18next.t('label.return_location')}</label>
+              <barcode-scanable-input name="locationName" custom-input></barcode-scanable-input>
             </fieldset>
           </form>
         </div>
@@ -271,7 +278,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
               }`
 
               this._fillUpForm(this.inputForm, record)
-              this._focusOnPalletInput()
+              this._focusOnInput(this.palletInput)
             }
           }
         }
@@ -320,7 +327,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
 
   pageUpdated() {
     if (this.active) {
-      this._focusOnReleaseGoodField()
+      this._focusOnInput(this.releaseGoodNoInput)
     }
   }
 
@@ -339,16 +346,8 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     })
   }
 
-  _focusOnReleaseGoodField() {
-    setTimeout(() => this.releaseGoodNoInput.focus(), 100)
-  }
-
-  _focusOnPalletInput() {
-    setTimeout(() => this.palletInput.focus(), 100)
-  }
-
-  _focusOnReleaseQtyInput() {
-    setTimeout(() => this.releaseQtyInput.focus(), 100)
+  _focusOnInput(target) {
+    setTimeout(() => target.focus(), 100)
   }
 
   async _fetchInventories(releaseGoodNo) {
@@ -474,12 +473,28 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     if (e.keyCode === 13) {
       try {
         this._validatePicking()
+
+        // 1. Check whether location is changed
+        if (this._selectedOrderInventory.location.name !== this.locationInput.value) {
+          const result = await CustomAlert({
+            title: i18next.t('title.relocate'),
+            text: i18next.t('text.are_you_sure'),
+            confirmButton: { text: i18next.t('button.relocate') },
+            cancelButton: { text: i18next.t('button.cancel') }
+          })
+
+          if (!result.value) {
+            return
+          }
+        }
+
         const response = await client.query({
           query: gql`
               mutation {
                 picking(${gqlBuilder.buildArgs({
                   worksheetDetailName: this._selectedOrderInventory.name,
                   palletId: this.palletInput.value,
+                  locationName: this.locationInput.value,
                   releaseQty: parseInt(this.releaseQtyInput.value)
                 })})
               }
@@ -488,11 +503,12 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
 
         if (!response.errors) {
           this._fetchInventories(this.releaseGoodNo)
-          this._focusOnPalletInput()
+          this._focusOnInput(this.palletInput)
           this._selectedTaskStatus = null
           this._selectedOrderInventory = null
           this.palletInput.value = ''
           this.releaseQtyInput.value = ''
+          this.locationInput.value = ''
         }
       } catch (e) {
         this._showToast(e)
@@ -506,7 +522,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
 
     // 2. pallet id existing
     if (!this.palletInput.value) {
-      this._focusOnPalletInput()
+      this._focusOnInput(this.palletInput)
       throw new Error(i18next.t('text.pallet_id_is_empty'))
     }
 
@@ -518,11 +534,17 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
 
     // 4. Release qty existing
     if (!parseInt(this.releaseQtyInput.value)) {
-      this._focusOnReleaseQtyInput()
+      this._focusOnInput(this.releaseQtyInput)
       throw new Error(i18next.t('text.release_qty_is_empty'))
     }
 
-    // 5. typed qty should be matched with release qty.
+    // 5. location id existing
+    if (!this.locationInput.value) {
+      this._focusOnInput(this.locationInput)
+      throw new Error(i18next.t('text.location_id_is_empty'))
+    }
+
+    // 6. typed qty should be matched with release qty.
     if (parseInt(this.releaseQtyInput.value) !== this._selectedOrderInventory.releaseQty) {
       setTimeout(() => this.releaseQtyInput.select(), 100)
       throw new Error(i18next.t('text.wrong_release_qty'))
