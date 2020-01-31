@@ -570,7 +570,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     this._complete()
   }
 
-  _complete() {
+  async _complete() {
     const response = await client.query({
       query: gql`
         mutation {
