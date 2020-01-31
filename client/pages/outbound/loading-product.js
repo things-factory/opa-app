@@ -21,7 +21,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       loadedProductConfig: Object,
       loadedProductData: Object,
       _selectedTaskStatus: String,
-      _selectedTruck: String,
       _vehicleList: Object
     }
   }
@@ -123,6 +122,10 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
 
   get deliveryOrderGrist() {
     return this.shadowRoot.querySelector('data-grist#delivery-order-grist')
+  }
+
+  get loadedProductGrist() {
+    return this.shadowRoot.querySelector('data-grist#loaded-product-grist')
   }
 
   get scannable() {
@@ -243,6 +246,16 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       ]
     }
 
+    if (this._selectedDeliveryOrder) {
+      actions = [
+        ...actions,
+        {
+          title: i18next.t('button.undo'),
+          action: this._undoLoading.bind(this)
+        }
+      ]
+    }
+
     store.dispatch({
       type: UPDATE_CONTEXT,
       context: {
@@ -338,6 +351,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               }
               this._selectedDeliveryOrder = record
               this._fetchLoadedProducts()
+              this._updateContext()
             }
           }
         }
@@ -410,7 +424,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
           name: 'unit',
           header: i18next.t('field.weight_unit'),
           record: { align: 'center' },
-          weight: 80
+          width: 80
         }
       ]
     }
@@ -505,10 +519,9 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         return { name: record.name, loadedQty: record.loadedQty }
       })
       const truckNo = this.truckInput.value.toUpperCase().replace(/\s+/g, '')
-
       const response = await client.query({
         query: gql`
-            mutation {
+          mutation {
             loading(${gqlBuilder.buildArgs({
               loadedWorksheetDetails,
               releaseGoodNo: this._releaseGoodNo,
@@ -518,7 +531,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               }
             })})
           }
-          `
+        `
       })
 
       if (!response.errors) {
@@ -526,6 +539,30 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         await this._fetchLoadingWorksheet(this._releaseGoodNo)
         await this._fetchDeliveryOrders(this._releaseGoodNo)
         this._selectedTaskStatus = null
+      }
+    } catch (e) {
+      this._showToast(e)
+    }
+  }
+
+  async _undoLoading() {
+    try {
+      this._validateUndoLoading()
+      const response = await client.query({
+        query: gql`
+          mutation {
+            undoLoading(${gqlBuilder.buildArgs({
+              deliveryOrder: { id: this._selectedDeliveryOrder.id },
+              palletIds: this.loadedProductGrist.selected.map(item => item.palletId)
+            })})
+          }
+        `
+      })
+
+      if (!response.errors) {
+        this._clearView()
+        await this._fetchLoadingWorksheet(this.releaseGoodNoInput.value)
+        await this._fetchDeliveryOrders(this.releaseGoodNoInput.value)
       }
     } catch (e) {
       this._showToast(e)
@@ -616,6 +653,12 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   _validateLoading() {
     // 1. validate whethere there's selected product or not
     if (!this.pickedProductGrist.selected || !this.pickedProductGrist.selected.length) {
+      throw new Error(i18next.t('text.there_is_no_selected_items'))
+    }
+  }
+
+  _validateUndoLoading() {
+    if (!this.loadedProductGrist.selected || !this.loadedProductGrist.selected.length) {
       throw new Error(i18next.t('text.there_is_no_selected_items'))
     }
   }
@@ -727,7 +770,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     this.loadedProductData = { records: [] }
     this.infoForm.reset()
     this.inputForm.reset()
-    this._selectedTruck = null
     this._selectedTaskStatus = null
     this._selectedDeliveryOrder = null
     this._updateContext()
