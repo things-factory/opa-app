@@ -191,7 +191,7 @@ class InboundReusablePallet extends connect(store)(localize(i18next)(PageView)) 
       const response = await client.query({
         query: gql`
           query {
-            palletReturnValidate(${gqlBuilder.buildArgs({
+            palletInboundValidate(${gqlBuilder.buildArgs({
               name: this.palletRefNoInput.value
             })}) {
               item{
@@ -213,11 +213,11 @@ class InboundReusablePallet extends connect(store)(localize(i18next)(PageView)) 
       })
 
       if (!response.errors) {
-        if (response?.data?.palletReturnValidate?.item) {
-          if (!this.palletData.records.find(itm => itm.name === response.data.palletReturnValidate.item.name))
-            this.palletData = { records: [...this.palletData.records, response.data.palletReturnValidate.item] }
-        } else if (response?.data?.palletReturnValidate?.error) {
-          this._showToast({ message: response.data.palletReturnValidate.error })
+        if (response?.data?.palletInboundValidate?.item) {
+          if (!this.palletData.records.find(itm => itm.name === response.data.palletInboundValidate.item.name))
+            this.palletData = { records: [...this.palletData.records, response.data.palletInboundValidate.item] }
+        } else if (response?.data?.palletInboundValidate?.error) {
+          this._showToast({ message: response.data.palletInboundValidate.error })
         }
       }
     } catch (error) {
