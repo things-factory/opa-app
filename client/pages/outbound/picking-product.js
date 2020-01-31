@@ -2,6 +2,7 @@ import '@things-factory/barcode-ui'
 import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import { openPopup } from '@things-factory/layout-base'
 import {
   client,
   CustomAlert,
@@ -16,6 +17,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
+import './outbound-reusable-pallet'
 
 class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -24,7 +26,8 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
       config: Object,
       data: Object,
       _productName: String,
-      _selectedTaskStatus: String
+      _selectedTaskStatus: String,
+      _reusablePalletList: Object
     }
   }
 
@@ -89,6 +92,16 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
           display: none;
         }
 
+        div.reusable_pallet {
+          grid-column: span 12 / auto;
+          display: inline-flex;
+          align-items: center;
+          font-size: 12px;
+          background-color: #ccc0;
+          border: 1px solid #6e7e8e;
+          color: #394e63;
+        }
+
         @media (max-width: 460px) {
           :host {
             display: block;
@@ -140,7 +153,10 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
             @keypress="${async e => {
               if (e.keyCode === 13) {
                 e.preventDefault()
-                if (this.releaseGoodNoInput.value) this._fetchInventories(this.releaseGoodNoInput.value)
+                if (this.releaseGoodNoInput.value) {
+                  this._fetchInventories(this.releaseGoodNoInput.value)
+                  this._fetchPalletsHandler(this.releaseGoodNoInput.value)
+                }
               }
             }}"
           ></barcode-scanable-input>
@@ -191,6 +207,13 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
               <input name="description" readonly />
             </fieldset>
 
+            <fieldset ?hidden=${this.releaseGoodNo == ''}>
+              <legend>${i18next.t('title.reusable_pallet')}</legend>
+              <div class="reusable_pallet" @click="${this._openPalletOutbound.bind(this)}">
+                <mwc-icon>apps</mwc-icon>Reusable Pallets
+              </button>
+            </fieldset>
+
             <fieldset ?hidden=${!this.scannable}>
               <legend>${i18next.t('title.input_section')}</legend>
               <label>${i18next.t('label.pallet_barcode')}</label>
@@ -212,6 +235,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     this.releaseGoodNo = ''
     this._selectedOrderInventory = null
     this._selectedTaskStatus = null
+    this._reusablePalletList = { records: [] }
   }
 
   get scannable() {
@@ -382,6 +406,38 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
+  async _fetchPalletsHandler(releaseGoodNo) {
+    const response = await client.query({
+      query: gql`
+        query {
+          pallets(${gqlBuilder.buildArgs({
+            filters: [{ name: 'refOrderNo', value: releaseGoodNo, operator: 'eq' }],
+            pagination: { page: 1, limit: 9999999 }
+          })}) {
+            items {
+              id
+              name              
+              owner{
+                id
+                name
+                description
+              }
+              holder{
+                id
+                name
+                description
+              }
+              status
+            }
+          }
+        }
+      `
+    })
+    if (!response.errors) {
+      this._reusablePalletList = { records: response.data.pallets.items }
+    }
+  }
+
   _clearView() {
     this.data = { records: [] }
     this.infoForm.reset()
@@ -492,7 +548,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     this._complete()
   }
 
-  async _complete() {
+  _complete() {
     const response = await client.query({
       query: gql`
         mutation {
@@ -514,6 +570,25 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
       this._clearView()
       navigate('outbound_worksheets')
     }
+  }
+
+  _openPalletOutbound() {
+    openPopup(
+      html`
+        <outbound-reusable-pallet
+          .palletData="${this._reusablePalletList}"
+          .releaseGoodNo="${this.releaseGoodNo}"
+          @reusable-pallet-info="${e => {
+            this._reusablePalletList = e.detail
+          }}"
+        ></outbound-reusable-pallet>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.outbound_reusable_pallet')
+      }
+    )
   }
 
   _showToast({ type, message }) {
