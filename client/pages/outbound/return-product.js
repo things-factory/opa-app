@@ -552,7 +552,7 @@ class ReturnProduct extends connect(store)(localize(i18next)(PageView)) {
     this._updateContext()
     const result = await CustomAlert({
       title: i18next.t('text.return'),
-      text: i18next.t('text.do_you_want_to_complete?'),
+      text: i18next.t('text.do_you_want_to_complete'),
       confirmButton: { text: i18next.t('text.yes') },
       cancelButton: { text: i18next.t('button.cancel') }
     })
