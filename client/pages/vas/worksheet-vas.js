@@ -205,10 +205,17 @@ class WorksheetVas extends localize(i18next)(PageView) {
           }
         }
       },
-      list: { fields: ['batchId', 'vas', 'remark'] },
+      list: { fields: ['location', 'batchId', 'vas', 'remark'] },
       pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'string',
+          name: 'locationInv',
+          header: i18next.t('field.location'),
+          record: { align: 'center' },
+          width: 150
+        },
         {
           type: 'string',
           name: 'batchId',
@@ -307,6 +314,10 @@ class WorksheetVas extends localize(i18next)(PageView) {
                 inventory {
                   name
                   description
+                  location {
+                    name
+                    description
+                  }
                 }
                 vas {
                   id
@@ -353,6 +364,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
             ...worksheetDetail.targetVas,
             name: worksheetDetail.name,
             status: worksheetDetail.status,
+            locationInv: worksheetDetail.targetVas.inventory.location.name,
             issue: worksheetDetail.issue,
             description: worksheetDetail.description
           }

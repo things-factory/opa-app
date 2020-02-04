@@ -250,6 +250,9 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
               <label>${i18next.t('label.batch_no')}</label>
               <input name="batchId" readonly />
 
+              <label>${i18next.t('label.location')}</label>
+              <input name="locationInv" readonly />
+
               <label>${i18next.t('label.vas')}</label>
               <input name="vas" readonly />
 
@@ -412,6 +415,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
               status
               issue
               operationGuide
+              locationInv 
               vas {
                 id
                 name
