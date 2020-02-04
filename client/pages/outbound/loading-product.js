@@ -14,6 +14,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _releaseGoodNo: String,
+      _ownCollection: Boolean,
       pickedProductConfig: Object,
       pickedProductData: Object,
       deliveryOrderConfig: Object,
@@ -165,6 +166,9 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
 
           <label>${i18next.t('label.started_at')}</label>
           <input name="startedAt" type="datetime-local" readonly />
+
+          <input id="ownCollection" type="checkbox" name="ownCollection" disabled />
+          <label for="ownCollection">${i18next.t('label.own_collection')}</label>
         </fieldset>
       </form>
 
@@ -192,9 +196,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
           <form id="input-form" class="single-column-form">
             <fieldset>
               <legend>${i18next.t('label.assign_truck')}</legend>
-              <input id="ownCollection" type="checkbox" name="ownCollection" />
-              <label for="ownCollection">${i18next.t('label.own_collection')}</label>
-
               <label>${i18next.t('label.lorry_no')}</label>
               <input name="truckNo" />
             </fieldset>
@@ -356,7 +357,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
           }
         }
       },
-      list: { fields: ['name', 'regNumber'] },
+      list: { fields: ['name', 'truck'] },
       pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -451,6 +452,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               bizplaceName
               refNo
               startedAt
+              ownCollection
             }
             worksheetDetailInfos {
               name
@@ -476,6 +478,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     if (!response.errors) {
       this._releaseGoodNo = releaseGoodNo
       this._fillUpForm(this.infoForm, response.data.loadingWorksheet.worksheetInfo)
+      this._ownCollection = response.data.loadingWorksheet.worksheetInfo.ownCollection
       this.pickedProductData = {
         records: response.data.loadingWorksheet.worksheetDetailInfos.map(record => {
           return {
@@ -526,8 +529,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               loadedWorksheetDetails,
               releaseGoodNo: this._releaseGoodNo,
               orderInfo: {
-                truckNo,
-                ownCollection: this.ownCollectionInput.checked
+                truckNo
               }
             })})
           }
