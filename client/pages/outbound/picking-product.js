@@ -2,16 +2,8 @@ import '@things-factory/barcode-ui'
 import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import {
-  client,
-  CustomAlert,
-  gqlBuilder,
-  isMobileDevice,
-  navigate,
-  PageView,
-  store,
-  UPDATE_CONTEXT
-} from '@things-factory/shell'
+import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
@@ -24,7 +16,8 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
       config: Object,
       data: Object,
       _productName: String,
-      _selectedTaskStatus: String
+      _selectedTaskStatus: String,
+      isWholePicking: Boolean
     }
   }
 
@@ -203,8 +196,12 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
               <label>${i18next.t('label.picked_qty')}</label>
               <input type="number" min="1" name="confirmedQty" />
 
-              <label>${i18next.t('label.return_location')}</label>
-              <barcode-scanable-input name="locationName" custom-input></barcode-scanable-input>
+              ${this.isWholePicking
+                ? ''
+                : html`
+                    <label>${i18next.t('label.return_location')}</label>
+                    <barcode-scanable-input name="locationName" custom-input></barcode-scanable-input>
+                  `}
             </fieldset>
           </form>
         </div>
@@ -252,6 +249,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
               this._productName = `${record.product.name} ${
                 record.product.description ? `(${record.product.description})` : ''
               }`
+              this.isWholePicking = this._selectedOrderInventory.releaseQty === this._selectedOrderInventory.qty
 
               this._fillUpForm(this.inputForm, record)
               this._focusOnInput(this.palletInput)
@@ -418,8 +416,9 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
       try {
         this._validatePicking()
 
+        const locationName = this.isWholePicking ? this._selectedOrderInventory.location.name : this.locationInput.value
         // 1. Check whether location is changed
-        if (this._selectedOrderInventory.location.name !== this.locationInput.value) {
+        if (this._selectedOrderInventory.location.name !== locationName) {
           const result = await CustomAlert({
             title: i18next.t('title.relocate'),
             text: i18next.t('text.are_you_sure'),
@@ -438,7 +437,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
                 picking(${gqlBuilder.buildArgs({
                   worksheetDetailName: this._selectedOrderInventory.name,
                   palletId: this.palletInput.value,
-                  locationName: this.locationInput.value,
+                  locationName,
                   releaseQty: parseInt(this.releaseQtyInput.value)
                 })})
               }
@@ -482,16 +481,16 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
       throw new Error(i18next.t('text.release_qty_is_empty'))
     }
 
-    // 5. location id existing
-    if (!this.locationInput.value) {
-      this._focusOnInput(this.locationInput)
-      throw new Error(i18next.t('text.location_id_is_empty'))
-    }
-
-    // 6. typed qty should be matched with release qty.
+    // 5. typed qty should be matched with release qty.
     if (parseInt(this.releaseQtyInput.value) !== this._selectedOrderInventory.releaseQty) {
       setTimeout(() => this.releaseQtyInput.select(), 100)
       throw new Error(i18next.t('text.wrong_release_qty'))
+    }
+
+    // 6. location id existing
+    if (!this.isWholePicking && !this.locationInput.value) {
+      this._focusOnInput(this.locationInput)
+      throw new Error(i18next.t('text.location_id_is_empty'))
     }
 
     if (!this.releaseQtyInput.checkValidity()) throw new Error(i18next.t('text.release_qty_invalid'))
