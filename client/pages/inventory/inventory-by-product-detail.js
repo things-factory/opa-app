@@ -5,7 +5,7 @@ import { openPopup } from '@things-factory/layout-base'
 import { client, gqlBuilder, isMobileDevice, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
-import './inventory-by-product-detail-movement'
+import './inventory-history-by-pallet'
 
 class InventoryByProductDetail extends localize(i18next)(LitElement) {
   static get styles() {
@@ -199,7 +199,7 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
   _showInventoryMovement(columns, data, column, record, rowIndex) {
     openPopup(
       html`
-        <inventory-by-product-detail-movement .palletId="${record.palletId}"></inventory-by-product-detail-movement>
+        <inventory-history-by-pallet .palletId="${record.palletId}"></inventory-history-by-pallet>
       `,
       {
         backdrop: true,

@@ -5,7 +5,7 @@ import { client, gqlBuilder, isMobileDevice, ScrollbarStyles } from '@things-fac
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 
-class InventoryByProductDetailMovement extends localize(i18next)(LitElement) {
+class InventoryHistoryByPallet extends localize(i18next)(LitElement) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -208,4 +208,4 @@ class InventoryByProductDetailMovement extends localize(i18next)(LitElement) {
   }
 }
 
-window.customElements.define('inventory-by-product-detail-movement', InventoryByProductDetailMovement)
+window.customElements.define('inventory-history-by-pallet', InventoryHistoryByPallet)
