@@ -204,7 +204,7 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
       {
         backdrop: true,
         size: 'large',
-        title: `${record.palletId} - Movements`
+        title: `${record.palletId} - History`
       }
     )
   }
