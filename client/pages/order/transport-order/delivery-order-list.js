@@ -1,4 +1,5 @@
 import '@things-factory/form-ui'
+import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
@@ -40,6 +41,8 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
 
   render() {
     return html`
+      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
+
       <data-grist
         .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
         .config=${this.config}
@@ -64,7 +67,42 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    const _deliveryStatus = await getCodeByName('DELIVERY_STATUS')
+
+    this._searchFields = [
+      {
+        name: 'name',
+        label: i18next.t('field.do_no'),
+        type: 'text',
+        props: { searchOper: 'eq' }
+      },
+      {
+        name: 'releaseGoodNo',
+        label: i18next.t('field.release_good_no'),
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
+        name: 'bizplaceName',
+        label: i18next.t('field.customer'),
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
+        name: 'status',
+        label: i18next.t('label.status'),
+        type: 'select',
+        options: [
+          { value: '' },
+          ..._deliveryStatus.map(status => {
+            return { name: i18next.t(`label.${status.description}`), value: status.name }
+          })
+        ],
+        props: { searchOper: 'eq' }
+      }
+    ]
+
     this.config = {
       rows: { selectable: { multiple: true }, appendable: false },
       columns: [
@@ -155,16 +193,21 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
     }
   }
 
+  get searchForm() {
+    return this.shadowRoot.querySelector('search-form')
+  }
+
   get dataGrist() {
     return this.shadowRoot.querySelector('data-grist')
   }
 
   async fetchHandler({ page, limit, sorters = [{ name: 'createdAt', desc: true }] }) {
+    const filters = this.searchForm.queryFilters
     const response = await client.query({
       query: gql`
         query {
           deliveryOrders(${gqlBuilder.buildArgs({
-            filters: [],
+            filters,
             pagination: { page, limit },
             sortings: sorters
           })}) {

@@ -100,9 +100,6 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
           <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" readonly />
 
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
-          <input name="truckNo" ?hidden="${!this._ownTransport}" readonly />
-
           <input id="exportOption" type="checkbox" name="exportOption" ?checked="${this._exportOption}" disabled />
           <label>${i18next.t('label.export')}</label>
 
@@ -360,10 +357,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
                 name
               }              
             }
-            shippingOrder {
-              id
-              name
-              description
+            shippingOrderInfo {
               containerNo
               containerLeavingDate
               containerArrivalDate
@@ -392,7 +386,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const releaseOrder = response.data.releaseGoodDetail
-      const shippingOrder = releaseOrder.shippingOrder
+      const shippingOrder = releaseOrder.shippingOrderInfo
       const orderInventories = releaseOrder.inventoryInfos.map(inventoryInfo => {
         return {
           ...inventoryInfo,
@@ -450,12 +444,22 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
   }
 
   _fillupForm(form, data) {
+    form.reset()
     for (let key in data) {
-      Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
+      Array.from(form.querySelectorAll('input')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
+        } else if (field.name === key && field.type === 'datetime-local') {
+          const datetime = Number(data[key])
+          const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
+          field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
         } else if (field.name === key) {
-          field.value = data[key]
+          if (data[key] instanceof Object) {
+            const objectData = data[key]
+            field.value = `${objectData.name} ${objectData.description ? `(${objectData.description})` : ''}`
+          } else {
+            field.value = data[key]
+          }
         }
       })
     }

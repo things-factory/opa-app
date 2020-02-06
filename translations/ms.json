@@ -520,6 +520,7 @@
   "text.data_imported_successfully": "data telah berjaya diimport",
   "text.data_updated_successfully": "data berjaya dikemaskini",
   "text.delete_all_locations?": "buang semua lokasi",
+  "text.delivery_has_been_dispatched": "pesanan penghantaran sedang dijalankan",
   "text.delivery_order_completed": "penghantaran pesanan selesai",
   "text.delivery_order_confirmed": "penghantaran pesanan telah dipastikan",
   "text.delivery_order_dispatched": "penghantaran pesanan dikeluarkan",

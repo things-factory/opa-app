@@ -118,9 +118,6 @@ class CompletedReleaseOrder extends localize(i18next)(PageView) {
             <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
             <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" readonly/>
 
-            <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
-            <input name="truckNo" ?hidden="${!this._ownTransport}" readonly/>
-
             <input
             id="exportOption"
             type="checkbox"
