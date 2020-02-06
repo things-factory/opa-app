@@ -10,6 +10,7 @@ import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
 import { PALLET_LABEL_SETTING_KEY } from '../../setting-constants'
 import '../components/import-pop-up'
+import './inventory-history-by-pallet'
 
 class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -91,7 +92,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
 
     this.config = {
       list: {
-        fields: ['palletId', 'product', 'bizplace', 'location']
+        fields: ['palletId', 'product', 'bizplace', 'qty', 'location']
       },
       rows: {
         handlers: { click: this._setProductRefCondition.bind(this) },
@@ -102,6 +103,14 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'reorder',
+          handlers: {
+            click: this._showInventoryMovement.bind(this)
+          }
+        },
         {
           type: 'string',
           name: 'palletId',
@@ -722,6 +731,19 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         `
     })
     return response.data.locations.items
+  }
+
+  _showInventoryMovement(columns, data, column, record, rowIndex) {
+    openPopup(
+      html`
+        <inventory-history-by-pallet .palletId="${record.palletId}"></inventory-history-by-pallet>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: `${record.palletId} - History`
+      }
+    )
   }
 
   async _printPalletLabel() {
