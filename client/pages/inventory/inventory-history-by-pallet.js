@@ -146,7 +146,7 @@ class InventoryHistoryByPallet extends localize(i18next)(LitElement) {
                 {
                   name: 'transactionType',
                   operator: 'in',
-                  value: ['ADJUSTMENT', 'UNLOADING', 'PICKING', 'LOADING', 'UNDO_UNLOADING']
+                  value: ['NEW', 'ADJUSTMENT', 'UNLOADING', 'UNDO_UNLOADING', 'PICKING', 'LOADING', 'UNDO_LOADING']
                 }
               ],
               pagination: { page, limit },
