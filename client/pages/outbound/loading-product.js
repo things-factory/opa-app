@@ -117,6 +117,10 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('input[name=truckNo]')
   }
 
+  get palletQty() {
+    return this.shadowRoot.querySelector('input[name=palletQty]')
+  }
+
   get pickedProductGrist() {
     return this.shadowRoot.querySelector('data-grist#picked-product-grist')
   }
@@ -198,6 +202,9 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               <legend>${i18next.t('label.assign_truck')}</legend>
               <label>${i18next.t('label.lorry_no')}</label>
               <input name="truckNo" />
+
+              <label>${i18next.t('label.total_pallet_qty')}</label>
+              <input name="palletQty" />
             </fieldset>
           </form>
           ${this._selectedDeliveryOrder
@@ -522,6 +529,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         return { name: record.name, loadedQty: record.loadedQty }
       })
       const truckNo = this.truckInput.value.toUpperCase().replace(/\s+/g, '')
+      const palletQty = this.palletQty.value
       const response = await client.query({
         query: gql`
           mutation {
@@ -529,7 +537,8 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               loadedWorksheetDetails,
               releaseGoodNo: this._releaseGoodNo,
               orderInfo: {
-                truckNo
+                truckNo,
+                palletQty
               }
             })})
           }

@@ -178,7 +178,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
   }
 
   async pageUpdated(changes) {
-    if (this.active && changes.resourceId) {
+    if (this.active) {
       this._worksheetNo = changes.resourceId
       await this.fetchWorksheet()
       this._updateContext()
