@@ -1,6 +1,7 @@
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, CustomAlert, gqlBuilder, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { gqlBuilder } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/popup-note'
@@ -469,10 +470,12 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
   async pageUpdated(changes) {
     if (this.active) {
-      this._doNo = changes.resourceId || this._doNo || ''
-      this._driverList = { ...(await this._fetchTruckDriver()) }
-      await this._fetchDeliveryOrder(this._doNo)
-      this._updateContext()
+      if (changes.resourceId) {
+        this._doNo = changes.resourceId
+        this._driverList = { ...(await this._fetchTruckDriver()) }
+        await this._fetchDeliveryOrder(this._doNo)
+        this._updateContext()
+      }
     }
   }
 
@@ -641,7 +644,8 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       const _releaseOrderId = _deliveryOrder.releaseGood.id || ''
       this._releaseOrderName = _deliveryOrder.releaseGood.name
       this._ownCollection = _deliveryOrder.ownCollection
-      this._truckNo = _deliveryOrder.truckNo || _deliveryOrder.transportVehicle.name
+      this._truckNo =
+        _deliveryOrder.truckNo || (_deliveryOrder.transportVehicle && _deliveryOrder.transportVehicle.name) || ''
       this._status = _deliveryOrder.status || ''
 
       if (!this._ownCollection) {
@@ -767,32 +771,26 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           confirmButton: { text: i18next.t('button.confirm') },
           cancelButton: { text: i18next.t('button.cancel') },
           callback: async result => {
-            if (result.dismiss)
-              return
-            else if (result.value)
-              this._proceedFlag = true
+            if (result.dismiss) return
+            else if (result.value) this._proceedFlag = true
           }
         })
-      }
-
-      else {
+      } else {
         await CustomAlert({
           title: i18next.t('title.are_you_sure'),
           text: i18next.t('text.dispatch_delivery_order'),
           confirmButton: { text: i18next.t('button.confirm') },
           cancelButton: { text: i18next.t('button.cancel') },
           callback: async result => {
-            if (result.dismiss)
-              return
-            else if (result.value)
-              this._proceedFlag = true
+            if (result.dismiss) return
+            else if (result.value) this._proceedFlag = true
           }
         })
       }
 
       if (this._proceedFlag === true) {
         var args = {
-          orderInfo: { 
+          orderInfo: {
             name: this._doNo,
             to: this._recipient,
             deliveryDate: this._date,
@@ -809,7 +807,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             }
           `
         })
-  
+
         if (!response.errors) {
           this._status = ORDER_STATUS.DELIVERING
           this._updateContext()
