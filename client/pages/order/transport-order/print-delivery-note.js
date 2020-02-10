@@ -1,7 +1,8 @@
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, CustomAlert, gqlBuilder, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
+import { gqlBuilder } from '@things-factory/utils'
 import { css, html } from 'lit-element'
 import '../../components/popup-note'
 import { ORDER_STATUS } from '../constants/order'
@@ -426,9 +427,11 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
   async pageUpdated(changes) {
     if (this.active) {
-      this._doNo = changes.resourceId || this._doNo || ''
-      await this._fetchDeliveryOrder(this._doNo)
-      this._updateContext()
+      if (changes.resourceId) {
+        this._doNo = changes.resourceId || this._doNo || ''
+        await this._fetchDeliveryOrder(this._doNo)
+        this._updateContext()
+      }
     }
   }
 
