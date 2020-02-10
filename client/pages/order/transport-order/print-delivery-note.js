@@ -1,8 +1,8 @@
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
 import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
-import gql from 'graphql-tag'
 import { gqlBuilder } from '@things-factory/utils'
+import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/popup-note'
 import { ORDER_STATUS } from '../constants/order'
@@ -428,7 +428,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   async pageUpdated(changes) {
     if (this.active) {
       if (changes.resourceId) {
-        this._doNo = changes.resourceId || this._doNo || ''
+        this._doNo = changes.resourceId
         await this._fetchDeliveryOrder(this._doNo)
         this._updateContext()
       }
@@ -496,7 +496,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
       this._status = deliveryOrderData.deliveryOrderInfo.doStatus
       this._ownCollection = deliveryOrderData.deliveryOrderInfo.ownCollection
-      this._truckNo = deliveryOrderData.deliveryOrderInfo.truckNo
+      this._truckNo = deliveryOrderData.deliveryOrderInfo && deliveryOrderData.deliveryOrderInfo.truckNo
 
       this._recipient = deliveryOrderData.deliveryOrderInfo.to || ''
       this._date = deliveryOrderData.deliveryOrderInfo.deliveryDate || ''
