@@ -136,62 +136,35 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
       const _targetRows = this._validate()
       let labelId = this._palletLabel && this._palletLabel.id
 
-      let today = new Date()
-      let year = today.getFullYear()
-      let month = today.getMonth() + 1
-      let date = today.getDate()
-      let seq = 0
-
       let dateStr = new Date()
         .toJSON()
         .slice(0, 10)
         .replace(/-/g, '/')
 
-      const palletRecords = await client.query({
-        query: gql`
-          mutation {
-            updatePalletCountSeq (${gqlBuilder.buildArgs({
-              printQty: _targetRows.map(x => x.printQty).reduce((a, b) => a + b)
-            })}) {
-              seq
-            }
-          }
-        `
-      })
-      if (!palletRecords.error) {
-        seq = palletRecords.data.updatePalletCountSeq.seq ? palletRecords.data.updatePalletCountSeq.seq : 0
-      } else {
-        throw 'Unable to get pallet records.'
-      }
-
       for (let i = 0; i < _targetRows.length; i++) {
         let record = _targetRows[i]
         for (let j = 0; j < record.printQty; j++) {
+          let batchId = record.batchId
+          let response = await client.query({
+            query: gql`
+              query {
+                generatePalletId(${gqlBuilder.buildArgs({
+                  batchId
+                })})
+              }
+            `
+          })
+          let palletId = response.data.generatePalletId
           let searchParams = new URLSearchParams()
-
-          /* CLARIFY-ME following 1 line logic. definitely not used. */
-          let batchId = record.batchId.replace(/[^a-zA-Z0-9 ]/g, '')
-
-          seq = seq + 1
-          searchParams.append(
-            'pallet',
-            `${'PA' +
-              year.toString().substr(year.toString().length - 2) +
-              ('0' + month.toString()).substr(('0' + month.toString()).toString().length - 2) +
-              ('0' + date.toString()).substr(('0' + date.toString()).length - 2) +
-              ('0000' + seq.toString()).substr(('0000' + seq.toString()).length - 4)}`
-          )
-
-          /* for pallet record mapping */
+          
+          // /* for pallet record mapping */
+          searchParams.append('pallet', palletId)
           searchParams.append('batch', record.batchId)
           searchParams.append('product', record.product.name)
           searchParams.append('type', record.product.type)
           searchParams.append('packing', record.packingType)
           searchParams.append('customer', record.bizplace)
           searchParams.append('date', dateStr)
-
-          console.log(searchParams.toString())
-          debugger
 
           try {
             const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
