@@ -286,7 +286,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     this._searchFields = [
       {
         label: i18next.t('field.customer'),
-        name: 'bizplace',
+        name: 'bizplace_id',
         type: 'select',
         options: [
           { value: '' },
