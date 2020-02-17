@@ -1,16 +1,9 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import {
-  client,
-  gqlBuilder,
-  isMobileDevice,
-  PageView,
-  ScrollbarStyles,
-  store,
-  navigate,
-  flattenObject
-} from '@things-factory/shell'
+import { client, PageView, store, navigate } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice, flattenObject } from '@things-factory/utils'
+import { ScrollbarStyles } from '@things-factory/styles'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
