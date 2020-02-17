@@ -1,11 +1,11 @@
+import { USBPrinter } from '@things-factory/barcode-base'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { isMobileDevice, store, client, gqlBuilder } from '@things-factory/shell'
+import { client, store } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
-import { connect } from 'pwa-helpers/connect-mixin'
 import { css, html, LitElement } from 'lit-element'
-import { USBPrinter } from '@things-factory/barcode-base'
-import uuid from 'uuid/v4'
+import { connect } from 'pwa-helpers/connect-mixin'
 import { PALLET_LABEL_SETTING_KEY } from '../../setting-constants'
 
 class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
@@ -156,7 +156,7 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
           })
           let palletId = response.data.generatePalletId
           let searchParams = new URLSearchParams()
-          
+
           // /* for pallet record mapping */
           searchParams.append('pallet', palletId)
           searchParams.append('batch', record.batchId)

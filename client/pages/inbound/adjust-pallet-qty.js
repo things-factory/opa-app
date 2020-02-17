@@ -1,8 +1,5 @@
-import { USBPrinter } from '@things-factory/barcode-base'
 import { SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
-import { client, gqlBuilder } from '@things-factory/shell'
-import gql from 'graphql-tag'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { css, html, LitElement } from 'lit-element'
 
