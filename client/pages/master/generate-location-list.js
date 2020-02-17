@@ -3,7 +3,8 @@ import '@things-factory/form-ui'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { isMobileDevice, ScrollbarStyles, sleep } from '@things-factory/shell'
+import { ScrollbarStyles } from '@things-factory/shell'
+import { isMobileDevice } from '@things-factory/utils'
 import { css, html, LitElement } from 'lit-element'
 
 export class GenerateLocationList extends localize(i18next)(LitElement) {

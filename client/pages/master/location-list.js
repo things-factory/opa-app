@@ -1,24 +1,17 @@
+import { USBPrinter } from '@things-factory/barcode-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import '@things-factory/import-ui'
 import { openPopup } from '@things-factory/layout-base'
-import {
-  client,
-  CustomAlert,
-  gqlBuilder,
-  isMobileDevice,
-  PageView,
-  ScrollbarStyles,
-  store
-} from '@things-factory/shell'
+import { client, CustomAlert, PageView, ScrollbarStyles, store } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
+import { LOCATION_LABEL_SETTING_KEY } from '../../setting-constants'
 import './generate-location-list'
 import './print-location-label'
-import { USBPrinter } from '@things-factory/barcode-base'
-import { LOCATION_LABEL_SETTING_KEY } from '../../setting-constants'
 
 class LocationList extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -607,7 +600,7 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
       }
     )
   }
-  
+
   async _printLocations(records) {
     var labelId = this._locationLabel && this._locationLabel.id
 

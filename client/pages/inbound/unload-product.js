@@ -284,7 +284,6 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
 
               this.inputForm.reset()
               this.palletInput.value = ''
-              this.actualQtyInput.value = ''
               this._fillUpInputForm(record)
               this._focusOnPalletInput()
               this._fetchInventories()
