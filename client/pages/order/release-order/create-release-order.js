@@ -291,7 +291,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
               basicArgs: {
                 filters: [
                   { name: 'status', operator: 'eq', value: INVENTORY_STATUS.STORED.value },
-                  { name: 'qty', operator: 'gt', value: 0 }
+                  { name: 'remainOnly', operator: 'eq', value: true }
                 ]
               },
               nameField: 'batchId',
