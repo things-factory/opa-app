@@ -2,7 +2,8 @@ import '@things-factory/form-ui'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, ScrollbarStyles } from '@things-factory/shell'
+import { client, ScrollbarStyles } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 
@@ -11,7 +12,7 @@ export class PrintLocationLabel extends localize(i18next)(LitElement) {
     return {
       selectedLocations: Array,
       _config: Object,
-      _data: Array,
+      _data: Array
     }
   }
 
@@ -92,7 +93,7 @@ export class PrintLocationLabel extends localize(i18next)(LitElement) {
         <data-grist
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this._config}
-        .fetchHandler="${this.fetchHandler.bind(this)}"
+          .fetchHandler="${this.fetchHandler.bind(this)}"
         ></data-grist>
       </div>
 
@@ -131,7 +132,7 @@ export class PrintLocationLabel extends localize(i18next)(LitElement) {
       ]
     }
 
-    if (this.selectedLocations && this.selectedLocations.length > 0){ 
+    if (this.selectedLocations && this.selectedLocations.length > 0) {
       this._records = []
       this._total = 0
     }
@@ -200,7 +201,10 @@ export class PrintLocationLabel extends localize(i18next)(LitElement) {
     switch (selectedFormat) {
       case 'withShelf':
         locations = records.map(location => {
-          location.name = location.type === 'BUFFER' ? `${location.name}` : `${location.zone}-${location.row}-${location.column}-${location.shelf}`
+          location.name =
+            location.type === 'BUFFER'
+              ? `${location.name}`
+              : `${location.zone}-${location.row}-${location.column}-${location.shelf}`
           location.indicator = location.type === 'BUFFER' ? location.zone : location.shelf
           return location
         })
@@ -211,7 +215,8 @@ export class PrintLocationLabel extends localize(i18next)(LitElement) {
 
       case 'withoutShelf':
         locations = records.map(location => {
-          location.name = location.type === 'BUFFER' ? `${location.name}` : `${location.zone}-${location.row}-${location.column}`
+          location.name =
+            location.type === 'BUFFER' ? `${location.name}` : `${location.zone}-${location.row}-${location.column}`
           location.indicator = location.type === 'BUFFER' ? location.zone : location.column
           return location
         })
@@ -223,11 +228,11 @@ export class PrintLocationLabel extends localize(i18next)(LitElement) {
       default:
         this._records = []
         this._total = 0
-      }
+    }
 
     this._config = {
       ...this._config,
-      pagination: { pages: [this._total]}
+      pagination: { pages: [this._total] }
     }
 
     this.dataGrist.fetch()
@@ -237,7 +242,7 @@ export class PrintLocationLabel extends localize(i18next)(LitElement) {
 
   async _fetchLocations(filters) {
     const sorters = [{ name: 'name', desc: false }]
-    
+
     if (this.warehouseId) {
       try {
         this.dataGrist.showSpinner()
@@ -270,11 +275,10 @@ export class PrintLocationLabel extends localize(i18next)(LitElement) {
             }
           `
         })
-  
+
         if (!response.errors) {
           return response.data.locations.items || []
         }
-
       } catch (e) {
         document.dispatchEvent(
           new CustomEvent('notify', {
@@ -284,11 +288,9 @@ export class PrintLocationLabel extends localize(i18next)(LitElement) {
             }
           })
         )
-
       } finally {
         this.dataGrist.hideSpinner()
       }
-      
     }
   }
 

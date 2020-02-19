@@ -2,7 +2,7 @@ import '@things-factory/barcode-ui'
 import { SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { isMobileDevice } from '@things-factory/shell'
+import { isMobileDevice } from '@things-factory/utils'
 import { css, html, LitElement } from 'lit-element'
 
 class ReturnPalletCheckPopup extends localize(i18next)(LitElement) {

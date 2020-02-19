@@ -5,7 +5,7 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { WORKSHEET_TYPE, WORKSHEET_STATUS } from '../inbound/constants/worksheet'
+import { WORKSHEET_TYPE } from '../inbound/constants/worksheet'
 import { ORDER_TYPES } from '../order/constants/order'
 
 class VasWorksheetList extends localize(i18next)(PageView) {
@@ -16,20 +16,15 @@ class VasWorksheetList extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-
           overflow: hidden;
         }
 
         search-form {
           overflow: visible;
         }
-        .grist {
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-        }
+
         data-grist {
-          overflow-y: hidden;
+          overflow-y: auto;
           flex: 1;
         }
       `
@@ -48,13 +43,11 @@ class VasWorksheetList extends localize(i18next)(PageView) {
     return html`
       <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
-      <div class="grist">
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .fetchHandler="${this.fetchHandler.bind(this)}"
-        ></data-grist>
-      </div>
+      <data-grist
+        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+        .config=${this.config}
+        .fetchHandler="${this.fetchHandler.bind(this)}"
+      ></data-grist>
     `
   }
 
@@ -124,15 +117,15 @@ class VasWorksheetList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'orderNo',
           header: i18next.t('field.order_no'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
           width: 200
         },
         {
           type: 'string',
           name: 'refOrder',
-          header: i18next.t('field.ref_order'),
-          record: { align: 'center' },
+          header: i18next.t('field.order_type'),
+          record: { align: 'left' },
           sortable: true,
           width: 200
         },
@@ -140,7 +133,7 @@ class VasWorksheetList extends localize(i18next)(PageView) {
           type: 'object',
           name: 'bizplace',
           header: i18next.t('field.customer'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
           width: 200
         },

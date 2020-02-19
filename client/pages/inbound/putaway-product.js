@@ -2,12 +2,12 @@ import '@things-factory/barcode-ui'
 import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView, store, UPDATE_CONTEXT, navigate } from '@things-factory/shell'
+import { client, CustomAlert, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { WORKSHEET_STATUS } from './constants/worksheet'
-import Swal from 'sweetalert2'
 import { connect } from 'pwa-helpers/connect-mixin.js'
+import { WORKSHEET_STATUS } from './constants/worksheet'
 
 const OPERATION_TYPE = {
   PUTAWAY: 'putaway',
@@ -707,15 +707,11 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
   async _completeHandler() {
     if (!this.data.records.every(record => record.completed)) return
     this._updateContext()
-    const result = await Swal.fire({
-      title: i18next.t('text.putaway'),
-      text: i18next.t('text.do_you_want_to_complete?'),
-      type: 'warning',
-      allowOutsideClick: false,
-      showCancelButton: true,
-      confirmButtonColor: '#22a6a7',
-      cancelButtonColor: '#cfcfcf',
-      confirmButtonText: i18next.t('text.yes')
+    const result = await CustomAlert({
+      title: i18next.t('title.putaway'),
+      text: i18next.t('text.do_you_want_to_complete'),
+      confirmButton: { text: i18next.t('button.confirm') },
+      cancelButton: { text: i18next.t('button.cancel') }
     })
 
     if (result.value) this._complete()
@@ -734,16 +730,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       this._clearView()
-      await Swal.fire({
-        title: i18next.t('text.putaway'),
-        text: i18next.t('text.your_work_has_completed'),
-        type: 'info',
-        allowOutsideClick: false,
-        confirmButtonColor: '#22a6a7',
-        confirmButtonText: i18next.t('button.okay')
-      })
-
-      this._clearView()
+      this._showToast({ message: i18next.t('text.your_work_has_completed') })
     }
   }
 

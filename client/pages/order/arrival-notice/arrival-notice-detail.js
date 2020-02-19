@@ -1,20 +1,15 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import {
-  client,
-  CustomAlert,
-  gqlBuilder,
-  isMobileDevice,
-  navigate,
-  PageView,
-  store,
-  UPDATE_CONTEXT
-} from '@things-factory/shell'
+import { openPopup } from '@things-factory/layout-base'
+import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/vas-relabel'
-import { ORDER_STATUS } from '../constants/order'
+import { ORDER_PRODUCT_STATUS, ORDER_STATUS } from '../constants/order'
+import './extra-product-popup'
+import './proceed-extra-product-popup'
 
 class ArrivalNoticeDetail extends localize(i18next)(PageView) {
   static get properties() {
@@ -202,7 +197,14 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     this.productGristConfig = {
       list: { fields: ['batchId', 'product', 'packingType', 'totalWeight'] },
       pagination: { infinite: true },
-      rows: { selectable: { multiple: true }, appendable: false },
+      rows: {
+        appendable: false,
+        classifier: (record, rowIndex) => {
+          return {
+            emphasized: record.status === ORDER_PRODUCT_STATUS.READY_TO_APPROVED.value
+          }
+        }
+      },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -220,13 +222,10 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
           width: 350
         },
         {
-          type: 'code',
+          type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
-          record: {
-            align: 'center',
-            codeName: 'PACKING_TYPES'
-          },
+          record: { align: 'center' },
           width: 150
         },
         {
@@ -237,10 +236,10 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
           width: 80
         },
         {
-          type: 'code',
+          type: 'string',
           name: 'unit',
           header: i18next.t('field.unit'),
-          record: { align: 'center', codeName: 'WEIGHT_UNITS' },
+          record: { align: 'center' },
           width: 80
         },
         {
@@ -271,7 +270,6 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       list: { fields: ['ready', 'vas', 'batchId', 'remark'] },
       pagination: { infinite: true },
       rows: {
-        selectable: { multiple: true },
         appendable: false,
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
@@ -334,6 +332,10 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             name: this._ganNo
           })}) {
             name
+            bizplace {
+              id
+              name
+            }
             containerNo
             ownTransport
             etaDate
@@ -343,11 +345,13 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             refNo
             importCargo
             orderProducts {
+              id
               batchId
               product {
                 name
                 description
               }
+              status
               packingType
               weight
               unit
@@ -376,6 +380,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       const arrivalNotice = response.data.arrivalNotice
       const orderProducts = arrivalNotice.orderProducts
       const orderVass = arrivalNotice.orderVass
+      this.orderBizplace = arrivalNotice.bizplace
 
       this._ownTransport = arrivalNotice.ownTransport
       this._importCargo = arrivalNotice.importCargo
@@ -387,19 +392,26 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     }
   }
 
-  _updateContext() {
+  async _updateContext() {
     this._actions = []
     if (this._status === ORDER_STATUS.PENDING.value) {
       this._actions = [
-        {
-          title: i18next.t('button.delete'),
-          action: this._deleteArrivalNotice.bind(this)
-        },
-        {
-          title: i18next.t('button.confirm'),
-          action: this._confirmArrivalNotice.bind(this)
-        }
+        { title: i18next.t('button.delete'), action: this._deleteArrivalNotice.bind(this) },
+        { title: i18next.t('button.confirm'), action: this._confirmArrivalNotice.bind(this) }
       ]
+    }
+
+    const isUserBelongsDomain = await this._checkUserBelongsDomain()
+    if (isUserBelongsDomain && this._status === ORDER_STATUS.PROCESSING.value) {
+      this._actions = [{ title: i18next.t('button.add'), action: this.openExtraProductPopup.bind(this) }]
+    }
+
+    if (
+      !isUserBelongsDomain &&
+      this._status === ORDER_STATUS.PROCESSING.value &&
+      this.productData.records.some(product => product.status === ORDER_PRODUCT_STATUS.READY_TO_APPROVED.value)
+    ) {
+      this._actions = [{ title: i18next.t('button.approve'), action: this.openApproveProductPopup.bind(this) }]
     }
 
     this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
@@ -408,6 +420,24 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       type: UPDATE_CONTEXT,
       context: this.context
     })
+  }
+
+  async _checkUserBelongsDomain() {
+    try {
+      const response = await client.query({
+        query: gql`
+          query {
+            checkUserBelongsDomain
+          }
+        `
+      })
+
+      if (!response.errors) {
+        return response.data.checkUserBelongsDomain
+      }
+    } catch (e) {
+      this._showToast(e)
+    }
   }
 
   _fillupANForm(data) {
@@ -507,6 +537,43 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     } catch (e) {
       this._showToast(e)
     }
+  }
+
+  openExtraProductPopup() {
+    openPopup(
+      html`
+        <extra-product-popup
+          .ganNo="${this._ganNo}"
+          .bizplace="${this.orderBizplace}"
+          @completed="${this._fetchGAN.bind(this)}"
+        ></extra-product-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.extra_product')
+      }
+    )
+  }
+
+  openApproveProductPopup() {
+    openPopup(
+      html`
+        <proceed-extra-product-popup
+          .ganNo="${this._ganNo}"
+          .data="${this.productData}"
+          @completed="${() => {
+            this._fetchGAN()
+            this._updateContext()
+          }}"
+        ></proceed-extra-product-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.proceed_extract_product')
+      }
+    )
   }
 
   _showToast({ type, message }) {

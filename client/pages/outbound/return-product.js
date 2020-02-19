@@ -2,7 +2,8 @@ import '@things-factory/barcode-ui'
 import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, CustomAlert, gqlBuilder, isMobileDevice, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { client, CustomAlert, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
@@ -552,7 +553,7 @@ class ReturnProduct extends connect(store)(localize(i18next)(PageView)) {
     this._updateContext()
     const result = await CustomAlert({
       title: i18next.t('text.return'),
-      text: i18next.t('text.do_you_want_to_complete?'),
+      text: i18next.t('text.do_you_want_to_complete'),
       confirmButton: { text: i18next.t('text.yes') },
       cancelButton: { text: i18next.t('button.cancel') }
     })

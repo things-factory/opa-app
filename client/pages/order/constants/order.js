@@ -97,6 +97,10 @@ export const ORDER_STATUS = {
 }
 
 export const ORDER_PRODUCT_STATUS = {
+  READY_TO_APPROVED: {
+    name: 'ready_to_approve',
+    value: 'READY_TO_APPROVED'
+  },
   PENDING: {
     name: 'product_status_pending',
     value: 'PENDING'
