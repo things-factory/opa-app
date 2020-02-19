@@ -742,6 +742,7 @@
   "title.intransit_inventory": "intransit inventory",
   "title.inventory": "inventory",
   "title.inventory_adjustment": "inventory adjustment",
+  "title.inventory_adjustment_approval": "inventory adjustment_approval",
   "title.inventory_by_product": "inventory by product",
   "title.inventory_histories": "inventory histories",
   "title.inventory_product_selection": "inventory product selection",
