@@ -56,13 +56,13 @@
     "@things-factory/print-ui": "^2.0.0",
     "@things-factory/product-ui": "^2.0.0",
     "@things-factory/resource-ui": "^2.0.0",
-    "@things-factory/sales-base": "^2.2.0-beta.1",
+    "@things-factory/sales-base": "^2.2.0",
     "@things-factory/sales-ui": "^2.0.0",
     "@things-factory/setting-ui": "^2.0.0",
     "@things-factory/system-ui": "^2.0.0",
     "@things-factory/transport-base": "^2.0.0",
-    "@things-factory/warehouse-base": "^2.2.0-beta.1",
-    "@things-factory/worksheet-base": "^2.2.0-beta.1",
+    "@things-factory/warehouse-base": "^2.2.0",
+    "@things-factory/worksheet-base": "^2.2.0",
     "@things-scene/chartjs": "*",
     "@things-scene/clock": "*",
     "@things-scene/clone": "*",
@@ -90,13 +90,6 @@
     "@things-scene/table": "*",
     "@things-scene/visualizer": "*",
     "@things-scene/wheel-sorter": "*"
-  },
-  "resolutions": {
-    "@things-factory/biz-base": "^2.2.0-beta.1",
-    "@things-factory/sales-base": "^2.2.0-beta.1",
-    "@things-factory/worksheet-base": "^2.2.0-beta.1",
-    "@things-factory/resource-ui": "^2.2.0-beta.1",
-    "@things-factory/warehouse-base": "^2.2.0-beta.1"
   },
   "devDependencies": {
     "@things-factory/opa-test": "^2.0.0",
