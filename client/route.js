@@ -216,6 +216,10 @@ export default function route(page) {
       import('./pages/system/system-setting')
       return page
 
+    case 'location_sorting_rule':
+      import('./pages/system/location-sorting-rule')
+      return page
+
     /**
      * Inbound Menus Section
      */
