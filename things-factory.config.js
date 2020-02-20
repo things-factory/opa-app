@@ -229,6 +229,10 @@ export default {
       tagname: 'system-setting',
       page: 'settings'
     },
+    {
+      tagname: 'location-sorting-rule',
+      page: 'location_sorting_rule'
+    },
 
     /**
      * Inbound Menus Section
