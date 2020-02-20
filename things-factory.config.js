@@ -190,6 +190,10 @@ export default {
       page: 'inventory_adjustment'
     },
     {
+      tagname: 'inventory-adjustment-approval',
+      page: 'inventory_adjustment_approval'
+    },
+    {
       tagname: 'customer-onhand-inventory',
       page: 'customer_onhand_inventory'
     },

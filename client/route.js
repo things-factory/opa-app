@@ -181,6 +181,10 @@ export default function route(page) {
       import('./pages/inventory/inventory-adjustment')
       return page
 
+    case 'inventory_adjustment_approval':
+      import('./pages/inventory/inventory-adjustment-approval')
+      return page
+
     case 'customer_onhand_inventory':
       import('./pages/inventory/customer-onhand-inventory')
       return page
