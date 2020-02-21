@@ -1,6 +1,7 @@
 {
   "arrival_notice_created": "arrival notice created",
   "arrival_notice_updated": "arrival notice updated",
+  "button.approve": "approve",
   "button.submit": "submit",
   "button.activate": "activate",
   "button.adjust": "adjust",
@@ -745,7 +746,7 @@
   "title.intransit_inventory": "intransit inventory",
   "title.inventory": "inventory",
   "title.inventory_adjustment": "inventory adjustment",
-  "title.inventory_adjustment_approval": "inventory adjustment_approval",
+  "title.inventory_adjustment_approval": "inventory adjustment approval",
   "title.inventory_by_product": "inventory by product",
   "title.inventory_histories": "inventory histories",
   "title.inventory_product_selection": "inventory product selection",
