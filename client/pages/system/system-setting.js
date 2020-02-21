@@ -1,6 +1,7 @@
 import '@things-factory/form-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { store, client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { store, client, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { getRenderer, getEditor } from '@things-factory/grist-ui'
@@ -15,7 +16,6 @@ class SystemSetting extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-
           overflow: hidden;
         }
 
