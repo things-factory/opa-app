@@ -4,7 +4,8 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
+import { client, CustomAlert, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
@@ -303,19 +304,20 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       },
       {
         label: i18next.t('field.product'),
-        name: 'product.name',
-        type: 'text',
-        props: { searchOper: 'i_like' }
+        name: 'product',
+        type: 'object',
+        queryName: 'products',
+        field: 'name'
       },
       {
         label: i18next.t('field.batch_no'),
-        name: 'batchId',
+        name: 'batch_id',
         type: 'text',
         props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.pallet_id'),
-        name: 'palletId',
+        name: 'pallet_id',
         type: 'text',
         props: { searchOper: 'i_like' }
       },
@@ -336,9 +338,10 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       },
       {
         label: i18next.t('field.location'),
-        name: 'location.name',
-        type: 'text',
-        props: { searchOper: 'i_like' }
+        name: 'location',
+        type: 'object',
+        queryName: 'locations',
+        field: 'name'
       }
     ]
   }
@@ -547,7 +550,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         document.dispatchEvent(
           new CustomEvent('notify', {
             detail: {
-              message: i18next.t('text.data_updated_successfully')
+              message: i18next.t('text.data_submitted_for_approval')
             }
           })
         )
@@ -582,7 +585,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       document.dispatchEvent(
         new CustomEvent('notify', {
           detail: {
-            message: i18next.t('text.data_imported_successfully')
+            message: i18next.t('text.data_submitted_for_approval')
           }
         })
       )
