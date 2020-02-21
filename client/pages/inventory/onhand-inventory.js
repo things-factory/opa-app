@@ -452,7 +452,6 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
         records = this.dataGrist.selected
         data = records
       } else {
-        debugger
         const bizplaceFilters = (await this.searchForm.getQueryFilters()).filter(x => x.name === 'bizplace')
         if (bizplaceFilters.length == 0) {
           throw new Error(`Please select a customer for export.`)
