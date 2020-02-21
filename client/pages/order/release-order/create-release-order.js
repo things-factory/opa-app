@@ -1,18 +1,11 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import {
-  client,
-  CustomAlert,
-  gqlBuilder,
-  isMobileDevice,
-  navigate,
-  PageView,
-  store,
-  UPDATE_CONTEXT
-} from '@things-factory/shell'
+import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import { fetchLocationSortingRule } from '../../../fetch-location-sorting-rule'
 import '../../components/vas-relabel'
 import { INVENTORY_STATUS, ORDER_PRODUCT_STATUS, ORDER_TYPES } from '../constants/'
 
@@ -257,7 +250,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    const locationSortingRules = await fetchLocationSortingRule()
     this.inventoryGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
@@ -290,7 +284,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                 filters: [
                   { name: 'status', operator: 'eq', value: INVENTORY_STATUS.STORED.value },
                   { name: 'remainOnly', operator: 'eq', value: true }
-                ]
+                ],
+                locationSortingRules
               },
               nameField: 'batchId',
               descriptionField: 'palletId',
@@ -300,7 +295,13 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                 { name: 'palletId', header: i18next.t('field.pallet_id'), record: { align: 'center' } },
                 { name: 'product', type: 'object', queryName: 'products' },
                 { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
-                { name: 'location', type: 'object', queryName: 'locations', record: { align: 'center' } },
+                {
+                  name: 'location',
+                  type: 'object',
+                  queryName: 'locations',
+                  field: 'name',
+                  record: { align: 'center' }
+                },
                 { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
                 { name: 'bizplace', type: 'object', record: { align: 'center' } },
                 { name: 'remainQty', type: 'float', record: { align: 'center' } },
@@ -448,7 +449,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
               queryName: 'inventories',
               nameField: 'batchId',
               descriptionField: 'palletId',
-              basicArgs: { filters: [{ name: 'id', operator: 'in', value: [null] }] },
+              basicArgs: { filters: [{ name: 'id', operator: 'in', value: [null] }], locationSortingRules },
               select: [
                 { name: 'id', hidden: true },
                 { name: 'name', hidden: true },
@@ -473,6 +474,10 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         }
       ]
     }
+  }
+
+  async _getLocationSortingRule() {
+    const response = await client.query()
   }
 
   _updateContext() {
@@ -689,14 +694,14 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     }
   }
 
-  _updateInventoryList() {
+  async _updateInventoryList() {
     const _selectedInventories = (this.inventoryGrist.dirtyData.records || []).map(record => record.inventory.id)
-
     this.inventoryGristConfig = {
       ...this.inventoryGristConfig,
       columns: this.inventoryGristConfig.columns.map(column => {
         if (column.name === 'inventory') {
           column.record.options.basicArgs = {
+            ...column.record.options.basicArgs,
             filters: [...column.record.options.basicArgs.filters.filter(filter => filter.name !== 'id')]
           }
 

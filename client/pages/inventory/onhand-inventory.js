@@ -130,8 +130,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
             header: i18next.t('field.customer'),
             key: 'bizplace.name',
             width: 50,
-            type: 'array',
-            arrData: []
+            type: 'string'
           },
           sortable: true,
           width: 300
@@ -453,7 +452,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
         records = this.dataGrist.selected
         data = records
       } else {
-        const bizplaceFilters = (await this.searchForm.getQueryFilters()).filter(x => x.name === 'bizplace_id')
+        const bizplaceFilters = (await this.searchForm.getQueryFilters()).filter(x => x.name === 'bizplace')
         if (bizplaceFilters.length == 0) {
           throw new Error(`Please select a customer for export.`)
         }

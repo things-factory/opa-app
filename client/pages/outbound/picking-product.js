@@ -8,10 +8,9 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
+import { fetchLocationSortingRule } from '../../fetch-location-sorting-rule'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
 import './outbound-reusable-pallet'
-
-const LOC_SORTING_RULE_SETTING_KEY = 'location-sorting-rule'
 
 class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -245,7 +244,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     this._selectedOrderInventory = null
     this._selectedTaskStatus = null
     this._reusablePalletList = { records: [] }
-    this.locationSortingRule = []
+    this.locationSortingRules = []
   }
 
   get scannable() {
@@ -328,7 +327,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
       ]
     }
 
-    this.locationSortingRule = await this._getLocationSortingRule()
+    this.locationSortingRules = await fetchLocationSortingRule()
   }
 
   pageUpdated() {
@@ -363,7 +362,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
         query {
           pickingWorksheet(${gqlBuilder.buildArgs({
             releaseGoodNo,
-            sortings: this.locationSortingRule
+            locationSortingRules: this.locationSortingRules
           })}) {
             worksheetInfo {
               bizplaceName
@@ -441,32 +440,6 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       this._reusablePalletList = { records: response.data.pallets.items }
-    }
-  }
-
-  async _getLocationSortingRule() {
-    const response = await client.query({
-      query: gql`
-        query {
-          setting(${gqlBuilder.buildArgs({
-            name: LOC_SORTING_RULE_SETTING_KEY
-          })}) {
-            value
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      const sortingRule = JSON.parse(response.data.setting.value)
-      const fields = Object.keys(sortingRule)
-      if (fields.length > 0) {
-        return fields.map(field => {
-          return { name: field, desc: sortingRule[field] === 'DESC' ? true : false }
-        })
-      } else {
-        return []
-      }
     }
   }
 
