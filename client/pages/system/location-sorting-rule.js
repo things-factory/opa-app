@@ -51,7 +51,6 @@ class LocationSortingRule extends localize(i18next)(PageView) {
     super()
     this._locationColumns = [
       { name: i18next.t('field.name'), value: 'name' },
-      { name: i18next.t('field.description'), value: 'description' },
       { name: i18next.t('field.zone'), value: 'zone' },
       { name: i18next.t('field.row'), value: 'row' },
       { name: i18next.t('field.column'), value: 'column' },
