@@ -246,6 +246,10 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
           margin-bottom: 10px;
         }
 
+        [pallet-quantity] {
+          text-align: right;
+        }
+
         [idx] {
           width: 15px;
           text-align: center;
@@ -302,6 +306,7 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
     var grnName = this._grnName || ''
     var refNo = this._refNo || '-'
     var date = this._date || ''
+    var totalPallet = 0
 
     var footer = i18next.t('text.please_write_down_full_name_clearly')
 
@@ -350,6 +355,7 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
             <tbody>
               ${Object.keys(this._products || {}).map((key, index) => {
                 let product = this._products[key]
+                totalPallet += 1
                 return html`
                   <tr>
                     <td idx>${index + 1}</td>
@@ -361,6 +367,10 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
                   </tr>
                 `
               })}
+              <tr>
+                <td colspan="5" pallet-quantity><strong>Total Pallet</strong></td>
+                <td>${totalPallet}</td>
+              </tr>
             </tbody>
           </table>
         </div>

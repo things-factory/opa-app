@@ -907,5 +907,14 @@
   "text.there_is_no_item_to_print:": "there is no item to print!",
   "text.dispatch_delivery_order_without_delivery_address": "dispatch delivery order without delivery address?",
   "text.dispatch_successful": "dispatch successful",
-  "title.dispatched": "dispatched"
+  "title.dispatched": "dispatched",
+  "text.add_extra_product": "add extra product",
+  "title.extra_product": "extra product",
+  "title.extra_products": "extra products",
+  "text.extra_products_were_added": "extra products were added",
+  "title.approve": "approve",
+  "title.reject": "reject",
+  "text.extra_products_approved": "extra product approved",
+  "text.extra_products_have_been_processed": "extra products have been processed",
+  "title.proceed_extra_product": "proceed extra products"
 }
