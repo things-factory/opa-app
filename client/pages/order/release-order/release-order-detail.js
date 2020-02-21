@@ -43,6 +43,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         .container {
           flex: 1;
           display: flex;
+          overflow-y: auto;
         }
         .grist {
           background-color: var(--main-section-background-color);

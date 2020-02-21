@@ -11,6 +11,8 @@ import { connect } from 'pwa-helpers/connect-mixin.js'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
 import './outbound-reusable-pallet'
 
+const LOC_SORTING_RULE_SETTING_KEY = 'location-sorting-rule'
+
 class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
@@ -38,6 +40,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
           background-color: var(--main-section-background-color);
           display: flex;
           flex: 1;
+          overflow: auto;
         }
 
         .left-column {
@@ -242,6 +245,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     this._selectedOrderInventory = null
     this._selectedTaskStatus = null
     this._reusablePalletList = { records: [] }
+    this.locationSortingRule = []
   }
 
   get scannable() {
@@ -258,7 +262,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
     this.config = {
       rows: {
         appendable: false,
@@ -323,6 +327,8 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
         }
       ]
     }
+
+    this.locationSortingRule = await this._getLocationSortingRule()
   }
 
   pageUpdated() {
@@ -356,7 +362,8 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
       query: gql`
         query {
           pickingWorksheet(${gqlBuilder.buildArgs({
-            releaseGoodNo
+            releaseGoodNo,
+            sortings: this.locationSortingRule
           })}) {
             worksheetInfo {
               bizplaceName
@@ -415,13 +422,13 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
           })}) {
             items {
               id
-              name              
-              owner{
+              name
+              owner {
                 id
                 name
                 description
               }
-              holder{
+              holder {
                 id
                 name
                 description
@@ -429,11 +436,37 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
               status
             }
           }
+      `
+    })
+
+    if (!response.errors) {
+      this._reusablePalletList = { records: response.data.pallets.items }
+    }
+  }
+
+  async _getLocationSortingRule() {
+    const response = await client.query({
+      query: gql`
+        query {
+          setting(${gqlBuilder.buildArgs({
+            name: LOC_SORTING_RULE_SETTING_KEY
+          })}) {
+            value
+          }
         }
       `
     })
+
     if (!response.errors) {
-      this._reusablePalletList = { records: response.data.pallets.items }
+      const sortingRule = JSON.parse(response.data.setting.value)
+      const fields = Object.keys(sortingRule)
+      if (fields.length > 0) {
+        return fields.map(field => {
+          return { name: field, desc: sortingRule[field] === 'DESC' ? true : false }
+        })
+      } else {
+        return []
+      }
     }
   }
 

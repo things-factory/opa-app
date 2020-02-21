@@ -290,7 +290,7 @@ export class ProceedExtraProductPopup extends localize(i18next)(LitElement) {
       if (!response.errors) {
         await CustomAlert({
           title: i18next.t('title.extra_products'),
-          text: i18next.t('text.extra_products_approved'),
+          text: i18next.t('text.extra_products_have_been_processed'),
           confirmButton: { text: i18next.t('button.confirm') }
         })
 

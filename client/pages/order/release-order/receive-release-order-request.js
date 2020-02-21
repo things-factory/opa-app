@@ -36,6 +36,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
         .container {
           flex: 1;
           display: flex;
+          overflow-y: auto;
         }
         .grist {
           background-color: var(--main-section-background-color);
