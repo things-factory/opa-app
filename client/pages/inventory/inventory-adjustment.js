@@ -323,7 +323,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       },
       {
         label: i18next.t('field.packing_type'),
-        name: 'packingType',
+        name: 'packing_type',
         type: 'select',
         options: [
           { value: '' },
