@@ -233,6 +233,10 @@ export default {
       tagname: 'location-sorting-rule',
       page: 'location_sorting_rule'
     },
+    {
+      tagname: 'document-template-list',
+      page: 'document_template_list'
+    },
 
     /**
      * Inbound Menus Section

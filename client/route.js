@@ -224,6 +224,10 @@ export default function route(page) {
       import('./pages/system/location-sorting-rule')
       return page
 
+    case 'document_template_list':
+      import('./pages/system/document-template-list')
+      return page
+
     /**
      * Inbound Menus Section
      */
