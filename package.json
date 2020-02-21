@@ -38,6 +38,7 @@
     "@things-factory/code-ui": "^2.0.0",
     "@things-factory/component-ui": "^2.0.0",
     "@things-factory/context-ui": "^2.0.0",
+    "@things-factory/document-template-base": "^2.2.0",
     "@things-factory/export-ui": "^2.0.0",
     "@things-factory/export-ui-csv": "^2.0.0",
     "@things-factory/export-ui-excel": "^2.0.0",
