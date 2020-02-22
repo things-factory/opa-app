@@ -204,7 +204,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
     this._searchFields = [
       {
         label: i18next.t('field.customer'),
-        name: 'bizplace',
+        name: 'bizplaceId',
         type: 'select',
         options: [
           { value: '' },
@@ -221,9 +221,10 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
       },
       {
         label: i18next.t('field.product'),
-        name: 'product.name',
-        type: 'text',
-        props: { searchOper: 'i_like' }
+        name: 'product',
+        type: 'object',
+        queryName: 'products',
+        field: 'name'
       },
       {
         label: i18next.t('field.batch_no'),
@@ -254,9 +255,10 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
       },
       {
         label: i18next.t('field.location'),
-        name: 'location.name',
-        type: 'text',
-        props: { searchOper: 'i_like' }
+        name: 'location',
+        type: 'object',
+        queryName: 'locations',
+        field: 'name'
       }
     ]
   }
@@ -452,7 +454,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
         records = this.dataGrist.selected
         data = records
       } else {
-        const bizplaceFilters = (await this.searchForm.getQueryFilters()).filter(x => x.name === 'bizplace')
+        const bizplaceFilters = (await this.searchForm.getQueryFilters()).filter(x => x.name === 'bizplaceId')
         if (bizplaceFilters.length == 0) {
           throw new Error(`Please select a customer for export.`)
         }

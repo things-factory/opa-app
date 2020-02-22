@@ -169,9 +169,10 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
     this._searchFields = [
       {
         label: i18next.t('field.product'),
-        name: 'product.name',
-        type: 'text',
-        props: { searchOper: 'i_like' }
+        name: 'product',
+        type: 'object',
+        queryName: 'products',
+        field: 'name'
       },
       {
         label: i18next.t('field.batch_no'),
@@ -202,9 +203,10 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
       },
       {
         label: i18next.t('field.location'),
-        name: 'location.name',
-        type: 'text',
-        props: { searchOper: 'i_like' }
+        name: 'location',
+        type: 'object',
+        queryName: 'locations',
+        field: 'name'
       }
     ]
   }

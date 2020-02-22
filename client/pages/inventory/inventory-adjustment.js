@@ -287,7 +287,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     this._searchFields = [
       {
         label: i18next.t('field.customer'),
-        name: 'bizplace_id',
+        name: 'bizplaceId',
         type: 'select',
         options: [
           { value: '' },
@@ -311,19 +311,19 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       },
       {
         label: i18next.t('field.batch_no'),
-        name: 'batch_id',
+        name: 'batchId',
         type: 'text',
         props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.pallet_id'),
-        name: 'pallet_id',
+        name: 'palletId',
         type: 'text',
         props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.packing_type'),
-        name: 'packing_type',
+        name: 'packingType',
         type: 'select',
         options: [
           { value: '' },
@@ -615,6 +615,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _exportableData() {
+    debugger
     try {
       let records = []
       let data = []
@@ -627,7 +628,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           })
       ]
 
-      const bizplaceFilters = (await this.searchForm.getQueryFilters()).filter(x => x.name === 'bizplace_id')
+      const bizplaceFilters = (await this.searchForm.getQueryFilters()).filter(x => x.name === 'bizplaceId')
 
       if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
         records = this.dataGrist.selected
