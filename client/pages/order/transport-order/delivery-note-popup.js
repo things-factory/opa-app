@@ -32,9 +32,6 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
           overflow-x: overlay;
           background-color: var(--main-section-background-color);
         }
-        .input-container {
-          display: flex;
-        }
         .button-container {
           padding: var(--button-container-padding);
           margin: var(--button-container-margin);

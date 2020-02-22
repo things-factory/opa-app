@@ -1,8 +1,8 @@
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
 import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
-import { reportPath2html } from '@things-factory/document-template-base'
-import { gqlBuilder } from '@things-factory/utils'
+import { getPathInfo, gqlBuilder } from '@things-factory/utils'
+import { ScrollbarStyles } from '@things-factory/styles'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/popup-note'
@@ -31,11 +31,19 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
   static get styles() {
     return [
+      ScrollbarStyles,
       css`
         :host {
           display: flex;
           flex-direction: column;
-          padding: 20px;
+          padding: 0;
+        }
+
+        #container {
+          flex: 1;
+          padding: 0;
+          margin: 0;
+          border: 0;
         }
       `
     ]
@@ -44,17 +52,13 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   get context() {
     return {
       title: i18next.t('title.goods_delivery_note_details'),
-      actions: this._actions,
-      printable: {
-        accept: ['preview'],
-        content: this
-      }
+      actions: this._actions
     }
   }
 
   render() {
     return html`
-      <div id="container"></div>
+      <iframe id="container"></iframe>
     `
   }
 
@@ -62,9 +66,13 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     if (this.active) {
       if (changes.resourceId) {
         this._doNo = changes.resourceId
-        await this._fetchDeliveryOrder(this._doNo)
-        this._updateContext()
       }
+
+      if (this._doNo) {
+        await this._fetchDeliveryOrder(this._doNo)
+      }
+
+      this._updateContext()
     }
   }
 
@@ -76,35 +84,8 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             name
           })}) {
             deliveryOrderInfo {
-              partnerBizplace
-              domainBizplace
-              domainBrn
-              domainAddress
-              releaseGoodNo
-              reportPath 
-              logoPath 
-              to
-              ownCollection
-              palletQty
               doStatus
-              driverName
-              deliveryDate
-              truckNo
-              updaterName
-            }
-            loadedInventoryInfo {
-              palletId
-              batchId
-              product {
-                id
-                name
-                description
-              }
-              packingType
-              releaseQty
-              releaseWeight
-              status
-              productDescription
+              ownCollection
             }
             contactPointInfo {
               contactName
@@ -120,102 +101,17 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const deliveryOrderData = response.data.deliveryOrderByWorksheet
-      const doDetails = deliveryOrderData.deliveryOrderInfo
 
-      const html = await reportPath2html({
-        reportFilePath: doDetails.reportPath,
-        data: {
-          logo_url: doDetails.logoPath,
-          customer_biz: doDetails.partnerBizplace,
-          company_domain: doDetails.domainBizplace,
-          company_brn: doDetails.domainBrn,
-          company_address: doDetails.domainAddress,
-          destination: doDetails.to || '',
-          order_no: doDetails.releaseGoodNo,
-          delivery_date: doDetails.deliveryDate || '',
-          truck_no: (doDetails && doDetails.truckNo) || '',
-          driver_name: doDetails.driverName || '',
-          pallet_qty: doDetails.palletQty || 0,
-          worker_name: doDetails.updaterName,
-          product_list: deliveryOrderData.loadedInventoryInfo.map((list, idx) => {
-            return {
-              list_no: idx,
-              product_name: list.product.name,
-              product_type: list.packingType,
-              product_description: list.productDescription,
-              product_batch: list.batchId,
-              product_qty: list.releaseQty,
-              product_weight: list.releaseWeight
-            }
-          })
-        }
-      })
+      var { domain } = getPathInfo(location.pathname) // find out better way later. ok
+      // var fetchResult = await fetch(`/view_document_do/${domain}/${this._doNo}`)
+      // var content = await fetchResult.text()
+      // this.shadowRoot.querySelector('#container').innerHtml = content
 
-      this.shadowRoot.querySelector('#container').innerHtml = html
+      this.shadowRoot.querySelector('#container').src = `/view_document_do/${domain}/${this._doNo}`
 
       this._status = deliveryOrderData.deliveryOrderInfo.doStatus
       this._ownCollection = deliveryOrderData.deliveryOrderInfo.ownCollection
       this._customerContactPoints = deliveryOrderData.contactPointInfo
-    }
-  }
-
-  async _executeDeliveryOrder() {
-    try {
-      this._validateInput()
-      this._proceedFlag = false
-
-      if (!this._recipient) {
-        await CustomAlert({
-          title: i18next.t('title.are_you_sure'),
-          text: i18next.t('text.dispatch_delivery_order_without_delivery_address'),
-          confirmButton: { text: i18next.t('button.confirm') },
-          cancelButton: { text: i18next.t('button.cancel') },
-          callback: async result => {
-            if (result.dismiss) return
-            else if (result.value) this._proceedFlag = true
-          }
-        })
-      } else {
-        await CustomAlert({
-          title: i18next.t('title.are_you_sure'),
-          text: i18next.t('text.dispatch_delivery_order'),
-          confirmButton: { text: i18next.t('button.confirm') },
-          cancelButton: { text: i18next.t('button.cancel') },
-          callback: async result => {
-            if (result.dismiss) return
-            else if (result.value) this._proceedFlag = true
-          }
-        })
-      }
-
-      if (this._proceedFlag === true) {
-        var args = {
-          orderInfo: {
-            name: this._doNo,
-            to: this._recipient,
-            deliveryDate: this._date,
-            driverName: this._driverName || null
-          }
-        }
-
-        const response = await client.query({
-          query: gql`
-            mutation {
-              dispatchDeliveryOrder(${gqlBuilder.buildArgs(args)}) {
-                name
-              }
-            }
-          `
-        })
-
-        if (!response.errors) {
-          this._status = ORDER_STATUS.DELIVERING
-          this._updateContext()
-          this._showToast({ message: i18next.t('text.dispatch_successful') })
-        }
-      }
-    } catch (e) {
-      this._showToast(e)
     }
   }
 
@@ -307,7 +203,16 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       ]
     }
 
-    this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
+    this._actions = [
+      ...this._actions,
+      { title: i18next.t('button.back'), action: () => history.back() },
+      {
+        title: i18next.t('button.print'),
+        action: () => {
+          this.renderRoot.querySelector('iframe').contentWindow.print()
+        }
+      }
+    ]
 
     store.dispatch({
       type: UPDATE_CONTEXT,
