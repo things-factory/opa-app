@@ -660,6 +660,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     if (this._exportOption && this._ownTransport) {
       if (!this.shippingOrderForm.checkValidity()) throw new Error('text.shipping_order_form_invalid')
     }
+
+    if (!this._serializeForm(this.releaseOrderForm)['releaseDate'])
+      throw new Error(i18next.t('text.invalid_release_date'))
   }
 
   _validateInventories() {

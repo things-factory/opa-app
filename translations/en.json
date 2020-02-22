@@ -574,6 +574,7 @@
   "text.invalid_form": "invalid form",
   "text.invalid_form_value": "invalid form value",
   "text.invalid_quantity_input": "invalid quantity input",
+  "text.invalid_release_date": "invalid release date",
   "text.inventory_is_not_selected": "inventory is not selected",
   "text.list_is_not_completed": "list is not completed",
   "text.loading_completed": "loading completed",
