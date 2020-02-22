@@ -922,5 +922,19 @@
   "title.reject": "reject",
   "text.extra_products_approved": "extra product approved",
   "text.extra_products_have_been_processed": "extra products have been processed",
-  "title.proceed_extra_product": "proceed extra products"
+  "title.proceed_extra_product": "proceed extra products",
+  "text.release_order_has_been_deleted": "release order has been deleted",
+  "text.reject_release_order": "reject release order",
+  "text.wrong_release_qty": "wrong release qty",
+  "title.location_sorting_rule": "location sorting rule",
+  "title.add_rule_field": "add rule field",
+  "label.asc": "ascending",
+  "label.desc": "descending",
+  "field.field.zone": "field zone",
+  "field.field.name": "field name",
+  "field.field.row": "field row",
+  "field.field.column": "field column",
+  "field.field.shelf": "field shelf",
+  "text.order_type_is_empty": "order type is empty",
+  "text.data_submitted_for_approval": "data submitted for approval"
 }
