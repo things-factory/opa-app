@@ -102,11 +102,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
     if (!response.errors) {
       const deliveryOrderData = response.data.deliveryOrderByWorksheet
 
-      var { domain } = getPathInfo(location.pathname) // find out better way later. ok
-      // var fetchResult = await fetch(`/view_document_do/${domain}/${this._doNo}`)
-      // var content = await fetchResult.text()
-      // this.shadowRoot.querySelector('#container').innerHtml = content
-
+      var { domain } = getPathInfo(location.pathname) // find out better way later.
       this.shadowRoot.querySelector('#container').src = `/view_document_do/${domain}/${this._doNo}`
 
       this._status = deliveryOrderData.deliveryOrderInfo.doStatus
@@ -205,13 +201,13 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
 
     this._actions = [
       ...this._actions,
-      { title: i18next.t('button.back'), action: () => history.back() },
       {
         title: i18next.t('button.print'),
         action: () => {
           this.renderRoot.querySelector('iframe').contentWindow.print()
         }
-      }
+      },
+      { title: i18next.t('button.back'), action: () => navigate(`delivery_orders`) }
     ]
 
     store.dispatch({
