@@ -936,5 +936,6 @@
   "field.field.column": "field column",
   "field.field.shelf": "field shelf",
   "text.order_type_is_empty": "order type is empty",
-  "text.data_submitted_for_approval": "data submitted for approval"
+  "text.data_submitted_for_approval": "data submitted for approval",
+  "text.there_is_no_selected_value": "there is no selected value"
 }
