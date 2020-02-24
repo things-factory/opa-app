@@ -222,6 +222,22 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           width: 80
         },
         {
+          type: 'number',
+          name: 'lockedQty',
+          header: i18next.t('field.release_qty'),
+          record: { editable: false, align: 'center' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'number',
+          name: 'remainingQty',
+          header: i18next.t('field.remainQty'),
+          record: { editable: false, align: 'center' },
+          sortable: true,
+          width: 80
+        },
+        {
           type: 'float',
           name: 'weight',
           header: i18next.t('field.total_weight'),
@@ -388,6 +404,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
                 type              
               }
               qty
+              remainQty
               warehouse {
                 id
                 name
@@ -410,6 +427,14 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           }
         }
       `
+    })
+
+    response.data.inventories.items = response.data.inventories.items.map(item => {
+      return {
+        ...item,
+        lockedQty: item.qty - item.remainQty,
+        remainingQty: item.remainQty
+      }
     })
 
     return {
