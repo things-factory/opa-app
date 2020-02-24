@@ -571,7 +571,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       {
         backdrop: true,
         size: 'large',
-        title: i18next.t('title.proceed_extract_product')
+        title: i18next.t('title.proceed_extra_product')
       }
     )
   }

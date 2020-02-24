@@ -513,7 +513,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   _validateForm() {
-    if (!this.arrivalNoticeForm.checkValidity()) throw new Error('text.arrival_notice_form_invalid')
+    if (!this.arrivalNoticeForm.checkValidity()) throw new Error(i18next.t('text.arrival_notice_form_invalid'))
   }
 
   _validateProducts() {
