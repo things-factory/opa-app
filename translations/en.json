@@ -553,7 +553,7 @@
   "text.delivery_order_rejected": "delivery order rejected",
   "text.delivery_has_been_dispatched": "delivery has been dispatched",
   "text.dispatch_delivery_order": "dispatch delivery order",
-  "text.do_you_want_to_complete": "do you want to complete?",
+  "text.do_you_want_to_complete?": "do you want to complete?",
   "text.do_you_want_to_print": "do you want to print",
   "text.duplicated_vas_on_same_batch": "duplicated vas on same batch",
   "text.duplicated_vas_on_same_batch'": "duplicated vas on same batch",

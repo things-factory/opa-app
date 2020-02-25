@@ -1,6 +1,6 @@
 {
   "name": "@things-factory/opa-app",
-  "version": "2.2.4",
+  "version": "2.2.5",
   "main": "dist-server/index.js",
   "browser": "client/index.js",
   "things-factory": true,
