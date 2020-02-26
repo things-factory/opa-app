@@ -1,7 +1,8 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { html, css } from 'lit-element'
-import { client, gqlBuilder, isMobileDevice, PageView, store, flattenObject } from '@things-factory/shell'
+import { client, PageView, store } from '@things-factory/shell'
+import { gqlBuilder, flattenObject } from '@things-factory/utils'
 import { connect } from 'pwa-helpers/connect-mixin'
 import { localize, i18next } from '@things-factory/i18n-base'
 import gql from 'graphql-tag'
@@ -132,9 +133,7 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
       pagination: { infinite: true },
       rows: {
         selectable: false,
-        groups: [
-          { column: 'product|name' },
-        ],
+        groups: [{ column: 'product|name' }],
         totals: ['openingBalance', 'inBalance', 'outBalance', 'closingBalance']
       },
       columns: [
