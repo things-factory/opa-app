@@ -315,6 +315,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
         records: worksheetDetails.map(worksheetDetail => {
           return {
             ...worksheetDetail.targetProduct,
+            id:worksheetDetail.id,
             name: worksheetDetail.name,
             status: worksheetDetail.status,
             description: worksheetDetail.description,
@@ -513,6 +514,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     const _pallets = {
       records: this.data.records.map(record => {
         return {
+          id: record.id,
           palletId: record.palletId,
           batchId: record.batchId,
           product: record.product,

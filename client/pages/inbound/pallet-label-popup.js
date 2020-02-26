@@ -83,13 +83,6 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
           header: i18next.t('field.print_qty'),
           record: { editable: true, align: 'center' },
           width: 60
-        },
-        {
-          type: 'integer',
-          name: 'startSeq',
-          header: i18next.t('field.start_seq'),
-          record: { align: 'center', editable: true, options: { min: 1 } },
-          width: 60
         }
       ]
     }
@@ -132,8 +125,7 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
   }
 
   async _printLabel() {
-    try {
-      const _targetRows = this._validate()
+    try {      
       let labelId = this._palletLabel && this._palletLabel.id
 
       let dateStr = new Date()
@@ -141,29 +133,46 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
         .slice(0, 10)
         .replace(/-/g, '/')
 
-      for (let i = 0; i < _targetRows.length; i++) {
-        let record = _targetRows[i]
-        for (let j = 0; j < record.printQty; j++) {
-          let batchId = record.batchId
-          let response = await client.query({
-            query: gql`
-              query {
-                generatePalletId(${gqlBuilder.buildArgs({
-                  batchId
-                })})
+      let _targetRows = this._validate()
+
+      const response = await client.query({
+        query: gql`
+          query {
+            generatePalletId(${gqlBuilder.buildArgs({
+              targets: _targetRows.map(target => {
+                return {
+                  id: target.id,
+                  printQty: target.printQty
+                }
+              })
+            })}) {
+              product {
+                name
+                type
               }
-            `
-          })
-          let palletId = response.data.generatePalletId
+              bizplace {
+                name
+              }
+              batchId
+              packingType
+              palletId
+            }
+          }
+        `
+      })
+
+      if (!response.errors) {
+        const results = response.data.generatePalletId
+
+        for (let i = 0; i < results.length; i++) {
           let searchParams = new URLSearchParams()
 
-          // /* for pallet record mapping */
-          searchParams.append('pallet', palletId)
-          searchParams.append('batch', record.batchId)
-          searchParams.append('product', record.product.name)
-          searchParams.append('type', record.product.type)
-          searchParams.append('packing', record.packingType)
-          searchParams.append('customer', record.bizplace)
+          searchParams.append('pallet', results[i].palletId)
+          searchParams.append('batch', results[i].batchId)
+          searchParams.append('product', results[i].product?.name)
+          searchParams.append('type', results[i].product?.type)
+          searchParams.append('packing', results[i].packingType)
+          searchParams.append('customer', results[i].bizplace?.name)
           searchParams.append('date', dateStr)
 
           try {
@@ -195,7 +204,7 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
 
   _validate() {
     let _targetRows = this.dataGrist.selected.length > 0 ? this.dataGrist.selected : this.dataGrist.dirtyData.records
-    if (!_targetRows.every(row => row.printQty && row.startSeq)) throw new Error(i18next.t('text.print_qty_is_empty'))
+    if (!_targetRows.every(row => row.printQty)) throw new Error(i18next.t('text.print_qty_is_empty'))
     return _targetRows
   }
 
