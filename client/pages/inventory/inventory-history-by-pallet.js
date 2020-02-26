@@ -1,7 +1,7 @@
 import '@material/mwc-button/mwc-button'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, ScrollbarStyles } from '@things-factory/shell'
+import { client } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import { ScrollbarStyles } from '@things-factory/styles'
 import gql from 'graphql-tag'
