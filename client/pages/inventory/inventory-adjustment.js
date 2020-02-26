@@ -226,16 +226,16 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           name: 'lockedQty',
           header: i18next.t('field.release_qty'),
           record: { editable: false, align: 'center' },
-          sortable: true,
-          width: 80
+          sortable: false,
+          width: 200
         },
         {
           type: 'number',
           name: 'remainingQty',
           header: i18next.t('field.remainQty'),
           record: { editable: false, align: 'center' },
-          sortable: true,
-          width: 80
+          sortable: false,
+          width: 200
         },
         {
           type: 'float',
