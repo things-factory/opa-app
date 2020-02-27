@@ -225,6 +225,8 @@
   "field.status": "status",
   "field.stock_name": "stock name",
   "field.subdomain": "subdomain",
+  "field.submitted_at": "submitted at",
+  "field.submitter": "submitter",
   "field.supplier_name": "supplier name",
   "field.template": "template",
   "field.theme": "theme",
