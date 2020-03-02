@@ -88,6 +88,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
               ownCollection
             }
             contactPointInfo {
+              id
               contactName
               address
               phone

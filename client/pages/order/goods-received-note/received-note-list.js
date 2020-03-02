@@ -135,16 +135,16 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
       rows: { appendable: false, selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'post_add',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              if (record.id) this._uploadGRN(record.name, record.id)
-            }
-          }
-        },
+        // {
+        //   type: 'gutter',
+        //   gutterName: 'button',
+        //   icon: 'post_add',
+        //   handlers: {
+        //     click: (columns, data, column, record, rowIndex) => {
+        //       if (record.id) this._uploadGRN(record.name, record.id)
+        //     }
+        //   }
+        // },
         {
           type: 'gutter',
           gutterName: 'button',
@@ -310,22 +310,22 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
     }
   }
 
-  _uploadGRN(grnName, grnId) {
-    openPopup(
-      html`
-        <upload-received-note
-          .grnName="${grnName}"
-          .grnId="${grnId}"
-          .callback="${this.dataGrist.fetch.bind(this.dataGrist)}"
-        ></upload-received-note>
-      `,
-      {
-        backdrop: true,
-        size: 'large',
-        title: i18next.t('title.upload_signed_grn')
-      }
-    )
-  }
+  // _uploadGRN(grnName, grnId) {
+  //   openPopup(
+  //     html`
+  //       <upload-received-note
+  //         .grnName="${grnName}"
+  //         .grnId="${grnId}"
+  //         .callback="${this.dataGrist.fetch.bind(this.dataGrist)}"
+  //       ></upload-received-note>
+  //     `,
+  //     {
+  //       backdrop: true,
+  //       size: 'large',
+  //       title: i18next.t('title.upload_signed_grn')
+  //     }
+  //   )
+  // }
 
   get _columns() {
     return this.config.columns

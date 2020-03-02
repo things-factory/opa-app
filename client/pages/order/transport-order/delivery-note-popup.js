@@ -84,12 +84,12 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
           </select>
 
           <label ?hidden="${this._otherDestination}">${i18next.t('label.to')}</label>
-          <select name="to" ?hidden="${this._otherDestination}">
+          <select name="contactPoint" ?hidden="${this._otherDestination}">
             <option value="">-- ${i18next.t('text.please_select_a_destination')} --</option>
             ${(this.contactPoints || []).map(
               cp =>
                 html`
-                  <option value="${cp && cp.address}">${cp && cp.address}</option>
+                  <option value="${cp && cp.id}">${cp && cp.contactName},${cp && cp.address}</option>
                 `
             )}
           </select>
@@ -101,6 +101,9 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
             @change="${e => (this._otherDestination = e.currentTarget.checked)}"
           />
           <label>${i18next.t('label.other_destination')}</label>
+
+          <label ?hidden="${!this._otherDestination}">${i18next.t('label.contact_name')}</label>
+          <input name="contactName" ?hidden="${!this._otherDestination}" />
 
           <label ?hidden="${!this._otherDestination}">${i18next.t('label.other_destination')}</label>
           <textarea name="otherDestination" ?hidden="${!this._otherDestination}"></textarea>
@@ -172,7 +175,8 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
         deliveryDate: this._getInputByName('deliveryDate').value,
         otherDriver: this._getInputByName('otherDriver').value,
         ownDriver: this._getInputByName('ownDriver').value,
-        to: this._getInputByName('to').value,
+        contactPoint: this._getInputByName('contactPoint').value,
+        contactName: this._getInputByName('contactName').value,
         otherDestination: this._getInputByName('otherDestination').value
       }
     } else {
