@@ -10,6 +10,7 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
     return {
       contactPoints: Array,
       ownCollection: Boolean,
+      truckNo: String,
       doNo: String,
       _driverList: Array,
       _truckList: Array,
@@ -86,7 +87,8 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
           </select>
           
           <label>${i18next.t('label.truck_no')}</label>
-          <input name="otherTruck" ?hidden="${!this.ownCollection}" />
+          <input name="otherTruck" ?hidden="${!this.ownCollection}"
+            value="${this.truckNo}"/>
           <select name="ownTruck" ?hidden="${this.ownCollection}">
             <option value="">-- ${i18next.t('text.please_select_a_truck')} --</option>
             ${(this._truckList || []).map(
@@ -139,7 +141,8 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
       query: gql`
       query {
         transportDrivers(${gqlBuilder.buildArgs({
-          filters: []
+          filters: [],
+          sortings: [{name: 'name'}]
         })}) {
           items{
               id
@@ -161,7 +164,8 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
       query: gql`
       query {
         transportVehicles(${gqlBuilder.buildArgs({
-          filters: []
+          filters: [],
+          sortings: [{name: 'name'}]
         })}) {
           items {
             id

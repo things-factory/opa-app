@@ -941,5 +941,6 @@
   "field.field.shelf": "field shelf",
   "text.order_type_is_empty": "order type is empty",
   "text.data_submitted_for_approval": "data submitted for approval",
-  "text.there_is_no_selected_value": "there is no selected value"
+  "text.there_is_no_selected_value": "there is no selected value",
+  "text.delivery_info_not_valid": "delivery info not valid"
 }

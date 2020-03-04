@@ -15,6 +15,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       _doNo: String,
       _driverName: String,
       _ownCollection: Boolean,
+      _truckNo: String,
       _status: String,
       _date: Date,
       _recipient: String,
@@ -86,6 +87,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
             deliveryOrderInfo {
               doStatus
               ownCollection
+              truckNo
             }
             contactPointInfo {
               id
@@ -109,6 +111,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       this._status = deliveryOrderData.deliveryOrderInfo.doStatus
       this._ownCollection = deliveryOrderData.deliveryOrderInfo.ownCollection
       this._customerContactPoints = deliveryOrderData.contactPointInfo
+      this._truckNo = deliveryOrderData.deliveryOrderInfo.truckNo
     }
   }
 
@@ -168,6 +171,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
         <delivery-note-popup
           .contactPoints="${this._customerContactPoints}"
           .ownCollection="${this._ownCollection}"
+          .truckNo="${this._truckNo}"
           .doNo="${this._doNo}"
           @delivery-dispatched="${() => {
             this.pageReset()
