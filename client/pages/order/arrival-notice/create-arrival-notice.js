@@ -575,14 +575,12 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     let arrivalNotice = this._serializeForm(this.arrivalNoticeForm)
     delete arrivalNotice.importedOrder
 
-    arrivalNotice.orderProducts = this.productGrist.dirtyData.records.map((record, idx) => {
+    arrivalNotice.orderProducts = this.productGrist.dirtyData.records.map(record => {
       let _tempObj = {}
-      const seq = idx + 1
       if (record.palletQty) _tempObj.palletQty = record.palletQty
 
       _tempObj = {
         ..._tempObj,
-        seq,
         batchId: record.batchId,
         product: { id: record.product.id },
         packingType: record.packingType,
