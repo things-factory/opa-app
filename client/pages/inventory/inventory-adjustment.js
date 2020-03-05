@@ -232,7 +232,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'number',
           name: 'remainingQty',
-          header: i18next.t('field.remainQty'),
+          header: i18next.t('field.remain_qty'),
           record: { editable: false, align: 'center' },
           sortable: true,
           width: 80
