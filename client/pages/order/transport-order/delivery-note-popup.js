@@ -11,6 +11,7 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
       contactPoints: Array,
       ownCollection: Boolean,
       truckNo: String,
+      _truckExist: Boolean,
       doNo: String,
       _driverList: Array,
       _truckList: Array,
@@ -90,7 +91,12 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
           <input name="otherTruck" ?hidden="${!this.ownCollection}"
             value="${this.truckNo}"/>
           <select name="ownTruck" ?hidden="${this.ownCollection}">
-            <option value="">-- ${i18next.t('text.please_select_a_truck')} --</option>
+            ${this._truckExist == true ?
+              html `<option value="${this.truckNo}">${this.truckNo}</option>`
+              :
+              html `<option value="">-- ${i18next.t('text.please_select_a_truck')} --</option>`
+            }
+
             ${(this._truckList || []).map(
               truck =>
                 html`
@@ -177,7 +183,12 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
     })
 
     if (!response.errors) {
-      return response.data.transportVehicles.items || []
+      this._truckExist = false
+      const trucks = response.data.transportVehicles.items || []
+      let filteredTrucks = trucks.filter(truck => truck.name != this.truckNo)
+
+      if (trucks.length > filteredTrucks.length) this._truckExist = true
+      return filteredTrucks
     }
   }
 
@@ -214,8 +225,8 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
         deliveryDate: this._getInputByName('deliveryDate').value,
         otherDriver: this._getInputByName('otherDriver').value,
         ownDriver: this._getInputByName('ownDriver').value,
-        otherTruck: this._getInputByName('otherTruck').value.toUpperCase().replace(/\s+/g, ''),
-        ownTruck: this._getInputByName('ownTruck').value,
+        otherTruck: this.ownCollection ? this._getInputByName('otherTruck').value.toUpperCase().replace(/\s+/g, '') : null,
+        ownTruck: this.ownCollection ? null : this._getInputByName('ownTruck').value,
         contactPoint: this._getInputByName('contactPoint').value,
         contactName: this._getInputByName('contactName').value,
         otherDestination: this._getInputByName('otherDestination').value
