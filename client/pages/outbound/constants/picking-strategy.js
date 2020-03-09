@@ -6,7 +6,7 @@ export const PICKING_STRATEGY = [
     value: 'FIFO'
   },
   {
-    name: i18next.t('label.lilo'),
-    value: 'LILO'
+    name: i18next.t('label.lifo'),
+    value: 'LIFO'
   }
 ]

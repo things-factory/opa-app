@@ -240,8 +240,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           type: 'string',
           name: 'productName',
           header: i18next.t('field.product'),
-          record: { align: 'center' },
-          width: 150
+          record: { align: 'left' },
+          width: 250
         },
         {
           type: 'string',
@@ -278,14 +278,14 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
           record: { align: 'left' },
-          width: 150
+          width: 120
         },
         {
           type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
-          record: { align: 'center' },
-          width: 150
+          record: { align: 'left' },
+          width: 250
         },
         {
           type: 'object',
