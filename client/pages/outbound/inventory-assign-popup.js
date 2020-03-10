@@ -79,7 +79,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
         </fieldset>
 
         <fieldset>
-          <legend>${i18next.t('title.release')}</legend>
+          <legend>${i18next.t('title.inventory_selection')}</legend>
           <label>${i18next.t('label.release_qty')}</label>
           <input readonly name="releaseQty" value="${`${this.pickQty} / ${this.releaseQty}`}" />
 
@@ -135,7 +135,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
         {
           type: 'boolean',
           name: 'picked',
-          header: i18next.t('field.picked'),
+          header: i18next.t('field.selected'),
           record: { align: 'center' },
           width: 60
         },
@@ -144,14 +144,14 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
           record: { align: 'left' },
-          width: 150
+          width: 130
         },
         {
           type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
-          record: { align: 'center' },
-          width: 150
+          record: { align: 'left' },
+          width: 250
         },
         {
           type: 'object',
@@ -219,7 +219,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
         {
           type: 'float',
           name: 'weight',
-          header: i18next.t('field.avaliable_weight'),
+          header: i18next.t('field.available_weight'),
           record: { align: 'center' },
           width: 60
         },
@@ -296,7 +296,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
         let pickQty = 0
         let pickWeight = 0
 
-        if (this.pickQty < this.releaseQty && this.pickWeight < this.releaseWeight) {
+        if (this.pickQty < this.releaseQty) {
           picked = true
           const leftQty = this.releaseQty - this.pickQty
           const leftWeight = this.releaseWeight - this.pickWeight
@@ -368,7 +368,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
 
   async submitPickedItems() {
     try {
-      this._checkVolumnValidity()
+      this._checkColumnValidity()
       const response = await client.query({
         query: gql`
           mutation {
@@ -392,9 +392,11 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
     }
   }
 
-  _checkVolumnValidity() {
-    if (this.pickQty > this.releaseQty) throw new Error(i18next.t('text.picked_qty_over_than_release'))
-    if (this.pickQty < this.releaseQty) throw new Error(i18next.t('text.picked_qty_less_than_release'))
+  _checkColumnValidity() {
+    if (this.pickQty > this.releaseQty)
+      throw new Error(i18next.t('text.selected_item_qty_is_more_than_order_release_qty'))
+    if (this.pickQty < this.releaseQty)
+      throw new Error(i18next.t('text.selected_item_qty_is_less_than_order_release_qty'))
     if (this.pickWeight > this.releaseWeight) throw new Error(i18next.t('text.picked_weight_over_than_release'))
     if (this.pickWeight < this.releaseWeight) throw new Error(i18next.t('text.picked_weight_less_than_release'))
   }

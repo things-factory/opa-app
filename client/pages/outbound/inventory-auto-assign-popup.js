@@ -99,7 +99,7 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
     this.config = {
       list: { fields: [] },
       pagination: { infinite: true },
-      rows: { appendable: false },
+      rows: { appendable: false, selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
@@ -220,32 +220,33 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
   }
 
   _composeWorksheetDetails(record, inventories) {
-    let releaseQty = record.releaseQty
-    let releaseWeight = record.releaseWeight
-
+    let leftReleaseQty = record.releaseQty
+    let leftReleaseWeight = record.releaseWeight
     let compReleaseQty = 0
     let compReleaseWeight = 0
 
     let worksheetDetails = []
     let idx = 0
-    while (compReleaseQty < releaseQty && compReleaseWeight < releaseWeight) {
+    while (compReleaseQty < record.releaseQty) {
       const inv = inventories[idx]
 
-      if (inv.qty > releaseQty && inv.weight > releaseWeight) {
-        compReleaseQty += releaseQty
-        compReleaseWeight += releaseWeight
+      if (inv.qty > leftReleaseQty) {
+        compReleaseQty += leftReleaseQty
+        compReleaseWeight += leftReleaseWeight
 
         worksheetDetails.push({
           targetInventory: {
             inventory: { id: inv.id },
-            releaseQty,
-            releaseWeight,
+            releaseQty: leftReleaseQty,
+            releaseWeight: leftReleaseWeight,
             type: ORDER_TYPES.RELEASE_OF_GOODS.value
           }
         })
       } else {
         compReleaseQty += inv.qty
         compReleaseWeight += inv.weight
+        leftReleaseQty -= inv.qty
+        leftReleaseWeight -= inv.weight
 
         worksheetDetails.push({
           targetInventory: {

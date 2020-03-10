@@ -275,15 +275,16 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
           header: i18next.t('field.inventory_list'),
           record: {
             editable: true,
-            align: 'center',
+            align: 'left',
             options: {
               queryName: 'inventoryProductGroup',
               basicArgs: { filters: [] },
               nameField: 'batchId',
               descriptionField: 'productName',
               select: [
-                { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
-                { name: 'productName', header: i18next.t('field.product'), record: { align: 'center' } },
+                { name: 'productId', hidden: true },
+                { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'left' } },
+                { name: 'productName', header: i18next.t('field.product'), record: { align: 'left' }, width: 280 },
                 { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
                 {
                   name: 'remainQty',
@@ -301,7 +302,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
               list: { fields: ['batchId', 'productName', 'packingType', 'remainQty', 'remainWeight'] }
             }
           },
-          width: 250
+          width: 300
         },
         {
           type: 'code',
@@ -318,28 +319,28 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
           name: 'remainQty',
           header: i18next.t('field.available_qty'),
           record: { align: 'center' },
-          width: 100
+          width: 140
         },
         {
           type: 'integer',
           name: 'releaseQty',
           header: i18next.t('field.release_qty'),
           record: { editable: true, align: 'center', options: { min: 0 } },
-          width: 100
+          width: 140
         },
         {
           type: 'float',
           name: 'remainWeight',
           header: i18next.t('field.available_weight'),
           record: { align: 'center' },
-          width: 100
+          width: 140
         },
         {
           type: 'float',
           name: 'releaseWeight',
           header: i18next.t('field.release_weight'),
           record: { editable: true, align: 'center', options: { min: 0 } },
-          width: 100
+          width: 140
         }
       ]
     }
@@ -478,7 +479,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
   _onInventoryFieldChanged(e) {
     let columnName = e.detail.column.name
-    let currentTargetId = e.detail.record.id
+    let currentTargetId = e.detail.record.productId
     let roundedWeight = e.detail.record.roundedWeight || 0
     let releaseQty = 0
 
@@ -498,7 +499,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     this.inventoryData = {
       ...this.inventoryGrist.dirtyData,
       records: this.inventoryGrist.dirtyData.records.map(record => {
-        if ((columnName == 'releaseWeight' || columnName == 'releaseQty') && record.id == currentTargetId) {
+        if ((columnName == 'releaseWeight' || columnName == 'releaseQty') && record.productId == currentTargetId) {
           if (columnName == 'releaseWeight') record.releaseQty = releaseQty
           record.releaseWeight = roundedWeight
         }
@@ -672,8 +673,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     const _selectedInv = (this.inventoryGrist.dirtyData.records || []).map(record => {
       return {
         batchId: record.inventory.batchId,
-        productName: record.inventory.productName,
-        packingType: record.inventory.packingType
+        packingType: record.inventory.packingType,
+        productId: record.inventory.productId
       }
     })
 
@@ -723,13 +724,13 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       })
     }
 
-    const mergedBatchProd = _selectedInv.map(item => item.batchId + item.productName + item.packingType)
+    const mergedBatchProd = _selectedInv.map(item => item.batchId + item.productId + item.packingType)
     let newData = []
     if (mergedBatchProd.length) {
       newData = this.vasGrist.dirtyData.records.filter(
         record =>
           mergedBatchProd.indexOf(
-            record.inventory.batchId + record.inventory.productName + record.inventory.packingType
+            record.inventory.batchId + record.inventory.productId + record.inventory.packingType
           ) > 0
       )
     }
