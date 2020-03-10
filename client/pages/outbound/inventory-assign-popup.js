@@ -296,7 +296,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
         let pickQty = 0
         let pickWeight = 0
 
-        if (this.pickQty < this.releaseQty && this.pickWeight < this.releaseWeight) {
+        if (this.pickQty < this.releaseQty) {
           picked = true
           const leftQty = this.releaseQty - this.pickQty
           const leftWeight = this.releaseWeight - this.pickWeight
