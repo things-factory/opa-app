@@ -1,9 +1,7 @@
-import { USBPrinter } from '@things-factory/barcode-base'
 import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { openPopup } from '@things-factory/layout-base'
 import { client, gqlBuilder, isMobileDevice, PageView, ScrollbarStyles, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
@@ -26,6 +24,27 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
           overflow: visible;
         }
 
+        .grist-container {
+          overflow-y: hidden;
+          display: flex;
+          flex: 1;
+        }
+
+        .grist {
+          background-color: var(--main-section-background-color);
+          display: flex;
+          flex-direction: column;
+          overflow-y: auto;
+        }
+
+        .grist-inventory-change {
+          flex: 3;
+        }
+
+        .grist-inventory-changes-detail {
+          flex: 2;
+        }
+
         data-grist {
           overflow-y: auto;
           flex: 1;
@@ -39,7 +58,8 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
       _searchFields: Array,
       config: Object,
       data: Object,
-      _palletLabel: Object
+      _detailData: Object,
+      _compareColumn: Array
     }
   }
 
@@ -47,11 +67,24 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
     return html`
       <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
-      <data-grist
-        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-        .config=${this.config}
-        .fetchHandler="${this.fetchHandler.bind(this)}"
-      ></data-grist>
+      <div class="grist-container">
+        <div class="grist grist-inventory-change">
+          <data-grist
+            id="grist-inventory-change"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.config}
+            .fetchHandler="${this.fetchHandler.bind(this)}"
+          ></data-grist>
+        </div>
+        <div class="grist grist-inventory-changes-detail">
+          <data-grist
+            id="grist-inventory-detail"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.detailGristConfig}
+            .data="${this._detailData}"
+          ></data-grist>
+        </div>
+      </div>
     `
   }
 
@@ -59,6 +92,10 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
     return {
       title: i18next.t('title.inventory_adjustment_approval'),
       actions: [
+        {
+          title: i18next.t('button.reject'),
+          action: this._rejectInventoryChanges.bind(this)
+        },
         {
           title: i18next.t('button.approve'),
           action: this._approveInventoryChanges.bind(this)
@@ -68,7 +105,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
   }
 
   get dataGrist() {
-    return this.shadowRoot.querySelector('data-grist')
+    return this.shadowRoot.querySelector('#grist-inventory-change')
   }
 
   get searchForm() {
@@ -78,136 +115,159 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
   async pageInitialized() {
     this.location = await this.fetchLocation()
     const _userBizplaces = await this.fetchBizplaces()
-    const _packingType = await getCodeByName('PACKING_TYPES')
+    const _approvalStatus = await getCodeByName('APPROVAL_STATUS')
+
+    this._compareColumn = [
+      { column: 'batchId', name: 'Batch No' },
+      { column: 'packingType', name: 'Packing Type' },
+      { column: 'bizplace', name: 'Customer' },
+      { column: 'product', name: 'Product' },
+      { column: 'location', name: 'Location' },
+      { column: 'qty', name: 'Quantity' },
+      { column: 'weight', name: 'Weight' }
+    ]
 
     this.config = {
-      list: {
-        fields: ['palletId', 'product', 'bizplace', 'location']
+      rows: {
+        appendable: false,
+        selectable: {
+          multiple: true
+        },
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            if (record) {
+              let recordDiff = []
+              if (record.status.toLowerCase() == 'pending') {
+                if (record.inventory != null) {
+                  this._compareColumn.map(item => {
+                    let currentVal = ''
+                    let updatedVal = ''
+
+                    if (typeof record.inventory[item.column] === 'object') {
+                      currentVal = record.inventory[item.column].name
+                      updatedVal = record[item.column].name
+                    } else {
+                      currentVal = record.inventory[item.column]
+                      updatedVal = record[item.column]
+                    }
+
+                    if (currentVal != updatedVal) {
+                      recordDiff.push({
+                        column: item.name,
+                        current: currentVal,
+                        update: updatedVal
+                      })
+                    }
+                  })
+                } else {
+                  this._compareColumn.map(item => {
+                    recordDiff.push({
+                      column: item.name,
+                      current: '-',
+                      update: typeof record[item.column] === 'object' ? record[item.column].name : record[item.column]
+                    })
+                  })
+                }
+              }
+
+              this._detailData = {
+                records: recordDiff
+              }
+            }
+          }
+        }
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'string',
+          name: 'transactionType',
+          header: i18next.t('field.type'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 130
+        },
+        {
+          type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 130
+        },
+        {
+          type: 'string',
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 130
+        },
+        {
+          type: 'string',
+          name: 'customerName',
+          header: i18next.t('field.customer'),
+          sortable: true,
+          width: 230
+        },
+        {
+          type: 'object',
+          name: 'creator',
+          header: i18next.t('field.submitted_by'),
           record: { align: 'left' },
           sortable: true,
           width: 150
         },
         {
-          type: 'string',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
-          record: {
-            editable: false,
-            align: 'left'
-          },
+          type: 'datetime',
+          name: 'createdAt',
+          header: i18next.t('field.submitted_at'),
+          record: { align: 'left' },
           sortable: true,
-          width: 120
-        },
-        {
-          type: 'object',
-          name: 'bizplace',
-          header: i18next.t('field.customer'),
-          record: {
-            editable: false,
-            align: 'left',
-            options: {
-              queryName: 'bizplaces'
-            }
-          },
-          sortable: true,
-          width: 300
-        },
-        {
-          type: 'object',
-          name: 'product',
-          header: i18next.t('field.product'),
-          record: {
-            editable: false,
-            align: 'left',
-            options: {
-              queryName: 'productsByBizplace',
-              basicArgs: {
-                filters: [{ name: 'bizplace', operator: 'eq', value: '' }]
-              },
-              select: [
-                { name: 'id', hidden: true },
-                { name: 'name', header: i18next.t('field.name'), width: 450 },
-                { name: 'description', header: i18next.t('field.description'), width: 450 },
-                { name: 'type', header: i18next.t('field.type'), width: 300 }
-              ]
-            }
-          },
-          sortable: true,
-          width: 500
-        },
-        {
-          type: 'code',
-          name: 'packingType',
-          header: i18next.t('field.packing_type'),
-          record: {
-            editable: false,
-            align: 'left',
-            codeName: 'PACKING_TYPES'
-          },
           width: 150
-        },
-        {
-          type: 'number',
-          name: 'qty',
-          header: i18next.t('field.qty'),
-          record: { editable: false, align: 'center' },
-          sortable: true,
-          width: 80
-        },
-        {
-          type: 'float',
-          name: 'weight',
-          header: i18next.t('field.total_weight'),
-          record: { align: 'center', editable: false },
-          sortable: true,
-          width: 80
-        },
-        {
-          type: 'object',
-          name: 'location',
-          header: i18next.t('field.location'),
-          record: {
-            editable: false,
-            align: 'center',
-            options: {
-              queryName: 'locations',
-              select: [
-                { name: 'id', hidden: true },
-                { name: 'description', hidden: true },
-                { name: 'name', header: i18next.t('field.name'), sortable: true, record: { align: 'center' } },
-                { name: 'zone', header: i18next.t('field.zone'), sortable: true, record: { align: 'center' } },
-                { name: 'row', header: i18next.t('field.row'), sortable: true, record: { align: 'center' } },
-                { name: 'column', header: i18next.t('field.column'), sortable: true, record: { align: 'center' } }
-              ],
-              list: { fields: ['name', 'zone', 'row', 'column'] }
-            }
-          },
-          sortable: true,
-          width: 120
         },
         {
           type: 'datetime',
           name: 'updatedAt',
           header: i18next.t('field.updated_at'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           sortable: true,
           width: 150
+        }
+      ]
+    }
+
+    this.detailGristConfig = {
+      pagination: { infinite: true },
+      rows: {
+        appendable: false
+      },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'string',
+          name: 'column',
+          header: 'Column',
+          record: { align: 'left' },
+          sortable: false,
+          width: 130
         },
         {
-          type: 'object',
-          name: 'updater',
-          header: i18next.t('field.updater'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 150
+          type: 'string',
+          name: 'current',
+          header: 'Current',
+          record: { align: 'left' },
+          sortable: false,
+          width: 240
+        },
+        {
+          type: 'string',
+          name: 'update',
+          header: 'Update',
+          record: { align: 'left' },
+          sortable: false,
+          width: 240
         }
       ]
     }
@@ -231,43 +291,25 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
         props: { searchOper: 'eq' }
       },
       {
-        label: i18next.t('field.product'),
-        name: 'product.name',
-        type: 'text',
-        props: { searchOper: 'i_like' }
-      },
-      {
-        label: i18next.t('field.batch_no'),
-        name: 'batchId',
-        type: 'text',
-        props: { searchOper: 'i_like' }
-      },
-      {
         label: i18next.t('field.pallet_id'),
         name: 'palletId',
         type: 'text',
         props: { searchOper: 'i_like' }
       },
       {
-        label: i18next.t('field.packing_type'),
-        name: 'packingType',
+        label: i18next.t('field.status'),
+        name: 'status',
         type: 'select',
         options: [
           { value: '' },
-          ..._packingType.map(packingType => {
+          ..._approvalStatus.map(stat => {
             return {
-              name: packingType.name,
-              value: packingType.name
+              name: stat.name,
+              value: stat.name
             }
           })
         ],
         props: { searchOper: 'eq' }
-      },
-      {
-        label: i18next.t('field.location'),
-        name: 'location.name',
-        type: 'text',
-        props: { searchOper: 'i_like' }
       }
     ]
   }
@@ -291,35 +333,53 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
             items {
               id
               palletId
+              inventory{ 
+                batchId
+                packingType
+                bizplace {
+                  id
+                  name
+                  description
+                }              
+                product {
+                  id
+                  name
+                  description  
+                  type              
+                }        
+                location {
+                  id
+                  name
+                  description
+                }
+                qty
+                weight
+              }
               batchId
               packingType
-              weight
               bizplace {
                 id
                 name
                 description
-              }
+              }              
               product {
                 id
                 name
                 description  
                 type              
-              }
-              qty
-              warehouse {
-                id
-                name
-                description
-              }
-              zone
+              }        
               location {
                 id
                 name
                 description
               }
+              qty
+              weight
+              status
+              transactionType
               createdAt
               updatedAt
-              updater {
+              creator {
                 name
                 description
               }
@@ -331,48 +391,29 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
     })
 
     return {
-      total: response.data.inventories.total || 0,
-      records: response.data.inventories.items || []
+      total: response.data.inventoryChanges.total || 0,
+      records:
+        response.data.inventoryChanges.items.map(item => {
+          return { ...item, customerName: item?.inventory?.bizplace?.name || item.bizplace.name }
+        }) || []
     }
   }
 
   async _approveInventoryChanges() {
-    var patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
-    patches.map(x => {
-      delete x.productWeight
-      if (x.bizplace) {
-        delete x.bizplace['__seq__']
-        delete x.bizplace['__origin__']
-        delete x.bizplace['__selected__']
-      }
-      if (x.location) {
-        delete x.location['row']
-        delete x.location['zone']
-        delete x.location['column']
-        delete x.location['__seq__']
-        delete x.location['__origin__']
-        delete x.location['__selected__']
-      }
-      if (x.product) {
-        delete x.product['productWeight']
-        delete x.product['__seq__']
-        delete x.product['__origin__']
-        delete x.product['__selected__']
-        delete x.product['type']
-      }
-      if (x.weight) {
-        x.weight = parseFloat(x.weight)
-      }
-    })
+    var patches = this.dataGrist.selected
+      .filter(item => item.status.toLowerCase() == 'pending')
+      .map(item => {
+        return { id: item.id }
+      })
     if (patches && patches.length) {
       const response = await client.query({
         query: gql`
-            mutation {
-              submitInventoryChanges(${gqlBuilder.buildArgs({
-                patches
-              })}) 
-            }
-          `
+          mutation {
+            approveInventoryChanges(${gqlBuilder.buildArgs({
+              patches
+            })})
+          }
+        `
       })
 
       if (!response.errors) {
@@ -380,7 +421,37 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
         document.dispatchEvent(
           new CustomEvent('notify', {
             detail: {
-              message: i18next.t('text.data_updated_successfully')
+              message: i18next.t('text.data_approved')
+            }
+          })
+        )
+      }
+    }
+  }
+
+  async _rejectInventoryChanges() {
+    var patches = this.dataGrist.selected
+      .filter(item => item.status.toLowerCase() == 'pending')
+      .map(item => {
+        return { id: item.id }
+      })
+    if (patches && patches.length) {
+      const response = await client.query({
+        query: gql`
+          mutation {
+            rejectInventoryChanges(${gqlBuilder.buildArgs({
+              patches
+            })})
+          }
+        `
+      })
+
+      if (!response.errors) {
+        this.dataGrist.fetch()
+        document.dispatchEvent(
+          new CustomEvent('notify', {
+            detail: {
+              message: i18next.t('text.data_rejected')
             }
           })
         )
@@ -392,10 +463,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
     return this.config.columns
   }
 
-  stateChanged(state) {
-    let palletLabelSetting = state.dashboard[PALLET_LABEL_SETTING_KEY]
-    this._palletLabel = (palletLabelSetting && palletLabelSetting.board) || {}
-  }
+  stateChanged(state) {}
 
   async fetchBizplaces(bizplace = []) {
     const response = await client.query({

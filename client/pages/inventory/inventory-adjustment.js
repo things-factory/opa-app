@@ -226,7 +226,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           name: 'lockedQty',
           header: i18next.t('field.release_qty'),
           record: { editable: false, align: 'center' },
-          sortable: true,
+          sortable: false,
           width: 80
         },
         {
@@ -234,7 +234,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           name: 'remainingQty',
           header: i18next.t('field.remainQty'),
           record: { editable: false, align: 'center' },
-          sortable: true,
+          sortable: false,
           width: 80
         },
         {
@@ -561,11 +561,9 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       const response = await client.query({
         query: gql`
             mutation {
-              updateMultipleInventory(${gqlBuilder.buildArgs({
+              submitInventoryChanges(${gqlBuilder.buildArgs({
                 patches
-              })}) {
-                name
-              }
+              })})
             }
           `
       })
@@ -596,11 +594,9 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
     const response = await client.query({
       query: gql`
           mutation {
-            updateMultipleInventory(${gqlBuilder.buildArgs({
+            submitInventoryChanges(${gqlBuilder.buildArgs({
               patches
-            })}) {
-              name
-            }
+            })})
           }
         `
     })
@@ -640,7 +636,6 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _exportableData() {
-    debugger
     try {
       let records = []
       let data = []
