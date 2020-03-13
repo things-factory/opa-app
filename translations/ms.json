@@ -549,7 +549,7 @@
   "text.delivery_order_rejected": "pesanan penghantaran ditolak",
   "text.dispatch_collection_order": "keluar pengumpulan pesanan",
   "text.dispatch_delivery_order": "hantar pesanan penghantaran",
-  "text.do_you_want_to_complete?": "anda pasti untuk lengkapkan",
+  "text.do_you_want_to_complete": "anda pasti untuk lengkapkan",
   "text.document_has_been_uploaded": "dokumen telah dimuatnaik",
   "text.do_you_want_to_print": "adakah anda mahu print",
   "text.duplicated_vas_on_same_batch": "salinan value added service pada kumpulan yang sama",

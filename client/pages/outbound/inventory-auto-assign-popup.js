@@ -183,7 +183,7 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
 
       await CustomAlert({
         title: i18next.t('title.completed'),
-        text: i18next.t('text.inventory_auto_assign_complted'),
+        text: i18next.t('text.inventory_auto_assign_completed'),
         confirmButton: { text: i18next.t('button.confirm') }
       })
 
