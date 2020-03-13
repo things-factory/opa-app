@@ -291,7 +291,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
         {
           type: 'string',
           name: 'batchId',
-          header: i18next.t('field.batchId'),
+          header: i18next.t('field.batch_no'),
           record: { align: 'center' },
           width: 150
         },

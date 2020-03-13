@@ -491,6 +491,9 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
                 @completed="${() => {
                   this._fetchInventories(this.releaseGoodNoInput.value)
                   this._fetchPalletsHandler(this.releaseGoodNoInput.value)
+                  this._selectedTaskStatus = null
+                  this._selectedOrderInventory = null
+                  this.palletInput.value = ''
                 }}"
               ></picking-replacement-popup>
             `,
@@ -538,7 +541,9 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
             this._selectedOrderInventory = null
             this.palletInput.value = ''
             this.releaseQtyInput.value = ''
-            this.locationInput.value = ''
+            if (!this.isWholePicking) {
+              this.locationInput.value = ''
+            }
           }
         }
 

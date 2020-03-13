@@ -57,7 +57,7 @@ class PickingReplacementPopup extends localize(i18next)(LitElement) {
     return html`
       <form id="info-form" class="multi-column-form">
         <fieldset>
-          <legend>${i18next.t('title.from_pallet')}</legend>
+          <legend>${i18next.t('title.original_pallet')}</legend>
           <label>${i18next.t('label.pallet_id')}</label>
           <input readonly value="${this.orderInventory.palletId}" />
 
@@ -174,7 +174,7 @@ class PickingReplacementPopup extends localize(i18next)(LitElement) {
         {
           type: 'string',
           name: 'batchId',
-          header: i18next.t('field.batch_id'),
+          header: i18next.t('field.batch_no'),
           record: { align: 'center' },
           width: 130
         },
@@ -210,7 +210,7 @@ class PickingReplacementPopup extends localize(i18next)(LitElement) {
 
   async getPalletInfo(palletId) {
     try {
-      if (!palletId) throw new Error(i18next.t('text.there_is_no_pallet_id'))
+      if (!palletId) throw new Error(i18next.t('text.no_pallet_id'))
       if (!(await this.checkProductIdenticality(this.orderInventory.palletId, palletId)))
         throw new Error(i18next.t('text.wrong_pallet_id'))
       const response = await client.query({
@@ -268,7 +268,7 @@ class PickingReplacementPopup extends localize(i18next)(LitElement) {
   checkValidity() {
     if (!this.targetInventory) {
       this._focusOnInput(this.palletInput)
-      throw new Error(i18next.t('text.pallet_doesnt_be_scanned'))
+      throw new Error(i18next.t('text.replacement_pallet_not_match_criteria'))
     }
 
     if (!parseInt(this.releaseQtyInput.value)) {
