@@ -23,7 +23,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       loadedProductConfig: Object,
       loadedProductData: Object,
       _selectedTaskStatus: String,
-      _vehicleList: Object
+      transportVehicles: Array
     }
   }
 
@@ -110,12 +110,12 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('form#input-form')
   }
 
-  get ownCollectionInput() {
-    return this.shadowRoot.querySelector('input[name=ownCollection]')
-  }
-
   get truckInput() {
     return this.shadowRoot.querySelector('input[name=truckNo]')
+  }
+
+  get selectTruckInput() {
+    return this.shadowRoot.querySelector('select[name=truckNo]')
   }
 
   get palletQty() {
@@ -154,6 +154,9 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
                   this._clearView()
                   await this._fetchLoadingWorksheet(this.releaseGoodNoInput.value)
                   await this._fetchDeliveryOrders(this.releaseGoodNoInput.value)
+                  if (!this._ownCollection) {
+                    await this._fetchTransportVehicle()
+                  }
                 }
               }
             }}"
@@ -200,9 +203,18 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         <div class="right-column">
           <form id="input-form" class="single-column-form">
             <fieldset>
-              <legend>${i18next.t('label.assign_truck')}</legend>
+              <legend>${i18next.t('label.delivery_information')}</legend>
               <label>${i18next.t('label.lorry_no')}</label>
-              <input name="truckNo" />
+              <input ?hidden=${!this._ownCollection} name="truckNo" />
+              <select name="truckNo" ?hidden="${this._ownCollection}">
+                <option value="">-- ${i18next.t('text.please_select_a_truck')} --</option>
+                ${(this.transportVehicles || []).map(
+                  truck =>
+                    html`
+                      <option value="${truck && truck.name}">${truck && truck.name}</option>
+                    `
+                )}
+              </select>
 
               <label>${i18next.t('label.total_pallet_qty')}</label>
               <input name="palletQty" />
@@ -230,6 +242,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     this.deliveryOrderData = { records: [] }
     this.loadedProductData = { records: [] }
     this._releaseGoodNo = ''
+    this._ownCollection = true
     this._selectedTaskStatus = null
   }
 
@@ -529,7 +542,12 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       const loadedWorksheetDetails = this.pickedProductGrist.selected.map(record => {
         return { name: record.name, loadedQty: record.loadedQty }
       })
-      const truckNo = this.truckInput.value.toUpperCase().replace(/\s+/g, '')
+      let truckNo = null
+      if (!this._ownCollection) {
+        truckNo = this.selectTruckInput.value
+      } else {
+        truckNo = this.truckInput.value.toUpperCase().replace(/\s+/g, '')
+      }
       const palletQty = this.palletQty.value
       const response = await client.query({
         query: gql`
@@ -612,6 +630,40 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         })
       }
       this._updateContext()
+    } else {
+      throw new Error(response.errors[0])
+    }
+  }
+
+  async _fetchTransportVehicle() {
+    const response = await client.query({
+      query: gql`
+        query {
+          transportVehicles(${gqlBuilder.buildArgs({
+            filters: []
+          })}) {
+            items {
+              id
+              name
+              regNumber
+              description
+              size
+              status
+              updatedAt
+              updater{
+                id
+                name
+                description
+              }
+            }
+            total
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      this.transportVehicles = response.data.transportVehicles.items
     } else {
       throw new Error(response.errors[0])
     }

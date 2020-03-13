@@ -1,16 +1,8 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import {
-  client,
-  CustomAlert,
-  gqlBuilder,
-  isMobileDevice,
-  navigate,
-  PageView,
-  store,
-  UPDATE_CONTEXT
-} from '@things-factory/shell'
+import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/vas-relabel'
@@ -219,27 +211,17 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
           width: 100
         },
         {
-          type: 'object',
-          name: 'product',
+          type: 'string',
+          name: 'productName',
           header: i18next.t('field.product'),
           record: { align: 'left' },
-          width: 350
-        },
-        {
-          type: 'object',
-          name: 'location',
-          header: i18next.t('field.location'),
-          record: { align: 'center' },
           width: 150
         },
         {
-          type: 'code',
+          type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
-          record: {
-            align: 'center',
-            codeName: 'PACKING_TYPES'
-          },
+          record: { align: 'center' },
           width: 150
         },
         {
@@ -307,9 +289,23 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
           width: 250
         },
         {
-          type: 'object',
-          name: 'inventory',
-          header: i18next.t('field.inventory'),
+          type: 'string',
+          name: 'batchId',
+          header: i18next.t('field.batch_no'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'productName',
+          header: i18next.t('field.product'),
+          record: { align: 'left' },
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'packingType',
+          header: i18next.t('field.packing_type'),
           record: { align: 'center' },
           width: 150
         },
@@ -345,18 +341,12 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
             inventoryInfos {
               name
               batchId
+              productName
               packingType
               qty
               weight
               releaseQty
               releaseWeight
-              product {
-                name
-                description
-              }
-              location {
-                name
-              }              
             }
             shippingOrderInfo {
               containerNo
@@ -365,15 +355,14 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
               shipName
             }
             orderVass {
+              batchId
+              productName
+              packingType
               vas {
                 name
                 description
                 operationGuide
                 operationGuideType
-              }
-              inventory {
-                name
-                description
               }
               operationGuide
               status
@@ -391,7 +380,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       const orderInventories = releaseOrder.inventoryInfos.map(inventoryInfo => {
         return {
           ...inventoryInfo,
-          roundedWeight: inventoryInfo.releaseQty * (inventoryInfo.weight / inventoryInfo.qty)
+          roundedWeight: inventoryInfo.releaseQty * (inventoryInfo.weight / inventoryInfo.qty) || ''
         }
       })
 

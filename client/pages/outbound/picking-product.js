@@ -11,6 +11,7 @@ import { connect } from 'pwa-helpers/connect-mixin.js'
 import { fetchLocationSortingRule } from '../../fetch-location-sorting-rule'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
 import './outbound-reusable-pallet'
+import './picking-replacement-popup'
 
 class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -478,52 +479,82 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
   async _picking(e) {
     if (e.keyCode === 13) {
       try {
-        this._validatePicking()
+        await this._validatePicking()
 
-        const locationName = this.isWholePicking ? this._selectedOrderInventory.location.name : this.locationInput.value
-        // 1. Check whether location is changed
-        if (this._selectedOrderInventory.location.name !== locationName) {
-          const result = await CustomAlert({
-            title: i18next.t('title.relocate'),
-            text: i18next.t('text.are_you_sure'),
-            confirmButton: { text: i18next.t('button.relocate') },
-            cancelButton: { text: i18next.t('button.cancel') }
+        if (this.isReplacement) {
+          openPopup(
+            html`
+              <picking-replacement-popup
+                .orderInventory="${this._selectedOrderInventory}"
+                .replacePalletId="${this.palletInput.value}"
+                .isWholePicking="${this.isWholePicking}"
+                @completed="${() => {
+                  this._fetchInventories(this.releaseGoodNoInput.value)
+                  this._fetchPalletsHandler(this.releaseGoodNoInput.value)
+                  this._selectedTaskStatus = null
+                  this._selectedOrderInventory = null
+                  this.palletInput.value = ''
+                }}"
+              ></picking-replacement-popup>
+            `,
+            {
+              backdrop: true,
+              size: 'large',
+              title: i18next.t('title.pallet_replacement')
+            }
+          )
+        } else {
+          const locationName = this.isWholePicking
+            ? this._selectedOrderInventory.location.name
+            : this.locationInput.value
+          // 1. Check whether location is changed
+          if (this._selectedOrderInventory.location.name !== locationName) {
+            const result = await CustomAlert({
+              title: i18next.t('title.relocate'),
+              text: i18next.t('text.are_you_sure'),
+              confirmButton: { text: i18next.t('button.relocate') },
+              cancelButton: { text: i18next.t('button.cancel') }
+            })
+
+            if (!result.value) {
+              return
+            }
+          }
+
+          const response = await client.query({
+            query: gql`
+                mutation {
+                  picking(${gqlBuilder.buildArgs({
+                    worksheetDetailName: this._selectedOrderInventory.name,
+                    palletId: this.palletInput.value,
+                    locationName,
+                    releaseQty: parseInt(this.releaseQtyInput.value)
+                  })})
+                }
+              `
           })
 
-          if (!result.value) {
-            return
+          if (!response.errors) {
+            this._fetchInventories(this.releaseGoodNo)
+            this._focusOnInput(this.palletInput)
+            this._selectedTaskStatus = null
+            this._selectedOrderInventory = null
+            this.palletInput.value = ''
+            this.releaseQtyInput.value = ''
+            if (!this.isWholePicking) {
+              this.locationInput.value = ''
+            }
           }
         }
 
-        const response = await client.query({
-          query: gql`
-              mutation {
-                picking(${gqlBuilder.buildArgs({
-                  worksheetDetailName: this._selectedOrderInventory.name,
-                  palletId: this.palletInput.value,
-                  locationName,
-                  releaseQty: parseInt(this.releaseQtyInput.value)
-                })})
-              }
-            `
-        })
-
-        if (!response.errors) {
-          this._fetchInventories(this.releaseGoodNo)
-          this._focusOnInput(this.palletInput)
-          this._selectedTaskStatus = null
-          this._selectedOrderInventory = null
-          this.palletInput.value = ''
-          this.releaseQtyInput.value = ''
-          this.locationInput.value = ''
-        }
+        this.isReplacement = false
       } catch (e) {
         this._showToast(e)
       }
     }
   }
 
-  _validatePicking() {
+  async _validatePicking() {
     // 1. validate for order selection
     if (!this._selectedOrderInventory) throw new Error(i18next.t('text.target_doesnt_selected'))
 
@@ -535,8 +566,16 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
 
     // 3. Equality of pallet id
     if (this._selectedOrderInventory.palletId !== this.palletInput.value) {
-      setTimeout(() => this.palletInput.select(), 100)
-      throw new Error(i18next.t('text.wrong_pallet_id'))
+      this.isReplacement = await this.checkProductIdenticality(
+        this._selectedOrderInventory.palletId,
+        this.palletInput.value
+      )
+      if (!this.isReplacement) {
+        setTimeout(() => this.palletInput.select(), 100)
+        throw new Error(i18next.t('text.wrong_pallet_id'))
+      } else {
+        return
+      }
     }
 
     // 4. Release qty existing
@@ -560,12 +599,29 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     if (!this.releaseQtyInput.checkValidity()) throw new Error(i18next.t('text.release_qty_invalid'))
   }
 
+  async checkProductIdenticality(palletA, palletB) {
+    const response = await client.query({
+      query: gql`
+        query {
+          checkProductIdenticality(${gqlBuilder.buildArgs({
+            palletA,
+            palletB
+          })})
+        }
+      `
+    })
+
+    if (!response.errors) {
+      return response.data.checkProductIdenticality
+    }
+  }
+
   async _completeHandler() {
     if (!this.data.records.every(record => record.completed)) return
     this._updateContext()
     const result = await CustomAlert({
       title: i18next.t('title.picking'),
-      text: i18next.t('text.do_you_want_to_complete?'),
+      text: i18next.t('text.do_you_want_to_complete'),
       confirmButton: { text: i18next.t('button.complete') },
       cancelButton: { text: i18next.t('button.cancel') }
     })

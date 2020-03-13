@@ -216,30 +216,16 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
         { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'string',
-          name: 'name',
-          header: i18next.t('field.pallet_id'),
-          record: { align: 'center' },
-          width: 100
-        },
-        {
-          type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_no'),
           record: { align: 'center' },
           width: 100
         },
         {
-          type: 'object',
-          name: 'product',
+          type: 'string',
+          name: 'productName',
           header: i18next.t('field.product'),
           record: { align: 'left' },
-          width: 350
-        },
-        {
-          type: 'object',
-          name: 'location',
-          header: i18next.t('field.location'),
-          record: { align: 'center' },
           width: 150
         },
         {
@@ -311,17 +297,27 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
           width: 250
         },
         {
-          type: 'object',
-          name: 'inventory',
-          header: i18next.t('field.inventory'),
+          type: 'string',
+          name: 'batchId',
+          header: i18next.t('field.batch_no'),
           record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'productName',
+          header: i18next.t('field.product'),
+          record: { align: 'left' },
           width: 150
         },
         {
-          type: 'object',
-          name: 'product',
-          header: i18next.t('field.product'),
-          record: { align: 'left' },
+          type: 'code',
+          name: 'packingType',
+          header: i18next.t('field.packing_type'),
+          record: {
+            align: 'center',
+            codeName: 'PACKING_TYPES'
+          },
           width: 150
         },
         {
@@ -352,20 +348,13 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
             collectionOrderNo
             remark
             inventoryInfos {
-              name
               batchId
+              productName
               packingType
               qty
               weight
               releaseQty
               releaseWeight
-              product {
-                name
-                description
-              }
-              location {
-                name
-              }              
             }
             shippingOrder {
               name
@@ -382,10 +371,9 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
                 operationGuide
                 operationGuideType
               }
-              inventory {
-                name
-                description
-              }
+              batchId
+              productName
+              packingType
               operationGuide
               status
               remark

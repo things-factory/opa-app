@@ -5,9 +5,8 @@ import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { fetchLocationSortingRule } from '../../../fetch-location-sorting-rule'
 import '../../components/vas-relabel'
-import { INVENTORY_STATUS, ORDER_PRODUCT_STATUS, ORDER_TYPES } from '../constants/'
+import { ORDER_INVENTORY_STATUS, ORDER_TYPES } from '../constants/'
 
 class CreateReleaseOrder extends localize(i18next)(PageView) {
   static get properties() {
@@ -251,7 +250,6 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
-    const locationSortingRules = await fetchLocationSortingRule()
     this.inventoryGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
@@ -277,59 +275,34 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
           header: i18next.t('field.inventory_list'),
           record: {
             editable: true,
-            align: 'center',
+            align: 'left',
             options: {
-              queryName: 'inventories',
-              basicArgs: {
-                filters: [
-                  { name: 'status', operator: 'eq', value: INVENTORY_STATUS.STORED.value },
-                  { name: 'remainOnly', operator: 'eq', value: true }
-                ],
-                locationSortingRules
-              },
+              queryName: 'inventoryProductGroup',
+              basicArgs: { filters: [] },
               nameField: 'batchId',
-              descriptionField: 'palletId',
+              descriptionField: 'productName',
               select: [
-                { name: 'id', hidden: true },
-                { name: 'name', hidden: true },
-                { name: 'palletId', header: i18next.t('field.pallet_id'), record: { align: 'center' } },
-                { name: 'product', type: 'object', queryName: 'products' },
-                { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
-                {
-                  name: 'location',
-                  type: 'object',
-                  queryName: 'locations',
-                  field: 'name',
-                  record: { align: 'center' }
-                },
+                { name: 'productId', hidden: true },
+                { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'left' } },
+                { name: 'productName', header: i18next.t('field.product'), record: { align: 'left' }, width: 280 },
                 { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
-                { name: 'bizplace', type: 'object', record: { align: 'center' } },
-                { name: 'remainQty', type: 'float', record: { align: 'center' } },
+                {
+                  name: 'remainQty',
+                  header: i18next.t('field.remain_qty'),
+                  record: { align: 'center' },
+                  ignoreCondition: true
+                },
                 {
                   name: 'remainWeight',
-                  type: 'float',
-                  header: i18next.t('field.total_weight'),
-                  record: { align: 'center' }
+                  header: i18next.t('field.remain_weight'),
+                  record: { align: 'center' },
+                  ignoreCondition: true
                 }
               ],
-              list: { fields: ['palletId', 'product', 'batchId', 'location', 'remainWeight'] }
+              list: { fields: ['batchId', 'productName', 'packingType', 'remainQty', 'remainWeight'] }
             }
           },
-          width: 250
-        },
-        {
-          type: 'object',
-          name: 'product',
-          header: i18next.t('field.product'),
-          record: { align: 'left' },
-          width: 150
-        },
-        {
-          type: 'object',
-          name: 'location',
-          header: i18next.t('field.location'),
-          record: { align: 'center' },
-          width: 150
+          width: 300
         },
         {
           type: 'code',
@@ -346,28 +319,28 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
           name: 'remainQty',
           header: i18next.t('field.available_qty'),
           record: { align: 'center' },
-          width: 100
+          width: 140
         },
         {
           type: 'integer',
           name: 'releaseQty',
           header: i18next.t('field.release_qty'),
           record: { editable: true, align: 'center', options: { min: 0 } },
-          width: 100
+          width: 140
         },
         {
           type: 'float',
           name: 'remainWeight',
           header: i18next.t('field.available_weight'),
           record: { align: 'center' },
-          width: 100
+          width: 140
         },
         {
           type: 'float',
           name: 'releaseWeight',
           header: i18next.t('field.release_weight'),
           record: { editable: true, align: 'center', options: { min: 0 } },
-          width: 100
+          width: 140
         }
       ]
     }
@@ -446,20 +419,28 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             editable: true,
             align: 'center',
             options: {
-              queryName: 'inventories',
+              queryName: 'inventoryProductGroup',
+              basicArgs: { filters: [] },
               nameField: 'batchId',
-              descriptionField: 'palletId',
-              basicArgs: { filters: [{ name: 'id', operator: 'in', value: [null] }], locationSortingRules },
+              descriptionField: 'productName',
               select: [
-                { name: 'id', hidden: true },
-                { name: 'name', hidden: true },
-                { name: 'palletId', header: i18next.t('field.pallet_id'), record: { align: 'center' } },
-                { name: 'product', type: 'object', queryName: 'products' },
                 { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
+                { name: 'productName', header: i18next.t('field.product'), record: { align: 'center' } },
                 { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
-                { name: 'location', type: 'object', queryName: 'locations', record: { align: 'center' } }
+                {
+                  name: 'remainQty',
+                  header: i18next.t('field.remain_qty'),
+                  record: { align: 'center' },
+                  ignoreCondition: true
+                },
+                {
+                  name: 'remainWeight',
+                  header: i18next.t('field.remain_weight'),
+                  record: { align: 'center' },
+                  ignoreCondition: true
+                }
               ],
-              list: { fields: ['palletId', 'product', 'batchId', 'location'] }
+              list: { fields: ['batchId', 'productName', 'packingType', 'remainQty', 'remainWeight'] }
             }
           },
           sortable: true,
@@ -474,10 +455,6 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         }
       ]
     }
-  }
-
-  async _getLocationSortingRule() {
-    const response = await client.query()
   }
 
   _updateContext() {
@@ -502,7 +479,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
   _onInventoryFieldChanged(e) {
     let columnName = e.detail.column.name
-    let currentTargetId = e.detail.record.id
+    let currentTargetId = e.detail.record.productId
     let roundedWeight = e.detail.record.roundedWeight || 0
     let releaseQty = 0
 
@@ -522,7 +499,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     this.inventoryData = {
       ...this.inventoryGrist.dirtyData,
       records: this.inventoryGrist.dirtyData.records.map(record => {
-        if ((columnName == 'releaseWeight' || columnName == 'releaseQty') && record.id == currentTargetId) {
+        if ((columnName == 'releaseWeight' || columnName == 'releaseQty') && record.productId == currentTargetId) {
           if (columnName == 'releaseWeight') record.releaseQty = releaseQty
           record.releaseWeight = roundedWeight
         }
@@ -679,11 +656,6 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
     if (this.inventoryGrist.dirtyData.records.filter(record => record.releaseQty > record.remainQty).length)
       throw new Error(i18next.t('text.invalid_quantity_input'))
-
-    // duplication of pallet id
-    const palletIds = this.inventoryGrist.dirtyData.records.map(inventory => inventory.palletId)
-    if (palletIds.filter((palletId, idx, palletIds) => palletIds.indexOf(palletId) !== idx).length)
-      throw new Error(i18next.t('text.pallet_id_is_duplicated'))
   }
 
   _validateVas() {
@@ -698,22 +670,29 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   }
 
   async _updateInventoryList() {
-    const _selectedInventories = (this.inventoryGrist.dirtyData.records || []).map(record => record.inventory.id)
+    const _selectedInv = (this.inventoryGrist.dirtyData.records || []).map(record => {
+      return {
+        batchId: record.inventory.batchId,
+        packingType: record.inventory.packingType,
+        productId: record.inventory.productId
+      }
+    })
+
     this.inventoryGristConfig = {
       ...this.inventoryGristConfig,
       columns: this.inventoryGristConfig.columns.map(column => {
         if (column.name === 'inventory') {
           column.record.options.basicArgs = {
             ...column.record.options.basicArgs,
-            filters: [...column.record.options.basicArgs.filters.filter(filter => filter.name !== 'id')]
+            filters: [...column.record.options.basicArgs.filters.filter(filter => filter.name !== 'batch_product')]
           }
 
-          if (_selectedInventories.length)
+          if (_selectedInv.length)
             column.record.options.basicArgs.filters = [
               ...column.record.options.basicArgs.filters,
               {
-                name: 'id',
-                value: _selectedInventories,
+                name: 'batch_product',
+                value: _selectedInv,
                 operator: 'notin'
               }
             ]
@@ -729,11 +708,11 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         if (column.name === 'inventory') {
           column.record.options.basicArgs = {
             ...column.record.options.basicArgs,
-            filters: _selectedInventories.length
+            filters: _selectedInv.length
               ? [
                   {
-                    name: 'id',
-                    value: _selectedInventories,
+                    name: 'batch_product',
+                    value: _selectedInv,
                     operator: 'in'
                   }
                 ]
@@ -744,6 +723,19 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         return column
       })
     }
+
+    const mergedBatchProd = _selectedInv.map(item => item.batchId + item.productId + item.packingType)
+    let newData = []
+    if (mergedBatchProd.length) {
+      newData = this.vasGrist.dirtyData.records.filter(
+        record =>
+          mergedBatchProd.indexOf(
+            record.inventory.batchId + record.inventory.productId + record.inventory.packingType
+          ) > 0
+      )
+    }
+
+    this.vasData = { ...this.vasData, records: newData }
   }
 
   _clearGristConditions() {
@@ -752,7 +744,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       columns: this.inventoryGristConfig.columns.map(column => {
         if (column.name === 'inventory') {
           column.record.options.basicArgs = {
-            filters: [...column.record.options.basicArgs.filters.filter(filter => filter.name !== 'id')]
+            filters: [...column.record.options.basicArgs.filters.filter(filter => filter.name !== 'batch_product')]
           }
         }
 
@@ -778,18 +770,15 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   _getReleaseOrder() {
     let releaseGood = this._serializeForm(this.releaseOrderForm)
 
-    releaseGood.orderInventories = this.inventoryGrist.data.records.map((record, idx) => {
-      const seq = idx + 1
-
+    releaseGood.orderInventories = this.inventoryGrist.data.records.map(record => {
       return {
         releaseQty: record.releaseQty,
         releaseWeight: record.releaseWeight,
-        seq,
-        inventory: {
-          id: record.id
-        },
+        batchId: record.inventory.batchId,
+        productName: record.inventory.productName,
+        packingType: record.inventory.packingType,
         type: ORDER_TYPES.RELEASE_OF_GOODS.value,
-        status: ORDER_PRODUCT_STATUS.PENDING.value
+        status: ORDER_INVENTORY_STATUS.PENDING.value
       }
     })
 
@@ -803,8 +792,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       _tempObj = {
         ..._tempObj,
         vas: { id: record.vas.id },
-        inventory: { id: record.inventory.id },
         batchId: record.inventory.batchId,
+        productName: record.inventory.productName,
+        packingType: record.inventory.packingType,
         remark: record.remark
       }
 
