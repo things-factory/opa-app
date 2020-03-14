@@ -297,7 +297,9 @@ class PickingReplacementPopup extends localize(i18next)(LitElement) {
     this.palletInput.value = ''
     this.releaseQtyInput.value = ''
     this.targetInventory = null
-    this.locationInput
+    if (!this.isWholePicking) {
+      this.locationInput.value = ''
+    }
   }
 
   async checkProductIdenticality(palletA, palletB) {
