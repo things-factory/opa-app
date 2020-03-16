@@ -295,6 +295,13 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           width: 250
         },
         {
+          type: 'string',
+          name: 'packingType',
+          header: i18next.t('field.packing_type'),
+          record: { align: 'center' },
+          width: 150
+        },
+        {
           type: 'object',
           name: 'location',
           header: i18next.t('field.location'),
@@ -474,6 +481,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 inventory {
                   batchId
                   palletId
+                  packingType
                   product {
                     name
                     description
