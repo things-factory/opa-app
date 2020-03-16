@@ -275,6 +275,13 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'string',
+          name: 'batchId',
+          header: i18next.t('field.batch_no'),
+          record: { align: 'left' },
+          width: 100
+        },
+        {
+          type: 'string',
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
           record: { align: 'left' },
@@ -465,6 +472,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 releaseQty
                 releaseWeight
                 inventory {
+                  batchId
                   palletId
                   product {
                     name
