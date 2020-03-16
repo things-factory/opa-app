@@ -479,7 +479,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
   _onInventoryFieldChanged(e) {
     let columnName = e.detail.column.name
-    let currentTargetId = e.detail.record.productId
+    let currentTargetProductId = e.detail.after.productId || e.detail.record.productId
+    let currentTargetBatchId = e.detail.after.batchId || e.detail.record.batchId
     let roundedWeight = e.detail.record.roundedWeight || 0
     let releaseQty = 0
 
@@ -499,7 +500,11 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     this.inventoryData = {
       ...this.inventoryGrist.dirtyData,
       records: this.inventoryGrist.dirtyData.records.map(record => {
-        if ((columnName == 'releaseWeight' || columnName == 'releaseQty') && record.productId == currentTargetId) {
+        if (
+          (columnName == 'releaseWeight' || columnName == 'releaseQty') &&
+          record.productId == currentTargetProductId &&
+          record.batchId == currentTargetBatchId
+        ) {
           if (columnName == 'releaseWeight') record.releaseQty = releaseQty
           record.releaseWeight = roundedWeight
         }
