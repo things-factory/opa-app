@@ -566,6 +566,8 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
 
     // 3. Equality of pallet id
     if (this._selectedOrderInventory.palletId !== this.palletInput.value) {
+      const isInProgressing = await this.checkProgressingPallet(this.palletInput.value)
+      if (isInProgressing) throw new Error('text.pallet_is_in_progressing')
       this.isReplacement = await this.checkProductIdenticality(
         this._selectedOrderInventory.palletId,
         this.palletInput.value
@@ -597,6 +599,20 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     }
 
     if (!this.releaseQtyInput.checkValidity()) throw new Error(i18next.t('text.release_qty_invalid'))
+  }
+
+  async checkProgressingPallet(palletId) {
+    const response = await client.query({
+      query: gql`
+        query {
+          checkProgressingPallet(${gqlBuilder.buildArgs({ palletId })})
+        }
+      `
+    })
+
+    if (!response.errors) {
+      return response.data.checkProgressingPallet
+    }
   }
 
   async checkProductIdenticality(palletA, palletB) {
