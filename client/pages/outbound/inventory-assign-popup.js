@@ -242,6 +242,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
       query: gql`
         query {
           inventoriesByStrategy(${gqlBuilder.buildArgs({
+            worksheetNo: this.worksheetNo,
             batchId: this.batchId,
             productName: this.productName,
             packingType: this.packingType,
