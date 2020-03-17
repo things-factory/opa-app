@@ -328,6 +328,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
   }
 
   async _fetchReleaseOrder() {
+    if (!this._releaseOrderNo) return
     this._status = ''
     const response = await client.query({
       query: gql`
@@ -339,40 +340,41 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
             name
             truckNo
             status
+            refNo
             ownTransport
             exportOption
-            refNo
             releaseDate
             collectionOrderNo
             inventoryInfos {
+              name
               batchId
               productName
               packingType
               qty
               weight
               releaseQty
-              releaseWeight    
+              releaseWeight
             }
-            shippingOrder {
+            shippingOrderInfo {
               containerNo
               containerLeavingDate
               containerArrivalDate
               shipName
             }
             orderVass {
+              batchId
+              productName
+              packingType
               vas {
                 name
                 description
                 operationGuide
                 operationGuideType
               }
-              batchId
-              productName
-              packingType
-              description
-              remark
               operationGuide
               status
+              description
+              remark
             }
           }
         }
@@ -381,18 +383,24 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
 
     if (!response.errors) {
       const releaseOrder = response.data.releaseGoodDetail
-      const shippingOrder = releaseOrder.shippingOrder
-      const orderInventories = releaseOrder.inventoryInfos
+      const shippingOrder = releaseOrder.shippingOrderInfo
+      const orderInventories = releaseOrder.inventoryInfos.map(inventoryInfo => {
+        return {
+          ...inventoryInfo,
+          roundedWeight: inventoryInfo.releaseQty * (inventoryInfo.weight / inventoryInfo.qty) || ''
+        }
+      })
+
       const orderVass = releaseOrder.orderVass
 
-      this._exportOption = response.data.releaseGoodDetail.exportOption
+      this._exportOption = releaseOrder.exportOption
       if (this._exportOption) {
         this._ownTransport = true
       } else if (!this._exportOption) {
-        this._ownTransport = response.data.releaseGoodDetail.ownTransport
+        this._ownTransport = releaseOrder.ownTransport
       }
-
       this._status = releaseOrder.status
+
       this._fillupRGForm(releaseOrder)
       if (this._exportOption) this._fillupSOForm(shippingOrder)
 
