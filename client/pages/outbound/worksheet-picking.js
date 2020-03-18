@@ -328,13 +328,6 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           header: i18next.t('field.release_weight'),
           record: { align: 'center' },
           width: 60
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.comment'),
-          record: { align: 'center' },
-          width: 300
         }
       ]
     }
