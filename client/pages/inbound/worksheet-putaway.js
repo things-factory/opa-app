@@ -183,12 +183,6 @@ class WorksheetPutaway extends localize(i18next)(PageView) {
           header: i18next.t('field.qty'),
           record: { align: 'center' },
           width: 80
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.comment'),
-          width: 300
         }
       ]
     }
