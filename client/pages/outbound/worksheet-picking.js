@@ -15,6 +15,7 @@ import './inventory-auto-assign-popup'
 class WorksheetPicking extends localize(i18next)(PageView) {
   static get properties() {
     return {
+      isPalletPickingOrder: Boolean,
       _worksheetNo: String,
       _worksheetStatus: String,
       _roNo: String,
@@ -90,6 +91,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
 
   constructor() {
     super()
+    this.isPalletPickingOrder = false
     this.worksheetDetailData = { records: [] }
   }
 
@@ -136,7 +138,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       </div>
 
       <div class="grist">
-        ${this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value
+        ${this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value && !this.isPalletPickingOrder
           ? html`
               <div class="grist-column">
                 <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product')}</h2>
@@ -359,6 +361,13 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               packingType
               releaseQty
               releaseWeight
+              inventory {
+                palletId
+                location {
+                  name
+                  description
+                }
+              }
             }
             bizplace {
               name
@@ -371,7 +380,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 productName
                 packingType
                 releaseQty
-                releaseWeight                
+                releaseWeight
+                status
               }
             }
           }
@@ -410,6 +420,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         }
       )
 
+      if (!tempOrderInvs.length) this.isPalletPickingOrder = true
+
       this.productGristData = {
         records: tempOrderInvs.map(ordInv => {
           const { compQty, compWeight } = completedOrderInvs.reduce(
@@ -428,6 +440,20 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             completed: compQty === ordInv.releaseQty && compWeight === ordInv.releaseWeight
           }
         })
+      }
+
+      if (completedOrderInvs && completedOrderInvs.length) {
+        this.worksheetDetailData = {
+          records: completedOrderInvs.map(item => {
+            return {
+              ...item,
+              ...item.inventory,
+              product: { name: item.productName },
+              ...item.inventory.location,
+              description: item.description
+            }
+          })
+        }
       }
 
       this._updateContext()
@@ -565,7 +591,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
   _updateContext() {
     this._actions = []
 
-    if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value) {
+    if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value && !this.isPalletPickingOrder) {
       this._actions = [
         ...this._actions,
         { title: i18next.t('button.auto_assign'), action: this._showAutoAssignPopup.bind(this) }
@@ -578,6 +604,10 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         ]
       }
     } else if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value) {
+      this._actions = [
+        ...this._actions,
+        { title: i18next.t('button.activate'), action: this._activateWorksheet.bind(this) }
+      ]
     }
 
     this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
