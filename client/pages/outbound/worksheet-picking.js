@@ -309,13 +309,6 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           width: 120
         },
         {
-          type: 'string',
-          name: 'zone',
-          header: i18next.t('field.zone'),
-          record: { align: 'center' },
-          width: 80
-        },
-        {
           type: 'integer',
           name: 'releaseQty',
           header: i18next.t('field.release_qty'),
