@@ -469,12 +469,15 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       this._fillUpForm(this.infoForm, response.data.putawayWorksheet.worksheetInfo)
 
       this.data = {
-        records: response.data.putawayWorksheet.worksheetDetailInfos.map(record => {
-          return {
-            ...record,
-            completed: record.status === WORKSHEET_STATUS.DONE.value
-          }
-        })
+        records: response.data.putawayWorksheet.worksheetDetailInfos
+          .map(record => {
+            return {
+              ...record,
+              completed: record.status === WORKSHEET_STATUS.DONE.value
+            }
+          })
+          .sort((a, b) => b.completed - a.completed)
+          .reverse()
       }
 
       this._completeHandler()
