@@ -399,13 +399,16 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
       this._fillUpForm(this.infoForm, response.data.pickingWorksheet.worksheetInfo)
 
       this.data = {
-        records: response.data.pickingWorksheet.worksheetDetailInfos.map(record => {
-          return {
-            ...record,
-            completed: record.status === WORKSHEET_STATUS.DONE.value,
-            locationName: record.location.name
-          }
-        })
+        records: response.data.pickingWorksheet.worksheetDetailInfos
+          .map(record => {
+            return {
+              ...record,
+              completed: record.status === WORKSHEET_STATUS.DONE.value,
+              locationName: record.location.name
+            }
+          })
+          .sort((a, b) => b.completed - a.completed)
+          .reverse()
       }
 
       this._completeHandler()
