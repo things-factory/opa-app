@@ -5,14 +5,12 @@ import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { fetchLocationSortingRule } from '../../../fetch-location-sorting-rule'
 import '../../components/vas-relabel'
-import { INVENTORY_STATUS, ORDER_INVENTORY_STATUS, ORDER_TYPES, PICKING_STANDARD } from '../constants/'
+import { ORDER_INVENTORY_STATUS, ORDER_TYPES } from '../constants/'
 
 class CreateReleaseOrder extends localize(i18next)(PageView) {
   static get properties() {
     return {
-      _pickingStd: String,
       _ownTransport: Boolean,
       _exportOption: Boolean,
       _selectedInventories: Array,
@@ -38,9 +36,6 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
           flex: 1;
           display: flex;
           overflow-y: auto;
-        }
-        .picking-std-container {
-          margin-top: 0px;
         }
         .grist {
           background-color: var(--main-section-background-color);
@@ -190,41 +185,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         </form>
       </div>
 
-      <form class="picking-std-container multi-column-form">
-        <fieldset>
-          <input
-            id="pick-by-prod"
-            name="picking-std"
-            type="radio"
-            value="${PICKING_STANDARD.PICK_BY_PRODUCT.value}"
-            @change="${e => {
-              this._pickingStd = e.currentTarget.value
-            }}"
-            ?checked="${this._pickingStd === PICKING_STANDARD.PICK_BY_PRODUCT.value}"
-          />
-          <label for="pick-by-prod">${PICKING_STANDARD.PICK_BY_PRODUCT.name}</label>
-
-          <input
-            id="pick-by-pallet"
-            name="picking-std"
-            type="radio"
-            value="${PICKING_STANDARD.PICK_BY_PALLET.value}"
-            @change="${e => {
-              this._pickingStd = e.currentTarget.value
-            }}"
-            ?checked="${this._pickingStd === PICKING_STANDARD.PICK_BY_PALLET.value}"
-          />
-          <label for="pick-by-pallet">${PICKING_STANDARD.PICK_BY_PALLET.name}</label>
-        </fieldset>
-      </form>
-
       <div class="container">
         <div class="grist">
-          <h2>
-            <mwc-icon>list_alt</mwc-icon>${i18next.t('title.release_product_list')}${` [${
-              PICKING_STANDARD[this._pickingStd].name
-            }]`}
-          </h2>
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.release_product_list')}</h2>
 
           <data-grist
             id="inventory-grist"
@@ -260,7 +223,6 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
     this._actions = [this.createButton]
-    this._pickingStd = PICKING_STANDARD.PICK_BY_PRODUCT.value
   }
 
   get releaseOrderForm() {
@@ -287,445 +249,211 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
   }
 
-  async updated(changeProps) {
-    if (changeProps.has('_pickingStd')) {
-      await this.switchPickingType()
-    }
-  }
-
-  async switchPickingType() {
-    this._clearView()
-    if (this._pickingStd === PICKING_STANDARD.PICK_BY_PRODUCT.value) {
-      this.inventoryGristConfig = this.inventoryGristConfig = {
-        pagination: { infinite: true },
-        rows: { selectable: { multiple: true } },
-        list: { fields: ['inventory', 'product', 'location', 'releaseQty'] },
-        columns: [
-          { type: 'gutter', gutterName: 'sequence' },
-          {
-            type: 'gutter',
-            gutterName: 'button',
-            icon: 'close',
-            handlers: {
-              click: (columns, data, column, record, rowIndex) => {
-                const newData = data.records.filter((_, idx) => idx !== rowIndex)
-                this.inventoryData = { ...this.inventoryData, records: newData }
-                this.inventoryGrist.dirtyData.records = newData
-                this._updateInventoryList()
-              }
-            }
-          },
-          {
-            type: 'object',
-            name: 'inventory',
-            header: i18next.t('field.inventory_list'),
-            record: {
-              editable: true,
-              align: 'left',
-              options: {
-                queryName: 'inventoryProductGroup',
-                basicArgs: { filters: [] },
-                nameField: 'batchId',
-                descriptionField: 'productName',
-                select: [
-                  { name: 'productId', hidden: true },
-                  { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'left' } },
-                  { name: 'productName', header: i18next.t('field.product'), record: { align: 'left' }, width: 280 },
-                  { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
-                  {
-                    name: 'remainQty',
-                    header: i18next.t('field.remain_qty'),
-                    record: { align: 'center' },
-                    ignoreCondition: true
-                  },
-                  {
-                    name: 'remainWeight',
-                    header: i18next.t('field.remain_weight'),
-                    record: { align: 'center' },
-                    ignoreCondition: true
-                  }
-                ],
-                list: { fields: ['batchId', 'productName', 'packingType', 'remainQty', 'remainWeight'] }
-              }
-            },
-            width: 300
-          },
-          {
-            type: 'code',
-            name: 'packingType',
-            header: i18next.t('field.packing_type'),
-            record: {
-              align: 'center',
-              codeName: 'PACKING_TYPES'
-            },
-            width: 150
-          },
-          {
-            type: 'integer',
-            name: 'remainQty',
-            header: i18next.t('field.available_qty'),
-            record: { align: 'center' },
-            width: 140
-          },
-          {
-            type: 'integer',
-            name: 'releaseQty',
-            header: i18next.t('field.release_qty'),
-            record: { editable: true, align: 'center', options: { min: 0 } },
-            width: 140
-          },
-          {
-            type: 'float',
-            name: 'remainWeight',
-            header: i18next.t('field.available_weight'),
-            record: { align: 'center' },
-            width: 140
-          },
-          {
-            type: 'float',
-            name: 'releaseWeight',
-            header: i18next.t('field.release_weight'),
-            record: { editable: true, align: 'center', options: { min: 0 } },
-            width: 140
-          }
-        ]
-      }
-
-      this.vasGristConfig = {
-        list: { fields: ['ready', 'vas', 'inventory', 'product', 'remark'] },
-        pagination: { infinite: true },
-        rows: {
-          selectable: { multiple: true },
+  async pageInitialized() {
+    this.inventoryGristConfig = {
+      pagination: { infinite: true },
+      rows: { selectable: { multiple: true } },
+      list: { fields: ['inventory', 'product', 'location', 'releaseQty'] },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'close',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              if (
-                record &&
-                record.vas &&
-                record.vas.operationGuideType === 'template' &&
-                record.vas.operationGuide &&
-                record.inventory
-              ) {
-                this._template = document.createElement(record.vas.operationGuide)
-                this._template.record = record
-                this._template.operationGuide = record.operationGuide
-              } else {
-                this._template = null
-              }
-              this._selectedVasRecord = record
-              this._selectedVasRecordIdx = rowIndex
-              this._updateContext()
+              const newData = data.records.filter((_, idx) => idx !== rowIndex)
+              this.inventoryData = { ...this.inventoryData, records: newData }
+              this.inventoryGrist.dirtyData.records = newData
+              this._updateInventoryList()
             }
           }
         },
-        columns: [
-          { type: 'gutter', gutterName: 'sequence' },
-          {
-            type: 'gutter',
-            gutterName: 'button',
-            icon: 'close',
-            handlers: {
-              click: (columns, data, column, record, rowIndex) => {
-                const newData = data.records.filter((_, idx) => idx !== rowIndex)
-                this.vasData = { ...this.vasData, records: newData }
-              }
-            }
-          },
-          {
-            type: 'boolean',
-            name: 'ready',
-            header: i18next.t('field.ready'),
-            width: 40
-          },
-          {
-            type: 'object',
-            name: 'vas',
-            header: i18next.t('field.vas'),
-            record: {
-              editable: true,
-              align: 'center',
-              options: {
-                queryName: 'vass',
-                select: [
-                  { name: 'id', hidden: true },
-                  { name: 'name' },
-                  { name: 'description' },
-                  { name: 'operationGuideType', hidden: true },
-                  { name: 'operationGuide', hidden: true }
-                ],
-                list: { fields: ['name', 'description'] }
-              }
-            },
-            width: 250
-          },
-          {
-            type: 'object',
-            name: 'inventory',
-            header: i18next.t('field.inventory_list'),
-            record: {
-              editable: true,
-              align: 'center',
-              options: {
-                queryName: 'inventoryProductGroup',
-                basicArgs: { filters: [] },
-                nameField: 'batchId',
-                descriptionField: 'productName',
-                select: [
-                  { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
-                  { name: 'productId', hidden: true },
-                  { name: 'productName', header: i18next.t('field.product'), record: { align: 'center' } },
-                  { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
-                  {
-                    name: 'remainQty',
-                    header: i18next.t('field.remain_qty'),
-                    record: { align: 'center' },
-                    ignoreCondition: true
-                  },
-                  {
-                    name: 'remainWeight',
-                    header: i18next.t('field.remain_weight'),
-                    record: { align: 'center' },
-                    ignoreCondition: true
-                  }
-                ],
-                list: { fields: ['batchId', 'productName', 'packingType', 'remainQty', 'remainWeight'] }
-              }
-            },
-            sortable: true,
-            width: 250
-          },
-          {
-            type: 'string',
-            name: 'remark',
-            header: i18next.t('field.remark'),
-            record: { editable: true, align: 'center' },
-            width: 350
-          }
-        ]
-      }
-    } else {
-      const locationSortingRules = await fetchLocationSortingRule()
-      this.inventoryGristConfig = {
-        pagination: { infinite: true },
-        rows: { selectable: { multiple: true } },
-        list: { fields: ['inventory', 'product', 'location', 'releaseQty'] },
-        columns: [
-          { type: 'gutter', gutterName: 'sequence' },
-          {
-            type: 'gutter',
-            gutterName: 'button',
-            icon: 'close',
-            handlers: {
-              click: (columns, data, column, record, rowIndex) => {
-                const newData = data.records.filter((_, idx) => idx !== rowIndex)
-                this.inventoryData = { ...this.inventoryData, records: newData }
-                this.inventoryGrist.dirtyData.records = newData
-                this._updateInventoryList()
-              }
-            }
-          },
-          {
-            type: 'object',
-            name: 'inventory',
-            header: i18next.t('field.inventory_list'),
-            record: {
-              editable: true,
-              align: 'center',
-              options: {
-                queryName: 'inventories',
-                basicArgs: {
-                  filters: [
-                    { name: 'status', operator: 'eq', value: INVENTORY_STATUS.STORED.value },
-                    { name: 'remainOnly', operator: 'eq', value: true }
-                  ],
-                  locationSortingRules
+        {
+          type: 'object',
+          name: 'inventory',
+          header: i18next.t('field.inventory_list'),
+          record: {
+            editable: true,
+            align: 'left',
+            options: {
+              queryName: 'inventoryProductGroup',
+              basicArgs: { filters: [] },
+              nameField: 'batchId',
+              descriptionField: 'productName',
+              select: [
+                { name: 'productId', hidden: true },
+                { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'left' } },
+                { name: 'productName', header: i18next.t('field.product'), record: { align: 'left' }, width: 280 },
+                { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
+                {
+                  name: 'remainQty',
+                  header: i18next.t('field.remain_qty'),
+                  record: { align: 'center' },
+                  ignoreCondition: true
                 },
-                nameField: 'batchId',
-                descriptionField: 'palletId',
-                select: [
-                  { name: 'id', hidden: true },
-                  { name: 'name', hidden: true },
-                  { name: 'palletId', header: i18next.t('field.pallet_id'), record: { align: 'center' } },
-                  { name: 'product', type: 'object', queryName: 'products' },
-                  { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
-                  {
-                    name: 'location',
-                    type: 'object',
-                    queryName: 'locations',
-                    field: 'name',
-                    record: { align: 'center' }
-                  },
-                  { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
-                  { name: 'bizplace', type: 'object', record: { align: 'center' } },
-                  { name: 'remainQty', type: 'float', record: { align: 'center' } },
-                  {
-                    name: 'remainWeight',
-                    type: 'float',
-                    header: i18next.t('field.total_weight'),
-                    record: { align: 'center' }
-                  }
-                ],
-                list: { fields: ['palletId', 'product', 'batchId', 'location', 'remainWeight'] }
-              }
-            },
-            width: 250
+                {
+                  name: 'remainWeight',
+                  header: i18next.t('field.remain_weight'),
+                  record: { align: 'center' },
+                  ignoreCondition: true
+                }
+              ],
+              list: { fields: ['batchId', 'productName', 'packingType', 'remainQty', 'remainWeight'] }
+            }
           },
-          {
-            type: 'object',
-            name: 'product',
-            header: i18next.t('field.product'),
-            record: { align: 'left' },
-            width: 150
+          width: 300
+        },
+        {
+          type: 'code',
+          name: 'packingType',
+          header: i18next.t('field.packing_type'),
+          record: {
+            align: 'center',
+            codeName: 'PACKING_TYPES'
           },
-          {
-            type: 'object',
-            name: 'location',
-            header: i18next.t('field.location'),
-            record: { align: 'center' },
-            width: 150
-          },
-          {
-            type: 'code',
-            name: 'packingType',
-            header: i18next.t('field.packing_type'),
-            record: {
-              align: 'center',
-              codeName: 'PACKING_TYPES'
-            },
-            width: 150
-          },
-          {
-            type: 'integer',
-            name: 'remainQty',
-            header: i18next.t('field.available_qty'),
-            record: { align: 'center' },
-            width: 100
-          },
-          {
-            type: 'integer',
-            name: 'releaseQty',
-            header: i18next.t('field.release_qty'),
-            record: { editable: true, align: 'center', options: { min: 0 } },
-            width: 100
-          },
-          {
-            type: 'float',
-            name: 'remainWeight',
-            header: i18next.t('field.available_weight'),
-            record: { align: 'center' },
-            width: 100
-          },
-          {
-            type: 'float',
-            name: 'releaseWeight',
-            header: i18next.t('field.release_weight'),
-            record: { editable: true, align: 'center', options: { min: 0 } },
-            width: 100
-          }
-        ]
-      }
+          width: 150
+        },
+        {
+          type: 'integer',
+          name: 'remainQty',
+          header: i18next.t('field.available_qty'),
+          record: { align: 'center' },
+          width: 140
+        },
+        {
+          type: 'integer',
+          name: 'releaseQty',
+          header: i18next.t('field.release_qty'),
+          record: { editable: true, align: 'center', options: { min: 0 } },
+          width: 140
+        },
+        {
+          type: 'float',
+          name: 'remainWeight',
+          header: i18next.t('field.available_weight'),
+          record: { align: 'center' },
+          width: 140
+        },
+        {
+          type: 'float',
+          name: 'releaseWeight',
+          header: i18next.t('field.release_weight'),
+          record: { editable: true, align: 'center', options: { min: 0 } },
+          width: 140
+        }
+      ]
+    }
 
-      this.vasGristConfig = {
-        list: { fields: ['ready', 'vas', 'inventory', 'product', 'remark'] },
-        pagination: { infinite: true },
-        rows: {
-          selectable: { multiple: true },
+    this.vasGristConfig = {
+      list: { fields: ['ready', 'vas', 'inventory', 'product', 'remark'] },
+      pagination: { infinite: true },
+      rows: {
+        selectable: { multiple: true },
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            if (
+              record &&
+              record.vas &&
+              record.vas.operationGuideType === 'template' &&
+              record.vas.operationGuide &&
+              record.inventory
+            ) {
+              this._template = document.createElement(record.vas.operationGuide)
+              this._template.record = record
+              this._template.operationGuide = record.operationGuide
+            } else {
+              this._template = null
+            }
+            this._selectedVasRecord = record
+            this._selectedVasRecordIdx = rowIndex
+            this._updateContext()
+          }
+        }
+      },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'close',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              if (
-                record &&
-                record.vas &&
-                record.vas.operationGuideType === 'template' &&
-                record.vas.operationGuide &&
-                record.inventory
-              ) {
-                this._template = document.createElement(record.vas.operationGuide)
-                this._template.record = record
-                this._template.operationGuide = record.operationGuide
-              } else {
-                this._template = null
-              }
-              this._selectedVasRecord = record
-              this._selectedVasRecordIdx = rowIndex
-              this._updateContext()
+              const newData = data.records.filter((_, idx) => idx !== rowIndex)
+              this.vasData = { ...this.vasData, records: newData }
             }
           }
         },
-        columns: [
-          { type: 'gutter', gutterName: 'sequence' },
-          {
-            type: 'gutter',
-            gutterName: 'button',
-            icon: 'close',
-            handlers: {
-              click: (columns, data, column, record, rowIndex) => {
-                const newData = data.records.filter((_, idx) => idx !== rowIndex)
-                this.vasData = { ...this.vasData, records: newData }
-              }
+        {
+          type: 'boolean',
+          name: 'ready',
+          header: i18next.t('field.ready'),
+          width: 40
+        },
+        {
+          type: 'object',
+          name: 'vas',
+          header: i18next.t('field.vas'),
+          record: {
+            editable: true,
+            align: 'center',
+            options: {
+              queryName: 'vass',
+              select: [
+                { name: 'id', hidden: true },
+                { name: 'name' },
+                { name: 'description' },
+                { name: 'operationGuideType', hidden: true },
+                { name: 'operationGuide', hidden: true }
+              ],
+              list: { fields: ['name', 'description'] }
             }
           },
-          {
-            type: 'boolean',
-            name: 'ready',
-            header: i18next.t('field.ready'),
-            width: 40
+          width: 250
+        },
+        {
+          type: 'object',
+          name: 'inventory',
+          header: i18next.t('field.inventory_list'),
+          record: {
+            editable: true,
+            align: 'center',
+            options: {
+              queryName: 'inventoryProductGroup',
+              basicArgs: { filters: [] },
+              nameField: 'batchId',
+              descriptionField: 'productName',
+              select: [
+                { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
+                { name: 'productName', header: i18next.t('field.product'), record: { align: 'center' } },
+                { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
+                {
+                  name: 'remainQty',
+                  header: i18next.t('field.remain_qty'),
+                  record: { align: 'center' },
+                  ignoreCondition: true
+                },
+                {
+                  name: 'remainWeight',
+                  header: i18next.t('field.remain_weight'),
+                  record: { align: 'center' },
+                  ignoreCondition: true
+                }
+              ],
+              list: { fields: ['batchId', 'productName', 'packingType', 'remainQty', 'remainWeight'] }
+            }
           },
-          {
-            type: 'object',
-            name: 'vas',
-            header: i18next.t('field.vas'),
-            record: {
-              editable: true,
-              align: 'center',
-              options: {
-                queryName: 'vass',
-                select: [
-                  { name: 'id', hidden: true },
-                  { name: 'name' },
-                  { name: 'description' },
-                  { name: 'operationGuideType', hidden: true },
-                  { name: 'operationGuide', hidden: true }
-                ],
-                list: { fields: ['name', 'description'] }
-              }
-            },
-            width: 250
-          },
-          {
-            type: 'object',
-            name: 'inventory',
-            header: i18next.t('field.inventory_list'),
-            record: {
-              editable: true,
-              align: 'center',
-              options: {
-                queryName: 'inventories',
-                nameField: 'batchId',
-                descriptionField: 'palletId',
-                basicArgs: { filters: [{ name: 'id', operator: 'in', value: [null] }], locationSortingRules },
-                select: [
-                  { name: 'id', hidden: true },
-                  { name: 'name', hidden: true },
-                  { name: 'palletId', header: i18next.t('field.pallet_id'), record: { align: 'center' } },
-                  { name: 'product', type: 'object', queryName: 'products' },
-                  { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
-                  { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
-                  { name: 'location', type: 'object', queryName: 'locations', record: { align: 'center' } }
-                ],
-                list: { fields: ['palletId', 'product', 'batchId', 'location'] }
-              }
-            },
-            sortable: true,
-            width: 250
-          },
-          {
-            type: 'string',
-            name: 'remark',
-            header: i18next.t('field.remark'),
-            record: { editable: true, align: 'center' },
-            width: 350
-          }
-        ]
-      }
+          sortable: true,
+          width: 250
+        },
+        {
+          type: 'string',
+          name: 'remark',
+          header: i18next.t('field.remark'),
+          record: { editable: true, align: 'center' },
+          width: 350
+        }
+      ]
     }
   }
 
@@ -837,88 +565,45 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   }
 
   async _generateReleaseOrder() {
-    if (this._pickingStd === PICKING_STANDARD.PICK_BY_PRODUCT.value) {
-      try {
-        this._validateForm()
-        this._validateInventories()
-        this._validateVas()
+    try {
+      this._validateForm()
+      this._validateInventories()
+      this._validateVas()
 
-        const result = await CustomAlert({
-          title: i18next.t('title.are_you_sure'),
-          text: i18next.t('text.create_release_order'),
-          confirmButton: { text: i18next.t('button.confirm') },
-          cancelButton: { text: i18next.t('button.cancel') }
-        })
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.create_release_order'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
 
-        if (!result.value) return
+      if (!result.value) return
 
-        await this._executeRelatedTrxs()
+      await this._executeRelatedTrxs()
 
-        let args = {
-          releaseGood: { ...this._getReleaseOrder(), ownTransport: this._exportOption ? true : this._ownTransport }
-        }
-        if (this._exportOption && this._ownTransport) args.shippingOrder = this._getShippingOrder()
-
-        const response = await client.query({
-          query: gql`
-              mutation {
-                generateReleaseGood(${gqlBuilder.buildArgs(args)}) {
-                  id
-                  name
-                }
-              }
-            `
-        })
-
-        if (!response.errors) {
-          this._clearView()
-          navigate(`release_order_detail/${response.data.generateReleaseGood.name}`)
-          this._showToast({ message: i18next.t('release_order_created') })
-        }
-      } catch (e) {
-        this._showToast(e)
+      let args = {
+        releaseGood: { ...this._getReleaseOrder(), ownTransport: this._exportOption ? true : this._ownTransport }
       }
-    } else {
-      try {
-        this._validateForm()
-        this._validateInventories()
-        this._validateVas()
+      if (this._exportOption && this._ownTransport) args.shippingOrder = this._getShippingOrder()
 
-        const result = await CustomAlert({
-          title: i18next.t('title.are_you_sure'),
-          text: i18next.t('text.create_release_order'),
-          confirmButton: { text: i18next.t('button.confirm') },
-          cancelButton: { text: i18next.t('button.cancel') }
-        })
-
-        if (!result.value) return
-
-        await this._executeRelatedTrxs()
-
-        let args = {
-          releaseGood: { ...this._getReleaseOrder(), ownTransport: this._exportOption ? true : this._ownTransport }
-        }
-        if (this._exportOption && this._ownTransport) args.shippingOrder = this._getShippingOrder()
-
-        const response = await client.query({
-          query: gql`
-              mutation {
-                generateReleaseGood(${gqlBuilder.buildArgs(args)}) {
-                  id
-                  name
-                }
+      const response = await client.query({
+        query: gql`
+            mutation {
+              generateReleaseGood(${gqlBuilder.buildArgs(args)}) {
+                id
+                name
               }
-            `
-        })
+            }
+          `
+      })
 
-        if (!response.errors) {
-          this._clearView()
-          navigate(`release_order_detail/${response.data.generateReleaseGood.name}`)
-          this._showToast({ message: i18next.t('release_order_created') })
-        }
-      } catch (e) {
-        this._showToast(e)
+      if (!response.errors) {
+        this._clearView()
+        navigate(`release_order_detail/${response.data.generateReleaseGood.name}`)
+        this._showToast({ message: i18next.t('release_order_created') })
       }
+    } catch (e) {
+      this._showToast(e)
     }
   }
 
@@ -963,293 +648,165 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   }
 
   _validateInventories() {
-    if (this._pickingStd === PICKING_STANDARD.PICK_BY_PRODUCT.value) {
-      if (!this.inventoryGrist.dirtyData.records || !this.inventoryGrist.dirtyData.records.length)
-        throw new Error(i18next.t('text.no_products'))
+    if (!this.inventoryGrist.dirtyData.records || !this.inventoryGrist.dirtyData.records.length)
+      throw new Error(i18next.t('text.no_products'))
 
-      // required field (batchId, packingType, weight, unit, packQty)
-      if (
-        this.inventoryGrist.dirtyData.records.filter(
-          record => !record.releaseQty || !record.batchId || !record.packingType
-        ).length
-      )
-        throw new Error(i18next.t('text.empty_value_in_list'))
+    // required field (batchId, packingType, weight, unit, packQty)
+    if (
+      this.inventoryGrist.dirtyData.records.filter(
+        record => !record.releaseQty || !record.batchId || !record.packingType
+      ).length
+    )
+      throw new Error(i18next.t('text.empty_value_in_list'))
 
-      if (this.inventoryGrist.dirtyData.records.filter(record => record.releaseQty > record.remainQty).length)
-        throw new Error(i18next.t('text.invalid_quantity_input'))
-    } else {
-      if (!this.inventoryGrist.dirtyData.records || !this.inventoryGrist.dirtyData.records.length)
-        throw new Error(i18next.t('text.no_products'))
-
-      // required field (batchId, packingType, weight, unit, packQty)
-      if (
-        this.inventoryGrist.dirtyData.records.filter(
-          record => !record.releaseQty || !record.batchId || !record.packingType
-        ).length
-      )
-        throw new Error(i18next.t('text.empty_value_in_list'))
-
-      if (this.inventoryGrist.dirtyData.records.filter(record => record.releaseQty > record.remainQty).length)
-        throw new Error(i18next.t('text.invalid_quantity_input'))
-
-      // duplication of pallet id
-      const palletIds = this.inventoryGrist.dirtyData.records.map(inventory => inventory.palletId)
-      if (palletIds.filter((palletId, idx, palletIds) => palletIds.indexOf(palletId) !== idx).length)
-        throw new Error(i18next.t('text.pallet_id_is_duplicated'))
-    }
+    if (this.inventoryGrist.dirtyData.records.filter(record => record.releaseQty > record.remainQty).length)
+      throw new Error(i18next.t('text.invalid_quantity_input'))
   }
 
   _validateVas() {
-    if (this._pickingStd === PICKING_STANDARD.PICK_BY_PRODUCT.value) {
-      if (this.vasGrist.dirtyData.records && this.vasGrist.dirtyData.records.length) {
-        // required field (vas && remark)
-        if (this.vasGrist.dirtyData.records.filter(record => !record.vas || !record.remark).length)
-          throw new Error(i18next.t('text.empty_value_in_list'))
+    if (this.vasGrist.dirtyData.records && this.vasGrist.dirtyData.records.length) {
+      // required field (vas && remark)
+      if (this.vasGrist.dirtyData.records.filter(record => !record.vas || !record.remark).length)
+        throw new Error(i18next.t('text.empty_value_in_list'))
 
-        if (!this.vasGrist.dirtyData.records.every(record => record.ready))
-          throw new Error(i18next.t('text.invalid_data_in_list'))
-      }
-    } else {
-      if (this.vasGrist.dirtyData.records && this.vasGrist.dirtyData.records.length) {
-        // required field (vas && remark)
-        if (this.vasGrist.dirtyData.records.filter(record => !record.vas || !record.remark).length)
-          throw new Error(i18next.t('text.empty_value_in_list'))
-
-        if (!this.vasGrist.dirtyData.records.every(record => record.ready))
-          throw new Error(i18next.t('text.invalid_data_in_list'))
-      }
+      if (!this.vasGrist.dirtyData.records.every(record => record.ready))
+        throw new Error(i18next.t('text.invalid_data_in_list'))
     }
   }
 
   async _updateInventoryList() {
-    if (this._pickingStd === PICKING_STANDARD.PICK_BY_PRODUCT.value) {
-      const _selectedInv = (this.inventoryGrist.dirtyData.records || []).map(record => {
-        return {
-          batchId: record.inventory.batchId,
-          packingType: record.inventory.packingType,
-          productId: record.inventory.productId
+    const _selectedInv = (this.inventoryGrist.dirtyData.records || []).map(record => {
+      return {
+        batchId: record.inventory.batchId,
+        packingType: record.inventory.packingType,
+        productId: record.inventory.productId
+      }
+    })
+
+    this.inventoryGristConfig = {
+      ...this.inventoryGristConfig,
+      columns: this.inventoryGristConfig.columns.map(column => {
+        if (column.name === 'inventory') {
+          column.record.options.basicArgs = {
+            ...column.record.options.basicArgs,
+            filters: [...column.record.options.basicArgs.filters.filter(filter => filter.name !== 'batch_product')]
+          }
+
+          if (_selectedInv.length)
+            column.record.options.basicArgs.filters = [
+              ...column.record.options.basicArgs.filters,
+              {
+                name: 'batch_product',
+                value: _selectedInv,
+                operator: 'notin'
+              }
+            ]
         }
+
+        return column
       })
+    }
 
-      this.inventoryGristConfig = {
-        ...this.inventoryGristConfig,
-        columns: this.inventoryGristConfig.columns.map(column => {
-          if (column.name === 'inventory') {
-            column.record.options.basicArgs = {
-              ...column.record.options.basicArgs,
-              filters: [...column.record.options.basicArgs.filters.filter(filter => filter.name !== 'batch_product')]
-            }
-
-            if (_selectedInv.length)
-              column.record.options.basicArgs.filters = [
-                ...column.record.options.basicArgs.filters,
-                {
-                  name: 'batch_product',
-                  value: _selectedInv,
-                  operator: 'notin'
-                }
-              ]
+    this.vasGristConfig = {
+      ...this.vasGristConfig,
+      columns: this.vasGristConfig.columns.map(column => {
+        if (column.name === 'inventory') {
+          column.record.options.basicArgs = {
+            ...column.record.options.basicArgs,
+            filters: _selectedInv.length
+              ? [
+                  {
+                    name: 'batch_product',
+                    value: _selectedInv,
+                    operator: 'in'
+                  }
+                ]
+              : []
           }
+        }
 
-          return column
-        })
-      }
+        return column
+      })
+    }
 
-      this.vasGristConfig = {
-        ...this.vasGristConfig,
-        columns: this.vasGristConfig.columns.map(column => {
-          if (column.name === 'inventory') {
-            column.record.options.basicArgs = {
-              ...column.record.options.basicArgs,
-              filters: _selectedInv.length
-                ? [
-                    {
-                      name: 'batch_product',
-                      value: _selectedInv,
-                      operator: 'in'
-                    }
-                  ]
-                : []
-            }
-          }
-
-          return column
-        })
-      }
-
-      const mergedBatchProd = _selectedInv.map(item => item.batchId + item.productId + item.packingType)
-
-      const newData = this.vasGrist.dirtyData.records.filter(
+    const mergedBatchProd = _selectedInv.map(item => item.batchId + item.productId + item.packingType)
+    let newData = []
+    if (mergedBatchProd.length) {
+      newData = this.vasGrist.dirtyData.records.filter(
         record =>
           mergedBatchProd.indexOf(
             record.inventory.batchId + record.inventory.productId + record.inventory.packingType
-          ) >= 0 || !record.inventory
+          ) > 0
       )
-
-      this.vasData = { ...this.vasData, records: newData }
-    } else {
-      const _selectedInventories = (this.inventoryGrist.dirtyData.records || []).map(record => record.inventory.id)
-      this.inventoryGristConfig = {
-        ...this.inventoryGristConfig,
-        columns: this.inventoryGristConfig.columns.map(column => {
-          if (column.name === 'inventory') {
-            column.record.options.basicArgs = {
-              ...column.record.options.basicArgs,
-              filters: [...column.record.options.basicArgs.filters.filter(filter => filter.name !== 'id')]
-            }
-
-            if (_selectedInventories.length)
-              column.record.options.basicArgs.filters = [
-                ...column.record.options.basicArgs.filters,
-                {
-                  name: 'id',
-                  value: _selectedInventories,
-                  operator: 'notin'
-                }
-              ]
-          }
-
-          return column
-        })
-      }
-
-      this.vasGristConfig = {
-        ...this.vasGristConfig,
-        columns: this.vasGristConfig.columns.map(column => {
-          if (column.name === 'inventory') {
-            column.record.options.basicArgs = {
-              ...column.record.options.basicArgs,
-              filters: _selectedInventories.length
-                ? [
-                    {
-                      name: 'id',
-                      value: _selectedInventories,
-                      operator: 'in'
-                    }
-                  ]
-                : []
-            }
-          }
-
-          return column
-        })
-      }
-
-      const newData = this.vasGrist.dirtyData.records.filter(
-        record => _selectedInventories.indexOf(record.inventory.id) >= 0 || !record.inventory
-      )
-
-      this.vasData = { ...this.vasData, records: newData }
     }
+
+    this.vasData = { ...this.vasData, records: newData }
   }
 
   _clearGristConditions() {
-    if (this.inventoryGristConfig && this.inventoryGristConfig.column && this.inventoryGristConfig.column.length) {
-      this.inventoryGristConfig = {
-        ...this.inventoryGristConfig,
-        columns: this.inventoryGristConfig.columns.map(column => {
-          if (column.name === 'inventory') {
-            column.record.options.basicArgs = {
-              filters: [...column.record.options.basicArgs.filters.filter(filter => filter.name !== 'batch_product')]
-            }
+    this.inventoryGristConfig = {
+      ...this.inventoryGristConfig,
+      columns: this.inventoryGristConfig.columns.map(column => {
+        if (column.name === 'inventory') {
+          column.record.options.basicArgs = {
+            filters: [...column.record.options.basicArgs.filters.filter(filter => filter.name !== 'batch_product')]
           }
+        }
 
-          return column
-        })
-      }
+        return column
+      })
     }
 
-    if (this.vasGristConfig && this.vasGristConfig.columns && this.vasGristConfig.columns.length) {
-      this.vasGristConfig = {
-        ...this.vasGristConfig,
-        columns: this.vasGristConfig.columns.map(column => {
-          if (column.name === 'inventory') {
-            column.record.options.basicArgs = {
-              ...column.record.options.basicArgs,
-              filters: []
-            }
+    this.vasGristConfig = {
+      ...this.vasGristConfig,
+      columns: this.vasGristConfig.columns.map(column => {
+        if (column.name === 'inventory') {
+          column.record.options.basicArgs = {
+            ...column.record.options.basicArgs,
+            filters: []
           }
+        }
 
-          return column
-        })
-      }
+        return column
+      })
     }
   }
 
   _getReleaseOrder() {
-    if (this._pickingStd === PICKING_STANDARD.PICK_BY_PRODUCT.value) {
-      let releaseGood = this._serializeForm(this.releaseOrderForm)
+    let releaseGood = this._serializeForm(this.releaseOrderForm)
 
-      releaseGood.orderInventories = this.inventoryGrist.data.records.map(record => {
-        return {
-          releaseQty: record.releaseQty,
-          releaseWeight: record.releaseWeight,
-          batchId: record.inventory.batchId,
-          productName: record.inventory.productName,
-          packingType: record.inventory.packingType,
-          type: ORDER_TYPES.RELEASE_OF_GOODS.value,
-          status: ORDER_INVENTORY_STATUS.PENDING.value
-        }
-      })
+    releaseGood.orderInventories = this.inventoryGrist.data.records.map(record => {
+      return {
+        releaseQty: record.releaseQty,
+        releaseWeight: record.releaseWeight,
+        batchId: record.inventory.batchId,
+        productName: record.inventory.productName,
+        packingType: record.inventory.packingType,
+        type: ORDER_TYPES.RELEASE_OF_GOODS.value,
+        status: ORDER_INVENTORY_STATUS.PENDING.value
+      }
+    })
 
-      releaseGood.orderVass = this.vasGrist.data.records.map(record => {
-        let _tempObj = {}
+    releaseGood.orderVass = this.vasGrist.data.records.map(record => {
+      let _tempObj = {}
 
-        if (record.operationGuide && record.operationGuide.data) {
-          _tempObj.operationGuide = JSON.stringify(record.operationGuide)
-        }
+      if (record.operationGuide && record.operationGuide.data) {
+        _tempObj.operationGuide = JSON.stringify(record.operationGuide)
+      }
 
-        _tempObj = {
-          ..._tempObj,
-          vas: { id: record.vas.id },
-          batchId: record.inventory.batchId,
-          productName: record.inventory.productName,
-          packingType: record.inventory.packingType,
-          remark: record.remark
-        }
+      _tempObj = {
+        ..._tempObj,
+        vas: { id: record.vas.id },
+        batchId: record.inventory.batchId,
+        productName: record.inventory.productName,
+        packingType: record.inventory.packingType,
+        remark: record.remark
+      }
 
-        return _tempObj
-      })
+      return _tempObj
+    })
 
-      return releaseGood
-    } else {
-      let releaseGood = this._serializeForm(this.releaseOrderForm)
-
-      releaseGood.orderInventories = this.inventoryGrist.data.records.map((record, idx) => {
-        return {
-          releaseQty: record.releaseQty,
-          releaseWeight: record.releaseWeight,
-          inventory: {
-            id: record.id
-          },
-          batchId: record.inventory.batchId,
-          productName: record.inventory.product.name,
-          packingType: record.inventory.packingType,
-          type: ORDER_TYPES.RELEASE_OF_GOODS.value,
-          status: ORDER_INVENTORY_STATUS.PENDING.value
-        }
-      })
-
-      releaseGood.orderVass = this.vasGrist.data.records.map(record => {
-        let _tempObj = {}
-
-        if (record.operationGuide && record.operationGuide.data) {
-          _tempObj.operationGuide = JSON.stringify(record.operationGuide)
-        }
-
-        _tempObj = {
-          ..._tempObj,
-          vas: { id: record.vas.id },
-          inventory: { id: record.inventory.id },
-          batchId: record.inventory.batchId,
-          remark: record.remark
-        }
-
-        return _tempObj
-      })
-
-      return releaseGood
-    }
+    return releaseGood
   }
 
   _serializeForm(form) {
