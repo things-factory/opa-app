@@ -1,21 +1,13 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { html, css } from 'lit-element'
-import {
-  client,
-  gqlBuilder,
-  isMobileDevice,
-  PageView,
-  ScrollbarStyles,
-  store,
-  flattenObject
-} from '@things-factory/shell'
+import { client, PageView, store } from '@things-factory/shell'
+import { gqlBuilder, flattenObject } from '@things-factory/utils'
 import { connect } from 'pwa-helpers/connect-mixin'
 import { localize, i18next } from '@things-factory/i18n-base'
 import gql from 'graphql-tag'
-import { getCodeByName } from '@things-factory/code-base'
 
-class InventorySummaryReport extends connect(store)(localize(i18next)(PageView)) {
+class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
     return css`
       :host {
@@ -34,14 +26,14 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
     return {
       _searchFields: Object,
       _config: Object,
-      _bizplaces: Object,
+      _userBizplaces: Object,
       data: Object
     }
   }
 
   get context() {
     return {
-      title: 'Inventory Report',
+      title: 'Inventory Pallet Detail Report',
       printable: {
         accept: ['preview'],
         content: this
@@ -73,7 +65,10 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
     return html`
       <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.report.fetch()}></search-form>
 
-      <data-report .config=${this._config} .fetchHandler=${this.fetchHandler.bind(this)}></data-report>
+      <data-report
+        .config=${this._config}
+        .fetchHandler="${this.fetchHandler.bind(this)}"
+      ></data-grist>
     `
   }
 
@@ -85,7 +80,7 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
         type: 'select',
         options: [
           { value: '' },
-          ...this._bizplaces.map(bizplaceList => {
+          ...this._userBizplaces.map(bizplaceList => {
             return {
               name: bizplaceList.name,
               value: bizplaceList.id
@@ -135,86 +130,69 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
 
   get reportConfig() {
     return {
+      pagination: { infinite: true },
+      rows: {
+        selectable: false,
+        groups: [{ column: 'product|name' }],
+        totals: ['openingBalance', 'inBalance', 'outBalance', 'closingBalance']
+      },
       columns: [
         {
           type: 'string',
           name: 'product|name',
+          record: { editable: false, align: 'left' },
           header: i18next.t('field.product'),
-          sortable: false,
-          width: 400
-        },
-        {
-          type: 'string',
-          name: 'packingType',
-          header: i18next.t('field.packing_type'),
-          record: {
-            editable: false,
-            align: 'center'
-          },
-          width: 180
+          width: 450
         },
         {
           type: 'string',
           name: 'batchId',
-          header: i18next.t('field.batch_no'),
-          record: { align: 'center' },
-          sortable: false,
+          record: { editable: false, align: 'left' },
+          header: i18next.t('field.batchId'),
           width: 200
         },
         {
           type: 'string',
-          name: 'orderName',
-          header: i18next.t('field.order_no'),
-          sortable: true,
-          width: 300
-        },
-        {
-          type: 'string',
-          name: 'orderRefNo',
-          header: i18next.t('field.ref_no'),
-          sortable: true,
-          width: 300
-        },
-        {
-          type: 'string',
-          name: 'createdAt',
-          header: i18next.t('field.date'),
+          name: 'arrivalNoticeName',
           record: { editable: false, align: 'left' },
-          sortable: true,
-          width: 110
+          header: i18next.t('field.arrival_notice'),
+          width: 200
         },
         {
-          type: 'number',
-          name: 'qty',
-          header: i18next.t('field.qty'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 100
+          type: 'float',
+          name: 'openingBalance',
+          record: { editable: false, align: 'center' },
+          header: i18next.t('field.opening_balance'),
+          width: 160
         },
         {
-          type: 'number',
-          name: 'weight',
-          header: i18next.t('field.weight'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 100
+          type: 'float',
+          name: 'inBalance',
+          record: { editable: false, align: 'center' },
+          header: i18next.t('field.inbound'),
+          width: 160
+        },
+        {
+          type: 'float',
+          name: 'outBalance',
+          record: { editable: false, align: 'center' },
+          header: i18next.t('field.outbound'),
+          width: 160
+        },
+        {
+          type: 'float',
+          name: 'closingBalance',
+          record: { editable: false, align: 'center' },
+          header: i18next.t('field.closing_balance'),
+          width: 160
         }
-      ],
-      rows: {
-        selectable: false,
-        groups: [
-          { column: 'product|name' },
-          { column: 'packingType', title: 'Sub Total' },
-          { column: 'batchId', title: 'Batch Total' }
-        ],
-        totals: ['qty', 'weight']
-      }
+      ]
     }
   }
 
   async pageInitialized() {
     this._products = []
-    this._bizplaces = [...(await this._fetchBizplaceList())]
+    this._userBizplaces = [...(await this._fetchBizplaceList())]
 
     this._searchFields = this.searchFields
     this._config = this.reportConfig
@@ -233,7 +211,7 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
       const response = await client.query({
         query: gql`
           query {
-            inventoryHistoryReport(${gqlBuilder.buildArgs({
+            inventoryHistoryPalletDetailReport(${gqlBuilder.buildArgs({
               filters: [
                 ...this.searchForm.queryFilters.map(filter => {
                   return filter
@@ -242,8 +220,6 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
               pagination: { page, limit },
               sortings: sorters
             })}) {
-              palletId
-              batchId
               bizplace {
                 name
                 description
@@ -252,29 +228,19 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
                 name
                 description
               }
-              qty
-              weight
-              status
-              packingType
-              transactionType
-              orderName
-              orderRefNo
-              createdAt
+              openingBalance
+              inBalance
+              outBalance
+              closingBalance
+              batchId
+              arrivalNoticeName
             }
           }
         `
       })
       return {
         total: 0,
-        records:
-          response.data.inventoryHistoryReport.map(item => {
-            let date = new Date(parseInt(item.createdAt))
-            return flattenObject({
-              ...item,
-              createdAt:
-                date.getDate().toString() + '/' + (date.getMonth() + 1).toString() + '/' + date.getFullYear().toString()
-            })
-          }) || []
+        records: response.data.inventoryHistoryPalletDetailReport.map(item => flattenObject(item)) || []
       }
     } catch (e) {
       console.log(e)
@@ -324,44 +290,6 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
 
     this._toDateInput.min = min
   }
-
-  async _bizplaceChange(e) {
-    let bizplace = [{ name: 'bizplace', operator: 'eq', value: e.currentTarget.value }]
-    if (e.currentTarget.value == '') {
-      this.searchFields
-      this._searchFields.filter(x => x.name == 'product')[0].options = [{ name: 'All', value: '' }]
-      this._searchFields = [...this._searchFields]
-    } else {
-      const response = await client.query({
-        query: gql`
-            query {
-              productsByBizplace(${gqlBuilder.buildArgs({
-                filters: [...bizplace]
-              })}) {
-                items {
-                  id
-                  name
-                }
-              }
-            }
-          `
-      })
-
-      if (!response.errors) {
-        this.searchFields
-        this._searchFields.filter(x => x.name == 'product')[0].options = [
-          { name: 'All', value: '' },
-          ...response.data.productsByBizplace.items.map(item => {
-            return {
-              name: item.name,
-              value: item.id
-            }
-          })
-        ]
-        this._searchFields = [...this._searchFields]
-      }
-    }
-  }
 }
 
-window.customElements.define('inventory-summary-report', InventorySummaryReport)
+window.customElements.define('inventory-pallet-detail-report', InventoryPalletDetailReport)
