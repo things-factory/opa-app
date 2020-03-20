@@ -203,7 +203,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             }}"
             ?checked="${this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value}"
           />
-          <label for="pick-by-prod">${i18next.t(PICKING_STANDARD.SELECT_BY_PRODUCT.name)}</label>
+          <label for="pick-by-prod">${PICKING_STANDARD.SELECT_BY_PRODUCT.name}</label>
 
           <input
             id="pick-by-pallet"
@@ -215,16 +215,16 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             }}"
             ?checked="${this._pickingStd === PICKING_STANDARD.SELECT_BY_PALLET.value}"
           />
-          <label for="pick-by-pallet">${i18next.t(PICKING_STANDARD.SELECT_BY_PALLET.name)}</label>
+          <label for="pick-by-pallet">${PICKING_STANDARD.SELECT_BY_PALLET.name}</label>
         </fieldset>
       </form>
 
       <div class="container">
         <div class="grist">
           <h2>
-            <mwc-icon>list_alt</mwc-icon>${i18next.t('title.release_product_list')}${` [${i18next.t(
+            <mwc-icon>list_alt</mwc-icon>${i18next.t('title.release_product_list')}${` [${
               PICKING_STANDARD[this._pickingStd].name
-            )}]`}
+            }]`}
           </h2>
 
           <data-grist
