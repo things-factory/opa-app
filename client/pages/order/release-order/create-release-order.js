@@ -192,29 +192,30 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
       <form class="picking-std-container multi-column-form">
         <fieldset>
+          <legend>${i18next.t('title.inventory_selection_strategy')}</legend>
           <input
             id="pick-by-prod"
             name="picking-std"
             type="radio"
-            value="${PICKING_STANDARD.PICK_BY_PRODUCT.value}"
+            value="${PICKING_STANDARD.SELECT_BY_PRODUCT.value}"
             @change="${e => {
               this._pickingStd = e.currentTarget.value
             }}"
-            ?checked="${this._pickingStd === PICKING_STANDARD.PICK_BY_PRODUCT.value}"
+            ?checked="${this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value}"
           />
-          <label for="pick-by-prod">${PICKING_STANDARD.PICK_BY_PRODUCT.name}</label>
+          <label for="pick-by-prod">${PICKING_STANDARD.SELECT_BY_PRODUCT.name}</label>
 
           <input
             id="pick-by-pallet"
             name="picking-std"
             type="radio"
-            value="${PICKING_STANDARD.PICK_BY_PALLET.value}"
+            value="${PICKING_STANDARD.SELECT_BY_PALLET.value}"
             @change="${e => {
               this._pickingStd = e.currentTarget.value
             }}"
-            ?checked="${this._pickingStd === PICKING_STANDARD.PICK_BY_PALLET.value}"
+            ?checked="${this._pickingStd === PICKING_STANDARD.SELECT_BY_PALLET.value}"
           />
-          <label for="pick-by-pallet">${PICKING_STANDARD.PICK_BY_PALLET.name}</label>
+          <label for="pick-by-pallet">${PICKING_STANDARD.SELECT_BY_PALLET.name}</label>
         </fieldset>
       </form>
 
@@ -260,7 +261,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
     this._actions = [this.createButton]
-    this._pickingStd = PICKING_STANDARD.PICK_BY_PRODUCT.value
+    this._pickingStd = PICKING_STANDARD.SELECT_BY_PRODUCT.value
   }
 
   get releaseOrderForm() {
@@ -295,7 +296,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
   async switchPickingType() {
     this._clearView()
-    if (this._pickingStd === PICKING_STANDARD.PICK_BY_PRODUCT.value) {
+    if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
       this.inventoryGristConfig = this.inventoryGristConfig = {
         pagination: { infinite: true },
         rows: { selectable: { multiple: true } },
@@ -555,7 +556,6 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                     record: { align: 'center' }
                   },
                   { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
-                  { name: 'bizplace', type: 'object', record: { align: 'center' } },
                   { name: 'remainQty', type: 'float', record: { align: 'center' } },
                   {
                     name: 'remainWeight',
@@ -837,7 +837,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   }
 
   async _generateReleaseOrder() {
-    if (this._pickingStd === PICKING_STANDARD.PICK_BY_PRODUCT.value) {
+    if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
       try {
         this._validateForm()
         this._validateInventories()
@@ -963,7 +963,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   }
 
   _validateInventories() {
-    if (this._pickingStd === PICKING_STANDARD.PICK_BY_PRODUCT.value) {
+    if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
       if (!this.inventoryGrist.dirtyData.records || !this.inventoryGrist.dirtyData.records.length)
         throw new Error(i18next.t('text.no_products'))
 
@@ -1000,7 +1000,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   }
 
   _validateVas() {
-    if (this._pickingStd === PICKING_STANDARD.PICK_BY_PRODUCT.value) {
+    if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
       if (this.vasGrist.dirtyData.records && this.vasGrist.dirtyData.records.length) {
         // required field (vas && remark)
         if (this.vasGrist.dirtyData.records.filter(record => !record.vas || !record.remark).length)
@@ -1022,7 +1022,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   }
 
   async _updateInventoryList() {
-    if (this._pickingStd === PICKING_STANDARD.PICK_BY_PRODUCT.value) {
+    if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
       const _selectedInv = (this.inventoryGrist.dirtyData.records || []).map(record => {
         return {
           batchId: record.inventory.batchId,
@@ -1177,7 +1177,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   }
 
   _getReleaseOrder() {
-    if (this._pickingStd === PICKING_STANDARD.PICK_BY_PRODUCT.value) {
+    if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
       let releaseGood = this._serializeForm(this.releaseOrderForm)
 
       releaseGood.orderInventories = this.inventoryGrist.data.records.map(record => {
