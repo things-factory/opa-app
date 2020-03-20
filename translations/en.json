@@ -971,5 +971,7 @@
   "text.there_is_no_selected_value": "there is no selected value",
   "text.inventory_auto_assign_completed": "inventory auto assign completed",
   "text.there_is_completed_item_already": "there is completed item already",
-  "text.data_approved": "data approved"
+  "text.data_approved": "data approved",
+  "text.data_rejected": "data rejected",
+  "label.contact_name": "contact name"
 }
