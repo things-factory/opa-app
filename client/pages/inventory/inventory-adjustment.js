@@ -804,6 +804,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         searchParams.append('batch', record.batchId)
         searchParams.append('product', record.product.name)
         searchParams.append('type', record.product.type)
+        searchParams.append('description', record.product.description)
         searchParams.append('customer', record.bizplace.name)
         searchParams.append('packing', record.packingType)
         searchParams.append('date', dateIn)
