@@ -260,7 +260,6 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     this._ownTransport = true
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
-    this._actions = [this.createButton]
     this._pickingStd = PICKING_STANDARD.SELECT_BY_PRODUCT.value
   }
 
@@ -296,6 +295,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
   async pageInitialized() {
     await this.switchPickingType()
+    this._actions = [this.createButton]
   }
 
   async switchPickingType() {
@@ -1368,8 +1368,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     this._template = null
     this._selectedVasRecord = null
     this._selectedVasRecordIdx = null
-    this.releaseOrderForm.reset()
-    this.shippingOrderForm.reset()
+    if (this.releaseOrderForm) this.releaseOrderForm.reset()
+    if (this.shippingOrderForm) this.shippingOrderForm.reset()
     this.inventoryData = { ...this.inventoryData, records: [] }
     this.vasData = { ...this.vasData, records: [] }
     this._clearGristConditions()
