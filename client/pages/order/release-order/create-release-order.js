@@ -750,41 +750,88 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   }
 
   _onInventoryFieldChanged(e) {
-    let columnName = e.detail.column.name
-    let currentTargetProductId = e.detail.after.productId || e.detail.record.productId
-    let currentTargetBatchId = e.detail.after.batchId || e.detail.record.batchId
-    let roundedWeight = e.detail.record.roundedWeight || 0
-    let releaseQty = 0
+    if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
+      let columnName = e.detail.column.name
+      let currentTargetProductId = e.detail.after.productId || e.detail.record.productId
+      let currentTargetBatchId = e.detail.after.batchId || e.detail.record.batchId
+      let roundedWeight = e.detail.record.roundedWeight || 0
+      let releaseQty = 0
 
-    if (columnName == 'releaseWeight' || columnName == 'releaseQty') {
-      let packageWeight = e.detail.record.remainWeight / e.detail.record.remainQty
-      if (
-        e.detail.record.remainWeight &&
-        e.detail.record.remainQty &&
-        e.detail.record.remainWeight > 0 &&
-        e.detail.record.remainQty > 0
-      ) {
-        releaseQty = Math.ceil(e.detail.after / packageWeight)
-        roundedWeight = (columnName == 'releaseQty' ? e.detail.after : releaseQty) * packageWeight
-      }
-    }
-
-    this.inventoryData = {
-      ...this.inventoryGrist.dirtyData,
-      records: this.inventoryGrist.dirtyData.records.map(record => {
+      if (columnName == 'releaseWeight' || columnName == 'releaseQty') {
+        let packageWeight = e.detail.record.remainWeight / e.detail.record.remainQty
         if (
-          (columnName == 'releaseWeight' || columnName == 'releaseQty') &&
-          record.productId == currentTargetProductId &&
-          record.batchId == currentTargetBatchId
+          e.detail.record.remainWeight &&
+          e.detail.record.remainQty &&
+          e.detail.record.remainWeight > 0 &&
+          e.detail.record.remainQty > 0
         ) {
-          if (columnName == 'releaseWeight') record.releaseQty = releaseQty
-          record.releaseWeight = roundedWeight
+          if (columnName === 'releaseQty') {
+            releaseQty = e.detail.after
+          } else {
+            releaseQty = Math.round(e.detail.after / packageWeight)
+          }
+
+          roundedWeight = releaseQty * packageWeight
+          roundedWeight = parseFloat(roundedWeight.toFixed(2))
         }
-        return {
-          ...record,
-          ...record.inventory
+      }
+
+      this.inventoryData = {
+        ...this.inventoryGrist.dirtyData,
+        records: this.inventoryGrist.dirtyData.records.map(record => {
+          if (
+            (columnName == 'releaseWeight' || columnName == 'releaseQty') &&
+            record.productId == currentTargetProductId &&
+            record.batchId == currentTargetBatchId
+          ) {
+            if (columnName == 'releaseWeight') record.releaseQty = releaseQty
+            record.releaseWeight = roundedWeight
+          }
+          return {
+            ...record,
+            ...record.inventory
+          }
+        })
+      }
+    } else {
+      let columnName = e.detail.column.name
+      let currentTargetId = e.detail.record.id
+      let roundedWeight = e.detail.record.roundedWeight || 0
+      let releaseQty = 0
+
+      if (columnName == 'releaseWeight' || columnName == 'releaseQty') {
+        if (isNaN(e.detail.after)) e.detail.after = 0
+        let packageWeight = e.detail.record.remainWeight / e.detail.record.remainQty
+        if (
+          e.detail.record.remainWeight &&
+          e.detail.record.remainQty &&
+          e.detail.record.remainWeight > 0 &&
+          e.detail.record.remainQty > 0
+        ) {
+          if (columnName === 'releaseQty') {
+            releaseQty = e.detail.after
+          } else {
+            releaseQty = Math.round(e.detail.after / packageWeight)
+          }
+
+          roundedWeight = releaseQty * packageWeight
+          roundedWeight = parseFloat(roundedWeight.toFixed(2))
         }
-      })
+      }
+
+      this.inventoryData = {
+        ...this.inventoryGrist.dirtyData,
+        records: this.inventoryGrist.dirtyData.records.map(record => {
+          if ((columnName == 'releaseWeight' || columnName == 'releaseQty') && record.id == currentTargetId) {
+            if (columnName == 'releaseWeight') record.releaseQty = releaseQty
+            record.releaseWeight = roundedWeight
+          }
+          return {
+            ...record,
+            ...record.inventory
+          }
+        })
+      }
     }
   }
 
@@ -814,23 +861,40 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     const changeRecord = event.detail.after
     const changedColumn = event.detail.column.name
 
-    if (changedColumn === 'releaseQty' || changedColumn === 'qty') {
+    if (changedColumn === 'releaseQty') {
       try {
-        this._validateReleaseQty(changeRecord.releaseQty, changeRecord.qty)
+        this._validateReleaseQty(changeRecord.releaseQty, changeRecord.remainQty)
       } catch (e) {
         this._showToast(e)
         delete event.detail.after.releaseQty
+      }
+    } else if (changedColumn === 'releaseWeight') {
+      try {
+        this._validateReleaseWeight(changeRecord.releaseWeight, changeRecord.remainWeight)
+      } catch (e) {
+        this._showToast(e)
+        delete event.detail.after.releaseWeight
       }
     }
 
     this._updateInventoryList()
   }
 
-  _validateReleaseQty(releaseQty, qty) {
-    if (releaseQty > qty) {
+  _validateReleaseQty(releaseQty, remainQty) {
+    if (releaseQty > remainQty) {
       throw new Error(i18next.t('text.available_quantity_insufficient'))
     } else if (releaseQty <= 0) {
       throw new Error(i18next.t('text.invalid_quantity_input'))
+    } else {
+      return
+    }
+  }
+
+  _validateReleaseWeight(releaseWeight, remainWeight) {
+    if (releaseWeight > remainWeight) {
+      throw new Error(i18next.t('text.available_weight_insufficient'))
+    } else if (releaseWeight <= 0) {
+      throw new Error(i18next.t('text.invalid_weight_input'))
     } else {
       return
     }
@@ -1144,22 +1208,51 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   }
 
   _clearGristConditions() {
-    if (this.inventoryGristConfig && this.inventoryGristConfig.column && this.inventoryGristConfig.column.length) {
+    if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
+      if (this.inventoryGristConfig && this.inventoryGristConfig.column && this.inventoryGristConfig.column.length) {
+        this.inventoryGristConfig = {
+          ...this.inventoryGristConfig,
+          columns: this.inventoryGristConfig.columns.map(column => {
+            if (column.name === 'inventory') {
+              column.record.options.basicArgs = {
+                filters: [...column.record.options.basicArgs.filters.filter(filter => filter.name !== 'batch_product')]
+              }
+            }
+
+            return column
+          })
+        }
+      }
+
+      if (this.vasGristConfig && this.vasGristConfig.columns && this.vasGristConfig.columns.length) {
+        this.vasGristConfig = {
+          ...this.vasGristConfig,
+          columns: this.vasGristConfig.columns.map(column => {
+            if (column.name === 'inventory') {
+              column.record.options.basicArgs = {
+                ...column.record.options.basicArgs,
+                filters: []
+              }
+            }
+
+            return column
+          })
+        }
+      }
+    } else {
       this.inventoryGristConfig = {
         ...this.inventoryGristConfig,
         columns: this.inventoryGristConfig.columns.map(column => {
           if (column.name === 'inventory') {
             column.record.options.basicArgs = {
-              filters: [...column.record.options.basicArgs.filters.filter(filter => filter.name !== 'batch_product')]
+              filters: [...column.record.options.basicArgs.filters.filter(filter => filter.name !== 'id')]
             }
           }
 
           return column
         })
       }
-    }
 
-    if (this.vasGristConfig && this.vasGristConfig.columns && this.vasGristConfig.columns.length) {
       this.vasGristConfig = {
         ...this.vasGristConfig,
         columns: this.vasGristConfig.columns.map(column => {
