@@ -149,6 +149,7 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
               product {
                 name
                 type
+                description
               }
               bizplace {
                 name
@@ -171,10 +172,10 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
           searchParams.append('batch', results[i].batchId)
           searchParams.append('product', results[i].product?.name)
           searchParams.append('type', results[i].product?.type)
+          searchParams.append('description', results[i].product?.description)
           searchParams.append('packing', results[i].packingType)
           searchParams.append('customer', results[i].bizplace?.name)
           searchParams.append('date', dateStr)
-
           try {
             const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
               method: 'GET'
