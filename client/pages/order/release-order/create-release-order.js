@@ -294,6 +294,10 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     }
   }
 
+  async pageInitialized() {
+    await this.switchPickingType()
+  }
+
   async switchPickingType() {
     this._clearView()
     if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
