@@ -391,8 +391,12 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
   _updateContext() {
     this.incompleteLocationName = false
     let actions = []
+    if (this._selectedTaskStatus === WORKSHEET_STATUS.DONE.value) {
+      actions = [...actions, { title: i18next.t('button.undo'), action: this._undoPutaway.bind(this) }]
+    }
+
     if (this.completed) {
-      actions = [{ title: i18next.t('button.complete'), action: this._completeHandler.bind(this) }]
+      actions = [...actions, { title: i18next.t('button.complete'), action: this._completeHandler.bind(this) }]
     }
 
     store.dispatch({
@@ -705,6 +709,35 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
         return response.data.locations.items || []
       }
     }
+  }
+
+  async _undoPutaway() {
+    try {
+      if (!this._selectedOrderProduct) throw new Error(i18next.t('text.there_is_no_selected_items'))
+      const response = await client.query({
+        query: gql`
+          mutation {
+            undoPutaway(${gqlBuilder.buildArgs({
+              worksheetDetailName: this._selectedOrderProduct.name,
+              palletId: this._selectedOrderProduct.palletId
+            })})
+          }
+        `
+      })
+
+      if (!response.errors) {
+        this._fetchProducts(this.arrivalNoticeNo)
+        this._focusOnPalletInput()
+        this._selectedTaskStatus = null
+        this._selectedOrderProduct = null
+        this.palletInput.value = ''
+        this.locationInput.value = ''
+      }
+    } catch (e) {
+      this._showToast(e)
+    }
+
+    console.log(this._selectedOrderProduct)
   }
 
   async _completeHandler() {
