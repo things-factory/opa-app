@@ -673,6 +673,7 @@
   "text.to_pallet_id_is_empty": "to pallet id is empty",
   "text.turn_to_pdf_successfully": "turn to pdf successfully",
   "text.undo_unloading": "undo unloading",
+  "text.undo_putaway": "undo putaway",
   "text.undo_vas": "undo vas",
   "text.unloading_completed": "unloading completed",
   "text.user_bizplaces_updated": "user bizplaces updated",

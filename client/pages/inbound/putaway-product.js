@@ -714,6 +714,18 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
   async _undoPutaway() {
     try {
       if (!this._selectedOrderProduct) throw new Error(i18next.t('text.there_is_no_selected_items'))
+      
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.undo_putaway'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) {
+        return
+      }
+
       const response = await client.query({
         query: gql`
           mutation {
