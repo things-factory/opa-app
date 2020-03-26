@@ -1,6 +1,6 @@
 {
   "name": "@things-factory/opa-app",
-  "version": "2.4.0-beta.0",
+  "version": "2.4.0-beta.1",
   "main": "dist-server/index.js",
   "browser": "client/index.js",
   "things-factory": true,
@@ -62,7 +62,7 @@
     "@things-factory/system-ui": "^2.0.0",
     "@things-factory/transport-base": "^2.0.0",
     "@things-factory/warehouse-base": "^2.4.0-beta",
-    "@things-factory/worksheet-base": "^2.3.0",
+    "@things-factory/worksheet-base": "^2.4.0-beta",
     "@things-scene/chartjs": "*",
     "@things-scene/clock": "*",
     "@things-scene/clone": "*",
@@ -99,6 +99,6 @@
   "resolutions": {
     "@things-factory/warehouse-base": "^2.4.0-beta",
     "@things-factory/sales-base": "^2.4.0-beta",
-    "@things-factory/worksheet-base": "^2.3.0"
+    "@things-factory/worksheet-base": "^2.4.0-beta"
   }
 }
