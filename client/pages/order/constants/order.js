@@ -9,6 +9,7 @@ export const ORDER_TYPES = {
 
 export const ORDER_STATUS = {
   PENDING: { name: 'order_status_pending', value: 'PENDING' },
+  PENDING_CANCEL: { name: 'order_status_pending_cancel', value: 'PENDING_CANCEL' },
   EDITING: { name: 'order_status_editing', value: 'EDITING' },
   REJECTED: { name: 'order_status_rejected', value: 'REJECTED' },
   PENDING_RECEIVE: { name: 'order_status_pending_receive', value: 'PENDING_RECEIVE' },

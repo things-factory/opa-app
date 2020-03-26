@@ -84,20 +84,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
   get context() {
     return {
       title: i18next.t('title.release_order_detail'),
-      actions: [
-        {
-          title: i18next.t('button.back'),
-          action: () => history.back()
-        },
-        {
-          title: i18next.t('button.reject'),
-          action: this._rejectReleaseOrder.bind(this)
-        },
-        {
-          title: i18next.t('button.receive'),
-          action: this._receiveReleaseOrder.bind(this)
-        }
-      ]
+      actions: this._actions
     }
   }
 
@@ -320,10 +307,11 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
     }
   }
 
-  pageUpdated(changes) {
-    if (this.active && changes.resourceId) {
-      this._releaseOrderNo = changes.resourceId
-      this._fetchReleaseOrder()
+  async pageUpdated(changes) {
+    if (this.active) {
+      this._releaseOrderNo = changes.resourceId || this._releaseOrderNo || ''
+      await this._fetchReleaseOrder()
+      this._updateContext()
     }
   }
 
@@ -516,6 +504,66 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
     )
 
     popup.onclosed
+  }
+
+  async _confirmCancellationReleaseOrder() {
+    try {
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.you_wont_be_able_to_revert_this'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) return
+
+      const response = await client.query({
+        query: gql`
+            mutation {
+              confirmCancellationReleaseOrder(${gqlBuilder.buildArgs({
+                name: this._releaseOrderNo
+              })})
+            }
+          `
+      })
+
+      if (!response.errors) {
+        this._showToast({ message: i18next.t('text.release_order_has_been_cancelled') })
+        navigate(`release_orders`)
+      }
+    } catch (e) {
+      throw e
+    }
+  }
+
+  _updateContext() {
+    this._actions = []
+    if (this._status === ORDER_STATUS.PENDING_RECEIVE.value) {
+      this._actions = [
+        {
+          title: i18next.t('button.reject'),
+          action: this._rejectReleaseOrder.bind(this)
+        },
+        {
+          title: i18next.t('button.receive'),
+          action: this._receiveReleaseOrder.bind(this)
+        }
+      ]
+    } else if (this._status === ORDER_STATUS.PENDING_TERMINATE) {
+      this._actions = [
+        {
+          title: i18next.t('button.terminate'),
+          action: this._confirmCancellationReleaseOrder.bind(this)
+        }
+      ]
+    }
+
+    this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
+
+    store.dispatch({
+      type: UPDATE_CONTEXT,
+      context: this.context
+    })
   }
 
   _showToast({ type, message }) {

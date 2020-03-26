@@ -138,7 +138,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               const status = record.status
-              if (status === ORDER_STATUS.PENDING_RECEIVE.value) {
+              if (status === ORDER_STATUS.PENDING_RECEIVE.value || status === ORDER_STATUS.PENDING_CANCEL.value) {
                 navigate(`receive_release_order_request/${record.name}`) // 1. move to order receiving page
               } else {
                 navigate(`release_order_detail/${record.name}`)

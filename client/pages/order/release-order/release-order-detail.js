@@ -415,6 +415,13 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
           action: this._confirmReleaseOrder.bind(this)
         }
       ]
+    } else if (this._status !== ORDER_STATUS.PENDING || this._status !== ORDER_STATUS.PENDING_RECEIVE) {
+      this._actions = [
+        {
+          title: i18next.t('button.cancel_order'),
+          action: this._submitCancellationReleaseOrder.bind(this)
+        }
+      ]
     }
 
     this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
@@ -483,6 +490,36 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
+    }
+  }
+
+  async _submitCancellationReleaseOrder() {
+    try {
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.you_wont_be_able_to_revert_this'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) return
+
+      const response = await client.query({
+        query: gql`
+            mutation {
+              pendingCancellationReleaseOrder(${gqlBuilder.buildArgs({
+                name: this._releaseOrderNo
+              })})
+            }
+          `
+      })
+
+      if (!response.errors) {
+        this._showToast({ message: i18next.t('text.release_order_submit_for_termination') })
+        navigate(`release_orders`)
+      }
+    } catch (e) {
+      throw e
     }
   }
 
