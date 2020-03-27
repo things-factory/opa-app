@@ -21,7 +21,8 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       palletProductConfig: Object,
       palletProductData: Object,
       _selectedOrderProduct: Object,
-      _selectedInventory: Object
+      _selectedInventory: Object,
+      _unloadedInventories: Array
     }
   }
 
@@ -240,7 +241,8 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
     if (
       changedProps.has('_arrivalNoticeNo') ||
       changedProps.has('_selectedOrderProduct') ||
-      changedProps.has('_selectedInventory')
+      changedProps.has('_selectedInventory') ||
+      changedProps.has('_unloadedInventories')
     ) {
       this._updateContext()
     }
@@ -250,6 +252,13 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
     let actions = []
     if (this._selectedOrderProduct && !this._selectedOrderProduct.validity) {
       actions = [...actions, { title: i18next.t('button.issue'), action: this._openIssueNote.bind(this) }]
+    }
+
+    if (this._unloadedInventories && this._unloadedInventories.length > 0) {
+      actions = [
+        ...actions,
+        { title: i18next.t('button.partial_complete'), action: this._completePartially.bind(this) }
+      ]
     }
 
     if (this._selectedInventory) {
@@ -423,6 +432,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
               actualPalletQty
               packQty
               actualPackQty
+              issue
               remark
             }
           }
@@ -465,16 +475,17 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
+      this._unloadedInventories = response.data.unloadedInventories
       this._selectedInventory = null
       this.palletProductData = {
-        records: response.data.unloadedInventories
+        records: this._unloadedInventories
       }
 
       this.orderProductData = {
         records: this.orderProductData.records.map(orderProduct => {
-          if (orderProduct.batchId === response.data.unloadedInventories.batchId) {
-            orderProduct.actualPalletQty = response.data.unloadedInventories.length
-            orderProduct.actualTotalPackQty = response.data.unloadedInventories
+          if (orderProduct.batchId === this._unloadedInventories.batchId) {
+            orderProduct.actualPalletQty = this._unloadedInventories.length
+            orderProduct.actualTotalPackQty = this._unloadedInventories
               .map(inventory => inventory.qty)
               .reduce((a, b) => a + b, 0)
           }
@@ -600,6 +611,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
                 return record
               })
             }
+            this._selectedOrderProduct.issue = e.detail.value
           }}"
         ></popup-note>
       `,
@@ -609,6 +621,75 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
         title: i18next.t('title.unloading_issue')
       }
     )
+  }
+
+  async _completePartially() {
+    try {
+      this._validateCompletePartially()
+
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.partial_complete'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) {
+        return
+      }
+
+      const response = await client.query({
+        query: gql`
+          mutation {
+            completeUnloadingPartially(${gqlBuilder.buildArgs({
+              arrivalNoticeNo: this._arrivalNoticeNo,
+              worksheetDetail: this._getWorksheetDetails().find(wsd => wsd.name === this._selectedOrderProduct.name)
+            })})
+          }
+        `
+      })
+
+      if (!response.errors) {
+        await CustomAlert({
+          title: i18next.t('title.completed'),
+          text: i18next.t('text.unloading_completed'),
+          confirmButton: { text: i18next.t('button.confirm') }
+        })
+
+        this._selectedInventory = null
+        this.palletInput.value = ''
+        this.actualQtyInput.value = ''
+      }
+      await this._fetchProducts(this._arrivalNoticeNo)
+      await this._fetchInventories()
+      this._focusOnPalletInput()
+    } catch (e) {
+      this._showToast(e)
+    }
+  }
+
+  _validateCompletePartially() {
+    if (!this._selectedOrderProduct) {
+      throw new Error('text.target_does_not_selected')
+    }
+
+    if (this._selectedOrderProduct.actualPalletQty <= 0) {
+      throw new Error('text.nothing_unloaded')
+    }
+
+    if (
+      this._selectedOrderProduct.actualPalletQty > this._selectedOrderProduct.palletQty &&
+      !this._selectedOrderProduct.issue
+    ) {
+      throw new Error('there_is_no_issue_noted')
+    }
+
+    if (
+      this._selectedOrderProduct.actualPackQty > this._selectedOrderProduct.packQty &&
+      !this._selectedOrderProduct.issue
+    ) {
+      throw new Error('there_is_no_issue_noted')
+    }
   }
 
   async _undoUnloading() {

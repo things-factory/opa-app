@@ -37,5 +37,9 @@ export const WORKSHEET_STATUS = {
   DONE: {
     name: 'done',
     value: 'DONE'
+  },
+  PARTIALLY_UNLOADED: {
+    name: 'partially_unloaded',
+    value: 'PARTIALLY_UNLOADED'
   }
 }

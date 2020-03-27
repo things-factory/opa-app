@@ -12,6 +12,7 @@ import '../components/popup-note'
 import './adjust-pallet-qty'
 import { WORKSHEET_STATUS } from './constants/worksheet'
 import './pallet-label-popup'
+import './putaway-worksheet-generate-popup'
 
 class WorksheetUnloading extends localize(i18next)(PageView) {
   static get properties() {
@@ -299,7 +300,8 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       const worksheet = response.data.worksheet
       const worksheetDetails = worksheet.worksheetDetails
       this._worksheetStatus = worksheet.status
-      this._ganNo = (worksheet.arrivalNotice && worksheet.arrivalNotice.name) || ''
+      this._gan = worksheet && worksheet.arrivalNotice
+      this._ganNo = (this._gan && this._gan.name) || ''
       this._bizplace = worksheet.bizplace.name
 
       this._fillupForm({
@@ -315,7 +317,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
         records: worksheetDetails.map(worksheetDetail => {
           return {
             ...worksheetDetail.targetProduct,
-            id:worksheetDetail.id,
+            id: worksheetDetail.id,
             name: worksheetDetail.name,
             status: worksheetDetail.status,
             description: worksheetDetail.description,
@@ -336,10 +338,22 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     this._actions = []
     if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value) {
       this._actions = [{ title: i18next.t('button.activate'), action: this._activateWorksheet.bind(this) }]
-    } else if (this._worksheetStatus === WORKSHEET_STATUS.EXECUTING.value) {
+    }
+    if (this._worksheetStatus === WORKSHEET_STATUS.EXECUTING.value) {
       this._actions = [
         { title: i18next.t('button.pallet_label_print'), action: this._openPalletLabelPrintPopup.bind(this) }
       ]
+
+      if (
+        this.data &&
+        this.data.records &&
+        this.data.records.some(wsd => wsd.status === WORKSHEET_STATUS.PARTIALLY_UNLOADED.value)
+      ) {
+        this._actions = [
+          ...this._actions,
+          { title: i18next.t('button.create_putaway_worksheet'), action: this._showPutawayWorksheetPopup.bind(this) }
+        ]
+      }
     }
 
     this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
@@ -533,6 +547,26 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
         backdrop: true,
         size: 'large',
         title: i18next.t('title.pallet_label')
+      }
+    )
+  }
+
+  _showPutawayWorksheetPopup() {
+    this._ganNo
+    openPopup(
+      html`
+        <putaway-worksheet-generate-popup
+          .arrivalNotice="${this._gan}"
+          @completed="${async () => {
+            await this.fetchWorksheet()
+            this._updateContext()
+          }}"
+        ></putaway-worksheet-generate-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.generate_putaway_worksheet')
       }
     )
   }
