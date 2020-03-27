@@ -113,6 +113,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
         options: [
           { value: '' },
           { name: i18next.t(`label.${ORDER_STATUS.PENDING_RECEIVE.name}`), value: ORDER_STATUS.PENDING_RECEIVE.value },
+          { name: i18next.t(`label.${ORDER_STATUS.CANCELLED.name}`), value: ORDER_STATUS.CANCELLED.value },
           {
             name: i18next.t(`label.${ORDER_STATUS.READY_TO_PICK.name}`),
             value: ORDER_STATUS.READY_TO_DISPATCH.value

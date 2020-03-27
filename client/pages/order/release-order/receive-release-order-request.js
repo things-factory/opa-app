@@ -2,13 +2,14 @@ import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, CustomAlert, navigate, PageView, store } from '@things-factory/shell'
+import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import '../../components/popup-note'
 import '../../components/vas-relabel'
+import { ORDER_STATUS } from '../constants/order'
 
 class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -549,10 +550,10 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
           action: this._receiveReleaseOrder.bind(this)
         }
       ]
-    } else if (this._status === ORDER_STATUS.PENDING_TERMINATE) {
+    } else if (this._status === ORDER_STATUS.PENDING_CANCEL.value) {
       this._actions = [
         {
-          title: i18next.t('button.terminate'),
+          title: i18next.t('button.confirm'),
           action: this._confirmCancellationReleaseOrder.bind(this)
         }
       ]

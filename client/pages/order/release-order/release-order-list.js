@@ -109,6 +109,7 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
           { value: '' },
           { name: i18next.t(`label.${ORDER_STATUS.PENDING.name}`), value: ORDER_STATUS.PENDING.value },
           { name: i18next.t(`label.${ORDER_STATUS.EDITING.name}`), value: ORDER_STATUS.EDITING.value },
+          { name: i18next.t(`label.${ORDER_STATUS.CANCELLED.name}`), value: ORDER_STATUS.CANCELLED.value },
           { name: i18next.t(`label.${ORDER_STATUS.PENDING_RECEIVE.name}`), value: ORDER_STATUS.PENDING_RECEIVE.value },
           { name: i18next.t(`label.${ORDER_STATUS.PENDING_CANCEL.name}`), value: ORDER_STATUS.PENDING_CANCEL.value },
           {

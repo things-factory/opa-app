@@ -189,8 +189,8 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
   }
 
   async pageUpdated(changes) {
-    if (this.active) {
-      this._releaseOrderNo = changes.resourceId || this._releaseOrderNo || ''
+    if (this.active && changes.resourceId) {
+      this._releaseOrderNo = changes.resourceId
       await this._fetchReleaseOrder()
       this._updateContext()
     }
@@ -322,7 +322,6 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
 
   async _fetchReleaseOrder() {
     if (!this._releaseOrderNo) return
-    this._status = ''
     const response = await client.query({
       query: gql`
         query {
@@ -415,7 +414,12 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
           action: this._confirmReleaseOrder.bind(this)
         }
       ]
-    } else if (this._status !== ORDER_STATUS.PENDING || this._status !== ORDER_STATUS.PENDING_RECEIVE) {
+    } else if (
+      this._status === ORDER_STATUS.READY_TO_PICK.value ||
+      this._status === ORDER_STATUS.PICKING.value ||
+      this._status === ORDER_STATUS.LOADING.value ||
+      this._status === ORDER_STATUS.DONE.value
+    ) {
       this._actions = [
         {
           title: i18next.t('button.cancel_order'),
@@ -515,7 +519,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       })
 
       if (!response.errors) {
-        this._showToast({ message: i18next.t('text.release_order_submit_for_termination') })
+        this._showToast({ message: i18next.t('text.release_order_submit_for_cancellation') })
         navigate(`release_orders`)
       }
     } catch (e) {

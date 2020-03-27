@@ -10,6 +10,8 @@ export const ORDER_TYPES = {
 export const ORDER_STATUS = {
   PENDING: { name: 'order_status_pending', value: 'PENDING' },
   PENDING_CANCEL: { name: 'order_status_pending_cancel', value: 'PENDING_CANCEL' },
+  PENDING_RECEIVE: { name: 'order_status_pending_receive', value: 'PENDING_RECEIVE' },
+  CANCELLED: { name: 'order_status_cancelled', value: 'CANCELLED' },
   EDITING: { name: 'order_status_editing', value: 'EDITING' },
   REJECTED: { name: 'order_status_rejected', value: 'REJECTED' },
   PENDING_RECEIVE: { name: 'order_status_pending_receive', value: 'PENDING_RECEIVE' },
@@ -24,6 +26,8 @@ export const ORDER_STATUS = {
   DISPATCHING: { name: 'order_status_dispatching', value: 'DISPATCHING' },
   INPROCESS: { name: 'order_status_in_process', value: 'INPROCESS' },
   READY_TO_PICK: { name: 'order_status_ready_to_pick', value: 'READY_TO_PICK' },
+  PICKING: { name: 'order_status_picking', value: 'PICKING' },
+  LOADING: { name: 'order_status_loading', value: 'LOADING' },
   READY_TO_DISPATCH: { name: 'order_status_ready_to_dispatch', value: 'READY_TO_DISPATCH' },
   READY_TO_EXECUTE: { name: 'order_status_ready_to_execute', value: 'READY_TO_EXECUTE' }
 }
