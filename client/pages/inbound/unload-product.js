@@ -637,13 +637,15 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       if (!result.value) {
         return
       }
+      const getWsd = this._getWorksheetDetails()
+      console.log(this._selectedOrderProduct.name)
 
       const response = await client.query({
         query: gql`
           mutation {
             completeUnloadingPartially(${gqlBuilder.buildArgs({
               arrivalNoticeNo: this._arrivalNoticeNo,
-              worksheetDetail: this._getWorksheetDetails().find(wsd => wsd.name === this._selectedOrderProduct.name)
+              worksheetDetail: getWsd.find(wsd => wsd.name === this._selectedOrderProduct.name)
             })})
           }
         `
