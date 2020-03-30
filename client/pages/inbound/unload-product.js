@@ -506,6 +506,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
     this._productName = ''
     this._selectedOrderProduct = null
     this._selectedInventory = null
+    this._unloadedInventories = null
     this._updateContext()
   }
 
