@@ -637,15 +637,13 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       if (!result.value) {
         return
       }
-      const getWsd = this._getWorksheetDetails()
-      console.log(this._selectedOrderProduct.name)
 
       const response = await client.query({
         query: gql`
           mutation {
             completeUnloadingPartially(${gqlBuilder.buildArgs({
               arrivalNoticeNo: this._arrivalNoticeNo,
-              worksheetDetail: getWsd.find(wsd => wsd.name === this._selectedOrderProduct.name)
+              worksheetDetail: this._getWorksheetDetails().find(wsd => wsd.name === this._selectedOrderProduct.name)
             })})
           }
         `
@@ -675,7 +673,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       throw new Error('text.target_does_not_selected')
     }
 
-    if (this._selectedOrderProduct.actualPalletQty <= 0) {
+    if (!this._unloadedInventories || this._unloadedInventories.length <= 0) {
       throw new Error('text.nothing_unloaded')
     }
 
