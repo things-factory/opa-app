@@ -15,6 +15,8 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       _template: Object,
       _ownTransport: Boolean,
       _exportOption: Boolean,
+      customerBizplaceId: String,
+      partnerBizplaceId: String,
       inventoryGristConfig: Object,
       vasGristConfig: Object,
       inventoryData: Object,
@@ -192,6 +194,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
     if (this.active && changes.resourceId) {
       this._releaseOrderNo = changes.resourceId
       await this._fetchReleaseOrder()
+      await this._getUserBizplace()
       this._updateContext()
     }
   }
@@ -337,6 +340,11 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
             exportOption
             releaseDate
             collectionOrderNo
+            bizplace {
+              id
+              name
+              description
+            }
             inventoryInfos {
               name
               batchId
@@ -385,6 +393,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
 
       const orderVass = releaseOrder.orderVass
 
+      this.partnerBizplaceId = releaseOrder.bizplace.id
       this._exportOption = response.data.releaseGoodDetail.exportOption
       if (this._exportOption) {
         this._ownTransport = true
@@ -414,11 +423,11 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
           action: this._confirmReleaseOrder.bind(this)
         }
       ]
-    } else if (
-      this._status === ORDER_STATUS.READY_TO_PICK.value ||
-      this._status === ORDER_STATUS.PICKING.value ||
-      this._status === ORDER_STATUS.LOADING.value ||
-      this._status === ORDER_STATUS.DONE.value
+    }
+
+    if (
+      (this._status !== ORDER_STATUS.PENDING.value && this.partnerBizplaceId === this.customerBizplaceId) ||
+      (this._status !== ORDER_STATUS.PENDING_RECEIVE.value && this.partnerBizplaceId === this.customerBizplaceId)
     ) {
       this._actions = [
         {
@@ -576,6 +585,31 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       }
     } catch (e) {
       this._showToast(e)
+    }
+  }
+
+  async _getUserBizplace() {
+    const response = await client.query({
+      query: gql`
+        query {
+          userBizplaces(${gqlBuilder.buildArgs({
+            email: ''
+          })}) {
+            id
+            name
+            description
+            userBizplaceId
+            mainBizplace
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      this.customerBizplaceId = response.data.userBizplaces
+        .map(userBiz => userBiz.userBizplaceId)
+        .slice(0, 1)
+        .shift()
     }
   }
 

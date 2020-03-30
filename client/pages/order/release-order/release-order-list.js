@@ -138,8 +138,6 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
               const status = record.status
               if (status === ORDER_STATUS.REJECTED.value) {
                 navigate(`rejected_release_order/${record.name}`) // 1. move to rejected detail page
-              } else if (status === ORDER_STATUS.EDITING.value) {
-                navigate(`edit_release_order/${record.name}`)
               } else {
                 navigate(`release_order_detail/${record.name}`)
               }

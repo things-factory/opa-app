@@ -530,7 +530,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
 
       if (!response.errors) {
         this._showToast({ message: i18next.t('text.release_order_has_been_cancelled') })
-        navigate(`release_orders`)
+        navigate(`release_order_requests`)
       }
     } catch (e) {
       throw e
@@ -550,7 +550,9 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
           action: this._receiveReleaseOrder.bind(this)
         }
       ]
-    } else if (this._status === ORDER_STATUS.PENDING_CANCEL.value) {
+    }
+
+    if (this._status === ORDER_STATUS.PENDING_CANCEL.value) {
       this._actions = [
         {
           title: i18next.t('button.confirm'),
@@ -559,7 +561,10 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
       ]
     }
 
-    this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
+    this._actions = [
+      ...this._actions,
+      { title: i18next.t('button.back'), action: () => navigate('release_order_requests') }
+    ]
 
     store.dispatch({
       type: UPDATE_CONTEXT,
