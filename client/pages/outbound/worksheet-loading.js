@@ -136,7 +136,7 @@ class WorksheetLoading extends localize(i18next)(PageView) {
       if (changes.resourceId) {
         this._worksheetNo = changes.resourceId
       }
-      await this.fetchOrderInventories()
+      await this.fetchWorksheet()
       this._updateContext()
       this._updateGristConfig()
     }

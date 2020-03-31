@@ -207,7 +207,7 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
       query: gql`
         query {
           deliveryOrders(${gqlBuilder.buildArgs({
-            filters,
+            filters: [...filters, { name: 'status', operator: 'notin', value: ['CANCELLED'] }],
             pagination: { page, limit },
             sortings: sorters
           })}) {
