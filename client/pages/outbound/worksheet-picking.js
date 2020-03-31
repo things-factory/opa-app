@@ -167,8 +167,10 @@ class WorksheetPicking extends localize(i18next)(PageView) {
   }
 
   async pageUpdated(changes) {
-    if (this.active) {
-      this._worksheetNo = changes.resourceId || this._worksheetNo
+    if (this.active && (changes.resourceId || this._worksheetNo)) {
+      if (changes.resourceId) {
+        this._worksheetNo = changes.resourceId
+      }
       await this.fetchOrderInventories()
       this._updateContext()
       this._updateGristConfig()
@@ -309,6 +311,13 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           header: i18next.t('field.location'),
           record: { align: 'center' },
           width: 120
+        },
+        {
+          type: 'integer',
+          name: 'qty',
+          header: i18next.t('field.available_qty'),
+          record: { align: 'center' },
+          width: 60
         },
         {
           type: 'integer',
