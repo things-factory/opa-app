@@ -151,8 +151,10 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
   }
 
   async pageUpdated(changes) {
-    if (this.active && changes.resourceId) {
-      this._worksheetNo = changes.resourceId
+    if (this.active && (changes.resourceId || this._worksheetNo)) {
+      if (changes.resourceId) {
+        this._worksheetNo = changes.resourceId
+      }
       await this.fetchWorksheet()
       this._updateContext()
       this._updateGristConfig()
