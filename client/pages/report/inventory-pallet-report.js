@@ -80,12 +80,14 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
         type: 'select',
         options: [
           { value: '' },
-          ...this._userBizplaces.map(bizplaceList => {
-            return {
-              name: bizplaceList.name,
-              value: bizplaceList.id
-            }
-          })
+          ...this._userBizplaces
+            .map(bizplaceList => {
+              return {
+                name: bizplaceList.name,
+                value: bizplaceList.id
+              }
+            })
+            .sort(this._compareValues('name', 'asc'))
         ],
         props: { searchOper: 'eq' }
       },
@@ -259,6 +261,25 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
     if (!this._bizplaceSelector.value) throw new Error(i18next.t('text.customer_does_not_selected'))
     if (!this._fromDateInput.value) throw new Error(i18next.t('text.from_date_is_empty'))
     if (!this._toDateInput.value) throw new Error(i18next.t('text.to_date_is_empty'))
+  }
+
+  _compareValues(key, order = 'asc') {
+    return function innerSort(a, b) {
+      if (!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
+        return 0
+      }
+
+      const varA = typeof a[key] === 'string' ? a[key].toUpperCase() : a[key]
+      const varB = typeof b[key] === 'string' ? b[key].toUpperCase() : b[key]
+
+      let comparison = 0
+      if (varA > varB) {
+        comparison = 1
+      } else if (varA < varB) {
+        comparison = -1
+      }
+      return order === 'desc' ? comparison * -1 : comparison
+    }
   }
 
   _modifyDateRange(e) {

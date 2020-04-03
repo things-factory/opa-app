@@ -16,7 +16,6 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-
           overflow: hidden;
         }
 
@@ -69,6 +68,7 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
 
   async pageInitialized() {
     const _worksheetStatus = await getCodeByName('WORKSHEET_STATUS')
+    this._bizplaces = [...(await this._fetchBizplaceList())]
 
     this._searchFields = [
       {
@@ -86,8 +86,19 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
       {
         name: 'bizplaceName',
         label: i18next.t('field.customer'),
-        type: 'text',
-        props: { searchOper: 'i_like' }
+        type: 'select',
+        options: [
+          { value: '' },
+          ...this._bizplaces
+            .map(bizplaceList => {
+              return {
+                name: bizplaceList.name,
+                value: bizplaceList.name
+              }
+            })
+            .sort(this._compareValues('name', 'asc'))
+        ],
+        props: { searchOper: 'eq' }
       },
       {
         name: 'status',
@@ -268,6 +279,47 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
 
   get _columns() {
     return this.config.columns
+  }
+
+  async _fetchBizplaceList() {
+    const response = await client.query({
+      query: gql`
+          query {
+            bizplaces(${gqlBuilder.buildArgs({
+              filters: []
+            })}) {
+              items{
+                id
+                name
+                description
+              }
+            }
+          }
+        `
+    })
+
+    if (!response.errors) {
+      return response.data.bizplaces.items
+    }
+  }
+
+  _compareValues(key, order = 'asc') {
+    return function innerSort(a, b) {
+      if (!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
+        return 0
+      }
+
+      const varA = typeof a[key] === 'string' ? a[key].toUpperCase() : a[key]
+      const varB = typeof b[key] === 'string' ? b[key].toUpperCase() : b[key]
+
+      let comparison = 0
+      if (varA > varB) {
+        comparison = 1
+      } else if (varA < varB) {
+        comparison = -1
+      }
+      return order === 'desc' ? comparison * -1 : comparison
+    }
   }
 
   _exportableData() {
