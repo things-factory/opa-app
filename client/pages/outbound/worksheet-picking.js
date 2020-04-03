@@ -121,6 +121,9 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             <label>${i18next.t('label.ref_no')}</label>
             <input name="refNo" readonly />
 
+            <input id="ownCollection" type="checkbox" name="ownCollection" disabled />
+            <label for="ownCollection">${i18next.t('label.own_collection')}</label>
+
             <label>${i18next.t('label.status')}</label>
             <select name="status" disabled>
               ${Object.keys(WORKSHEET_STATUS).map(
@@ -362,6 +365,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               name
               description
               refNo
+              ownTransport
             }
             orderInventories {
               status
@@ -408,7 +412,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         ...worksheet,
         releaseGood: worksheet.releaseGood.name,
         bizplace: worksheet.bizplace.name,
-        refNo: worksheet.releaseGood.refNo
+        refNo: worksheet.releaseGood.refNo,
+        ownCollection: worksheet.releaseGood.ownTransport
       })
 
       if (this._worksheetStatus !== WORKSHEET_STATUS.DEACTIVATED.value) this.fetchWorksheetDetails()

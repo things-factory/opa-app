@@ -165,6 +165,7 @@
   "field.out": "out",
   "field.outbound": "outbound",
   "field.own_transport": "own transport",
+  "field.own_collection": "own collection",
   "field.owner": "owner",
   "field.partner": "partner",
   "field.pack_in_qty": "pack in qty",

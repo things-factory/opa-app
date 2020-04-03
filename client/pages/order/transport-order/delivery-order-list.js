@@ -155,19 +155,21 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
           width: 150
         },
         {
-          type: 'object',
-          name: 'releaseGood',
-          header: i18next.t('field.release_good_no'),
+          type: 'string',
+          name: 'refNo',
+          header: i18next.t('field.ref_no'),
           record: { align: 'left' },
           sortable: true,
           width: 150
         },
         {
-          type: 'string',
-          name: 'customer',
+          type: 'object',
+          name: 'bizplace',
           header: i18next.t('field.customer'),
+          record: { align: 'left' },
           sortable: true,
           width: 250
+          width: 200
         },
         {
           type: 'date',
@@ -176,6 +178,14 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
           record: { align: 'center' },
           sortable: true,
           width: 160
+        },
+        {
+          type: 'boolean',
+          name: 'ownCollection',
+          header: i18next.t('field.own_collection'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 100
         },
         {
           type: 'string',
@@ -243,8 +253,9 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
                 id
                 name
                 description
+                refNo
               }
-              refNo
+              ownCollection
               createdAt
               updatedAt
               updater {
@@ -260,17 +271,14 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
     })
 
     if (!response.errors) {
-      let total = response.data.deliveryOrders.total || 0
-      let deliveryOrders = response.data.deliveryOrders.items || []
-
-      deliveryOrders = deliveryOrders.map(deliveryOrder => {
-        if (deliveryOrder.bizplace) deliveryOrder.customer = deliveryOrder.bizplace.name
-        return deliveryOrder
-      })
-
       return {
-        total: total,
-        records: deliveryOrders
+        total: response.data.deliveryOrders.total || 0,
+        records: response.data.deliveryOrders.items.map(item => {
+          return {
+            ...item,
+            refNo: item.releaseGood.refNo
+          }
+        })
       }
     }
   }
