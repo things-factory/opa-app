@@ -468,7 +468,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             header: i18next.t('field.inventory_list'),
             record: {
               editable: true,
-              align: 'center',
+              align: 'left',
               options: {
                 queryName: 'inventoryProductGroup',
                 basicArgs: { filters: [] },
@@ -477,7 +477,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                 select: [
                   { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
                   { name: 'productId', hidden: true },
-                  { name: 'productName', header: i18next.t('field.product'), record: { align: 'center' } },
+                  { name: 'productName', header: i18next.t('field.product'), record: { align: 'left' } },
                   { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
                   {
                     name: 'remainQty',
@@ -534,7 +534,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             header: i18next.t('field.inventory_list'),
             record: {
               editable: true,
-              align: 'center',
+              align: 'left',
               options: {
                 queryName: 'inventories',
                 basicArgs: {
