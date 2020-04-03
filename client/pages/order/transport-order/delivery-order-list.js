@@ -168,7 +168,6 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
           header: i18next.t('field.customer'),
           record: { align: 'left' },
           sortable: true,
-          width: 250
           width: 200
         },
         {
