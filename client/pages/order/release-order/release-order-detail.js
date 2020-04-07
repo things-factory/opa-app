@@ -429,7 +429,9 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
     if (
       this._status !== ORDER_STATUS.PENDING.value &&
       this.partnerBizplaceId === this.customerBizplaceId &&
-      this._status !== ORDER_STATUS.PENDING_RECEIVE.value
+      this._status !== ORDER_STATUS.PENDING_RECEIVE.value &&
+      this._status !== ORDER_STATUS.PENDING_CANCEL.value &&
+      this._status !== ORDER_STATUS.CANCELLED.value
     ) {
       this._actions = [
         {
