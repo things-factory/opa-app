@@ -22,12 +22,13 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       _ganNo: String,
       _ownTransport: Boolean,
       _importCargo: Boolean,
+      isUserBelongsDomain: Boolean,
       _status: String,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
       vasData: Object,
-      _template: Object
+      _template: Object,
     }
   }
 
@@ -82,14 +83,14 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
-      `
+      `,
     ]
   }
 
   get context() {
     return {
       title: i18next.t('title.arrival_notice_detail'),
-      actions: this._actions
+      actions: this._actions,
     }
   }
 
@@ -121,7 +122,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             type="checkbox"
             name="ownTransport"
             ?checked="${this._ownTransport}"
-            @change="${e => (this._ownTransport = e.currentTarget.checked)}"
+            @change="${(e) => (this._ownTransport = e.currentTarget.checked)}"
             disabled
           />
           <label>${i18next.t('label.own_transport')}</label>
@@ -129,11 +130,9 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
 
         <label>${i18next.t('label.status')}</label>
         <select name="status" disabled
-          >${Object.keys(ORDER_STATUS).map(key => {
+          >${Object.keys(ORDER_STATUS).map((key) => {
             const status = ORDER_STATUS[key]
-            return html`
-              <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option>
-            `
+            return html` <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option> `
           })}</select
         >
       </form>
@@ -193,7 +192,9 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    this.isUserBelongsDomain = await this._checkUserBelongsDomain()
+
     this.productGristConfig = {
       list: { fields: ['batchId', 'product', 'packingType', 'totalWeight'] },
       pagination: { infinite: true },
@@ -201,9 +202,9 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         appendable: false,
         classifier: (record, rowIndex) => {
           return {
-            emphasized: record.status === ORDER_PRODUCT_STATUS.READY_TO_APPROVED.value
+            emphasized: record.status === ORDER_PRODUCT_STATUS.READY_TO_APPROVED.value,
           }
-        }
+        },
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -212,58 +213,58 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
           name: 'batchId',
           header: i18next.t('field.batch_no'),
           record: { align: 'center' },
-          width: 150
+          width: 150,
         },
         {
           type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
           record: { align: 'center', options: { queryName: 'products' } },
-          width: 350
+          width: 350,
         },
         {
           type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: { align: 'center' },
-          width: 150
+          width: 150,
         },
         {
           type: 'float',
           name: 'weight',
           header: i18next.t('field.weight'),
           record: { align: 'center' },
-          width: 80
+          width: 80,
         },
         {
           type: 'string',
           name: 'unit',
           header: i18next.t('field.unit'),
           record: { align: 'center' },
-          width: 80
+          width: 80,
         },
         {
           type: 'integer',
           name: 'packQty',
           header: i18next.t('field.pack_qty'),
           record: { align: 'center' },
-          width: 80
+          width: 80,
         },
         {
           type: 'integer',
           name: 'totalWeight',
           header: i18next.t('field.total_weight'),
           record: { align: 'center' },
-          width: 120
+          width: 120,
         },
         {
           type: 'integer',
           name: 'palletQty',
           header: i18next.t('field.pallet_qty'),
           record: { align: 'center' },
-          width: 80
-        }
-      ]
+          width: 80,
+        },
+      ],
     }
 
     this.vasGristConfig = {
@@ -279,8 +280,8 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             } else {
               this._template = null
             }
-          }
-        }
+          },
+        },
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -289,36 +290,36 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
           name: 'vas',
           header: i18next.t('field.vas'),
           record: { align: 'center', options: { queryName: 'vass' } },
-          width: 250
+          width: 250,
         },
         {
           type: 'select',
           name: 'batchId',
           header: i18next.t('field.batch_no'),
           record: { align: 'center', options: ['', i18next.t('label.all')] },
-          width: 150
+          width: 150,
         },
         {
           type: 'string',
           name: 'status',
           header: i18next.t('field.status'),
           record: { align: 'center' },
-          width: 150
+          width: 150,
         },
         {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
           record: { align: 'center' },
-          width: 350
+          width: 350,
         },
         {
           type: 'string',
           name: 'description',
           header: i18next.t('field.comment'),
-          width: 350
-        }
-      ]
+          width: 350,
+        },
+      ],
     }
   }
 
@@ -329,7 +330,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       query: gql`
         query {
           arrivalNotice(${gqlBuilder.buildArgs({
-            name: this._ganNo
+            name: this._ganNo,
           })}) {
             name
             bizplace {
@@ -373,7 +374,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             }
           }
         }
-      `
+      `,
     })
 
     if (!response.errors) {
@@ -392,24 +393,23 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     }
   }
 
-  async _updateContext() {
+  _updateContext() {
     this._actions = []
     if (this._status === ORDER_STATUS.PENDING.value) {
       this._actions = [
         { title: i18next.t('button.delete'), action: this._deleteArrivalNotice.bind(this) },
-        { title: i18next.t('button.confirm'), action: this._confirmArrivalNotice.bind(this) }
+        { title: i18next.t('button.confirm'), action: this._confirmArrivalNotice.bind(this) },
       ]
     }
 
-    const isUserBelongsDomain = await this._checkUserBelongsDomain()
-    if (isUserBelongsDomain && this._status === ORDER_STATUS.PROCESSING.value) {
+    if (this._status === ORDER_STATUS.PROCESSING.value && this.isUserBelongsDomain) {
       this._actions = [{ title: i18next.t('button.add'), action: this.openExtraProductPopup.bind(this) }]
     }
 
     if (
-      !isUserBelongsDomain &&
+      !this.isUserBelongsDomain &&
       this._status === ORDER_STATUS.PROCESSING.value &&
-      this.productData.records.some(product => product.status === ORDER_PRODUCT_STATUS.READY_TO_APPROVED.value)
+      this.productData.records.some((product) => product.status === ORDER_PRODUCT_STATUS.READY_TO_APPROVED.value)
     ) {
       this._actions = [{ title: i18next.t('button.approve'), action: this.openApproveProductPopup.bind(this) }]
     }
@@ -418,7 +418,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
 
     store.dispatch({
       type: UPDATE_CONTEXT,
-      context: this.context
+      context: this.context,
     })
   }
 
@@ -429,7 +429,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
           query {
             checkUserBelongsDomain
           }
-        `
+        `,
       })
 
       if (!response.errors) {
@@ -446,7 +446,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
 
   _fillupForm(form, data) {
     for (let key in data) {
-      Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
+      Array.from(form.querySelectorAll('input, textarea, select')).forEach((field) => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
         } else if (field.name === key) {
@@ -462,7 +462,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.you_wont_be_able_to_revert_this'),
         confirmButton: { text: i18next.t('button.confirm') },
-        cancelButton: { text: i18next.t('button.cancel') }
+        cancelButton: { text: i18next.t('button.cancel') },
       })
 
       if (!result.value) return
@@ -472,10 +472,10 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         query: gql`
             mutation {
               deleteArrivalNotice(${gqlBuilder.buildArgs({
-                name: this._ganNo
+                name: this._ganNo,
               })}) 
             }
-          `
+          `,
       })
 
       if (!response.errors) {
@@ -510,7 +510,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       title: i18next.t('title.are_you_sure'),
       text: i18next.t('text.confirm_arrival_notice'),
       confirmButton: { text: i18next.t('button.confirm') },
-      cancelButton: { text: i18next.t('button.cancel') }
+      cancelButton: { text: i18next.t('button.cancel') },
     })
 
     if (!result.value) {
@@ -522,12 +522,12 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         query: gql`
             mutation {
               confirmArrivalNotice(${gqlBuilder.buildArgs({
-                name: this._ganNo
+                name: this._ganNo,
               })}) {
                 name
               }
             }
-          `
+          `,
       })
 
       if (!response.errors) {
@@ -551,7 +551,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       {
         backdrop: true,
         size: 'large',
-        title: i18next.t('title.extra_product')
+        title: i18next.t('title.extra_product'),
       }
     )
   }
@@ -571,7 +571,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       {
         backdrop: true,
         size: 'large',
-        title: i18next.t('title.proceed_extra_product')
+        title: i18next.t('title.proceed_extra_product'),
       }
     )
   }
@@ -581,8 +581,8 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       new CustomEvent('notify', {
         detail: {
           type,
-          message
-        }
+          message,
+        },
       })
     )
   }
