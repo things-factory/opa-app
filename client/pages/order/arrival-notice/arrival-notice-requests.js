@@ -15,7 +15,6 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
         :host {
           display: flex;
           flex-direction: column;
-
           overflow: hidden;
         }
 
@@ -27,7 +26,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           overflow-y: auto;
           flex: 1;
         }
-      `
+      `,
     ]
   }
 
@@ -35,13 +34,17 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
     return {
       _searchFields: Array,
       config: Object,
-      data: Object
+      data: Object,
     }
   }
 
   render() {
     return html`
-      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
+      <search-form
+        id="search-form"
+        .fields=${this._searchFields}
+        @submit=${(e) => this.dataGrist.fetch()}
+      ></search-form>
 
       <data-grist
         .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
@@ -56,8 +59,8 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
       title: i18next.t('title.arrival_notice_requests'),
       exportable: {
         name: i18next.t('title.arrival_notice_requests'),
-        data: this._exportableData.bind(this)
-      }
+        data: this._exportableData.bind(this),
+      },
     }
   }
 
@@ -68,47 +71,59 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
-    const _orderStatus = await getCodeByName('ORDER_STATUS')
+    const _orderStatus = await getCodeByName('GAN_REQUESTS_STATUS')
+    const _userBizplaces = await this.fetchBizplaces()
 
     this._searchFields = [
       {
         label: i18next.t('field.gan'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'i_like' }
+        props: { searchOper: 'i_like' },
       },
       {
         label: i18next.t('field.customer'),
-        name: 'bizplace',
-        type: 'object',
-        queryName: 'bizplaces',
-        field: 'name'
+        name: 'bizplaceName',
+        type: 'select',
+        options: [
+          { value: '' },
+          ..._userBizplaces
+            .filter((userBizplaces) => !userBizplaces.mainBizplace)
+            .map((userBizplace) => {
+              return {
+                name: userBizplace.name,
+                value: userBizplace.name,
+              }
+            })
+            .sort(this._compareValues('name', 'asc')),
+        ],
+        props: { searchOper: 'eq' },
       },
       {
         label: i18next.t('field.eta'),
         name: 'etaDate',
         type: 'date',
-        props: { searchOper: 'eq' }
+        props: { searchOper: 'eq' },
       },
       {
         label: i18next.t('field.ref_no'),
         name: 'refNo',
         type: 'text',
-        props: { searchOper: 'i_like' }
+        props: { searchOper: 'i_like' },
       },
       {
         label: i18next.t('field.import_cargo'),
         name: 'importCargo',
         type: 'checkbox',
         props: { searchOper: 'eq' },
-        attrs: ['indeterminate']
+        attrs: ['indeterminate'],
       },
       {
         label: i18next.t('field.own_transport'),
         name: 'ownTransport',
         type: 'checkbox',
         props: { searchOper: 'eq' },
-        attrs: ['indeterminate']
+        attrs: ['indeterminate'],
       },
       {
         label: i18next.t('field.status'),
@@ -116,18 +131,18 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
         type: 'select',
         options: [
           { value: '' },
-          ..._orderStatus.map(status => {
+          ..._orderStatus.map((status) => {
             return { name: i18next.t(`label.${status.description}`), value: status.name }
-          })
+          }),
         ],
-        props: { searchOper: 'eq' }
-      }
+        props: { searchOper: 'eq' },
+      },
     ]
 
     this.config = {
       rows: { appendable: false, selectable: { multiple: true } },
       list: {
-        fields: ['bizplace', 'status', 'updatedAt']
+        fields: ['bizplace', 'status', 'updatedAt'],
       },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
@@ -148,8 +163,8 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
               } else {
                 navigate(`arrival_notice_detail/${record.name}`)
               }
-            }
-          }
+            },
+          },
         },
         {
           type: 'string',
@@ -157,7 +172,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.gan'),
           record: { align: 'left' },
           sortable: true,
-          width: 160
+          width: 160,
         },
         {
           type: 'object',
@@ -165,7 +180,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.customer'),
           record: { align: 'left' },
           sortable: true,
-          width: 250
+          width: 250,
         },
         {
           type: 'string',
@@ -173,7 +188,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.ref_no'),
           record: { align: 'left' },
           sortable: true,
-          width: 120
+          width: 120,
         },
         {
           type: 'date',
@@ -181,7 +196,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.eta'),
           record: { align: 'center' },
           sortable: true,
-          width: 100
+          width: 100,
         },
         {
           type: 'boolean',
@@ -189,7 +204,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.import_cargo'),
           record: { align: 'center' },
           sortable: true,
-          width: 120
+          width: 120,
         },
         {
           type: 'boolean',
@@ -197,7 +212,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.own_transport'),
           record: { align: 'center' },
           sortable: true,
-          width: 120
+          width: 120,
         },
         {
           type: 'string',
@@ -205,7 +220,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.status'),
           record: { align: 'left' },
           sortable: true,
-          width: 120
+          width: 120,
         },
         {
           type: 'datetime',
@@ -213,7 +228,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.updated_at'),
           record: { align: 'center' },
           sortable: true,
-          width: 160
+          width: 160,
         },
         {
           type: 'object',
@@ -221,9 +236,9 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.updater'),
           record: { align: 'left' },
           sortable: true,
-          width: 200
-        }
-      ]
+          width: 200,
+        },
+      ],
     }
   }
 
@@ -242,7 +257,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           arrivalNoticeRequests(${gqlBuilder.buildArgs({
             filters: await this.searchForm.getQueryFilters(),
             pagination: { page, limit },
-            sortings: sorters
+            sortings: sorters,
           })}) {
             items {
               id
@@ -265,14 +280,52 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
             total
           }
         }
-      `
+      `,
     })
 
     if (!response.errors) {
       return {
         total: response.data.arrivalNoticeRequests.total || 0,
-        records: response.data.arrivalNoticeRequests.items || []
+        records: response.data.arrivalNoticeRequests.items || [],
       }
+    }
+  }
+
+  async fetchBizplaces(bizplace = []) {
+    const response = await client.query({
+      query: gql`
+          query {
+            bizplaces(${gqlBuilder.buildArgs({
+              filters: [...bizplace],
+            })}) {
+              items{
+                id
+                name
+                description
+              }
+            }
+          }
+        `,
+    })
+    return response.data.bizplaces.items
+  }
+
+  _compareValues(key, order = 'asc') {
+    return function innerSort(a, b) {
+      if (!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
+        return 0
+      }
+
+      const varA = typeof a[key] === 'string' ? a[key].toUpperCase() : a[key]
+      const varB = typeof b[key] === 'string' ? b[key].toUpperCase() : b[key]
+
+      let comparison = 0
+      if (varA > varB) {
+        comparison = 1
+      } else if (varA < varB) {
+        comparison = -1
+      }
+      return order === 'desc' ? comparison * -1 : comparison
     }
   }
 

@@ -5,6 +5,7 @@ import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { ORDER_STATUS } from '../constants/order'
+import { getCodeByName } from '@things-factory/code-base'
 
 class ReleaseOrderRequests extends localize(i18next)(PageView) {
   static get styles() {
@@ -25,7 +26,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           overflow-y: auto;
           flex: 1;
         }
-      `
+      `,
     ]
   }
 
@@ -33,13 +34,17 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
     return {
       _searchFields: Array,
       config: Object,
-      data: Object
+      data: Object,
     }
   }
 
   render() {
     return html`
-      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
+      <search-form
+        id="search-form"
+        .fields=${this._searchFields}
+        @submit=${(e) => this.dataGrist.fetch()}
+      ></search-form>
 
       <data-grist
         .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
@@ -54,8 +59,8 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
       title: i18next.t('title.release_order_requests'),
       exportable: {
         name: i18next.t('title.release_order_requests'),
-        data: this._exportableData.bind(this)
-      }
+        data: this._exportableData.bind(this),
+      },
     }
   }
 
@@ -65,46 +70,60 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    const _orderStatus = await getCodeByName('RO_REQUESTS_STATUS')
+    const _userBizplaces = await this.fetchBizplaces()
+
     this._searchFields = [
       {
         label: i18next.t('field.release_order_no'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'i_like' }
+        props: { searchOper: 'i_like' },
       },
       {
         label: i18next.t('field.ref_no'),
         name: 'refNo',
         type: 'text',
-        props: { searchOper: 'i_like' }
+        props: { searchOper: 'i_like' },
       },
       {
         label: i18next.t('field.customer'),
-        name: 'bizplace',
-        type: 'object',
-        queryName: 'bizplaces',
-        field: 'name'
+        name: 'bizplaceName',
+        type: 'select',
+        options: [
+          { value: '' },
+          ..._userBizplaces
+            .filter((userBizplaces) => !userBizplaces.mainBizplace)
+            .map((userBizplace) => {
+              return {
+                name: userBizplace.name,
+                value: userBizplace.name,
+              }
+            })
+            .sort(this._compareValues('name', 'asc')),
+        ],
+        props: { searchOper: 'eq' },
       },
       {
         label: i18next.t('field.release_date'),
         name: 'releaseDate',
         type: 'date',
-        props: { searchOper: 'i_like' }
+        props: { searchOper: 'i_like' },
       },
       {
         label: i18next.t('field.import_cargo'),
         name: 'importCargo',
         type: 'checkbox',
         props: { searchOper: 'eq' },
-        attrs: ['indeterminate']
+        attrs: ['indeterminate'],
       },
       {
         label: i18next.t('field.shipping_option'),
         name: 'exportOption',
         type: 'checkbox',
         props: { searchOper: 'eq' },
-        attrs: ['indeterminate']
+        attrs: ['indeterminate'],
       },
       {
         label: i18next.t('field.status'),
@@ -112,18 +131,12 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
         type: 'select',
         options: [
           { value: '' },
-          { name: i18next.t(`label.${ORDER_STATUS.PENDING_RECEIVE.name}`), value: ORDER_STATUS.PENDING_RECEIVE.value },
-          { name: i18next.t(`label.${ORDER_STATUS.CANCELLED.name}`), value: ORDER_STATUS.CANCELLED.value },
-          {
-            name: i18next.t(`label.${ORDER_STATUS.READY_TO_PICK.name}`),
-            value: ORDER_STATUS.READY_TO_DISPATCH.value
-          },
-          { name: i18next.t(`label.${ORDER_STATUS.INPROCESS.name}`), value: ORDER_STATUS.INPROCESS.value },
-          { name: i18next.t(`label.${ORDER_STATUS.DISPATCHING.name}`), value: ORDER_STATUS.DISPATCHING.value },
-          { name: i18next.t(`label.${ORDER_STATUS.DONE.name}`), value: ORDER_STATUS.DONE.value }
+          ..._orderStatus.map((status) => {
+            return { name: i18next.t(`label.${status.description}`), value: status.name }
+          }),
         ],
-        props: { searchOper: 'eq' }
-      }
+        props: { searchOper: 'eq' },
+      },
     ]
 
     this.config = {
@@ -144,8 +157,8 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
               } else {
                 navigate(`release_order_detail/${record.name}`)
               }
-            }
-          }
+            },
+          },
         },
         {
           type: 'string',
@@ -153,7 +166,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.release_good_no'),
           record: { align: 'left' },
           sortable: true,
-          width: 180
+          width: 180,
         },
         {
           type: 'string',
@@ -161,7 +174,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.ref_no'),
           record: { align: 'left' },
           sortable: true,
-          width: 160
+          width: 160,
         },
         {
           type: 'object',
@@ -169,7 +182,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.customer'),
           record: { align: 'left' },
           sortable: true,
-          width: 200
+          width: 200,
         },
         {
           type: 'date',
@@ -177,7 +190,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.release_date'),
           record: { align: 'center' },
           sortable: true,
-          width: 120
+          width: 120,
         },
         {
           type: 'boolean',
@@ -185,7 +198,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.own_transport'),
           record: { align: 'center' },
           sortable: true,
-          width: 100
+          width: 100,
         },
         {
           type: 'boolean',
@@ -193,7 +206,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.export_option'),
           record: { align: 'center' },
           sortable: true,
-          width: 100
+          width: 100,
         },
         {
           type: 'string',
@@ -201,7 +214,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.status'),
           record: { align: 'left' },
           sortable: true,
-          width: 120
+          width: 120,
         },
         {
           type: 'datetime',
@@ -209,7 +222,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.updated_at'),
           record: { align: 'center' },
           sortable: true,
-          width: 160
+          width: 160,
         },
         {
           type: 'object',
@@ -217,9 +230,9 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.updater'),
           record: { align: 'left' },
           sortable: true,
-          width: 200
-        }
-      ]
+          width: 200,
+        },
+      ],
     }
   }
 
@@ -238,7 +251,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           releaseGoodRequests(${gqlBuilder.buildArgs({
             filters: await this.searchForm.getQueryFilters(),
             pagination: { page, limit },
-            sortings: sorters
+            sortings: sorters,
           })}) {
             items {
               id
@@ -263,14 +276,52 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
             total
           }
         }
-      `
+      `,
     })
 
     if (!response.errors) {
       return {
         total: response.data.releaseGoodRequests.total || 0,
-        records: response.data.releaseGoodRequests.items || []
+        records: response.data.releaseGoodRequests.items || [],
       }
+    }
+  }
+
+  async fetchBizplaces(bizplace = []) {
+    const response = await client.query({
+      query: gql`
+          query {
+            bizplaces(${gqlBuilder.buildArgs({
+              filters: [...bizplace],
+            })}) {
+              items{
+                id
+                name
+                description
+              }
+            }
+          }
+        `,
+    })
+    return response.data.bizplaces.items
+  }
+
+  _compareValues(key, order = 'asc') {
+    return function innerSort(a, b) {
+      if (!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
+        return 0
+      }
+
+      const varA = typeof a[key] === 'string' ? a[key].toUpperCase() : a[key]
+      const varB = typeof b[key] === 'string' ? b[key].toUpperCase() : b[key]
+
+      let comparison = 0
+      if (varA > varB) {
+        comparison = 1
+      } else if (varA < varB) {
+        comparison = -1
+      }
+      return order === 'desc' ? comparison * -1 : comparison
     }
   }
 
