@@ -184,6 +184,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
           },
         },
       },
+      list: { fields: ['transactionType', 'status', 'palletId', 'customerName', 'creator', 'createdAt'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
@@ -247,6 +248,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
 
     this.detailGristConfig = {
       pagination: { infinite: true },
+      list: { fields: ['column', 'current', 'update'] },
       rows: {
         appendable: false,
       },
