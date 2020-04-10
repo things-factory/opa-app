@@ -169,19 +169,11 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
                     updatedVal = record[item.column]
                   }
 
-                  if (currentVal != updatedVal) {
-                    recordDiff.push({
-                      column: item.name,
-                      current: currentVal,
-                      update: updatedVal
-                    })
-                  } else {
-                    recordDiff.push({
-                      column: item.name,
-                      current: currentVal,
-                      update: '[N/A]'
-                    })
-                  }
+                  recordDiff.push({
+                    column: item.name,
+                    current: currentVal,
+                    update: currentVal != updatedVal ? updatedVal : '[N/A]'
+                  })
                 })
               } else {
                 this._compareColumn.map(item => {
@@ -273,7 +265,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
         {
           type: 'string',
           name: 'column',
-          header: 'Column',
+          header: i18next.t('field.column'),
           record: { align: 'left' },
           sortable: false,
           width: 130
@@ -281,7 +273,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
         {
           type: 'string',
           name: 'current',
-          header: 'before',
+          header: i18next.t('field.before'),
           record: { align: 'left' },
           sortable: false,
           width: 240
@@ -289,7 +281,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
         {
           type: 'string',
           name: 'update',
-          header: 'after',
+          header: i18next.t('field.after'),
           record: { align: 'left' },
           sortable: false,
           width: 240
