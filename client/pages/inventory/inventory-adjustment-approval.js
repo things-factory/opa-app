@@ -52,7 +52,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
           overflow-y: auto;
           flex: 1;
         }
-      `,
+      `
     ]
   }
 
@@ -62,17 +62,13 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
       config: Object,
       data: Object,
       _detailData: Object,
-      _compareColumn: Array,
+      _compareColumn: Array
     }
   }
 
   render() {
     return html`
-      <search-form
-        id="search-form"
-        .fields=${this._searchFields}
-        @submit=${(e) => this.dataGrist.fetch()}
-      ></search-form>
+      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
       <div class="grist-container">
         <div class="grist grist-inventory-change">
@@ -101,13 +97,13 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
       actions: [
         {
           title: i18next.t('button.reject'),
-          action: this._rejectInventoryChanges.bind(this),
+          action: this._rejectInventoryChanges.bind(this)
         },
         {
           title: i18next.t('button.approve'),
-          action: this._approveInventoryChanges.bind(this),
-        },
-      ],
+          action: this._approveInventoryChanges.bind(this)
+        }
+      ]
     }
   }
 
@@ -131,58 +127,78 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
       { column: 'product', name: 'Product' },
       { column: 'location', name: 'Location' },
       { column: 'qty', name: 'Quantity' },
-      { column: 'weight', name: 'Weight' },
+      { column: 'weight', name: 'Weight' }
     ]
 
     this.config = {
       rows: {
         appendable: false,
         selectable: {
-          multiple: true,
+          multiple: true
         },
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
             if (record) {
               let recordDiff = []
-              if (record.status.toLowerCase() == 'pending') {
-                if (record.inventory != null) {
-                  this._compareColumn.map((item) => {
-                    let currentVal = ''
-                    let updatedVal = ''
+              let compareData = []
 
-                    if (typeof record.inventory[item.column] === 'object') {
-                      currentVal = record.inventory[item.column].name
-                      updatedVal = record[item.column].name
-                    } else {
-                      currentVal = record.inventory[item.column]
-                      updatedVal = record[item.column]
-                    }
+              switch (record.status.toLowerCase()) {
+                case 'pending':
+                  compareData = record.inventory
+                  break
+                case 'approved':
+                  compareData = record.lastInventoryHistory
+                  break
+                case 'rejected':
+                  compareData = record.lastInventoryHistory
+                  break
+                default:
+                  break
+              }
 
-                    if (currentVal != updatedVal) {
-                      recordDiff.push({
-                        column: item.name,
-                        current: currentVal,
-                        update: updatedVal,
-                      })
-                    }
-                  })
-                } else {
-                  this._compareColumn.map((item) => {
+              if (compareData != null) {
+                this._compareColumn.map(item => {
+                  let currentVal = ''
+                  let updatedVal = ''
+
+                  if (typeof compareData[item.column] === 'object') {
+                    currentVal = compareData[item.column].name
+                    updatedVal = record[item.column].name
+                  } else {
+                    currentVal = compareData[item.column]
+                    updatedVal = record[item.column]
+                  }
+
+                  if (currentVal != updatedVal) {
                     recordDiff.push({
                       column: item.name,
-                      current: '-',
-                      update: typeof record[item.column] === 'object' ? record[item.column].name : record[item.column],
+                      current: currentVal,
+                      update: updatedVal
                     })
+                  } else {
+                    recordDiff.push({
+                      column: item.name,
+                      current: currentVal,
+                      update: '[N/A]'
+                    })
+                  }
+                })
+              } else {
+                this._compareColumn.map(item => {
+                  recordDiff.push({
+                    column: item.name,
+                    current: '[N/A]',
+                    update: typeof record[item.column] === 'object' ? record[item.column].name : record[item.column]
                   })
-                }
+                })
               }
 
               this._detailData = {
-                records: recordDiff,
+                records: recordDiff
               }
             }
-          },
-        },
+          }
+        }
       },
       list: { fields: ['transactionType', 'status', 'palletId', 'customerName', 'creator', 'createdAt'] },
       columns: [
@@ -194,7 +210,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
           header: i18next.t('field.type'),
           record: { align: 'center' },
           sortable: true,
-          width: 130,
+          width: 130
         },
         {
           type: 'string',
@@ -202,7 +218,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
           header: i18next.t('field.status'),
           record: { align: 'center' },
           sortable: true,
-          width: 130,
+          width: 130
         },
         {
           type: 'string',
@@ -210,14 +226,14 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
           header: i18next.t('field.pallet_id'),
           record: { align: 'left' },
           sortable: true,
-          width: 130,
+          width: 130
         },
         {
           type: 'string',
           name: 'customerName',
           header: i18next.t('field.customer'),
           sortable: true,
-          width: 230,
+          width: 230
         },
         {
           type: 'object',
@@ -225,7 +241,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
           header: i18next.t('field.submitted_by'),
           record: { align: 'left' },
           sortable: true,
-          width: 150,
+          width: 150
         },
         {
           type: 'datetime',
@@ -233,7 +249,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
           header: i18next.t('field.submitted_at'),
           record: { align: 'left' },
           sortable: true,
-          width: 150,
+          width: 150
         },
         {
           type: 'datetime',
@@ -241,16 +257,16 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
           header: i18next.t('field.updated_at'),
           record: { align: 'left' },
           sortable: true,
-          width: 150,
-        },
-      ],
+          width: 150
+        }
+      ]
     }
 
     this.detailGristConfig = {
       pagination: { infinite: true },
       list: { fields: ['column', 'current', 'update'] },
       rows: {
-        appendable: false,
+        appendable: false
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -260,25 +276,25 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
           header: 'Column',
           record: { align: 'left' },
           sortable: false,
-          width: 130,
+          width: 130
         },
         {
           type: 'string',
           name: 'current',
-          header: 'Current',
+          header: 'before',
           record: { align: 'left' },
           sortable: false,
-          width: 240,
+          width: 240
         },
         {
           type: 'string',
           name: 'update',
-          header: 'Update',
+          header: 'after',
           record: { align: 'left' },
           sortable: false,
-          width: 240,
-        },
-      ],
+          width: 240
+        }
+      ]
     }
 
     this._searchFields = [
@@ -289,22 +305,22 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
         options: [
           { value: '' },
           ..._userBizplaces
-            .filter((userBizplaces) => !userBizplaces.mainBizplace)
-            .map((userBizplace) => {
+            .filter(userBizplaces => !userBizplaces.mainBizplace)
+            .map(userBizplace => {
               return {
                 name: userBizplace.name,
-                value: userBizplace.id,
+                value: userBizplace.id
               }
             })
-            .sort(this._compareValues('name', 'asc')),
+            .sort(this._compareValues('name', 'asc'))
         ],
-        props: { searchOper: 'eq' },
+        props: { searchOper: 'eq' }
       },
       {
         label: i18next.t('field.pallet_id'),
         name: 'palletId',
         type: 'text',
-        props: { searchOper: 'i_like' },
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.status'),
@@ -312,15 +328,15 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
         type: 'select',
         options: [
           { value: '' },
-          ..._approvalStatus.map((stat) => {
+          ..._approvalStatus.map(stat => {
             return {
               name: stat.name,
-              value: stat.name,
+              value: stat.name
             }
-          }),
+          })
         ],
-        props: { searchOper: 'eq' },
-      },
+        props: { searchOper: 'eq' }
+      }
     ]
   }
 
@@ -338,7 +354,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
           inventoryChanges(${gqlBuilder.buildArgs({
             filters: [...filters],
             pagination: { page, limit },
-            sortings: sorters,
+            sortings: sorters
           })}) {
             items {
               id
@@ -387,6 +403,28 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
               weight
               status
               transactionType
+              lastInventoryHistory{ 
+                batchId
+                packingType
+                bizplace {
+                  id
+                  name
+                  description
+                }              
+                product {
+                  id
+                  name
+                  description  
+                  type              
+                }        
+                location {
+                  id
+                  name
+                  description
+                }
+                qty
+                weight
+              }
               createdAt
               updatedAt
               creator {
@@ -397,22 +435,22 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
             total
           }
         }
-      `,
+      `
     })
 
     return {
       total: response.data.inventoryChanges.total || 0,
       records:
-        response.data.inventoryChanges.items.map((item) => {
+        response.data.inventoryChanges.items.map(item => {
           return { ...item, customerName: item?.inventory?.bizplace?.name || item.bizplace.name }
-        }) || [],
+        }) || []
     }
   }
 
   async _approveInventoryChanges() {
     var patches = this.dataGrist.selected
-      .filter((item) => item.status.toLowerCase() == 'pending')
-      .map((item) => {
+      .filter(item => item.status.toLowerCase() == 'pending')
+      .map(item => {
         return { id: item.id }
       })
     if (patches && patches.length) {
@@ -420,10 +458,10 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
         query: gql`
           mutation {
             approveInventoryChanges(${gqlBuilder.buildArgs({
-              patches,
+              patches
             })})
           }
-        `,
+        `
       })
 
       if (!response.errors) {
@@ -431,8 +469,8 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
         document.dispatchEvent(
           new CustomEvent('notify', {
             detail: {
-              message: i18next.t('text.data_approved'),
-            },
+              message: i18next.t('text.data_approved')
+            }
           })
         )
       }
@@ -441,8 +479,8 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
 
   async _rejectInventoryChanges() {
     var patches = this.dataGrist.selected
-      .filter((item) => item.status.toLowerCase() == 'pending')
-      .map((item) => {
+      .filter(item => item.status.toLowerCase() == 'pending')
+      .map(item => {
         return { id: item.id }
       })
     if (patches && patches.length) {
@@ -450,10 +488,10 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
         query: gql`
           mutation {
             rejectInventoryChanges(${gqlBuilder.buildArgs({
-              patches,
+              patches
             })})
           }
-        `,
+        `
       })
 
       if (!response.errors) {
@@ -461,8 +499,8 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
         document.dispatchEvent(
           new CustomEvent('notify', {
             detail: {
-              message: i18next.t('text.data_rejected'),
-            },
+              message: i18next.t('text.data_rejected')
+            }
           })
         )
       }
@@ -480,7 +518,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
       query: gql`
           query {
             bizplaces(${gqlBuilder.buildArgs({
-              filters: [...bizplace],
+              filters: [...bizplace]
             })}) {
               items{
                 id
@@ -489,7 +527,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
               }
             }
           }
-        `,
+        `
     })
     return response.data.bizplaces.items
   }
@@ -499,7 +537,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
       query: gql`
           query {
             productsByBizplace(${gqlBuilder.buildArgs({
-              filters: [...bizplace],
+              filters: [...bizplace]
             })}) {
               items {
                 id
@@ -507,7 +545,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
               }
             }
           }
-        `,
+        `
     })
     return response.data.productsByBizplace.items
   }
@@ -517,7 +555,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
       query: gql`
           query {
             locations(${gqlBuilder.buildArgs({
-              filters: [],
+              filters: []
             })}) {
               items {
                 id
@@ -525,7 +563,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
               }
             }
           }
-        `,
+        `
     })
     return response.data.locations.items
   }
@@ -554,8 +592,8 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
       new CustomEvent('notify', {
         detail: {
           type,
-          message,
-        },
+          message
+        }
       })
     )
   }
