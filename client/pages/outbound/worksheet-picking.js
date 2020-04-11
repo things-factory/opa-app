@@ -22,7 +22,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       productGristConfig: Object,
       wsdGristConfig: Object,
       productGristData: Object,
-      worksheetDetailData: Object
+      worksheetDetailData: Object,
     }
   }
 
@@ -85,7 +85,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
-      `
+      `,
     ]
   }
 
@@ -101,8 +101,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       actions: this._actions,
       printable: {
         accept: ['preview'],
-        content: this
-      }
+        content: this,
+      },
     }
   }
 
@@ -127,7 +127,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             <label>${i18next.t('label.status')}</label>
             <select name="status" disabled>
               ${Object.keys(WORKSHEET_STATUS).map(
-                key => html`
+                (key) => html`
                   <option value="${WORKSHEET_STATUS[key].value}"
                     >${i18next.t(`label.${WORKSHEET_STATUS[key].name}`)}</option
                   >
@@ -186,9 +186,9 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       pagination: { infinite: true },
       rows: {
         appendable: false,
-        classifier: record => {
+        classifier: (record) => {
           return {
-            emphasized: record.completed
+            emphasized: record.completed,
           }
         },
         handlers: {
@@ -205,11 +205,11 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 productName: record.productName,
                 packingType: record.packingType,
                 releaseQty: record.releaseQty,
-                releaseWeight: record.releaseWeight
+                releaseWeight: record.releaseWeight,
               }
             }
-          }
-        }
+          },
+        },
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -217,7 +217,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           type: 'boolean',
           name: 'completed',
           header: i18next.t('field.done'),
-          width: 40
+          width: 40,
         },
         {
           type: 'gutter',
@@ -230,48 +230,48 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 productName: record.productName,
                 packingType: record.packingType,
                 releaseQty: record.releaseQty,
-                releaseWeight: record.releaseWeight
+                releaseWeight: record.releaseWeight,
               }
               this._showInventoryAssignPopup()
-            }
-          }
+            },
+          },
         },
         {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_no'),
           record: { align: 'left' },
-          width: 100
+          width: 100,
         },
         {
           type: 'string',
           name: 'productName',
           header: i18next.t('field.product'),
           record: { align: 'left' },
-          width: 250
+          width: 250,
         },
         {
           type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: { align: 'center' },
-          width: 150
+          width: 150,
         },
         {
           type: 'integer',
           name: 'releaseQty',
           header: i18next.t('field.release_qty'),
           record: { align: 'center' },
-          width: 60
+          width: 60,
         },
         {
           type: 'float',
           name: 'releaseWeight',
           header: i18next.t('field.release_weight'),
           record: { align: 'center' },
-          width: 60
-        }
-      ]
+          width: 60,
+        },
+      ],
     }
 
     this.preWsdGristConfig = {
@@ -285,58 +285,58 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           name: 'batchId',
           header: i18next.t('field.batch_no'),
           record: { align: 'left' },
-          width: 100
+          width: 100,
         },
         {
           type: 'string',
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
           record: { align: 'left' },
-          width: 120
+          width: 120,
         },
         {
           type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
           record: { align: 'left' },
-          width: 250
+          width: 250,
         },
         {
           type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: { align: 'center' },
-          width: 150
+          width: 150,
         },
         {
           type: 'object',
           name: 'location',
           header: i18next.t('field.location'),
           record: { align: 'center' },
-          width: 120
+          width: 120,
         },
         {
           type: 'integer',
           name: 'qty',
           header: i18next.t('field.available_qty'),
           record: { align: 'center' },
-          width: 60
+          width: 60,
         },
         {
           type: 'integer',
           name: 'releaseQty',
           header: i18next.t('field.release_qty'),
           record: { align: 'center' },
-          width: 60
+          width: 60,
         },
         {
           type: 'float',
           name: 'releaseWeight',
           header: i18next.t('field.release_weight'),
           record: { align: 'center' },
-          width: 60
-        }
-      ]
+          width: 60,
+        },
+      ],
     }
   }
 
@@ -358,7 +358,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       query: gql`
         query {
           worksheet(${gqlBuilder.buildArgs({
-            name: this._worksheetNo
+            name: this._worksheetNo,
           })}) {
             status
             releaseGood {
@@ -375,6 +375,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               releaseQty
               releaseWeight
               inventory {
+                qty
                 palletId
                 location {
                   name
@@ -399,7 +400,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             }
           }
         }
-      `
+      `,
     })
 
     if (!response.errors) {
@@ -413,7 +414,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         releaseGood: worksheet.releaseGood.name,
         bizplace: worksheet.bizplace.name,
         refNo: worksheet.releaseGood.refNo,
-        ownCollection: worksheet.releaseGood.ownTransport
+        ownCollection: worksheet.releaseGood.ownTransport,
       })
 
       if (this._worksheetStatus !== WORKSHEET_STATUS.DEACTIVATED.value) this.fetchWorksheetDetails()
@@ -430,14 +431,14 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         },
         {
           tempOrderInvs: [],
-          completedOrderInvs: []
+          completedOrderInvs: [],
         }
       )
 
       if (!tempOrderInvs.length) this.isPalletPickingOrder = true
 
       this.productGristData = {
-        records: tempOrderInvs.map(ordInv => {
+        records: tempOrderInvs.map((ordInv) => {
           const { compQty, compWeight } = completedOrderInvs.reduce(
             (result, compOrdInv) => {
               if (this._checkSameOrderInv(ordInv, compOrdInv)) {
@@ -451,22 +452,22 @@ class WorksheetPicking extends localize(i18next)(PageView) {
 
           return {
             ...ordInv,
-            completed: compQty === ordInv.releaseQty && compWeight === ordInv.releaseWeight
+            completed: compQty === ordInv.releaseQty && compWeight === ordInv.releaseWeight,
           }
-        })
+        }),
       }
 
       if (completedOrderInvs && completedOrderInvs.length) {
         this.worksheetDetailData = {
-          records: completedOrderInvs.map(item => {
+          records: completedOrderInvs.map((item) => {
             return {
               ...item,
               ...item.inventory,
               product: { name: item.productName },
               ...item.inventory.location,
-              description: item.description
+              description: item.description,
             }
-          })
+          }),
         }
       }
 
@@ -494,7 +495,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             worksheetNo,
             batchId,
             productName,
-            packingType
+            packingType,
           })}) {
             items {
               id
@@ -524,21 +525,21 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             total
           }
         }
-      `
+      `,
     })
 
     if (!response.errors) {
       this.worksheetDetailData = {
-        records: response.data.worksheetDetailsByProductGroup.items.map(item => {
+        records: response.data.worksheetDetailsByProductGroup.items.map((item) => {
           return {
             ...item,
             ...item.targetInventory,
             ...item.targetInventory.inventory,
             ...item.targetInventory.inventory.location,
-            description: item.description
+            description: item.description,
           }
         }),
-        total: response.data.worksheetDetailsByProductGroup.total
+        total: response.data.worksheetDetailsByProductGroup.total,
       }
     }
   }
@@ -549,7 +550,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       query: gql`
         query {
           worksheet(${gqlBuilder.buildArgs({
-            name: this._worksheetNo
+            name: this._worksheetNo,
           })}) {
             worksheetDetails {
               name
@@ -581,23 +582,23 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             }
           }
         }
-      `
+      `,
     })
 
     if (!response.errors) {
       const worksheetDetails = response.data.worksheet.worksheetDetails
 
       this.worksheetDetailData = {
-        records: worksheetDetails.map(worksheetDetail => {
+        records: worksheetDetails.map((worksheetDetail) => {
           return {
             ...worksheetDetail.targetInventory.inventory,
             name: worksheetDetail.name,
             description: worksheetDetail.description,
             status: worksheetDetail.status,
             releaseQty: worksheetDetail.targetInventory.releaseQty,
-            releaseWeight: worksheetDetail.targetInventory.releaseWeight
+            releaseWeight: worksheetDetail.targetInventory.releaseWeight,
           }
-        })
+        }),
       }
     }
   }
@@ -608,19 +609,19 @@ class WorksheetPicking extends localize(i18next)(PageView) {
     if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value && !this.isPalletPickingOrder) {
       this._actions = [
         ...this._actions,
-        { title: i18next.t('button.auto_assign'), action: this._showAutoAssignPopup.bind(this) }
+        { title: i18next.t('button.auto_assign'), action: this._showAutoAssignPopup.bind(this) },
       ]
 
-      if (this.productGristData.records.every(record => record.completed)) {
+      if (this.productGristData.records.every((record) => record.completed)) {
         this._actions = [
           ...this._actions,
-          { title: i18next.t('button.activate'), action: this._activateWorksheet.bind(this) }
+          { title: i18next.t('button.activate'), action: this._activateWorksheet.bind(this) },
         ]
       }
     } else if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value) {
       this._actions = [
         ...this._actions,
-        { title: i18next.t('button.activate'), action: this._activateWorksheet.bind(this) }
+        { title: i18next.t('button.activate'), action: this._activateWorksheet.bind(this) },
       ]
     }
 
@@ -628,7 +629,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
 
     store.dispatch({
       type: UPDATE_CONTEXT,
-      context: this.context
+      context: this.context,
     })
   }
 
@@ -638,19 +639,19 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       name: 'status',
       header: i18next.t('field.status'),
       record: { align: 'center' },
-      width: 100
+      width: 100,
     }
 
     if (
-      !this.preWsdGristConfig.columns.some(e => e.name === 'status') &&
+      !this.preWsdGristConfig.columns.some((e) => e.name === 'status') &&
       this._worksheetStatus !== WORKSHEET_STATUS.DEACTIVATED.value
     ) {
       this.preWsdGristConfig.columns = [...this.preWsdGristConfig.columns, statusColumnConfig]
     } else if (
-      this.preWsdGristConfig.columns.some(e => e.name === 'status') &&
+      this.preWsdGristConfig.columns.some((e) => e.name === 'status') &&
       this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value
     ) {
-      this.preWsdGristConfig.columns.splice(this.preWsdGristConfig.columns.map(e => e.name).indexOf('status'))
+      this.preWsdGristConfig.columns.splice(this.preWsdGristConfig.columns.map((e) => e.name).indexOf('status'))
     }
 
     this.wsdGristConfig = { ...this.preWsdGristConfig }
@@ -658,7 +659,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
 
   _fillupForm(data) {
     for (let key in data) {
-      Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
+      Array.from(this.form.querySelectorAll('input, select')).forEach((field) => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
         } else if (field.name === key) {
@@ -699,7 +700,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         {
           backdrop: true,
           size: 'large',
-          title: i18next.t('title.inventory_assign')
+          title: i18next.t('title.inventory_assign'),
         }
       )
     } catch (e) {
@@ -727,7 +728,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       {
         backdrop: true,
         size: 'large',
-        title: i18next.t('title.inventory_auto_assign')
+        title: i18next.t('title.inventory_auto_assign'),
       }
     )
   }
@@ -738,7 +739,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.activate_putaway_worksheet'),
         confirmButton: { text: i18next.t('button.confirm') },
-        cancelButton: { text: i18next.t('button.cancel') }
+        cancelButton: { text: i18next.t('button.cancel') },
       })
 
       if (!result.value) {
@@ -749,12 +750,12 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         query: gql`
           mutation {
             activatePicking(${gqlBuilder.buildArgs({
-              worksheetNo: this._worksheetNo
+              worksheetNo: this._worksheetNo,
             })}) {
               name
             }
           }
-        `
+        `,
       })
       if (!response.errors) {
         this._showToast({ message: i18next.t('text.worksheet_activated') })
@@ -768,10 +769,10 @@ class WorksheetPicking extends localize(i18next)(PageView) {
   }
 
   _getPickingWorksheetDetails() {
-    return this.productGrist.dirtyData.records.map(worksheetDetail => {
+    return this.productGrist.dirtyData.records.map((worksheetDetail) => {
       return {
         name: worksheetDetail.name,
-        description: worksheetDetail.description
+        description: worksheetDetail.description,
       }
     })
   }
@@ -781,8 +782,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       new CustomEvent('notify', {
         detail: {
           type,
-          message
-        }
+          message,
+        },
       })
     )
   }
