@@ -22,7 +22,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
       _data: Object,
       data: Object,
       pickQty: Number,
-      pickWeight: Number
+      pickWeight: Number,
     }
   }
 
@@ -54,7 +54,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
         .button-container > mwc-button {
           margin: auto 0 0 auto;
         }
-      `
+      `,
     ]
   }
 
@@ -105,7 +105,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
   }
 
   get selectedStrategy() {
-    return Array.from(this.shadowRoot.querySelectorAll('input[name=pickingStrategy]')).find(input => input.checked)
+    return Array.from(this.shadowRoot.querySelectorAll('input[name=pickingStrategy]')).find((input) => input.checked)
       .value
   }
 
@@ -124,11 +124,11 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
       list: { fields: ['palletId', 'product', 'location', 'qty'] },
       pagination: { infinite: true },
       rows: {
-        classifier: record => {
+        classifier: (record) => {
           return {
-            emphasized: record.picked
+            emphasized: record.picked,
           }
-        }
+        },
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -137,91 +137,91 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
           name: 'picked',
           header: i18next.t('field.selected'),
           record: { align: 'center' },
-          width: 60
+          width: 60,
         },
         {
           type: 'string',
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
           record: { align: 'left' },
-          width: 130
+          width: 130,
         },
         {
           type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
           record: { align: 'left' },
-          width: 250
+          width: 250,
         },
         {
           type: 'object',
           name: 'location',
           header: i18next.t('field.location'),
           record: { align: 'center' },
-          width: 120
+          width: 120,
         },
         {
           type: 'string',
           name: 'description',
           header: i18next.t('field.comment'),
           record: { align: 'center', editable: true },
-          width: 300
+          width: 300,
         },
         {
           type: 'string',
           name: 'zone',
           header: i18next.t('field.zone'),
           record: { align: 'center' },
-          width: 80
+          width: 80,
         },
         {
           type: 'string',
           name: 'row',
           header: i18next.t('field.row'),
           record: { align: 'center' },
-          width: 80
+          width: 80,
         },
         {
           type: 'string',
           name: 'column',
           header: i18next.t('field.column'),
           record: { align: 'center' },
-          width: 80
+          width: 80,
         },
         {
           type: 'string',
           name: 'shelf',
           header: i18next.t('field.shelf'),
           record: { align: 'center' },
-          width: 80
+          width: 80,
         },
         {
           type: 'integer',
           name: 'pickQty',
           header: i18next.t('field.pick_qty'),
           record: { align: 'center', editable: true },
-          width: 60
+          width: 60,
         },
         {
           type: 'integer',
           name: 'qty',
           header: i18next.t('field.available_qty'),
           record: { align: 'center' },
-          width: 60
+          width: 60,
         },
         {
           type: 'float',
           name: 'pickWeight',
           header: i18next.t('field.pick_weight'),
           record: { align: 'center', editable: true },
-          width: 60
+          width: 60,
         },
         {
           type: 'float',
           name: 'weight',
           header: i18next.t('field.available_weight'),
           record: { align: 'center' },
-          width: 60
+          width: 60,
         },
         {
           type: 'datetime',
@@ -229,9 +229,9 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
           record: { align: 'center', editable: false },
           header: i18next.t('field.stored_at'),
           sortable: true,
-          width: 180
-        }
-      ]
+          width: 180,
+        },
+      ],
     }
 
     this.fetchInventoriesByStrategy()
@@ -242,11 +242,10 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
       query: gql`
         query {
           inventoriesByStrategy(${gqlBuilder.buildArgs({
-            worksheetNo: this.worksheetNo,
             batchId: this.batchId,
             productName: this.productName,
             packingType: this.packingType,
-            pickingStrategy: this.selectedStrategy
+            pickingStrategy: this.selectedStrategy,
           })}) {
             items {
               id
@@ -270,18 +269,18 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
             total
           }
         }
-      `
+      `,
     })
 
     if (!response.errors) {
       this._data = {
-        records: response.data.inventoriesByStrategy.items.map(item => {
+        records: response.data.inventoriesByStrategy.items.map((item) => {
           return {
             ...item,
-            ...item.location
+            ...item.location,
           }
         }),
-        total: response.data.inventoriesByStrategy.total
+        total: response.data.inventoriesByStrategy.total,
       }
     }
   }
@@ -292,7 +291,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
 
     this.data = {
       ..._data,
-      records: _data.records.map(item => {
+      records: _data.records.map((item) => {
         let picked = false
         let pickQty = 0
         let pickWeight = 0
@@ -313,9 +312,9 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
           ...item.location,
           picked,
           pickQty,
-          pickWeight
+          pickWeight,
         }
-      })
+      }),
     }
   }
 
@@ -327,7 +326,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
 
       if (columnName === 'pickQty') {
         this.data = {
-          records: this.grist.dirtyData.records.map(data => {
+          records: this.grist.dirtyData.records.map((data) => {
             const pickQty = data.pickQty
             const pickWeight = Math.round((data.weight / data.qty) * data.pickQty)
 
@@ -338,13 +337,13 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
               ...data,
               pickQty,
               pickWeight,
-              picked: Boolean(data.pickQty)
+              picked: Boolean(data.pickQty),
             }
-          })
+          }),
         }
       } else if (columnName === 'pickWeight') {
         this.data = {
-          records: this.grist.dirtyData.records.map(data => {
+          records: this.grist.dirtyData.records.map((data) => {
             const pickQty = Math.round((data.qty * data.pickWeight) / data.weight)
             const pickWeight = data.pickWeight
 
@@ -355,9 +354,9 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
               ...data,
               pickQty: Math.round((data.qty * data.pickWeight) / data.weight),
               pickWeight: data.pickWeight,
-              picked: Boolean(data.pickWeight)
+              picked: Boolean(data.pickWeight),
             }
-          })
+          }),
         }
       }
 
@@ -378,10 +377,10 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
               batchId: this.batchId,
               productName: this.productName,
               packingType: this.packingType,
-              worksheetDetails: this._composeWorksheetDetails()
+              worksheetDetails: this._composeWorksheetDetails(),
             })})
           }
-        `
+        `,
       })
 
       if (!response.errors) {
@@ -404,16 +403,16 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
 
   _composeWorksheetDetails() {
     return this.grist.dirtyData.records
-      .filter(record => record.pickQty && record.pickWeight)
-      .map(record => {
+      .filter((record) => record.pickQty && record.pickWeight)
+      .map((record) => {
         return {
           description: record.description,
           targetInventory: {
             inventory: { id: record.id },
             releaseQty: record.pickQty,
             releaseWeight: record.pickWeight,
-            type: ORDER_TYPES.RELEASE_OF_GOODS.value
-          }
+            type: ORDER_TYPES.RELEASE_OF_GOODS.value,
+          },
         }
       })
   }
@@ -423,8 +422,8 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
       new CustomEvent('notify', {
         detail: {
           type,
-          message
-        }
+          message,
+        },
       })
     )
   }
