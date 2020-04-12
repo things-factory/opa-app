@@ -999,5 +999,6 @@
   "text.there_is_completed_item_already": "there is completed item already",
   "text.data_approved": "data approved",
   "text.data_rejected": "data rejected",
-  "label.contact_name": "contact name"
+  "label.contact_name": "contact name",
+  "label.partially_unloaded": "partially unloaded"
 }
