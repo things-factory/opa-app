@@ -15,7 +15,7 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
       worksheetNo: String,
       selectedItems: Array,
       config: Object,
-      data: Object
+      data: Object,
     }
   }
 
@@ -47,7 +47,7 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
         .button-container > mwc-button {
           margin: auto 0 0 auto;
         }
-      `
+      `,
     ]
   }
 
@@ -87,7 +87,7 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
   }
 
   get selectedStrategy() {
-    return Array.from(this.shadowRoot.querySelectorAll('input[name=pickingStrategy]')).find(input => input.checked)
+    return Array.from(this.shadowRoot.querySelectorAll('input[name=pickingStrategy]')).find((input) => input.checked)
       .value
   }
 
@@ -107,44 +107,44 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
           type: 'boolean',
           name: 'completed',
           header: i18next.t('field.done'),
-          width: 40
+          width: 40,
         },
         {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_no'),
           record: { align: 'left' },
-          width: 100
+          width: 100,
         },
         {
           type: 'string',
           name: 'productName',
           header: i18next.t('field.product'),
           record: { align: 'center' },
-          width: 150
+          width: 150,
         },
         {
           type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: { align: 'center' },
-          width: 150
+          width: 150,
         },
         {
           type: 'integer',
           name: 'releaseQty',
           header: i18next.t('field.release_qty'),
           record: { align: 'center' },
-          width: 60
+          width: 60,
         },
         {
           type: 'float',
           name: 'releaseWeight',
           header: i18next.t('field.release_weight'),
           record: { align: 'center' },
-          width: 60
-        }
-      ]
+          width: 60,
+        },
+      ],
     }
   }
 
@@ -152,13 +152,15 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
     try {
       this.validateCheckedItems()
       const selectedItems = this.grist.selected
+      const filterBizplace = this.data.records.map((record) => record.bizplaceId)
+      let bizplaceId = [...new Set(filterBizplace)]
 
-      if (selectedItems.some(record => record.completed)) {
+      if (selectedItems.some((record) => record.completed)) {
         const result = await CustomAlert({
           title: i18next.t('title.are_you_sure'),
           text: i18next.t('text.there_is_completed_item_already'),
           confirmButton: { text: i18next.t('button.confirm') },
-          cancelButton: { text: i18next.t('button.cancel') }
+          cancelButton: { text: i18next.t('button.cancel') },
         })
 
         if (!result.value) {
@@ -170,12 +172,12 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
         title: i18next.t('title.inventory_auto_assign'),
         text: i18next.t('text.please_wait'),
         allowOutsideClick: false,
-        allowEscapeKey: false
+        allowEscapeKey: false,
       })
 
       await Promise.all(
-        selectedItems.map(async selectedItem => {
-          const inventories = await this.fetchInventoriesByStrategy(selectedItem, this.selectedStrategy)
+        selectedItems.map(async (selectedItem) => {
+          const inventories = await this.fetchInventoriesByStrategy(selectedItem, this.selectedStrategy, bizplaceId[0])
           const worksheetDetails = this._composeWorksheetDetails(selectedItem, inventories)
           await this.submitPickedItems(this.worksheetNo, selectedItem, worksheetDetails)
         })
@@ -184,7 +186,7 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
       await CustomAlert({
         title: i18next.t('title.completed'),
         text: i18next.t('text.inventory_auto_assign_completed'),
-        confirmButton: { text: i18next.t('button.confirm') }
+        confirmButton: { text: i18next.t('button.confirm') },
       })
 
       this.dispatchEvent(new CustomEvent('completed'))
@@ -194,16 +196,16 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
     }
   }
 
-  async fetchInventoriesByStrategy({ batchId, productName, packingType }, pickingStrategy) {
+  async fetchInventoriesByStrategy({ batchId, productName, packingType }, pickingStrategy, bizplaceId) {
     const response = await client.query({
       query: gql`
         query {
           inventoriesByStrategy(${gqlBuilder.buildArgs({
-            worksheetNo: this.worksheetNo,
+            bizplaceId,
             batchId,
             productName,
             packingType,
-            pickingStrategy
+            pickingStrategy,
           })}) {
             items {
               id
@@ -212,7 +214,7 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
             }
           }
         }
-      `
+      `,
     })
 
     if (!response.errors) {
@@ -240,8 +242,8 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
             inventory: { id: inv.id },
             releaseQty: leftReleaseQty,
             releaseWeight: leftReleaseWeight,
-            type: ORDER_TYPES.RELEASE_OF_GOODS.value
-          }
+            type: ORDER_TYPES.RELEASE_OF_GOODS.value,
+          },
         })
       } else {
         compReleaseQty += inv.qty
@@ -254,8 +256,8 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
             inventory: { id: inv.id },
             releaseQty: inv.qty,
             releaseWeight: inv.weight,
-            type: ORDER_TYPES.RELEASE_OF_GOODS.value
-          }
+            type: ORDER_TYPES.RELEASE_OF_GOODS.value,
+          },
         })
       }
 
@@ -275,10 +277,10 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
               batchId,
               productName,
               packingType,
-              worksheetDetails
+              worksheetDetails,
             })})
           }
-        `
+        `,
       })
     } catch (e) {
       this._showToast(e)
@@ -295,8 +297,8 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
       new CustomEvent('notify', {
         detail: {
           type,
-          message
-        }
+          message,
+        },
       })
     )
   }

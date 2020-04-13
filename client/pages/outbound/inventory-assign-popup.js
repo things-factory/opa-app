@@ -15,6 +15,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
       worksheetNo: String,
       batchId: String,
       productName: String,
+      bizplaceId: String,
       packingType: String,
       releaseQty: Number,
       releaseWeight: Number,
@@ -243,6 +244,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
         query {
           inventoriesByStrategy(${gqlBuilder.buildArgs({
             batchId: this.batchId,
+            bizplaceId: this.bizplaceId,
             productName: this.productName,
             packingType: this.packingType,
             pickingStrategy: this.selectedStrategy,
