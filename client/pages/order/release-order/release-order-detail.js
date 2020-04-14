@@ -204,7 +204,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
     this.inventoryGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true }, appendable: false },
-      list: { fields: ['name', 'batchId', 'product', 'location', 'releaseQty'] },
+      list: { fields: ['productName', 'batchId', 'packingType', 'releaseQty', 'releaseWeight'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
