@@ -701,10 +701,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
         if (!result.value) return
 
+        await this._executeRelatedTrxs()
         let releaseGood = this._getFormInfo()
         releaseGood.orderInventories = this._getOrderInventories()
-
-        await this._executeRelatedTrxs()
         releaseGood.orderVass = this._getOrderVass()
 
         let args = {
@@ -748,8 +747,12 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
         await this._executeRelatedTrxs()
 
+        let releaseGood = this._getFormInfo()
+        releaseGood.orderInventories = this._getOrderInventories()
+        releaseGood.orderVass = this._getOrderVass()
+
         let args = {
-          releaseGood: { ...this._getReleaseOrder(), ownTransport: this._exportOption ? true : this._ownTransport }
+          releaseGood: { ...releaseGood, ownTransport: this._exportOption ? true : this._ownTransport }
         }
         if (this._exportOption && this._ownTransport) args.shippingOrder = this._getShippingOrder()
 
