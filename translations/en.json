@@ -1000,5 +1000,7 @@
   "text.data_approved": "data approved",
   "text.data_rejected": "data rejected",
   "label.contact_name": "contact name",
-  "label.partially_unloaded": "partially unloaded"
+  "label.partially_unloaded": "partially unloaded",
+  "text.picked_weight_less_than_release": "picked weight less than release",
+  "text.pallet_is_in_progressing": "pallet is in progressing"
 }
