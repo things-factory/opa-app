@@ -51,32 +51,29 @@ class VasRelabel extends localize(i18next)(LitElement) {
         .new-label {
           display: flex;
         }
-      `
+      `,
     ]
   }
 
   static get properties() {
     return {
-      record: Object
+      record: Object,
     }
   }
 
   render() {
     return html`
       <div class="container">
-        <form class="single-column-form" @submit="${e => e.preventDefault()}">
+        <form class="single-column-form" @submit="${(e) => e.preventDefault()}">
           <fieldset>
             <legend>${i18next.t('title.relabel')}</legend>
-            <label>${i18next.t('label.from_batch_id')}</label>
-            <input readonly name="fromBatchId" value="${this.fromBatchId}" />
-
             ${(!this._isEditable && this.toBatchId) || this._isEditable
               ? html`
                   <label>${i18next.t('label.to_batch_id')}</label>
                   <input
                     name="batchId"
                     value="${this.toBatchId}"
-                    @change="${e => (this._selectedBatchId = e.currentTarget.value)}"
+                    @change="${(e) => (this._selectedBatchId = e.currentTarget.value)}"
                   />
                 `
               : ''}
@@ -128,16 +125,6 @@ class VasRelabel extends localize(i18next)(LitElement) {
 
   get newLabelInput() {
     return this.shadowRoot.querySelector('file-uploader[name=newLabel]')
-  }
-
-  get fromBatchId() {
-    if (this.record && this.record.batchId) {
-      return this.record.batchId
-    } else if (this.record && this.record.inventory) {
-      return this.record.inventory.batchId
-    } else {
-      return ''
-    }
   }
 
   get toProduct() {
@@ -224,10 +211,10 @@ class VasRelabel extends localize(i18next)(LitElement) {
     const basicArgs = {
       filters: [
         { name: 'productRef', operator: 'noteq', value: '' },
-        { name: 'productRef', operator: 'is_not_null' }
-      ]
+        { name: 'productRef', operator: 'is_not_null' },
+      ],
     }
-    const confirmCallback = selected => {
+    const confirmCallback = (selected) => {
       this._selectedProduct = selected
       if (this._selectedProduct) {
         this.productInput.value = `${this._selectedProduct.name} ${
@@ -249,7 +236,7 @@ class VasRelabel extends localize(i18next)(LitElement) {
       {
         backdrop: true,
         size: 'large',
-        title: i18next.t('title.product')
+        title: i18next.t('title.product'),
       }
     )
   }
@@ -262,10 +249,10 @@ class VasRelabel extends localize(i18next)(LitElement) {
           toProduct: this._selectedProduct,
           toBatchId: this._selectedBatchId,
           newLabel: {
-            files: this.newLabelInput.files
-          }
+            files: this.newLabelInput.files,
+          },
         },
-        transactions: [this.createNewLabel.bind(this)]
+        transactions: [this.createNewLabel.bind(this)],
       }
     } catch (e) {
       throw e
@@ -293,19 +280,19 @@ class VasRelabel extends localize(i18next)(LitElement) {
               {
                 name: 'batchId',
                 operator: 'eq',
-                value: this._selectedBatchId
-              }
+                value: this._selectedBatchId,
+              },
             ],
             pagination: {
-              limit: 1
-            }
+              limit: 1,
+            },
           })}) {
             items {
               batchId
             }
           }
         }
-      `
+      `,
     })
 
     if (!response.errors) {
@@ -325,7 +312,7 @@ class VasRelabel extends localize(i18next)(LitElement) {
       const attachment = {
         file: operationGuide.data.newLabel.files[0],
         category: 'LABEL',
-        refBy: `VAS-ORDER-RELABEL-${String(Date.now())}`
+        refBy: `VAS-ORDER-RELABEL-${String(Date.now())}`,
       }
       const response = await client.query({
         query: gql`
@@ -338,11 +325,11 @@ class VasRelabel extends localize(i18next)(LitElement) {
           }
         `,
         variables: {
-          attachment
+          attachment,
         },
         context: {
-          hasUpload: true
-        }
+          hasUpload: true,
+        },
       })
 
       if (response.errors) throw response.errors[0]
@@ -351,8 +338,8 @@ class VasRelabel extends localize(i18next)(LitElement) {
         ...operationGuide,
         data: {
           ...operationGuide.data,
-          newLabel: response.data.createAttachment
-        }
+          newLabel: response.data.createAttachment,
+        },
       }
     } catch (e) {
       throw e
@@ -366,12 +353,12 @@ class VasRelabel extends localize(i18next)(LitElement) {
         query: gql`
           mutation {
             deleteAttachment(${gqlBuilder.buildArgs({
-              id: operationGuide.data.newLabel.id
+              id: operationGuide.data.newLabel.id,
             })}) {
               name
             }
           }
-        `
+        `,
       })
 
       if (response.errors) throw response.errors[0]

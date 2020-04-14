@@ -42,10 +42,27 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
           flex: 1;
         }
         .button-container {
-          display: flex;
+          padding: var(--button-container-padding);
+          margin: var(--button-container-margin);
+          text-align: var(--button-container-align);
+          background-color: var(--button-container-background);
+          height: var(--button-container-height);
         }
-        .button-container > mwc-button {
-          margin: auto 0 0 auto;
+        .button-container button {
+          background-color: var(--button-container-button-background-color);
+          border-radius: var(--button-container-button-border-radius);
+          height: var(--button-container-button-height);
+          border: var(--button-container-button-border);
+          margin: var(--button-container-button-margin);
+
+          padding: var(--button-padding);
+          color: var(--button-color);
+          font: var(--button-font);
+          text-transform: var(--button-text-transform);
+        }
+        .button-container button:hover,
+        .button-container button:active {
+          background-color: var(--button-background-focus-color);
         }
       `
     ]
@@ -81,7 +98,7 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
       </div>
 
       <div class="button-container">
-        <mwc-button @click="${this.autoAssign.bind(this)}">${i18next.t('button.auto_assign')}</mwc-button>
+        <button @click="${this.autoAssign.bind(this)}">${i18next.t('button.auto_assign')}</button>
       </div>
     `
   }
@@ -152,6 +169,8 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
     try {
       this.validateCheckedItems()
       const selectedItems = this.grist.selected
+      const filterBizplace = this.data.records.map(record => record.bizplaceId)
+      let bizplaceId = [...new Set(filterBizplace)]
 
       if (selectedItems.some(record => record.completed)) {
         const result = await CustomAlert({
@@ -175,7 +194,7 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
 
       await Promise.all(
         selectedItems.map(async selectedItem => {
-          const inventories = await this.fetchInventoriesByStrategy(selectedItem, this.selectedStrategy)
+          const inventories = await this.fetchInventoriesByStrategy(selectedItem, this.selectedStrategy, bizplaceId[0])
           const worksheetDetails = this._composeWorksheetDetails(selectedItem, inventories)
           await this.submitPickedItems(this.worksheetNo, selectedItem, worksheetDetails)
         })
@@ -194,12 +213,12 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
     }
   }
 
-  async fetchInventoriesByStrategy({ batchId, productName, packingType }, pickingStrategy) {
+  async fetchInventoriesByStrategy({ batchId, productName, packingType }, pickingStrategy, bizplaceId) {
     const response = await client.query({
       query: gql`
         query {
           inventoriesByStrategy(${gqlBuilder.buildArgs({
-            worksheetNo: this.worksheetNo,
+            bizplaceId,
             batchId,
             productName,
             packingType,

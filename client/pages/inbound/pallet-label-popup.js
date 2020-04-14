@@ -40,10 +40,27 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
           flex: 1;
         }
         .button-container {
-          display: flex;
+          padding: var(--button-container-padding);
+          margin: var(--button-container-margin);
+          text-align: var(--button-container-align);
+          background-color: var(--button-container-background);
+          height: var(--button-container-height);
         }
-        .button-container > mwc-button {
-          margin-left: auto;
+        .button-container button {
+          background-color: var(--button-container-button-background-color);
+          border-radius: var(--button-container-button-border-radius);
+          height: var(--button-container-button-height);
+          border: var(--button-container-button-border);
+          margin: var(--button-container-button-margin);
+
+          padding: var(--button-padding);
+          color: var(--button-color);
+          font: var(--button-font);
+          text-transform: var(--button-text-transform);
+        }
+        .button-container button:hover,
+        .button-container button:active {
+          background-color: var(--button-background-focus-color);
         }
       `
     ]
@@ -104,7 +121,7 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
       </div>
 
       <div class="button-container">
-        <mwc-button @click="${this._printLabel.bind(this)}">${i18next.t('button.print')}</mwc-button>
+        <button @click="${this._printLabel.bind(this)}">${i18next.t('button.print')}</button>
       </div>
     `
   }
@@ -125,13 +142,10 @@ class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
   }
 
   async _printLabel() {
-    try {      
+    try {
       let labelId = this._palletLabel && this._palletLabel.id
 
-      let dateStr = new Date()
-        .toJSON()
-        .slice(0, 10)
-        .replace(/-/g, '/')
+      let dateStr = new Date().toJSON().slice(0, 10).replace(/-/g, '/')
 
       let _targetRows = this._validate()
 

@@ -2,6 +2,7 @@ import '@things-factory/barcode-ui'
 import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
+import { getRenderer } from '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
 import {
@@ -19,7 +20,8 @@ import { css, html } from 'lit-element'
 import '../components/popup-note'
 import '../components/vas-relabel'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
-import { ORDER_TYPES } from '../order/constants/order'
+import { BATCH_NO_TYPE, ETC_TYPE, ORDER_TYPES, PRODUCT_TYPE } from '../order/constants'
+import './target-inventory-assignment-popup'
 
 class WorksheetVas extends localize(i18next)(PageView) {
   static get properties() {
@@ -32,8 +34,10 @@ class WorksheetVas extends localize(i18next)(PageView) {
       _ganNo: String,
       _roNo: String,
       _template: Object,
-      config: Object,
-      data: Object
+      nonAssignedGristConfig: Object,
+      assignedGristConfig: Object,
+      nonAssignedVasSet: Object,
+      assignedData: Object
     }
   }
 
@@ -58,6 +62,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
           margin: 10px;
         }
         .container {
+          overflow: hidden;
           display: flex;
           flex: 1;
         }
@@ -70,7 +75,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
         }
         .guide-container {
           display: flex;
-          max-width: 30vw;
+          margin: auto;
         }
         data-grist {
           overflow-y: hidden;
@@ -136,15 +141,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
             <input name="bizplace" readonly />
 
             <label>${i18next.t('label.status')}</label>
-            <select name="status" disabled>
-              ${this._statusOptions.map(
-                status => html`
-                  <option value="${status.name}" ?selected="${this._worksheetStatus === status.name}"
-                    >${i18next.t(`label.${status.description}`)}</option
-                  >
-                `
-              )}
-            </select>
+            <input name="status" readonly />
           </fieldset>
         </form>
 
@@ -152,19 +149,38 @@ class WorksheetVas extends localize(i18next)(PageView) {
       </div>
 
       <div class="container">
+        ${this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value &&
+        this.nonAssignedVasSet &&
+        this.nonAssignedVasSet.records &&
+        this.nonAssignedVasSet.records.length
+          ? html`
+              <div class="grist">
+                <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.non_assigned_vas')}</h2>
+
+                <data-grist
+                  id="grist"
+                  .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+                  .config=${this.nonAssignedGristConfig}
+                  .data="${this.nonAssignedVasSet}"
+                ></data-grist>
+              </div>
+            `
+          : ''}
+
         <div class="grist">
           <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
 
           <data-grist
-            id="grist"
+            id="assigned-grist"
             .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-            .config=${this.config}
-            .data="${this.data}"
+            .config=${this.assignedGristConfig}
+            .data="${this.assignedData}"
           ></data-grist>
         </div>
-        <div class="guide-container">
-          ${this._template}
-        </div>
+      </div>
+
+      <div class="guide-container">
+        ${this._template}
       </div>
     `
   }
@@ -177,16 +193,98 @@ class WorksheetVas extends localize(i18next)(PageView) {
     this._voNo = ''
   }
 
-  async pageUpdated(changes) {
-    if (this.active) {
-      this._worksheetNo = changes.resourceId
-      await this.fetchWorksheet()
-      this._updateContext()
+  updated(changedProps) {
+    if (changedProps.has('_worksheetStatus')) {
       this._updateGristConfig()
     }
   }
 
-  async pageInitialized() {
+  async pageUpdated(changes) {
+    if (this.active) {
+      if (changes.resourceId) this._worksheetNo = changes.resourceId
+      await this.fetchWorksheet()
+      this._updateContext()
+    }
+  }
+
+  async firstUpdate() {
+    this._statusOptions = await getCodeByName('WORKSHEET_STATUS')
+  }
+
+  pageInitialized() {
+    this.nonAssignedGristConfig = {
+      rows: { appendable: false },
+      list: { fields: ['set', 'targetType', 'target', 'packingType', 'otherTarget', 'vas', 'remark'] },
+      pagination: { infinite: true },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'assignment',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              this._showInventoryAssignPopup(record)
+            }
+          }
+        },
+        {
+          type: 'string',
+          name: 'set',
+          header: i18next.t('field.set'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'targetType',
+          header: i18next.t('field.target_type'),
+          record: { align: 'center' },
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'target',
+          header: i18next.t('field.target'),
+          record: {
+            renderer: (value, column, record, rowIndex, field) => {
+              if (record.targetType === BATCH_NO_TYPE) {
+                return getRenderer()(record.targetBatchId, column, record, rowIndex, field)
+              } else if (record.targetType === PRODUCT_TYPE) {
+                return getRenderer('object')(record.targetProduct, column, record, rowIndex, field)
+              } else if (record.targetType === ETC_TYPE) {
+                return getRenderer()(record.otherTarget, column, record, rowIndex, field)
+              }
+            },
+            align: 'center'
+          },
+
+          width: 250
+        },
+        {
+          type: 'string',
+          name: 'packingType',
+          header: i18next.t('field.packingType'),
+          record: { align: 'center' },
+          width: 250
+        },
+        {
+          type: 'integer',
+          name: 'qty',
+          header: i18next.t('field.qty'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'integer',
+          name: 'vasCount',
+          header: i18next.t('field.vas_count'),
+          record: { align: 'center' },
+          width: 100
+        }
+      ]
+    }
+
     this.preConfig = {
       rows: {
         appendable: false,
@@ -203,23 +301,68 @@ class WorksheetVas extends localize(i18next)(PageView) {
               this._showIssueNotePopup(record)
             }
           }
+        },
+        classifier: (record, rowIndex) => {
+          return {
+            emphasized: Boolean(record.operationGuide)
+          }
         }
       },
-      list: { fields: ['location', 'batchId', 'vas', 'remark'] },
+      list: { fields: ['location', 'targetType', 'targetBatchId', 'targetProduct', 'otherTarget', 'vas', 'remark'] },
       pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'string',
-          name: 'locationInv',
-          header: i18next.t('field.location'),
+          name: 'set',
+          header: i18next.t('field.set'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'targetType',
+          header: i18next.t('field.target_type'),
           record: { align: 'center' },
           width: 150
         },
         {
           type: 'string',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
+          name: 'target',
+          header: i18next.t('field.target'),
+          record: {
+            renderer: (value, column, record, rowIndex, field) => {
+              if (record.targetType === BATCH_NO_TYPE) {
+                return getRenderer()(record.targetBatchId, column, record, rowIndex, field)
+              } else if (record.targetType === PRODUCT_TYPE) {
+                return getRenderer('object')(record.targetProduct, column, record, rowIndex, field)
+              } else if (record.targetType === ETC_TYPE) {
+                return getRenderer()(record.otherTarget, column, record, rowIndex, field)
+              }
+            },
+            align: 'center'
+          },
+
+          width: 250
+        },
+        {
+          type: 'string',
+          name: 'packingType',
+          header: i18next.t('field.packingType'),
+          record: { align: 'center' },
+          width: 250
+        },
+        {
+          type: 'integer',
+          name: 'qty',
+          header: i18next.t('field.qty'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'locationInv',
+          header: i18next.t('field.location'),
           record: { align: 'center' },
           width: 150
         },
@@ -243,16 +386,14 @@ class WorksheetVas extends localize(i18next)(PageView) {
         }
       ]
     }
-
-    this._statusOptions = await getCodeByName('WORKSHEET_STATUS')
   }
 
   get form() {
     return this.shadowRoot.querySelector('form')
   }
 
-  get grist() {
-    return this.shadowRoot.querySelector('data-grist')
+  get assignedGrist() {
+    return this.shadowRoot.querySelector('data-grist#assigned-grist')
   }
 
   get _orderNo() {
@@ -326,7 +467,17 @@ class WorksheetVas extends localize(i18next)(PageView) {
                   operationGuideType
                   operationGuide
                 }
-                batchId
+                set
+                targetType
+                targetBatchId
+                targetProduct {
+                  id
+                  name
+                  description
+                }
+                packingType
+                qty
+                otherTarget
                 name
                 description
                 remark
@@ -358,19 +509,72 @@ class WorksheetVas extends localize(i18next)(PageView) {
       if (!this._orderType) return
 
       this._fillupForm(worksheet)
-      this.data = {
-        records: worksheetDetails.map(worksheetDetail => {
-          return {
-            ...worksheetDetail.targetVas,
-            name: worksheetDetail.name,
-            status: worksheetDetail.status,
-            locationInv: worksheetDetail.targetVas.inventory.location.name,
-            issue: worksheetDetail.issue,
-            description: worksheetDetail.description
-          }
+      const { nonAssignedVasSet, assignedData } = this._formatData(worksheetDetails)
+      this.nonAssignedVasSet = {
+        records: nonAssignedVasSet.map(vasSet => {
+          return { ...vasSet, set: `Set ${vasSet.set}` }
         })
       }
+      this.assignedData = { records: assignedData }
     }
+  }
+
+  _formatData(worksheetDetails) {
+    return worksheetDetails
+      .sort((a, b) => a.targetVas.set - b.targetVas.set)
+      .reduce(
+        (returnObj, wsd) => {
+          if (
+            wsd &&
+            wsd.targetVas &&
+            wsd.targetVas.inventory &&
+            wsd.targetVas.inventory.location &&
+            wsd.targetVas.inventory.location.name
+          ) {
+            returnObj.assignedData.push({
+              ...wsd.targetVas,
+              id: wsd.id,
+              set: `Set ${wsd.targetVas.set}`,
+              locationInv:
+                (wsd.targetVas.inventory &&
+                  wsd.targetVas.inventory.location &&
+                  wsd.targetVas.inventory.location.name) ||
+                '',
+              name: wsd.name,
+              status: wsd.status
+            })
+          } else {
+            if (returnObj.nonAssignedVasSet.find(vas => vas.set === wsd.targetVas.set)) {
+              returnObj.nonAssignedVasSet = returnObj.nonAssignedVasSet.map(vas => {
+                if (vas.set === wsd.targetVas.set) {
+                  return {
+                    ...vas,
+                    vasCount: vas.vasCount + 1,
+                    tasks: [...vas.tasks, wsd]
+                  }
+                }
+
+                return vas
+              })
+            } else {
+              returnObj.nonAssignedVasSet.push({
+                set: wsd.targetVas.set,
+                targetType: wsd.targetVas.targetType,
+                targetBatchId: wsd.targetVas.targetBatchId,
+                targetProduct: wsd.targetVas.targetProduct,
+                packingType: wsd.targetVas.packingType,
+                otherTarget: wsd.targetVas.otherTarget,
+                qty: wsd.targetVas.qty,
+                vasCount: 1,
+                tasks: [wsd]
+              })
+            }
+          }
+
+          return returnObj
+        },
+        { nonAssignedVasSet: [], assignedData: [] }
+      )
   }
 
   _updateContext() {
@@ -389,21 +593,6 @@ class WorksheetVas extends localize(i18next)(PageView) {
   }
 
   _updateGristConfig() {
-    const statusColumnConfig = {
-      type: 'string',
-      name: 'status',
-      header: i18next.t('field.status'),
-      record: { align: 'center' },
-      width: 100
-    }
-
-    const issueColumnConfig = {
-      type: 'string',
-      name: 'issue',
-      header: i18next.t('field.issue'),
-      width: 200
-    }
-
     this.preConfig.columns.map(column => {
       if (column.name === 'description') {
         column.record = { ...column.record, editable: this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value }
@@ -411,10 +600,33 @@ class WorksheetVas extends localize(i18next)(PageView) {
     })
 
     if (this._worksheetStatus !== WORKSHEET_STATUS.DEACTIVATED.value) {
-      this.preConfig.columns = [...this.preConfig.columns, statusColumnConfig, issueColumnConfig]
+      if (!this.preConfig.columns.find(column => column.name === 'status')) {
+        this.preConfig.columns = [
+          ...this.preConfig.columns,
+          {
+            type: 'string',
+            name: 'status',
+            header: i18next.t('field.status'),
+            record: { align: 'center' },
+            width: 100
+          }
+        ]
+      }
+
+      if (!this.preConfig.columns.find(column => column.name === 'issue')) {
+        this.preConfig.columns = [
+          ...this.preConfig.columns,
+          {
+            type: 'string',
+            name: 'issue',
+            header: i18next.t('field.issue'),
+            width: 200
+          }
+        ]
+      }
     }
 
-    this.config = { ...this.preConfig }
+    this.assignedGristConfig = { ...this.preConfig }
   }
 
   _fillupForm(data) {
@@ -439,20 +651,44 @@ class WorksheetVas extends localize(i18next)(PageView) {
   }
 
   _showIssueNotePopup(record) {
-    openPopup(
-      html`
-        <popup-note title="${record.batchId}" value="${record.issue}" .readonly="${true}"></popup-note>
-      `,
-      {
-        backdrop: true,
-        size: 'medium',
-        title: i18next.t('title.issue_note')
-      }
-    )
+    openPopup(html` <popup-note title="${record.batchId}" value="${record.issue}" .readonly="${true}"></popup-note> `, {
+      backdrop: true,
+      size: 'medium',
+      title: i18next.t('title.issue_note')
+    })
+  }
+
+  _showInventoryAssignPopup(record) {
+    try {
+      openPopup(
+        html`
+          <target-inventory-assignment-popup
+            .targetType="${record.targetType}"
+            .targetBatchId="${record.targetBatchId}"
+            .targetProduct="${record.targetProduct}"
+            .packingType="${record.packingType}"
+            .otherType="${record.otherType}"
+            .qty="${record.qty}"
+            .tasks="${record.tasks}"
+            @completed="${() => {
+              this.fetchWorksheet()
+            }}"
+          ></target-inventory-assignment-popup>
+        `,
+        {
+          backdrop: true,
+          size: 'large',
+          title: i18next.t('title.inventory_assign')
+        }
+      )
+    } catch (e) {
+      this._showToast(e)
+    }
   }
 
   async _activateWorksheet() {
     try {
+      this._checkActivateValidity()
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.activate_vas_worksheet'),
@@ -464,7 +700,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
         return
       }
 
-      if (this.data.records.some(record => record.vas && record.vas.operationGuideType)) {
+      if (this.assignedData.records.some(record => record.vas && record.vas.operationGuideType)) {
         const result = await CustomAlert({
           type: 'warning',
           title: i18next.t('title.is_operation_finished'),
@@ -493,7 +729,6 @@ class WorksheetVas extends localize(i18next)(PageView) {
       if (!response.errors) {
         this._showToast({ message: i18next.t('text.worksheet_activated') })
         await this.fetchWorksheet()
-        this._updateGristConfig()
         this._updateContext()
         navigate(`vas_worksheets`)
       }
@@ -502,8 +737,13 @@ class WorksheetVas extends localize(i18next)(PageView) {
     }
   }
 
+  _checkActivateValidity() {
+    if (this.nonAssignedVasSet && this.nonAssignedVasSet.records && this.nonAssignedVasSet.records.length)
+      throw new Error(i18next.t('text.there_is_non_assigned_vas'))
+  }
+
   _getVasWorksheetDetails() {
-    return this.grist.dirtyData.records.map(worksheetDetail => {
+    return this.assignedGrist.dirtyData.records.map(worksheetDetail => {
       return {
         name: worksheetDetail.name,
         description: worksheetDetail.description

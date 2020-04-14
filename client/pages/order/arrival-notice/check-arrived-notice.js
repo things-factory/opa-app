@@ -1,12 +1,13 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
+import { getRenderer } from '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, CustomAlert, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/popup-note'
 import '../../components/vas-relabel'
-import { ORDER_STATUS } from '../constants/order'
+import { BATCH_NO_TYPE, ETC_TYPE, ORDER_STATUS, PRODUCT_TYPE } from '../constants'
 
 class CheckArrivedNotice extends localize(i18next)(PageView) {
   static get properties() {
@@ -123,9 +124,7 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
         <select name="status" disabled
           >${Object.keys(ORDER_STATUS).map(key => {
             const status = ORDER_STATUS[key]
-            return html`
-              <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option>
-            `
+            return html` <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option> `
           })}</select
         >
       </form>
@@ -248,9 +247,9 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
     }
 
     this.vasGristConfig = {
+      list: { fields: ['targetType', 'targetDisplay', 'packingType'] },
       pagination: { infinite: true },
       rows: {
-        selectable: { multiple: true },
         appendable: false,
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
@@ -266,24 +265,77 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
-          type: 'object',
-          name: 'vas',
-          header: i18next.t('field.vas'),
-          record: { editable: true, align: 'center', options: { queryName: 'vass' } },
+          type: 'string',
+          name: 'set',
+          header: i18next.t('field.set'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'targetType',
+          header: i18next.t('field.target_type'),
+          record: { align: 'center' },
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'target',
+          header: i18next.t('field.target'),
+          record: {
+            renderer: (value, column, record, rowIndex, field) => {
+              if (record.targetType === BATCH_NO_TYPE) {
+                return getRenderer()(record.targetBatchId, column, record, rowIndex, field)
+              } else if (record.targetType === PRODUCT_TYPE) {
+                return getRenderer('object')(record.targetProduct, column, record, rowIndex, field)
+              } else if (record.targetType === ETC_TYPE) {
+                return getRenderer()(record.otherTarget, column, record, rowIndex, field)
+              }
+            },
+            align: 'center'
+          },
+
           width: 250
         },
         {
-          type: 'select',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
-          record: { editable: true, align: 'center', options: ['', i18next.t('label.all')] },
+          type: 'string',
+          name: 'packingType',
+          header: i18next.t('field.packingType'),
+          record: { align: 'center' },
+          width: 250
+        },
+        {
+          type: 'integer',
+          name: 'qty',
+          header: i18next.t('field.qty'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'object',
+          name: 'vas',
+          header: i18next.t('field.vas'),
+          record: { align: 'center', options: { queryName: 'vass' } },
+          width: 250
+        },
+        {
+          type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: { align: 'center' },
           width: 150
         },
         {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
-          record: { editable: true, align: 'center' },
+          record: { align: 'center' },
+          width: 350
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.comment'),
           width: 350
         }
       ]
@@ -298,6 +350,7 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
   }
 
   async _fetchGAN() {
+    if (!this._ganNo) return
     this._status = ''
     const response = await client.query({
       query: gql`
@@ -306,19 +359,26 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
             name: this._ganNo
           })}) {
             name
+            bizplace {
+              id
+              name
+            }
             containerNo
             ownTransport
             etaDate
-            refNo
             deliveryOrderNo
             status
             truckNo
+            refNo
+            importCargo
             orderProducts {
+              id
               batchId
               product {
                 name
                 description
               }
+              status
               packingType
               weight
               unit
@@ -329,14 +389,24 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
             orderVass {
               vas {
                 name
-                description
                 operationGuide
                 operationGuideType
               }
-              batchId
+              set
+              targetType
+              targetBatchId
+              targetProduct {
+                id
+                name
+                description
+              }
+              packingType
+              qty
+              otherTarget
+              description
               remark
-              operationGuide
               status
+              operationGuide
             }
           }
         }
@@ -347,13 +417,24 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
       const arrivalNotice = response.data.arrivalNotice
       const orderProducts = arrivalNotice.orderProducts
       const orderVass = arrivalNotice.orderVass
+      this.orderBizplace = arrivalNotice.bizplace
 
       this._ownTransport = arrivalNotice.ownTransport
+      this._importCargo = arrivalNotice.importCargo
       this._status = arrivalNotice.status
       this._fillupANForm(arrivalNotice)
 
       this.productData = { records: orderProducts }
-      this.vasData = { records: orderVass }
+      this.vasData = {
+        records: orderVass
+          .sort((a, b) => a.set - b.set)
+          .map(orderVas => {
+            return {
+              ...orderVas,
+              set: `Set ${orderVas.set}`
+            }
+          })
+      }
     }
   }
 

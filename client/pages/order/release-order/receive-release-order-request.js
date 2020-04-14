@@ -1,5 +1,6 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
+import { getRenderer } from '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
 import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
@@ -9,7 +10,7 @@ import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import '../../components/popup-note'
 import '../../components/vas-relabel'
-import { ORDER_STATUS } from '../constants/order'
+import { BATCH_NO_TYPE, ETC_TYPE, ORDER_STATUS, PRODUCT_TYPE } from '../constants'
 
 class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -251,9 +252,9 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
     }
 
     this.vasGristConfig = {
+      list: { fields: ['targetType', 'targetDisplay', 'packingType'] },
       pagination: { infinite: true },
       rows: {
-        selectable: { multiple: true },
         appendable: false,
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
@@ -266,34 +267,66 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
           }
         }
       },
-      list: { fields: ['vas', 'inventory', 'product', 'remark'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
-          type: 'object',
-          name: 'vas',
-          header: i18next.t('field.vas'),
+          type: 'string',
+          name: 'set',
+          header: i18next.t('field.set'),
           record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'targetType',
+          header: i18next.t('field.target_type'),
+          record: { align: 'center' },
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'target',
+          header: i18next.t('field.target'),
+          record: {
+            renderer: (value, column, record, rowIndex, field) => {
+              if (record.targetType === BATCH_NO_TYPE) {
+                return getRenderer()(record.targetBatchId, column, record, rowIndex, field)
+              } else if (record.targetType === PRODUCT_TYPE) {
+                return getRenderer('object')(record.targetProduct, column, record, rowIndex, field)
+              } else if (record.targetType === ETC_TYPE) {
+                return getRenderer()(record.otherTarget, column, record, rowIndex, field)
+              }
+            },
+            align: 'center'
+          },
+
           width: 250
         },
         {
           type: 'string',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
-          record: { align: 'center' },
-          width: 150
-        },
-        {
-          type: 'string',
-          name: 'productName',
-          header: i18next.t('field.product'),
-          record: { align: 'left' },
-          width: 150
-        },
-        {
-          type: 'string',
           name: 'packingType',
-          header: i18next.t('field.packing_type'),
+          header: i18next.t('field.packingType'),
+          record: { align: 'center' },
+          width: 250
+        },
+        {
+          type: 'integer',
+          name: 'qty',
+          header: i18next.t('field.qty'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'object',
+          name: 'vas',
+          header: i18next.t('field.vas'),
+          record: { align: 'center', options: { queryName: 'vass' } },
+          width: 250
+        },
+        {
+          type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
           record: { align: 'center' },
           width: 150
         },
@@ -302,6 +335,12 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
           name: 'remark',
           header: i18next.t('field.remark'),
           record: { align: 'center' },
+          width: 350
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.comment'),
           width: 350
         }
       ]
@@ -351,19 +390,26 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
               shipName
             }
             orderVass {
-              batchId
-              productName
-              packingType
               vas {
                 name
-                description
                 operationGuide
                 operationGuideType
               }
-              operationGuide
-              status
+              set
+              targetType
+              targetBatchId
+              targetProduct {
+                id
+                name
+                description
+              }
+              packingType
+              qty
+              otherTarget
               description
               remark
+              status
+              operationGuide
             }
           }
         }
@@ -394,7 +440,16 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
       if (this._exportOption) this._fillupSOForm(shippingOrder)
 
       this.inventoryData = { records: orderInventories }
-      this.vasData = { records: orderVass }
+      this.vasData = {
+        records: orderVass
+          .sort((a, b) => a.set - b.set)
+          .map(orderVas => {
+            return {
+              ...orderVas,
+              set: `Set ${orderVas.set}`
+            }
+          })
+      }
     }
   }
 

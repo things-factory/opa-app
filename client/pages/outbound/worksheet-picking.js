@@ -228,6 +228,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               this._selectedProduct = {
                 batchId: record.batchId,
                 productName: record.productName,
+                bizplaceId: record.bizplaceId,
                 packingType: record.packingType,
                 releaseQty: record.releaseQty,
                 releaseWeight: record.releaseWeight
@@ -320,7 +321,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           name: 'qty',
           header: i18next.t('field.available_qty'),
           record: { align: 'center' },
-          width: 60
+          width: 80
         },
         {
           type: 'integer',
@@ -375,6 +376,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               releaseQty
               releaseWeight
               inventory {
+                qty
                 palletId
                 location {
                   name
@@ -383,6 +385,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               }
             }
             bizplace {
+              id
               name
               description
             }
@@ -451,6 +454,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
 
           return {
             ...ordInv,
+            bizplaceId: worksheet.bizplace.id,
             completed: compQty === ordInv.releaseQty && compWeight === ordInv.releaseWeight
           }
         })
@@ -682,6 +686,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             .worksheetNo="${this._worksheetNo}"
             .batchId="${this._selectedProduct.batchId}"
             .productName="${this._selectedProduct.productName}"
+            .bizplaceId="${this._selectedProduct.bizplaceId}"
             .packingType="${this._selectedProduct.packingType}"
             .releaseQty="${this._selectedProduct.releaseQty}"
             .releaseWeight="${this._selectedProduct.releaseWeight}"
