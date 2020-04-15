@@ -146,11 +146,11 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
                 case 'pending':
                   compareData = record.inventory
                   break
+                case 'rejected':
                 case 'approved':
                   compareData = record.lastInventoryHistory
-                  break
-                case 'rejected':
-                  compareData = record.lastInventoryHistory
+                  compareData.qty = compareData.opening_qty + compareData.qty
+                  compareData.weight = compareData.opening_weight + compareData.weight
                   break
                 default:
                   break
