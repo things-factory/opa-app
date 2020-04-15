@@ -115,7 +115,7 @@ class TargetInventoryAssignmentPopup extends localize(i18next)(LitElement) {
 
           ${this.targetType === BATCH_NO_TYPE
             ? html`
-                <label>${i18next.t('label.batch_id')}</label>
+                <label>${i18next.t('label.batch_no')}</label>
                 <input id="batch-id" value="${this.targetBatchId}" readonly />
               `
             : this.targetType === PRODUCT_TYPE
@@ -229,7 +229,7 @@ class TargetInventoryAssignmentPopup extends localize(i18next)(LitElement) {
         {
           type: 'string',
           name: 'batchId',
-          header: i18next.t('field.batch_id'),
+          header: i18next.t('field.batch_no'),
           record: { align: 'center' },
           width: 130
         },
@@ -272,7 +272,7 @@ class TargetInventoryAssignmentPopup extends localize(i18next)(LitElement) {
           type: 'integer',
           name: 'selectedQty',
           header: i18next.t('field.selected_qty'),
-          record: { align: 'cnter', editable: true },
+          record: { align: 'center', editable: true },
           width: 60
         },
         {
