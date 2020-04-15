@@ -1,6 +1,6 @@
 {
   "name": "@things-factory/opa-app",
-  "version": "2.4.4",
+  "version": "2.4.5",
   "main": "dist-server/index.js",
   "browser": "client/index.js",
   "things-factory": true,
@@ -96,8 +96,6 @@
     "inquirer": "^7.0.0"
   },
   "resolutions": {
-    "@things-factory/warehouse-base": "^2.4.0",
-    "@things-factory/sales-base": "^2.4.0",
-    "@things-factory/worksheet-base": "^2.4.0"
+    "@things-factory/auth-base": "2.0.2"
   }
 }
