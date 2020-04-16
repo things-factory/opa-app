@@ -71,7 +71,7 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
     return {
       selectedTargetType: String,
       selectedTarget: String,
-      maxQty: Number,
+      selectedPackingType: String,
       vasGristConfig: Object,
       vasGristData: Object,
       targetBatchList: Array,
@@ -152,9 +152,7 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
                   id="target-selector"
                   required
                   @change="${e => {
-                    this.selectedTarget = this.targetProductList.find(
-                      product => product.value === e.currentTarget.value
-                    )
+                    this.selectedTarget = this.targetProductList.find(prod => prod.value === e.currentTarget.value)
                     this._checkQtyValidity.bind(this)
                   }}"
                 >
@@ -185,15 +183,21 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
           ${this.selectedTarget && this.selectedTarget.packingTypes && this.selectedTarget.packingTypes.length
             ? html`
                 <label>${i18next.t('label.packing_type')}</label>
-                <select id="packing-type-selector" ?required="${this.selectedTargetType !== ETC_TYPE}">
+                <select
+                  id="packing-type-selector"
+                  ?required="${this.selectedTargetType !== ETC_TYPE}"
+                  @change="${e => {
+                    this.selectedPackingType = e.currentTarget.value
+                  }}"
+                >
                   <option></option>
                   ${this.selectedTarget.packingTypes.map(
                     packingType =>
                       html`
                         <option
-                          value="${packingType}"
-                          ?selected="${this.record && this.record.packingType === packingType}"
-                          >${packingType}</option
+                          value="${packingType.type}"
+                          ?selected="${this.record && this.record.packingType === packingType.type}"
+                          >${packingType.type}</option
                         >
                       `
                   )}
@@ -428,10 +432,10 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
       }
 
       const selectedTarget = this.targetSelector.value
-      if (this.selectedTargetType === BATCH_NO_TYPE) {
-        packQty = this.targetBatchList.find(batch => batch.value === selectedTarget).packQty
-      } else if (this.selectedTargetType === PRODUCT_TYPE) {
-        packQty = this.targetProductList.find(batch => batch.value === selectedTarget).packQty
+
+      if (this.selectedPackingType) {
+        packQty = this.selectedTarget.packingTypes.find(packingType => packingType.type === this.selectedPackingType)
+          .packQty
       }
 
       if (packQty && qty > packQty) {

@@ -350,14 +350,38 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   _onProductChangeHandler(event) {
-    const changeRecord = event.detail.after
-    const changedColumn = event.detail.column.name
+    try {
+      this._checkProductDuplication()
+      const changeRecord = event.detail.after
+      const changedColumn = event.detail.column.name
 
-    if (changedColumn === 'weight' || changedColumn === 'unit' || changedColumn === 'packQty') {
-      changeRecord.totalWeight = this._calcTotalWeight(changeRecord.weight, changeRecord.unit, changeRecord.packQty)
+      if (changedColumn === 'weight' || changedColumn === 'unit' || changedColumn === 'packQty') {
+        changeRecord.totalWeight = this._calcTotalWeight(changeRecord.weight, changeRecord.unit, changeRecord.packQty)
+      }
+
+      this._updateVasTargets()
+    } catch (e) {
+      event.detail.after[event.detail.column.name] = event.detail.before[event.detail.column.name]
+      this._showToast(e)
     }
+  }
 
-    this._updateVasTargets()
+  _checkProductDuplication() {
+    // batchId, product.id, packingType
+    let isDuplicated = false
+    const completedRows = this.productGrist.dirtyData.records
+      .filter(record => record.batchId && record.product && record.product.id && record.packingType)
+      .map(record => `${record.batchId}-${record.product.id}-${record.packingType}`)
+
+    completedRows.forEach((row, idx, rows) => {
+      if (rows.lastIndexOf(row) !== idx) {
+        isDuplicated = true
+      }
+    })
+
+    if (isDuplicated) {
+      throw new Error(i18next.t('text.there_is_duplicated_products'))
+    }
   }
 
   _calcTotalWeight(weight, unit, packQty) {
@@ -651,17 +675,31 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   getTargetBatchList() {
-    if (this.checkProductValidity) {
+    if (this.checkProductValidity()) {
       return this.productGrist.dirtyData.records.reduce((batchList, record) => {
         if (batchList.find(batch => batch.value === record.batchId)) {
           batchList = batchList.map(batch => {
             if (batch.value === record.batchId) {
               return {
                 ...batch,
-                packQty: batch.packQty + record.packQty,
-                packingTypes: [...batch.packingTypes, record.packingType].filter(
-                  (type, idx, types) => types.indexOf(type) === idx
-                )
+                packingTypes: batch.packingTypes.find(packingType => packingType.type === record.packingType)
+                  ? batch.packingTypes.map(packingType => {
+                      if (packingType.type === record.packingType) {
+                        packingType = {
+                          ...packingType,
+                          packQty: packingType.packQty + record.packQty
+                        }
+                      }
+
+                      return packingType
+                    })
+                  : [
+                      ...batch.packingTypes,
+                      {
+                        type: record.packingType,
+                        packQty: record.packQty
+                      }
+                    ]
               }
             } else {
               return batch
@@ -671,8 +709,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           batchList.push({
             display: record.batchId,
             value: record.batchId,
-            packQty: record.packQty,
-            packingTypes: [record.packingType]
+            packingTypes: [{ type: record.packingType, packQty: record.packQty }]
           })
         }
 
@@ -684,32 +721,47 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   getTargetProductList() {
-    return this.productGrist.dirtyData.records.reduce((productList, record) => {
-      if (productList.find(product => product.value === record.product.id)) {
-        return productList.map(product => {
-          if (product.value === record.product.id) {
-            return {
-              ...product,
-              packQty: product.packQty + record.packQty,
-              packingTypes: [...product.packingTypes, record.packingType].filter(
-                (type, idx, types) => types.indexOf(type) === idx
-              )
-            }
-          } else {
-            return product
-          }
-        })
-      } else {
-        productList.push({
-          display: `${record.product.name} ${record.product.description ? ` (${record.product.description})` : ''}`,
-          value: record.product.id,
-          packQty: record.packQty,
-          packingTypes: [record.packingType]
-        })
-      }
+    if (this.checkProductValidity()) {
+      return this.productGrist.dirtyData.records.reduce((productList, record) => {
+        if (productList.find(product => product.value === record.product.id)) {
+          return productList.map(product => {
+            if (product.value === record.product.id) {
+              return {
+                ...product,
+                packingTypes: product.packingTypes.find(packingType => packingType.type === record.packingType)
+                  ? product.packingTypes.map(packingType => {
+                      if (packingType.type === record.packingType) {
+                        packingType = {
+                          ...packingType,
+                          packQty: packingType.packQty + record.packQty
+                        }
+                      }
 
-      return productList
-    }, [])
+                      return packingType
+                    })
+                  : [
+                      ...product.packingTypes,
+                      {
+                        type: record.packingType,
+                        packQty: record.packQty
+                      }
+                    ]
+              }
+            } else {
+              return product
+            }
+          })
+        } else {
+          productList.push({
+            display: `${record.product.name} ${record.product.description ? ` (${record.product.description})` : ''}`,
+            value: record.product.id,
+            packingTypes: [{ type: record.packingType, packQty: record.packQty }]
+          })
+        }
+
+        return productList
+      }, [])
+    }
   }
 
   _showToast({ type, message }) {
