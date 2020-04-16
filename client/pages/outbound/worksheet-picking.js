@@ -437,7 +437,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         }
       )
 
-      if (!tempOrderInvs.length) this.isPalletPickingOrder = true
+      this.isPalletPickingOrder = Boolean(!tempOrderInvs || !tempOrderInvs.length)
 
       this.productGristData = {
         records: tempOrderInvs.map(ordInv => {
@@ -472,6 +472,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             }
           })
         }
+      } else {
+        this.worksheetDetailData = { records: [] }
       }
 
       this._updateContext()
