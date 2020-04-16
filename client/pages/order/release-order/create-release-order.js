@@ -956,28 +956,15 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   }
 
   _clearGristConditions() {
-    if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
-      if (this.inventoryGristConfig && this.inventoryGristConfig.column && this.inventoryGristConfig.column.length) {
-        this.inventoryGristConfig = {
-          ...this.inventoryGristConfig,
-          columns: this.inventoryGristConfig.columns.map(column => {
-            if (column.name === 'inventory') {
-              column.record.options.basicArgs = {
-                filters: [...column.record.options.basicArgs.filters.filter(filter => filter.name !== 'batch_product')]
-              }
-            }
-
-            return column
-          })
-        }
-      }
-    } else {
+    if (this.inventoryGristConfig && this.inventoryGristConfig.columns && this.inventoryGristConfig.columns.length) {
       this.inventoryGristConfig = {
         ...this.inventoryGristConfig,
         columns: this.inventoryGristConfig.columns.map(column => {
           if (column.name === 'inventory') {
             column.record.options.basicArgs = {
-              filters: [...column.record.options.basicArgs.filters.filter(filter => filter.name !== 'id')]
+              filters: column.record.options.basicArgs.filters.filter(
+                filter => filter.name !== 'batch_product' && filter.name !== 'id'
+              )
             }
           }
 
