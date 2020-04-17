@@ -531,10 +531,24 @@ class CreateVasOrder extends localize(i18next)(PageView) {
             if (batch.value === record.batchId) {
               return {
                 ...batch,
-                packQty: batch.packQty + record.remainQty,
-                packingTypes: [...batch.packingTypes, record.packingType].filter(
-                  (type, idx, types) => types.indexOf(type) === idx
-                )
+                packingTypes: batch.packingTypes.find(packingType => packingType.type === record.packingType)
+                  ? batch.packingTypes.map(packingType => {
+                      if (packingType.type === record.packingType) {
+                        packingType = {
+                          ...packingType,
+                          packQty: packingType.packQty + record.remainQty
+                        }
+                      }
+
+                      return packingType
+                    })
+                  : [
+                      ...batch.packingTypes,
+                      {
+                        type: record.packingType,
+                        packQty: record.remainQty
+                      }
+                    ]
               }
             } else {
               return batch
@@ -544,8 +558,7 @@ class CreateVasOrder extends localize(i18next)(PageView) {
           batchList.push({
             display: record.batchId,
             value: record.batchId,
-            packQty: record.remainQty,
-            packingTypes: [record.packingType]
+            packingTypes: [{ type: record.packingType, packQty: record.remainQty }]
           })
         }
 
@@ -564,10 +577,24 @@ class CreateVasOrder extends localize(i18next)(PageView) {
             if (product.value === record.product.id) {
               return {
                 ...product,
-                packQty: product.packQty + record.remainQty,
-                packingTypes: [...product.packingTypes, record.packingType].filter(
-                  (type, idx, types) => types.indexOf(type) === idx
-                )
+                packingTypes: product.packingTypes.find(packingType => packingType.type === record.packingType)
+                  ? product.packingTypes.map(packingType => {
+                      if (packingType.type === record.packingType) {
+                        packingType = {
+                          ...packingType,
+                          packQty: packingType.packQty + record.remainQty
+                        }
+                      }
+
+                      return packingType
+                    })
+                  : [
+                      ...product.packingTypes,
+                      {
+                        type: record.packingType,
+                        packQty: record.remainQty
+                      }
+                    ]
               }
             } else {
               return product
@@ -577,8 +604,7 @@ class CreateVasOrder extends localize(i18next)(PageView) {
           productList.push({
             display: `${record.product.name} ${record.product.description ? ` (${record.product.description})` : ''}`,
             value: record.product.id,
-            packQty: record.remainQty,
-            packingTypes: [record.packingType]
+            packingTypes: [{ type: record.packingType, packQty: record.remainQty }]
           })
         }
 
