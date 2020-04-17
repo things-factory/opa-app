@@ -10,7 +10,7 @@ import {
   navigate,
   PageView,
   store,
-  UPDATE_CONTEXT,
+  UPDATE_CONTEXT
 } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
@@ -24,7 +24,7 @@ class VasOrderDetail extends localize(i18next)(PageView) {
       _template: Object,
       config: Object,
       data: Object,
-      _status: String,
+      _status: String
     }
   }
 
@@ -73,7 +73,7 @@ class VasOrderDetail extends localize(i18next)(PageView) {
           max-width: 30vw;
           display: flex;
         }
-      `,
+      `
     ]
   }
 
@@ -85,7 +85,7 @@ class VasOrderDetail extends localize(i18next)(PageView) {
   get context() {
     return {
       title: i18next.t('title.vas_order_detail'),
-      actions: this._actions,
+      actions: this._actions
     }
   }
 
@@ -131,8 +131,8 @@ class VasOrderDetail extends localize(i18next)(PageView) {
             } else {
               this._template = null
             }
-          },
-        },
+          }
+        }
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -141,14 +141,14 @@ class VasOrderDetail extends localize(i18next)(PageView) {
           name: 'set',
           header: i18next.t('field.set'),
           record: { align: 'center' },
-          width: 100,
+          width: 100
         },
         {
           type: 'string',
           name: 'targetType',
           header: i18next.t('field.target_type'),
           record: { align: 'center' },
-          width: 150,
+          width: 150
         },
         {
           type: 'string',
@@ -164,39 +164,39 @@ class VasOrderDetail extends localize(i18next)(PageView) {
                 return getRenderer()(record.otherTarget, column, record, rowIndex, field)
               }
             },
-            align: 'center',
+            align: 'center'
           },
 
-          width: 250,
+          width: 250
         },
         {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
           record: { align: 'center', options: { queryName: 'vass' } },
-          width: 250,
+          width: 250
         },
         {
           type: 'string',
           name: 'status',
           header: i18next.t('field.status'),
           record: { align: 'center' },
-          width: 150,
+          width: 150
         },
         {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
           record: { align: 'center' },
-          width: 350,
+          width: 350
         },
         {
           type: 'string',
           name: 'description',
           header: i18next.t('field.comment'),
-          width: 350,
-        },
-      ],
+          width: 350
+        }
+      ]
     }
   }
 
@@ -212,7 +212,7 @@ class VasOrderDetail extends localize(i18next)(PageView) {
       query: gql`
         query {
           vasOrder(${gqlBuilder.buildArgs({
-            name: this._vasNo,
+            name: this._vasNo
           })}) {
             id
             name
@@ -232,6 +232,7 @@ class VasOrderDetail extends localize(i18next)(PageView) {
                 name
                 description
               }
+              otherTarget
               operationGuide
               status
               description
@@ -239,19 +240,19 @@ class VasOrderDetail extends localize(i18next)(PageView) {
             }
           }
         }
-      `,
+      `
     })
 
     if (!response.errors) {
       const vasOrder = response.data.vasOrder
       this._status = vasOrder.status
       this.data = {
-        records: vasOrder.orderVass.map((orderVas) => {
+        records: vasOrder.orderVass.map(orderVas => {
           return {
             ...orderVas,
-            ...orderVas.inventory,
+            ...orderVas.inventory
           }
-        }),
+        })
       }
     }
   }
@@ -262,12 +263,12 @@ class VasOrderDetail extends localize(i18next)(PageView) {
       this._actions = [
         {
           title: i18next.t('button.delete'),
-          action: this._deleteVasOrder.bind(this),
+          action: this._deleteVasOrder.bind(this)
         },
         {
           title: i18next.t('button.confirm'),
-          action: this._confirmVasOrder.bind(this),
-        },
+          action: this._confirmVasOrder.bind(this)
+        }
       ]
     }
 
@@ -275,7 +276,7 @@ class VasOrderDetail extends localize(i18next)(PageView) {
 
     store.dispatch({
       type: UPDATE_CONTEXT,
-      context: this.context,
+      context: this.context
     })
   }
 
@@ -285,7 +286,7 @@ class VasOrderDetail extends localize(i18next)(PageView) {
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.you_wont_be_able_to_revert_this'),
         confirmButton: { text: i18next.t('button.confirm') },
-        cancelButton: { text: i18next.t('button.cancel') },
+        cancelButton: { text: i18next.t('button.cancel') }
       })
 
       if (!result.value) return
@@ -295,10 +296,10 @@ class VasOrderDetail extends localize(i18next)(PageView) {
         query: gql`
             mutation {
               deleteVasOrder(${gqlBuilder.buildArgs({
-                name: this._vasNo,
+                name: this._vasNo
               })}) 
             }
-          `,
+          `
       })
 
       if (!response.errors) {
@@ -333,7 +334,7 @@ class VasOrderDetail extends localize(i18next)(PageView) {
       title: i18next.t('title.are_you_sure'),
       text: i18next.t('text.confirm_vas_order'),
       confirmButton: { text: i18next.t('button.confirm') },
-      cancelButton: { text: i18next.t('button.cancel') },
+      cancelButton: { text: i18next.t('button.cancel') }
     })
 
     if (!result.value) {
@@ -345,12 +346,12 @@ class VasOrderDetail extends localize(i18next)(PageView) {
         query: gql`
             mutation {
               confirmVasOrder(${gqlBuilder.buildArgs({
-                name: this._vasNo,
+                name: this._vasNo
               })}) {
                 name
               }
             }
-          `,
+          `
       })
 
       if (!response.errors) {
@@ -367,8 +368,8 @@ class VasOrderDetail extends localize(i18next)(PageView) {
       new CustomEvent('notify', {
         detail: {
           type,
-          message,
-        },
+          message
+        }
       })
     )
   }

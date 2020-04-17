@@ -17,7 +17,7 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
       _rejectReason: String,
       config: Object,
       data: Object,
-      _template: Object,
+      _template: Object
     }
   }
 
@@ -74,7 +74,7 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
-      `,
+      `
     ]
   }
 
@@ -84,9 +84,9 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
       actions: [
         {
           title: i18next.t('button.back'),
-          action: () => history.back(),
-        },
-      ],
+          action: () => history.back()
+        }
+      ]
     }
   }
 
@@ -150,8 +150,8 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
             } else {
               this._template = null
             }
-          },
-        },
+          }
+        }
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -160,14 +160,14 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
           name: 'set',
           header: i18next.t('field.set'),
           record: { align: 'center' },
-          width: 100,
+          width: 100
         },
         {
           type: 'string',
           name: 'targetType',
           header: i18next.t('field.target_type'),
           record: { align: 'center' },
-          width: 150,
+          width: 150
         },
         {
           type: 'string',
@@ -183,39 +183,39 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
                 return getRenderer()(record.otherTarget, column, record, rowIndex, field)
               }
             },
-            align: 'center',
+            align: 'center'
           },
 
-          width: 250,
+          width: 250
         },
         {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
           record: { align: 'center', options: { queryName: 'vass' } },
-          width: 250,
+          width: 250
         },
         {
           type: 'string',
           name: 'status',
           header: i18next.t('field.status'),
           record: { align: 'center' },
-          width: 150,
+          width: 150
         },
         {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
           record: { align: 'center' },
-          width: 350,
+          width: 350
         },
         {
           type: 'string',
           name: 'description',
           header: i18next.t('field.comment'),
-          width: 350,
-        },
-      ],
+          width: 350
+        }
+      ]
     }
   }
 
@@ -229,7 +229,7 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
       query: gql`
         query {
           vasOrder(${gqlBuilder.buildArgs({
-            name: this._vasNo,
+            name: this._vasNo
           })}) {
             id
             name
@@ -250,6 +250,7 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
                 name
                 description
               }
+              otherTarget
               operationGuide
               status
               description
@@ -257,19 +258,19 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
             }
           }
         }
-      `,
+      `
     })
 
     if (!response.errors) {
       const vasOrder = response.data.vasOrder
       this._rejectReason = vasOrder.remark
       this.data = {
-        records: vasOrder.orderVass.map((orderVas) => {
+        records: vasOrder.orderVass.map(orderVas => {
           return {
             ...orderVas,
-            ...orderVas.inventory,
+            ...orderVas.inventory
           }
-        }),
+        })
       }
     }
   }
@@ -279,8 +280,8 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
       new CustomEvent('notify', {
         detail: {
           type,
-          message,
-        },
+          message
+        }
       })
     )
   }
