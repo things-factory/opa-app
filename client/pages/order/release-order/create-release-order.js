@@ -921,7 +921,11 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   _updateVasTargets(isFieldChanged) {
     if (!this.vasGrist.dirtyData || !this.vasGrist.dirtyData.records || !this.vasGrist.dirtyData.records.length) return
 
-    if (!this.inventoryData || !this.inventoryData.records || !this.inventoryData.records.length) {
+    if (
+      !this.inventoryGrist.dirtyData ||
+      !this.inventoryGrist.dirtyData.records ||
+      !this.inventoryGrist.dirtyData.records.length
+    ) {
       this.vasData = { ...this.vasData, records: [] }
       return
     }
