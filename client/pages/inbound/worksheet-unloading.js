@@ -176,7 +176,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
           }
         }
       },
-      list: { fields: ['batchId', 'product', 'palletQty'] },
+      list: { fields: ['batchId', 'product', 'palletQty', 'status'] },
       pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },

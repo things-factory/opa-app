@@ -182,7 +182,6 @@ class WorksheetPicking extends localize(i18next)(PageView) {
 
   pageInitialized() {
     this.productGristConfig = {
-      list: { fields: [] },
       pagination: { infinite: true },
       rows: {
         appendable: false,
@@ -276,7 +275,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
     }
 
     this.preWsdGristConfig = {
-      list: { fields: ['palletId', 'product', 'location', 'qty'] },
+      list: { fields: ['palletId', 'batchId', 'product', 'packingType', 'location', 'releaseQty', 'status'] },
       pagination: { infinite: true },
       rows: { appendable: false },
       columns: [
