@@ -83,7 +83,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
       },
       {
         label: i18next.t('field.customer'),
-        name: 'bizplaceName',
+        name: 'bizplaceId',
         type: 'select',
         options: [
           { value: '' },
@@ -92,7 +92,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
             .map((userBizplace) => {
               return {
                 name: userBizplace.name,
-                value: userBizplace.name,
+                value: userBizplace.id,
               }
             })
             .sort(this._compareValues('name', 'asc')),
