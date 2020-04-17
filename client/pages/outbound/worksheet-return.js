@@ -312,6 +312,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
     }
 
     this.config = { ...this.preConfig }
+    this.data = { ...this.data }
   }
 
   _fillupForm(data) {

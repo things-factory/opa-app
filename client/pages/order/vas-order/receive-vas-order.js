@@ -18,7 +18,7 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
       _template: Object,
       config: Object,
       data: Object,
-      _status: String,
+      _status: String
     }
   }
 
@@ -67,7 +67,7 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
-      `,
+      `
     ]
   }
 
@@ -82,17 +82,17 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
       actions: [
         {
           title: i18next.t('button.reject'),
-          action: this._rejectVasOrder.bind(this),
+          action: this._rejectVasOrder.bind(this)
         },
         {
           title: i18next.t('button.receive'),
-          action: this._receiveVasOrder.bind(this),
+          action: this._receiveVasOrder.bind(this)
         },
         {
           title: i18next.t('button.back'),
-          action: () => history.back(),
-        },
-      ],
+          action: () => history.back()
+        }
+      ]
     }
   }
 
@@ -135,8 +135,8 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
             } else {
               this._template = null
             }
-          },
-        },
+          }
+        }
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -145,14 +145,14 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
           name: 'set',
           header: i18next.t('field.set'),
           record: { align: 'center' },
-          width: 100,
+          width: 100
         },
         {
           type: 'string',
           name: 'targetType',
           header: i18next.t('field.target_type'),
           record: { align: 'center' },
-          width: 150,
+          width: 150
         },
         {
           type: 'string',
@@ -168,39 +168,39 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
                 return getRenderer()(record.otherTarget, column, record, rowIndex, field)
               }
             },
-            align: 'center',
+            align: 'center'
           },
 
-          width: 250,
+          width: 250
         },
         {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
           record: { align: 'center', options: { queryName: 'vass' } },
-          width: 250,
+          width: 250
         },
         {
           type: 'string',
           name: 'status',
           header: i18next.t('field.status'),
           record: { align: 'center' },
-          width: 150,
+          width: 150
         },
         {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
           record: { align: 'center' },
-          width: 350,
+          width: 350
         },
         {
           type: 'string',
           name: 'description',
           header: i18next.t('field.comment'),
-          width: 350,
-        },
-      ],
+          width: 350
+        }
+      ]
     }
   }
 
@@ -210,7 +210,7 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
       query: gql`
         query {
           vasOrder(${gqlBuilder.buildArgs({
-            name: this._vasNo,
+            name: this._vasNo
           })}) {
             id
             name
@@ -230,6 +230,7 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
                 name
                 description
               }
+              otherTarget
               operationGuide
               status
               description
@@ -237,7 +238,7 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
             }
           }
         }
-      `,
+      `
     })
 
     if (!response.errors) {
@@ -245,12 +246,12 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
 
       this._status = vasOrder.status
       this.data = {
-        records: vasOrder.orderVass.map((orderVas) => {
+        records: vasOrder.orderVass.map(orderVas => {
           return {
             ...orderVas,
-            ...orderVas.inventory,
+            ...orderVas.inventory
           }
-        }),
+        })
       }
     }
   }
@@ -261,7 +262,7 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.receive_vas_order'),
         confirmButton: { text: i18next.t('button.confirm') },
-        cancelButton: { text: i18next.t('button.cancel') },
+        cancelButton: { text: i18next.t('button.cancel') }
       })
 
       if (!result.value) {
@@ -272,14 +273,14 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
         query: gql`
           mutation {
             generateVasOrderWorksheet(${gqlBuilder.buildArgs({
-              vasNo: this._vasNo,
+              vasNo: this._vasNo
             })}) {
               vasWorksheet {
                 name
               }
             }
           }
-        `,
+        `
       })
 
       if (!response.errors) {
@@ -296,14 +297,14 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
       html`
         <popup-note
           .title="${i18next.t('title.remark')}"
-          @submit="${async (e) => {
+          @submit="${async e => {
             try {
               if (!e.detail.value) throw new Error(i18next.t('text.remark_is_empty'))
               const result = await CustomAlert({
                 title: i18next.t('title.are_you_sure'),
                 text: i18next.t('text.reject_vas_order'),
                 confirmButton: { text: i18next.t('button.confirm') },
-                cancelButton: { text: i18next.t('button.cancel') },
+                cancelButton: { text: i18next.t('button.cancel') }
               })
 
               if (!result.value) {
@@ -315,12 +316,12 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
                 mutation {
                   rejectVasOrder(${gqlBuilder.buildArgs({
                     name: this._vasNo,
-                    patch: { remark: e.detail.value },
+                    patch: { remark: e.detail.value }
                   })}) {
                     name
                   }
                 }
-              `,
+              `
               })
 
               if (!response.errors) {
@@ -336,7 +337,7 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
       {
         backdrop: true,
         size: 'medium',
-        title: i18next.t('title.reject_vas_order'),
+        title: i18next.t('title.reject_vas_order')
       }
     )
 
@@ -348,8 +349,8 @@ class ReceiveVasOrder extends localize(i18next)(PageView) {
       new CustomEvent('notify', {
         detail: {
           type,
-          message,
-        },
+          message
+        }
       })
     )
   }

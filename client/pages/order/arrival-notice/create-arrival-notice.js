@@ -498,7 +498,11 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   _updateVasTargets(isFieldChanged) {
     if (!this.vasGrist.dirtyData || !this.vasGrist.dirtyData.records || !this.vasGrist.dirtyData.records.length) return
 
-    if (!this.productData || !this.productData.records || !this.productData.records.length) {
+    if (
+      !this.productGrist.dirtyData ||
+      !this.productGrist.dirtyData.records ||
+      !this.productGrist.dirtyData.records.length
+    ) {
       this.vasData = { ...this.vasData, records: [] }
       return
     }
