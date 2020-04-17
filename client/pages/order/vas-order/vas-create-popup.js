@@ -432,8 +432,9 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
       }
 
       const selectedTarget = this.targetSelector.value
+      const selectedPackingType = this.packingTypeSelector.value
 
-      if (this.selectedPackingType) {
+      if (selectedPackingType) {
         packQty = this.selectedTarget.packingTypes.find(packingType => packingType.type === this.selectedPackingType)
           .packQty
       }

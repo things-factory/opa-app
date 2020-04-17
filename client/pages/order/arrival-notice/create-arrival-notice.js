@@ -359,7 +359,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         changeRecord.totalWeight = this._calcTotalWeight(changeRecord.weight, changeRecord.unit, changeRecord.packQty)
       }
 
-      this._updateVasTargets()
+      this._updateVasTargets(true)
     } catch (e) {
       event.detail.after[event.detail.column.name] = event.detail.before[event.detail.column.name]
       this._showToast(e)
@@ -495,38 +495,53 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     if (!this.vasGrist.dirtyData.records.every(record => record.ready)) throw new Error('there_is_not_ready_vas')
   }
 
-  _updateVasTargets() {
+  _updateVasTargets(isFieldChanged) {
     if (!this.vasGrist.dirtyData || !this.vasGrist.dirtyData.records || !this.vasGrist.dirtyData.records.length) return
-    try {
-      const targetBatchList = this.getTargetBatchList().map(batch => batch.value)
-      const targetProductList = this.getTargetProductList().map(product => product.value)
 
-      this.vasData = {
-        ...this.vasData,
-        records: this.vasGrist.dirtyData.records.map(record => {
-          if (record.targetType === BATCH_NO_TYPE && targetBatchList.indexOf(record.target) < 0) {
-            return {
-              ...record,
-              ready: false,
-              target: null,
-              targetDisplay: null,
-              qty: 1
-            }
-          } else if (record.targetType === PRODUCT_TYPE && targetProductList.indexOf(record.target) < 0) {
-            return {
-              ...record,
-              ready: false,
-              target: null,
-              targetDisplay: null,
-              qty: 1
-            }
-          } else {
-            return record
-          }
-        })
-      }
-    } catch (e) {
+    if (!this.productData || !this.productData.records || !this.productData.records.length) {
       this.vasData = { ...this.vasData, records: [] }
+      return
+    }
+
+    const standardProductList = isFieldChanged ? this.productGrist.dirtyData.records : this.productData.records
+    const batchPackPairs = standardProductList
+      .filter(record => record.batchId && record.product && record.product.id && record.packingType)
+      .map(record => `${record.batchId}-${record.packingType}`)
+    const productPackPairs = standardProductList
+      .filter(record => record.product && record.product.id)
+      .map(record => `${record.product.id}-${record.packingType}`)
+
+    this.vasData = {
+      ...this.vasData,
+      records: this.vasGrist.dirtyData.records.map(record => {
+        if (
+          record.targetType === BATCH_NO_TYPE &&
+          batchPackPairs.indexOf(`${record.target}-${record.packingType}`) < 0
+        ) {
+          return {
+            ...record,
+            ready: false,
+            target: null,
+            targetDisplay: null,
+            packingType: null,
+            qty: 1
+          }
+        } else if (
+          record.targetType === PRODUCT_TYPE &&
+          productPackPairs.indexOf(`${record.target}-${record.packingType}`) < 0
+        ) {
+          return {
+            ...record,
+            ready: false,
+            target: null,
+            targetDisplay: null,
+            packingType: null,
+            qty: 1
+          }
+        } else {
+          return record
+        }
+      })
     }
   }
 

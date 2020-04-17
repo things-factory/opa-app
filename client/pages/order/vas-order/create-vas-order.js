@@ -320,38 +320,53 @@ class CreateVasOrder extends localize(i18next)(PageView) {
     this._updateVasTargets()
   }
 
-  _updateVasTargets() {
+  _updateVasTargets(isFieldChanged) {
     if (!this.vasGrist.dirtyData || !this.vasGrist.dirtyData.records || !this.vasGrist.dirtyData.records.length) return
-    try {
-      const targetBatchList = this.getTargetBatchList().map(batch => batch.value)
-      const targetProductList = this.getTargetProductList().map(product => product.value)
 
-      this.vasData = {
-        ...this.vasData,
-        records: this.vasGrist.dirtyData.records.map(record => {
-          if (record.targetType === BATCH_NO_TYPE && targetBatchList.indexOf(record.target) < 0) {
-            return {
-              ...record,
-              ready: false,
-              target: null,
-              targetDisplay: null,
-              qty: 1
-            }
-          } else if (record.targetType === PRODUCT_TYPE && targetProductList.indexOf(record.target) < 0) {
-            return {
-              ...record,
-              ready: false,
-              target: null,
-              targetDisplay: null,
-              qty: 1
-            }
-          } else {
-            return record
-          }
-        })
-      }
-    } catch (e) {
+    if (!this.inventoryData || !this.inventoryData.records || !this.inventoryData.records.length) {
       this.vasData = { ...this.vasData, records: [] }
+      return
+    }
+
+    const standardProductList = isFieldChanged ? this.inventoryGrist.dirtyData.records : this.inventoryData.records
+    const batchPackPairs = standardProductList
+      .filter(record => record.batchId && record.product && record.product.id && record.packingType)
+      .map(record => `${record.batchId}-${record.packingType}`)
+    const productPackPairs = standardProductList
+      .filter(record => record.product && record.product.id)
+      .map(record => `${record.product.id}-${record.packingType}`)
+
+    this.vasData = {
+      ...this.vasData,
+      records: this.vasGrist.dirtyData.records.map(record => {
+        if (
+          record.targetType === BATCH_NO_TYPE &&
+          batchPackPairs.indexOf(`${record.target}-${record.packingType}`) < 0
+        ) {
+          return {
+            ...record,
+            ready: false,
+            target: null,
+            targetDisplay: null,
+            packingType: null,
+            qty: 1
+          }
+        } else if (
+          record.targetType === PRODUCT_TYPE &&
+          productPackPairs.indexOf(`${record.target}-${record.packingType}`) < 0
+        ) {
+          return {
+            ...record,
+            ready: false,
+            target: null,
+            targetDisplay: null,
+            packingType: null,
+            qty: 1
+          }
+        } else {
+          return record
+        }
+      })
     }
   }
 
