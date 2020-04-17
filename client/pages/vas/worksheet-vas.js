@@ -627,6 +627,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
     }
 
     this.assignedGristConfig = { ...this.preConfig }
+    this.assignedData = { ...this.assignedData }
   }
 
   _fillupForm(data) {

@@ -402,6 +402,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     }
 
     this.config = { ...this.preConfig }
+    this.data = { ...this.data }
   }
 
   _fillupForm(data) {
@@ -454,16 +455,11 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
   }
 
   _showIssueNotePopup(record) {
-    openPopup(
-      html`
-        <popup-note title="${record.batchId}" value="${record.issue}" .readonly="${true}"></popup-note>
-      `,
-      {
-        backdrop: true,
-        size: 'medium',
-        title: i18next.t('title.issue_note')
-      }
-    )
+    openPopup(html` <popup-note title="${record.batchId}" value="${record.issue}" .readonly="${true}"></popup-note> `, {
+      backdrop: true,
+      size: 'medium',
+      title: i18next.t('title.issue_note')
+    })
   }
 
   async _activateWorksheet() {
@@ -541,16 +537,11 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
         }
       })
     }
-    openPopup(
-      html`
-        <pallet-label-popup .pallets="${_pallets}"></pallet-label-popup>
-      `,
-      {
-        backdrop: true,
-        size: 'large',
-        title: i18next.t('title.pallet_label')
-      }
-    )
+    openPopup(html` <pallet-label-popup .pallets="${_pallets}"></pallet-label-popup> `, {
+      backdrop: true,
+      size: 'large',
+      title: i18next.t('title.pallet_label')
+    })
   }
 
   _showPutawayWorksheetPopup() {
