@@ -29,7 +29,7 @@ class VasOrderList extends localize(i18next)(PageView) {
           overflow-y: hidden;
           flex: 1;
         }
-      `
+      `,
     ]
   }
 
@@ -37,13 +37,17 @@ class VasOrderList extends localize(i18next)(PageView) {
     return {
       _searchFields: Array,
       config: Object,
-      data: Object
+      data: Object,
     }
   }
 
   render() {
     return html`
-      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
+      <search-form
+        id="search-form"
+        .fields=${this._searchFields}
+        @submit=${(e) => this.dataGrist.fetch()}
+      ></search-form>
 
       <div class="grist">
         <data-grist
@@ -60,8 +64,8 @@ class VasOrderList extends localize(i18next)(PageView) {
       title: i18next.t('title.vas_orders'),
       exportable: {
         name: i18next.t('title.vas_orders'),
-        data: this._exportableData.bind(this)
-      }
+        data: this._exportableData.bind(this),
+      },
     }
   }
 
@@ -77,7 +81,7 @@ class VasOrderList extends localize(i18next)(PageView) {
         label: i18next.t('field.vas_order_no'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'i_like' }
+        props: { searchOper: 'i_like' },
       },
       {
         label: i18next.t('field.status'),
@@ -89,13 +93,13 @@ class VasOrderList extends localize(i18next)(PageView) {
           { name: i18next.t(`label.${ORDER_STATUS.PENDING_RECEIVE.name}`), value: ORDER_STATUS.PENDING_RECEIVE.value },
           {
             name: i18next.t(`label.${ORDER_STATUS.READY_TO_EXECUTE.name}`),
-            value: ORDER_STATUS.READY_TO_EXECUTE.value
+            value: ORDER_STATUS.READY_TO_EXECUTE.value,
           },
           { name: i18next.t(`label.${ORDER_STATUS.EXECUTING.name}`), value: ORDER_STATUS.EXECUTING.value },
-          { name: i18next.t(`label.${ORDER_STATUS.DONE.name}`), value: ORDER_STATUS.DONE.value }
+          { name: i18next.t(`label.${ORDER_STATUS.DONE.name}`), value: ORDER_STATUS.DONE.value },
         ],
-        props: { searchOper: 'eq' }
-      }
+        props: { searchOper: 'eq' },
+      },
     ]
 
     this.config = {
@@ -115,8 +119,8 @@ class VasOrderList extends localize(i18next)(PageView) {
               } else {
                 navigate(`vas_order_detail/${record.name}`)
               }
-            }
-          }
+            },
+          },
         },
         {
           type: 'string',
@@ -124,7 +128,7 @@ class VasOrderList extends localize(i18next)(PageView) {
           header: i18next.t('field.vas_order_no'),
           record: { align: 'center' },
           sortable: true,
-          width: 180
+          width: 180,
         },
         {
           type: 'string',
@@ -132,7 +136,7 @@ class VasOrderList extends localize(i18next)(PageView) {
           header: i18next.t('field.status'),
           record: { align: 'center' },
           sortable: true,
-          width: 150
+          width: 150,
         },
         {
           type: 'datetime',
@@ -140,7 +144,7 @@ class VasOrderList extends localize(i18next)(PageView) {
           header: i18next.t('field.updated_at'),
           record: { align: 'center' },
           sortable: true,
-          width: 160
+          width: 160,
         },
         {
           type: 'object',
@@ -148,9 +152,9 @@ class VasOrderList extends localize(i18next)(PageView) {
           header: i18next.t('field.updater'),
           record: { align: 'center' },
           sortable: true,
-          width: 160
-        }
-      ]
+          width: 160,
+        },
+      ],
     }
   }
 
@@ -173,7 +177,7 @@ class VasOrderList extends localize(i18next)(PageView) {
           vasOrders(${gqlBuilder.buildArgs({
             filters: this.searchForm.queryFilters,
             pagination: { page, limit },
-            sortings: sorters
+            sortings: sorters,
           })}) {
             items {
               id
@@ -183,18 +187,23 @@ class VasOrderList extends localize(i18next)(PageView) {
               updatedAt
               creator {
                 name
+                description
+              }
+              updater {
+                name
+                description
               }
             }
             total
           }
         }
-      `
+      `,
     })
 
     if (!response.errors) {
       return {
         total: response.data.vasOrders.total || 0,
-        records: response.data.vasOrders.items || []
+        records: response.data.vasOrders.items || [],
       }
     }
   }

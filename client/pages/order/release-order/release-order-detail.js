@@ -1,12 +1,13 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
+import { getRenderer } from '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/vas-relabel'
-import { ORDER_STATUS } from '../constants/order'
+import { BATCH_NO_TYPE, ETC_TYPE, ORDER_STATUS, PRODUCT_TYPE } from '../constants'
 
 class ReleaseOrderDetail extends localize(i18next)(PageView) {
   static get properties() {
@@ -21,7 +22,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       vasGristConfig: Object,
       inventoryData: Object,
       vasData: Object,
-      _status: String,
+      _status: String
     }
   }
 
@@ -77,7 +78,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
-      `,
+      `
     ]
   }
 
@@ -166,7 +167,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
   get context() {
     return {
       title: i18next.t('title.release_order_detail'),
-      actions: this._actions,
+      actions: this._actions
     }
   }
 
@@ -212,64 +213,64 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
           name: 'batchId',
           header: i18next.t('field.batch_no'),
           record: { align: 'center' },
-          width: 100,
+          width: 100
         },
         {
           type: 'string',
           name: 'productName',
           header: i18next.t('field.product'),
           record: { align: 'left' },
-          width: 150,
+          width: 150
         },
         {
           type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: { align: 'center' },
-          width: 150,
+          width: 150
         },
         {
           type: 'integer',
           name: 'qty',
           header: i18next.t('field.available_qty'),
           record: { align: 'center' },
-          width: 100,
+          width: 100
         },
         {
           type: 'integer',
           name: 'releaseQty',
           header: i18next.t('field.release_qty'),
           record: { align: 'center', options: { min: 0 } },
-          width: 100,
+          width: 100
         },
         {
           type: 'float',
           name: 'weight',
           header: i18next.t('field.available_weight'),
           record: { align: 'center' },
-          width: 100,
+          width: 100
         },
         {
           type: 'float',
           name: 'releaseWeight',
           header: i18next.t('field.release_weight'),
           record: { align: 'center', options: { min: 0 } },
-          width: 100,
+          width: 100
         },
         {
           type: 'float',
           name: 'roundedWeight',
           header: i18next.t('field.rounded_weight'),
           record: { align: 'center', options: { min: 0 } },
-          width: 100,
-        },
-      ],
+          width: 100
+        }
+      ]
     }
 
     this.vasGristConfig = {
+      list: { fields: ['targetType', 'targetDisplay', 'packingType'] },
       pagination: { infinite: true },
       rows: {
-        selectable: { multiple: true },
         appendable: false,
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
@@ -279,48 +280,86 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
             } else {
               this._template = null
             }
-          },
-        },
+          }
+        }
       },
-      list: { fields: ['ready', 'vas', 'inventory', 'product', 'remark'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
-          type: 'object',
-          name: 'vas',
-          header: i18next.t('field.vas'),
+          type: 'string',
+          name: 'set',
+          header: i18next.t('field.set'),
           record: { align: 'center' },
-          width: 250,
+          width: 100
         },
         {
           type: 'string',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
+          name: 'targetType',
+          header: i18next.t('field.target_type'),
           record: { align: 'center' },
-          width: 100,
+          width: 150
         },
         {
           type: 'string',
-          name: 'productName',
-          header: i18next.t('field.product'),
-          record: { align: 'left' },
-          width: 150,
+          name: 'target',
+          header: i18next.t('field.target'),
+          record: {
+            renderer: (value, column, record, rowIndex, field) => {
+              if (record.targetType === BATCH_NO_TYPE) {
+                return getRenderer()(record.targetBatchId, column, record, rowIndex, field)
+              } else if (record.targetType === PRODUCT_TYPE) {
+                return getRenderer('object')(record.targetProduct, column, record, rowIndex, field)
+              } else if (record.targetType === ETC_TYPE) {
+                return getRenderer()(record.otherTarget, column, record, rowIndex, field)
+              }
+            },
+            align: 'center'
+          },
+
+          width: 250
         },
         {
           type: 'string',
           name: 'packingType',
-          header: i18next.t('field.packing_type'),
+          header: i18next.t('field.packingType'),
           record: { align: 'center' },
-          width: 150,
+          width: 250
+        },
+        {
+          type: 'integer',
+          name: 'qty',
+          header: i18next.t('field.qty'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'object',
+          name: 'vas',
+          header: i18next.t('field.vas'),
+          record: { align: 'center', options: { queryName: 'vass' } },
+          width: 250
+        },
+        {
+          type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: { align: 'center' },
+          width: 150
         },
         {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
           record: { align: 'center' },
-          width: 350,
+          width: 350
         },
-      ],
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.comment'),
+          width: 350
+        }
+      ]
     }
   }
 
@@ -330,7 +369,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       query: gql`
         query {
           releaseGoodDetail(${gqlBuilder.buildArgs({
-            name: this._releaseOrderNo,
+            name: this._releaseOrderNo
           })}) {
             id
             name
@@ -363,32 +402,39 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
               shipName
             }
             orderVass {
-              batchId
-              productName
-              packingType
               vas {
                 name
-                description
                 operationGuide
                 operationGuideType
               }
-              operationGuide
-              status
+              set
+              targetType
+              targetBatchId
+              targetProduct {
+                id
+                name
+                description
+              }
+              packingType
+              qty
+              otherTarget
               description
               remark
+              status
+              operationGuide
             }
           }
         }
-      `,
+      `
     })
 
     if (!response.errors) {
       const releaseOrder = response.data.releaseGoodDetail
       const shippingOrder = releaseOrder.shippingOrderInfo
-      const orderInventories = releaseOrder.inventoryInfos.map((inventoryInfo) => {
+      const orderInventories = releaseOrder.inventoryInfos.map(inventoryInfo => {
         return {
           ...inventoryInfo,
-          roundedWeight: inventoryInfo.releaseQty * (inventoryInfo.weight / inventoryInfo.qty) || '',
+          roundedWeight: inventoryInfo.releaseQty * (inventoryInfo.weight / inventoryInfo.qty) || ''
         }
       })
 
@@ -407,7 +453,16 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       if (this._exportOption) this._fillupSOForm(shippingOrder)
 
       this.inventoryData = { records: orderInventories }
-      this.vasData = { records: orderVass }
+      this.vasData = {
+        records: orderVass
+          .sort((a, b) => a.set - b.set)
+          .map(orderVas => {
+            return {
+              ...orderVas,
+              set: `Set ${orderVas.set}`
+            }
+          })
+      }
     }
   }
 
@@ -417,12 +472,12 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       this._actions = [
         {
           title: i18next.t('button.delete'),
-          action: this._deleteReleaseOrder.bind(this),
+          action: this._deleteReleaseOrder.bind(this)
         },
         {
           title: i18next.t('button.confirm'),
-          action: this._confirmReleaseOrder.bind(this),
-        },
+          action: this._confirmReleaseOrder.bind(this)
+        }
       ]
     }
 
@@ -436,8 +491,8 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       this._actions = [
         {
           title: i18next.t('button.cancel_order'),
-          action: this._submitCancellationReleaseOrder.bind(this),
-        },
+          action: this._submitCancellationReleaseOrder.bind(this)
+        }
       ]
     }
 
@@ -445,7 +500,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
 
     store.dispatch({
       type: UPDATE_CONTEXT,
-      context: this.context,
+      context: this.context
     })
   }
 
@@ -460,7 +515,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
   _fillupForm(form, data) {
     form.reset()
     for (let key in data) {
-      Array.from(form.querySelectorAll('input')).forEach((field) => {
+      Array.from(form.querySelectorAll('input')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
         } else if (field.name === key && field.type === 'datetime-local') {
@@ -485,7 +540,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.you_wont_be_able_to_revert_this'),
         confirmButton: { text: i18next.t('button.confirm') },
-        cancelButton: { text: i18next.t('button.cancel') },
+        cancelButton: { text: i18next.t('button.cancel') }
       })
 
       if (!result.value) return
@@ -495,10 +550,10 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         query: gql`
             mutation {
               deleteReleaseGood(${gqlBuilder.buildArgs({
-                name: this._releaseOrderNo,
+                name: this._releaseOrderNo
               })})
             }
-          `,
+          `
       })
 
       if (!response.errors) {
@@ -516,7 +571,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.you_wont_be_able_to_revert_this'),
         confirmButton: { text: i18next.t('button.confirm') },
-        cancelButton: { text: i18next.t('button.cancel') },
+        cancelButton: { text: i18next.t('button.cancel') }
       })
 
       if (!result.value) return
@@ -525,10 +580,10 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         query: gql`
             mutation {
               pendingCancellationReleaseOrder(${gqlBuilder.buildArgs({
-                name: this._releaseOrderNo,
+                name: this._releaseOrderNo
               })})
             }
-          `,
+          `
       })
 
       if (!response.errors) {
@@ -563,7 +618,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       title: i18next.t('title.are_you_sure'),
       text: i18next.t('text.confirm_release_good'),
       confirmButton: { text: i18next.t('button.confirm') },
-      cancelButton: { text: i18next.t('button.cancel') },
+      cancelButton: { text: i18next.t('button.cancel') }
     })
 
     if (!result.value) {
@@ -575,12 +630,12 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         query: gql`
             mutation {
               confirmReleaseGood(${gqlBuilder.buildArgs({
-                name: this._releaseOrderNo,
+                name: this._releaseOrderNo
               })}) {
                 name
               }
             }
-          `,
+          `
       })
 
       if (!response.errors) {
@@ -597,7 +652,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       query: gql`
         query {
           userBizplaces(${gqlBuilder.buildArgs({
-            email: '',
+            email: ''
           })}) {
             id
             name
@@ -606,12 +661,12 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
             mainBizplace
           }
         }
-      `,
+      `
     })
 
     if (!response.errors) {
       this.customerBizplaceId = response.data.userBizplaces
-        .map((userBiz) => userBiz.userBizplaceId)
+        .map(userBiz => userBiz.userBizplaceId)
         .slice(0, 1)
         .shift()
     }
@@ -622,8 +677,8 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       new CustomEvent('notify', {
         detail: {
           type,
-          message,
-        },
+          message
+        }
       })
     )
   }

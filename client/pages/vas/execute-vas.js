@@ -1,6 +1,7 @@
 import '@things-factory/barcode-ui'
 import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
+import { getRenderer } from '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
 import {
@@ -19,15 +20,17 @@ import { connect } from 'pwa-helpers/connect-mixin.js'
 import '../components/popup-note'
 import '../components/vas-relabel'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
-import { ORDER_TYPES } from '../order/constants/order'
+import { ORDER_TYPES, PRODUCT_TYPE, ETC_TYPE, BATCH_NO_TYPE } from '../order/constants'
 
 class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       orderNo: String,
       orderType: String,
-      config: Object,
-      data: Object,
+      vasGristConfig: Object,
+      taskGristConfig: Object,
+      vasSets: Object,
+      vasTasks: Object,
       _vasName: String,
       _selectedTaskStatus: String,
       _template: Object
@@ -126,8 +129,8 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('form#input-form')
   }
 
-  get grist() {
-    return this.shadowRoot.querySelector('data-grist')
+  get taskGrist() {
+    return this.shadowRoot.querySelector('data-grist#task-grist')
   }
 
   render() {
@@ -142,6 +145,8 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
             @keypress="${e => {
               if (e.keyCode === 13) {
                 e.preventDefault()
+                this.orderNo = e.currentTarget.value
+                this.orderType = this.orderTypeInput.value
                 this._fetchVass()
               }
             }}"
@@ -153,6 +158,8 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
             @keypress="${async e => {
               if (e.keyCode === 13) {
                 e.preventDefault()
+                this.orderNo = this.orderNoInput.value
+                this.orderType = e.currentTarget.value
                 this._fetchVass()
               }
             }}"
@@ -233,9 +240,18 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
         <div class="left-column">
           <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
           <data-grist
+            id="vas-grist"
             .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-            .config=${this.config}
-            .data=${this.data}
+            .config=${this.vasGristConfig}
+            .data=${this.vasSets}
+          ></data-grist>
+
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.task_list')}</h2>
+          <data-grist
+            id="task-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.taskGristConfig}
+            .data=${this.vasTasks}
             @record-change="${e => {
               e.detail.after.validity = e.detail.after.actualQty === e.detail.after.packQty
             }}"
@@ -246,9 +262,6 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
           <form id="input-form" class="single-column-form">
             <fieldset>
               <legend>${i18next.t('label.vas')}: ${this._vasName}</legend>
-
-              <label>${i18next.t('label.batch_no')}</label>
-              <input name="batchId" readonly />
 
               <label>${i18next.t('label.location')}</label>
               <input name="locationInv" readonly />
@@ -272,7 +285,6 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
 
   constructor() {
     super()
-    this.data = { records: [] }
     this._vasName = ''
     this.orderNo = ''
     this._selectedVas = null
@@ -286,7 +298,69 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   }
 
   pageInitialized() {
-    this.config = {
+    this.vasGristConfig = {
+      list: { fields: ['completed', 'targetType', 'targetDisplay', 'vasCount', 'qty'] },
+      rows: {
+        appendable: false,
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            this._selectedVasSet = record.set
+            this.vasTasks = { records: record.tasks }
+          }
+        }
+      },
+      pagination: { infinite: true },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'boolean',
+          name: 'completed',
+          header: i18next.t('field.completed'),
+          width: 40
+        },
+        {
+          type: 'string',
+          name: 'targetType',
+          header: i18next.t('field.target_type'),
+          record: { align: 'center' },
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'target',
+          header: i18next.t('field.target'),
+          record: {
+            renderer: (value, column, record, rowIndex, field) => {
+              if (record.targetType === BATCH_NO_TYPE) {
+                return getRenderer()(record.targetBatchId, column, record, rowIndex, field)
+              } else if (record.targetType === PRODUCT_TYPE) {
+                return getRenderer('object')(record.targetProduct, column, record, rowIndex, field)
+              } else if (record.targetType === ETC_TYPE) {
+                return getRenderer()(record.otherTarget, column, record, rowIndex, field)
+              }
+            },
+            align: 'center'
+          },
+          width: 250
+        },
+        {
+          type: 'integer',
+          name: 'qty',
+          header: i18next.t('field.qty'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'integer',
+          name: 'vasCount',
+          header: i18next.t('field.vas_count'),
+          record: { align: 'center' },
+          width: 100
+        }
+      ]
+    }
+
+    this.taskGristConfig = {
       rows: {
         appendable: false,
         handlers: {
@@ -313,7 +387,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       pagination: {
         infinite: true
       },
-      list: { fields: ['batchId', 'vas', 'issue'] },
+      list: { fields: ['complete', 'vas', 'issue'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -322,13 +396,6 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.completed'),
           records: { editable: false },
           width: 40
-        },
-        {
-          type: 'string',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
-          record: { align: 'center' },
-          width: 180
         },
         {
           type: 'object',
@@ -362,11 +429,11 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
         { title: i18next.t('button.done'), action: this._executeVas.bind(this) }
       ]
     } else if (this._selectedTaskStatus === WORKSHEET_STATUS.DONE.value) {
-      actions = [
-        ...actions,
-        { title: i18next.t('button.complete'), action: this._complete.bind(this) },
-        { title: i18next.t('button.undo'), action: this._undoVas.bind(this) }
-      ]
+      actions = [...actions, { title: i18next.t('button.undo'), action: this._undoVas.bind(this) }]
+    }
+
+    if (this.vasSets && this.vasSets.records && this.vasSets.records.every(record => record.completed)) {
+      actions = [...actions, { title: i18next.t('button.complete'), action: this._complete.bind(this) }]
     }
 
     store.dispatch({
@@ -414,6 +481,16 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
               targetName
               status
               issue
+              set
+              targetType
+              targetBatchId
+              targetProduct {
+                id
+                name
+                description
+              }
+              otherTarget
+              qty
               operationGuide
               locationInv 
               vas {
@@ -436,22 +513,70 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       this.orderType = orderType
       this._fillUpInfoForm(response.data.vasWorksheet.worksheetInfo)
 
-      this.data = {
-        ...this.data,
-        records: response.data.vasWorksheet.worksheetDetailInfos
-          .filter(worksheetDetail => worksheetDetail.vas)
-          .map(worksheetDetail => {
-            return {
-              ...worksheetDetail,
-              completed: worksheetDetail.status === WORKSHEET_STATUS.DONE.value
-            }
-          })
+      const records = this._formatData(response.data.vasWorksheet.worksheetDetailInfos)
+      this.vasSets = { records }
+
+      if (this._selectedVasSet) {
+        this.vasTasks = { records: records.find(record => record.set === this._selectedVasSet).tasks }
       }
+
+      if (this.vasSets && this.vasSets.records && this.vasSets.records.every(record => record.completed)) {
+        this._complete()
+      }
+
+      this._updateContext()
+    }
+  }
+
+  _formatData(tasks) {
+    return tasks
+      .reduce((vasSet, task) => {
+        if (vasSet.find(vas => vas.set === task.set)) {
+          vasSet = vasSet.map(vas => {
+            if (vas.set === task.set) {
+              vas.tasks.push(this._formatTask(task))
+            }
+            return vas
+          })
+        } else {
+          vasSet.push({
+            set: task.set,
+            targetType: task.targetType,
+            targetBatchId: task.targetBatchId,
+            targetProduct: task.targetProduct,
+            otherTarget: task.otherTarget,
+            qty: task.qty,
+            tasks: [...(vasSet.tasks || []), this._formatTask(task)]
+          })
+        }
+
+        return vasSet
+      }, [])
+      .map(vasSet => {
+        return {
+          ...vasSet,
+          completed: vasSet.tasks.every(task => task.completed),
+          vasCount: vasSet.tasks.length
+        }
+      })
+  }
+
+  _formatTask(task) {
+    return {
+      name: task.name,
+      vas: task.vas,
+      remark: task.remark,
+      status: task.status,
+      locationInv: task.locationInv,
+      operationGuide: task.operationGuide,
+      completed: task.status === WORKSHEET_STATUS.DONE.value,
+      description: task.description
     }
   }
 
   _clearView() {
-    this.data = { records: [] }
+    this.vasSets = { records: [] }
+    this.vasTasks = { records: [] }
     this.inputForm.reset()
     this._selectedVas = null
     this._selectedTaskStatus = null
@@ -506,8 +631,8 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
           .title="${i18next.t('title.issue')}"
           .value="${this._selectedVas && this._selectedVas.issue ? this._selectedVas.issue : ''}"
           @submit="${async e => {
-            this.data = {
-              records: this.data.records.map(record => {
+            this.vasTasks = {
+              records: this.vasTasks.records.map(record => {
                 if (record.name === this._selectedVas.name) record.issue = e.detail.value
                 return record
               })
@@ -592,7 +717,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _getVasWorksheetDetail() {
-    const worksheetDetail = this.grist.dirtyData.records.filter(record => record.name === this._selectedVas.name)[0]
+    const worksheetDetail = this.taskGrist.dirtyData.records.filter(record => record.name === this._selectedVas.name)[0]
     let vasWorkseetDetail = { name: worksheetDetail.name }
     if (worksheetDetail.issue) vasWorkseetDetail.issue = worksheetDetail.issue
     return vasWorkseetDetail
@@ -624,6 +749,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
 
       if (!response.errors) {
         this._clearView()
+        this._selectedVasSet = null
         this._showToast({ message: i18next.t('text.vas_is_completed') })
         navigate('vas_worksheets')
       }
@@ -633,7 +759,8 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _validateComplete() {
-    if (!this.data.records.every(record => record.completed)) {
+    const tasks = this.vasSets.records.map(vasSet => vasSet.tasks).flat()
+    if (!tasks.every(record => record.completed)) {
       throw new Error('text.there_is_uncompleted_task')
     }
   }

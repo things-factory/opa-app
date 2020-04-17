@@ -1,5 +1,6 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
+import { getRenderer } from '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
 import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
@@ -7,6 +8,7 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/vas-relabel'
+import { BATCH_NO_TYPE, ETC_TYPE, PRODUCT_TYPE } from '../constants'
 import { ORDER_PRODUCT_STATUS, ORDER_STATUS } from '../constants/order'
 import './extra-product-popup'
 import './proceed-extra-product-popup'
@@ -28,7 +30,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       vasGristConfig: Object,
       productData: Object,
       vasData: Object,
-      _template: Object,
+      _template: Object
     }
   }
 
@@ -83,14 +85,14 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
-      `,
+      `
     ]
   }
 
   get context() {
     return {
       title: i18next.t('title.arrival_notice_detail'),
-      actions: this._actions,
+      actions: this._actions
     }
   }
 
@@ -122,7 +124,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             type="checkbox"
             name="ownTransport"
             ?checked="${this._ownTransport}"
-            @change="${(e) => (this._ownTransport = e.currentTarget.checked)}"
+            @change="${e => (this._ownTransport = e.currentTarget.checked)}"
             disabled
           />
           <label>${i18next.t('label.own_transport')}</label>
@@ -130,7 +132,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
 
         <label>${i18next.t('label.status')}</label>
         <select name="status" disabled
-          >${Object.keys(ORDER_STATUS).map((key) => {
+          >${Object.keys(ORDER_STATUS).map(key => {
             const status = ORDER_STATUS[key]
             return html` <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option> `
           })}</select
@@ -202,9 +204,9 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         appendable: false,
         classifier: (record, rowIndex) => {
           return {
-            emphasized: record.status === ORDER_PRODUCT_STATUS.READY_TO_APPROVED.value,
+            emphasized: record.status === ORDER_PRODUCT_STATUS.READY_TO_APPROVED.value
           }
-        },
+        }
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -213,62 +215,62 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
           name: 'batchId',
           header: i18next.t('field.batch_no'),
           record: { align: 'center' },
-          width: 150,
+          width: 150
         },
         {
           type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
           record: { align: 'center', options: { queryName: 'products' } },
-          width: 350,
+          width: 350
         },
         {
           type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: { align: 'center' },
-          width: 150,
+          width: 150
         },
         {
           type: 'float',
           name: 'weight',
           header: i18next.t('field.weight'),
           record: { align: 'center' },
-          width: 80,
+          width: 80
         },
         {
           type: 'string',
           name: 'unit',
           header: i18next.t('field.unit'),
           record: { align: 'center' },
-          width: 80,
+          width: 80
         },
         {
           type: 'integer',
           name: 'packQty',
           header: i18next.t('field.pack_qty'),
           record: { align: 'center' },
-          width: 80,
+          width: 80
         },
         {
           type: 'integer',
           name: 'totalWeight',
           header: i18next.t('field.total_weight'),
           record: { align: 'center' },
-          width: 120,
+          width: 120
         },
         {
           type: 'integer',
           name: 'palletQty',
           header: i18next.t('field.pallet_qty'),
           record: { align: 'center' },
-          width: 80,
-        },
-      ],
+          width: 80
+        }
+      ]
     }
 
     this.vasGristConfig = {
-      list: { fields: ['ready', 'vas', 'batchId', 'remark'] },
+      list: { fields: ['targetType', 'targetDisplay', 'packingType'] },
       pagination: { infinite: true },
       rows: {
         appendable: false,
@@ -280,46 +282,86 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             } else {
               this._template = null
             }
-          },
-        },
+          }
+        }
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'string',
+          name: 'set',
+          header: i18next.t('field.set'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'targetType',
+          header: i18next.t('field.target_type'),
+          record: { align: 'center' },
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'target',
+          header: i18next.t('field.target'),
+          record: {
+            renderer: (value, column, record, rowIndex, field) => {
+              if (record.targetType === BATCH_NO_TYPE) {
+                return getRenderer()(record.targetBatchId, column, record, rowIndex, field)
+              } else if (record.targetType === PRODUCT_TYPE) {
+                return getRenderer('object')(record.targetProduct, column, record, rowIndex, field)
+              } else if (record.targetType === ETC_TYPE) {
+                return getRenderer()(record.otherTarget, column, record, rowIndex, field)
+              }
+            },
+            align: 'center'
+          },
+
+          width: 250
+        },
+        {
+          type: 'string',
+          name: 'packingType',
+          header: i18next.t('field.packingType'),
+          record: { align: 'center' },
+          width: 250
+        },
+        {
+          type: 'integer',
+          name: 'qty',
+          header: i18next.t('field.qty'),
+          record: { align: 'center' },
+          width: 100
+        },
         {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
           record: { align: 'center', options: { queryName: 'vass' } },
-          width: 250,
-        },
-        {
-          type: 'select',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
-          record: { align: 'center', options: ['', i18next.t('label.all')] },
-          width: 150,
+          width: 250
         },
         {
           type: 'string',
           name: 'status',
           header: i18next.t('field.status'),
           record: { align: 'center' },
-          width: 150,
+          width: 150
         },
         {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
           record: { align: 'center' },
-          width: 350,
+          width: 350
         },
         {
           type: 'string',
           name: 'description',
           header: i18next.t('field.comment'),
-          width: 350,
-        },
-      ],
+          width: 350
+        }
+      ]
     }
   }
 
@@ -330,7 +372,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       query: gql`
         query {
           arrivalNotice(${gqlBuilder.buildArgs({
-            name: this._ganNo,
+            name: this._ganNo
           })}) {
             name
             bizplace {
@@ -366,15 +408,25 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
                 operationGuide
                 operationGuideType
               }
+              set
+              targetType
+              targetBatchId
+              targetProduct {
+                id
+                name
+                description
+              }
+              packingType
+              qty
+              otherTarget
               description
-              batchId
               remark
               status
               operationGuide
             }
           }
         }
-      `,
+      `
     })
 
     if (!response.errors) {
@@ -389,7 +441,16 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       this._fillupANForm(arrivalNotice)
 
       this.productData = { records: orderProducts }
-      this.vasData = { records: orderVass }
+      this.vasData = {
+        records: orderVass
+          .sort((a, b) => a.set - b.set)
+          .map(orderVas => {
+            return {
+              ...orderVas,
+              set: `Set ${orderVas.set}`
+            }
+          })
+      }
     }
   }
 
@@ -398,7 +459,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     if (this._status === ORDER_STATUS.PENDING.value) {
       this._actions = [
         { title: i18next.t('button.delete'), action: this._deleteArrivalNotice.bind(this) },
-        { title: i18next.t('button.confirm'), action: this._confirmArrivalNotice.bind(this) },
+        { title: i18next.t('button.confirm'), action: this._confirmArrivalNotice.bind(this) }
       ]
     }
 
@@ -409,7 +470,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     if (
       !this.isUserBelongsDomain &&
       this._status === ORDER_STATUS.PROCESSING.value &&
-      this.productData.records.some((product) => product.status === ORDER_PRODUCT_STATUS.READY_TO_APPROVED.value)
+      this.productData.records.some(product => product.status === ORDER_PRODUCT_STATUS.READY_TO_APPROVED.value)
     ) {
       this._actions = [{ title: i18next.t('button.approve'), action: this.openApproveProductPopup.bind(this) }]
     }
@@ -418,7 +479,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
 
     store.dispatch({
       type: UPDATE_CONTEXT,
-      context: this.context,
+      context: this.context
     })
   }
 
@@ -429,7 +490,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
           query {
             checkUserBelongsDomain
           }
-        `,
+        `
       })
 
       if (!response.errors) {
@@ -446,7 +507,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
 
   _fillupForm(form, data) {
     for (let key in data) {
-      Array.from(form.querySelectorAll('input, textarea, select')).forEach((field) => {
+      Array.from(form.querySelectorAll('input, textarea, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
         } else if (field.name === key) {
@@ -462,7 +523,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.you_wont_be_able_to_revert_this'),
         confirmButton: { text: i18next.t('button.confirm') },
-        cancelButton: { text: i18next.t('button.cancel') },
+        cancelButton: { text: i18next.t('button.cancel') }
       })
 
       if (!result.value) return
@@ -472,10 +533,10 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         query: gql`
             mutation {
               deleteArrivalNotice(${gqlBuilder.buildArgs({
-                name: this._ganNo,
+                name: this._ganNo
               })}) 
             }
-          `,
+          `
       })
 
       if (!response.errors) {
@@ -510,7 +571,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       title: i18next.t('title.are_you_sure'),
       text: i18next.t('text.confirm_arrival_notice'),
       confirmButton: { text: i18next.t('button.confirm') },
-      cancelButton: { text: i18next.t('button.cancel') },
+      cancelButton: { text: i18next.t('button.cancel') }
     })
 
     if (!result.value) {
@@ -522,12 +583,12 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         query: gql`
             mutation {
               confirmArrivalNotice(${gqlBuilder.buildArgs({
-                name: this._ganNo,
+                name: this._ganNo
               })}) {
                 name
               }
             }
-          `,
+          `
       })
 
       if (!response.errors) {
@@ -551,7 +612,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       {
         backdrop: true,
         size: 'large',
-        title: i18next.t('title.extra_product'),
+        title: i18next.t('title.extra_product')
       }
     )
   }
@@ -571,7 +632,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       {
         backdrop: true,
         size: 'large',
-        title: i18next.t('title.proceed_extra_product'),
+        title: i18next.t('title.proceed_extra_product')
       }
     )
   }
@@ -581,8 +642,8 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       new CustomEvent('notify', {
         detail: {
           type,
-          message,
-        },
+          message
+        }
       })
     )
   }

@@ -1,5 +1,6 @@
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
+import { getRenderer } from '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
@@ -7,6 +8,7 @@ import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import '../../components/popup-note'
 import '../../components/vas-relabel'
+import { BATCH_NO_TYPE, ETC_TYPE, PRODUCT_TYPE } from '../constants'
 
 class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -15,7 +17,7 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
       _rejectReason: String,
       config: Object,
       data: Object,
-      _template: Object
+      _template: Object,
     }
   }
 
@@ -72,7 +74,7 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
-      `
+      `,
     ]
   }
 
@@ -82,9 +84,9 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
       actions: [
         {
           title: i18next.t('button.back'),
-          action: () => history.back()
-        }
-      ]
+          action: () => history.back(),
+        },
+      ],
     }
   }
 
@@ -136,9 +138,9 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
   }
   pageInitialized() {
     this.config = {
+      list: { fields: ['targetType', 'targetDisplay', 'vasCount'] },
       pagination: { infinite: true },
       rows: {
-        selectable: { multiple: true },
         appendable: false,
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
@@ -148,46 +150,72 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
             } else {
               this._template = null
             }
-          }
-        }
+          },
+        },
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
-          type: 'object',
-          name: 'product',
-          header: i18next.t('field.inventory_list'),
+          type: 'string',
+          name: 'set',
+          header: i18next.t('field.set'),
           record: { align: 'center' },
-          width: 250
+          width: 100,
+        },
+        {
+          type: 'string',
+          name: 'targetType',
+          header: i18next.t('field.target_type'),
+          record: { align: 'center' },
+          width: 150,
+        },
+        {
+          type: 'string',
+          name: 'target',
+          header: i18next.t('field.target'),
+          record: {
+            renderer: (value, column, record, rowIndex, field) => {
+              if (record.targetType === BATCH_NO_TYPE) {
+                return getRenderer()(record.targetBatchId, column, record, rowIndex, field)
+              } else if (record.targetType === PRODUCT_TYPE) {
+                return getRenderer('object')(record.targetProduct, column, record, rowIndex, field)
+              } else if (record.targetType === ETC_TYPE) {
+                return getRenderer()(record.otherTarget, column, record, rowIndex, field)
+              }
+            },
+            align: 'center',
+          },
+
+          width: 250,
         },
         {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
           record: { align: 'center', options: { queryName: 'vass' } },
-          width: 250
+          width: 250,
         },
         {
           type: 'string',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
+          name: 'status',
+          header: i18next.t('field.status'),
           record: { align: 'center' },
-          width: 150
-        },
-        {
-          type: 'object',
-          name: 'location',
-          header: i18next.t('field.location'),
-          record: { align: 'center' },
-          width: 230
+          width: 150,
         },
         {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
-          width: 350
-        }
-      ]
+          record: { align: 'center' },
+          width: 350,
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.comment'),
+          width: 350,
+        },
+      ],
     }
   }
 
@@ -201,7 +229,7 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
       query: gql`
         query {
           vasOrder(${gqlBuilder.buildArgs({
-            name: this._vasNo
+            name: this._vasNo,
           })}) {
             id
             name
@@ -214,36 +242,34 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
                 operationGuide
                 operationGuideType
               }
-              inventory {
-                batchId
+              set
+              targetType
+              targetBatchId
+              targetProduct {
+                id
                 name
-                product {
-                  name
-                }
-                location {
-                  name
-                  description
-                }
+                description
               }
               operationGuide
               status
+              description
               remark
             }
           }
         }
-      `
+      `,
     })
 
     if (!response.errors) {
       const vasOrder = response.data.vasOrder
       this._rejectReason = vasOrder.remark
       this.data = {
-        records: vasOrder.orderVass.map(orderVas => {
+        records: vasOrder.orderVass.map((orderVas) => {
           return {
             ...orderVas,
-            ...orderVas.inventory
+            ...orderVas.inventory,
           }
-        })
+        }),
       }
     }
   }
@@ -253,8 +279,8 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
       new CustomEvent('notify', {
         detail: {
           type,
-          message
-        }
+          message,
+        },
       })
     )
   }
