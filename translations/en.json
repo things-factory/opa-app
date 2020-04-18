@@ -1017,5 +1017,16 @@
   "label.contact_name": "contact name",
   "label.partially_unloaded": "partially unloaded",
   "text.picked_weight_less_than_release": "picked weight less than release",
-  "text.pallet_is_in_progressing": "pallet is in progressing"
+  "text.pallet_is_in_progressing": "pallet is in progressing",
+  "text.there_is_no_selectable_item": "there is no selectable item",
+  "field.operationGuide": "operation guide",
+  "field.operationGuideType": "operation guide type",
+  "title.task_list": "task list",
+  "title.vas_issue": "vas issue",
+  "field.selected_qty": "selected qty",
+  "selected_qty_is_more_than_expected": "selected qty is more than expected",
+  "text.order_no_is_empty": "order no is empty",
+  "title.target_products": "target products",
+  "label.etc": "etc",
+  "text.there_is_non_assigned_vas": "there is non-assigned vas"
 }
