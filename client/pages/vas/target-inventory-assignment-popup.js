@@ -457,8 +457,8 @@ class TargetInventoryAssignmentPopup extends localize(i18next)(LitElement) {
   }
 
   checkInventoryValidity() {
-    if (this.selectedQty < this.qty) throw new Error('text.selected_qty_is_less_than_expected')
-    if (this.selectedQty > this.qty) throw new Error('text.selected_qty_is_more_than_expected')
+    if (this.selectedQty < this.qty) throw new Error(i18next.t('text.selected_qty_is_less_than_expected'))
+    if (this.selectedQty > this.qty) throw new Error(i18next.t('text.selected_qty_is_more_than_expected'))
   }
 
   _showToast({ type, message }) {
