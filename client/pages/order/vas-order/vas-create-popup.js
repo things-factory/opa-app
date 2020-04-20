@@ -172,12 +172,7 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
             : this.selectedTargetType === ETC_TYPE
             ? html`
                 <label>${i18next.t('label.target')}</label>
-                <input
-                  id="target-selector"
-                  required
-                  value="${(this.record && this.record.target) || ''}"
-                  @change="${this._checkQtyValidity.bind(this)}"
-                />
+                <input id="target-selector" required value="${(this.record && this.record.target) || ''}" />
               `
             : ''}
           ${this.selectedTarget && this.selectedTarget.packingTypes && this.selectedTarget.packingTypes.length
@@ -204,16 +199,19 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
                 </select>
               `
             : ''}
-
-          <label>${i18next.t('label.qty')}</label>
-          <input
-            id="qty-input"
-            type="number"
-            min="1"
-            ?required="${this.selectedTargetType !== ETC_TYPE}"
-            value="${(this.record && this.record.qty) || 1}"
-            @change="${this._checkQtyValidity.bind(this)}"
-          />
+          ${this.selectedTargetType !== ETC_TYPE
+            ? html`
+                <label>${i18next.t('label.qty')}</label>
+                <input
+                  id="qty-input"
+                  type="number"
+                  min="1"
+                  ?required="${this.selectedTargetType !== ETC_TYPE}"
+                  value="${(this.record && this.record.qty) || 1}"
+                  @change="${this._checkQtyValidity.bind(this)}"
+                />
+              `
+            : ''}
         </fieldset>
       </form>
 
@@ -285,7 +283,7 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
                         : this.targetSelector.selectedOptions[0].innerText,
                     target: this.targetSelector.value,
                     packingType: (this.packingTypeSelector && this.packingTypeSelector.value) || null,
-                    qty: Number(this.qtyInput.value) || null,
+                    qty: (this.qtyInput && Number(this.qtyInput.value)) || null,
                     vasCount: this.vasGrist.dirtyData.records.length,
                     orderVass: this.vasGrist.dirtyData.records
                   }

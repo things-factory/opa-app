@@ -2,7 +2,7 @@ import '@things-factory/barcode-ui'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client } from '@things-factory/shell'
+import { client, CustomAlert } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
@@ -38,6 +38,7 @@ class TargetInventoryAssignmentPopup extends localize(i18next)(LitElement) {
           background-color: var(--main-section-background-color);
         }
         .grist-container {
+          overflow: hidden;
           display: flex;
           flex: 1;
         }
@@ -331,14 +332,11 @@ class TargetInventoryAssignmentPopup extends localize(i18next)(LitElement) {
 
     try {
       this._checkQtyValidity(record.qty, selectedQty, this.qty)
-      this.data = {
+      this.inventoryData = {
         ...this.inventoryGrist.dirtyData,
         records: this.inventoryGrist.dirtyData.records.map((record, idx) => {
           if (idx === rowIdx) {
-            return {
-              ...record,
-              selected: selectedQty > 0
-            }
+            return { ...record, selected: Boolean(selectedQty > 0) }
           } else {
             return record
           }
@@ -354,10 +352,7 @@ class TargetInventoryAssignmentPopup extends localize(i18next)(LitElement) {
         ...this.inventoryGrist.dirtyData,
         records: this.inventoryGrist.dirtyData.records.map((record, idx) => {
           if (idx === rowIdx) {
-            return {
-              ...record,
-              selectedQty: evt.detail.before
-            }
+            return { ...record, selectedQty: evt.detail.before }
           } else {
             return record
           }
@@ -421,6 +416,18 @@ class TargetInventoryAssignmentPopup extends localize(i18next)(LitElement) {
   async assignInventories() {
     try {
       this.checkInventoryValidity()
+
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.assign_inventories'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) {
+        return
+      }
+
       const response = await client.query({
         query: gql`
           mutation {

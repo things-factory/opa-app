@@ -525,11 +525,12 @@ class WorksheetVas extends localize(i18next)(PageView) {
       .reduce(
         (returnObj, wsd) => {
           if (
-            wsd &&
-            wsd.targetVas &&
-            wsd.targetVas.inventory &&
-            wsd.targetVas.inventory.location &&
-            wsd.targetVas.inventory.location.name
+            (wsd &&
+              wsd.targetVas &&
+              wsd.targetVas.inventory &&
+              wsd.targetVas.inventory.location &&
+              wsd.targetVas.inventory.location.name) ||
+            wsd.targetVas.targetType === ETC_TYPE
           ) {
             returnObj.assignedData.push({
               ...wsd.targetVas,
@@ -541,6 +542,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
                   wsd.targetVas.inventory.location.name) ||
                 '',
               name: wsd.name,
+              issue: wsd.issue,
               status: wsd.status
             })
           } else {
