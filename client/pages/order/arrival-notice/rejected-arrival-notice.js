@@ -85,10 +85,8 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
     return {
       title: i18next.t('title.rejected_arrival_notice_detail'),
       actions: [
-        {
-          title: i18next.t('button.back'),
-          action: () => history.back()
-        }
+        { title: i18next.t('button.duplicate'), action: () => window.open(`duplicate_arrival_notice/${this._ganNo}`) },
+        { title: i18next.t('button.back'), action: () => history.back()}
       ]
     }
   }

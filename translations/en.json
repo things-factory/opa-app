@@ -1028,5 +1028,7 @@
   "text.order_no_is_empty": "order no is empty",
   "title.target_products": "target products",
   "label.etc": "etc",
-  "text.there_is_non_assigned_vas": "there is non-assigned vas"
+  "text.there_is_non_assigned_vas": "there is non-assigned vas",
+  "button.duplicate": "duplicate",
+  "text.invalid_vas_setting": "invalid VAS setting"
 }

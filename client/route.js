@@ -44,6 +44,10 @@ export default function route(page) {
       import('./pages/order/arrival-notice/create-arrival-notice')
       return page
 
+    case 'duplicate_arrival_notice':
+      import('./pages/order/arrival-notice/duplicate-arrival-notice')
+      return page
+
     case 'arrival_notices':
       import('./pages/order/arrival-notice/arrival-notice-list')
       return page
@@ -74,6 +78,10 @@ export default function route(page) {
 
     case 'create_release_order':
       import('./pages/order/release-order/create-release-order')
+      return page
+
+    case 'duplicate_release_order':
+      import('./pages/order/release-order/duplicate-release-order')
       return page
 
     case 'release_orders':

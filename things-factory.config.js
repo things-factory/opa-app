@@ -44,6 +44,10 @@ export default {
       page: 'create_arrival_notice'
     },
     {
+      tagname: 'duplicate-arrival-notice',
+      page: 'duplicate_arrival_notice'
+    },
+    {
       tagname: 'arrival-notice-list',
       page: 'arrival_notices'
     },
@@ -74,6 +78,10 @@ export default {
     {
       tagname: 'create-release-order',
       page: 'create_release_order'
+    },
+    {
+      tagname: 'duplicate-release-order',
+      page: 'duplicate_release_order'
     },
     {
       tagname: 'release-order-list',
