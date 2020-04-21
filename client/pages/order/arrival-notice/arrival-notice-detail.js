@@ -475,7 +475,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       this._actions = [{ title: i18next.t('button.approve'), action: this.openApproveProductPopup.bind(this) }]
     }
 
-    if (this._status !== ORDER_STATUS.PENDING.value) {
+    if (!this.isUserBelongsDomain && this._status !== ORDER_STATUS.PENDING.value) {
       this._actions = [{ title: i18next.t('button.duplicate'), action: () => window.open(`duplicate_arrival_notice/${this._ganNo}`) }]
     }
 
