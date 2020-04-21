@@ -80,10 +80,6 @@ export default function route(page) {
       import('./pages/order/release-order/create-release-order')
       return page
 
-    case 'duplicate_release_order':
-      import('./pages/order/release-order/duplicate-release-order')
-      return page
-
     case 'release_orders':
       import('./pages/order/release-order/release-order-list')
       return page
