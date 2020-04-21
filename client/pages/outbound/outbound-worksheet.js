@@ -84,7 +84,7 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
-        name: 'bizplaceName',
+        name: 'bizplaceId',
         label: i18next.t('field.customer'),
         type: 'select',
         options: [
@@ -93,7 +93,7 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
             .map(bizplaceList => {
               return {
                 name: bizplaceList.name,
-                value: bizplaceList.name
+                value: bizplaceList.id
               }
             })
             .sort(this._compareValues('name', 'asc'))
@@ -116,7 +116,7 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
 
     this.config = {
       list: {
-        fields: ['releaseGood|name', 'bizplace|name', 'type', 'releaseGood|refNo', 'status', 'startedAt', 'endedAt']
+        fields: ['releaseGood', 'bizplace', 'type', 'releaseRefNo', 'status', 'startedAt', 'endedAt']
       },
       rows: { appendable: false },
       columns: [
@@ -143,8 +143,8 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
           }
         },
         {
-          type: 'string',
-          name: 'releaseGood|name',
+          type: 'object',
+          name: 'releaseGood',
           header: i18next.t('field.release_good_no'),
           record: { align: 'left' },
           sortable: true,
@@ -152,15 +152,15 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'releaseGood|refNo',
+          name: 'releaseRefNo',
           header: i18next.t('field.ref_no'),
           record: { align: 'left' },
           sortable: true,
           width: 180
         },
         {
-          type: 'string',
-          name: 'bizplace|name',
+          type: 'object',
+          name: 'bizplace',
           header: i18next.t('field.customer'),
           record: { align: 'left' },
           sortable: true,
@@ -199,8 +199,8 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
           width: 160
         },
         {
-          type: 'string',
-          name: 'updater|name',
+          type: 'object',
+          name: 'updater',
           header: i18next.t('field.updater'),
           record: { editable: false, align: 'center' },
           sortable: true,
@@ -269,9 +269,7 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
         total: response.data.worksheets.total || 0,
         records:
           response.data.worksheets.items.map(item => {
-            return flattenObject({
-              ...item
-            })
+            return { ...item, releaseRefNo: item.releaseGood.refNo || '' }
           }) || {}
       }
     }

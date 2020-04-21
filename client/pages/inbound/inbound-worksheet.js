@@ -134,7 +134,7 @@ class InboundWorksheet extends localize(i18next)(PageView) {
 
     this.config = {
       list: {
-        fields: ['arrivalNotice', 'bizplace', 'type', 'refNo', 'status', 'startedAt', 'endedAt']
+        fields: ['arrivalNotice', 'bizplace', 'type', 'arrivalRefNo', 'status', 'startedAt', 'endedAt']
       },
       rows: { appendable: false },
       columns: [
@@ -173,7 +173,7 @@ class InboundWorksheet extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'refNo',
+          name: 'arrivalRefNo',
           header: i18next.t('field.ref_no'),
           record: { align: 'left' },
           sortable: true,
@@ -301,7 +301,7 @@ class InboundWorksheet extends localize(i18next)(PageView) {
         total: response.data.worksheets.total || 0,
         records:
           response.data.worksheets.items.map(item => {
-            return { ...item, refNo: item.arrivalNotice.refNo || '' }
+            return { ...item, arrivalRefNo: item.arrivalNotice.refNo || '' }
           }) || {}
       }
     }
