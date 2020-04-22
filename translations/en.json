@@ -1030,5 +1030,7 @@
   "label.etc": "etc",
   "text.there_is_non_assigned_vas": "there is non-assigned vas",
   "button.duplicate": "duplicate",
-  "text.invalid_vas_setting": "invalid VAS setting"
+  "text.invalid_vas_setting": "invalid VAS setting",
+  "text.there_is_no_vas": "there is no VAS",
+  "text.assign_inventories": "assign inventories"
 }
