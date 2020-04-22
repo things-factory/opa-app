@@ -461,12 +461,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
               editable: true,
               align: 'left',
               options: {
-                queryName: 'inventories',
+                queryName: 'inventoriesByPallet',
                 basicArgs: {
-                  filters: [
-                    { name: 'status', operator: 'eq', value: INVENTORY_STATUS.STORED.value },
-                    { name: 'remainOnly', operator: 'eq', value: true }
-                  ],
+                  filters: [{ name: 'status', operator: 'eq', value: INVENTORY_STATUS.STORED.value }],
                   locationSortingRules
                 },
                 nameField: 'batchId',

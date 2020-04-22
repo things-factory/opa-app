@@ -96,6 +96,7 @@
     "inquirer": "^7.0.0"
   },
   "resolutions": {
-    "@things-factory/auth-base": "2.0.2"
+    "@things-factory/auth-base": "2.0.2",
+    "@things-factory/worksheet-base": "^2.5.0-beta"
   }
 }
