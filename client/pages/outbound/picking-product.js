@@ -490,7 +490,6 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
               <picking-replacement-popup
                 .orderInventory="${this._selectedOrderInventory}"
                 .replacePalletId="${this.palletInput.value}"
-                .isWholePicking="${this.isWholePicking}"
                 @completed="${() => {
                   this._fetchInventories(this.releaseGoodNoInput.value)
                   this._fetchPalletsHandler(this.releaseGoodNoInput.value)
