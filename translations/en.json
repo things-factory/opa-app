@@ -1032,5 +1032,6 @@
   "button.duplicate": "duplicate",
   "text.invalid_vas_setting": "invalid VAS setting",
   "text.there_is_no_vas": "there is no VAS",
-  "text.assign_inventories": "assign inventories"
+  "text.assign_inventories": "assign inventories",
+  "text.invalid_release_qty": "invalid release qty"
 }
