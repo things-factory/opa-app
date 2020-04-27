@@ -747,7 +747,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
-        text: i18next.t('text.activate_putaway_worksheet'),
+        text: i18next.t('text.activate_picking_worksheet'),
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })

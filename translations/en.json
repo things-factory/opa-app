@@ -541,6 +541,7 @@
   "text.selected_item_qty_is_more_than_order_release_qty": "selected item qty is more than order release qty",
   "text.selected_item_qty_is_less_than_order_release_qty": "selected item qty is less than order release qty",
   "text.activate_putaway_worksheet": "activate putaway worksheet",
+  "text.activate_picking_worksheet": "activate picking worksheet",
   "text.driver_and_vehicle_is_not_selected": "driver and vehicle is not selected",
   "text.activate_unloading_worksheet": "activate unloading worksheet",
   "text.activate_return_worksheet": "activate return worksheet",
