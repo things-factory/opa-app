@@ -1034,5 +1034,7 @@
   "text.invalid_vas_setting": "invalid VAS setting",
   "text.there_is_no_vas": "there is no VAS",
   "text.assign_inventories": "assign inventories",
-  "text.invalid_release_qty": "invalid release qty"
+  "text.invalid_release_qty": "invalid release qty",
+  "title.upload_document": "upload document",
+  "label.upload_grn": "upload GRN"
 }
