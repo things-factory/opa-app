@@ -420,23 +420,17 @@ class InventoryHistory extends localize(i18next)(PageView) {
   }
 
   _modifyDateRange(e) {
-    this._toDateInput.value = ''
     const fromDate = e.currentTarget.value
+
+    if (this._toDateInput.value < fromDate) this._toDateInput.value = fromDate
+
     let min = new Date(fromDate)
-    let max = new Date(fromDate)
-    max.setMonth(max.getMonth() + 1)
-    max.setHours(0, 0, 0, 0)
     let today = new Date()
-    today.setDate(today.getDate() + 1)
     today.setHours(0, 0, 0, 0)
 
-    if (max >= today) max = today
     min = min.toISOString().split('T')[0]
-    max = max.toISOString().split('T')[0]
 
-    this._fromDateInput.max = max
     this._toDateInput.min = min
-    this._toDateInput.max = max
   }
 
   get _columns() {
