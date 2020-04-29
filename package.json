@@ -57,7 +57,7 @@
     "@things-factory/product-base": "^2.5.0-beta",
     "@things-factory/product-ui": "^2.5.0-beta",
     "@things-factory/resource-ui": "^2.0.0",
-    "@things-factory/sales-base": "^2.5.0-beta",
+    "@things-factory/sales-base": "^2.5.0-beta.0",
     "@things-factory/setting-ui": "^2.0.0",
     "@things-factory/system-ui": "^2.0.0",
     "@things-factory/transport-base": "^2.0.0",
@@ -97,7 +97,9 @@
     "inquirer": "^7.0.0"
   },
   "resolutions": {
-    "@things-factory/auth-base": "2.0.2",
-    "@things-factory/worksheet-base": "^2.5.0-beta"
+    "@things-factory/worksheet-base": "^2.5.0-beta.0",
+    "@things-factory/sales-base": "^2.5.0-beta.0",
+    "@things-factory/warehouse-base": "^2.5.0-beta.0",
+    "@things-factory/product-base": "^2.5.0-beta.0"
   }
 }

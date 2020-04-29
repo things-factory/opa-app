@@ -4,7 +4,7 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, CustomAlert, PageView, ScrollbarStyles, store } from '@things-factory/shell'
+import { client, CustomAlert, PageView, ScrollbarStyles, store, navigate } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
@@ -759,16 +759,11 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _showInventoryMovement(columns, data, column, record, rowIndex) {
-    openPopup(
-      html`
-        <inventory-history-by-pallet .palletId="${record.palletId}"></inventory-history-by-pallet>
-      `,
-      {
-        backdrop: true,
-        size: 'large',
-        title: `${record.palletId} - History`
-      }
-    )
+    openPopup(html` <inventory-history-by-pallet .palletId="${record.palletId}"></inventory-history-by-pallet> `, {
+      backdrop: true,
+      size: 'large',
+      title: `${record.palletId} - History`
+    })
   }
 
   async _printPalletLabel() {

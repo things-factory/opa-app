@@ -209,6 +209,14 @@ export default {
       tagname: 'customer-intransit-inventory',
       page: 'customer_intransit_inventory'
     },
+    {
+      tagname: 'inventory-check-list',
+      page: 'inventory_check_list'
+    },
+    {
+      tagname: 'worksheet-cycle-count',
+      page: 'worksheet_cycle_count'
+    },
 
     /**
      * System Menus Section

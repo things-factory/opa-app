@@ -201,6 +201,14 @@ export default function route(page) {
       import('./pages/inventory/customer-intransit-inventory')
       return page
 
+    case 'inventory_check_list':
+      import('./pages/inventory-check/inventory-check-list')
+      return page
+
+    case 'worksheet_cycle_count':
+      import('./pages/inventory-check/worksheet-cycle-count')
+      return page
+
     /**
      * System Menus Section
      */

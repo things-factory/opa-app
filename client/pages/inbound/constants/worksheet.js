@@ -7,6 +7,14 @@ export const WORKSHEET_TYPE = {
     name: 'putaway',
     value: 'PUTAWAY'
   },
+  CYCLE_COUNT: {
+    name: 'cycle_count',
+    value: 'CYCLE_COUNT'
+  },
+  STOCK_TAKE: {
+    name: 'stock_take',
+    value: 'STOCK_TAKE'
+  },
   VAS: {
     name: 'vas',
     value: 'VAS'
