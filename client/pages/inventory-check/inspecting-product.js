@@ -369,7 +369,8 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           .map(record => {
             return {
               ...record,
-              completed: record.status === (WORKSHEET_STATUS.NOT_TALLY.value || WORKSHEET_STATUS.NOT_TALLY.value),
+              completed:
+                record.status === WORKSHEET_STATUS.NOT_TALLY.value || record.status === WORKSHEET_STATUS.DONE.value,
               locationName: record.location.name
             }
           })

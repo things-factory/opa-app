@@ -7,6 +7,7 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { WORKSHEET_TYPE } from '../inbound/constants/worksheet'
+import { ORDER_STATUS } from '../order/constants/order'
 
 class InventoryCheckList extends localize(i18next)(PageView) {
   static get styles() {
@@ -112,12 +113,17 @@ class InventoryCheckList extends localize(i18next)(PageView) {
             click: (columns, data, column, record, rowIndex) => {
               if (!record.id) return
               const type = record.type
+              const status = record.status
 
               // Handle PICKING
-              if (type === WORKSHEET_TYPE.CYCLE_COUNT.value) {
+              if (
+                type === WORKSHEET_TYPE.CYCLE_COUNT.value &&
+                status !== ORDER_STATUS.PENDING_REVIEW.value &&
+                status !== ORDER_STATUS.DONE.value
+              ) {
                 navigate(`worksheet_cycle_count/${record.name}`)
-              } else if (type === WORKSHEET_TYPE.STOCK_TAKE.value) {
-                navigate(`worksheet_stock_take/${record.name}`)
+              } else {
+                navigate(`cycle_count_report/${record.name}`)
               }
             }
           }
@@ -152,7 +158,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
           header: i18next.t('field.status'),
           record: { align: 'center' },
           sortable: true,
-          width: 100
+          width: 120
         },
         {
           type: 'datetime',
@@ -213,6 +219,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
                 name
                 description
                 executionDate
+                status
               }
               bizplace {
                 id
@@ -240,7 +247,11 @@ class InventoryCheckList extends localize(i18next)(PageView) {
         total: response.data.worksheets.total || 0,
         records:
           response.data.worksheets.items.map(item => {
-            return { ...item, executionDate: item.inventoryCheck.executionDate || '' }
+            return {
+              ...item,
+              executionDate: item.inventoryCheck.executionDate || '',
+              status: item.inventoryCheck.status
+            }
           }) || {}
       }
     }

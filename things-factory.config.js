@@ -221,6 +221,10 @@ export default {
       tagname: 'inspecting-product',
       page: 'inspecting_product'
     },
+    {
+      tagname: 'cycle-count-report',
+      page: 'cycle_count_report'
+    },
 
     /**
      * System Menus Section

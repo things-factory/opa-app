@@ -213,6 +213,10 @@ export default function route(page) {
       import('./pages/inventory-check/inspecting-product')
       return page
 
+    case 'cycle_count_report':
+      import('./pages/inventory-check/cycle-count-report')
+      return page
+
     /**
      * System Menus Section
      */
