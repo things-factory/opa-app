@@ -379,7 +379,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
         this._showToast({ message: i18next.t('text.worksheet_activated') })
         await this.fetchWorksheet()
         this._updateContext()
-        navigate(`inventory_count_list`)
+        navigate(`inventory_check_list`)
       }
     } catch (e) {
       this._showToast(e)

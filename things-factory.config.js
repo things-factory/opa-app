@@ -217,6 +217,10 @@ export default {
       tagname: 'worksheet-cycle-count',
       page: 'worksheet_cycle_count'
     },
+    {
+      tagname: 'inspecting-product',
+      page: 'inspecting_product'
+    },
 
     /**
      * System Menus Section

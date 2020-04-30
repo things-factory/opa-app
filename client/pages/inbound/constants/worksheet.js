@@ -49,5 +49,9 @@ export const WORKSHEET_STATUS = {
   PARTIALLY_UNLOADED: {
     name: 'partially_unloaded',
     value: 'PARTIALLY_UNLOADED'
+  },
+  NOT_TALLY: {
+    name: 'not_tally',
+    value: 'NOT_TALLY'
   }
 }

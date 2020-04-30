@@ -209,6 +209,10 @@ export default function route(page) {
       import('./pages/inventory-check/worksheet-cycle-count')
       return page
 
+    case 'inspecting_product':
+      import('./pages/inventory-check/inspecting-product')
+      return page
+
     /**
      * System Menus Section
      */
