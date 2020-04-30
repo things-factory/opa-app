@@ -547,6 +547,8 @@
   "release_orders_requests": "release orders requests",
   "text.there_is_no_product": "there is no product selected",
   "text.accept_release_order": "accept release order",
+  "text.inspected_qty_is_empty": "inspected qty is empty",
+  "text.inspected_weight_is_empty": "inspected weight is empty",
   "text.selected_qty_is_less_than_expected": "selected qty is less than expected",
   "text.selected_qty_is_more_than_expected": "selected qty is more than expected",
   "text.selected_item_qty_is_more_than_order_release_qty": "selected item qty is more than order release qty",
