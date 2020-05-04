@@ -46,6 +46,10 @@ export const WORKSHEET_STATUS = {
     name: 'done',
     value: 'DONE'
   },
+  ADJUSTED: {
+    name: 'adjusted',
+    value: 'ADJUSTED'
+  },
   PARTIALLY_UNLOADED: {
     name: 'partially_unloaded',
     value: 'PARTIALLY_UNLOADED'

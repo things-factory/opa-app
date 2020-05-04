@@ -139,11 +139,23 @@ class CycleCountReport extends localize(i18next)(PageView) {
         appendable: false,
         classifier: (record, rowIndex) => {
           return {
-            emphasized: record.status === WORKSHEET_STATUS.NOT_TALLY.value
+            emphasized:
+              record.status === WORKSHEET_STATUS.NOT_TALLY.value || record.status === WORKSHEET_STATUS.ADJUSTED.value
           }
         }
       },
-      list: { fields: ['batchId', 'palletId', 'product', 'packingType', 'releaseQty', 'status'] },
+      list: {
+        fields: [
+          'batchId',
+          'palletId',
+          'product',
+          'packingType',
+          'inspectedLocation',
+          'inspectedQty',
+          'inspectedWeight',
+          'status'
+        ]
+      },
       pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -287,7 +299,11 @@ class CycleCountReport extends localize(i18next)(PageView) {
       const worksheetDetails = worksheet.worksheetDetails
       const tallyInv = worksheetDetails.filter(wd => wd.status === WORKSHEET_STATUS.DONE.value)
       const notTallyInv = worksheetDetails.filter(wd => wd.status === WORKSHEET_STATUS.NOT_TALLY.value)
-      const accuracyInv = (tallyInv.length / (tallyInv.length + notTallyInv.length)) * 100 + `%`
+      const adjustedInv = worksheetDetails.filter(wd => wd.status === WORKSHEET_STATUS.ADJUSTED.value)
+
+      const accuracyInv =
+        (tallyInv.length / (tallyInv.length + (notTallyInv.length ? notTallyInv.length : adjustedInv.length))) * 100 +
+        `%`
 
       this._reportStatus = worksheet.inventoryCheck.status
       this._cycleCountNo = (worksheet.inventoryCheck && worksheet.inventoryCheck.name) || ''
@@ -385,12 +401,10 @@ class CycleCountReport extends localize(i18next)(PageView) {
       const response = await client.query({
         query: gql`
           mutation {
-            activateCycleCount(${gqlBuilder.buildArgs({
-              worksheetNo: this._worksheetNo,
+            cycleCountAdjustment(${gqlBuilder.buildArgs({
+              cycleCountNo: this._cycleCountNo,
               cycleCountWorksheetDetails: this._getCycleCountWSD()
-            })}) {
-              name
-            }
+            })}) 
           }
         `
       })

@@ -638,6 +638,7 @@
   "text.invalid_quantity_input": "invalid quantity input",
   "text.invalid_release_date": "invalid release date",
   "text.inventory_is_not_selected": "inventory is not selected",
+  "text.inventory_adjustment": "inventory adjustment",
   "text.list_is_not_completed": "list is not completed",
   "text.loading_completed": "loading completed",
   "text.location_code_is_empty": "location code is empty",
