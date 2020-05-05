@@ -986,6 +986,7 @@
   "label.approved_at": "approved at",
   "label.inventory_accuracy": "inventory accuracy",
   "text.cannot_delete_unsaved_location(s)": "cannot delete unsaved location(s)",
+  "text.cycle_count_date_invalid": "cycle count date invalid",
   "label.add_extension": "add extension",
   "label.select_file": "select file",
   "text.goods_received_note_uploaded": "text.goods_received_note_uploaded",

@@ -67,11 +67,11 @@ class CycleCountPopup extends localize(i18next)(LitElement) {
 
   render() {
     return html`
-      <form id="input-form" class="multi-column-form">
+      <form id="input-form" name="cycleCount" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.cycle_count_information')}</legend>
           <label>${i18next.t('label.execute_date')}</label>
-          <input name="executionDate" type="date" min="${this._getStdDate()}" />
+          <input name="executionDate" type="date" min="${this._getStdDate()}" required />
         </fieldset>
       </form>
 
@@ -96,6 +96,10 @@ class CycleCountPopup extends localize(i18next)(LitElement) {
 
   get date() {
     return this.shadowRoot.querySelector('input[name=executionDate]')
+  }
+
+  get cycleCountForm() {
+    return this.shadowRoot.querySelector('form[name=cycleCount]')
   }
 
   async firstUpdated() {
@@ -180,6 +184,7 @@ class CycleCountPopup extends localize(i18next)(LitElement) {
       }
     })
     try {
+      this._validateDate()
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.create_cycle_count'),
@@ -213,6 +218,10 @@ class CycleCountPopup extends localize(i18next)(LitElement) {
     } catch (e) {
       this._showToast(e)
     }
+  }
+
+  _validateDate() {
+    if (!this.cycleCountForm.checkValidity()) throw new Error('text.cycle_count_date_invalid')
   }
 
   _compareValues(key, order = 'asc') {
