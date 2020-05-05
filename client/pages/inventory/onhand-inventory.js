@@ -279,7 +279,8 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
             filters: [
               ...filters,
               { name: 'status', operator: 'notin', value: ['INTRANSIT', 'TERMINATED', 'DELETED'] },
-              { name: 'remainOnly', operator: 'eq', value: true }
+              { name: 'remainOnly', operator: 'eq', value: true },
+              { name: 'unlockOnly', operator: 'eq', value: true }
             ],
             pagination: { page, limit },
             sortings: sorters
