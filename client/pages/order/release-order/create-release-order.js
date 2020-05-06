@@ -11,6 +11,7 @@ import '../../components/vas-relabel'
 import '../../order/vas-order/vas-create-popup'
 import {
   BATCH_NO_TYPE,
+  BATCH_AND_PRODUCT_TYPE,
   INVENTORY_STATUS,
   ORDER_INVENTORY_STATUS,
   ORDER_TYPES,
@@ -930,11 +931,16 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
     const standardProductList = isFieldChanged ? this.inventoryGrist.dirtyData.records : this.inventoryData.records
     const batchPackPairs = standardProductList
-      .filter(record => record.batchId && record.product && record.product.id && record.packingType)
+      .filter(record => record.batchId && record.packingType)
       .map(record => `${record.batchId}-${record.packingType}`)
+
     const productPackPairs = standardProductList
       .filter(record => record.product && record.product.id)
       .map(record => `${record.product.id}-${record.packingType}`)
+
+    const batchProductPackPairs = standardProductList
+      .filter(record => record.batchId && record.product && record.product.id && record.packingType)
+      .map(record => `${record.batchId}-${record.product.id}-${record.packingType}`)
 
     this.vasData = {
       ...this.vasData,
@@ -954,6 +960,18 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         } else if (
           record.targetType === PRODUCT_TYPE &&
           productPackPairs.indexOf(`${record.target}-${record.packingType}`) < 0
+        ) {
+          return {
+            ...record,
+            ready: false,
+            target: null,
+            targetDisplay: null,
+            packingType: null,
+            qty: 1
+          }
+        } else if (
+          record.targetType === BATCH_AND_PRODUCT_TYPE &&
+          batchProductPackPairs.indexOf(`${record.target.batchId}-${record.target.productId}-${record.packingType}`) < 0
         ) {
           return {
             ...record,
@@ -1039,9 +1057,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             set: idx + 1,
             vas: { id: orderVas.vas.id },
             remark: orderVas.remark,
-            targetType: record.targetType,
-            packingType: record.packingType,
-            qty: record.qty
+            targetType: record.targetType
           }
 
           if (orderVas.operationGuide && orderVas.operationGuide.data) {
@@ -1050,8 +1066,17 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
           if (record.targetType === BATCH_NO_TYPE) {
             result.targetBatchId = record.target
+            result.packingType = record.packingType
+            result.qty = record.qty
           } else if (record.targetType === PRODUCT_TYPE) {
             result.targetProduct = { id: record.target }
+            result.packingType = record.packingType
+            result.qty = record.qty
+          } else if (record.targetType === BATCH_AND_PRODUCT_TYPE) {
+            result.targetBatchId = record.target.batchId
+            result.targetProduct = { id: record.target.productId }
+            result.packingType = record.packingType
+            result.qty = record.qty
           } else {
             result.otherTarget = record.target
           }
@@ -1094,8 +1119,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       openPopup(
         html`
           <vas-create-popup
-            .targetBatchList="${this.getTargetBatchList()}"
-            .targetProductList="${this.getTargetProductList()}"
+            .targetList="${this.inventoryGrist.dirtyData.records.map(record => {
+              return { ...record, packQty: record.releaseQty }
+            })}"
             .record="${record}"
             @completed="${e => {
               if (this.vasGrist.dirtyData.records.length === this._selectedVasRecordIdx) {
@@ -1141,98 +1167,6 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       throw new Error(i18next.t('text.invalid_release_qty'))
 
     return true
-  }
-
-  getTargetBatchList() {
-    if (this.checkInventoryValidity()) {
-      return this.inventoryGrist.dirtyData.records.reduce((batchList, record) => {
-        if (batchList.find(batch => batch.value === record.batchId)) {
-          batchList = batchList.map(batch => {
-            if (batch.value === record.batchId) {
-              return {
-                ...batch,
-                packingTypes: batch.packingTypes.find(packingType => packingType.type === record.packingType)
-                  ? batch.packingTypes.map(packingType => {
-                      if (packingType.type === record.packingType) {
-                        packingType = {
-                          ...packingType,
-                          packQty: packingType.packQty + record.releaseQty
-                        }
-                      }
-
-                      return packingType
-                    })
-                  : [
-                      ...batch.packingTypes,
-                      {
-                        type: record.packingType,
-                        packQty: record.releaseQty
-                      }
-                    ]
-              }
-            } else {
-              return batch
-            }
-          })
-        } else {
-          batchList.push({
-            display: record.batchId,
-            value: record.batchId,
-            packingTypes: [{ type: record.packingType, packQty: record.releaseQty }]
-          })
-        }
-
-        return batchList
-      }, [])
-    } else {
-      return []
-    }
-  }
-
-  getTargetProductList() {
-    if (this.checkInventoryValidity()) {
-      return this.inventoryGrist.dirtyData.records.reduce((productList, record) => {
-        if (productList.find(product => product.value === record.product.id)) {
-          return productList.map(product => {
-            if (product.value === record.product.id) {
-              return {
-                ...product,
-                packingTypes: product.packingTypes.find(packingType => packingType.type === record.packingType)
-                  ? product.packingTypes.map(packingType => {
-                      if (packingType.type === record.packingType) {
-                        packingType = {
-                          ...packingType,
-                          packQty: packingType.packQty + record.releaseQty
-                        }
-                      }
-
-                      return packingType
-                    })
-                  : [
-                      ...product.packingTypes,
-                      {
-                        type: record.packingType,
-                        packQty: record.releaseQty
-                      }
-                    ]
-              }
-            } else {
-              return product
-            }
-          })
-        } else {
-          productList.push({
-            display: `${record.product.name} ${record.product.description ? ` (${record.product.description})` : ''}`,
-            value: record.product.id,
-            packingTypes: [{ type: record.packingType, packQty: record.releaseQty }]
-          })
-        }
-
-        return productList
-      }, [])
-    } else {
-      return []
-    }
   }
 
   _showToast({ type, message }) {

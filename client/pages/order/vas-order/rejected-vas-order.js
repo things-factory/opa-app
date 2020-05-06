@@ -8,7 +8,7 @@ import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import '../../components/popup-note'
 import '../../components/vas-relabel'
-import { BATCH_NO_TYPE, ETC_TYPE, PRODUCT_TYPE } from '../constants'
+import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, PRODUCT_TYPE } from '../constants'
 
 class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -179,6 +179,14 @@ class RejectedVasOrder extends connect(store)(localize(i18next)(PageView)) {
                 return getRenderer()(record.targetBatchId, column, record, rowIndex, field)
               } else if (record.targetType === PRODUCT_TYPE) {
                 return getRenderer('object')(record.targetProduct, column, record, rowIndex, field)
+              } else if (record.targetType === BATCH_AND_PRODUCT_TYPE) {
+                return getRenderer()(
+                  `${record.targetBatchId} / ${record.targetProduct.name}`,
+                  column,
+                  record,
+                  rowIndex,
+                  field
+                )
               } else if (record.targetType === ETC_TYPE) {
                 return getRenderer()(record.otherTarget, column, record, rowIndex, field)
               }

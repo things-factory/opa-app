@@ -2,11 +2,12 @@ import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, CustomAlert, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-factory/shell'
+import { client, CustomAlert, navigate, PageView } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../order/vas-order/vas-create-popup'
-import { BATCH_NO_TYPE, PRODUCT_TYPE } from '../constants'
+import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, PRODUCT_TYPE } from '../constants'
 
 class CreateArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
@@ -38,6 +39,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         .container {
           flex: 1;
           display: flex;
+          overflow: hidden;
         }
         .grist {
           background-color: var(--main-section-background-color);
@@ -509,11 +511,16 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
     const standardProductList = isFieldChanged ? this.productGrist.dirtyData.records : this.productData.records
     const batchPackPairs = standardProductList
-      .filter(record => record.batchId && record.product && record.product.id && record.packingType)
+      .filter(record => record.batchId && record.packingType)
       .map(record => `${record.batchId}-${record.packingType}`)
+
     const productPackPairs = standardProductList
       .filter(record => record.product && record.product.id)
       .map(record => `${record.product.id}-${record.packingType}`)
+
+    const batchProductPackPairs = standardProductList
+      .filter(record => record.batchId && record.product && record.product.id && record.packingType)
+      .map(record => `${record.batchId}-${record.product.id}-${record.packingType}`)
 
     this.vasData = {
       ...this.vasData,
@@ -533,6 +540,18 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         } else if (
           record.targetType === PRODUCT_TYPE &&
           productPackPairs.indexOf(`${record.target}-${record.packingType}`) < 0
+        ) {
+          return {
+            ...record,
+            ready: false,
+            target: null,
+            targetDisplay: null,
+            packingType: null,
+            qty: 1
+          }
+        } else if (
+          record.targetType === BATCH_AND_PRODUCT_TYPE &&
+          batchProductPackPairs.indexOf(`${record.target.batchId}-${record.target.productId}-${record.packingType}`) < 0
         ) {
           return {
             ...record,
@@ -593,9 +612,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             set: idx + 1,
             vas: { id: orderVas.vas.id },
             remark: orderVas.remark,
-            targetType: record.targetType,
-            packingType: record.packingType,
-            qty: record.qty
+            targetType: record.targetType
           }
 
           if (orderVas.operationGuide && orderVas.operationGuide.data) {
@@ -604,8 +621,17 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
           if (record.targetType === BATCH_NO_TYPE) {
             result.targetBatchId = record.target
+            result.packingType = record.packingType
+            result.qty = record.qty
           } else if (record.targetType === PRODUCT_TYPE) {
             result.targetProduct = { id: record.target }
+            result.packingType = record.packingType
+            result.qty = record.qty
+          } else if (record.targetType === BATCH_AND_PRODUCT_TYPE) {
+            result.targetBatchId = record.target.batchId
+            result.targetProduct = { id: record.target.productId }
+            result.packingType = record.packingType
+            result.qty = record.qty
           } else {
             result.otherTarget = record.target
           }
@@ -639,8 +665,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       openPopup(
         html`
           <vas-create-popup
-            .targetBatchList="${this.getTargetBatchList()}"
-            .targetProductList="${this.getTargetProductList()}"
+            .targetList="${this.productGrist.dirtyData.records}"
             .record="${record}"
             @completed="${e => {
               if (this.vasGrist.dirtyData.records.length === this._selectedVasRecordIdx) {
@@ -691,96 +716,6 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       throw new Error(i18next.t('text.invalid_pack_qty'))
 
     return true
-  }
-
-  getTargetBatchList() {
-    if (this.checkProductValidity()) {
-      return this.productGrist.dirtyData.records.reduce((batchList, record) => {
-        if (batchList.find(batch => batch.value === record.batchId)) {
-          batchList = batchList.map(batch => {
-            if (batch.value === record.batchId) {
-              return {
-                ...batch,
-                packingTypes: batch.packingTypes.find(packingType => packingType.type === record.packingType)
-                  ? batch.packingTypes.map(packingType => {
-                      if (packingType.type === record.packingType) {
-                        packingType = {
-                          ...packingType,
-                          packQty: packingType.packQty + record.packQty
-                        }
-                      }
-
-                      return packingType
-                    })
-                  : [
-                      ...batch.packingTypes,
-                      {
-                        type: record.packingType,
-                        packQty: record.packQty
-                      }
-                    ]
-              }
-            } else {
-              return batch
-            }
-          })
-        } else {
-          batchList.push({
-            display: record.batchId,
-            value: record.batchId,
-            packingTypes: [{ type: record.packingType, packQty: record.packQty }]
-          })
-        }
-
-        return batchList
-      }, [])
-    } else {
-      return []
-    }
-  }
-
-  getTargetProductList() {
-    if (this.checkProductValidity()) {
-      return this.productGrist.dirtyData.records.reduce((productList, record) => {
-        if (productList.find(product => product.value === record.product.id)) {
-          return productList.map(product => {
-            if (product.value === record.product.id) {
-              return {
-                ...product,
-                packingTypes: product.packingTypes.find(packingType => packingType.type === record.packingType)
-                  ? product.packingTypes.map(packingType => {
-                      if (packingType.type === record.packingType) {
-                        packingType = {
-                          ...packingType,
-                          packQty: packingType.packQty + record.packQty
-                        }
-                      }
-
-                      return packingType
-                    })
-                  : [
-                      ...product.packingTypes,
-                      {
-                        type: record.packingType,
-                        packQty: record.packQty
-                      }
-                    ]
-              }
-            } else {
-              return product
-            }
-          })
-        } else {
-          productList.push({
-            display: `${record.product.name} ${record.product.description ? ` (${record.product.description})` : ''}`,
-            value: record.product.id,
-            packingTypes: [{ type: record.packingType, packQty: record.packQty }]
-          })
-        }
-
-        return productList
-      }, [])
-    }
   }
 
   _showToast({ type, message }) {

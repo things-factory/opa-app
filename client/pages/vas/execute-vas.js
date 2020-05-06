@@ -20,7 +20,7 @@ import { connect } from 'pwa-helpers/connect-mixin.js'
 import '../components/popup-note'
 import '../components/vas-relabel'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
-import { ORDER_TYPES, PRODUCT_TYPE, ETC_TYPE, BATCH_NO_TYPE } from '../order/constants'
+import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, ORDER_TYPES, PRODUCT_TYPE } from '../order/constants'
 
 class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -335,6 +335,14 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
                 return getRenderer()(record.targetBatchId, column, record, rowIndex, field)
               } else if (record.targetType === PRODUCT_TYPE) {
                 return getRenderer('object')(record.targetProduct, column, record, rowIndex, field)
+              } else if (record.targetType === BATCH_AND_PRODUCT_TYPE) {
+                return getRenderer()(
+                  `${record.targetBatchId} / ${record.targetProduct.name}`,
+                  column,
+                  record,
+                  rowIndex,
+                  field
+                )
               } else if (record.targetType === ETC_TYPE) {
                 return getRenderer()(record.otherTarget, column, record, rowIndex, field)
               }

@@ -8,7 +8,7 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/vas-relabel'
-import { BATCH_NO_TYPE, ETC_TYPE, PRODUCT_TYPE } from '../constants'
+import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, PRODUCT_TYPE } from '../constants'
 import { ORDER_PRODUCT_STATUS, ORDER_STATUS } from '../constants/order'
 import './extra-product-popup'
 import './proceed-extra-product-popup'
@@ -311,6 +311,14 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
                 return getRenderer()(record.targetBatchId, column, record, rowIndex, field)
               } else if (record.targetType === PRODUCT_TYPE) {
                 return getRenderer('object')(record.targetProduct, column, record, rowIndex, field)
+              } else if (record.targetType === BATCH_AND_PRODUCT_TYPE) {
+                return getRenderer()(
+                  `${record.targetBatchId} / ${record.targetProduct.name}`,
+                  column,
+                  record,
+                  rowIndex,
+                  field
+                )
               } else if (record.targetType === ETC_TYPE) {
                 return getRenderer()(record.otherTarget, column, record, rowIndex, field)
               }
@@ -476,7 +484,9 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     }
 
     if (!this.isUserBelongsDomain && this._status !== ORDER_STATUS.PENDING.value) {
-      this._actions = [{ title: i18next.t('button.duplicate'), action: () => window.open(`duplicate_arrival_notice/${this._ganNo}`) }]
+      this._actions = [
+        { title: i18next.t('button.duplicate'), action: () => window.open(`duplicate_arrival_notice/${this._ganNo}`) }
+      ]
     }
 
     this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
