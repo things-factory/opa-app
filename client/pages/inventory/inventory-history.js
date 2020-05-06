@@ -166,10 +166,10 @@ class InventoryHistory extends localize(i18next)(PageView) {
       },
       {
         label: i18next.t('field.product'),
-        name: 'productName',
-        type: 'text',
-        props: { searchOper: 'i_like' },
-        attrs: ['custom']
+        name: 'productId',
+        type: 'object',
+        queryName: 'products',
+        field: 'name'
       },
       {
         label: i18next.t('field.status'),
@@ -339,7 +339,10 @@ class InventoryHistory extends localize(i18next)(PageView) {
         .getFields()
         .filter(field => field.hasAttribute('custom'))
         .map(field => field.name)
-      this.searchForm.queryFilters.forEach(filter => {
+
+      var queryFilter = await this.searchForm.getQueryFilters()
+
+      queryFilter.forEach(filter => {
         if (_customFields.includes(filter.name)) {
           if (filter.name === 'bizplace') {
             inventoryHistory[filter.name] = { id: filter.value }
@@ -350,12 +353,13 @@ class InventoryHistory extends localize(i18next)(PageView) {
           filters.push(filter)
         }
       })
+
       const response = await client.query({
         query: gql`
           query {
             bizplaceInventoryHistories(${gqlBuilder.buildArgs({
               inventoryHistory,
-              filters,
+              filters: [...filters],
               pagination: { page, limit },
               sortings: sorters
             })}) {
