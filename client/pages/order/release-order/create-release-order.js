@@ -7,11 +7,11 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { fetchLocationSortingRule } from '../../../fetch-location-sorting-rule'
-import '../../components/vas-relabel'
+import '../../components/vas-templates'
 import '../../order/vas-order/vas-create-popup'
 import {
-  BATCH_NO_TYPE,
   BATCH_AND_PRODUCT_TYPE,
+  BATCH_NO_TYPE,
   INVENTORY_STATUS,
   ORDER_INVENTORY_STATUS,
   ORDER_TYPES,

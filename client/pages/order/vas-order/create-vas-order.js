@@ -5,8 +5,8 @@ import { client, CustomAlert, navigate, PageView } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import '../../components/vas-relabel'
-import { BATCH_NO_TYPE, PRODUCT_TYPE, BATCH_AND_PRODUCT_TYPE } from '../constants'
+import '../../components/vas-templates'
+import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, PRODUCT_TYPE } from '../constants'
 import './vas-create-popup'
 
 class CreateVasOrder extends localize(i18next)(PageView) {

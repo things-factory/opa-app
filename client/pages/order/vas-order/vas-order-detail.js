@@ -14,7 +14,7 @@ import {
 } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import '../../components/vas-relabel'
+import '../../components/vas-templates'
 import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, ORDER_STATUS, PRODUCT_TYPE } from '../constants'
 
 class VasOrderDetail extends localize(i18next)(PageView) {

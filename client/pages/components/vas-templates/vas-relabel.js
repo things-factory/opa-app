@@ -1,19 +1,19 @@
-import { SingleColumnFormStyles, MultiColumnFormStyles } from '@things-factory/form-ui'
+import { SingleColumnFormStyles } from '@things-factory/form-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
 import { client } from '@things-factory/shell'
 import { gqlBuilder } from '@things-factory/utils'
 import gql from 'graphql-tag'
-import { css, html, LitElement } from 'lit-element'
-import '../components/image-viewer'
-import { ORDER_VAS_STATUS } from '../order/constants/order'
-import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
+import { css, html } from 'lit-element'
+import { WORKSHEET_STATUS } from '../../inbound/constants/worksheet'
+import { ORDER_VAS_STATUS } from '../../order/constants/order'
+import '../image-viewer'
+import { VasTemplate } from './vas-template'
 
-class VasRelabel extends localize(i18next)(LitElement) {
+class VasRelabel extends localize(i18next)(VasTemplate) {
   static get styles() {
     return [
       SingleColumnFormStyles,
-      MultiColumnFormStyles,
       css`
         :host {
           display: flex;
@@ -31,25 +31,8 @@ class VasRelabel extends localize(i18next)(LitElement) {
           flex-direction: column;
           flex: 1;
         }
-        h2 {
-          padding: var(--subtitle-padding);
-          font: var(--subtitle-font);
-          margin: var(--grist-title-margin);
-          border: var(--grist-title-border);
-          color: var(--secondary-color);
-        }
-        h2 mwc-icon {
-          vertical-align: middle;
-          margin: var(--grist-title-icon-margin);
-          font-size: var(--grist-title-icon-size);
-          color: var(--grist-title-icon-color);
-        }
-
         image-viewer {
           flex: 1;
-        }
-        .new-label {
-          display: flex;
         }
       `
     ]

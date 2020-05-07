@@ -8,7 +8,7 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/popup-note'
-import '../../components/vas-relabel'
+import '../../components/vas-templates'
 import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, PRODUCT_TYPE } from '../constants'
 
 class ReceiveVasOrder extends localize(i18next)(PageView) {

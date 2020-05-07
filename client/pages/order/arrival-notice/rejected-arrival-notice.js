@@ -6,7 +6,7 @@ import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/sh
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/popup-note'
-import '../../components/vas-relabel'
+import '../../components/vas-templates'
 import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, ORDER_STATUS, PRODUCT_TYPE } from '../constants'
 
 class RejectedArrivalNotice extends localize(i18next)(PageView) {
