@@ -331,6 +331,13 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
           width: 100
         },
         {
+          type: 'integer',
+          name: 'weight',
+          header: i18next.t('field.weight'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
@@ -421,6 +428,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
               }
               packingType
               qty
+              weight
               otherTarget
               description
               remark

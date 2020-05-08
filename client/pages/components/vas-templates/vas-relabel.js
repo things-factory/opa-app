@@ -153,10 +153,6 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
     }
   }
 
-  get _isEditable() {
-    return !this.record.status
-  }
-
   get _isDownloadable() {
     return this.record.status !== WORKSHEET_STATUS.EXECUTING.value
   }
@@ -183,8 +179,22 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
     )
   }
 
+  get transactions() {
+    return [this.createNewLabel.bind(this)]
+  }
+
   get revertTransactions() {
     return [this.deleteNewLabel.bind(this)]
+  }
+
+  get data() {
+    return {
+      toProduct: this._selectedProduct,
+      toBatchId: this._selectedBatchId,
+      newLabel: {
+        files: this.newLabelInput.files
+      }
+    }
   }
 
   _openProductPopup() {
@@ -221,25 +231,7 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
     )
   }
 
-  async adjust() {
-    try {
-      await this._validateAdjust()
-      return {
-        data: {
-          toProduct: this._selectedProduct,
-          toBatchId: this._selectedBatchId,
-          newLabel: {
-            files: this.newLabelInput.files
-          }
-        },
-        transactions: [this.createNewLabel.bind(this)]
-      }
-    } catch (e) {
-      throw e
-    }
-  }
-
-  async _validateAdjust() {
+  async validateAdjust() {
     if (!this._selectedProduct && !this._selectedBatchId) {
       throw new Error(i18next.t('text.target_does_not_selected'))
     }

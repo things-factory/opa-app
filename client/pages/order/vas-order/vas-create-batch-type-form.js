@@ -20,7 +20,11 @@ export class VasCreateBatchTypeForm extends LitElement {
 
   render() {
     return html`
-      <form class="multi-column-form" @submit="${e => e.preventDefault()}">
+      <form
+        class="multi-column-form"
+        @submit="${e => e.preventDefault()}"
+        @change="${e => this.dispatchEvent(new CustomEvent('form-change'))}"
+      >
         <fieldset>
           <label>${i18next.t('label.batch_no')}</label>
           <select

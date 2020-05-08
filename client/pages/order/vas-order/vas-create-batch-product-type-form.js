@@ -21,7 +21,11 @@ export class VasCreateBatchProductTypeForm extends LitElement {
   }
 
   render() {
-    return html` <form class="multi-column-form" @submit="${e => e.preventDefault()}">
+    return html` <form
+      class="multi-column-form"
+      @submit="${e => e.preventDefault()}"
+      @change="${e => this.dispatchEvent(new CustomEvent('form-change'))}"
+    >
       <fieldset>
         <label>${i18next.t('label.batch_no')}</label>
         <select
@@ -100,6 +104,17 @@ export class VasCreateBatchProductTypeForm extends LitElement {
           value="${(this.record && this.record.qty) || 1}"
           @change="${this._checkQtyValidity.bind(this)}"
         />
+
+        <label>${i18next.t('label.weight')}</label>
+        <input
+          ?readonly="${!this.selectedBatchId || !this.selectedProductId || !this.selectedPackingType}"
+          id="weight-input"
+          type="number"
+          min="0.01"
+          step="0.01"
+          value="${(this.record && this.record.qty) || 1}"
+          @change="${this._checkWeightValidity.bind(this)}"
+        />
       </fieldset>
     </form>`
   }
@@ -127,6 +142,10 @@ export class VasCreateBatchProductTypeForm extends LitElement {
 
   get qtyInput() {
     return this.shadowRoot.querySelector('input#qty-input')
+  }
+
+  get weightInput() {
+    return this.shadowRoot.querySelector('input#weight-input')
   }
 
   get targetBatchList() {
@@ -174,11 +193,17 @@ export class VasCreateBatchProductTypeForm extends LitElement {
     return this.qtyInput.value
   }
 
+  get weight() {
+    return this.weightInput.value
+  }
+
   checkValidity() {
     return this.form.checkValidity()
   }
 
   _checkQtyValidity() {
+    const { totalQty, unitWeight } = this._calcAvailAmount()
+
     try {
       const qty = Number(this.qtyInput.value)
 
@@ -187,21 +212,53 @@ export class VasCreateBatchProductTypeForm extends LitElement {
         throw new Error('text.qty_should_be_positive')
       }
 
-      const packQty = this.targetList
-        .filter(
-          target =>
-            target.batchId === this.selectedBatchId &&
-            target.product.id === this.selectedProductId &&
-            target.packingType === this.selectedPackingType
-        )
-        .reduce((packQty, target) => packQty + target.packQty, 0)
-
-      if (packQty && qty > packQty) {
-        this.qtyInput.value = packQty
+      if (totalQty && qty > totalQty) {
+        this.qtyInput.value = totalQty
         throw new Error(i18next.t('text.qty_exceed_limit'))
       }
     } catch (e) {
       this._showToast(e)
+    } finally {
+      const qty = Number(this.qtyInput.value)
+      this.weightInput.value = qty * unitWeight
+    }
+  }
+
+  _checkWeightValidity() {
+    const { totalWeight, unitWeight } = this._calcAvailAmount()
+
+    try {
+      const weight = Number(this.weightInput.value)
+
+      if (weight <= 0) {
+        this.weightInput.value = 1
+        throw new Error('text.weight_should_be_positive')
+      }
+
+      if (totalWeight && weight > totalWeight) {
+        this.weightInput.value = totalWeight
+        throw new Error(i18next.t('text.weight_exceed_limit'))
+      }
+    } catch (e) {
+      this._showToast(e)
+    } finally {
+      const weight = Number(this.weightInput.value)
+      this.qtyInput.value = weight / unitWeight
+    }
+  }
+
+  _calcAvailAmount() {
+    const targetItem = this.targetList.find(
+      target =>
+        target.batchId === this.selectedBatchId &&
+        target.product.id === this.selectedProductId &&
+        target.packingType === this.selectedPackingType
+    )
+
+    return {
+      totalQty: targetItem.packQty,
+      unitWeight: targetItem.unitWeight,
+      totalWeight: targetItem.totalWeight
     }
   }
 

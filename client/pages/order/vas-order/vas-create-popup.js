@@ -106,6 +106,19 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
     return this.shadowRoot.querySelector('.vas-create-form')
   }
 
+  get targetInfo() {
+    if (this.targetForm && this.targetForm.checkValidity()) {
+      return {
+        targetType: this.selectedTargetType,
+        targetDisplay: this.targetForm.targetDisplay,
+        target: this.targetForm.target,
+        packingType: this.targetForm.selectedPackingType,
+        qty: (this.targetForm.qty && parseInt(this.targetForm.qty)) || '',
+        weight: (this.targetForm.weight && parseFloat(this.targetForm.weight)) || ''
+      }
+    }
+  }
+
   render() {
     return html`
       <form id="target-type" class="multi-column-form" @change="${this._onTypeFormchangeHandler}">
@@ -141,6 +154,7 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
               class="vas-create-form"
               .targetList="${this.targetList}"
               .record="${this.record}"
+              @form-change="${this.resetVasTemplates}"
             ></vas-create-batch-type-form>
           `
         : this.selectedTargetType === PRODUCT_TYPE
@@ -149,6 +163,7 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
               class="vas-create-form"
               .targetList="${this.targetList}"
               .record="${this.record}"
+              @form-change="${this.resetVasTemplates}"
             ></vas-create-product-type-form>
           `
         : this.selectedTargetType === BATCH_AND_PRODUCT_TYPE
@@ -157,24 +172,34 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
               class="vas-create-form"
               .targetList="${this.targetList}"
               .record="${this.record}"
+              @form-change="${this.resetVasTemplates}"
             ></vas-create-batch-product-type-form>
           `
         : this.selectedTargetType === ETC_TYPE
-        ? html` <vas-create-etc-type-form class="vas-create-form" .record="${this.record}"></vas-create-etc-type-form> `
+        ? html`
+            <vas-create-etc-type-form
+              class="vas-create-form"
+              .record="${this.record}"
+              @form-change="${this.resetVasTemplates}"
+            ></vas-create-etc-type-form>
+          `
         : ''}
-
-      <div class="grist-container">
-        <div class="grist">
-          <h2>${i18next.t('title.vas')}</h2>
-          <data-grist
-            id="vas-grist"
-            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-            .config=${this.vasGristConfig}
-            .data="${this.vasGristData}"
-            @field-change="${this._onFieldChange.bind(this)}"
-          ></data-grist>
-        </div>
-      </div>
+      ${this.selectedTargetType
+        ? html`
+            <div class="grist-container">
+              <div class="grist">
+                <h2>${i18next.t('title.vas')}</h2>
+                <data-grist
+                  id="vas-grist"
+                  .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+                  .config=${this.vasGristConfig}
+                  .data="${this.vasGristData}"
+                  @field-change="${this._onFieldChange.bind(this)}"
+                ></data-grist>
+              </div>
+            </div>
+          `
+        : ''}
 
       <div class="guide-container">
         ${this._template}
@@ -228,6 +253,12 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
     this.vasGristData = { records: [] }
   }
 
+  updated(changedProps) {
+    if (changedProps.has('selectedTargetType')) {
+      this.setVasQueryFilter()
+    }
+  }
+
   async firstUpdated() {
     this.vasGristConfig = {
       list: { fields: ['ready', 'vas', 'batchId', 'remark'] },
@@ -236,10 +267,18 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
         selectable: { multiple: true },
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
+            if (!this.targetInfo) {
+              this._showToast({
+                message: i18next.t('text.vas_target_does_not_specified')
+              })
+
+              return
+            }
+
             if (record && record.vas && record.vas.operationGuideType === 'template' && record.vas.operationGuide) {
               this._template = document.createElement(record.vas.operationGuide)
               this._template.record = record
-              this._template.operationGuide = record.operationGuide
+              this._template.targetInfo = this.targetInfo
             } else {
               this._template = null
             }
@@ -357,12 +396,8 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
       this.dispatchEvent(
         new CustomEvent('completed', {
           detail: {
+            ...this.targetInfo,
             ready: true,
-            targetType: this.selectedTargetType,
-            targetDisplay: this.targetForm.targetDisplay,
-            target: this.targetForm.target,
-            packingType: this.targetForm.selectedPackingType,
-            qty: (this.targetForm.qty && parseInt(this.targetForm.qty)) || '',
             vasCount: this.vasGrist.dirtyData.records.length,
             orderVass: this.vasGrist.dirtyData.records
           }
@@ -382,6 +417,55 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
     if (this.vasGrist.dirtyData.records.length == 0) throw new Error(i18next.t('text.there_is_no_vas'))
     if (this.vasGrist.dirtyData.records.some(record => !record.ready))
       throw new Error(i18next.t('text.invalid_vas_setting'))
+  }
+
+  resetVasTemplates() {
+    this._template = null
+
+    this.vasGrist.data = {
+      ...this.vasGrist.data,
+      records: this.vasGrist.data.records.map(record => {
+        if (record && record.operationGuide) {
+          delete record.operationGuide
+          record.ready = false
+        }
+
+        return record
+      })
+    }
+  }
+
+  setVasQueryFilter() {
+    switch (this.selectedTargetType) {
+      case BATCH_AND_PRODUCT_TYPE:
+        this.vasGristConfig = {
+          ...this.vasGristConfig,
+          columns: this.vasGristConfig.columns.map(column => {
+            if (column.name === 'vas') {
+              delete column.record.options.basicArgs
+              return column
+            } else {
+              return column
+            }
+          })
+        }
+
+        break
+      default:
+        this.vasGristConfig = {
+          ...this.vasGristConfig,
+          columns: this.vasGristConfig.columns.map(column => {
+            if (column.name === 'vas') {
+              column.record.options.basicArgs = {
+                filters: [{ name: 'operationGuide', operator: 'notin_with_null', value: ['vas-repack'] }]
+              }
+              return column
+            } else {
+              return column
+            }
+          })
+        }
+    }
   }
 
   _showToast({ type, message }) {

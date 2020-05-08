@@ -335,6 +335,13 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           width: 100
         },
         {
+          type: 'float',
+          name: 'weight',
+          header: i18next.t('field.weight'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
           type: 'integer',
           name: 'vasCount',
           header: i18next.t('field.vas_count'),
@@ -632,6 +639,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             result.targetProduct = { id: record.target.productId }
             result.packingType = record.packingType
             result.qty = record.qty
+            result.weight = record.weight
           } else {
             result.otherTarget = record.target
           }
@@ -665,7 +673,13 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       openPopup(
         html`
           <vas-create-popup
-            .targetList="${this.productGrist.dirtyData.records}"
+            .targetList="${this.productGrist.dirtyData.records.map(record => {
+              return {
+                ...record,
+                unitWeight: record.weight,
+                totalWeight: record.weight * record.packQty
+              }
+            })}"
             .record="${record}"
             @completed="${e => {
               if (this.vasGrist.dirtyData.records.length === this._selectedVasRecordIdx) {
@@ -711,6 +725,9 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
     if (this.productGrist.dirtyData.records.some(record => !record.packingType))
       throw new Error(i18next.t('text.invalid_packing_type'))
+
+    if (this.productGrist.dirtyData.records.some(record => !record.weight))
+      throw new Error(i18next.t('text.invalid_weight'))
 
     if (this.productGrist.dirtyData.records.some(record => !record.packQty))
       throw new Error(i18next.t('text.invalid_pack_qty'))

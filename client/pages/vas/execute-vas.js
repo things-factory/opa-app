@@ -4,16 +4,8 @@ import '@things-factory/grist-ui'
 import { getRenderer } from '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import {
-  client,
-  CustomAlert,
-  gqlBuilder,
-  isMobileDevice,
-  navigate,
-  PageView,
-  store,
-  UPDATE_CONTEXT
-} from '@things-factory/shell'
+import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'

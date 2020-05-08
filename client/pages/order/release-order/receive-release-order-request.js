@@ -325,6 +325,13 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
           width: 100
         },
         {
+          type: 'integer',
+          name: 'weight',
+          header: i18next.t('field.weight'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
@@ -413,6 +420,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
               }
               packingType
               qty
+              weight
               otherTarget
               description
               remark

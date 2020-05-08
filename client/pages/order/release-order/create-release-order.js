@@ -327,6 +327,13 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
+          name: 'weight',
+          header: i18next.t('field.weight'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'integer',
           name: 'vasCount',
           header: i18next.t('field.vas_count'),
           record: { align: 'center' },
@@ -1077,6 +1084,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             result.targetProduct = { id: record.target.productId }
             result.packingType = record.packingType
             result.qty = record.qty
+            result.weight = record.weight
           } else {
             result.otherTarget = record.target
           }
@@ -1120,7 +1128,12 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         html`
           <vas-create-popup
             .targetList="${this.inventoryGrist.dirtyData.records.map(record => {
-              return { ...record, packQty: record.releaseQty }
+              return {
+                ...record,
+                packQty: record.releaseQty,
+                unitWeight: record.releaseWeight / record.releaseQty,
+                totalWeight: record.releaseWeight
+              }
             })}"
             .record="${record}"
             @completed="${e => {
