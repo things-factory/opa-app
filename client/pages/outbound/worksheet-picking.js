@@ -320,7 +320,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'qty',
+          name: 'availableQty',
           header: i18next.t('field.available_qty'),
           record: { align: 'center' },
           width: 80
@@ -380,6 +380,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               releaseWeight
               inventory {
                 qty
+                lockedQty
                 palletId
                 location {
                   name
@@ -472,7 +473,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               ...item.inventory,
               product: { name: item.productName },
               ...item.inventory.location,
-              description: item.description
+              description: item.description,
+              availableQty: item.inventory.qty - item.inventory.lockedQty
             }
           })
         }
@@ -569,6 +571,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 releaseQty
                 releaseWeight                
                 inventory {
+                  qty
+                  lockedQty
                   palletId
                   batchId
                   packingType
@@ -605,7 +609,11 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             description: worksheetDetail.description,
             status: worksheetDetail.status,
             releaseQty: worksheetDetail.targetInventory.releaseQty,
-            releaseWeight: worksheetDetail.targetInventory.releaseWeight
+            releaseWeight: worksheetDetail.targetInventory.releaseWeight,
+            availableQty:
+              worksheetDetail.targetInventory.inventory.qty -
+              worksheetDetail.targetInventory.inventory.lockedQty +
+              worksheetDetail.targetInventory.releaseQty
           }
         })
       }
