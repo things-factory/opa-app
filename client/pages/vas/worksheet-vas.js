@@ -682,6 +682,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
       openPopup(
         html`
           <target-inventory-assignment-popup
+            .orderType="${this._orderType}"
             .targetType="${record.targetType}"
             .targetBatchId="${record.targetBatchId}"
             .targetProduct="${record.targetProduct}"

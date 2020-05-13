@@ -25,7 +25,8 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       vasTasks: Object,
       _vasName: String,
       _selectedTaskStatus: String,
-      _template: Object
+      _template: Object,
+      _templateContextBtns: Array
     }
   }
 
@@ -255,6 +256,9 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
             <fieldset>
               <legend>${i18next.t('label.vas')}: ${this._vasName}</legend>
 
+              <label>${i18next.t('label.pallet')}</label>
+              <input name="palletId" readonly />
+
               <label>${i18next.t('label.location')}</label>
               <input name="locationInv" readonly />
 
@@ -291,7 +295,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
 
   pageInitialized() {
     this.vasGristConfig = {
-      list: { fields: ['completed', 'targetType', 'targetDisplay', 'vasCount', 'qty'] },
+      list: { fields: ['completed', 'targetType', 'targetDisplay', 'vasCount'] },
       rows: {
         appendable: false,
         handlers: {
@@ -345,17 +349,14 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'integer',
-          name: 'qty',
-          header: i18next.t('field.qty'),
+          name: 'vasCount',
+          header: i18next.t('field.vas_count'),
           record: { align: 'center' },
           width: 100
         },
         {
           type: 'integer',
-          name: 'vasCount',
-          header: i18next.t('field.vas_count'),
-          record: { align: 'center' },
-          width: 100
+          name: ''
         }
       ]
     }
@@ -376,9 +377,18 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
 
               if (record.vas.operationGuideType && record.vas.operationGuideType === 'template') {
                 this._template = document.createElement(record.vas.operationGuide)
+                if (!record.completed) {
+                  this._template.isExecuting = true
+                  this._templateContextBtns = this._template.contextButtons
+                } else {
+                  this._template.isExecuting = false
+                  this._templateContextBtns = null
+                }
+
                 this._template.record = { ...record, operationGuide: JSON.parse(record.operationGuide) }
               } else {
                 this._template = null
+                this._templateContextBtns = null
               }
             }
           }
@@ -436,6 +446,10 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       actions = [...actions, { title: i18next.t('button.complete'), action: this._complete.bind(this) }]
     }
 
+    if (this._templateContextBtns && this._templateContextBtns.length) {
+      actions = [...actions, ...this._templateContextBtns]
+    }
+
     store.dispatch({
       type: UPDATE_CONTEXT,
       context: {
@@ -491,6 +505,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
               }
               otherTarget
               qty
+              weight
               operationGuide
               locationInv 
               vas {
@@ -499,6 +514,9 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
                 description
                 operationGuide
                 operationGuideType
+              }
+              inventory {
+                palletId
               }
               description
               remark
@@ -545,7 +563,6 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
             targetBatchId: task.targetBatchId,
             targetProduct: task.targetProduct,
             otherTarget: task.otherTarget,
-            qty: task.qty,
             tasks: [...(vasSet.tasks || []), this._formatTask(task)]
           })
         }
@@ -563,6 +580,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
 
   _formatTask(task) {
     return {
+      palletId: task.inventory.palletId,
       name: task.name,
       vas: task.vas,
       remark: task.remark,
@@ -570,7 +588,9 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       locationInv: task.locationInv,
       operationGuide: task.operationGuide,
       completed: task.status === WORKSHEET_STATUS.DONE.value,
-      description: task.description
+      description: task.description,
+      qty: task.qty,
+      weight: task.weight
     }
   }
 
@@ -651,26 +671,42 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   async _executeVas() {
     try {
       this._validate()
+
+      const args = { worksheetDetail: this._getVasWorksheetDetail() }
+
+      if (this._template) {
+        this._template.checkCompleteValidity()
+
+        if (this._template.completeParams) {
+          args.completeParams = JSON.stringify(this._template.completeParams)
+        }
+      }
+
       const response = await client.query({
         query: gql`
           mutation {
-            executeVas(${gqlBuilder.buildArgs({
-              worksheetDetail: this._getVasWorksheetDetail()
-            })})
+            executeVas(${gqlBuilder.buildArgs(args)})
           }
         `
       })
 
       if (!response.errors) {
-        this._selectedVas = null
-        this._selectedTaskStatus = null
-        this.infoForm.reset()
-        this.inputForm.reset()
+        this.resetView()
         this._fetchVass()
+        this._updateContext()
       }
     } catch (e) {
       this._showToast(e)
     }
+  }
+
+  resetView() {
+    this._selectedVas = null
+    this._selectedTaskStatus = null
+    this._template = null
+    this._templateContextBtns = null
+    this.infoForm.reset()
+    this.inputForm.reset()
   }
 
   async _undoVas() {
@@ -699,10 +735,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!response.errors) {
-        this._selectedVas = null
-        this._selectedTaskStatus = null
-        this.infoForm.reset()
-        this.inputForm.reset()
+        this.resetView()
         this._fetchVass()
         this._updateContext()
       }

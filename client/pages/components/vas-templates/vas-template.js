@@ -2,6 +2,10 @@ import { LitElement } from 'lit-element'
 import '../image-viewer'
 
 export class VasTemplate extends LitElement {
+  get contextButtons() {
+    return null
+  }
+
   get _isEditable() {
     return !this.record.status
   }
@@ -17,6 +21,12 @@ export class VasTemplate extends LitElement {
   get data() {
     throw new Error('data getter should be implemented by component which extends VasTemplate')
   }
+
+  get completeParams() {
+    return null
+  }
+
+  checkCompleteValidity() {}
 
   adjust() {
     try {

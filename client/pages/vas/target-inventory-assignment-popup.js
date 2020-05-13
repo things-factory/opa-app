@@ -6,11 +6,12 @@ import { client, CustomAlert } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
-import { BATCH_NO_TYPE, PRODUCT_TYPE } from '../order/constants'
+import { BATCH_NO_TYPE, PRODUCT_TYPE, BATCH_AND_PRODUCT_TYPE, ETC_TYPE, ORDER_TYPES } from '../order/constants'
 
 class TargetInventoryAssignmentPopup extends localize(i18next)(LitElement) {
   static get properties() {
     return {
+      orderType: String,
       tasks: Array,
       targetType: String,
       targetBatchId: String,
@@ -114,20 +115,24 @@ class TargetInventoryAssignmentPopup extends localize(i18next)(LitElement) {
           <label>${i18next.t('label.target_type')}</label>
           <input id="target-type" value="${this.targetType}" readonly />
 
-          ${this.targetType === BATCH_NO_TYPE
+          ${this.targetType === BATCH_NO_TYPE || this.targetType === BATCH_AND_PRODUCT_TYPE
             ? html`
                 <label>${i18next.t('label.batch_no')}</label>
                 <input id="batch-id" value="${this.targetBatchId}" readonly />
               `
-            : this.targetType === PRODUCT_TYPE
+            : ''}
+          ${this.targetType === PRODUCT_TYPE || this.targetType === BATCH_AND_PRODUCT_TYPE
             ? html`
                 <label>${i18next.t('label.product')}</label>
                 <input id="batch-id" value="${this.targetProduct.name}" readonly />
               `
-            : html`
+            : ''}
+          ${this.targetType === ETC_TYPE
+            ? html`
                 <label>${i18next.t('label.etc')}</label>
                 <input id="batch-id" value="${this.otherType}" readonly />
-              `}
+              `
+            : ''}
 
           <label>${i18next.t('label.packing_type')}</label>
           <input id="packing-type" value="${this.packingType}" readonly />
@@ -210,81 +215,157 @@ class TargetInventoryAssignmentPopup extends localize(i18next)(LitElement) {
       ]
     }
 
-    this.inventoryGristConfig = {
-      list: { fields: ['batchId', 'palletId', 'product', 'packingType', 'location', 'qty'] },
-      pagination: { infinite: true },
-      rows: {
-        appendable: false,
-        classifier: record => {
-          return { emphasized: Boolean(record.selected) }
-        }
-      },
-      columns: [
-        { type: 'gutter', gutterName: 'sequence' },
-        {
-          type: 'boolean',
-          name: 'selected',
-          header: i18next.t('field.selected'),
-          width: 60
+    this.inventoryGristConfig = this.getGristConfig(this.orderType)
+  }
+
+  getGristConfig(orderType) {
+    if (orderType === ORDER_TYPES.RELEASE_OF_GOODS.value) {
+      return {
+        list: { fields: ['batchId', 'palletId', 'product', 'packingType', 'location', 'qty'] },
+        pagination: { infinite: true },
+        rows: {
+          appendable: false,
+          classifier: record => {
+            return { emphasized: Boolean(record.selected) }
+          }
         },
-        {
-          type: 'string',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
-          record: { align: 'center' },
-          width: 130
+        columns: [
+          { type: 'gutter', gutterName: 'sequence' },
+          {
+            type: 'boolean',
+            name: 'selected',
+            header: i18next.t('field.selected'),
+            width: 60
+          },
+          {
+            type: 'string',
+            name: 'batchId',
+            header: i18next.t('field.batch_no'),
+            record: { align: 'center' },
+            width: 130
+          },
+          {
+            type: 'string',
+            name: 'palletId',
+            header: i18next.t('field.pallet_id'),
+            record: { align: 'center' },
+            width: 130
+          },
+          {
+            type: 'object',
+            name: 'product',
+            header: i18next.t('field.product'),
+            record: { align: 'center' },
+            width: 250
+          },
+          {
+            type: 'string',
+            name: 'packingType',
+            header: i18next.t('field.packing_type'),
+            record: { align: 'center' },
+            width: 130
+          },
+          {
+            type: 'integer',
+            name: 'qty',
+            header: i18next.t('field.available_qty'),
+            record: { align: 'center' },
+            width: 60
+          },
+          {
+            type: 'integer',
+            name: 'selectedQty',
+            header: i18next.t('field.selected_qty'),
+            record: { align: 'center', editable: true },
+            width: 60
+          },
+          {
+            type: 'datetime',
+            name: 'createdAt',
+            record: { align: 'center', editable: false },
+            header: i18next.t('field.stored_at'),
+            sortable: true,
+            width: 180
+          }
+        ]
+      }
+    } else {
+      return {
+        list: { fields: ['batchId', 'palletId', 'product', 'packingType', 'location', 'qty'] },
+        pagination: { infinite: true },
+        rows: {
+          appendable: false,
+          classifier: record => {
+            return { emphasized: Boolean(record.selected) }
+          }
         },
-        {
-          type: 'string',
-          name: 'palletId',
-          header: i18next.t('field.pallet_id'),
-          record: { align: 'center' },
-          width: 130
-        },
-        {
-          type: 'object',
-          name: 'product',
-          header: i18next.t('field.product'),
-          record: { align: 'center' },
-          width: 250
-        },
-        {
-          type: 'string',
-          name: 'packingType',
-          header: i18next.t('field.packing_type'),
-          record: { align: 'center' },
-          width: 130
-        },
-        {
-          type: 'object',
-          name: 'location',
-          header: i18next.t('field.location'),
-          record: { align: 'center' },
-          width: 150
-        },
-        {
-          type: 'integer',
-          name: 'qty',
-          header: i18next.t('field.available_qty'),
-          record: { align: 'center' },
-          width: 60
-        },
-        {
-          type: 'integer',
-          name: 'selectedQty',
-          header: i18next.t('field.selected_qty'),
-          record: { align: 'center', editable: true },
-          width: 60
-        },
-        {
-          type: 'datetime',
-          name: 'createdAt',
-          record: { align: 'center', editable: false },
-          header: i18next.t('field.stored_at'),
-          sortable: true,
-          width: 180
-        }
-      ]
+        columns: [
+          { type: 'gutter', gutterName: 'sequence' },
+          {
+            type: 'boolean',
+            name: 'selected',
+            header: i18next.t('field.selected'),
+            width: 60
+          },
+          {
+            type: 'string',
+            name: 'batchId',
+            header: i18next.t('field.batch_no'),
+            record: { align: 'center' },
+            width: 130
+          },
+          {
+            type: 'string',
+            name: 'palletId',
+            header: i18next.t('field.pallet_id'),
+            record: { align: 'center' },
+            width: 130
+          },
+          {
+            type: 'object',
+            name: 'product',
+            header: i18next.t('field.product'),
+            record: { align: 'center' },
+            width: 250
+          },
+          {
+            type: 'string',
+            name: 'packingType',
+            header: i18next.t('field.packing_type'),
+            record: { align: 'center' },
+            width: 130
+          },
+          {
+            type: 'object',
+            name: 'location',
+            header: i18next.t('field.location'),
+            record: { align: 'center' },
+            width: 150
+          },
+          {
+            type: 'integer',
+            name: 'qty',
+            header: i18next.t('field.available_qty'),
+            record: { align: 'center' },
+            width: 60
+          },
+          {
+            type: 'integer',
+            name: 'selectedQty',
+            header: i18next.t('field.selected_qty'),
+            record: { align: 'center', editable: true },
+            width: 60
+          },
+          {
+            type: 'datetime',
+            name: 'createdAt',
+            record: { align: 'center', editable: false },
+            header: i18next.t('field.stored_at'),
+            sortable: true,
+            width: 180
+          }
+        ]
+      }
     }
   }
 

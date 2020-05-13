@@ -255,6 +255,7 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
 
   updated(changedProps) {
     if (changedProps.has('selectedTargetType')) {
+      this.vasGristData = { records: [] }
       this.setVasQueryFilter()
     }
   }
@@ -295,6 +296,7 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               this.vasGristData = { ...this.vasGristData, records: data.records.filter((_, idx) => idx !== rowIndex) }
+              this.setVasQueryFilter()
             }
           }
         },
@@ -378,6 +380,8 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
         }
       })
     }
+
+    this.setVasQueryFilter()
   }
 
   _isReadyToCreate(record) {
@@ -435,14 +439,28 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
     }
   }
 
-  setVasQueryFilter() {
+  async setVasQueryFilter() {
+    if (!this.selectedTargetType) return
+    await this.updateComplete
+
+    let vasIds = []
+    if (this.vasGristData && this.vasGristData.records && this.vasGristData.records.length) {
+      vasIds = this.vasGristData.records.filter(record => record.vas && record.vas.id).map(record => record.vas.id)
+    }
+
     switch (this.selectedTargetType) {
       case BATCH_AND_PRODUCT_TYPE:
         this.vasGristConfig = {
           ...this.vasGristConfig,
           columns: this.vasGristConfig.columns.map(column => {
             if (column.name === 'vas') {
-              delete column.record.options.basicArgs
+              if (vasIds.length) {
+                column.record.options.basicArgs = {
+                  filters: [{ name: 'id', operator: 'notin', value: vasIds }]
+                }
+              } else {
+                delete column.record.options.basicArgs
+              }
               return column
             } else {
               return column
@@ -456,8 +474,17 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
           ...this.vasGristConfig,
           columns: this.vasGristConfig.columns.map(column => {
             if (column.name === 'vas') {
-              column.record.options.basicArgs = {
-                filters: [{ name: 'operationGuide', operator: 'notin_with_null', value: ['vas-repack'] }]
+              if (vasIds.length) {
+                column.record.options.basicArgs = {
+                  filters: [
+                    { name: 'operationGuide', operator: 'notin_with_null', value: ['vas-repack'] },
+                    { name: 'id', operator: 'notin', value: vasIds }
+                  ]
+                }
+              } else {
+                column.record.options.basicArgs = {
+                  filters: [{ name: 'operationGuide', operator: 'notin_with_null', value: ['vas-repack'] }]
+                }
               }
               return column
             } else {
