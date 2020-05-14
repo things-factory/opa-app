@@ -398,7 +398,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
           <cycle-count-popup
             .selectedInventory="${_selectedInventory}"
             @completed="${() => {
-              navigate('worksheet_cycle_count')
+              navigate('inventory_check_list')
             }}"
           ></cycle-count-popup>
         `,
