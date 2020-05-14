@@ -759,16 +759,11 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _showInventoryMovement(columns, data, column, record, rowIndex) {
-    openPopup(
-      html`
-        <inventory-history-by-pallet .palletId="${record.palletId}"></inventory-history-by-pallet>
-      `,
-      {
-        backdrop: true,
-        size: 'large',
-        title: `${record.palletId} - History`
-      }
-    )
+    openPopup(html` <inventory-history-by-pallet .palletId="${record.palletId}"></inventory-history-by-pallet> `, {
+      backdrop: true,
+      size: 'large',
+      title: `${record.palletId} - History`
+    })
   }
 
   async _printPalletLabel() {

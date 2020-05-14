@@ -163,7 +163,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
 
                   if (typeof compareData[item.column] === 'object') {
                     currentVal = compareData[item.column].name
-                    updatedVal = record[item.column].name
+                    updatedVal = record[item.column]?.name
                   } else {
                     currentVal = compareData[item.column]
                     updatedVal = record[item.column]
@@ -172,7 +172,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
                   recordDiff.push({
                     column: item.name,
                     current: currentVal,
-                    update: currentVal != updatedVal ? updatedVal : '[N/A]'
+                    update: !!updatedVal && currentVal != updatedVal ? updatedVal : '[N/A]'
                   })
                 })
               } else {
@@ -292,7 +292,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
     this._searchFields = [
       {
         label: i18next.t('field.customer'),
-        name: 'bizplace',
+        name: 'inventory.bizplace',
         type: 'select',
         options: [
           { value: '' },
