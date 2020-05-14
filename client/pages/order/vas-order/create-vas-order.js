@@ -532,7 +532,7 @@ class CreateVasOrder extends localize(i18next)(PageView) {
               return {
                 ...record,
                 packQty: record.remainQty,
-                unitWeight: record.remainQty / record.remainWeight,
+                unitWeight: record.remainWeight / record.remainQty,
                 totalWeight: record.remainWeight
               }
             })}"
