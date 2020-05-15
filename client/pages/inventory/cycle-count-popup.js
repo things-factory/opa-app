@@ -221,7 +221,7 @@ class CycleCountPopup extends localize(i18next)(LitElement) {
   }
 
   _validateDate() {
-    if (!this.cycleCountForm.checkValidity()) throw new Error('text.cycle_count_date_invalid')
+    if (!this.cycleCountForm.checkValidity()) throw new Error(i18next.t('text.cycle_count_date_invalid'))
   }
 
   _compareValues(key, order = 'asc') {
