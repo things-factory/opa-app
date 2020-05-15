@@ -225,6 +225,14 @@ export default {
       tagname: 'cycle-count-report',
       page: 'cycle_count_report'
     },
+    {
+      tagname: 'job-sheet-list',
+      page: 'job_sheets'
+    },
+    {
+      tagname: 'job-sheet-report',
+      page: 'job_sheet_report'
+    },
 
     /**
      * System Menus Section

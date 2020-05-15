@@ -217,6 +217,14 @@ export default function route(page) {
       import('./pages/inventory-check/cycle-count-report')
       return page
 
+    case 'job_sheets':
+      import('./pages/report/job-sheet-list')
+      return page
+
+    case 'job_sheet_report':
+      import('./pages/report/job-sheet-report')
+      return page
+
     /**
      * System Menus Section
      */

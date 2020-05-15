@@ -20,6 +20,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       _ganNo: String,
       _importedOrder: Boolean,
       _ownTransport: Boolean,
+      _hasContainer: Boolean,
+      _looseItem: Boolean,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -87,14 +89,11 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <form name="arrivalNotice" class="multi-column-form">
+      <form name="arrivalNotice" class="multi-column-form" autocomplete="off">
         <fieldset>
           <legend>${i18next.t('title.arrival_notice')}</legend>
           <label>${i18next.t('label.ref_no')}</label>
           <input name="refNo" />
-
-          <label>${i18next.t('label.container_no')}</label>
-          <input name="containerNo" />
 
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
           <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" />
@@ -104,6 +103,29 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
           <label>${i18next.t('label.eta_date')}</label>
           <input name="etaDate" type="date" min="${this._getStdDate()}" required />
+
+          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
+          <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" />
+
+          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_size')}</label>
+          <input ?hidden="${!this._hasContainer}" type="text" name="containerSize" />
+
+          <label ?hidden="${!this._hasContainer}">${i18next.t('label.advise_mt_date')}</label>
+          <input ?hidden="${!this._hasContainer}" type="date" min="${this._getStdDate()}" name="adviseMtDate" />
+
+          <input
+            id="container"
+            type="checkbox"
+            name="container"
+            ?checked="${this._hasContainer}"
+            @change="${e => {
+              this._hasContainer = e.currentTarget.checked
+            }}"
+          />
+          <label for="container">${i18next.t('label.container')}</label>
+
+          <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" />
+          <label for="looseItem">${i18next.t('label.loose_item')}</label>
 
           <input
             id="importedOrder"
@@ -162,6 +184,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     this.productData = { records: [] }
     this.vasData = { records: [] }
     this._importedOrder = false
+    this._hasContainer = false
     this._ownTransport = true
     this._orderType = null
   }
@@ -434,6 +457,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       const args = {
         arrivalNotice: { ...arrivalNotice, ownTransport: this._importedOrder ? true : this._ownTransport }
       }
+
+      delete args.arrivalNotice.container
 
       const response = await client.query({
         query: gql`
