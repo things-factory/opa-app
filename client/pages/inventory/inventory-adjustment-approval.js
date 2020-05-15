@@ -59,6 +59,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
   static get properties() {
     return {
       _searchFields: Array,
+      _lockedPallet: Array,
       config: Object,
       data: Object,
       _detailData: Object,
@@ -116,6 +117,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
   }
 
   async pageInitialized() {
+    this._lockedPallet = []
     this.location = await this.fetchLocation()
     const _userBizplaces = await this.fetchBizplaces()
     const _approvalStatus = await getCodeByName('APPROVAL_STATUS')
@@ -133,6 +135,11 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
     this.config = {
       rows: {
         appendable: false,
+        classifier: record => {
+          return {
+            emphasized: !!this._lockedPallet.find(changes => changes['id'] === record.id)
+          }
+        },
         selectable: {
           multiple: true
         },
@@ -451,20 +458,32 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
           mutation {
             approveInventoryChanges(${gqlBuilder.buildArgs({
               patches
-            })})
+            })}) {              
+                items {
+                  id
+                }
+                total
+            }
           }
         `
       })
-
       if (!response.errors) {
-        this.dataGrist.fetch()
+        this._lockedPallet = response.data.approveInventoryChanges.items
         document.dispatchEvent(
           new CustomEvent('notify', {
             detail: {
-              message: i18next.t('text.data_approved')
+              level: response.data.approveInventoryChanges.total > 0 ? 'error' : 'info',
+              message:
+                response.data.approveInventoryChanges.total > 0
+                  ? 'Highlighted pallet could not be approved due to ongoing process.'
+                  : i18next.t('text.data_approved'),
+              option: {
+                timer: 7000
+              }
             }
           })
         )
+        this.dataGrist.fetch()
       }
     }
   }
