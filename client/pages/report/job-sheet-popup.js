@@ -12,7 +12,8 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
       adviseMtDate: String,
       containerSize: String,
       containerNo: String,
-      looseItem: Boolean
+      looseItem: Boolean,
+      jobSheetNo: String
     }
   }
 
@@ -56,11 +57,11 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
 
   render() {
     return html`
-      <form id="input-form" class="single-column-form">
+      <form id="input-form" name="jobSheet" class="single-column-form">
         <fieldset>
           <legend>${i18next.t('title.job_sheet_info')}</legend>
           <label>${i18next.t('label.container_no')}</label>
-          <input name="containerNo" type="date" readonly />
+          <input name="containerNo" readonly />
 
           <label>${i18next.t('label.container_size')}</label>
           <input name="containerSize" type="text" readonly />
@@ -82,7 +83,17 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
     `
   }
 
-  get inputForm() {
+  firstUpdated() {
+    this._fillUpForm(this._jobSheetForm, {
+      containerNo: this.containerNo,
+      containerMtDate: this.containerMtDate,
+      looseItem: this.looseItem,
+      adviseMtDate: this.adviseMtDate,
+      containerSize: this.containerSize
+    })
+  }
+
+  get _jobSheetForm() {
     return this.shadowRoot.querySelector('form#input-form')
   }
 
@@ -92,6 +103,7 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
         query: gql`
           mutation {
             updateJobSheet(${gqlBuilder.buildArgs({
+              name: this.jobSheetNo,
               patch: { ...this._getJobSheetInfo() }
             })}) {
               id
@@ -133,7 +145,6 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
   }
 
   _fillUpForm(form, data) {
-    form.reset()
     for (let key in data) {
       Array.from(form.querySelectorAll('input')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {

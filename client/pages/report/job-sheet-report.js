@@ -92,6 +92,7 @@ class JobSheetReport extends localize(i18next)(PageView) {
                 name
             }
             jobSheet {
+              name
               containerSize
               containerMtDate
               adviseMtDate
@@ -112,6 +113,7 @@ class JobSheetReport extends localize(i18next)(PageView) {
       this._containerSize = arrivalNoticeInfo.jobSheet.containerSize
       this._mtDate = arrivalNoticeInfo.jobSheet.containerMtDate
       this._adviseMtDate = arrivalNoticeInfo.jobSheet.adviseMtDate
+      this._jobSheetNo = arrivalNoticeInfo.jobSheet.name
     }
   }
 
@@ -124,6 +126,7 @@ class JobSheetReport extends localize(i18next)(PageView) {
           .containerSize="${this._containerSize}"
           .containerNo="${this._containerNo}"
           .looseItem="${this._looseItem}"
+          .jobSheetNo="${this._jobSheetNo}"
           @job-sheet-updated="${() => {
             this.pageReset()
           }}"
