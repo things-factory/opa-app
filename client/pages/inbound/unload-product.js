@@ -554,7 +554,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
               unload(${gqlBuilder.buildArgs({
                 worksheetDetailName: this._selectedOrderProduct.name,
                 inventory: {
-                  palletId: this.palletInput.value,
+                  palletId: this.palletInput.value.trim(),
                   qty: parseInt(this.actualQtyInput.value)
                 }
               })})

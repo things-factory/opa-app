@@ -148,7 +148,7 @@ class JobSheetList extends localize(i18next)(PageView) {
           header: i18next.t('field.job_sheet'),
           record: { align: 'left' },
           sortable: true,
-          width: 200
+          width: 150
         },
         {
           type: 'string',
@@ -156,7 +156,15 @@ class JobSheetList extends localize(i18next)(PageView) {
           header: i18next.t('field.gan_no'),
           record: { align: 'left' },
           sortable: true,
-          width: 200
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'containerNo',
+          header: i18next.t('field.container_no'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 150
         },
         {
           type: 'datetime',
@@ -242,6 +250,8 @@ class JobSheetList extends localize(i18next)(PageView) {
               items {
                 name
                 description
+                containerNo
+                refNo
                 bizplace {
                   id
                   name
