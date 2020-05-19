@@ -992,7 +992,7 @@
   "label.approver": "approver",
   "label.approved_at": "approved at",
   "label.inventory_accuracy": "inventory accuracy",
-  "label.container_mt_date": "container mt date",
+  "label.container_mt_date": "container MT date",
   "text.cannot_delete_unsaved_location(s)": "cannot delete unsaved location(s)",
   "text.cycle_count_date_invalid": "cycle count date invalid",
   "text.cycle_count_worksheet_created": "cycle count worksheet created",
@@ -1077,5 +1077,6 @@
   "button.duplicate": "duplicate",
   "text.invalid_vas_setting": "invalid VAS setting",
   "text.there_is_no_vas": "there is no VAS",
-  "text.assign_inventories": "assign inventories"
+  "text.assign_inventories": "assign inventories",
+  "text.inventory_has_been_adjusted": "inventory has been adjusted"
 }

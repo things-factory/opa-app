@@ -249,8 +249,8 @@ class InventoryCheckList extends localize(i18next)(PageView) {
           response.data.worksheets.items.map(item => {
             return {
               ...item,
-              executionDate: item.inventoryCheck.executionDate || '',
-              status: item.inventoryCheck.status
+              executionDate: item.inventoryCheck && item.inventoryCheck.executionDate,
+              status: item.inventoryCheck && item.inventoryCheck.status
             }
           }) || {}
       }
