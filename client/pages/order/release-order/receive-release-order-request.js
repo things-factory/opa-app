@@ -23,7 +23,9 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
       inventoryData: Object,
       vasData: Object,
       _status: String,
-      _template: Object
+      _template: Object,
+      _mimetype: String,
+      _doPath: String
     }
   }
 
@@ -138,6 +140,22 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
         </form>
       </div>
 
+      <div class="do-attachment-container" ?hidden="${!this._ownTransport}">
+        <form name="doAttachment" class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.do_attachment')}</legend>
+            <div class="do-preview">
+              <image-viewer
+                name="${this._doName}"
+                src="${this._doPath}"
+                .mimetype="${this._mimetype}"
+                .downloadable="${this._isDownloadable}"
+              ></image-viewer>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+
       <div class="container">
         <div class="grist">
           <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.release_product_list')}</h2>
@@ -190,6 +208,10 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
 
   get vasGrist() {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
+  }
+
+  get _isDownloadable() {
+    return this._status !== ORDER_STATUS.PENDING.value
   }
 
   pageInitialized() {
@@ -388,6 +410,13 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
             exportOption
             releaseDate
             collectionOrderNo
+            attachment {
+              id
+              name
+              refBy
+              path
+              mimetype
+            }
             inventoryInfos {
               name
               batchId
@@ -451,6 +480,12 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
         this._ownTransport = releaseOrder.ownTransport
       }
       this._status = releaseOrder.status
+
+      if (this._ownTransport) {
+        this._doPath = `${location.origin}/attachment/${releaseOrder.attachment[0].path}`
+        this._doName = releaseOrder.attachment[0].name
+        this._mimetype = releaseOrder.attachment[0].mimetype
+      }
 
       this._fillupRGForm(releaseOrder)
       if (this._exportOption) this._fillupSOForm(shippingOrder)

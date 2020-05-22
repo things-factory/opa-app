@@ -110,6 +110,14 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
           <label ?hidden="${!this._ownTransport || this._exportOption}">${i18next.t('label.co_no')}</label>
           <input name="collectionOrderNo" ?hidden="${!this._ownTransport || this._exportOption}" />
 
+          <label ?hidden="${!this._ownTransport || this._exportOption}">${i18next.t('label.upload_do')}</label>
+          <file-uploader
+            custom-input
+            id="uploadDocument"
+            name="attachments"
+            ?hidden="${!this._ownTransport || this._exportOption}"
+          ></file-uploader>
+
           <input
             id="exportOption"
             type="checkbox"
@@ -255,6 +263,10 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
   get vasGrist() {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
+  }
+
+  get _document() {
+    return this.shadowRoot.querySelector('#uploadDocument')
   }
 
   async updated(changeProps) {
@@ -713,17 +725,28 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         let args = {
           releaseGood: { ...releaseGood, ownTransport: this._exportOption ? true : this._ownTransport }
         }
+
+        let file
+        if (this._ownTransport) {
+          file = this._document.files[0]
+        }
         if (this._exportOption && this._ownTransport) args.shippingOrder = this._getShippingOrder()
 
         const response = await client.query({
           query: gql`
-              mutation {
-                generateReleaseGood(${gqlBuilder.buildArgs(args)}) {
+              mutation ($file: Upload!) {
+                generateReleaseGood(${gqlBuilder.buildArgs(args)}, file:$file) {
                   id
                   name
                 }
               }
-            `
+            `,
+          variables: {
+            file
+          },
+          context: {
+            hasUpload: true
+          }
         })
 
         if (!response.errors) {
