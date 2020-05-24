@@ -182,7 +182,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           width: 100
         },
         {
-          type: 'string',
+          type: 'object',
           name: 'inspectedLocation',
           header: i18next.t('field.inspected_location'),
           record: { align: 'center' },
@@ -235,7 +235,11 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
               targetInventory {
                 inspectedQty
                 inspectedWeight
-                inspectedLocation
+                inspectedLocation {
+                  id
+                  name
+                  description
+                }
                 inventory {
                   palletId
                   batchId

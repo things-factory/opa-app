@@ -204,10 +204,10 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               <barcode-scanable-input name="locationName" custom-input></barcode-scanable-input>
 
               <label>${i18next.t('label.inspected_qty')}</label>
-              <input type="number" min="1" name="inspectedQty" />
+              <input type="number" min="1" name="inspectedQty" required />
 
               <label>${i18next.t('label.inspected_weight')}</label>
-              <input type="number" min="1" name="inspectedWeight" />
+              <input type="number" min="1" name="inspectedWeight" required />
             </fieldset>
           </form>
         </div>
@@ -308,8 +308,15 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
 
   _updateContext() {
     let actions = []
+    if (
+      this._selectedTaskStatus === WORKSHEET_STATUS.DONE.value ||
+      this._selectedTaskStatus === WORKSHEET_STATUS.NOT_TALLY.value
+    ) {
+      actions = [...actions, { title: i18next.t('button.undo'), action: this._undoInspection.bind(this) }]
+    }
+
     if (this.completed) {
-      actions = [{ title: i18next.t('button.complete'), action: this._complete.bind(this) }]
+      actions = [...action, { title: i18next.t('button.complete'), action: this._complete.bind(this) }]
     }
 
     store.dispatch({
@@ -465,16 +472,30 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       throw new Error(i18next.t('text.wrong_pallet_id'))
     }
 
-    // 4. inspected qty existing
+    // 4. location id existing
+    if (!this.locationInput.value) {
+      this._focusOnInput(this.locationInput)
+      throw new Error(i18next.t('text.location_id_is_empty'))
+    }
+
+    // 5. inspected qty existing
     if (!this.inspectedQtyInput.value) {
       this._focusOnInput(this.inspectedQtyInput)
       throw new Error(i18next.t('text.inspected_qty_is_empty'))
     }
 
-    // 6. location id existing
-    if (!this.locationInput.value) {
-      this._focusOnInput(this.locationInput)
-      throw new Error(i18next.t('text.location_id_is_empty'))
+    // 6. inspected weight existing
+    if (!this.inspectedWeightInput.value) {
+      this._focusOnInput(this.inspectedWeightInput)
+      throw new Error(i18next.t('text.inspected_weight_is_empty'))
+    }
+
+    // 7. weight value must be 0 if no more qty
+    if (
+      (this.inspectedQtyInput.value == 0 && this.inspectedWeightInput.value > 0) ||
+      (this.inspectedWeightInput.value == 0 && this.inspectedQtyInput.value > 0)
+    ) {
+      throw new Error(i18next.t('text.qty_and_weight_value_is_invalid'))
     }
   }
 
@@ -516,6 +537,46 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
 
       this._clearView()
       navigate('inventory_check_list')
+    }
+  }
+
+  async _undoInspection() {
+    try {
+      if (!this._selectedOrderInventory) throw new Error(i18next.t('text.there_is_no_selected_items'))
+
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.undo_inspection'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) {
+        return
+      }
+
+      const response = await client.query({
+        query: gql`
+          mutation {
+            undoInspection(${gqlBuilder.buildArgs({
+              worksheetDetailName: this._selectedOrderInventory.name
+            })})
+          }
+        `
+      })
+
+      if (!response.errors) {
+        this._fetchInventories(this.inventoryCheckNo)
+        this._focusOnInput(this.palletInput)
+        this._selectedTaskStatus = null
+        this._selectedOrderInventory = null
+        this.inspectedQtyInput.value = ''
+        this.inspectedWeightInput.value = ''
+        this.palletInput.value = ''
+        this.locationInput.value = ''
+      }
+    } catch (e) {
+      this._showToast(e)
     }
   }
 
