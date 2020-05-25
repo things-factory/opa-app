@@ -734,7 +734,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
         const response = await client.query({
           query: gql`
-              mutation ($file: Upload!) {
+              mutation ($file: Upload) {
                 generateReleaseGood(${gqlBuilder.buildArgs(args)}, file:$file) {
                   id
                   name
