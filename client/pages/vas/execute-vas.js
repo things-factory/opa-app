@@ -36,11 +36,13 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       MultiColumnFormStyles,
       css`
         :host {
+          overflow: hidden;
           display: flex;
           flex-direction: column;
         }
 
         .grist {
+          overflow: hidden;
           background-color: var(--main-section-background-color);
           display: flex;
           flex: 1;
@@ -353,10 +355,6 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.vas_count'),
           record: { align: 'center' },
           width: 100
-        },
-        {
-          type: 'integer',
-          name: ''
         }
       ]
     }
@@ -376,19 +374,9 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
               this._fillUpInputForm(record)
 
               if (record.vas.operationGuideType && record.vas.operationGuideType === 'template') {
-                this._template = document.createElement(record.vas.operationGuide)
-                if (!record.completed) {
-                  this._template.isExecuting = true
-                  this._templateContextBtns = this._template.contextButtons
-                } else {
-                  this._template.isExecuting = false
-                  this._templateContextBtns = null
-                }
-
-                this._template.record = { ...record, operationGuide: JSON.parse(record.operationGuide) }
+                this.initVasTemplate(record)
               } else {
-                this._template = null
-                this._templateContextBtns = null
+                this.clearVasTemplate()
               }
             }
           }
@@ -421,6 +409,38 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
         }
       ]
     }
+  }
+
+  initVasTemplate(record) {
+    this._template = document.createElement(record.vas.operationGuide)
+    this._template.addEventListener('completed', this._templateCompletedHandler.bind(this))
+    this._template.record = { ...record, operationGuide: JSON.parse(record.operationGuide) }
+
+    if (!record.completed) {
+      this._template.isExecuting = true
+      this._templateContextBtns = this._template.contextButtons
+    } else {
+      this._template.isExecuting = false
+      this._templateContextBtns = null
+    }
+
+    this._template.init()
+  }
+
+  clearVasTemplate() {
+    this._template.removeEventListener('completed', this._templateCompletedHandler)
+    this._template = null
+    this._templateContextBtns = null
+  }
+
+  async _templateCompletedHandler() {
+    const selectedVasName = this._selectedVas.name
+    await this._fetchVass()
+    this._selectedVas = this.vasTasks.records.find(record => record.name === selectedVasName)
+    this._fillUpInputForm(this._selectedVas)
+    this._selectedTaskStatus = this._selectedVas.status
+    this._template.record = { ...this._selectedVas, operationGuide: JSON.parse(this._selectedVas.operationGuide) }
+    this._template.init()
   }
 
   pageUpdated(changes, lifecycle) {
@@ -517,9 +537,15 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
               }
               inventory {
                 palletId
+                qty
+                weight
               }
               description
               remark
+              relatedOrderInv {
+                releaseQty
+                releaseWeight
+              }
             }
           }
         }
@@ -590,7 +616,10 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       completed: task.status === WORKSHEET_STATUS.DONE.value,
       description: task.description,
       qty: task.qty,
-      weight: task.weight
+      weight: task.weight,
+      relatedOrderInv: task.relatedOrderInv,
+      inventory: task.inventory,
+      issue: task.issue
     }
   }
 
@@ -675,11 +704,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       const args = { worksheetDetail: this._getVasWorksheetDetail() }
 
       if (this._template) {
-        this._template.checkCompleteValidity()
-
-        if (this._template.completeParams) {
-          args.completeParams = JSON.stringify(this._template.completeParams)
-        }
+        await this._template.checkCompleteValidity()
       }
 
       const response = await client.query({
@@ -703,8 +728,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   resetView() {
     this._selectedVas = null
     this._selectedTaskStatus = null
-    this._template = null
-    this._templateContextBtns = null
+    this.clearVasTemplate()
     this.infoForm.reset()
     this.inputForm.reset()
   }

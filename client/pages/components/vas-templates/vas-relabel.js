@@ -1,7 +1,7 @@
 import { SingleColumnFormStyles } from '@things-factory/form-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client } from '@things-factory/shell'
+import { client, CustomAlert } from '@things-factory/shell'
 import { gqlBuilder } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
@@ -336,6 +336,19 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
       if (response.errors) throw response.errors[0]
     } catch (e) {
       throw e
+    }
+  }
+
+  async checkCompleteValidity() {
+    const result = await CustomAlert({
+      title: i18next.t('title.relabeling'),
+      text: i18next.t('text.is_operation_finished'),
+      confirmButton: { text: i18next.t('button.confirm') },
+      cancelButton: { text: i18next.t('button.cancel') }
+    })
+
+    if (!result.value) {
+      throw new Error(i18next.t('text.please_finish_relabeling'))
     }
   }
 }

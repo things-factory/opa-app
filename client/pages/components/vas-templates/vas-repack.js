@@ -1,14 +1,13 @@
 import '@things-factory/barcode-ui'
 import { SingleColumnFormStyles } from '@things-factory/form-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { openPopup } from '@things-factory/layout-base'
-import { client } from '@things-factory/shell'
+import { client, CustomAlert } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../image-viewer'
 import { PACKING_UNITS, PACKING_UNIT_QTY, PACKING_UNIT_WEIGHT } from './constants'
-import './vas-repack-pallet-add-popup'
+import './vas-pallet-add-popup'
 import { VasTemplate } from './vas-template'
 
 class VasRepack extends localize(i18next)(VasTemplate) {
@@ -53,7 +52,12 @@ class VasRepack extends localize(i18next)(VasTemplate) {
             <legend>${i18next.t('title.repack')}</legend>
 
             <label>${i18next.t('label.packing_unit')}</label>
-            <select id="packing-unit-selector" required ?disabled="${!this._isEditable}">
+            <select
+              id="packing-unit-selector"
+              required
+              ?disabled="${!this._isEditable}"
+              @change="${this._onPackingUnitChange}"
+            >
               ${PACKING_UNITS.map(
                 unit =>
                   html`<option
@@ -98,31 +102,53 @@ class VasRepack extends localize(i18next)(VasTemplate) {
               required
               type="number"
               name="std-amount"
+              @change="${this._onStdAmountChange}"
               value="${this._getOperationGuideData('stdAmount') || ''}"
               ?disabled="${!this._isEditable}"
             />
 
             <label>${i18next.t('label.required_package_qty')}</label>
             <input
-              required
+              readonly
               type="number"
-              name="package-qty"
+              name="required-package-qty"
               min="1"
-              value="${this._getOperationGuideData('packageQty') || ''}"
-              ?disabled="${!this._isEditable}"
+              value="${this._getOperationGuideData('requiredPackageQty') || ''}"
             />
-
-            ${this.isExecuting
-              ? html`
-                  <label>${i18next.t('label.maximum_pakage_qty')}</label>
-                  <input type="number" value="${this.maximumPackageQty}" disabled />
-                `
-              : ''}
           </fieldset>
         </form>
 
         ${this.isExecuting
           ? html`
+              <form class="single-column-form">
+                <fieldset>
+                  <label>${i18next.t('label.total_qty')}</label>
+                  ${this.record.inventory.qty === 0 && this.record.relatedOrderInv.releaseQty
+                    ? html` <input readonly value="${this.record.relatedOrderInv.releaseQty}" /> `
+                    : html` <input readonly value="${this.record.inventory.qty}" /> `}
+                </fieldset>
+              </form>
+
+              <form
+                id="input-form"
+                class="single-column-form"
+                @submit="${e => e.preventDefault()}"
+                @keypress="${e => {
+                  if (e.keyCode === 13) this.repack()
+                }}"
+              >
+                <fieldset>
+                  <label>${i18next.t('label.pallet')}</label>
+                  <barcode-scanable-input name="pallet-id" custom-input></barcode-scanable-input>
+
+                  <label>${i18next.t('label.location')}</label>
+                  <barcode-scanable-input name="location-name" custom-input></barcode-scanable-input>
+
+                  <label>${i18next.t('label.package_qty')}</label>
+                  <input name="package-qty" type="number" min="1" required />
+                </fieldset>
+              </form>
+
               <data-grist
                 .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
                 .config="${this.config}"
@@ -142,13 +168,77 @@ class VasRepack extends localize(i18next)(VasTemplate) {
     this.palletData = { records: [] }
   }
 
-  async firstUpdated() {
-    await this._fetchPackingTypes()
+  get contextButtons() {
+    return []
+  }
 
+  get form() {
+    return this.shadowRoot.querySelector('form#repack-info-form')
+  }
+
+  get packingUnitSelector() {
+    return this.shadowRoot.querySelector('select#packing-unit-selector')
+  }
+  get toPackingTypeSelector() {
+    return this.shadowRoot.querySelector('select#to-packing-type-selector')
+  }
+
+  get stdAmountInput() {
+    return this.shadowRoot.querySelector('input[name=std-amount]')
+  }
+
+  get requiredPackageQtyInput() {
+    return this.shadowRoot.querySelector('input[name=required-package-qty]')
+  }
+
+  get transactions() {
+    return []
+  }
+
+  get revertTransactions() {
+    return []
+  }
+
+  get data() {
+    return {
+      packingUnit: this.packingUnitSelector.value,
+      toPackingType: this.toPackingTypeSelector.value,
+      stdAmount: Number(this.stdAmountInput.value) || '',
+      requiredPackageQty: Number(this.requiredPackageQtyInput.value) || ''
+    }
+  }
+
+  get palletIdInput() {
+    return this.shadowRoot.querySelector('barcode-scanable-input[name=pallet-id]').shadowRoot.querySelector('input')
+  }
+
+  get locationInput() {
+    return this.shadowRoot.querySelector('barcode-scanable-input[name=location-name]').shadowRoot.querySelector('input')
+  }
+
+  get packageQtyInput() {
+    return this.shadowRoot.querySelector('input[name=package-qty]')
+  }
+
+  get inputForm() {
+    return this.shadowRoot.querySelector('form#input-form')
+  }
+
+  async firstUpdated() {
+    await this.updateComplete
+    if (this.isExecuting) {
+      this._initExecutingConfig()
+    }
+
+    await this._fetchPackingTypes()
+  }
+
+  _initExecutingConfig() {
+    this.locationInput.addEventListener('change', this._checkLocationValidity.bind(this))
     this.config = {
       rows: { appendable: false },
       pagination: { infinite: true },
-      list: { fields: ['palletId', 'packageQty'] },
+      list: { fields: ['palletId', 'location', 'qty'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -156,11 +246,19 @@ class VasRepack extends localize(i18next)(VasTemplate) {
           gutterName: 'button',
           icon: 'close',
           handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              this.palletData = {
-                ...this.palletData,
-                records: data.records.filter((_, idx) => idx !== rowIndex)
+            click: async (columns, data, column, record, rowIndex) => {
+              const result = await CustomAlert({
+                title: i18next.t('title.are_you_sure'),
+                text: i18next.t('text.undo_repackaging'),
+                confirmButton: { text: i18next.t('button.confirm') },
+                cancelButton: { text: i18next.t('button.cancel') }
+              })
+
+              if (!result.value) {
+                return
               }
+
+              this.undoRepack(this.record.name, record.palletId)
             }
           }
         },
@@ -170,7 +268,6 @@ class VasRepack extends localize(i18next)(VasTemplate) {
           header: i18next.t('field.pallet'),
           width: 180
         },
-
         {
           type: 'string',
           name: 'locationName',
@@ -179,11 +276,38 @@ class VasRepack extends localize(i18next)(VasTemplate) {
         },
         {
           type: 'integer',
-          name: 'packageQty',
-          header: i18next.t('field.package_qty'),
+          name: 'repackedPkgQty',
+          header: i18next.t('field.qty'),
           width: 60
         }
       ]
+    }
+  }
+
+  async _checkLocationValidity() {
+    try {
+      const locationName = this.locationInput.value
+      if (!locationName) return
+
+      const response = await client.query({
+        query: gql`
+          query {
+            locationByName(${gqlBuilder.buildArgs({
+              name: locationName
+            })}) {
+              id
+            }
+          }
+        `
+      })
+
+      if (!response.errors) {
+        if (!response.data.locationByName) throw new Error(i18next.t('text.there_is_no_location'))
+      }
+    } catch (e) {
+      this.locationInput.value = ''
+      this.locationInput.focus()
+      this._showToast(e)
     }
   }
 
@@ -209,68 +333,39 @@ class VasRepack extends localize(i18next)(VasTemplate) {
     }
   }
 
-  get contextButtons() {
-    return [
-      {
-        title: i18next.t('label.add_pallet'),
-        action: this.openAddPalletPopup.bind(this)
+  async init() {
+    await this.updateComplete
+    if (this.isExecuting) {
+      this.inputForm.reset()
+      this.palletIdInput.value = ''
+      this.locationInput.value = ''
+      this.palletIdInput.focus()
+
+      this.palletData = {
+        records: this.record.operationGuide.data.repackedInvs
       }
-    ]
-  }
-
-  get form() {
-    return this.shadowRoot.querySelector('form#repack-info-form')
-  }
-
-  get packingUnitSelector() {
-    return this.shadowRoot.querySelector('select#packing-unit-selector')
-  }
-  get toPackingTypeSelector() {
-    return this.shadowRoot.querySelector('select#to-packing-type-selector')
-  }
-
-  get stdAmountInput() {
-    return this.shadowRoot.querySelector('input[name=std-amount]')
-  }
-
-  get packageQtyInput() {
-    return this.shadowRoot.querySelector('input[name=package-qty]')
-  }
-
-  get palletIdInput() {
-    return this.shadowRoot.querySelector('barcode-scanable-input[name=pallet-id]').shadowRoot.querySelector('input')
-  }
-
-  get transactions() {
-    return []
-  }
-
-  get revertTransactions() {
-    return []
-  }
-
-  get data() {
-    return {
-      packingUnit: this.packingUnitSelector.value,
-      toPackingType: this.toPackingTypeSelector.value,
-      stdAmount: Number(this.stdAmountInput.value) || '',
-      packageQty: Number(this.packageQtyInput.value) || ''
     }
   }
 
-  get maximumPackageQty() {
-    const packingUnit = this.record.operationGuide.data.packingUnit
-    const stdAmount = this.record.operationGuide.data.stdAmount
+  _onPackingUnitChange() {
+    const stdAmount = parseInt(this.stdAmountInput.value)
+    if (stdAmount) {
+      this._calcPackageQty()
+    }
+  }
 
+  _onStdAmountChange() {
+    this._calcPackageQty()
+  }
+
+  _calcPackageQty() {
+    const packingUnit = this.packingUnitSelector.value
+    const stdAmount = parseInt(this.stdAmountInput.value)
     if (packingUnit === PACKING_UNIT_QTY.value) {
-      return this.record.qty / stdAmount
-    } else if (packingUnit === PACKING_UNIT_WEIGHT.value) {
-      return this.record.weight / stdAmount
+      this.requiredPackageQtyInput.value = this.targetInfo.qty / stdAmount
+    } else {
+      this.requiredPackageQtyInput.value = this.targetInfo.weight / stdAmount
     }
-  }
-
-  get completeParams() {
-    return this.palletData.records
   }
 
   checkCompleteValidity() {
@@ -278,18 +373,12 @@ class VasRepack extends localize(i18next)(VasTemplate) {
       throw new Error(i18next.t('text.there_is_no_pallet_records'))
   }
 
-  _getOperationGuideData(key) {
-    if (this.record.operationGuide && this.record.operationGuide.data && this.record.operationGuide.data[key]) {
-      return this.record.operationGuide.data[key]
-    }
-  }
-
   validateAdjust() {
     if (!this.form.checkValidity()) throw new Error(i18next.t('text.invalid_form'))
     const stdAmount = Number(this.stdAmountInput.value)
     if (stdAmount <= 0) throw new Error(i18next.t('text.std_amount_should_be_positive'))
 
-    const packageQty = Number(this.packageQtyInput.value)
+    const packageQty = Number(this.requiredPackageQtyInput.value)
     if (packageQty <= 0) throw new Error(i18next.t('text.package_qty_should_be_positive'))
 
     const packingUnit = this.packingUnitSelector.value
@@ -304,46 +393,68 @@ class VasRepack extends localize(i18next)(VasTemplate) {
     }
   }
 
-  openAddPalletPopup() {
-    openPopup(
-      html`<vas-repack-pallet-add-popup
-        @add-pallet="${e => {
-          this._addPallet(e.detail.palletId, e.detail.locationName, e.detail.packageQty)
-        }}"
-      ></vas-repack-pallet-add-popup>`,
-      {
-        backdrop: true,
-        size: 'small',
-        title: i18next.t('title.repack')
-      }
-    )
-  }
-
-  _addPallet(palletId, locationName, packageQty) {
+  async repack() {
     try {
-      this._checkValidity(packageQty)
-      this.palletData = {
-        ...this.palletData,
-        records: [...this.palletData.records, { palletId, locationName, packageQty }]
-      }
+      this._checkRepackable()
+      await client.query({
+        query: gql`
+          mutation {
+            repackaging(${gqlBuilder.buildArgs({
+              worksheetDetailName: this.record.name,
+              palletId: this.palletIdInput.value,
+              locationName: this.locationInput.value,
+              packageQty: parseInt(this.packageQtyInput.value)
+            })})
+          }
+        `
+      })
+
+      this.dispatchEvent(new CustomEvent('completed'))
+      this.init()
     } catch (e) {
       this._showToast(e)
     }
   }
 
-  _checkValidity(packageQty) {
-    const packingUnit = this.record.operationGuide.data.packingUnit
-    const stdAmount = this.record.operationGuide.data.stdAmount
-    const totalPackageQty =
-      this.palletData.records.reduce((totalPackageQty, record) => (totalPackageQty += record.packageQty), 0) +
-      packageQty
-    const totalAmount = stdAmount * totalPackageQty
-
-    if (packingUnit === PACKING_UNIT_QTY.value) {
-      if (this.record.qty < totalAmount) throw new Error(i18next.t('text.qty_exceed_limit'))
-    } else if (packingUnit === PACKING_UNIT_WEIGHT.value) {
-      if (this.record.weight < totalAmount) throw new Error(i18next.t('text.weight_exceed_limit'))
+  async undoRepack(worksheetDetailName, palletId) {
+    try {
+      await client.query({
+        query: gql`
+          mutation {
+            undoRepackaging(${gqlBuilder.buildArgs({
+              worksheetDetailName,
+              palletId
+            })})
+          }
+        `
+      })
+      this.dispatchEvent(new CustomEvent('completed'))
+      this.init()
+    } catch (e) {
+      this._showToast(e)
     }
+  }
+
+  _checkRepackable() {
+    if (!this.palletIdInput.value) {
+      this.palletIdInput.select()
+      throw new Error(i18next.t('text.pallet_id_is_empty'))
+    }
+
+    if (!this.locationInput.value) {
+      this.locationInput.select()
+      throw new Error(i18next.t('text.location_code_is_empty'))
+    }
+
+    const packageQty = Number(this.packageQtyInput.value)
+
+    if (!packageQty || packageQty <= 0) {
+      this.packageQtyInput.select()
+      throw new Error(i18next.t('text.package_qty_should_be_positive'))
+    }
+
+    const requiredPackageQty = this._getOperationGuideData('requiredPackageQty')
+    if (packageQty > requiredPackageQty) throw new Error(i18next.t('text.package_qty_is_exceed_required_package_qty'))
   }
 
   _showToast({ type, message }) {

@@ -202,9 +202,12 @@ export class VasCreateBatchProductTypeForm extends LitElement {
   }
 
   _checkQtyValidity() {
-    const { totalQty, unitWeight } = this._calcAvailAmount()
+    let totalQty, unitWeight
 
     try {
+      const amount = this._calcAvailAmount()
+      totalQty = amount.totalQty
+      unitWeight = amount.unitWeight
       const qty = Number(this.qtyInput.value)
 
       if (qty <= 0) {
@@ -225,9 +228,13 @@ export class VasCreateBatchProductTypeForm extends LitElement {
   }
 
   _checkWeightValidity() {
-    const { totalWeight, unitWeight } = this._calcAvailAmount()
+    let totalWeight, unitWeight
 
     try {
+      const amount = this._calcAvailAmount()
+      totalWeight = amount.totalWeight
+      unitWeight = amount.unitWeight
+
       const weight = Number(this.weightInput.value)
 
       if (weight <= 0) {
@@ -248,17 +255,31 @@ export class VasCreateBatchProductTypeForm extends LitElement {
   }
 
   _calcAvailAmount() {
-    const targetItem = this.targetList.find(
+    const targetItems = this.targetList.filter(
       target =>
         target.batchId === this.selectedBatchId &&
         target.product.id === this.selectedProductId &&
         target.packingType === this.selectedPackingType
     )
 
-    return {
-      totalQty: targetItem.packQty,
-      unitWeight: targetItem.unitWeight,
-      totalWeight: targetItem.totalWeight
+    if (targetItems.every(item => item.unitWeight === targetItems[0].unitWeight)) {
+      return targetItems.reduce(
+        (availAmount, item) => {
+          availAmount = {
+            unitWeight: item.unitWeight,
+            totalQty: availAmount.totalQty + item.packQty,
+            totalWeight: availAmount.totalWeight + item.totalWeight
+          }
+          return availAmount
+        },
+        {
+          totalQty: 0,
+          unitWeight: 0,
+          totalWeight: 0
+        }
+      )
+    } else {
+      throw new Error(i18next.t('text.some_unit_weight_is_diff'))
     }
   }
 

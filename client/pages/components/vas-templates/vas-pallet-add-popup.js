@@ -1,9 +1,12 @@
 import { localize, i18next } from '@things-factory/i18n-base'
 import { SingleColumnFormStyles } from '@things-factory/form-ui'
 import { LitElement, html, css } from 'lit-element'
+import { client } from '@things-factory/shell'
+import { gqlBuilder } from '@things-factory/utils'
+import gql from 'graphql-tag'
 import '@things-factory/barcode-ui'
 
-class VasRepackPalletAddPopup extends localize(i18next)(LitElement) {
+class VasPalletAddPopup extends localize(i18next)(LitElement) {
   static get styles() {
     return [
       SingleColumnFormStyles,
@@ -41,6 +44,14 @@ class VasRepackPalletAddPopup extends localize(i18next)(LitElement) {
       `
     ]
   }
+
+  static get properties() {
+    return {
+      currentPalletId: String,
+      allowCurrentPalletId: Boolean
+    }
+  }
+
   render() {
     return html`
       <form
@@ -85,6 +96,12 @@ class VasRepackPalletAddPopup extends localize(i18next)(LitElement) {
     return this.shadowRoot.querySelector('input[name=package-qty]')
   }
 
+  async firstUpdated() {
+    await this.updateComplete
+    this.palletIdInput.addEventListener('change', this._checkPalletIdValidity.bind(this))
+    this.locationInput.addEventListener('change', this._checkLocationValidity.bind(this))
+  }
+
   addPallet(e) {
     try {
       this._checkPalletAddable()
@@ -121,6 +138,67 @@ class VasRepackPalletAddPopup extends localize(i18next)(LitElement) {
     }
   }
 
+  async _checkPalletIdValidity() {
+    try {
+      const palletId = this.palletIdInput.value
+      if (!palletId) return
+
+      if (!this.hasAttribute('allowCurrentPalletId') && palletId === this.currentPalletId) {
+        palletId === this.currentPalletId
+        throw new Error(i18next.t('text.wrong_pallet_id'))
+      } else if (this.hasAttribute('allowCurrentPalletId') && palletId === this.currentPalletId) {
+        return
+      }
+
+      const response = await client.query({
+        query: gql`
+          query {
+            inventoryByPallet(${gqlBuilder.buildArgs({
+              palletId
+            })}) {
+              id
+            }
+          }
+        `
+      })
+
+      if (!response.errors) {
+        if (response.data.inventoryByPallet) throw new Error(i18next.t('text.wrong_pallet_id'))
+      }
+    } catch (e) {
+      this.palletIdInput.value = ''
+      this.palletIdInput.focus()
+      this._showToast(e)
+    }
+  }
+
+  async _checkLocationValidity() {
+    try {
+      const locationName = this.locationInput.value
+      if (!locationName) return
+
+      const response = await client.query({
+        query: gql`
+          query {
+            locationByName(${gqlBuilder.buildArgs({
+              name: locationName
+            })}) {
+              id
+            }
+          }
+        `
+      })
+
+      if (!response.errors) {
+        if (!response.data.locationByName) throw new Error(i18next.t('text.there_is_no_location'))
+      }
+    } catch (e) {
+      this.locationInput.value = ''
+      this.locationInput.focus()
+      this._showToast(e)
+    }
+  }
+
   _showToast({ type, message }) {
     document.dispatchEvent(
       new CustomEvent('notify', {
@@ -133,4 +211,4 @@ class VasRepackPalletAddPopup extends localize(i18next)(LitElement) {
   }
 }
 
-customElements.define('vas-repack-pallet-add-popup', VasRepackPalletAddPopup)
+customElements.define('vas-pallet-add-popup', VasPalletAddPopup)

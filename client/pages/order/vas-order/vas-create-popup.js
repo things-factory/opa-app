@@ -255,7 +255,7 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
 
   updated(changedProps) {
     if (changedProps.has('selectedTargetType')) {
-      this.vasGristData = { records: [] }
+      this._template = null
       this.setVasQueryFilter()
     }
   }
@@ -368,6 +368,8 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
     } else {
       this.selectedTargetType = undefined
     }
+
+    this.vasGristData = { records: [] }
   }
 
   _onFieldChange() {
@@ -477,7 +479,7 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
               if (vasIds.length) {
                 column.record.options.basicArgs = {
                   filters: [
-                    { name: 'operationGuide', operator: 'notin_with_null', value: ['vas-repack'] },
+                    { name: 'operationGuide', operator: 'notin_with_null', value: ['vas-repack', 'vas-repalletizing'] },
                     { name: 'id', operator: 'notin', value: vasIds }
                   ]
                 }
