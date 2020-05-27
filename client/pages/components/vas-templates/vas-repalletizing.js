@@ -87,22 +87,13 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
             type="number"
             min="1"
             readonly
-            value="${this._getOperationGuideData('requiredPalletQty') || ''}"
+            value="${this._getOperationGuideData('requiredPalletQty', 0)}"
           />
         </fieldset>
       </form>
 
       ${this.isExecuting
         ? html`
-            <form class="single-column-form">
-              <fieldset>
-                <label>${i18next.t('label.total_qty')}</label>
-                ${this.record.inventory.qty === 0 && this.record.relatedOrderInv.releaseQty
-                  ? html` <input readonly value="${this.record.relatedOrderInv.releaseQty}" /> `
-                  : html` <input readonly value="${this.record.inventory.qty}" /> `}
-              </fieldset>
-            </form>
-
             <form
               id="input-form"
               class="single-column-form"
@@ -112,6 +103,11 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
               }}"
             >
               <fieldset>
+                <label>${i18next.t('label.total_qty')}</label>
+                ${this.record.inventory.qty === 0 && this.record.relatedOrderInv.releaseQty
+                  ? html` <input readonly value="${this.record.relatedOrderInv.releaseQty}" /> `
+                  : html` <input readonly value="${this.record.inventory.qty}" /> `}
+
                 <label>${i18next.t('label.pallet')}</label>
                 <barcode-scanable-input name="pallet-id" custom-input></barcode-scanable-input>
 
@@ -182,7 +178,7 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
     this.config = {
       rows: { appendable: false },
       pagination: { infinite: true },
-      list: { fields: ['palletId', 'location', 'qty'] },
+      list: { fields: ['palletId', 'locationName', 'addedQty'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {

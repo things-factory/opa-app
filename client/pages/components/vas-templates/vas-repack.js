@@ -238,7 +238,7 @@ class VasRepack extends localize(i18next)(VasTemplate) {
     this.config = {
       rows: { appendable: false },
       pagination: { infinite: true },
-      list: { fields: ['palletId', 'location', 'qty'] },
+      list: { fields: ['palletId', 'locationName', 'repackedPkgQty'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
