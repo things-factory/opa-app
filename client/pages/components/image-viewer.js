@@ -7,8 +7,7 @@ class ImageViewer extends localize(i18next)(LitElement) {
       name: String,
       src: String,
       filePath: String,
-      downloadable: Boolean,
-      mimetype: String
+      downloadable: Boolean
     }
   }
 
@@ -58,13 +57,9 @@ class ImageViewer extends localize(i18next)(LitElement) {
     return html`
       <div class="container">
         ${this.name ? html` <h2>${this.name}</h2> ` : ''}
-        ${this.mimetype === 'image/png' || this.mimetype === 'image/jpeg'
-          ? html`
-              <div class="img-container">
-                <img src="${this._fullPath}" />
-              </div>
-            `
-          : ''}
+        <div class="img-container">
+          <img src="${this._fullPath}" />
+        </div>
       </div>
 
       ${this.downloadable
