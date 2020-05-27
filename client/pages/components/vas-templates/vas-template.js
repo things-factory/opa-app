@@ -47,10 +47,13 @@ export class VasTemplate extends LitElement {
     throw new Error('validateAdjust function should be implemented by component which extends VasTemplate')
   }
 
-  _getOperationGuideData(key) {
+  _getOperationGuideData(key, defaultValue = '') {
+    let foundValue = defaultValue
     if (this.record.operationGuide && this.record.operationGuide.data && this.record.operationGuide.data[key]) {
-      return this.record.operationGuide.data[key]
+      foundValue = this.record.operationGuide.data[key]
     }
+
+    return foundValue
   }
 
   _showToast({ type, message }) {
