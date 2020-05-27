@@ -148,8 +148,8 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
             <legend>${i18next.t('title.do_attachment')}</legend>
             <div class="do-preview">
               <image-viewer
-                name="${`${this._doName ? this._doName : ''}`}"
-                src="${`${this._doPath ? this._doPath : ''}`}"
+                name="${this._doName}"
+                src="${this._doPath}"
                 .mimetype="${this._mimetype}"
                 .downloadable="${this._isDownloadable}"
               ></image-viewer>
@@ -504,11 +504,9 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       this._fillupRGForm(response.data.releaseGoodDetail)
 
       if (this._ownTransport) {
-        if (releaseOrder.attachment) {
-          this._doPath = `${location.origin}/attachment/${releaseOrder.attachment[0].path}`
-          this._doName = releaseOrder.attachment[0].name
-          this._mimetype = releaseOrder.attachment[0].mimetype
-        }
+        this._doPath = `${location.origin}/attachment/${releaseOrder.attachment[0].path}`
+        this._doName = releaseOrder.attachment[0].name
+        this._mimetype = releaseOrder.attachment[0].mimetype
       }
 
       if (this._exportOption) this._fillupSOForm(shippingOrder)
