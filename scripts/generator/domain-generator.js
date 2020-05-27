@@ -344,12 +344,10 @@ async function createRelations(trxMgr, domain, email) {
   // 2) users_domains table
   // 3) users_roles table
   const userRepo = trxMgr.getRepository(User)
-  const user = await userRepo.findOne({ where: { email }, relations: ['domains', 'roles'] })
-  await userRepo.save({
-    ...user,
-    domains: [...user.domains, domain],
-    roles: [...user.roles, domainManagerRole]
-  })
+  const user = await userRepo.findOne({ where: { email }, relations: ['roles'] })
+  user.domains = Promise.resolve([...(await user.domains), domain])
+  user.roles = [...user.roles, domainManagerRole]
+  await userRepo.save(user)
 }
 
 generateDomain()

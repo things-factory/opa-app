@@ -30,6 +30,7 @@
   "dependencies": {
     "@things-factory/apptool-ui": "^2.0.0",
     "@things-factory/attachment-base": "^2.0.0",
+    "@things-factory/auth-base": "^2.5.0-beta.0",
     "@things-factory/auth-ui-jwt": "^2.0.0",
     "@things-factory/barcode-ui": "^2.0.0",
     "@things-factory/biz-ui": "^2.0.0",
@@ -48,7 +49,6 @@
     "@things-factory/id-rule-base": "^0.0.3",
     "@things-factory/import-ui": "^2.0.0",
     "@things-factory/import-ui-excel": "^2.0.0",
-    "@things-factory/integration-ui": "^2.0.0",
     "@things-factory/menu-ui": "^2.0.0",
     "@things-factory/more-ui": "^2.0.0",
     "@things-factory/print-proxy-service": "^2.0.0",
