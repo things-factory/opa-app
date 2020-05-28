@@ -756,9 +756,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
             completeUnloading(${gqlBuilder.buildArgs({
               arrivalNoticeNo: this._arrivalNoticeNo,
               worksheetDetails: this._getWorksheetDetails()
-            })}) {
-              name
-            }
+            })})
           }
         `
       })
