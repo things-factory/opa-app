@@ -10,6 +10,7 @@ import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import '../../components/popup-note'
 import '../../components/vas-templates'
+import '../../components/attachment-viewer'
 import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, ORDER_STATUS, PRODUCT_TYPE } from '../constants'
 
 class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageView)) {
@@ -23,6 +24,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
       inventoryData: Object,
       vasData: Object,
       _status: String,
+      _attachments: Array,
       _template: Object,
       _mimetype: String,
       _doPath: String
@@ -80,6 +82,14 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
 
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
+        }
+        .do-preview {
+          display: flex;
+          flex-direction: row;
+          flex: 1;
+        }
+        attachment-viewer {
+          flex: 1;
         }
       `
     ]
@@ -143,14 +153,19 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
       <div class="do-attachment-container" ?hidden="${!this._ownTransport}">
         <form name="doAttachment" class="multi-column-form">
           <fieldset>
-            <legend>${i18next.t('title.do_attachment')}</legend>
+            <legend>${i18next.t('title.attachment')}</legend>
             <div class="do-preview">
-              <image-viewer
-                name="${this._doName}"
-                src="${this._doPath}"
-                .mimetype="${this._mimetype}"
-                .downloadable="${this._isDownloadable}"
-              ></image-viewer>
+              ${(this._attachments || []).map(
+                attachment =>
+                  html`
+                    <attachment-viewer
+                      name="${attachment.name}"
+                      src="${location.origin}/attachment/${attachment.path}"
+                      .mimetype="${attachment.mimetype}"
+                      .downloadable="${this._downloadable}"
+                    ></attachment-viewer>
+                  `
+              )}
             </div>
           </fieldset>
         </form>
@@ -187,6 +202,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
     this._exportOption = false
+    this._downloadable = true
     this._ownTransport = true
   }
 
@@ -482,9 +498,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
       this._status = releaseOrder.status
 
       if (this._ownTransport) {
-        this._doPath = `${location.origin}/attachment/${releaseOrder.attachment[0].path}`
-        this._doName = releaseOrder.attachment[0].name
-        this._mimetype = releaseOrder.attachment[0].mimetype
+        this._attachments = releaseOrder && releaseOrder.attachment
       }
 
       this._fillupRGForm(releaseOrder)

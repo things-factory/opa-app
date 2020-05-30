@@ -7,7 +7,7 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/vas-templates'
-import '../../components/image-viewer'
+import '../../components/attachment-viewer'
 import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, ORDER_STATUS, PRODUCT_TYPE } from '../constants'
 
 class ReleaseOrderDetail extends localize(i18next)(PageView) {
@@ -23,6 +23,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       vasGristConfig: Object,
       inventoryData: Object,
       vasData: Object,
+      _attachments: Array,
       _status: String,
       _mimetype: String,
       _doPath: String
@@ -84,10 +85,10 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
 
         .do-preview {
           display: flex;
-          flex-direction: column;
+          flex-direction: row;
           flex: 1;
         }
-        image-viewer {
+        attachment-viewer {
           flex: 1;
         }
       `
@@ -145,14 +146,19 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       <div class="do-attachment-container" ?hidden="${!this._ownTransport}">
         <form name="doAttachment" class="multi-column-form">
           <fieldset>
-            <legend>${i18next.t('title.do_attachment')}</legend>
+            <legend>${i18next.t('title.attachment')}</legend>
             <div class="do-preview">
-              <image-viewer
-                name="${this._doName}"
-                src="${this._doPath}"
-                .mimetype="${this._mimetype}"
-                .downloadable="${this._isDownloadable}"
-              ></image-viewer>
+              ${(this._attachments || []).map(
+                attachment =>
+                  html`
+                    <attachment-viewer
+                      name="${attachment.name}"
+                      src="${location.origin}/attachment/${attachment.path}"
+                      .mimetype="${attachment.mimetype}"
+                      .downloadable="${this._downloadable}"
+                    ></attachment-viewer>
+                  `
+              )}
             </div>
           </fieldset>
         </form>
@@ -188,6 +194,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
     super()
     this._exportOption = false
     this._ownTransport = true
+    this._downloadable = true
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
   }
@@ -504,9 +511,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       this._fillupRGForm(response.data.releaseGoodDetail)
 
       if (this._ownTransport) {
-        this._doPath = `${location.origin}/attachment/${releaseOrder.attachment[0].path}`
-        this._doName = releaseOrder.attachment[0].name
-        this._mimetype = releaseOrder.attachment[0].mimetype
+        this._attachments = releaseOrder && releaseOrder.attachment
       }
 
       if (this._exportOption) this._fillupSOForm(shippingOrder)

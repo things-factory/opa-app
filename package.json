@@ -29,8 +29,8 @@
   },
   "dependencies": {
     "@things-factory/apptool-ui": "^2.0.0",
-    "@things-factory/attachment-base": "^2.0.0",
-    "@things-factory/auth-base": "^2.5.0-beta.0",
+    "@things-factory/attachment-ui": "^2.0.0",
+    "@things-factory/auth-base": "^2.5.0",
     "@things-factory/auth-ui-jwt": "^2.0.0",
     "@things-factory/barcode-ui": "^2.0.0",
     "@things-factory/biz-ui": "^2.0.0",
@@ -101,7 +101,6 @@
     "@things-factory/worksheet-base": "^2.5.0-beta.0",
     "@things-factory/sales-base": "^2.5.0-beta.0",
     "@things-factory/warehouse-base": "^2.5.0-beta.0",
-    "@things-factory/product-base": "^2.5.0-beta.0",
-    "@things-factory/auth-base": "^2.5.0-beta.0"
+    "@things-factory/product-base": "^2.5.0-beta.0"
   }
 }
