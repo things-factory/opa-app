@@ -1078,8 +1078,10 @@
   "label.etc": "etc",
   "text.there_is_non_assigned_vas": "there is non-assigned vas",
   "button.duplicate": "duplicate",
+  "button.accept": "accept",
   "text.invalid_vas_setting": "invalid VAS setting",
   "text.there_is_no_vas": "there is no VAS",
+  "text.accept_goods_received_note": "accept goods received note",
   "text.assign_inventories": "assign inventories",
   "text.inventory_has_been_adjusted": "inventory has been adjusted"
 }

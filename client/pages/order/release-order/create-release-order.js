@@ -1157,6 +1157,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     if (this.shippingOrderForm) this.shippingOrderForm.reset()
     this.inventoryData = { ...this.inventoryData, records: [] }
     this.vasData = { ...this.vasData, records: [] }
+    this.renderRoot.querySelector('file-uploader')._files = []
     this._clearGristConditions()
   }
 

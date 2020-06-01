@@ -18,6 +18,7 @@ export const ORDER_STATUS = {
   PENDING_RECEIVE: { name: 'order_status_pending_receive', value: 'PENDING_RECEIVE' },
   INTRANSIT: { name: 'order_status_intransit', value: 'INTRANSIT' },
   ARRIVED: { name: 'order_status_arrived', value: 'ARRIVED' },
+  RECEIVED: { name: 'order_status_received', value: 'RECEIVED' },
   READY_TO_UNLOAD: { name: 'ready_to_unload', value: 'READY_TO_UNLOAD' },
   PROCESSING: { name: 'order_status_processing', value: 'PROCESSING' },
   DONE: { name: 'order_status_done', value: 'DONE' },

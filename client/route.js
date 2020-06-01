@@ -143,8 +143,12 @@ export default function route(page) {
       import('./pages/order/goods-received-note/received-note-detail')
       return page
 
-    case 'received_notes':
-      import('./pages/order/goods-received-note/customer-received-notes')
+    case 'received_note':
+      import('./pages/order/goods-received-note/customer-received-note')
+      return page
+
+    case 'customer_grn_list':
+      import('./pages/order/goods-received-note/customer-grn-list')
       return page
 
     /**

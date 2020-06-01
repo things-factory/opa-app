@@ -159,7 +159,9 @@ class DocumentTemplateList extends connect(store)(localize(i18next)(PageView)) {
           TEMPLATE_TYPES.DO_TEMPLATE.value,
           TEMPLATE_TYPES.CO_TEMPLATE.value,
           TEMPLATE_TYPES.JOB_TEMPLATE.value,
-          TEMPLATE_TYPES.LOGO.value
+          TEMPLATE_TYPES.LOGO.value,
+          TEMPLATE_TYPES.COP.value,
+          TEMPLATE_TYPES.SIGNATURE.value
         ]
       }
     ]

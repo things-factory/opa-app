@@ -1,10 +1,8 @@
 import { i18next, localize } from '@things-factory/i18n-base'
-import { openPopup } from '@things-factory/layout-base'
 import { navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import { ScrollbarStyles } from '@things-factory/styles'
 import { getPathInfo } from '@things-factory/utils'
 import { css, html } from 'lit-element'
-import './upload-document-popup'
 
 class ReceivedNoteDetail extends localize(i18next)(PageView) {
   static get properties() {
@@ -41,9 +39,7 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
   }
 
   render() {
-    return html`
-      <iframe id="container"></iframe>
-    `
+    return html` <iframe id="container"></iframe> `
   }
 
   async pageUpdated(changes) {
@@ -73,10 +69,6 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
           this.renderRoot.querySelector('iframe').contentWindow.print()
         }
       },
-      {
-        title: i18next.t('button.upload'),
-        action: this._editGRN.bind(this)
-      },
       { title: i18next.t('button.back'), action: () => navigate(`received_note_list`) }
     ]
 
@@ -84,24 +76,6 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
       type: UPDATE_CONTEXT,
       context: this.context
     })
-  }
-
-  _editGRN() {
-    openPopup(
-      html`
-        <upload-document-popup
-          .grnNo="${this._grnNo}"
-          @document-uploaded="${() => {
-            this._showToast({ message: i18next.t('text.document_has_been_uploaded') })
-          }}"
-        ></upload-document-popup>
-      `,
-      {
-        backdrop: true,
-        size: 'medium',
-        title: i18next.t('title.upload_grn')
-      }
-    )
   }
 
   _showToast({ type, message }) {

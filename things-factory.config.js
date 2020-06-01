@@ -163,8 +163,12 @@ export default {
       page: 'received_note_detail'
     },
     {
-      tagname: 'customer-received-notes',
-      page: 'received_notes'
+      tagname: 'customer-received-note',
+      page: 'received_note'
+    },
+    {
+      tagname: 'customer-grn-list',
+      page: 'customer_grn_list'
     },
     /**
      * Billing Menus Section

@@ -18,5 +18,13 @@ export const TEMPLATE_TYPES = {
   LOGO: {
     name: 'logo',
     value: 'LOGO'
+  },
+  COP: {
+    name: 'cop',
+    value: 'COP'
+  },
+  SIGNATURE: {
+    name: 'signature',
+    value: 'SIGNATURE'
   }
 }
