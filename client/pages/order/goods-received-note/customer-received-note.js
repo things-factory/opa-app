@@ -10,7 +10,8 @@ import { ORDER_STATUS } from '../constants'
 class CustomerReceivedNote extends localize(i18next)(PageView) {
   static get properties() {
     return {
-      _grnNo: String
+      _grnNo: String,
+      _status: String
     }
   }
 
@@ -90,7 +91,7 @@ class CustomerReceivedNote extends localize(i18next)(PageView) {
   _updateContext() {
     this._actions = []
 
-    if (this._grnStatus !== ORDER_STATUS.RECEIVED) {
+    if (this._status !== ORDER_STATUS.RECEIVED.value) {
       this._actions = [...this._actions, { title: i18next.t('button.accept'), action: this._receivedGrn.bind(this) }]
     }
 
