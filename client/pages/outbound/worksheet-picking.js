@@ -404,6 +404,12 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 releaseQty
                 releaseWeight
                 status
+                inventory {
+                  product {
+                    name
+                    description
+                  }
+                }
               }
             }
           }
@@ -467,7 +473,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         })
       }
 
-      if (completedOrderInvs && completedOrderInvs.length) {
+      if (completedOrderInvs && completedOrderInvs.length && this.isPalletPickingOrder) {
         this.worksheetDetailData = {
           records: completedOrderInvs.map(item => {
             return {
@@ -479,8 +485,6 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             }
           })
         }
-      } else {
-        this.worksheetDetailData = { records: [] }
       }
 
       this._updateContext()
