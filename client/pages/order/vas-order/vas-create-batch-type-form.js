@@ -69,6 +69,7 @@ export class VasCreateBatchTypeForm extends LitElement {
             ?disabled="${!this.selectedBatchId || !this.selectedPackingType}"
             type="number"
             min="1"
+            placeholder="${this.maximumQty}"
             value="${(this.record && this.record.qty) || 1}"
             @change="${this._checkQtyValidity.bind(this)}"
           />
@@ -122,6 +123,16 @@ export class VasCreateBatchTypeForm extends LitElement {
 
   get qty() {
     return this.qtyInput.value
+  }
+
+  get maximumQty() {
+    if (this.selectedBatchId && this.selectedPackingType) {
+      return this.targetList
+        .filter(target => target.batchId === this.selectedBatchId && target.packingType === this.selectedPackingType)
+        .reduce((packQty, target) => packQty + target.packQty, 0)
+    } else {
+      return ''
+    }
   }
 
   checkValidity() {

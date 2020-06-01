@@ -102,6 +102,7 @@ export class VasCreateBatchProductTypeForm extends LitElement {
           type="number"
           min="1"
           value="${(this.record && this.record.qty) || 1}"
+          placeholder="${this.maximumQty}"
           @change="${this._checkQtyValidity.bind(this)}"
         />
 
@@ -114,6 +115,7 @@ export class VasCreateBatchProductTypeForm extends LitElement {
           step="0.01"
           value="${(this.record && this.record.qty) || 1}"
           @change="${this._checkWeightValidity.bind(this)}"
+          placeholder="${this.maximumWeight}"
         />
       </fieldset>
     </form>`
@@ -195,6 +197,22 @@ export class VasCreateBatchProductTypeForm extends LitElement {
 
   get weight() {
     return this.weightInput.value
+  }
+
+  get maximumQty() {
+    if (this.selectedBatchId && this.selectedProductId && this.selectedPackingType) {
+      return this._calcAvailAmount().totalQty
+    } else {
+      return ''
+    }
+  }
+
+  get maximumWeight() {
+    if (this.selectedBatchId && this.selectedProductId && this.selectedPackingType) {
+      return this._calcAvailAmount().totalWeight
+    } else {
+      return ''
+    }
   }
 
   checkValidity() {
