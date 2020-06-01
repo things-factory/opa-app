@@ -207,8 +207,11 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 productName: record.productName,
                 packingType: record.packingType,
                 releaseQty: record.releaseQty,
-                releaseWeight: record.releaseWeight
+                releaseWeight: record.releaseWeight,
+                completed: record.completed
               }
+
+              this._updateContext()
             }
           }
         }
@@ -617,7 +620,12 @@ class WorksheetPicking extends localize(i18next)(PageView) {
 
     if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value && !this.isPalletPickingOrder) {
       if (this.productGristData.records.some(record => record.completed)) {
-        this._actions = [...this._actions, { title: i18next.t('button.undo'), action: this._undoAssignment.bind(this) }]
+        if (this._selectedProduct && this._selectedProduct.completed) {
+          this._actions = [
+            ...this._actions,
+            { title: i18next.t('button.undo'), action: this._undoAssignment.bind(this) }
+          ]
+        }
       }
 
       if (this.productGristData.records.every(record => record.completed)) {
@@ -764,7 +772,10 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         query: gql`
           mutation {
             undoPickingAssigment(${gqlBuilder.buildArgs({
-              worksheetNo: this._worksheetNo
+              worksheetNo: this._worksheetNo,
+              batchId: this._selectedProduct.batchId,
+              productName: this._selectedProduct.productName,
+              packingType: this._selectedProduct.packingType
             })})
           }
         `
