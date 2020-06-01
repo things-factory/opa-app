@@ -616,15 +616,19 @@ class WorksheetPicking extends localize(i18next)(PageView) {
     this._actions = []
 
     if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value && !this.isPalletPickingOrder) {
-      this._actions = [
-        ...this._actions,
-        { title: i18next.t('button.auto_assign'), action: this._showAutoAssignPopup.bind(this) }
-      ]
+      if (this.productGristData.records.some(record => record.completed)) {
+        this._actions = [...this._actions, { title: i18next.t('button.undo'), action: this._undoAssignment.bind(this) }]
+      }
 
       if (this.productGristData.records.every(record => record.completed)) {
         this._actions = [
           ...this._actions,
           { title: i18next.t('button.activate'), action: this._activateWorksheet.bind(this) }
+        ]
+      } else {
+        this._actions = [
+          ...this._actions,
+          { title: i18next.t('button.auto_assign'), action: this._showAutoAssignPopup.bind(this) }
         ]
       }
     } else if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value) {
@@ -743,11 +747,46 @@ class WorksheetPicking extends localize(i18next)(PageView) {
     )
   }
 
+  async _undoAssignment() {
+    try {
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.undo_picking_worksheet'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) {
+        return
+      }
+
+      await client.query({
+        query: gql`
+          mutation {
+            undoPickingAssigment(${gqlBuilder.buildArgs({
+              worksheetNo: this._worksheetNo
+            })})
+          }
+        `
+      })
+
+      await this.fetchOrderInventories()
+      await this.fetchWorksheetDetails(
+        this._worksheetNo,
+        this._selectedProduct.batchId,
+        this._selectedProduct.productName,
+        this._selectedProduct.packingType
+      )
+    } catch (e) {
+      this._showToast(e)
+    }
+  }
+
   async _activateWorksheet() {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
-        text: i18next.t('text.activate_putaway_worksheet'),
+        text: i18next.t('text.activate_picking_worksheet'),
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
