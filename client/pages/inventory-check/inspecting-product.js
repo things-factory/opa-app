@@ -316,7 +316,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     }
 
     if (this.completed) {
-      actions = [...action, { title: i18next.t('button.complete'), action: this._complete.bind(this) }]
+      actions = [...actions, { title: i18next.t('button.complete'), action: this._complete.bind(this) }]
     }
 
     store.dispatch({
