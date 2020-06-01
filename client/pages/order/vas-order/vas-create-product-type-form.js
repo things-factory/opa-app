@@ -75,6 +75,7 @@ export class VasCreateProductTypeForm extends LitElement {
             min="1"
             value="${(this.record && this.record.qty) || 1}"
             @change="${this._checkQtyValidity.bind(this)}"
+            placeholder="${this.maximumQty}"
           />
         </fieldset>
       </form>
@@ -130,6 +131,18 @@ export class VasCreateProductTypeForm extends LitElement {
 
   get qty() {
     return this.qtyInput.value
+  }
+
+  get maximumQty() {
+    if (this.selectedProductId && this.selectedPackingType) {
+      return this.targetList
+        .filter(
+          target => target.product.id === this.selectedProductId && target.packingType === this.selectedPackingType
+        )
+        .reduce((packQty, target) => packQty + target.packQty, 0)
+    } else {
+      return ''
+    }
   }
 
   checkValidity() {
