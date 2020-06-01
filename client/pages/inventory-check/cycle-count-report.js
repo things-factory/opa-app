@@ -192,7 +192,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           name: 'location',
           header: i18next.t('field.system_location'),
           record: { align: 'center' },
-          width: 80
+          width: 120
         },
         {
           type: 'string',
@@ -270,7 +270,11 @@ class CycleCountReport extends localize(i18next)(PageView) {
               targetInventory {
                 inspectedQty
                 inspectedWeight
-                inspectedLocation
+                inspectedLocation {
+                  id
+                  name
+                  description
+                }
                 inventory {
                   palletId
                   batchId
@@ -323,7 +327,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
               name: worksheetDetail.name,
               description: worksheetDetail.description,
               status: worksheetDetail.status,
-              inspectedLocation: worksheetDetail.targetInventory.inspectedLocation,
+              inspectedLocation: worksheetDetail.targetInventory.inspectedLocation && worksheetDetail.targetInventory.inspectedLocation.name,
               inspectedQty: worksheetDetail.targetInventory.inspectedQty,
               inspectedWeight: worksheetDetail.targetInventory.inspectedWeight,
               packingType: worksheetDetail.targetInventory.inventory.packingType
