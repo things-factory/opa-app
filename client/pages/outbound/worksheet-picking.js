@@ -801,6 +801,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         this._selectedProduct.packingType
       )
 
+      this._selectedProduct.completed = false
       this._updateContext()
     } catch (e) {
       this._showToast(e)
