@@ -230,6 +230,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           icon: 'assignment',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
+              if (record.completed) return
+
               this._selectedProduct = {
                 batchId: record.batchId,
                 productName: record.productName,
@@ -720,6 +722,9 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 this._selectedProduct.productName,
                 this._selectedProduct.packingType
               )
+
+              this._selectedProduct.completed = true
+              this._updateContext()
             }}"
           ></inventory-assign-popup>
         `,
@@ -748,6 +753,9 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               this._selectedProduct.productName,
               this._selectedProduct.packingType
             )
+
+            this._selectedProduct.completed = true
+            this._updateContext()
           }}"
         ></inventory-auto-assign-popup>
       `,
@@ -792,6 +800,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         this._selectedProduct.productName,
         this._selectedProduct.packingType
       )
+
+      this._updateContext()
     } catch (e) {
       this._showToast(e)
     }
