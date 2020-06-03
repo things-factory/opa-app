@@ -1090,5 +1090,7 @@
   "text.inventory_has_been_adjusted": "inventory has been adjusted",
   "text.invalid_release_qty": "invalid release qty",
   "title.upload_document": "upload document",
-  "label.upload_grn": "upload GRN"
+  "label.upload_grn": "upload GRN",
+  "title.create_template": "create template",
+  "text.template_upload_successfully": "text.template_upload_successfully"
 }
