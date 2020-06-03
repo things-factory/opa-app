@@ -490,7 +490,6 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
               <picking-replacement-popup
                 .orderInventory="${this._selectedOrderInventory}"
                 .replacePalletId="${this.palletInput.value}"
-                .isWholePicking="${this.isWholePicking}"
                 @completed="${() => {
                   this._fetchInventories(this.releaseGoodNoInput.value)
                   this._fetchPalletsHandler(this.releaseGoodNoInput.value)
@@ -570,7 +569,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     // 3. Equality of pallet id
     if (this._selectedOrderInventory.palletId !== this.palletInput.value) {
       const isInProgressing = await this.checkProgressingPallet(this.palletInput.value)
-      if (isInProgressing) throw new Error('text.pallet_is_in_progressing')
+      if (isInProgressing) throw new Error(i18next.t('text.pallet_is_in_progressing'))
       this.isReplacement = await this.checkProductIdenticality(
         this._selectedOrderInventory.palletId,
         this.palletInput.value

@@ -153,6 +153,7 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
           name: 'product|name',
           record: { editable: false, align: 'left' },
           header: i18next.t('field.product'),
+          imex: { header: i18next.t('field.product'), key: 'product|name', width: 75, type: 'string' },
           width: 450
         },
         {
@@ -160,6 +161,7 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
           name: 'batchId',
           record: { editable: false, align: 'left' },
           header: i18next.t('field.batchId'),
+          imex: { header: i18next.t('field.batchId'), key: 'batchId', width: 25, type: 'string' },
           width: 200
         },
         {
@@ -167,6 +169,7 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
           name: 'arrivalNoticeName',
           record: { editable: false, align: 'left' },
           header: i18next.t('field.arrival_notice'),
+          imex: { header: i18next.t('field.arrival_notice'), key: 'arrivalNoticeName', width: 25, type: 'string' },
           width: 200
         },
         {
