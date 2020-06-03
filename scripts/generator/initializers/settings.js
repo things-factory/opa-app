@@ -4,7 +4,9 @@ const settings = [
   { name: 'dashboard:SYSTEM ADMIN', description: 'dashboard for SUPER ADMIN', category: 'board' },
   { name: 'dashboard:W/H MANAGER', description: 'dashboard for W/H MANAGER', category: 'board' },
   { name: 'location-label', description: 'board id for location label', category: 'board' },
-  { name: 'pallet-label', description: 'board id for pallet label', category: 'board' }
+  { name: 'pallet-label', description: 'board id for pallet label', category: 'board' },
+  { name: 'location-sorting-rule', description: 'Location sorting rules', category: 'Location' },
+  { name: 'pallet-id-rule', description: 'Pallet ID Rule', category: 'id-rule' }
 ]
 
 module.exports = async function initSettings(trxMgr, domain) {

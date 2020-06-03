@@ -3,40 +3,53 @@ let menus = [
     name: 'Master Data',
     menuType: 'MENU',
     childrens: [
-      {
-        name: 'Product',
-        template: 'product-list',
+      { 
+        name: 'Company', template: 'company-list',
+        menuType: 'SCREEN',
+        routingType: 'STATIC',
+        resourceUrl: 'companies'
+      },
+      { 
+        name: 'Pallets', template: 'pallet-list',
+        menuType: 'SCREEN',
+        routingType: 'STATIC',
+        resourceUrl: 'pallets'
+      },
+      { 
+        name: 'Product', template: 'product-list',
         menuType: 'SCREEN',
         routingType: 'STATIC',
         resourceUrl: 'products'
       },
-      {
-        name: 'VAS',
-        template: 'vas-list',
+      { 
+        name: 'Transport Driver', template: 'transport-driver',
         menuType: 'SCREEN',
         routingType: 'STATIC',
-        resourceUrl: 'vas'
+        resourceUrl: 'transport_driver'
       },
-      {
-        name: 'Warehouse',
-        template: 'warehouse-list',
-        menuType: 'SCREEN',
-        routingType: 'STATIC',
-        resourceUrl: 'warehouses'
-      },
-      {
-        name: 'Transport Vehicle',
-        template: 'transport-vehicle',
+      { 
+        name: 'Transport Vehicle', template: 'transport-vehicle',
         menuType: 'SCREEN',
         routingType: 'STATIC',
         resourceUrl: 'transport_vehicle'
       },
-      {
-        name: 'Transport Driver',
-        template: 'transport-driver',
+      { 
+        name: 'Vas', template: 'vas-list',
         menuType: 'SCREEN',
         routingType: 'STATIC',
-        resourceUrl: 'transport_driver'
+        resourceUrl: 'vas'
+      },
+      { 
+        name: 'Warehouse', template: 'warehouse-list',
+        menuType: 'SCREEN',
+        routingType: 'STATIC',
+        resourceUrl: 'warehouses'
+      },
+      { 
+        name: 'Worker', template: 'worker-list',
+        menuType: 'SCREEN',
+        routingType: 'STATIC',
+        resourceUrl: 'workers'
       }
     ]
   },
@@ -64,7 +77,7 @@ let menus = [
         menuType: 'SCREEN',
         routingType: 'STATIC',
         resourceUrl: 'arrival_notice_requests'
-      }
+      },
     ]
   },
   {
@@ -174,6 +187,20 @@ let menus = [
     menuType: 'MENU',
     childrens: [
       {
+        name: 'Customer Intransit Inventory',
+        template: 'customer-intransit-inventory',
+        menuType: 'SCREEN',
+        routingType: 'STATIC',
+        resourceUrl: 'customer_intransit_inventory'
+      },
+      {
+        name: 'Customer Inventory by Product',
+        template: 'customer-inventory-by-product',
+        menuType: 'SCREEN',
+        routingType: 'STATIC',
+        resourceUrl: 'customer_inventory_by_product'
+      },
+      {
         name: 'Customer Onhand Inventory',
         template: 'customer-onhand-inventory',
         menuType: 'SCREEN',
@@ -181,11 +208,32 @@ let menus = [
         resourceUrl: 'customer_onhand_inventory'
       },
       {
-        name: 'Customer Intransit Inventory',
-        template: 'customer-intransit-inventory',
+        name: 'Intransit Inventory',
+        template: 'intransit-inventory',
         menuType: 'SCREEN',
         routingType: 'STATIC',
-        resourceUrl: 'customer_intransit_inventory'
+        resourceUrl: 'intransit_inventory'
+      },
+      {
+        name: 'Inventory Adjustment',
+        template: 'inventory-adjustment',
+        menuType: 'SCREEN',
+        routingType: 'STATIC',
+        resourceUrl: 'inventory_adjustment'
+      },
+      {
+        name: 'Inventory Adjustment Approval',
+        template: 'inventory-adjustment-approval',
+        menuType: 'SCREEN',
+        routingType: 'STATIC',
+        resourceUrl: 'inventory_adjustment_approval'
+      },
+      {
+        name: 'Inventory by Product',
+        template: 'inventory-by-product',
+        menuType: 'SCREEN',
+        routingType: 'STATIC',
+        resourceUrl: 'inventory_by_product'
       },
       {
         name: 'Inventory Histories',
@@ -195,11 +243,11 @@ let menus = [
         resourceUrl: 'inventory_histories'
       },
       {
-        name: 'Inventory Adjustment',
-        template: 'inventory-adjustment',
+        name: 'Onhand Inventory',
+        template: 'onhand-inventory',
         menuType: 'SCREEN',
         routingType: 'STATIC',
-        resourceUrl: 'inventory_adjustment'
+        resourceUrl: 'onhand_inventory'
       }
     ]
   },
@@ -261,6 +309,34 @@ let menus = [
     name: 'Report',
     menuType: 'MENU',
     childrens: [
+      {
+        name: 'Customer Inventory Pallet Report',
+        template: 'customer inventory pallet report',
+        menuType: 'SCREEN',
+        routingType: 'STATIC',
+        resourceUrl: 'customer_inventory_pallet_report'
+      },
+      {
+        name: 'Customer Inventory Report',
+        template: 'customer-inventory-report',
+        menuType: 'SCREEN',
+        routingType: 'STATIC',
+        resourceUrl: 'customer_inventory_report'
+      },
+      {
+        name: 'Inventory Pallet Report',
+        template: 'inventory-pallet-report',
+        menuType: 'SCREEN',
+        routingType: 'STATIC',
+        resourceUrl: 'inventory_pallet_report'
+      },
+      {
+        name: 'Inventory Pallet Report Summary',
+        template: 'inventory-pallet-detail-report',
+        menuType: 'SCREEN',
+        routingType: 'STATIC',
+        resourceUrl: 'inventory_pallet_detail_report'
+      },
       {
         name: 'Inventory Report',
         template: 'inventory-report',
