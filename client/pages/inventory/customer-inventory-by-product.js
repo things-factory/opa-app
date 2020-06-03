@@ -72,11 +72,11 @@ class CustomerInventoryByProduct extends localize(i18next)(PageView) {
   pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('field.name'),
-        name: 'name',
-        props: {
-          searchOper: 'i_like'
-        }
+        label: i18next.t('field.product'),
+        name: 'id',
+        type: 'object',
+        queryName: 'products',
+        field: 'name'
       },
       {
         label: i18next.t('field.product_ref'),
@@ -289,16 +289,11 @@ class CustomerInventoryByProduct extends localize(i18next)(PageView) {
   }
 
   _showInventoryInfo(columns, data, column, record, rowIndex) {
-    openPopup(
-      html`
-        <inventory-by-product-detail .productId="${record.id}"></inventory-by-product-detail>
-      `,
-      {
-        backdrop: true,
-        size: 'large',
-        title: `${record.name} ${record.description ? `(${record.description})` : ''}`
-      }
-    )
+    openPopup(html` <inventory-by-product-detail .productId="${record.id}"></inventory-by-product-detail> `, {
+      backdrop: true,
+      size: 'large',
+      title: `${record.name} ${record.description ? `(${record.description})` : ''}`
+    })
   }
 }
 

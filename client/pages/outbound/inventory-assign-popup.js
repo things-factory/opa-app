@@ -102,7 +102,11 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
           <input readonly name="releaseQty" value="${`${this.pickQty} / ${this.releaseQty}`}" />
 
           <label>${i18next.t('label.release_weight')}</label>
-          <input readonly name="releaseWeight" value="${`${this.pickWeight} / ${this.releaseWeight}`}" />
+          <input
+            readonly
+            name="releaseWeight"
+            value="${`${Math.round(this.pickWeight * 100) / 100} / ${this.releaseWeight}`}"
+          />
         </fieldset>
       </form>
 
@@ -347,7 +351,8 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
         this.data = {
           records: this.grist.dirtyData.records.map(data => {
             const pickQty = data.pickQty
-            const pickWeight = Math.round((data.weight / data.qty) * data.pickQty)
+            let pickWeight = (data.weight / data.qty) * data.pickQty
+            pickWeight = Math.round(pickWeight * 100) / 100
 
             totalPickQty += pickQty
             totalPickWeight += pickWeight
