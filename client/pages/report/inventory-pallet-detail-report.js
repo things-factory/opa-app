@@ -109,7 +109,7 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
         },
         value: (() => {
           let date = new Date()
-          date.setMonth(date.getMonth() - 1)
+          date.setTime(date.getTime() - 86400000 * 7)
           return date.toISOString().split('T')[0]
         })(),
         handlers: { change: this._modifyDateRange.bind(this) }
@@ -122,7 +122,7 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
           searchOper: 'eq',
           min: (() => {
             let date = new Date()
-            date.setMonth(date.getMonth() - 1)
+            date.setTime(date.getTime() - 86400000 * 7)
             return date.toISOString().split('T')[0]
           })(),
           max: new Date().toISOString().split('T')[0]
@@ -137,10 +137,17 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
       pagination: { infinite: true },
       rows: {
         selectable: false,
-        groups: [{ column: 'product|name' }],
+        groups: [{ column: 'bizplace|name' }, { column: 'product|name', title: 'Product Total' }],
         totals: ['openingBalance', 'inBalance', 'outBalance', 'closingBalance']
       },
       columns: [
+        {
+          type: 'string',
+          name: 'bizplace|name',
+          record: { editable: false, align: 'left' },
+          header: i18next.t('field.customer'),
+          width: 450
+        },
         {
           type: 'string',
           name: 'product|name',
@@ -170,32 +177,28 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
           name: 'openingBalance',
           record: { editable: false, align: 'center' },
           header: i18next.t('field.opening_balance'),
-          imex: { header: i18next.t('field.opening_balance'), key: 'openingBalance', width: 25, type: 'string' },
-          width: 160
+          width: 100
         },
         {
           type: 'float',
           name: 'inBalance',
           record: { editable: false, align: 'center' },
           header: i18next.t('field.inbound'),
-          imex: { header: i18next.t('field.inbound'), key: 'inBalance', width: 25, type: 'string' },
-          width: 160
+          width: 100
         },
         {
           type: 'float',
           name: 'outBalance',
           record: { editable: false, align: 'center' },
           header: i18next.t('field.outbound'),
-          imex: { header: i18next.t('field.outbound'), key: 'outBalance', width: 25, type: 'string' },
-          width: 160
+          width: 100
         },
         {
           type: 'float',
           name: 'closingBalance',
           record: { editable: false, align: 'center' },
           header: i18next.t('field.closing_balance'),
-          imex: { header: i18next.t('field.closing_balance'), key: 'closingBalance', width: 25, type: 'string' },
-          width: 160
+          width: 100
         }
       ]
     }
@@ -223,11 +226,7 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
         query: gql`
           query {
             inventoryHistoryPalletDetailReport(${gqlBuilder.buildArgs({
-              filters: [
-                ...this.searchForm.queryFilters.map(filter => {
-                  return filter
-                })
-              ],
+              filters: [...this.searchForm.queryFilters],
               pagination: { page, limit },
               sortings: sorters
             })}) {
@@ -245,13 +244,20 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
               closingBalance
               batchId
               arrivalNoticeName
+              jsonDateMovement
             }
           }
         `
       })
+
+      this.data = {
+        filter: [...this.searchForm.queryFilters],
+        records: response.data.inventoryHistoryPalletDetailReport.map(item => flattenObject(item)) || []
+      }
+
       return {
         total: 0,
-        records: response.data.inventoryHistoryPalletDetailReport.map(item => flattenObject(item)) || []
+        records: this.data.records
       }
     } catch (e) {
       console.log(e)
@@ -283,7 +289,7 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
   _validate() {
     if (!this.searchForm.shadowRoot.querySelector('form').checkValidity())
       throw new Error(i18next.t('text.invalid_form_value'))
-    if (!this._bizplaceSelector.value) throw new Error(i18next.t('text.customer_does_not_selected'))
+    // if (!this._bizplaceSelector.value) throw new Error(i18next.t('text.customer_does_not_selected'))
     if (!this._fromDateInput.value) throw new Error(i18next.t('text.from_date_is_empty'))
     if (!this._toDateInput.value) throw new Error(i18next.t('text.to_date_is_empty'))
   }
@@ -304,20 +310,61 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
 
   _exportableData() {
     try {
-      var headerSetting = [
-        ...this.report._config.columns
-          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
-          .map(column => {
-            return column.imex
-          })
+      let headerSettingBegin = [
+        { header: i18next.t('field.customer'), key: 'bizplace|name', width: 50, type: 'string' },
+        { header: i18next.t('field.product'), key: 'product|name', width: 75, type: 'string' },
+        { header: i18next.t('field.batchId'), key: 'batchId', width: 25, type: 'string' },
+        { header: i18next.t('field.arrival_notice'), key: 'arrivalNoticeName', width: 25, type: 'string' },
+        { header: i18next.t('field.opening_balance'), key: 'openingBalance', width: 25, type: 'string' }
       ]
 
-      return {
-        header: headerSetting,
-        data: this.report.data.records,
+      let headerSettingDate = []
+      let fromDate = new Date(this.data.filter.find(x => x.name === 'fromDate').value)
+      let toDate = new Date(this.data.filter.find(x => x.name === 'toDate').value)
+
+      for (var d = fromDate; d <= toDate; d.setDate(d.getDate() + 1)) {
+        headerSettingDate.push({
+          header: d
+            .toLocaleDateString('en-GB', {
+              day: '2-digit',
+              month: 'short'
+            })
+            .replace(/ /g, '-'),
+          key: d.toISOString().slice(0, 10),
+          width: 25,
+          type: 'string'
+        })
+      }
+
+      let headerSettingEnd = [
+        { header: i18next.t('field.inbound'), key: 'inBalance', width: 20, type: 'string' },
+        { header: i18next.t('field.outbound'), key: 'outBalance', width: 20, type: 'string' },
+        { header: i18next.t('field.closing_balance'), key: 'closingBalance', width: 20, type: 'string' }
+      ]
+
+      let fullData = this.data.records.map(record => {
+        if (record.jsonDateMovement) {
+          let bal = parseInt(record.openingBalance || 0)
+          JSON.parse(record.jsonDateMovement).forEach(data => {
+            bal = bal + parseInt(data.in_balance) - parseInt(data.out_balance)
+            record = {
+              ...record,
+              [data.created_at]: 'In: ' + data.in_balance + '| Out: ' + data.out_balance + '| Bal :' + bal
+            }
+          })
+        }
+        return { ...record }
+      })
+
+      let exportData = {
+        header: [...headerSettingBegin, ...headerSettingDate, ...headerSettingEnd],
+        data: fullData,
         groups: this.report._config.rows.groups,
         totals: this.report._config.rows.totals
       }
+
+      // throw 'stop'
+      return exportData
     } catch (e) {
       this._showToast(e)
     }
