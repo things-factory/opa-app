@@ -157,6 +157,7 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
               filters: [
                 ...filters,
                 { name: 'product_id', operator: 'eq', value: this.productId },
+                { name: 'remainOnly', operator: 'eq', value: true },
                 { name: 'status', operator: 'notin', value: ['INTRANSIT', 'DELETED'] }
               ],
               pagination: { page, limit },
@@ -199,16 +200,11 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
   }
 
   _showInventoryMovement(columns, data, column, record, rowIndex) {
-    openPopup(
-      html`
-        <inventory-history-by-pallet .palletId="${record.palletId}"></inventory-history-by-pallet>
-      `,
-      {
-        backdrop: true,
-        size: 'large',
-        title: `${record.palletId} - History`
-      }
-    )
+    openPopup(html` <inventory-history-by-pallet .palletId="${record.palletId}"></inventory-history-by-pallet> `, {
+      backdrop: true,
+      size: 'large',
+      title: `${record.palletId} - History`
+    })
   }
 
   _showToast({ type, message }) {
