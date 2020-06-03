@@ -167,6 +167,7 @@ class PickingReplacementPopup extends localize(i18next)(LitElement) {
   constructor() {
     super()
     this.data = { records: [] }
+    this.isWholePicking = true
   }
 
   updated(changedProps) {
@@ -262,6 +263,7 @@ class PickingReplacementPopup extends localize(i18next)(LitElement) {
 
       if (!response.errors) {
         this.targetInventory = response.data.inventories.items[0]
+        this.isWholePicking = this.orderInventory.releaseQty === this.targetInventory.qty
         this._focusOnInput(this.releaseQtyInput)
       }
     } catch (e) {

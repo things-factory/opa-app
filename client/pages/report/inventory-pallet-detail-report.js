@@ -33,10 +33,14 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
 
   get context() {
     return {
-      title: 'Inventory Pallet Detail Report',
+      title: i18next.t('title.inventory_pallet_detail_report'),
       printable: {
         accept: ['preview'],
         content: this
+      },
+      exportable: {
+        name: i18next.t('title.inventory_pallet_detail_report'),
+        data: this._exportableData.bind(this)
       }
     }
   }
@@ -142,6 +146,7 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
           name: 'product|name',
           record: { editable: false, align: 'left' },
           header: i18next.t('field.product'),
+          imex: { header: i18next.t('field.product'), key: 'product|name', width: 75, type: 'string' },
           width: 450
         },
         {
@@ -149,6 +154,7 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
           name: 'batchId',
           record: { editable: false, align: 'left' },
           header: i18next.t('field.batchId'),
+          imex: { header: i18next.t('field.batchId'), key: 'batchId', width: 25, type: 'string' },
           width: 200
         },
         {
@@ -156,6 +162,7 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
           name: 'arrivalNoticeName',
           record: { editable: false, align: 'left' },
           header: i18next.t('field.arrival_notice'),
+          imex: { header: i18next.t('field.arrival_notice'), key: 'arrivalNoticeName', width: 25, type: 'string' },
           width: 200
         },
         {
@@ -163,6 +170,7 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
           name: 'openingBalance',
           record: { editable: false, align: 'center' },
           header: i18next.t('field.opening_balance'),
+          imex: { header: i18next.t('field.opening_balance'), key: 'openingBalance', width: 25, type: 'string' },
           width: 160
         },
         {
@@ -170,6 +178,7 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
           name: 'inBalance',
           record: { editable: false, align: 'center' },
           header: i18next.t('field.inbound'),
+          imex: { header: i18next.t('field.inbound'), key: 'inBalance', width: 25, type: 'string' },
           width: 160
         },
         {
@@ -177,6 +186,7 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
           name: 'outBalance',
           record: { editable: false, align: 'center' },
           header: i18next.t('field.outbound'),
+          imex: { header: i18next.t('field.outbound'), key: 'outBalance', width: 25, type: 'string' },
           width: 160
         },
         {
@@ -184,6 +194,7 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
           name: 'closingBalance',
           record: { editable: false, align: 'center' },
           header: i18next.t('field.closing_balance'),
+          imex: { header: i18next.t('field.closing_balance'), key: 'closingBalance', width: 25, type: 'string' },
           width: 160
         }
       ]
@@ -289,6 +300,27 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
     min = min.toISOString().split('T')[0]
 
     this._toDateInput.min = min
+  }
+
+  _exportableData() {
+    try {
+      var headerSetting = [
+        ...this.report._config.columns
+          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+          .map(column => {
+            return column.imex
+          })
+      ]
+
+      return {
+        header: headerSetting,
+        data: this.report.data.records,
+        groups: this.report._config.rows.groups,
+        totals: this.report._config.rows.totals
+      }
+    } catch (e) {
+      this._showToast(e)
+    }
   }
 }
 

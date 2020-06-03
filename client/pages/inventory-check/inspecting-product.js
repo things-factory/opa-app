@@ -484,18 +484,20 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       throw new Error(i18next.t('text.inspected_qty_is_empty'))
     }
 
+    if (this.inspectedQtyInput.value < 0) {
+      this._focusOnInput(this.inspectedQtyInput)
+      throw new Error(i18next.t('text.inspected_qty_is_invalid'))
+    }
+
+    if (this.inspectedWeightInput.value < 0) {
+      this._focusOnInput(this.inspectedWeightInput)
+      throw new Error(i18next.t('text.inspected_weight_is_invalid'))
+    }
+
     // 6. inspected weight existing
     if (!this.inspectedWeightInput.value) {
       this._focusOnInput(this.inspectedWeightInput)
       throw new Error(i18next.t('text.inspected_weight_is_empty'))
-    }
-
-    // 7. weight value must be 0 if no more qty
-    if (
-      (this.inspectedQtyInput.value == 0 && this.inspectedWeightInput.value > 0) ||
-      (this.inspectedWeightInput.value == 0 && this.inspectedQtyInput.value > 0)
-    ) {
-      throw new Error(i18next.t('text.qty_and_weight_value_is_invalid'))
     }
   }
 

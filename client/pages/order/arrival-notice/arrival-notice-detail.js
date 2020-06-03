@@ -514,9 +514,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     }
 
     if (!this.isUserBelongsDomain && this._status !== ORDER_STATUS.PENDING.value) {
-      this._actions = [
-        { title: i18next.t('button.duplicate'), action: () => window.open(`duplicate_arrival_notice/${this._ganNo}`) }
-      ]
+      this._actions = [...this._actions, { title: i18next.t('button.duplicate'), action: () => window.open(`duplicate_arrival_notice/${this._ganNo}`) }]
     }
 
     this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
