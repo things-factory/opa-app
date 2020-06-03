@@ -7,7 +7,7 @@ import { connect } from 'pwa-helpers/connect-mixin'
 import { localize, i18next } from '@things-factory/i18n-base'
 import gql from 'graphql-tag'
 
-class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageView)) {
+class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
     return css`
       :host {
@@ -375,4 +375,4 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
   }
 }
 
-window.customElements.define('inventory-pallet-detail-report', InventoryPalletDetailReport)
+window.customElements.define('daily-collection-report', DailyCollectionReport)

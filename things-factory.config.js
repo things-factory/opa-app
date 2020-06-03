@@ -346,6 +346,10 @@ export default {
      * Report Menus Section
      */
     {
+      tagname: 'daily-collection-report',
+      page: 'daily_collection_report'
+    },
+    {
       tagname: 'inventory-report',
       page: 'inventory_report'
     },

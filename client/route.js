@@ -332,6 +332,9 @@ export default function route(page) {
     /**
      * Report Menus Section
      */
+    case 'daily_collection_report':
+      import('./pages/report/daily-collection-report')
+      return page
     case 'inventory_report':
       import('./pages/report/inventory-report')
       return page

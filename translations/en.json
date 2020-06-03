@@ -1051,6 +1051,7 @@
   "field.field.name": "field name",
   "field.field.row": "field row",
   "field.field.column": "field column",
+  "field.container_size": "container size",
   "field.field.shelf": "field shelf",
   "field.set": "set",
   "field.system_qty": "system qty",
