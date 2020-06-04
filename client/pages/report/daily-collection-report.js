@@ -33,13 +33,13 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
 
   get context() {
     return {
-      title: i18next.t('title.inventory_pallet_detail_report'),
+      title: i18next.t('title.daily_collection_report'),
       printable: {
         accept: ['preview'],
         content: this
       },
       exportable: {
-        name: i18next.t('title.inventory_pallet_detail_report'),
+        name: i18next.t('title.daily_collection_report'),
         data: this._exportableData.bind(this)
       }
     }
@@ -137,7 +137,7 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
       pagination: { infinite: true },
       rows: {
         selectable: false,
-        groups: [{ column: 'bizplace|name' }, { column: 'product|name', title: 'Product Total' }],
+        groups: [{ column: 'bizplace|name' }],
         totals: ['openingBalance', 'inBalance', 'outBalance', 'closingBalance']
       },
       columns: [
@@ -150,31 +150,10 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
         },
         {
           type: 'string',
-          name: 'product|name',
-          record: { editable: false, align: 'left' },
-          header: i18next.t('field.product'),
-          width: 450
-        },
-        {
-          type: 'string',
-          name: 'batchId',
-          record: { editable: false, align: 'left' },
-          header: i18next.t('field.batchId'),
-          width: 200
-        },
-        {
-          type: 'string',
           name: 'arrivalNoticeName',
           record: { editable: false, align: 'left' },
           header: i18next.t('field.arrival_notice'),
           width: 200
-        },
-        {
-          type: 'string',
-          name: 'containerSize',
-          record: { editable: false, align: 'left' },
-          header: i18next.t('field.container_size'),
-          width: 100
         },
         {
           type: 'float',
@@ -229,16 +208,12 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
       const response = await client.query({
         query: gql`
           query {
-            inventoryHistoryPalletDetailReport(${gqlBuilder.buildArgs({
+            dailyCollectionReports(${gqlBuilder.buildArgs({
               filters: [...this.searchForm.queryFilters],
               pagination: { page, limit },
               sortings: sorters
             })}) {
               bizplace {
-                name
-                description
-              }
-              product {
                 name
                 description
               }
@@ -249,7 +224,6 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
               batchId
               arrivalNoticeName
               jsonDateMovement
-              containerSize
             }
           }
         `
