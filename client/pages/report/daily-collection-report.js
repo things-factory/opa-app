@@ -34,10 +34,6 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
   get context() {
     return {
       title: i18next.t('title.daily_collection_report'),
-      printable: {
-        accept: ['preview'],
-        content: this
-      },
       exportable: {
         name: i18next.t('title.daily_collection_report'),
         data: this._exportableData.bind(this)
@@ -69,10 +65,7 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
     return html`
       <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.report.fetch()}></search-form>
 
-      <data-report
-        .config=${this._config}
-        .fetchHandler="${this.fetchHandler.bind(this)}"
-      ></data-grist>
+      <data-report .config=${this._config} .fetchHandler="${this.fetchHandler.bind(this)}"></data-grist>
     `
   }
 
@@ -94,8 +87,8 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
         props: { searchOper: 'eq' }
       },
       {
-        label: i18next.t('field.product'),
-        name: 'product',
+        label: i18next.t('field.gan'),
+        name: 'arrivalNotice',
         type: 'string',
         props: { searchOper: 'in' }
       },
@@ -137,51 +130,48 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
       pagination: { infinite: true },
       rows: {
         selectable: false,
-        groups: [{ column: 'bizplace|name' }],
-        totals: ['openingBalance', 'inBalance', 'outBalance', 'closingBalance']
+        groups: [{ column: 'bizplace_name' }, { column: 'ended_at' }, { column: 'arrival_notice_name' }]
       },
       columns: [
         {
           type: 'string',
-          name: 'bizplace|name',
+          name: 'bizplace_name',
           record: { editable: false, align: 'left' },
           header: i18next.t('field.customer'),
+          imex: { header: i18next.t('field.customer'), key: 'bizplace_name', width: 75, type: 'string' },
           width: 450
         },
         {
           type: 'string',
-          name: 'arrivalNoticeName',
+          name: 'ended_at',
+          header: i18next.t('field.date'),
+          record: { editable: false, align: 'left' },
+          imex: { header: i18next.t('field.date'), key: 'ended_at', width: 15, type: 'string' },
+          width: 110
+        },
+        {
+          type: 'string',
+          name: 'arrival_notice_name',
           record: { editable: false, align: 'left' },
           header: i18next.t('field.arrival_notice'),
-          width: 200
+          imex: { header: i18next.t('field.arrival_notice'), key: 'arrival_notice_name', width: 40, type: 'string' },
+          width: 250
         },
         {
-          type: 'float',
-          name: 'openingBalance',
-          record: { editable: false, align: 'center' },
-          header: i18next.t('field.opening_balance'),
-          width: 130
+          type: 'string',
+          name: 'self_collect',
+          record: { editable: false, align: 'left' },
+          header: i18next.t('field.self_collect'),
+          imex: { header: i18next.t('field.self_collect'), key: 'self_collect', width: 200, type: 'string' },
+          width: 500
         },
         {
-          type: 'float',
-          name: 'inBalance',
-          record: { editable: false, align: 'center' },
-          header: i18next.t('field.inbound'),
-          width: 130
-        },
-        {
-          type: 'float',
-          name: 'outBalance',
-          record: { editable: false, align: 'center' },
-          header: i18next.t('field.outbound'),
-          width: 130
-        },
-        {
-          type: 'float',
-          name: 'closingBalance',
-          record: { editable: false, align: 'center' },
-          header: i18next.t('field.closing_balance'),
-          width: 130
+          type: 'string',
+          name: 'delivery',
+          record: { editable: false, align: 'left' },
+          header: i18next.t('field.delivery'),
+          imex: { header: i18next.t('field.delivery'), key: 'delivery', width: 200, type: 'string' },
+          width: 500
         }
       ]
     }
@@ -213,17 +203,11 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
               pagination: { page, limit },
               sortings: sorters
             })}) {
-              bizplace {
-                name
-                description
-              }
-              openingBalance
-              inBalance
-              outBalance
-              closingBalance
-              batchId
-              arrivalNoticeName
-              jsonDateMovement
+              arrival_notice_name
+              bizplace_name
+              ended_at
+              self_collect
+              delivery
             }
           }
         `
@@ -231,7 +215,7 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
 
       this.data = {
         filter: [...this.searchForm.queryFilters],
-        records: response.data.inventoryHistoryPalletDetailReport.map(item => flattenObject(item)) || []
+        records: response.data.dailyCollectionReports || []
       }
 
       return {
@@ -289,60 +273,20 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
 
   _exportableData() {
     try {
-      let headerSettingBegin = [
-        { header: i18next.t('field.customer'), key: 'bizplace|name', width: 50, type: 'string' },
-        { header: i18next.t('field.product'), key: 'product|name', width: 75, type: 'string' },
-        { header: i18next.t('field.batchId'), key: 'batchId', width: 25, type: 'string' },
-        { header: i18next.t('field.arrival_notice'), key: 'arrivalNoticeName', width: 30, type: 'string' },
-        { header: i18next.t('field.container_size'), key: 'containerSize', width: 10, type: 'string' },
-        { header: i18next.t('field.opening_balance'), key: 'openingBalance', width: 25, type: 'string' }
-      ]
-
-      let headerSettingDate = []
-      let fromDate = new Date(this.data.filter.find(x => x.name === 'fromDate').value)
-      let toDate = new Date(this.data.filter.find(x => x.name === 'toDate').value)
-
-      for (var d = fromDate; d <= toDate; d.setDate(d.getDate() + 1)) {
-        headerSettingDate.push({
-          header: d
-            .toLocaleDateString('en-GB', {
-              day: '2-digit',
-              month: 'short'
-            })
-            .replace(/ /g, '-'),
-          key: d.toISOString().slice(0, 10),
-          width: 25,
-          type: 'string'
-        })
-      }
-
-      let headerSettingEnd = [
-        { header: i18next.t('field.inbound'), key: 'inBalance', width: 20, type: 'string' },
-        { header: i18next.t('field.outbound'), key: 'outBalance', width: 20, type: 'string' },
-        { header: i18next.t('field.closing_balance'), key: 'closingBalance', width: 20, type: 'string' }
-      ]
-
-      let fullData = this.data.records.map(record => {
-        if (record.jsonDateMovement) {
-          let bal = parseInt(record.openingBalance || 0)
-          JSON.parse(record.jsonDateMovement).forEach(data => {
-            bal = bal + parseInt(data.in_balance) - parseInt(data.out_balance)
-            record = {
-              ...record,
-              [data.created_at]: 'In: ' + data.in_balance + '| Out: ' + data.out_balance + '| Bal :' + bal
-            }
+      var headerSetting = [
+        ...this.report._config.columns
+          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+          .map(column => {
+            return column.imex
           })
-        }
-        return { ...record }
-      })
+      ]
 
-      let exportData = {
-        header: [...headerSettingBegin, ...headerSettingDate, ...headerSettingEnd],
-        data: fullData,
+      return {
+        header: headerSetting,
+        data: this.report.data.records,
         groups: this.report._config.rows.groups,
-        totals: this.report._config.rows.totals
+        totals: []
       }
-      return exportData
     } catch (e) {
       this._showToast(e)
     }

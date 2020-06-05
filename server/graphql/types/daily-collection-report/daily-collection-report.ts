@@ -10,13 +10,10 @@ export const DailyCollectionReport = gql`
     creator: User
     updatedAt: String
     createdAt: String
-    bizplace: Bizplace
-    openingBalance: Float
-    inBalance: Float
-    outBalance: Float
-    closingBalance: Float
-    arrivalNoticeName: String
-    jsonDateMovement: String
-    containerSize: String
+    arrival_notice_name: String
+    bizplace_name: String
+    ended_at: String
+    self_collect: String
+    delivery: String
   }
 `
