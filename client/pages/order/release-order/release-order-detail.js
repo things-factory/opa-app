@@ -227,10 +227,15 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
   }
 
   async pageUpdated(changes) {
-    if (this.active && changes.resourceId) {
-      this._releaseOrderNo = changes.resourceId
-      await this._fetchReleaseOrder()
-      this._updateContext()
+    if (this.active) {
+      if (changes.resourceId) {
+        this._releaseOrderNo = changes.resourceId
+      }
+
+      if (this._releaseOrderNo) {
+        await this._fetchReleaseOrder(this._releaseOrderNo)
+        this._updateContext()
+      }
     }
   }
 
