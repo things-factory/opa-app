@@ -2,16 +2,19 @@ import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import '@things-factory/import-ui'
-import { isMobileDevice, ScrollbarStyles } from '@things-factory/shell'
+import { isMobileDevice } from '@things-factory/utils'
 import { css, html, LitElement } from 'lit-element'
-import '../../components/vas-relabel'
-import { BATCH_NO_TYPE, ETC_TYPE, PRODUCT_TYPE, TARGET_TYPES } from '../constants'
+import '../../components/vas-templates'
+import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, PRODUCT_TYPE } from '../constants'
+import './vas-create-batch-product-type-form'
+import './vas-create-batch-type-form'
+import './vas-create-etc-type-form'
+import './vas-create-product-type-form'
 
 export class VasCreatePopup extends localize(i18next)(LitElement) {
   static get styles() {
     return [
       MultiColumnFormStyles,
-      ScrollbarStyles,
       css`
         :host {
           display: flex;
@@ -70,12 +73,10 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
   static get properties() {
     return {
       selectedTargetType: String,
-      selectedTarget: String,
       selectedPackingType: String,
       vasGristConfig: Object,
       vasGristData: Object,
-      targetBatchList: Array,
-      targetProductList: Array,
+      targetList: Array,
       record: Object,
       _template: Object
     }
@@ -85,148 +86,120 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
     return this.shadowRoot.querySelector('#vas-grist')
   }
 
+  get targetTypeForm() {
+    return this.shadowRoot.querySelector('form#target-type')
+  }
+
+  get batchTypeInput() {
+    return this.shadowRoot.querySelector('input#batchId')
+  }
+
+  get productTypeInput() {
+    return this.shadowRoot.querySelector('input#product')
+  }
+
+  get etcTypeInput() {
+    return this.shadowRoot.querySelector('input#etc')
+  }
+
   get targetForm() {
-    return this.shadowRoot.querySelector('form')
+    return this.shadowRoot.querySelector('.vas-create-form')
   }
 
-  get targetSelector() {
-    return this.shadowRoot.querySelector('#target-selector')
-  }
-
-  get packingTypeSelector() {
-    return this.shadowRoot.querySelector('#packing-type-selector')
-  }
-
-  get qtyInput() {
-    return this.shadowRoot.querySelector('input#qty-input')
+  get targetInfo() {
+    if (this.targetForm && this.targetForm.checkValidity()) {
+      return {
+        targetType: this.selectedTargetType,
+        targetDisplay: this.targetForm.targetDisplay,
+        target: this.targetForm.target,
+        packingType: this.targetForm.selectedPackingType,
+        qty: (this.targetForm.qty && parseInt(this.targetForm.qty)) || '',
+        weight: (this.targetForm.weight && parseFloat(this.targetForm.weight)) || ''
+      }
+    }
   }
 
   render() {
     return html`
-      <form class="multi-column-form" @submit="${e => e.preventDefault()}">
+      <form id="target-type" class="multi-column-form" @change="${this._onTypeFormchangeHandler}">
         <fieldset>
-          <legend>${i18next.t('title.target')}</legend>
-          <label>${i18next.t('label.target_type')}</label>
-          <select
-            required
-            @change="${e => {
-              this.selectedTargetType = e.currentTarget.value
-            }}"
-          >
-            ${TARGET_TYPES.map(
-              type =>
-                html`
-                  <option value="${type.value}" ?selected="${this.record && this.record.targetType === type.value}"
-                    >${type.display}</option
-                  >
-                `
-            )}
-          </select>
+          <legend>${i18next.t('label.target_type')}</legend>
 
-          ${this.selectedTargetType === BATCH_NO_TYPE
-            ? html`
-                <label>${i18next.t('label.target')}</label>
-                <select
-                  id="target-selector"
-                  required
-                  @change="${e => {
-                    this.selectedTarget = this.targetBatchList.find(batch => batch.value === e.currentTarget.value)
-                    this._checkQtyValidity.bind(this)
-                  }}"
-                >
-                  <option></option>
-                  ${this.targetBatchList.map(
-                    batch =>
-                      html`
-                        <option value="${batch.value}" ?selected="${this.record && this.record.target === batch.value}"
-                          >${batch.display}</option
-                        >
-                      `
-                  )}
-                </select>
-              `
-            : this.selectedTargetType === PRODUCT_TYPE
-            ? html`
-                <label>${i18next.t('label.target')}</label>
-                <select
-                  id="target-selector"
-                  required
-                  @change="${e => {
-                    this.selectedTarget = this.targetProductList.find(prod => prod.value === e.currentTarget.value)
-                    this._checkQtyValidity.bind(this)
-                  }}"
-                >
-                  <option></option>
-                  ${this.targetProductList.map(
-                    product =>
-                      html`
-                        <option
-                          value="${product.value}"
-                          ?selected="${this.record && this.record.target === product.value}"
-                          >${product.display}</option
-                        >
-                      `
-                  )}
-                </select>
-              `
-            : this.selectedTargetType === ETC_TYPE
-            ? html`
-                <label>${i18next.t('label.target')}</label>
-                <input id="target-selector" required value="${(this.record && this.record.target) || ''}" />
-              `
-            : ''}
-          ${this.selectedTarget && this.selectedTarget.packingTypes && this.selectedTarget.packingTypes.length
-            ? html`
-                <label>${i18next.t('label.packing_type')}</label>
-                <select
-                  id="packing-type-selector"
-                  ?required="${this.selectedTargetType !== ETC_TYPE}"
-                  @change="${e => {
-                    this.selectedPackingType = e.currentTarget.value
-                  }}"
-                >
-                  <option></option>
-                  ${this.selectedTarget.packingTypes.map(
-                    packingType =>
-                      html`
-                        <option
-                          value="${packingType.type}"
-                          ?selected="${this.record && this.record.packingType === packingType.type}"
-                          >${packingType.type}</option
-                        >
-                      `
-                  )}
-                </select>
-              `
-            : ''}
-          ${this.selectedTargetType !== ETC_TYPE
-            ? html`
-                <label>${i18next.t('label.qty')}</label>
-                <input
-                  id="qty-input"
-                  type="number"
-                  min="1"
-                  ?required="${this.selectedTargetType !== ETC_TYPE}"
-                  value="${(this.record && this.record.qty) || 1}"
-                  @change="${this._checkQtyValidity.bind(this)}"
-                />
-              `
-            : ''}
+          <input
+            id="batchId"
+            type="checkbox"
+            name="batchId"
+            ?checked="${(this.record && this.record.targetType === BATCH_NO_TYPE) ||
+            this.record.targetType === BATCH_AND_PRODUCT_TYPE}"
+          />
+          <label for="batchId">${i18next.t('label.batch_id')}</label>
+
+          <input
+            id="product"
+            type="checkbox"
+            name="product"
+            ?checked="${(this.record && this.record.targetType === PRODUCT_TYPE) ||
+            this.record.targetType === BATCH_AND_PRODUCT_TYPE}"
+          />
+          <label for="product">${i18next.t('label.product')}</label>
+
+          <input id="etc" type="checkbox" name="etc" ?checked="${this.record && this.record.targetType === ETC_TYPE}" />
+          <label for="etc">${i18next.t('label.etc')}</label>
         </fieldset>
       </form>
 
-      <div class="grist-container">
-        <div class="grist">
-          <h2>${i18next.t('title.vas')}</h2>
-          <data-grist
-            id="vas-grist"
-            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-            .config=${this.vasGristConfig}
-            .data="${this.vasGristData}"
-            @field-change="${this._onFieldChange.bind(this)}"
-          ></data-grist>
-        </div>
-      </div>
+      ${this.selectedTargetType === BATCH_NO_TYPE
+        ? html`
+            <vas-create-batch-type-form
+              class="vas-create-form"
+              .targetList="${this.targetList}"
+              .record="${this.record}"
+              @form-change="${this.resetVasTemplates}"
+            ></vas-create-batch-type-form>
+          `
+        : this.selectedTargetType === PRODUCT_TYPE
+        ? html`
+            <vas-create-product-type-form
+              class="vas-create-form"
+              .targetList="${this.targetList}"
+              .record="${this.record}"
+              @form-change="${this.resetVasTemplates}"
+            ></vas-create-product-type-form>
+          `
+        : this.selectedTargetType === BATCH_AND_PRODUCT_TYPE
+        ? html`
+            <vas-create-batch-product-type-form
+              class="vas-create-form"
+              .targetList="${this.targetList}"
+              .record="${this.record}"
+              @form-change="${this.resetVasTemplates}"
+            ></vas-create-batch-product-type-form>
+          `
+        : this.selectedTargetType === ETC_TYPE
+        ? html`
+            <vas-create-etc-type-form
+              class="vas-create-form"
+              .record="${this.record}"
+              @form-change="${this.resetVasTemplates}"
+            ></vas-create-etc-type-form>
+          `
+        : ''}
+      ${this.selectedTargetType
+        ? html`
+            <div class="grist-container">
+              <div class="grist">
+                <h2>${i18next.t('title.vas')}</h2>
+                <data-grist
+                  id="vas-grist"
+                  .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+                  .config=${this.vasGristConfig}
+                  .data="${this.vasGristData}"
+                  @field-change="${this._onFieldChange.bind(this)}"
+                ></data-grist>
+              </div>
+            </div>
+          `
+        : ''}
 
       <div class="guide-container">
         ${this._template}
@@ -268,33 +241,7 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
         >
           ${i18next.t('button.cancel')}
         </button>
-        <button
-          @click="${() => {
-            try {
-              this._checkValidity()
-              this.dispatchEvent(
-                new CustomEvent('completed', {
-                  detail: {
-                    ready: true,
-                    targetType: this.selectedTargetType,
-                    targetDisplay:
-                      this.selectedTargetType === ETC_TYPE
-                        ? this.targetSelector.value
-                        : this.targetSelector.selectedOptions[0].innerText,
-                    target: this.targetSelector.value,
-                    packingType: (this.packingTypeSelector && this.packingTypeSelector.value) || null,
-                    qty: (this.qtyInput && Number(this.qtyInput.value)) || null,
-                    vasCount: this.vasGrist.dirtyData.records.length,
-                    orderVass: this.vasGrist.dirtyData.records
-                  }
-                })
-              )
-              history.back()
-            } catch (e) {
-              this._showToast(e)
-            }
-          }}"
-        >
+        <button @click="${this.confirmHandler.bind(this)}">
           ${i18next.t('button.confirm')}
         </button>
       </div>
@@ -304,8 +251,13 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
   constructor() {
     super()
     this.vasGristData = { records: [] }
-    this.targetBatchList = [{ display: i18next.t('text.there_is_no_selectable_item'), value: '' }]
-    this.targetProductList = [{ display: i18next.t('text.there_is_no_selectable_item'), value: '' }]
+  }
+
+  updated(changedProps) {
+    if (changedProps.has('selectedTargetType')) {
+      this._template = null
+      this.setVasQueryFilter()
+    }
   }
 
   async firstUpdated() {
@@ -316,10 +268,18 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
         selectable: { multiple: true },
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
+            if (!this.targetInfo) {
+              this._showToast({
+                message: i18next.t('text.vas_target_does_not_specified')
+              })
+
+              return
+            }
+
             if (record && record.vas && record.vas.operationGuideType === 'template' && record.vas.operationGuide) {
               this._template = document.createElement(record.vas.operationGuide)
               this._template.record = record
-              this._template.operationGuide = record.operationGuide
+              this._template.targetInfo = this.targetInfo
             } else {
               this._template = null
             }
@@ -336,6 +296,7 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               this.vasGristData = { ...this.vasGristData, records: data.records.filter((_, idx) => idx !== rowIndex) }
+              this.setVasQueryFilter()
             }
           }
         },
@@ -378,14 +339,37 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
 
     if (this.record && this.record.orderVass && this.record.orderVass.length) {
       this.selectedTargetType = this.record.targetType
-      this.selectedTarget =
-        this.selectedTargetType === BATCH_NO_TYPE
-          ? this.targetBatchList.find(batch => batch.value === this.record.target)
-          : this.selectedTargetType === PRODUCT_TYPE
-          ? this.targetProductList.find(product => product.value === this.record.target)
-          : null
       this.vasGristData = { records: this.record.orderVass }
     }
+  }
+
+  _onTypeFormchangeHandler(e) {
+    const input = e.target
+    if (input.name === 'etc') {
+      const checked = input.checked
+      this.targetTypeForm.reset()
+      input.checked = checked
+    } else {
+      this.etcTypeInput.checked = false
+    }
+
+    const isBatchIdType = this.batchTypeInput.checked
+    const isProductType = this.productTypeInput.checked
+    const isEtcType = this.etcTypeInput.checked
+
+    if (isBatchIdType && isProductType) {
+      this.selectedTargetType = BATCH_AND_PRODUCT_TYPE
+    } else if (isBatchIdType && !isProductType) {
+      this.selectedTargetType = BATCH_NO_TYPE
+    } else if (!isBatchIdType && isProductType) {
+      this.selectedTargetType = PRODUCT_TYPE
+    } else if (isEtcType) {
+      this.selectedTargetType = ETC_TYPE
+    } else {
+      this.selectedTargetType = undefined
+    }
+
+    this.vasGristData = { records: [] }
   }
 
   _onFieldChange() {
@@ -398,6 +382,8 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
         }
       })
     }
+
+    this.setVasQueryFilter()
   }
 
   _isReadyToCreate(record) {
@@ -407,6 +393,25 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
       return Boolean(record.vas && record.remark)
     } else {
       return false
+    }
+  }
+
+  confirmHandler() {
+    try {
+      this._checkValidity()
+      this.dispatchEvent(
+        new CustomEvent('completed', {
+          detail: {
+            ...this.targetInfo,
+            ready: true,
+            vasCount: this.vasGrist.dirtyData.records.length,
+            orderVass: this.vasGrist.dirtyData.records
+          }
+        })
+      )
+      history.back()
+    } catch (e) {
+      this._showToast(e)
     }
   }
 
@@ -420,29 +425,75 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
       throw new Error(i18next.t('text.invalid_vas_setting'))
   }
 
-  _checkQtyValidity() {
-    try {
-      const qty = Number(this.qtyInput.value)
-      let packQty
-      if (qty <= 0) {
-        this.qtyInput.value = 1
-        throw new Error('text.qty_should_be_positive')
-      }
+  resetVasTemplates() {
+    this._template = null
 
-      const selectedTarget = this.targetSelector.value
-      const selectedPackingType = this.packingTypeSelector.value
+    this.vasGrist.data = {
+      ...this.vasGrist.data,
+      records: this.vasGrist.data.records.map(record => {
+        if (record && record.operationGuide) {
+          delete record.operationGuide
+          record.ready = false
+        }
 
-      if (selectedPackingType) {
-        packQty = this.selectedTarget.packingTypes.find(packingType => packingType.type === this.selectedPackingType)
-          .packQty
-      }
+        return record
+      })
+    }
+  }
 
-      if (packQty && qty > packQty) {
-        this.qtyInput.value = packQty
-        throw new Error(i18next.t('text.qty_exceed_limit'))
-      }
-    } catch (e) {
-      this._showToast(e)
+  async setVasQueryFilter() {
+    if (!this.selectedTargetType) return
+    await this.updateComplete
+
+    let vasIds = []
+    if (this.vasGristData && this.vasGristData.records && this.vasGristData.records.length) {
+      vasIds = this.vasGristData.records.filter(record => record.vas && record.vas.id).map(record => record.vas.id)
+    }
+
+    switch (this.selectedTargetType) {
+      case BATCH_AND_PRODUCT_TYPE:
+        this.vasGristConfig = {
+          ...this.vasGristConfig,
+          columns: this.vasGristConfig.columns.map(column => {
+            if (column.name === 'vas') {
+              if (vasIds.length) {
+                column.record.options.basicArgs = {
+                  filters: [{ name: 'id', operator: 'notin', value: vasIds }]
+                }
+              } else {
+                delete column.record.options.basicArgs
+              }
+              return column
+            } else {
+              return column
+            }
+          })
+        }
+
+        break
+      default:
+        this.vasGristConfig = {
+          ...this.vasGristConfig,
+          columns: this.vasGristConfig.columns.map(column => {
+            if (column.name === 'vas') {
+              if (vasIds.length) {
+                column.record.options.basicArgs = {
+                  filters: [
+                    { name: 'operationGuide', operator: 'notin_with_null', value: ['vas-repack', 'vas-repalletizing'] },
+                    { name: 'id', operator: 'notin', value: vasIds }
+                  ]
+                }
+              } else {
+                column.record.options.basicArgs = {
+                  filters: [{ name: 'operationGuide', operator: 'notin_with_null', value: ['vas-repack'] }]
+                }
+              }
+              return column
+            } else {
+              return column
+            }
+          })
+        }
     }
   }
 

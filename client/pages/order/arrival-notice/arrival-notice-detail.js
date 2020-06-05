@@ -7,8 +7,8 @@ import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import '../../components/vas-relabel'
-import { BATCH_NO_TYPE, ETC_TYPE, PRODUCT_TYPE } from '../constants'
+import '../../components/vas-templates'
+import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, PRODUCT_TYPE } from '../constants'
 import { ORDER_PRODUCT_STATUS, ORDER_STATUS } from '../constants/order'
 import './extra-product-popup'
 import './proceed-extra-product-popup'
@@ -24,6 +24,8 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       _ganNo: String,
       _ownTransport: Boolean,
       _importCargo: Boolean,
+      _hasContainer: Boolean,
+      _looseItem: Boolean,
       isUserBelongsDomain: Boolean,
       _status: String,
       productGristConfig: Object,
@@ -104,20 +106,40 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
           <label>${i18next.t('label.ref_no')}</label>
           <input name="refNo" readonly />
 
-          <label>${i18next.t('label.container_no')}</label>
-          <input name="containerNo" readonly />
-
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
           <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" readonly />
-
-          <label ?hidden="${this._importedOrder || !this._ownTransport}">${i18next.t('label.truck_no')}</label>
-          <input ?hidden="${this._importedOrder || !this._ownTransport}" name="truckNo" readonly />
 
           <label>${i18next.t('label.eta_date')}</label>
           <input name="etaDate" type="date" readonly />
 
+          <label ?hidden="${this._importedOrder || !this._ownTransport}">${i18next.t('label.truck_no')}</label>
+          <input ?hidden="${this._importedOrder || !this._ownTransport}" name="truckNo" readonly />
+
+          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
+          <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" readonly />
+
+          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_size')}</label>
+          <input ?hidden="${!this._hasContainer}" type="text" name="containerSize" readonly />
+
+          <label ?hidden="${!this._hasContainer}">${i18next.t('label.advise_mt_date')}</label>
+          <input ?hidden="${!this._hasContainer}" type="date" name="adviseMtDate" readonly />
+
+          <label>${i18next.t('label.status')}</label>
+          <select name="status" disabled
+            >${Object.keys(ORDER_STATUS).map(key => {
+              const status = ORDER_STATUS[key]
+              return html` <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option> `
+            })}</select
+          >
+
+          <input id="container" type="checkbox" name="container" ?checked="${this._hasContainer}" disabled />
+          <label for="container">${i18next.t('label.container')}</label>
+
           <input id="importedOrder" type="checkbox" name="importCargo" ?checked="${this._importedOrder}" disabled />
           <label for="importedOrder">${i18next.t('label.import_cargo')}</label>
+
+          <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" disabled />
+          <label for="looseItem">${i18next.t('label.loose_item')}</label>
 
           <input
             id="ownTransport"
@@ -129,14 +151,6 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
           />
           <label>${i18next.t('label.own_transport')}</label>
         </fieldset>
-
-        <label>${i18next.t('label.status')}</label>
-        <select name="status" disabled
-          >${Object.keys(ORDER_STATUS).map(key => {
-            const status = ORDER_STATUS[key]
-            return html` <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option> `
-          })}</select
-        >
       </form>
 
       <div class="container">
@@ -169,8 +183,6 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     super()
     this.productData = { records: [] }
     this.vasData = { records: [] }
-    this._ownTransport = true
-    this._importCargo = false
   }
 
   get arrivalNoticeForm() {
@@ -311,6 +323,14 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
                 return getRenderer()(record.targetBatchId, column, record, rowIndex, field)
               } else if (record.targetType === PRODUCT_TYPE) {
                 return getRenderer('object')(record.targetProduct, column, record, rowIndex, field)
+              } else if (record.targetType === BATCH_AND_PRODUCT_TYPE) {
+                return getRenderer()(
+                  `${record.targetBatchId} / ${record.targetProduct.name}`,
+                  column,
+                  record,
+                  rowIndex,
+                  field
+                )
               } else if (record.targetType === ETC_TYPE) {
                 return getRenderer()(record.otherTarget, column, record, rowIndex, field)
               }
@@ -331,6 +351,13 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
           type: 'integer',
           name: 'qty',
           header: i18next.t('field.qty'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'integer',
+          name: 'weight',
+          header: i18next.t('field.weight'),
           record: { align: 'center' },
           width: 100
         },
@@ -382,11 +409,16 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             containerNo
             ownTransport
             etaDate
+            looseItem
             deliveryOrderNo
             status
             truckNo
             refNo
             importCargo
+            jobSheet {
+              adviseMtDate
+              containerSize
+            }
             orderProducts {
               id
               batchId
@@ -418,6 +450,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
               }
               packingType
               qty
+              weight
               otherTarget
               description
               remark
@@ -435,10 +468,15 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       const orderVass = arrivalNotice.orderVass
       this.orderBizplace = arrivalNotice.bizplace
 
+      this._hasContainer = arrivalNotice.containerNo ? true : false
+      this._looseItem = arrivalNotice.looseItem
       this._ownTransport = arrivalNotice.ownTransport
       this._importCargo = arrivalNotice.importCargo
       this._status = arrivalNotice.status
-      this._fillupANForm(arrivalNotice)
+      this._fillupANForm({
+        ...arrivalNotice,
+        ...arrivalNotice.jobSheet
+      })
 
       this.productData = { records: orderProducts }
       this.vasData = {

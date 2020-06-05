@@ -2,11 +2,12 @@ import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, CustomAlert, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-factory/shell'
+import { client, CustomAlert, navigate, PageView } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../order/vas-order/vas-create-popup'
-import { BATCH_NO_TYPE, PRODUCT_TYPE } from '../constants'
+import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, PRODUCT_TYPE } from '../constants'
 
 class CreateArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
@@ -19,6 +20,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       _ganNo: String,
       _importedOrder: Boolean,
       _ownTransport: Boolean,
+      _hasContainer: Boolean,
+      _looseItem: Boolean,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -38,6 +41,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         .container {
           flex: 1;
           display: flex;
+          overflow: hidden;
         }
         .grist {
           background-color: var(--main-section-background-color);
@@ -85,14 +89,11 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
   render() {
     return html`
-      <form name="arrivalNotice" class="multi-column-form">
+      <form name="arrivalNotice" class="multi-column-form" autocomplete="off">
         <fieldset>
           <legend>${i18next.t('title.arrival_notice')}</legend>
           <label>${i18next.t('label.ref_no')}</label>
           <input name="refNo" />
-
-          <label>${i18next.t('label.container_no')}</label>
-          <input name="containerNo" />
 
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
           <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" />
@@ -102,6 +103,29 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
           <label>${i18next.t('label.eta_date')}</label>
           <input name="etaDate" type="date" min="${this._getStdDate()}" required />
+
+          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
+          <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" />
+
+          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_size')}</label>
+          <input ?hidden="${!this._hasContainer}" type="text" name="containerSize" />
+
+          <label ?hidden="${!this._hasContainer}">${i18next.t('label.advise_mt_date')}</label>
+          <input ?hidden="${!this._hasContainer}" type="date" min="${this._getStdDate()}" name="adviseMtDate" />
+
+          <input
+            id="container"
+            type="checkbox"
+            name="container"
+            ?checked="${this._hasContainer}"
+            @change="${e => {
+              this._hasContainer = e.currentTarget.checked
+            }}"
+          />
+          <label for="container">${i18next.t('label.container')}</label>
+
+          <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" />
+          <label for="looseItem">${i18next.t('label.loose_item')}</label>
 
           <input
             id="importedOrder"
@@ -160,6 +184,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     this.productData = { records: [] }
     this.vasData = { records: [] }
     this._importedOrder = false
+    this._hasContainer = false
     this._ownTransport = true
     this._orderType = null
   }
@@ -174,6 +199,18 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
   get productGrist() {
     return this.shadowRoot.querySelector('data-grist#product-grist')
+  }
+
+  get containerNo() {
+    return this.shadowRoot.querySelector('input[name=containerNo]')
+  }
+
+  get containerSize() {
+    return this.shadowRoot.querySelector('input[name=containerSize]')
+  }
+
+  get adviseMtDate() {
+    return this.shadowRoot.querySelector('input[name=adviseMtDate]')
   }
 
   get vasGrist() {
@@ -333,6 +370,13 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           width: 100
         },
         {
+          type: 'float',
+          name: 'weight',
+          header: i18next.t('field.weight'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
           type: 'integer',
           name: 'vasCount',
           header: i18next.t('field.vas_count'),
@@ -423,8 +467,13 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       arrivalNotice.orderVass = this._getOrderVass()
 
       const args = {
-        arrivalNotice: { ...arrivalNotice, ownTransport: this._importedOrder ? true : this._ownTransport }
+        arrivalNotice: {
+          ...arrivalNotice,
+          ownTransport: this._importedOrder ? true : this._ownTransport
+        }
       }
+
+      delete args.arrivalNotice.container
 
       const response = await client.query({
         query: gql`
@@ -475,6 +524,14 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
   _validateForm() {
     if (!this.arrivalNoticeForm.checkValidity()) throw new Error(i18next.t('text.arrival_notice_form_invalid'))
+
+    if (this._hasContainer) {
+      if (!this.containerNo.value) throw new Error(i18next.t('text.container_no_is_empty'))
+
+      if (!this.containerSize.value) throw new Error(i18next.t('text.container_size_is_empty'))
+
+      if (!this.adviseMtDate.value) throw new Error(i18next.t('text.advise_mt_date_is_empty'))
+    }
   }
 
   _validateProducts() {
@@ -509,11 +566,16 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
     const standardProductList = isFieldChanged ? this.productGrist.dirtyData.records : this.productData.records
     const batchPackPairs = standardProductList
-      .filter(record => record.batchId && record.product && record.product.id && record.packingType)
+      .filter(record => record.batchId && record.packingType)
       .map(record => `${record.batchId}-${record.packingType}`)
+
     const productPackPairs = standardProductList
       .filter(record => record.product && record.product.id)
       .map(record => `${record.product.id}-${record.packingType}`)
+
+    const batchProductPackPairs = standardProductList
+      .filter(record => record.batchId && record.product && record.product.id && record.packingType)
+      .map(record => `${record.batchId}-${record.product.id}-${record.packingType}`)
 
     this.vasData = {
       ...this.vasData,
@@ -533,6 +595,18 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         } else if (
           record.targetType === PRODUCT_TYPE &&
           productPackPairs.indexOf(`${record.target}-${record.packingType}`) < 0
+        ) {
+          return {
+            ...record,
+            ready: false,
+            target: null,
+            targetDisplay: null,
+            packingType: null,
+            qty: 1
+          }
+        } else if (
+          record.targetType === BATCH_AND_PRODUCT_TYPE &&
+          batchProductPackPairs.indexOf(`${record.target.batchId}-${record.target.productId}-${record.packingType}`) < 0
         ) {
           return {
             ...record,
@@ -593,9 +667,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             set: idx + 1,
             vas: { id: orderVas.vas.id },
             remark: orderVas.remark,
-            targetType: record.targetType,
-            packingType: record.packingType,
-            qty: record.qty
+            targetType: record.targetType
           }
 
           if (orderVas.operationGuide && orderVas.operationGuide.data) {
@@ -604,8 +676,18 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
           if (record.targetType === BATCH_NO_TYPE) {
             result.targetBatchId = record.target
+            result.packingType = record.packingType
+            result.qty = record.qty
           } else if (record.targetType === PRODUCT_TYPE) {
             result.targetProduct = { id: record.target }
+            result.packingType = record.packingType
+            result.qty = record.qty
+          } else if (record.targetType === BATCH_AND_PRODUCT_TYPE) {
+            result.targetBatchId = record.target.batchId
+            result.targetProduct = { id: record.target.productId }
+            result.packingType = record.packingType
+            result.qty = record.qty
+            result.weight = record.weight
           } else {
             result.otherTarget = record.target
           }
@@ -639,8 +721,13 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       openPopup(
         html`
           <vas-create-popup
-            .targetBatchList="${this.getTargetBatchList()}"
-            .targetProductList="${this.getTargetProductList()}"
+            .targetList="${this.productGrist.dirtyData.records.map(record => {
+              return {
+                ...record,
+                unitWeight: record.weight,
+                totalWeight: record.weight * record.packQty
+              }
+            })}"
             .record="${record}"
             @completed="${e => {
               if (this.vasGrist.dirtyData.records.length === this._selectedVasRecordIdx) {
@@ -687,100 +774,13 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     if (this.productGrist.dirtyData.records.some(record => !record.packingType))
       throw new Error(i18next.t('text.invalid_packing_type'))
 
+    if (this.productGrist.dirtyData.records.some(record => !record.weight))
+      throw new Error(i18next.t('text.invalid_weight'))
+
     if (this.productGrist.dirtyData.records.some(record => !record.packQty))
       throw new Error(i18next.t('text.invalid_pack_qty'))
 
     return true
-  }
-
-  getTargetBatchList() {
-    if (this.checkProductValidity()) {
-      return this.productGrist.dirtyData.records.reduce((batchList, record) => {
-        if (batchList.find(batch => batch.value === record.batchId)) {
-          batchList = batchList.map(batch => {
-            if (batch.value === record.batchId) {
-              return {
-                ...batch,
-                packingTypes: batch.packingTypes.find(packingType => packingType.type === record.packingType)
-                  ? batch.packingTypes.map(packingType => {
-                      if (packingType.type === record.packingType) {
-                        packingType = {
-                          ...packingType,
-                          packQty: packingType.packQty + record.packQty
-                        }
-                      }
-
-                      return packingType
-                    })
-                  : [
-                      ...batch.packingTypes,
-                      {
-                        type: record.packingType,
-                        packQty: record.packQty
-                      }
-                    ]
-              }
-            } else {
-              return batch
-            }
-          })
-        } else {
-          batchList.push({
-            display: record.batchId,
-            value: record.batchId,
-            packingTypes: [{ type: record.packingType, packQty: record.packQty }]
-          })
-        }
-
-        return batchList
-      }, [])
-    } else {
-      return []
-    }
-  }
-
-  getTargetProductList() {
-    if (this.checkProductValidity()) {
-      return this.productGrist.dirtyData.records.reduce((productList, record) => {
-        if (productList.find(product => product.value === record.product.id)) {
-          return productList.map(product => {
-            if (product.value === record.product.id) {
-              return {
-                ...product,
-                packingTypes: product.packingTypes.find(packingType => packingType.type === record.packingType)
-                  ? product.packingTypes.map(packingType => {
-                      if (packingType.type === record.packingType) {
-                        packingType = {
-                          ...packingType,
-                          packQty: packingType.packQty + record.packQty
-                        }
-                      }
-
-                      return packingType
-                    })
-                  : [
-                      ...product.packingTypes,
-                      {
-                        type: record.packingType,
-                        packQty: record.packQty
-                      }
-                    ]
-              }
-            } else {
-              return product
-            }
-          })
-        } else {
-          productList.push({
-            display: `${record.product.name} ${record.product.description ? ` (${record.product.description})` : ''}`,
-            value: record.product.id,
-            packingTypes: [{ type: record.packingType, packQty: record.packQty }]
-          })
-        }
-
-        return productList
-      }, [])
-    }
   }
 
   _showToast({ type, message }) {

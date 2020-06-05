@@ -7,9 +7,10 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { fetchLocationSortingRule } from '../../../fetch-location-sorting-rule'
-import '../../components/vas-relabel'
+import '../../components/vas-templates'
 import '../../order/vas-order/vas-create-popup'
 import {
+  BATCH_AND_PRODUCT_TYPE,
   BATCH_NO_TYPE,
   INVENTORY_STATUS,
   ORDER_INVENTORY_STATUS,
@@ -25,6 +26,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       _ownTransport: Boolean,
       _exportOption: Boolean,
       _selectedInventories: Array,
+      _files: Array,
       inventoryGristConfig: Object,
       vasGristConfig: Object,
       inventoryData: Object,
@@ -108,6 +110,17 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
           <label ?hidden="${!this._ownTransport || this._exportOption}">${i18next.t('label.co_no')}</label>
           <input name="collectionOrderNo" ?hidden="${!this._ownTransport || this._exportOption}" />
+
+          <label ?hidden="${!this._ownTransport || this._exportOption}">${i18next.t('label.upload_documents')}</label>
+          <file-uploader
+            name="attachments"
+            id="uploadDocument"
+            label="${i18next.t('label.select_file')}"
+            accept="*"
+            ?hidden="${!this._ownTransport || this._exportOption}"
+            multiple="true"
+            custom-input
+          ></file-uploader>
 
           <input
             id="exportOption"
@@ -256,6 +269,10 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
   }
 
+  get _document() {
+    return this.shadowRoot.querySelector('#uploadDocument')
+  }
+
   async updated(changeProps) {
     if (changeProps.has('_pickingStd')) {
       await this.switchPickingType()
@@ -321,6 +338,13 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
           type: 'integer',
           name: 'qty',
           header: i18next.t('field.qty'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'integer',
+          name: 'weight',
+          header: i18next.t('field.weight'),
           record: { align: 'center' },
           width: 100
         },
@@ -461,12 +485,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
               editable: true,
               align: 'left',
               options: {
-                queryName: 'inventories',
+                queryName: 'inventoriesByPallet',
                 basicArgs: {
-                  filters: [
-                    { name: 'status', operator: 'eq', value: INVENTORY_STATUS.STORED.value },
-                    { name: 'remainOnly', operator: 'eq', value: true }
-                  ],
+                  filters: [{ name: 'status', operator: 'eq', value: INVENTORY_STATUS.STORED.value }],
                   locationSortingRules
                 },
                 nameField: 'batchId',
@@ -708,17 +729,28 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         let args = {
           releaseGood: { ...releaseGood, ownTransport: this._exportOption ? true : this._ownTransport }
         }
+
+        let attachments
+        if (this._ownTransport) {
+          attachments = this._document.files
+        }
         if (this._exportOption && this._ownTransport) args.shippingOrder = this._getShippingOrder()
 
         const response = await client.query({
           query: gql`
-              mutation {
-                generateReleaseGood(${gqlBuilder.buildArgs(args)}) {
+              mutation ($attachments: Upload) {
+                generateReleaseGood(${gqlBuilder.buildArgs(args)}, file:$attachments) {
                   id
                   name
                 }
               }
-            `
+            `,
+          variables: {
+            attachments
+          },
+          context: {
+            hasUpload: true
+          }
         })
 
         if (!response.errors) {
@@ -753,17 +785,29 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         let args = {
           releaseGood: { ...releaseGood, ownTransport: this._exportOption ? true : this._ownTransport }
         }
+
+        let attachments
+        if (this._ownTransport) {
+          attachments = this._document.files
+        }
+
         if (this._exportOption && this._ownTransport) args.shippingOrder = this._getShippingOrder()
 
         const response = await client.query({
           query: gql`
-              mutation {
-                generateReleaseGood(${gqlBuilder.buildArgs(args)}) {
+              mutation ($attachments: Upload) {
+                generateReleaseGood(${gqlBuilder.buildArgs(args)}, file:$attachments) {
                   id
                   name
                 }
               }
-            `
+            `,
+          variables: {
+            attachments
+          },
+          context: {
+            hasUpload: true
+          }
         })
 
         if (!response.errors) {
@@ -933,11 +977,16 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
     const standardProductList = isFieldChanged ? this.inventoryGrist.dirtyData.records : this.inventoryData.records
     const batchPackPairs = standardProductList
-      .filter(record => record.batchId && record.product && record.product.id && record.packingType)
+      .filter(record => record.batchId && record.packingType)
       .map(record => `${record.batchId}-${record.packingType}`)
+
     const productPackPairs = standardProductList
       .filter(record => record.product && record.product.id)
       .map(record => `${record.product.id}-${record.packingType}`)
+
+    const batchProductPackPairs = standardProductList
+      .filter(record => record.batchId && record.product && record.product.id && record.packingType)
+      .map(record => `${record.batchId}-${record.product.id}-${record.packingType}`)
 
     this.vasData = {
       ...this.vasData,
@@ -957,6 +1006,18 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         } else if (
           record.targetType === PRODUCT_TYPE &&
           productPackPairs.indexOf(`${record.target}-${record.packingType}`) < 0
+        ) {
+          return {
+            ...record,
+            ready: false,
+            target: null,
+            targetDisplay: null,
+            packingType: null,
+            qty: 1
+          }
+        } else if (
+          record.targetType === BATCH_AND_PRODUCT_TYPE &&
+          batchProductPackPairs.indexOf(`${record.target.batchId}-${record.target.productId}-${record.packingType}`) < 0
         ) {
           return {
             ...record,
@@ -1042,9 +1103,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             set: idx + 1,
             vas: { id: orderVas.vas.id },
             remark: orderVas.remark,
-            targetType: record.targetType,
-            packingType: record.packingType,
-            qty: record.qty
+            targetType: record.targetType
           }
 
           if (orderVas.operationGuide && orderVas.operationGuide.data) {
@@ -1053,8 +1112,18 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
           if (record.targetType === BATCH_NO_TYPE) {
             result.targetBatchId = record.target
+            result.packingType = record.packingType
+            result.qty = record.qty
           } else if (record.targetType === PRODUCT_TYPE) {
             result.targetProduct = { id: record.target }
+            result.packingType = record.packingType
+            result.qty = record.qty
+          } else if (record.targetType === BATCH_AND_PRODUCT_TYPE) {
+            result.targetBatchId = record.target.batchId
+            result.targetProduct = { id: record.target.productId }
+            result.packingType = record.packingType
+            result.qty = record.qty
+            result.weight = record.weight
           } else {
             result.otherTarget = record.target
           }
@@ -1087,6 +1156,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     if (this.releaseOrderForm) this.releaseOrderForm.reset()
     if (this.shippingOrderForm) this.shippingOrderForm.reset()
     this.inventoryData = { ...this.inventoryData, records: [] }
+    if (this._document?._files) {
+      this._document._files = []
+    }
     this.vasData = { ...this.vasData, records: [] }
     this._clearGristConditions()
   }
@@ -1097,8 +1169,14 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       openPopup(
         html`
           <vas-create-popup
-            .targetBatchList="${this.getTargetBatchList()}"
-            .targetProductList="${this.getTargetProductList()}"
+            .targetList="${this.inventoryGrist.dirtyData.records.map(record => {
+              return {
+                ...record,
+                packQty: record.releaseQty,
+                unitWeight: record.releaseWeight / record.releaseQty,
+                totalWeight: record.releaseWeight
+              }
+            })}"
             .record="${record}"
             @completed="${e => {
               if (this.vasGrist.dirtyData.records.length === this._selectedVasRecordIdx) {
@@ -1144,98 +1222,6 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       throw new Error(i18next.t('text.invalid_release_qty'))
 
     return true
-  }
-
-  getTargetBatchList() {
-    if (this.checkInventoryValidity()) {
-      return this.inventoryGrist.dirtyData.records.reduce((batchList, record) => {
-        if (batchList.find(batch => batch.value === record.batchId)) {
-          batchList = batchList.map(batch => {
-            if (batch.value === record.batchId) {
-              return {
-                ...batch,
-                packingTypes: batch.packingTypes.find(packingType => packingType.type === record.packingType)
-                  ? batch.packingTypes.map(packingType => {
-                      if (packingType.type === record.packingType) {
-                        packingType = {
-                          ...packingType,
-                          packQty: packingType.packQty + record.releaseQty
-                        }
-                      }
-
-                      return packingType
-                    })
-                  : [
-                      ...batch.packingTypes,
-                      {
-                        type: record.packingType,
-                        packQty: record.releaseQty
-                      }
-                    ]
-              }
-            } else {
-              return batch
-            }
-          })
-        } else {
-          batchList.push({
-            display: record.batchId,
-            value: record.batchId,
-            packingTypes: [{ type: record.packingType, packQty: record.releaseQty }]
-          })
-        }
-
-        return batchList
-      }, [])
-    } else {
-      return []
-    }
-  }
-
-  getTargetProductList() {
-    if (this.checkInventoryValidity()) {
-      return this.inventoryGrist.dirtyData.records.reduce((productList, record) => {
-        if (productList.find(product => product.value === record.product.id)) {
-          return productList.map(product => {
-            if (product.value === record.product.id) {
-              return {
-                ...product,
-                packingTypes: product.packingTypes.find(packingType => packingType.type === record.packingType)
-                  ? product.packingTypes.map(packingType => {
-                      if (packingType.type === record.packingType) {
-                        packingType = {
-                          ...packingType,
-                          packQty: packingType.packQty + record.releaseQty
-                        }
-                      }
-
-                      return packingType
-                    })
-                  : [
-                      ...product.packingTypes,
-                      {
-                        type: record.packingType,
-                        packQty: record.releaseQty
-                      }
-                    ]
-              }
-            } else {
-              return product
-            }
-          })
-        } else {
-          productList.push({
-            display: `${record.product.name} ${record.product.description ? ` (${record.product.description})` : ''}`,
-            value: record.product.id,
-            packingTypes: [{ type: record.packingType, packQty: record.releaseQty }]
-          })
-        }
-
-        return productList
-      }, [])
-    } else {
-      return []
-    }
   }
 
   _showToast({ type, message }) {

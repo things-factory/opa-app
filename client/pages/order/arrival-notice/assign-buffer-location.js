@@ -7,8 +7,8 @@ import { client, CustomAlert, gqlBuilder, isMobileDevice, navigate, PageView } f
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/popup-note'
-import '../../components/vas-relabel'
-import { BATCH_NO_TYPE, ETC_TYPE, ORDER_STATUS, PRODUCT_TYPE } from '../constants'
+import '../../components/vas-templates'
+import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, ORDER_STATUS, PRODUCT_TYPE } from '../constants'
 import './buffer-location-selector'
 
 class AssignBufferLocation extends localize(i18next)(PageView) {
@@ -299,6 +299,14 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
                 return getRenderer()(record.targetBatchId, column, record, rowIndex, field)
               } else if (record.targetType === PRODUCT_TYPE) {
                 return getRenderer('object')(record.targetProduct, column, record, rowIndex, field)
+              } else if (record.targetType === BATCH_AND_PRODUCT_TYPE) {
+                return getRenderer()(
+                  `${record.targetBatchId} / ${record.targetProduct.name}`,
+                  column,
+                  record,
+                  rowIndex,
+                  field
+                )
               } else if (record.targetType === ETC_TYPE) {
                 return getRenderer()(record.otherTarget, column, record, rowIndex, field)
               }
@@ -319,6 +327,13 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
           type: 'integer',
           name: 'qty',
           header: i18next.t('field.qty'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'integer',
+          name: 'weight',
+          header: i18next.t('field.weight'),
           record: { align: 'center' },
           width: 100
         },
@@ -413,6 +428,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
               }
               packingType
               qty
+              weight
               otherTarget
               description
               remark

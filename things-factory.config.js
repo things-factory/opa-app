@@ -163,8 +163,12 @@ export default {
       page: 'received_note_detail'
     },
     {
-      tagname: 'customer-received-notes',
-      page: 'received_notes'
+      tagname: 'customer-received-note',
+      page: 'received_note'
+    },
+    {
+      tagname: 'customer-grn-list',
+      page: 'customer_grn_list'
     },
     /**
      * Billing Menus Section
@@ -208,6 +212,30 @@ export default {
     {
       tagname: 'customer-intransit-inventory',
       page: 'customer_intransit_inventory'
+    },
+    {
+      tagname: 'inventory-check-list',
+      page: 'inventory_check_list'
+    },
+    {
+      tagname: 'worksheet-cycle-count',
+      page: 'worksheet_cycle_count'
+    },
+    {
+      tagname: 'inspecting-product',
+      page: 'inspecting_product'
+    },
+    {
+      tagname: 'cycle-count-report',
+      page: 'cycle_count_report'
+    },
+    {
+      tagname: 'job-sheet-list',
+      page: 'job_sheets'
+    },
+    {
+      tagname: 'job-sheet-report',
+      page: 'job_sheet_report'
     },
 
     /**
@@ -317,6 +345,10 @@ export default {
     /**
      * Report Menus Section
      */
+    {
+      tagname: 'daily-collection-report',
+      page: 'daily_collection_report'
+    },
     {
       tagname: 'inventory-report',
       page: 'inventory_report'

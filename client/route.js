@@ -143,8 +143,12 @@ export default function route(page) {
       import('./pages/order/goods-received-note/received-note-detail')
       return page
 
-    case 'received_notes':
-      import('./pages/order/goods-received-note/customer-received-notes')
+    case 'received_note':
+      import('./pages/order/goods-received-note/customer-received-note')
+      return page
+
+    case 'customer_grn_list':
+      import('./pages/order/goods-received-note/customer-grn-list')
       return page
 
     /**
@@ -199,6 +203,30 @@ export default function route(page) {
 
     case 'customer_intransit_inventory':
       import('./pages/inventory/customer-intransit-inventory')
+      return page
+
+    case 'inventory_check_list':
+      import('./pages/inventory-check/inventory-check-list')
+      return page
+
+    case 'worksheet_cycle_count':
+      import('./pages/inventory-check/worksheet-cycle-count')
+      return page
+
+    case 'inspecting_product':
+      import('./pages/inventory-check/inspecting-product')
+      return page
+
+    case 'cycle_count_report':
+      import('./pages/inventory-check/cycle-count-report')
+      return page
+
+    case 'job_sheets':
+      import('./pages/report/job-sheet-list')
+      return page
+
+    case 'job_sheet_report':
+      import('./pages/report/job-sheet-report')
       return page
 
     /**
@@ -304,6 +332,9 @@ export default function route(page) {
     /**
      * Report Menus Section
      */
+    case 'daily_collection_report':
+      import('./pages/report/daily-collection-report')
+      return page
     case 'inventory_report':
       import('./pages/report/inventory-report')
       return page

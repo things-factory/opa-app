@@ -207,8 +207,11 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 productName: record.productName,
                 packingType: record.packingType,
                 releaseQty: record.releaseQty,
-                releaseWeight: record.releaseWeight
+                releaseWeight: record.releaseWeight,
+                completed: record.completed
               }
+
+              this._updateContext()
             }
           }
         }
@@ -227,6 +230,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           icon: 'assignment',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
+              if (record.completed) return
+
               this._selectedProduct = {
                 batchId: record.batchId,
                 productName: record.productName,
@@ -401,6 +406,12 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 releaseQty
                 releaseWeight
                 status
+                inventory {
+                  product {
+                    name
+                    description
+                  }
+                }
               }
             }
           }
@@ -464,7 +475,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         })
       }
 
-      if (completedOrderInvs && completedOrderInvs.length) {
+      if (completedOrderInvs && completedOrderInvs.length && this.isPalletPickingOrder) {
         this.worksheetDetailData = {
           records: completedOrderInvs.map(item => {
             return {
@@ -476,8 +487,6 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             }
           })
         }
-      } else {
-        this.worksheetDetailData = { records: [] }
       }
 
       this._updateContext()
@@ -616,15 +625,24 @@ class WorksheetPicking extends localize(i18next)(PageView) {
     this._actions = []
 
     if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value && !this.isPalletPickingOrder) {
-      this._actions = [
-        ...this._actions,
-        { title: i18next.t('button.auto_assign'), action: this._showAutoAssignPopup.bind(this) }
-      ]
+      if (this.productGristData.records.some(record => record.completed)) {
+        if (this._selectedProduct && this._selectedProduct.completed) {
+          this._actions = [
+            ...this._actions,
+            { title: i18next.t('button.undo'), action: this._undoAssignment.bind(this) }
+          ]
+        }
+      }
 
       if (this.productGristData.records.every(record => record.completed)) {
         this._actions = [
           ...this._actions,
           { title: i18next.t('button.activate'), action: this._activateWorksheet.bind(this) }
+        ]
+      } else {
+        this._actions = [
+          ...this._actions,
+          { title: i18next.t('button.auto_assign'), action: this._showAutoAssignPopup.bind(this) }
         ]
       }
     } else if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value) {
@@ -704,6 +722,9 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 this._selectedProduct.productName,
                 this._selectedProduct.packingType
               )
+
+              this._selectedProduct.completed = true
+              this._updateContext()
             }}"
           ></inventory-assign-popup>
         `,
@@ -732,6 +753,9 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               this._selectedProduct.productName,
               this._selectedProduct.packingType
             )
+
+            this._selectedProduct.completed = true
+            this._updateContext()
           }}"
         ></inventory-auto-assign-popup>
       `,
@@ -741,6 +765,47 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         title: i18next.t('title.inventory_auto_assign')
       }
     )
+  }
+
+  async _undoAssignment() {
+    try {
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.undo_picking_worksheet'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) {
+        return
+      }
+
+      await client.query({
+        query: gql`
+          mutation {
+            undoPickingAssigment(${gqlBuilder.buildArgs({
+              worksheetNo: this._worksheetNo,
+              batchId: this._selectedProduct.batchId,
+              productName: this._selectedProduct.productName,
+              packingType: this._selectedProduct.packingType
+            })})
+          }
+        `
+      })
+
+      await this.fetchOrderInventories()
+      await this.fetchWorksheetDetails(
+        this._worksheetNo,
+        this._selectedProduct.batchId,
+        this._selectedProduct.productName,
+        this._selectedProduct.packingType
+      )
+
+      this._selectedProduct.completed = false
+      this._updateContext()
+    } catch (e) {
+      this._showToast(e)
+    }
   }
 
   async _activateWorksheet() {

@@ -7,6 +7,10 @@ export const TEMPLATE_TYPES = {
     name: 'do_template',
     value: 'DO_TEMPLATE'
   },
+  JOB_TEMPLATE: {
+    name: 'job_template',
+    value: 'JOB_TEMPLATE'
+  },
   CO_TEMPLATE: {
     name: 'co_template',
     value: 'CO_TEMPLATE'
@@ -14,5 +18,13 @@ export const TEMPLATE_TYPES = {
   LOGO: {
     name: 'logo',
     value: 'LOGO'
+  },
+  COP: {
+    name: 'cop',
+    value: 'COP'
+  },
+  SIGNATURE: {
+    name: 'signature',
+    value: 'SIGNATURE'
   }
 }

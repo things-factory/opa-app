@@ -4,23 +4,15 @@ import '@things-factory/grist-ui'
 import { getRenderer } from '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import {
-  client,
-  CustomAlert,
-  gqlBuilder,
-  isMobileDevice,
-  navigate,
-  PageView,
-  store,
-  UPDATE_CONTEXT
-} from '@things-factory/shell'
+import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import '../components/popup-note'
-import '../components/vas-relabel'
+import '../components/vas-templates'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
-import { ORDER_TYPES, PRODUCT_TYPE, ETC_TYPE, BATCH_NO_TYPE } from '../order/constants'
+import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, ORDER_TYPES, PRODUCT_TYPE } from '../order/constants'
 
 class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -33,7 +25,8 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       vasTasks: Object,
       _vasName: String,
       _selectedTaskStatus: String,
-      _template: Object
+      _template: Object,
+      _templateContextBtns: Array
     }
   }
 
@@ -43,11 +36,13 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       MultiColumnFormStyles,
       css`
         :host {
+          overflow: hidden;
           display: flex;
           flex-direction: column;
         }
 
         .grist {
+          overflow: hidden;
           background-color: var(--main-section-background-color);
           display: flex;
           flex: 1;
@@ -263,6 +258,9 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
             <fieldset>
               <legend>${i18next.t('label.vas')}: ${this._vasName}</legend>
 
+              <label>${i18next.t('label.pallet')}</label>
+              <input name="palletId" readonly />
+
               <label>${i18next.t('label.location')}</label>
               <input name="locationInv" readonly />
 
@@ -299,7 +297,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
 
   pageInitialized() {
     this.vasGristConfig = {
-      list: { fields: ['completed', 'targetType', 'targetDisplay', 'vasCount', 'qty'] },
+      list: { fields: ['completed', 'targetType', 'targetDisplay', 'vasCount'] },
       rows: {
         appendable: false,
         handlers: {
@@ -335,6 +333,14 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
                 return getRenderer()(record.targetBatchId, column, record, rowIndex, field)
               } else if (record.targetType === PRODUCT_TYPE) {
                 return getRenderer('object')(record.targetProduct, column, record, rowIndex, field)
+              } else if (record.targetType === BATCH_AND_PRODUCT_TYPE) {
+                return getRenderer()(
+                  `${record.targetBatchId} / ${record.targetProduct.name}`,
+                  column,
+                  record,
+                  rowIndex,
+                  field
+                )
               } else if (record.targetType === ETC_TYPE) {
                 return getRenderer()(record.otherTarget, column, record, rowIndex, field)
               }
@@ -342,13 +348,6 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
             align: 'center'
           },
           width: 250
-        },
-        {
-          type: 'integer',
-          name: 'qty',
-          header: i18next.t('field.qty'),
-          record: { align: 'center' },
-          width: 100
         },
         {
           type: 'integer',
@@ -375,10 +374,9 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
               this._fillUpInputForm(record)
 
               if (record.vas.operationGuideType && record.vas.operationGuideType === 'template') {
-                this._template = document.createElement(record.vas.operationGuide)
-                this._template.record = { ...record, operationGuide: JSON.parse(record.operationGuide) }
+                this.initVasTemplate(record)
               } else {
-                this._template = null
+                this.clearVasTemplate()
               }
             }
           }
@@ -413,6 +411,38 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
+  initVasTemplate(record) {
+    this._template = document.createElement(record.vas.operationGuide)
+    this._template.addEventListener('completed', this._templateCompletedHandler.bind(this))
+    this._template.record = { ...record, operationGuide: JSON.parse(record.operationGuide) }
+
+    if (!record.completed) {
+      this._template.isExecuting = true
+      this._templateContextBtns = this._template.contextButtons
+    } else {
+      this._template.isExecuting = false
+      this._templateContextBtns = null
+    }
+
+    this._template.init()
+  }
+
+  clearVasTemplate() {
+    this._template.removeEventListener('completed', this._templateCompletedHandler)
+    this._template = null
+    this._templateContextBtns = null
+  }
+
+  async _templateCompletedHandler() {
+    const selectedVasName = this._selectedVas.name
+    await this._fetchVass()
+    this._selectedVas = this.vasTasks.records.find(record => record.name === selectedVasName)
+    this._fillUpInputForm(this._selectedVas)
+    this._selectedTaskStatus = this._selectedVas.status
+    this._template.record = { ...this._selectedVas, operationGuide: JSON.parse(this._selectedVas.operationGuide) }
+    this._template.init()
+  }
+
   pageUpdated(changes, lifecycle) {
     if (this.active) {
       this._focusOnBarcodeField()
@@ -434,6 +464,10 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
 
     if (this.vasSets && this.vasSets.records && this.vasSets.records.every(record => record.completed)) {
       actions = [...actions, { title: i18next.t('button.complete'), action: this._complete.bind(this) }]
+    }
+
+    if (this._templateContextBtns && this._templateContextBtns.length) {
+      actions = [...actions, ...this._templateContextBtns]
     }
 
     store.dispatch({
@@ -491,6 +525,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
               }
               otherTarget
               qty
+              weight
               operationGuide
               locationInv 
               vas {
@@ -500,8 +535,17 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
                 operationGuide
                 operationGuideType
               }
+              inventory {
+                palletId
+                qty
+                weight
+              }
               description
               remark
+              relatedOrderInv {
+                releaseQty
+                releaseWeight
+              }
             }
           }
         }
@@ -545,7 +589,6 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
             targetBatchId: task.targetBatchId,
             targetProduct: task.targetProduct,
             otherTarget: task.otherTarget,
-            qty: task.qty,
             tasks: [...(vasSet.tasks || []), this._formatTask(task)]
           })
         }
@@ -563,6 +606,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
 
   _formatTask(task) {
     return {
+      palletId: task.inventory.palletId,
       name: task.name,
       vas: task.vas,
       remark: task.remark,
@@ -570,7 +614,12 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       locationInv: task.locationInv,
       operationGuide: task.operationGuide,
       completed: task.status === WORKSHEET_STATUS.DONE.value,
-      description: task.description
+      description: task.description,
+      qty: task.qty,
+      weight: task.weight,
+      relatedOrderInv: task.relatedOrderInv,
+      inventory: task.inventory,
+      issue: task.issue
     }
   }
 
@@ -651,26 +700,37 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
   async _executeVas() {
     try {
       this._validate()
+
+      const args = { worksheetDetail: this._getVasWorksheetDetail() }
+
+      if (this._template) {
+        await this._template.checkCompleteValidity()
+      }
+
       const response = await client.query({
         query: gql`
           mutation {
-            executeVas(${gqlBuilder.buildArgs({
-              worksheetDetail: this._getVasWorksheetDetail()
-            })})
+            executeVas(${gqlBuilder.buildArgs(args)})
           }
         `
       })
 
       if (!response.errors) {
-        this._selectedVas = null
-        this._selectedTaskStatus = null
-        this.infoForm.reset()
-        this.inputForm.reset()
+        this.resetView()
         this._fetchVass()
+        this._updateContext()
       }
     } catch (e) {
       this._showToast(e)
     }
+  }
+
+  resetView() {
+    this._selectedVas = null
+    this._selectedTaskStatus = null
+    this.clearVasTemplate()
+    this.infoForm.reset()
+    this.inputForm.reset()
   }
 
   async _undoVas() {
@@ -699,10 +759,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!response.errors) {
-        this._selectedVas = null
-        this._selectedTaskStatus = null
-        this.infoForm.reset()
-        this.inputForm.reset()
+        this.resetView()
         this._fetchVass()
         this._updateContext()
       }

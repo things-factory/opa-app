@@ -56,12 +56,7 @@ class ImageViewer extends localize(i18next)(LitElement) {
   render() {
     return html`
       <div class="container">
-        ${this.name
-          ? html`
-              <h2>${this.name}</h2>
-            `
-          : ''}
-
+        ${this.name ? html` <h2>${this.name}</h2> ` : ''}
         <div class="img-container">
           <img src="${this._fullPath}" />
         </div>

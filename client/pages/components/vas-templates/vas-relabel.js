@@ -1,19 +1,19 @@
-import { SingleColumnFormStyles, MultiColumnFormStyles } from '@things-factory/form-ui'
+import { SingleColumnFormStyles } from '@things-factory/form-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client } from '@things-factory/shell'
+import { client, CustomAlert } from '@things-factory/shell'
 import { gqlBuilder } from '@things-factory/utils'
 import gql from 'graphql-tag'
-import { css, html, LitElement } from 'lit-element'
-import '../components/image-viewer'
-import { ORDER_VAS_STATUS } from '../order/constants/order'
-import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
+import { css, html } from 'lit-element'
+import { WORKSHEET_STATUS } from '../../inbound/constants/worksheet'
+import { ORDER_VAS_STATUS } from '../../order/constants/order'
+import '../image-viewer'
+import { VasTemplate } from './vas-template'
 
-class VasRelabel extends localize(i18next)(LitElement) {
+class VasRelabel extends localize(i18next)(VasTemplate) {
   static get styles() {
     return [
       SingleColumnFormStyles,
-      MultiColumnFormStyles,
       css`
         :host {
           display: flex;
@@ -31,40 +31,23 @@ class VasRelabel extends localize(i18next)(LitElement) {
           flex-direction: column;
           flex: 1;
         }
-        h2 {
-          padding: var(--subtitle-padding);
-          font: var(--subtitle-font);
-          margin: var(--grist-title-margin);
-          border: var(--grist-title-border);
-          color: var(--secondary-color);
-        }
-        h2 mwc-icon {
-          vertical-align: middle;
-          margin: var(--grist-title-icon-margin);
-          font-size: var(--grist-title-icon-size);
-          color: var(--grist-title-icon-color);
-        }
-
         image-viewer {
           flex: 1;
         }
-        .new-label {
-          display: flex;
-        }
-      `,
+      `
     ]
   }
 
   static get properties() {
     return {
-      record: Object,
+      record: Object
     }
   }
 
   render() {
     return html`
       <div class="container">
-        <form class="single-column-form" @submit="${(e) => e.preventDefault()}">
+        <form class="single-column-form" @submit="${e => e.preventDefault()}">
           <fieldset>
             <legend>${i18next.t('title.relabel')}</legend>
             ${(!this._isEditable && this.toBatchId) || this._isEditable
@@ -73,7 +56,7 @@ class VasRelabel extends localize(i18next)(LitElement) {
                   <input
                     name="batchId"
                     value="${this.toBatchId}"
-                    @change="${(e) => (this._selectedBatchId = e.currentTarget.value)}"
+                    @change="${e => (this._selectedBatchId = e.currentTarget.value)}"
                   />
                 `
               : ''}
@@ -170,10 +153,6 @@ class VasRelabel extends localize(i18next)(LitElement) {
     }
   }
 
-  get _isEditable() {
-    return !this.record.status
-  }
-
   get _isDownloadable() {
     return this.record.status !== WORKSHEET_STATUS.EXECUTING.value
   }
@@ -200,8 +179,22 @@ class VasRelabel extends localize(i18next)(LitElement) {
     )
   }
 
+  get transactions() {
+    return [this.createNewLabel.bind(this)]
+  }
+
   get revertTransactions() {
     return [this.deleteNewLabel.bind(this)]
+  }
+
+  get data() {
+    return {
+      toProduct: this._selectedProduct,
+      toBatchId: this._selectedBatchId,
+      newLabel: {
+        files: this.newLabelInput.files
+      }
+    }
   }
 
   _openProductPopup() {
@@ -209,12 +202,9 @@ class VasRelabel extends localize(i18next)(LitElement) {
     if (this.record.status === ORDER_VAS_STATUS.PENDING.value) return
     const queryName = 'products'
     const basicArgs = {
-      filters: [
-        { name: 'productRef', operator: 'noteq', value: '' },
-        { name: 'productRef', operator: 'is_not_null' },
-      ],
+      filters: [{ name: 'product_ref_id', operator: 'is_not_null' }]
     }
-    const confirmCallback = (selected) => {
+    const confirmCallback = selected => {
       this._selectedProduct = selected
       if (this._selectedProduct) {
         this.productInput.value = `${this._selectedProduct.name} ${
@@ -236,30 +226,12 @@ class VasRelabel extends localize(i18next)(LitElement) {
       {
         backdrop: true,
         size: 'large',
-        title: i18next.t('title.product'),
+        title: i18next.t('title.product')
       }
     )
   }
 
-  async adjust() {
-    try {
-      await this._validateAdjust()
-      return {
-        data: {
-          toProduct: this._selectedProduct,
-          toBatchId: this._selectedBatchId,
-          newLabel: {
-            files: this.newLabelInput.files,
-          },
-        },
-        transactions: [this.createNewLabel.bind(this)],
-      }
-    } catch (e) {
-      throw e
-    }
-  }
-
-  async _validateAdjust() {
+  async validateAdjust() {
     if (!this._selectedProduct && !this._selectedBatchId) {
       throw new Error(i18next.t('text.target_does_not_selected'))
     }
@@ -280,19 +252,19 @@ class VasRelabel extends localize(i18next)(LitElement) {
               {
                 name: 'batchId',
                 operator: 'eq',
-                value: this._selectedBatchId,
-              },
+                value: this._selectedBatchId
+              }
             ],
             pagination: {
-              limit: 1,
-            },
+              limit: 1
+            }
           })}) {
             items {
               batchId
             }
           }
         }
-      `,
+      `
     })
 
     if (!response.errors) {
@@ -312,7 +284,7 @@ class VasRelabel extends localize(i18next)(LitElement) {
       const attachment = {
         file: operationGuide.data.newLabel.files[0],
         category: 'LABEL',
-        refBy: `VAS-ORDER-RELABEL-${String(Date.now())}`,
+        refBy: `VAS-ORDER-RELABEL-${String(Date.now())}`
       }
       const response = await client.query({
         query: gql`
@@ -325,11 +297,11 @@ class VasRelabel extends localize(i18next)(LitElement) {
           }
         `,
         variables: {
-          attachment,
+          attachment
         },
         context: {
-          hasUpload: true,
-        },
+          hasUpload: true
+        }
       })
 
       if (response.errors) throw response.errors[0]
@@ -338,8 +310,8 @@ class VasRelabel extends localize(i18next)(LitElement) {
         ...operationGuide,
         data: {
           ...operationGuide.data,
-          newLabel: response.data.createAttachment,
-        },
+          newLabel: response.data.createAttachment
+        }
       }
     } catch (e) {
       throw e
@@ -353,17 +325,30 @@ class VasRelabel extends localize(i18next)(LitElement) {
         query: gql`
           mutation {
             deleteAttachment(${gqlBuilder.buildArgs({
-              id: operationGuide.data.newLabel.id,
+              id: operationGuide.data.newLabel.id
             })}) {
               name
             }
           }
-        `,
+        `
       })
 
       if (response.errors) throw response.errors[0]
     } catch (e) {
       throw e
+    }
+  }
+
+  async checkCompleteValidity() {
+    const result = await CustomAlert({
+      title: i18next.t('title.relabeling'),
+      text: i18next.t('text.is_operation_finished'),
+      confirmButton: { text: i18next.t('button.confirm') },
+      cancelButton: { text: i18next.t('button.cancel') }
+    })
+
+    if (!result.value) {
+      throw new Error(i18next.t('text.please_finish_relabeling'))
     }
   }
 }

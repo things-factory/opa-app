@@ -1,15 +1,15 @@
+import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
-import { getCodeByName } from '@things-factory/code-base'
+import { openPopup } from '@things-factory/layout-base'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { connect } from 'pwa-helpers/connect-mixin'
-import { client, PageView, store } from '@things-factory/shell'
-import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
+import { client, navigate, PageView, store } from '@things-factory/shell'
 import { ScrollbarStyles } from '@things-factory/styles'
-import { PALLET_LABEL_SETTING_KEY } from '../../setting-constants'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
-import { USBPrinter } from '@things-factory/barcode-base'
 import { css, html } from 'lit-element'
+import { connect } from 'pwa-helpers/connect-mixin'
+import './cycle-count-popup'
 
 class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -19,7 +19,6 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
         :host {
           display: flex;
           flex-direction: column;
-
           overflow: hidden;
         }
 
@@ -27,15 +26,8 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
           overflow: visible;
         }
 
-        .grist {
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-          overflow-y: auto;
-        }
-
         data-grist {
-          overflow-y: hidden;
+          overflow-y: auto;
           flex: 1;
         }
       `
@@ -47,8 +39,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
       _email: String,
       _searchFields: Array,
       config: Object,
-      data: Object,
-      _palletLabel: Object
+      data: Object
     }
   }
 
@@ -56,13 +47,11 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
     return html`
       <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
-      <div class="grist">
-        <data-grist
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.config}
-          .fetchHandler="${this.fetchHandler.bind(this)}"
-        ></data-grist>
-      </div>
+      <data-grist
+        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+        .config=${this.config}
+        .fetchHandler="${this.fetchHandler.bind(this)}"
+      ></data-grist>
     `
   }
 
@@ -71,8 +60,8 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
       title: i18next.t('title.onhand_inventory'),
       actions: [
         {
-          title: i18next.t('button.pallet_label_print'),
-          action: this._printPalletLabel.bind(this)
+          title: i18next.t('button.cycle_count'),
+          action: this._createCycleCount.bind(this)
         }
       ],
       exportable: {
@@ -89,6 +78,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
       list: {
         fields: ['palletId', 'product', 'bizplace', 'location']
       },
+      pagination: { pages: [10, 20, 50, 500] },
       rows: {
         selectable: {
           multiple: true
@@ -170,7 +160,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'number',
-          name: 'qty',
+          name: 'remainQty',
           header: i18next.t('field.qty'),
           record: { align: 'center' },
           imex: { header: i18next.t('field.qty'), key: 'qty', width: 30, type: 'number' },
@@ -286,7 +276,12 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
       query: gql`
         query {
           inventories(${gqlBuilder.buildArgs({
-            filters: [...filters, { name: 'status', operator: 'notin', value: ['INTRANSIT', 'TERMINATED', 'DELETED'] }],
+            filters: [
+              ...filters,
+              { name: 'status', operator: 'notin', value: ['INTRANSIT', 'TERMINATED', 'DELETED'] },
+              { name: 'remainOnly', operator: 'eq', value: true },
+              { name: 'unlockOnly', operator: 'eq', value: true }
+            ],
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -307,6 +302,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
                 description                
               }
               qty
+              remainQty
               warehouse {
                 id
                 name
@@ -392,51 +388,28 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
     return this.config.columns
   }
 
-  async _printPalletLabel() {
-    const records = this.dataGrist.selected
-    var labelId = this._palletLabel && this._palletLabel.id
-
-    if (!labelId) {
-      document.dispatchEvent(
-        new CustomEvent('notify', {
-          detail: {
-            level: 'error',
-            message: `${i18next.t('text.no_label_setting_was_found')}. ${i18next.t('text.please_check_your_setting')}`
-          }
-        })
-      )
-    } else {
-      for (var record of records) {
-        var searchParams = new URLSearchParams()
-
-        /* for pallet record mapping */
-        searchParams.append('pallet', record.palletId)
-        searchParams.append('batch', record.batchId)
-        searchParams.append('product', record.product.name)
-
-        try {
-          const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {
-            method: 'GET'
-          })
-
-          if (response.status !== 200) {
-            throw `Error : Can't get label command from server (response: ${response.status})`
-          }
-
-          var command = await response.text()
-
-          if (!this.printer) {
-            this.printer = new USBPrinter()
-          }
-
-          await this.printer.connectAndPrint(command)
-        } catch (e) {
-          this._showToast(e)
-
-          delete this.printer
-          break
+  _createCycleCount() {
+    const _selectedInventory = this.dataGrist.selected
+    try {
+      if (_selectedInventory && _selectedInventory.length == 0)
+        throw new Error(i18next.t('text.there_is_no_selected_inventory'))
+      openPopup(
+        html`
+          <cycle-count-popup
+            .selectedInventory="${_selectedInventory}"
+            @completed="${() => {
+              navigate('inventory_check_list')
+            }}"
+          ></cycle-count-popup>
+        `,
+        {
+          backdrop: true,
+          size: 'large',
+          title: i18next.t('title.create_cycle_count')
         }
-      }
+      )
+    } catch (e) {
+      this._showToast(e)
     }
   }
 
@@ -523,8 +496,6 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
   }
 
   stateChanged(state) {
-    let palletLabelSetting = state.dashboard[PALLET_LABEL_SETTING_KEY]
-    this._palletLabel = (palletLabelSetting && palletLabelSetting.board) || {}
     this._email = state.auth && state.auth.user && state.auth.user.email
   }
 

@@ -9,8 +9,9 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import '../../components/popup-note'
-import '../../components/vas-relabel'
-import { BATCH_NO_TYPE, ETC_TYPE, ORDER_STATUS, PRODUCT_TYPE } from '../constants'
+import '../../components/vas-templates'
+import '../../components/attachment-viewer'
+import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, ORDER_STATUS, PRODUCT_TYPE } from '../constants'
 
 class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -23,7 +24,10 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
       inventoryData: Object,
       vasData: Object,
       _status: String,
-      _template: Object
+      _attachments: Array,
+      _template: Object,
+      _mimetype: String,
+      _doPath: String
     }
   }
 
@@ -78,6 +82,14 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
 
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
+        }
+        .do-preview {
+          display: flex;
+          flex-direction: row;
+          flex: 1;
+        }
+        attachment-viewer {
+          flex: 1;
         }
       `
     ]
@@ -138,6 +150,27 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
         </form>
       </div>
 
+      <div class="do-attachment-container" ?hidden="${!this._ownTransport}">
+        <form name="doAttachment" class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.attachment')}</legend>
+            <div class="do-preview">
+              ${(this._attachments || []).map(
+                attachment =>
+                  html`
+                    <attachment-viewer
+                      name="${attachment.name}"
+                      src="${location.origin}/attachment/${attachment.path}"
+                      .mimetype="${attachment.mimetype}"
+                      .downloadable="${this._downloadable}"
+                    ></attachment-viewer>
+                  `
+              )}
+            </div>
+          </fieldset>
+        </form>
+      </div>
+
       <div class="container">
         <div class="grist">
           <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.release_product_list')}</h2>
@@ -169,6 +202,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
     this._exportOption = false
+    this._downloadable = true
     this._ownTransport = true
   }
 
@@ -190,6 +224,10 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
 
   get vasGrist() {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
+  }
+
+  get _isDownloadable() {
+    return this._status !== ORDER_STATUS.PENDING.value
   }
 
   pageInitialized() {
@@ -293,6 +331,14 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
                 return getRenderer()(record.targetBatchId, column, record, rowIndex, field)
               } else if (record.targetType === PRODUCT_TYPE) {
                 return getRenderer('object')(record.targetProduct, column, record, rowIndex, field)
+              } else if (record.targetType === BATCH_AND_PRODUCT_TYPE) {
+                return getRenderer()(
+                  `${record.targetBatchId} / ${record.targetProduct.name}`,
+                  column,
+                  record,
+                  rowIndex,
+                  field
+                )
               } else if (record.targetType === ETC_TYPE) {
                 return getRenderer()(record.otherTarget, column, record, rowIndex, field)
               }
@@ -313,6 +359,13 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
           type: 'integer',
           name: 'qty',
           header: i18next.t('field.qty'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'integer',
+          name: 'weight',
+          header: i18next.t('field.weight'),
           record: { align: 'center' },
           width: 100
         },
@@ -373,6 +426,13 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
             exportOption
             releaseDate
             collectionOrderNo
+            attachment {
+              id
+              name
+              refBy
+              path
+              mimetype
+            }
             inventoryInfos {
               name
               batchId
@@ -405,6 +465,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
               }
               packingType
               qty
+              weight
               otherTarget
               description
               remark
@@ -435,6 +496,10 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
         this._ownTransport = releaseOrder.ownTransport
       }
       this._status = releaseOrder.status
+
+      if (this._ownTransport) {
+        this._attachments = releaseOrder && releaseOrder.attachment
+      }
 
       this._fillupRGForm(releaseOrder)
       if (this._exportOption) this._fillupSOForm(shippingOrder)

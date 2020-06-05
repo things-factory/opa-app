@@ -6,8 +6,9 @@ import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import '../../components/vas-relabel'
-import { BATCH_NO_TYPE, ETC_TYPE, ORDER_STATUS, PRODUCT_TYPE } from '../constants'
+import '../../components/vas-templates'
+import '../../components/attachment-viewer'
+import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, ORDER_STATUS, PRODUCT_TYPE } from '../constants'
 
 class ReleaseOrderDetail extends localize(i18next)(PageView) {
   static get properties() {
@@ -22,7 +23,10 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       vasGristConfig: Object,
       inventoryData: Object,
       vasData: Object,
-      _status: String
+      _attachments: Array,
+      _status: String,
+      _mimetype: String,
+      _doPath: String
     }
   }
 
@@ -78,6 +82,15 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
+
+        .do-preview {
+          display: flex;
+          flex-direction: row;
+          flex: 1;
+        }
+        attachment-viewer {
+          flex: 1;
+        }
       `
     ]
   }
@@ -130,6 +143,27 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         </form>
       </div>
 
+      <div class="do-attachment-container" ?hidden="${!this._ownTransport}">
+        <form name="doAttachment" class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.attachment')}</legend>
+            <div class="do-preview">
+              ${(this._attachments || []).map(
+                attachment =>
+                  html`
+                    <attachment-viewer
+                      name="${attachment.name}"
+                      src="${location.origin}/attachment/${attachment.path}"
+                      .mimetype="${attachment.mimetype}"
+                      .downloadable="${this._downloadable}"
+                    ></attachment-viewer>
+                  `
+              )}
+            </div>
+          </fieldset>
+        </form>
+      </div>
+
       <div class="container">
         <div class="grist">
           <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.release_product_list')}</h2>
@@ -160,6 +194,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
     super()
     this._exportOption = false
     this._ownTransport = true
+    this._downloadable = true
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
   }
@@ -309,6 +344,14 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
                 return getRenderer()(record.targetBatchId, column, record, rowIndex, field)
               } else if (record.targetType === PRODUCT_TYPE) {
                 return getRenderer('object')(record.targetProduct, column, record, rowIndex, field)
+              } else if (record.targetType === BATCH_AND_PRODUCT_TYPE) {
+                return getRenderer()(
+                  `${record.targetBatchId} / ${record.targetProduct.name}`,
+                  column,
+                  record,
+                  rowIndex,
+                  field
+                )
               } else if (record.targetType === ETC_TYPE) {
                 return getRenderer()(record.otherTarget, column, record, rowIndex, field)
               }
@@ -329,6 +372,13 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
           type: 'integer',
           name: 'qty',
           header: i18next.t('field.qty'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'integer',
+          name: 'weight',
+          header: i18next.t('field.weight'),
           record: { align: 'center' },
           width: 100
         },
@@ -380,6 +430,13 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
             exportOption
             releaseDate
             collectionOrderNo
+            attachment {
+              id
+              name
+              refBy
+              path
+              mimetype
+            }
             bizplace {
               id
               name
@@ -417,6 +474,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
               }
               packingType
               qty
+              weight
               otherTarget
               description
               remark
@@ -447,9 +505,15 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       } else if (!this._exportOption) {
         this._ownTransport = response.data.releaseGoodDetail.ownTransport
       }
+
       this._status = releaseOrder.status
 
       this._fillupRGForm(response.data.releaseGoodDetail)
+
+      if (this._ownTransport) {
+        this._attachments = releaseOrder && releaseOrder.attachment
+      }
+
       if (this._exportOption) this._fillupSOForm(shippingOrder)
 
       this.inventoryData = { records: orderInventories }
@@ -464,6 +528,10 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
           })
       }
     }
+  }
+
+  get _isDownloadable() {
+    return this._status !== ORDER_STATUS.PENDING.value
   }
 
   _updateContext() {
