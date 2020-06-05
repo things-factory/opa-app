@@ -13,7 +13,9 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
       containerSize: String,
       containerNo: String,
       looseItem: Boolean,
-      jobSheetNo: String
+      jobSheetNo: String,
+      sumPackQty: String,
+      sumPalletQty: String
     }
   }
 
@@ -74,6 +76,12 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
 
           <label>${i18next.t('label.container_mt_date')}</label>
           <input name="containerMtDate" type="date" min="${this._getStdDate()}" />
+
+          <label>${i18next.t('label.total_pack_qty')}</label>
+          <input name="sumPackQty" />
+
+          <label>${i18next.t('label.total_pallet_qty')}</label>
+          <input name="sumPalletQty" />
         </fieldset>
       </form>
 
@@ -89,7 +97,9 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
       containerMtDate: this.containerMtDate,
       looseItem: this.looseItem,
       adviseMtDate: this.adviseMtDate,
-      containerSize: this.containerSize
+      containerSize: this.containerSize,
+      sumPackQty: this.sumPackQty,
+      sumPalletQty: this.sumPalletQty
     })
   }
 
@@ -127,7 +137,9 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
   _getJobSheetInfo() {
     if (this.shadowRoot.querySelector('form').checkValidity()) {
       return {
-        containerMtDate: this._getInputByName('containerMtDate').value
+        containerMtDate: this._getInputByName('containerMtDate').value,
+        sumPackQty: parseInt(this._getInputByName('sumPackQty').value),
+        sumPalletQty: parseInt(this._getInputByName('sumPalletQty').value)
       }
     } else {
       throw new Error(i18next.t('text.job_sheet_info_invalid'))

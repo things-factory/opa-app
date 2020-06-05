@@ -94,6 +94,19 @@ class JobSheetList extends localize(i18next)(PageView) {
         attrs: ['custom']
       },
       {
+        label: i18next.t('field.job_sheet'),
+        name: 'jobSheetNo',
+        type: 'text',
+        props: { searchOper: 'i_like' },
+        attrs: ['custom']
+      },
+      {
+        name: 'containerNo',
+        label: i18next.t('field.container_no'),
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
         label: i18next.t('field.from_date'),
         name: 'fromDate',
         type: 'date',
@@ -143,8 +156,8 @@ class JobSheetList extends localize(i18next)(PageView) {
           }
         },
         {
-          type: 'string',
-          name: 'jobSheetNo',
+          type: 'object',
+          name: 'jobSheet',
           header: i18next.t('field.job_sheet'),
           record: { align: 'left' },
           sortable: true,
@@ -257,7 +270,10 @@ class JobSheetList extends localize(i18next)(PageView) {
                   name
                   description
                 }
-                jobSheetNo
+                jobSheet {
+                  id
+                  name
+                }
                 updatedAt
                 updater {
                   id
@@ -283,7 +299,7 @@ class JobSheetList extends localize(i18next)(PageView) {
   _validate() {
     if (!this.searchForm.shadowRoot.querySelector('form').checkValidity())
       throw new Error(i18next.t('text.invalid_form_value'))
-    if (!this._bizplaceSelector.value) throw new Error(i18next.t('text.customer_does_not_selected'))
+    if (!this._bizplaceSelector.value) throw new Error(i18next.t('text.no_customer_is_selected'))
     if (!this._fromDateInput.value) throw new Error(i18next.t('text.from_date_is_empty'))
     if (!this._toDateInput.value) throw new Error(i18next.t('text.to_date_is_empty'))
   }
