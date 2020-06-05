@@ -201,6 +201,18 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist#product-grist')
   }
 
+  get containerNo() {
+    return this.shadowRoot.querySelector('input[name=containerNo]')
+  }
+
+  get containerSize() {
+    return this.shadowRoot.querySelector('input[name=containerSize]')
+  }
+
+  get adviseMtDate() {
+    return this.shadowRoot.querySelector('input[name=adviseMtDate]')
+  }
+
   get vasGrist() {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
   }
@@ -455,7 +467,10 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       arrivalNotice.orderVass = this._getOrderVass()
 
       const args = {
-        arrivalNotice: { ...arrivalNotice, ownTransport: this._importedOrder ? true : this._ownTransport }
+        arrivalNotice: {
+          ...arrivalNotice,
+          ownTransport: this._importedOrder ? true : this._ownTransport
+        }
       }
 
       delete args.arrivalNotice.container
@@ -509,6 +524,14 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
   _validateForm() {
     if (!this.arrivalNoticeForm.checkValidity()) throw new Error(i18next.t('text.arrival_notice_form_invalid'))
+
+    if (this._hasContainer) {
+      if (!this.containerNo.value) throw new Error(i18next.t('text.container_no_is_empty'))
+
+      if (!this.containerSize.value) throw new Error(i18next.t('text.container_size_is_empty'))
+
+      if (!this.adviseMtDate.value) throw new Error(i18next.t('text.advise_mt_date_is_empty'))
+    }
   }
 
   _validateProducts() {

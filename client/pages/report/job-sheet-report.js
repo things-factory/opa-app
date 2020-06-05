@@ -16,7 +16,8 @@ class JobSheetReport extends localize(i18next)(PageView) {
       _looseItem: Boolean,
       _containerSize: String,
       _containerMtDate: String,
-      _adviseMtDate: String
+      _adviseMtDate: String,
+      _sumPalletQty: Number
     }
   }
 
@@ -96,6 +97,7 @@ class JobSheetReport extends localize(i18next)(PageView) {
               containerSize
               containerMtDate
               adviseMtDate
+              sumPalletQty
             }
           }
         }
@@ -110,10 +112,11 @@ class JobSheetReport extends localize(i18next)(PageView) {
 
       this._containerNo = arrivalNoticeInfo.containerNo
       this._looseItem = arrivalNoticeInfo.looseItem
-      this._containerSize = arrivalNoticeInfo.jobSheet.containerSize
+      this._containerSize = arrivalNoticeInfo.jobSheet.containerSize || null
       this._mtDate = arrivalNoticeInfo.jobSheet.containerMtDate
       this._adviseMtDate = arrivalNoticeInfo.jobSheet.adviseMtDate
       this._jobSheetNo = arrivalNoticeInfo.jobSheet.name
+      this._sumPalletQty = arrivalNoticeInfo.jobSheet.sumPalletQty
     }
   }
 
@@ -125,6 +128,7 @@ class JobSheetReport extends localize(i18next)(PageView) {
           .adviseMtDate="${this._adviseMtDate}"
           .containerSize="${this._containerSize}"
           .containerNo="${this._containerNo}"
+          .sumPalletQty="${this._sumPalletQty}"
           .looseItem="${this._looseItem}"
           .jobSheetNo="${this._jobSheetNo}"
           @job-sheet-updated="${() => {
