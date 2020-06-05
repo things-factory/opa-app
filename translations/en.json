@@ -730,6 +730,7 @@
   "text.to_pallet_id_is_empty": "to pallet id is empty",
   "text.turn_to_pdf_successfully": "turn to pdf successfully",
   "text.undo_unloading": "undo unloading",
+  "text.undo_picking_worksheet": "undo inventory selection",
   "text.undo_putaway": "undo putaway",
   "text.undo_inspection": "undo inspection",
   "text.undo_vas": "undo vas",
