@@ -114,11 +114,8 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
           <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
           <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" readonly />
 
-          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_size')}</label>
-          <input ?hidden="${!this._hasContainer}" type="text" name="containerSize" readonly />
-
-          <label ?hidden="${!this._hasContainer}">${i18next.t('label.advise_mt_date')}</label>
-          <input ?hidden="${!this._hasContainer}" type="date" name="adviseMtDate" readonly />
+          <label>${i18next.t('label.container_size')}</label>
+          <input type="text" name="containerSize" readonly />
 
           <label>${i18next.t('label.status')}</label>
           <select name="status" disabled
@@ -130,6 +127,9 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
 
           <input id="container" type="checkbox" name="container" ?checked="${this._hasContainer}" disabled />
           <label for="container">${i18next.t('label.container')}</label>
+
+          <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" disabled />
+          <label for="looseItem">${i18next.t('label.loose_item')}</label>
 
           <input id="importCargo" type="checkbox" name="importCargo" ?checked="${this._importCargo}" disabled />
           <label>${i18next.t('label.import_cargo')}</label>
@@ -398,7 +398,6 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
             looseItem
             jobSheet {
               containerSize
-              adviseMtDate
             }
             orderProducts {
               id

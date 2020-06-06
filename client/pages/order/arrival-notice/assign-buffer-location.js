@@ -16,6 +16,8 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
     return {
       _ganNo: String,
       _ownTransport: Boolean,
+      _hasContainer: Boolean,
+      _looseItem: Boolean,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -112,23 +114,35 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
           <label>${i18next.t('label.eta_date')}</label>
           <input name="etaDate" type="date" readonly />
 
+          <label ?hidden="${this._importCargo || !this._ownTransport}">${i18next.t('label.truck_no')}</label>
+          <input ?hidden="${this._importCargo || !this._ownTransport}" name="truckNo" readonly />
+
+          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
+          <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" readonly />
+
+          <label>${i18next.t('label.container_size')}</label>
+          <input type="text" name="containerSize" readonly />
+
+          <label>${i18next.t('label.status')}</label>
+          <select name="status" disabled
+          >${Object.keys(ORDER_STATUS).map(key => {
+            const status = ORDER_STATUS[key]
+            return html` <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option> `
+          })}</select
+          >
+
+          <input id="container" type="checkbox" name="container" ?checked="${this._hasContainer}" disabled />
+          <label for="container">${i18next.t('label.container')}</label>
+
+          <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" disabled />
+          <label for="looseItem">${i18next.t('label.loose_item')}</label>
+
           <input id="importCargo" type="checkbox" name="importCargo" ?checked="${this._importCargo}" disabled />
           <label>${i18next.t('label.import_cargo')}</label>
 
           <input id="ownTransport" type="checkbox" name="ownTransport" ?checked="${this._ownTransport}" disabled />
           <label>${i18next.t('label.own_transport')}</label>
-
-          <label ?hidden="${this._importCargo || !this._ownTransport}">${i18next.t('label.truck_no')}</label>
-          <input ?hidden="${this._importCargo || !this._ownTransport}" name="truckNo" readonly />
         </fieldset>
-
-        <label>${i18next.t('label.status')}</label>
-        <select name="status" disabled
-          >${Object.keys(ORDER_STATUS).map(key => {
-            const status = ORDER_STATUS[key]
-            return html` <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option> `
-          })}</select
-        >
       </fieldset>
 
 
@@ -412,6 +426,9 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
               totalWeight
               palletQty
             }
+            jobSheet {
+              containerSize
+            }
             orderVass {
               vas {
                 name
@@ -446,10 +463,14 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
       const orderVass = arrivalNotice.orderVass
       this.orderBizplace = arrivalNotice.bizplace
 
+      this._hasContainer = arrivalNotice.containerNo ? true : false
       this._ownTransport = arrivalNotice.ownTransport
       this._importCargo = arrivalNotice.importCargo
       this._status = arrivalNotice.status
-      this._fillupANForm(arrivalNotice)
+      this._fillupANForm({
+        ...arrivalNotice,
+        ...arrivalNotice.jobSheet
+      })
 
       this.productData = { records: orderProducts }
       this.vasData = {

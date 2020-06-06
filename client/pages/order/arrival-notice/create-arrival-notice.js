@@ -1,3 +1,4 @@
+import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -22,6 +23,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       _ownTransport: Boolean,
       _hasContainer: Boolean,
       _looseItem: Boolean,
+      containerSizes: Array,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -107,11 +109,16 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
           <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" />
 
-          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_size')}</label>
-          <input ?hidden="${!this._hasContainer}" type="text" name="containerSize" />
-
-          <label ?hidden="${!this._hasContainer}">${i18next.t('label.advise_mt_date')}</label>
-          <input ?hidden="${!this._hasContainer}" type="date" min="${this._getStdDate()}" name="adviseMtDate" />
+          <label>${i18next.t('label.container_size')}</label>
+          <select name="containerSize">
+            <option value="">--${i18next.t('label.please_select_a_container_size')}--</option>
+            ${(this.containerSizes || []).map(
+              containerSize =>
+                html`
+                  <option value="${containerSize && containerSize.name}">${containerSize && containerSize.name}</option>
+                `
+            )}
+          </select>
 
           <input
             id="container"
@@ -183,6 +190,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     super()
     this.productData = { records: [] }
     this.vasData = { records: [] }
+    this.containerSizes = []
     this._importedOrder = false
     this._hasContainer = false
     this._ownTransport = true
@@ -205,19 +213,13 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('input[name=containerNo]')
   }
 
-  get containerSize() {
-    return this.shadowRoot.querySelector('input[name=containerSize]')
-  }
-
-  get adviseMtDate() {
-    return this.shadowRoot.querySelector('input[name=adviseMtDate]')
-  }
-
   get vasGrist() {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    this.containerSizes = await getCodeByName('CONTAINER_SIZES')
+
     this.productGristConfig = {
       pagination: { infinite: true },
       list: { fields: ['batch_no', 'product', 'packingType', 'totalWeight'] },
@@ -527,10 +529,6 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
     if (this._hasContainer) {
       if (!this.containerNo.value) throw new Error(i18next.t('text.container_no_is_empty'))
-
-      if (!this.containerSize.value) throw new Error(i18next.t('text.container_size_is_empty'))
-
-      if (!this.adviseMtDate.value) throw new Error(i18next.t('text.advise_mt_date_is_empty'))
     }
   }
 

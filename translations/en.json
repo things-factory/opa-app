@@ -991,6 +991,7 @@
   "text.select_location_format": "select location format",
   "vas_order_created": "vas order created",
   "label.location_format": "location format",
+  "label.please_select_a_container_size": "please select a container size",
   "label.by_product": "by product",
   "label.by_batch": "by batch",
   "label.by_pallet": "by pallet",

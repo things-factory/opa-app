@@ -118,11 +118,8 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
           <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
           <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" readonly />
 
-          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_size')}</label>
-          <input ?hidden="${!this._hasContainer}" type="text" name="containerSize" readonly />
-
-          <label ?hidden="${!this._hasContainer}">${i18next.t('label.advise_mt_date')}</label>
-          <input ?hidden="${!this._hasContainer}" type="date" name="adviseMtDate" readonly />
+          <label>${i18next.t('label.container_size')}</label>
+          <input type="text" name="containerSize" readonly />
 
           <label>${i18next.t('label.status')}</label>
           <select name="status" disabled
@@ -416,7 +413,6 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             refNo
             importCargo
             jobSheet {
-              adviseMtDate
               containerSize
             }
             orderProducts {
@@ -514,7 +510,10 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     }
 
     if (!this.isUserBelongsDomain && this._status !== ORDER_STATUS.PENDING.value) {
-      this._actions = [...this._actions, { title: i18next.t('button.duplicate'), action: () => window.open(`duplicate_arrival_notice/${this._ganNo}`) }]
+      this._actions = [
+        ...this._actions,
+        { title: i18next.t('button.duplicate'), action: () => window.open(`duplicate_arrival_notice/${this._ganNo}`) }
+      ]
     }
 
     this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
