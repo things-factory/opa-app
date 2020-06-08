@@ -348,7 +348,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'integer',
           name: 'actualPackQty',
-          header: i18next.t('field.actual_total_pack_qty'),
+          header: i18next.t('field.actual_pack_qty'),
           record: { align: 'center' },
           width: 60
         },
