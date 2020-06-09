@@ -3,11 +3,11 @@ import { SingleColumnFormStyles } from '@things-factory/form-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, CustomAlert } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
+import { openPopup } from '@things-factory/layout-base'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import '../image-viewer'
 import { PACKING_UNITS, PACKING_UNIT_QTY, PACKING_UNIT_WEIGHT } from './constants'
-import './vas-pallet-add-popup'
+import './repack-pallet-scan-popup'
 import { VasTemplate } from './vas-template'
 
 class VasRepack extends localize(i18next)(VasTemplate) {
@@ -40,7 +40,8 @@ class VasRepack extends localize(i18next)(VasTemplate) {
       packingTypes: Array,
       isExecuting: Boolean,
       config: Object,
-      palletData: Object
+      palletData: Object,
+      fromPalletIds: Array
     }
   }
 
@@ -120,15 +121,6 @@ class VasRepack extends localize(i18next)(VasTemplate) {
 
         ${this.isExecuting
           ? html`
-              <form class="single-column-form">
-                <fieldset>
-                  <label>${i18next.t('label.total_qty')}</label>
-                  ${this.record.inventory.qty === 0 && this.record.relatedOrderInv.releaseQty
-                    ? html` <input readonly value="${this.record.relatedOrderInv.releaseQty}" /> `
-                    : html` <input readonly value="${this.record.inventory.qty}" /> `}
-                </fieldset>
-              </form>
-
               <form
                 id="input-form"
                 class="single-column-form"
@@ -138,14 +130,14 @@ class VasRepack extends localize(i18next)(VasTemplate) {
                 }}"
               >
                 <fieldset>
+                  <label>${i18next.t('label.from_pallet')}</label>
+                  <barcode-scanable-input name="from-pallet-id" custom-input></barcode-scanable-input>
+
                   <label>${i18next.t('label.pallet')}</label>
                   <barcode-scanable-input name="pallet-id" custom-input></barcode-scanable-input>
 
                   <label>${i18next.t('label.location')}</label>
                   <barcode-scanable-input name="location-name" custom-input></barcode-scanable-input>
-
-                  <label>${i18next.t('label.package_qty')}</label>
-                  <input name="package-qty" type="number" min="1" required />
                 </fieldset>
               </form>
 
@@ -208,6 +200,12 @@ class VasRepack extends localize(i18next)(VasTemplate) {
     }
   }
 
+  get fromPalletIdInput() {
+    return this.shadowRoot
+      .querySelector('barcode-scanable-input[name=from-pallet-id]')
+      .shadowRoot.querySelector('input')
+  }
+
   get palletIdInput() {
     return this.shadowRoot.querySelector('barcode-scanable-input[name=pallet-id]').shadowRoot.querySelector('input')
   }
@@ -233,7 +231,16 @@ class VasRepack extends localize(i18next)(VasTemplate) {
     await this._fetchPackingTypes()
   }
 
+  updated(changedProps) {
+    if (changedProps.has('fromPalletIds')) {
+      if (this.fromPalletIds?.length) {
+        this.fromPalletIdInput.value = this.fromPalletIds.join(', ')
+      }
+    }
+  }
+
   _initExecutingConfig() {
+    this.fromPalletIdInput.addEventListener('change', this._checkFromPalletValidity.bind(this))
     this.locationInput.addEventListener('change', this._checkLocationValidity.bind(this))
     this.config = {
       rows: { appendable: false },
@@ -281,6 +288,57 @@ class VasRepack extends localize(i18next)(VasTemplate) {
           width: 60
         }
       ]
+    }
+  }
+
+  async _checkFromPalletValidity() {
+    try {
+      const fromPalletId = this.fromPalletIdInput.value
+      if (!fromPalletId) return
+
+      const response = await client.query({
+        query: gql`
+          query {
+            checkRepackablePallet(${gqlBuilder.buildArgs({
+              worksheetDetailName: this.record.name,
+              palletId: fromPalletId
+            })}) {
+              qty
+              weight
+            }
+          }
+        `
+      })
+
+      if (!response.errors) {
+        const { qty, weight } = response.data.checkRepackablePallet
+        if (qty <= 0 || weight <= 0) throw new Error(i18next.t('text.no_more_product_on_pallet'))
+
+        const packingUnit = this._getOperationGuideData('packingUnit')
+        const stdAmount = this._getOperationGuideData('stdAmount')
+        const scannedPallet = {
+          palletId: fromPalletId,
+          qty,
+          weight
+        }
+        if (packingUnit === PACKING_UNIT_QTY.value) {
+          if (qty < stdAmount) {
+            this._showPalletScanPopup(packingUnit, stdAmount, scannedPallet)
+          }
+        } else if (packingUnit === PACKING_UNIT_WEIGHT.value) {
+          if (weight < stdAmount) {
+            this._showPalletScanPopup(packingUnit, stdAmount, scannedPallet)
+          }
+        } else {
+          this.fromPalletIds = []
+        }
+      } else {
+        throw new Error(response.errors[0].message)
+      }
+    } catch (e) {
+      this.fromPalletIdInput.value = ''
+      this.fromPalletIdInput.focus()
+      this._showToast(e)
     }
   }
 
@@ -337,14 +395,30 @@ class VasRepack extends localize(i18next)(VasTemplate) {
     await this.updateComplete
     if (this.isExecuting) {
       this.inputForm.reset()
+      this.fromPalletIdInput.value = ''
       this.palletIdInput.value = ''
       this.locationInput.value = ''
-      this.palletIdInput.focus()
-
-      this.palletData = {
-        records: this.record.operationGuide.data.repackedInvs
-      }
+      this.fromPalletIdInput.focus()
+      this.palletData = { records: this._formatPalletData(this.record.operationGuide.data.repackedInvs) }
+      this.fromPalletIds = []
     }
+  }
+
+  _formatPalletData(repakcedInvs) {
+    return (repakcedInvs || []).reduce((result, repackedInv) => {
+      if (result.find(item => item.palletId === repackedInv.palletId)) {
+        result = result.map(item => {
+          return {
+            ...item,
+            qty: item.repackedPkgQty + repackedInv.repackedPkgQty
+          }
+        })
+      } else {
+        result.push(repackedInv)
+      }
+
+      return result
+    }, [])
   }
 
   _onPackingUnitChange() {
@@ -396,14 +470,15 @@ class VasRepack extends localize(i18next)(VasTemplate) {
   async repack() {
     try {
       this._checkRepackable()
+      let fromPalletIds = this.fromPalletIds?.length ? this.fromPalletIds : [this.fromPalletIdInput.value]
       await client.query({
         query: gql`
           mutation {
             repackaging(${gqlBuilder.buildArgs({
               worksheetDetailName: this.record.name,
+              fromPalletIds,
               palletId: this.palletIdInput.value,
-              locationName: this.locationInput.value,
-              packageQty: parseInt(this.packageQtyInput.value)
+              locationName: this.locationInput.value
             })})
           }
         `
@@ -436,25 +511,54 @@ class VasRepack extends localize(i18next)(VasTemplate) {
   }
 
   _checkRepackable() {
+    if (!this.fromPalletIdInput.value) {
+      this.fromPalletIdInput.select()
+      throw new Error(i18next.t('text.from_pallet_id_is_emplty'))
+    }
+
     if (!this.palletIdInput.value) {
       this.palletIdInput.select()
       throw new Error(i18next.t('text.pallet_id_is_empty'))
     }
 
     if (!this.locationInput.value) {
-      this.locationInput.select()
-      throw new Error(i18next.t('text.location_code_is_empty'))
+      // location에 값이 없을 경우 기존에 추가된 팔렛에 현재 추가하려는 팔렛이 있는지 확인하고
+      // 만약 있다면 기존 로케이션을 유지하는 것으로 간주하여 valid
+      // 없다면 로케이션을 필수로 입력해야 하기 때문에 invalid
+      if (
+        this.palletData?.records &&
+        this.palletData.records.find(record => record.palletId === this.palletIdInput.value)
+      ) {
+        const samePalletRecord = this.palletData.records.find(record => record.palletId === this.palletIdInput.value)
+        this.locationInput.value = samePalletRecord.locationName
+      } else {
+        this.locationInput.select()
+        throw new Error(i18next.t('text.location_code_is_empty'))
+      }
     }
+  }
 
-    const packageQty = Number(this.packageQtyInput.value)
-
-    if (!packageQty || packageQty <= 0) {
-      this.packageQtyInput.select()
-      throw new Error(i18next.t('text.package_qty_should_be_positive'))
-    }
-
-    const requiredPackageQty = this._getOperationGuideData('requiredPackageQty')
-    if (packageQty > requiredPackageQty) throw new Error(i18next.t('text.package_qty_is_exceed_required_package_qty'))
+  _showPalletScanPopup(packingUnit, requiredAmount, scannedPallet) {
+    const palletData = { records: [scannedPallet] }
+    openPopup(
+      html`
+        <repack-pallet-scan-popup
+          .palletData="${palletData}"
+          .worksheetDetailName="${this.record.name}"
+          .packingUnit="${packingUnit}"
+          .requiredAmount="${requiredAmount}"
+          @completed="${e => {
+            this.fromPalletIds = e.detail.fromPalletIds
+            this.repack()
+          }}"
+        ></repack-pallet-scan-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'small',
+        title: i18next.t('title.scan_pallet')
+      }
+    )
   }
 
   _showToast({ type, message }) {
