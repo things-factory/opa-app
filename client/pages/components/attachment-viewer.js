@@ -63,13 +63,6 @@ class AttachmentViewer extends localize(i18next)(LitElement) {
       <div class="card">
         <div class="container">
           ${this.name ? html` <h3>${this.name}</h3> ` : ''}
-          ${this.mimetype === 'image/png' || this.mimetype === 'image/jpeg'
-            ? html`
-                <div class="img-container">
-                  <img src="${this._fullPath}" />
-                </div>
-              `
-            : ''}
         </div>
 
         ${this.downloadable
