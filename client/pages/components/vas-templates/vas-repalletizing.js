@@ -69,7 +69,7 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
               `
             : ''}
 
-          <label for="std-qty-input">${i18next.t('label.std_qty')}</label>
+          <label for="std-qty-input">${i18next.t('label.std_qty_in_single_pallet')}</label>
           <input
             id="std-qty-input"
             name="stdQty"
