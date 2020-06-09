@@ -49,6 +49,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
           flex: 1;
           display: flex;
           overflow-y: auto;
+          min-height: 50vh;
         }
         .picking-std-container {
           margin-top: 0px;
