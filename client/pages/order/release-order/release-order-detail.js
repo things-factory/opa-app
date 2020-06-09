@@ -143,7 +143,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         </form>
       </div>
 
-      <div class="do-attachment-container" ?hidden="${!this._ownTransport}">
+      <div class="do-attachment-container">
         <form name="doAttachment" class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.attachment')}</legend>
