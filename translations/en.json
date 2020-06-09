@@ -555,6 +555,7 @@
   "release_order_updated": "release order updated",
   "release_orders_requests": "release orders requests",
   "text.there_is_no_product": "there is no product selected",
+  "text.there_is_no_inventory": "there is no inventory",
   "text.accept_release_order": "accept release order",
   "text.inspected_qty_is_empty": "inspected qty is empty",
   "text.inspected_weight_is_empty": "inspected weight is empty",
