@@ -36,7 +36,7 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
       MultiColumnFormStyles,
       css`
         :host {
-          overflow: hidden;
+          overflow: auto;
           display: flex;
           flex-direction: column;
         }
