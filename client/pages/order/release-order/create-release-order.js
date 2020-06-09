@@ -118,7 +118,6 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             id="uploadDocument"
             label="${i18next.t('label.select_file')}"
             accept="*"
-            ?hidden="${!this._ownTransport || this._exportOption}"
             multiple="true"
             custom-input
           ></file-uploader>
