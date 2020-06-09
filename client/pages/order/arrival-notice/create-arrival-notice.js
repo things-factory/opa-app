@@ -44,6 +44,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           flex: 1;
           display: flex;
           overflow: hidden;
+          min-height: 50vh;
         }
         .grist {
           background-color: var(--main-section-background-color);
