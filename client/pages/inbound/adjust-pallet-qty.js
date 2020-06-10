@@ -2,6 +2,8 @@ import { SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { css, html, LitElement } from 'lit-element'
+import { openPopup } from '@things-factory/layout-base'
+import './vas-selector'
 
 class AdjustPalletQty extends localize(i18next)(LitElement) {
   static get properties() {
@@ -90,6 +92,9 @@ class AdjustPalletQty extends localize(i18next)(LitElement) {
             required
           />
 
+          <label>${i18next.t('label.repalletizing_vas')}</label>
+          <input name="vasSelector" readonly @click="${this._openVasSelector.bind(this)}" />
+
           <label>${i18next.t('label.comment')}</label>
           <input
             name="description"
@@ -110,6 +115,10 @@ class AdjustPalletQty extends localize(i18next)(LitElement) {
     return this.shadowRoot.querySelector('form')
   }
 
+  get _vasSelector() {
+    return this.shadowRoot.querySelector('input[name=vasSelector]')
+  }
+
   get _palletQtyInput() {
     return this.shadowRoot.querySelector('input[name=palletQty]')
   }
@@ -126,12 +135,31 @@ class AdjustPalletQty extends localize(i18next)(LitElement) {
     setTimeout(() => this._palletQtyInput.select(), 100)
   }
 
+  _openVasSelector() {
+    openPopup(
+      html`
+        <vas-selector
+          @selected="${e => {
+            this._vasSelector.value = `${e.detail.name} ${e.detail.description ? `(${e.detail.description})` : ''}`
+            this._vasSelector.palletizingVasId = e.detail.id
+          }}"
+        ></vas-selector>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.select_warehouse')
+      }
+    )
+  }
+
   _adjustPalletQty() {
     try {
       this._validate()
       this.dispatchEvent(
         new CustomEvent('pallet-adjusted', {
           detail: {
+            palletizingVasId: this._vasSelector.palletizingVasId,
             palletQty: parseInt(this._palletQtyInput.value),
             palletizingDescription: this._descriptionInput.value
           }
@@ -146,6 +174,7 @@ class AdjustPalletQty extends localize(i18next)(LitElement) {
 
   _validate() {
     if (!this._form.checkValidity()) throw new Error(i18next.t('text.invalid_form'))
+    if (!this._vasSelector.palletizingVasId) throw new Error(i18next.t('text.vas_is_not_selected'))
   }
 
   _showToast({ type, message }) {

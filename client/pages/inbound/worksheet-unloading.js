@@ -436,6 +436,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
               ...this.data,
               records: this.data.records.map(item => {
                 if (item.name === record.name) {
+                  item.palletizingVasId = e.detail.palletizingVasId
                   item.palletQty = e.detail.palletQty
                   item.palletizingDescription = e.detail.palletizingDescription
                 }
@@ -514,6 +515,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       }
 
       if (!worksheetDetail.isPalletized) {
+        _tempObj.palletizingVasId = worksheetDetail.palletizingVasId
         _tempObj.palletQty = worksheetDetail.palletQty
         _tempObj.palletizingDescription = worksheetDetail.palletizingDescription
       }

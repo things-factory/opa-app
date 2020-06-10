@@ -107,10 +107,24 @@ class VasWorksheetList extends localize(i18next)(PageView) {
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               if (!record.id) return
-              const type = record.type
-              // Handle VAS
-              if (type === WORKSHEET_TYPE.VAS.value) {
+              const refOrderType = record.arrivalNotice?.name
+                ? ORDER_TYPES.ARRIVAL_NOTICE.value
+                : record.releaseGood?.name
+                ? ORDER_TYPES.RELEASE_OF_GOODS
+                : record.vasOrder?.name
+                ? ORDER_TYPES.VAS_ORDER.value
+                : null
+
+              if (!refOrderType) return
+
+              // Route to worksheet vas if it's pure VAS
+              // worksheet-vas component has flow for activating and inventory assignment
+              if (refOrderType === ORDER_TYPES.VAS_ORDER.value) {
                 navigate(`worksheet_vas/${record.name}`)
+              } else {
+                // Route to worksheet ref vas if it's not pure VAS
+                // worksheet ref vas component doesn't have flow for activating and inventory assignment
+                navigate(`worksheet_ref_vas/${record.name}`)
               }
             }
           }
