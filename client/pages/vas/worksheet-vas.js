@@ -5,16 +5,8 @@ import '@things-factory/grist-ui'
 import { getRenderer } from '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import {
-  client,
-  CustomAlert,
-  gqlBuilder,
-  isMobileDevice,
-  navigate,
-  PageView,
-  store,
-  UPDATE_CONTEXT
-} from '@things-factory/shell'
+import { client, CustomAlert, gqlBuilder, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../components/popup-note'
@@ -124,18 +116,8 @@ class WorksheetVas extends localize(i18next)(PageView) {
         <form class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.vas')}</legend>
-            <label ?hidden="${this._orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}"
-              >${i18next.t('label.arrival_notice')}</label
-            >
-            <input ?hidden="${this._orderType !== ORDER_TYPES.ARRIVAL_NOTICE.value}" name="arrivalNotice" readonly />
-
-            <label ?hidden="${this._orderType !== ORDER_TYPES.RELEASE_OF_GOODS.value}"
-              >${i18next.t('label.release_order')}</label
-            >
-            <input ?hidden="${this._orderType !== ORDER_TYPES.RELEASE_OF_GOODS.value}" name="releaseGood" readonly />
-
-            <label ?hidden="${this._orderType !== ORDER_TYPES.VAS_ORDER.value}">${i18next.t('label.vas_order')}</label>
-            <input ?hidden="${this._orderType !== ORDER_TYPES.VAS_ORDER.value}" name="vasOrder" readonly />
+            <label>${i18next.t('label.vas_order')}</label>
+            <input name="vasOrder" readonly />
 
             <label>${i18next.t('label.customer')}</label>
             <input name="bizplace" readonly />
@@ -145,7 +127,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
           </fieldset>
         </form>
 
-        <barcode-tag bcid="qrcode" .value=${this._orderNo}></barcode-tag>
+        <barcode-tag bcid="qrcode" .value=${this._voNo}></barcode-tag>
       </div>
 
       <div class="container">
@@ -188,8 +170,6 @@ class WorksheetVas extends localize(i18next)(PageView) {
   constructor() {
     super()
     this._statusOptions = []
-    this._ganNo = ''
-    this._roNo = ''
     this._voNo = ''
   }
 
@@ -412,24 +392,6 @@ class WorksheetVas extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist#assigned-grist')
   }
 
-  get _orderNo() {
-    let orderNo
-    switch (this._orderType) {
-      case ORDER_TYPES.ARRIVAL_NOTICE.value:
-        orderNo = this._ganNo
-        break
-
-      case ORDER_TYPES.RELEASE_OF_GOODS.value:
-        orderNo = this._roNo
-        break
-      case ORDER_TYPES.VAS_ORDER.value:
-        orderNo = this._voNo
-        break
-    }
-
-    return orderNo
-  }
-
   async fetchWorksheet() {
     if (!this._worksheetNo) return
     const response = await client.query({
@@ -441,17 +403,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
             id
             name
             status
-            arrivalNotice {
-              id
-              name
-              description
-            }
             vasOrder {
-              id
-              name
-              description
-            }
-            releaseGood {
               id
               name
               description
@@ -510,20 +462,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
       const worksheetDetails = worksheet.worksheetDetails
 
       this._worksheetStatus = worksheet.status
-      this._ganNo = (worksheet.arrivalNotice && worksheet.arrivalNotice.name) || ''
-      this._voNo = (worksheet.vasOrder && worksheet.vasOrder.name) || ''
-      this._roNo = (worksheet.releaseGood && worksheet.releaseGood.name) || ''
-
-      this._orderType = worksheet.arrivalNotice
-        ? ORDER_TYPES.ARRIVAL_NOTICE.value
-        : worksheet.releaseGood
-        ? ORDER_TYPES.RELEASE_OF_GOODS.value
-        : worksheet.vasOrder
-        ? ORDER_TYPES.VAS_ORDER.value
-        : null
-
-      if (!this._orderType) return
-
+      this._voNo = worksheet.vasOrder.name
       this._fillupForm(worksheet)
       const { nonAssignedVasSet, assignedData } = this._formatData(worksheetDetails)
       this.nonAssignedVasSet = {
@@ -682,7 +621,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
       openPopup(
         html`
           <target-inventory-assignment-popup
-            .orderType="${this._orderType}"
+            .orderType="${ORDER_TYPES.VAS_ORDER.value}"
             .targetType="${record.targetType}"
             .targetBatchId="${record.targetBatchId}"
             .targetProduct="${record.targetProduct}"
