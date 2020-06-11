@@ -326,9 +326,14 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
           pickQty = leftQty > item.qty ? item.qty : leftQty
           pickWeight = leftWeight > item.weight ? item.weight : leftWeight
 
+          // rounding off the pickWeight will update the *Pick Weight* column on grist
+          pickWeight = Math.round(pickWeight * 100) / 100
           this.pickQty += pickQty
           this.pickWeight += pickWeight
         }
+        
+        // need to round off so that it will bypass the validation upon submission
+        this.pickWeight = Math.round(this.pickWeight * 100) / 100
 
         return {
           ...item,
