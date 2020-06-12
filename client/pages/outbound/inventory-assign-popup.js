@@ -359,9 +359,14 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
       if (columnName === 'pickQty') {
         this.data = {
           records: this.grist.dirtyData.records.map(data => {
-            const pickQty = data.pickQty
+            let pickQty = data.pickQty
             let pickWeight = (data.weight / data.qty) * data.pickQty
             pickWeight = Math.round(pickWeight * 100) / 100
+
+            if (pickQty > data.qty) {
+              pickQty = data.qty
+              pickWeight = data.weight
+            }
 
             totalPickQty += pickQty
             totalPickWeight += pickWeight
@@ -377,12 +382,17 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
       } else if (columnName === 'pickWeight') {
         this.data = {
           records: this.grist.dirtyData.records.map(data => {
-            const pickQty = Math.round((data.qty * data.pickWeight) / data.weight)
-            const pickWeight = data.pickWeight
+            let pickQty = Math.round((data.qty * data.pickWeight) / data.weight)
+            let pickWeight = data.pickWeight
+
+            if (pickWeight > data.weight) {
+              pickQty = data.qty
+              pickWeight = data.weight
+            }
 
             totalPickQty += pickQty
             totalPickWeight += pickWeight
-
+            
             return {
               ...data,
               pickQty: Math.round((data.qty * data.pickWeight) / data.weight),
@@ -395,7 +405,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
 
       await this.grist.updateComplete
       this.pickQty = totalPickQty
-      this.pickWeight = totalPickWeight
+      this.pickWeight = Math.round(totalPickWeight * 100) / 100
     }
   }
 
