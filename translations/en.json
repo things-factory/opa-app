@@ -212,6 +212,8 @@
   "field.receipt_reference_no": "receipt reference no",
   "field.receive_date": "receive date",
   "field.ref_no": "ref no",
+  "field.opening_qty": "opening qty",
+  "field.opening_weight": "opening weight",
   "field.order_type": "order type",
   "field.registration_number": "registration number",
   "field.reject_date": "reject date",
