@@ -363,7 +363,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
             let pickWeight = (data.weight / data.qty) * data.pickQty
             pickWeight = Math.round(pickWeight * 100) / 100
 
-            if (pickQty > data.qty) {
+            if (pickQty > data.qty || Number.isNaN(pickQty)) {
               pickQty = data.qty
               pickWeight = data.weight
             }
@@ -385,7 +385,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
             let pickQty = Math.round((data.qty * data.pickWeight) / data.weight)
             let pickWeight = data.pickWeight
 
-            if (pickWeight > data.weight) {
+            if (pickWeight > data.weight || Number.isNaN(pickWeight)) {
               pickQty = data.qty
               pickWeight = data.weight
             }
