@@ -90,6 +90,7 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
               value: bizplaceList.id
             }
           })
+          .sort(this._compareValues('name', 'asc'))
         ],
         props: { searchOper: 'eq' }
       },
@@ -291,6 +292,25 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
     }
   }
 
+  _compareValues(key, order = 'asc') {
+    return function innerSort(a, b) {
+      if (!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
+        return 0
+      }
+
+      const varA = typeof a[key] === 'string' ? a[key].toUpperCase() : a[key]
+      const varB = typeof b[key] === 'string' ? b[key].toUpperCase() : b[key]
+
+      let comparison = 0
+      if (varA > varB) {
+        comparison = 1
+      } else if (varA < varB) {
+        comparison = -1
+      }
+      return order === 'desc' ? comparison * -1 : comparison
+    }
+  }
+
   _validate() {
     if (!this.searchForm.shadowRoot.querySelector('form').checkValidity())
       throw new Error(i18next.t('text.invalid_form_value'))
@@ -355,7 +375,7 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
             bal = bal + parseInt(data.in_balance) - parseInt(data.out_balance)
             record = {
               ...record,
-              [data.created_at]: 'In: ' + data.in_balance + '| Out: ' + data.out_balance + '| Bal :' + bal
+              [data.created_at]: 'In: ' + data.in_balance + ' | Out: ' + data.out_balance + ' | Bal: ' + bal
             }
           })
         }
