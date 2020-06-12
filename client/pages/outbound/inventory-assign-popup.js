@@ -395,8 +395,8 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
             
             return {
               ...data,
-              pickQty: Math.round((data.qty * data.pickWeight) / data.weight),
-              pickWeight: data.pickWeight,
+              pickQty: Math.round((pickQty * data.weight) / data.weight),
+              pickWeight,
               picked: Boolean(data.pickWeight)
             }
           })
