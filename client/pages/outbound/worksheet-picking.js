@@ -463,6 +463,10 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 result.compQty += compOrdInv.releaseQty
                 result.compWeight += compOrdInv.releaseWeight
               }
+
+              // need to round off the completed weight to bypass the validation
+              result.compWeight = Math.round(result.compWeight * 100) / 100
+
               return result
             },
             { compQty: 0, compWeight: 0 }
