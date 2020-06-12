@@ -8,5 +8,9 @@ export const PICKING_STRATEGY = [
   {
     name: i18next.t('label.lifo'),
     value: 'LIFO'
+  },
+  {
+    name: i18next.t('label.location'),
+    value: 'LOCATION'
   }
 ]

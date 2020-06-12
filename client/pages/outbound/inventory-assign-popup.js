@@ -7,6 +7,7 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import { ORDER_TYPES } from '../order/constants'
+import { fetchLocationSortingRule } from '../../fetch-location-sorting-rule'
 import { PICKING_STRATEGY } from './constants'
 
 class InventoryAssignPopup extends localize(i18next)(LitElement) {
@@ -142,6 +143,8 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
   }
 
   async firstUpdated() {
+    this.locationSortingRules = await fetchLocationSortingRule()
+
     this.config = {
       list: { fields: ['palletId', 'product', 'location', 'qty'] },
       pagination: { infinite: true },
@@ -268,7 +271,8 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
             bizplaceId: this.bizplaceId,
             productName: this.productName,
             packingType: this.packingType,
-            pickingStrategy: this.selectedStrategy
+            pickingStrategy: this.selectedStrategy,
+            locationSortingRules: this.locationSortingRules
           })}) {
             items {
               id
