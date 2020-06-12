@@ -418,6 +418,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
               name
               description
               issue
+              seq
               targetVas {
                 operationGuide
                 inventory {
@@ -459,7 +460,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const worksheet = response.data.worksheet
-      const worksheetDetails = worksheet.worksheetDetails
+      const worksheetDetails = worksheet.worksheetDetails.sort((a, b) => a.seq - b.seq)
 
       this._worksheetStatus = worksheet.status
       this._voNo = worksheet.vasOrder.name

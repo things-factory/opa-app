@@ -130,9 +130,6 @@ class VasRepack extends localize(i18next)(VasTemplate) {
                 }}"
               >
                 <fieldset>
-                  <label>${i18next.t('label.from_pallet')}</label>
-                  <barcode-scanable-input name="from-pallet-id" custom-input></barcode-scanable-input>
-
                   <label>${i18next.t('label.pallet')}</label>
                   <barcode-scanable-input name="pallet-id" custom-input></barcode-scanable-input>
 

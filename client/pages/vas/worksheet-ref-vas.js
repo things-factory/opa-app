@@ -27,7 +27,9 @@ class WorksheetRefVas extends localize(i18next)(PageView) {
       // 작업 세트를 출력하기 위한 Grist의 설정
       taskGristConfig: Object,
       // 작업 세트 데이터
-      taskData: Object
+      taskData: Object,
+      // Template Element
+      _template: Object
     }
   }
 
@@ -100,7 +102,7 @@ class WorksheetRefVas extends localize(i18next)(PageView) {
   get context() {
     return {
       title: i18next.t('title.worksheet_vas'),
-      actions: this._actions,
+      actions: [{ title: i18next.t('button.back'), action: () => history.back() }],
       printable: {
         accept: ['preview'],
         content: this
@@ -164,7 +166,7 @@ class WorksheetRefVas extends localize(i18next)(PageView) {
 
   pageInitialized() {
     this.taskGristConfig = {
-      rows: { appendable: false },
+      rows: { appendable: false, handlers: { click: this.taskGristClickHandler.bind(this) } },
       list: { fields: ['set', 'vas', 'status'] },
       pagination: { infinite: true },
       columns: [
@@ -226,6 +228,18 @@ class WorksheetRefVas extends localize(i18next)(PageView) {
           name: 'remark',
           header: i18next.t('field.remark'),
           width: 250
+        },
+        {
+          type: 'string',
+          name: 'description',
+          header: i18next.t('field.comment'),
+          width: 250
+        },
+        {
+          type: 'string',
+          name: 'issue',
+          header: i18next.t('field.issue'),
+          width: 250
         }
       ]
     }
@@ -276,10 +290,14 @@ class WorksheetRefVas extends localize(i18next)(PageView) {
                 vas {
                   name
                   description
+                  operationGuide
                 }
                 status
                 remark
+                operationGuide
               }
+              description
+              issue
             }
           }
         }
@@ -315,7 +333,32 @@ class WorksheetRefVas extends localize(i18next)(PageView) {
   }
 
   formatTaskData() {
-    return { records: this.worksheet.worksheetDetails.map(wsd => wsd.targetVas) }
+    return {
+      records: this.worksheet.worksheetDetails.map(wsd => {
+        return { ...wsd.targetVas, description: wsd.description, issue: wsd.issue }
+      })
+    }
+  }
+
+  taskGristClickHandler(columns, data, column, record, rowIndex) {
+    if (record.operationGuide && record.vas.operationGuide) {
+      this._template = document.createElement(record.vas.operationGuide)
+      this._template.record = { ...record, operationGuide: JSON.parse(record.operationGuide) }
+    } else {
+      this._template = null
+    }
+
+    if (column.name === 'issue' && record.issue) {
+      this._showIssueNotePopup(record)
+    }
+  }
+
+  _showIssueNotePopup(record) {
+    openPopup(html` <popup-note title="${record.batchId}" value="${record.issue}" .readonly="${true}"></popup-note> `, {
+      backdrop: true,
+      size: 'medium',
+      title: i18next.t('title.issue_note')
+    })
   }
 
   _showToast({ type, message }) {
