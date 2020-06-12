@@ -7,7 +7,7 @@ import { connect } from 'pwa-helpers/connect-mixin'
 import { localize, i18next } from '@things-factory/i18n-base'
 import gql from 'graphql-tag'
 
-class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) {
+class InventoryPalletStorageReport extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
     return css`
       :host {
@@ -33,7 +33,7 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
 
   get context() {
     return {
-      title: i18next.t('title.inventory_pallet_report'),
+      title: i18next.t('title.inventory_pallet_storage_report'),
       printable: {
         accept: ['preview'],
         content: this
@@ -297,4 +297,4 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
   }
 }
 
-window.customElements.define('inventory-pallet-report', InventoryPalletReport)
+window.customElements.define('inventory-pallet-storage-report', InventoryPalletStorageReport)

@@ -341,6 +341,9 @@ export default function route(page) {
     case 'inventory_pallet_report':
       import('./pages/report/inventory-pallet-report')
       return page
+    case 'inventory_pallet_storage_report':
+      import('./pages/report/inventory-pallet-storage-report')
+      return page
     case 'inventory_pallet_detail_report':
       import('./pages/report/inventory-pallet-detail-report')
       return page

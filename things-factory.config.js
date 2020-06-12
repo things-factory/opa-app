@@ -358,6 +358,10 @@ export default {
       page: 'inventory_pallet_report'
     },
     {
+      tagname: 'inventory-pallet-storage-report',
+      page: 'inventory_pallet_storage_report'
+    },
+    {
       tagname: 'inventory-pallet-detail-report',
       page: 'inventory_pallet_detail_report'
     },
