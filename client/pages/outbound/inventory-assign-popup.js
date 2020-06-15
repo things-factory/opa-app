@@ -366,6 +366,9 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
             if (pickQty > data.qty || Number.isNaN(pickQty)) {
               pickQty = data.qty
               pickWeight = data.weight
+            } else if (pickQty < 0) {
+              pickQty = 0
+              pickWeight = 0
             }
 
             totalPickQty += pickQty
@@ -388,6 +391,9 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
             if (pickWeight > data.weight || Number.isNaN(pickWeight)) {
               pickQty = data.qty
               pickWeight = data.weight
+            } else if (pickWeight < 0) {
+              pickQty = 0
+              pickWeight = 0
             }
 
             totalPickQty += pickQty

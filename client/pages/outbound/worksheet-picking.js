@@ -562,7 +562,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             ...item.targetInventory,
             ...item.targetInventory.inventory,
             ...item.targetInventory.inventory.location,
-            description: item.description
+            description: item.description,
+            availableQty: item.targetInventory.inventory.qty - item.targetInventory.inventory.lockedQty + item.targetInventory.releaseQty
           }
         }),
         total: response.data.worksheetDetailsByProductGroup.total
