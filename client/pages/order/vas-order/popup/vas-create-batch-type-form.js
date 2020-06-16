@@ -1,23 +1,8 @@
-import { LitElement, html } from 'lit-element'
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import { i18next } from '@things-factory/i18n-base'
+import { html } from 'lit-element'
+import { AbstractVasCreateForm, VAS_BATCH_NO_TYPE } from './abastract-vas-create-form'
 
-export class VasCreateBatchTypeForm extends LitElement {
-  static get properties() {
-    return {
-      selectedBatchId: Object,
-      selectedPackingType: String,
-      targetList: Array,
-      targetBatchList: Array,
-      packingTypeList: Array,
-      record: Object
-    }
-  }
-
-  static get styles() {
-    return [MultiColumnFormStyles]
-  }
-
+export class VasCreateBatchTypeForm extends AbstractVasCreateForm {
   render() {
     return html`
       <form
@@ -86,22 +71,6 @@ export class VasCreateBatchTypeForm extends LitElement {
     }
   }
 
-  get form() {
-    return this.shadowRoot.querySelector('form')
-  }
-
-  get packingTypeSelector() {
-    return this.shadowRoot.querySelector('select#packing-type-selector')
-  }
-
-  get qtyInput() {
-    return this.shadowRoot.querySelector('input#qty-input')
-  }
-
-  get targetBatchList() {
-    return this.targetList.map(target => target.batchId).filter((batchId, idx, arr) => arr.indexOf(batchId) == idx)
-  }
-
   get packingTypeList() {
     if (this.selectedBatchId) {
       return this.targetList
@@ -113,30 +82,35 @@ export class VasCreateBatchTypeForm extends LitElement {
     }
   }
 
-  get targetDisplay() {
-    return this.selectedBatchId
-  }
-
   get target() {
     return this.selectedBatchId
   }
 
-  get qty() {
-    return this.qtyInput.value
+  get targetDisplay() {
+    return this.selectedBatchId
   }
 
   get maximumQty() {
     if (this.selectedBatchId && this.selectedPackingType) {
-      return this.targetList
+      const packQty = this.targetList
         .filter(target => target.batchId === this.selectedBatchId && target.packingType === this.selectedPackingType)
         .reduce((packQty, target) => packQty + target.packQty, 0)
+
+      const choosenQty = this.vasList
+        .map(task => {
+          if (task.targetType === VAS_BATCH_NO_TYPE) {
+            task.target = { batchId: task.target }
+          }
+
+          return task
+        })
+        .filter(task => task.packingType === this.selectedPackingType && task.target.batchId === this.selectedBatchId)
+        .reduce((choosenQty, task) => (choosenQty += task.qty), 0)
+
+      return packQty - choosenQty
     } else {
       return ''
     }
-  }
-
-  checkValidity() {
-    return this.form.checkValidity()
   }
 
   _checkQtyValidity() {
@@ -158,17 +132,6 @@ export class VasCreateBatchTypeForm extends LitElement {
     } catch (e) {
       this._showToast(e)
     }
-  }
-
-  _showToast({ type, message }) {
-    document.dispatchEvent(
-      new CustomEvent('notify', {
-        detail: {
-          type,
-          message
-        }
-      })
-    )
   }
 }
 

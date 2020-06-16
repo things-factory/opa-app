@@ -12,7 +12,13 @@ import { css, html } from 'lit-element'
 import '../components/popup-note'
 import '../components/vas-templates'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
-import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, ORDER_TYPES, PRODUCT_TYPE } from '../order/constants'
+import {
+  VAS_BATCH_AND_PRODUCT_TYPE,
+  VAS_BATCH_NO_TYPE,
+  VAS_ETC_TYPE,
+  ORDER_TYPES,
+  VAS_PRODUCT_TYPE
+} from '../order/constants'
 import './target-inventory-assignment-popup'
 
 class WorksheetRefVas extends localize(i18next)(PageView) {

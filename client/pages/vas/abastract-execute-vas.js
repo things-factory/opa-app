@@ -9,7 +9,13 @@ import { css, html, LitElement } from 'lit-element'
 import '../components/popup-note'
 import '../components/vas-templates'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
-import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, PRODUCT_TYPE, VAS_ORDER } from '../order/constants'
+import {
+  VAS_BATCH_AND_PRODUCT_TYPE,
+  VAS_BATCH_NO_TYPE,
+  VAS_ETC_TYPE,
+  VAS_PRODUCT_TYPE,
+  VAS_ORDER
+} from '../order/constants'
 
 export class AbstractExecuteVas extends LitElement {
   static get styles() {
@@ -141,11 +147,11 @@ export class AbstractExecuteVas extends LitElement {
           header: i18next.t('field.target'),
           record: {
             renderer: (value, column, record, rowIndex, field) => {
-              if (record.targetType === BATCH_NO_TYPE) {
+              if (record.targetType === VAS_BATCH_NO_TYPE) {
                 return getRenderer()(record.targetBatchId, column, record, rowIndex, field)
-              } else if (record.targetType === PRODUCT_TYPE) {
+              } else if (record.targetType === VAS_PRODUCT_TYPE) {
                 return getRenderer('object')(record.targetProduct, column, record, rowIndex, field)
-              } else if (record.targetType === BATCH_AND_PRODUCT_TYPE) {
+              } else if (record.targetType === VAS_BATCH_AND_PRODUCT_TYPE) {
                 return getRenderer()(
                   `${record.targetBatchId} / ${record.targetProduct.name}`,
                   column,
@@ -153,7 +159,7 @@ export class AbstractExecuteVas extends LitElement {
                   rowIndex,
                   field
                 )
-              } else if (record.targetType === ETC_TYPE) {
+              } else if (record.targetType === VAS_ETC_TYPE) {
                 return getRenderer()(record.otherTarget, column, record, rowIndex, field)
               }
             },
@@ -437,7 +443,7 @@ export class AbstractExecuteVas extends LitElement {
 
   async _undoVas() {
     try {
-      this.checkExecutionValidity()
+      this.checkUndoValidity()
 
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
@@ -475,7 +481,6 @@ export class AbstractExecuteVas extends LitElement {
     this._selectedTaskStatus = null
     this.clearVasTemplate()
     this.infoForm.reset()
-    this.inputForm?.reset()
     this.detailInfoForm.reset()
   }
 
@@ -523,6 +528,10 @@ export class AbstractExecuteVas extends LitElement {
 
   checkExecutionValidity() {
     // 1. validate for vas selection
+    if (!this._selectedVas) throw new Error(i18next.t('text.target_doesnt_selected'))
+  }
+
+  checkUndoValidity() {
     if (!this._selectedVas) throw new Error(i18next.t('text.target_doesnt_selected'))
   }
 

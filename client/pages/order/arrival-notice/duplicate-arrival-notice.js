@@ -5,8 +5,8 @@ import { openPopup } from '@things-factory/layout-base'
 import { client, CustomAlert, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import '../../order/vas-order/vas-create-popup'
-import { BATCH_NO_TYPE, PRODUCT_TYPE } from '../constants'
+import '../../order/vas-order/popup/vas-create-popup'
+import { VAS_BATCH_NO_TYPE, VAS_PRODUCT_TYPE } from '../constants'
 
 class DuplicateArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
@@ -18,12 +18,12 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
        */
       _ganNo: String,
       _importedOrder: Boolean,
-			_ownTransport: Boolean,
-			_refNo: String,
-			_containerNo: String,
-			_etaDate: String,
-			_deliveryOrderNo: String,
-			_truckNo: String,
+      _ownTransport: Boolean,
+      _refNo: String,
+      _containerNo: String,
+      _etaDate: String,
+      _deliveryOrderNo: String,
+      _truckNo: String,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -92,19 +92,19 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
         <fieldset>
           <legend>${i18next.t('title.arrival_notice')}</legend>
           <label>${i18next.t('label.ref_no')}</label>
-          <input name="refNo" value="${this._refNo}"/>
+          <input name="refNo" value="${this._refNo}" />
 
           <label>${i18next.t('label.container_no')}</label>
-          <input name="containerNo" value="${this._containerNo}"/>
+          <input name="containerNo" value="${this._containerNo}" />
 
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
-          <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" value="${this._deliveryOrderNo}"/>
+          <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" value="${this._deliveryOrderNo}" />
 
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
-          <input ?hidden="${!this._ownTransport}" name="truckNo" value="${this._truckNo}"/>
+          <input ?hidden="${!this._ownTransport}" name="truckNo" value="${this._truckNo}" />
 
           <label>${i18next.t('label.eta_date')}</label>
-          <input name="etaDate" type="date" min="${this._getStdDate()}" required/>
+          <input name="etaDate" type="date" min="${this._getStdDate()}" required />
 
           <input
             id="importedOrder"
@@ -346,12 +346,12 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
     }
   }
 
-	async pageUpdated(changes) {
+  async pageUpdated(changes) {
     if (this.active && changes.resourceId) {
       this._ganNo = changes.resourceId
-			await this._getOriginalArrivalNotice(this._ganNo)
-		}
-	}
+      await this._getOriginalArrivalNotice(this._ganNo)
+    }
+  }
 
   _getStdDate() {
     let date = new Date()
@@ -403,12 +403,12 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   async _getOriginalArrivalNotice(gan) {
-		const response = await client.query({
-			query: gql`
+    const response = await client.query({
+      query: gql`
 				query {
 					arrivalNotice(${gqlBuilder.buildArgs({
-						name: gan
-					})}) {
+            name: gan
+          })}) {
 						name
 						refNo
 						containerNo
@@ -431,21 +431,21 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
 					}
 				}
 			`
-		})
+    })
 
-		if (!response.errors) {
-			const arrivalNotice = response.data.arrivalNotice
-			const orderProducts = arrivalNotice.orderProducts
+    if (!response.errors) {
+      const arrivalNotice = response.data.arrivalNotice
+      const orderProducts = arrivalNotice.orderProducts
 
-			this._refNo = arrivalNotice.refNo || ''
-			this._containerNo = arrivalNotice.containerNo || ''
-			this._etaDate = arrivalNotice.etaDate
-			this._deliveryOrderNo = arrivalNotice.deliveryOrderNo || ''
-			this._truckNo = arrivalNotice.truckNo || ''
-			this._ownTransport = arrivalNotice.ownTransport
-			this._importedOrder = arrivalNotice.importCargo
-			this.productData = { records: orderProducts }
-		}
+      this._refNo = arrivalNotice.refNo || ''
+      this._containerNo = arrivalNotice.containerNo || ''
+      this._etaDate = arrivalNotice.etaDate
+      this._deliveryOrderNo = arrivalNotice.deliveryOrderNo || ''
+      this._truckNo = arrivalNotice.truckNo || ''
+      this._ownTransport = arrivalNotice.ownTransport
+      this._importedOrder = arrivalNotice.importCargo
+      this.productData = { records: orderProducts }
+    }
   }
 
   async _generateArrivalNotice() {
@@ -575,7 +575,7 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
       ...this.vasData,
       records: this.vasGrist.dirtyData.records.map(record => {
         if (
-          record.targetType === BATCH_NO_TYPE &&
+          record.targetType === VAS_BATCH_NO_TYPE &&
           batchPackPairs.indexOf(`${record.target}-${record.packingType}`) < 0
         ) {
           return {
@@ -587,7 +587,7 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
             qty: 1
           }
         } else if (
-          record.targetType === PRODUCT_TYPE &&
+          record.targetType === VAS_PRODUCT_TYPE &&
           productPackPairs.indexOf(`${record.target}-${record.packingType}`) < 0
         ) {
           return {
@@ -658,9 +658,9 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
             result.operationGuide = JSON.stringify(orderVas.operationGuide)
           }
 
-          if (record.targetType === BATCH_NO_TYPE) {
+          if (record.targetType === VAS_BATCH_NO_TYPE) {
             result.targetBatchId = record.target
-          } else if (record.targetType === PRODUCT_TYPE) {
+          } else if (record.targetType === VAS_PRODUCT_TYPE) {
             result.targetProduct = { id: record.target }
           } else {
             result.otherTarget = record.target

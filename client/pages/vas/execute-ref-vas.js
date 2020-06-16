@@ -133,10 +133,6 @@ class ExecuteRefVas extends localize(i18next)(AbstractExecuteVas) {
     }`
   }
 
-  get inputForm() {
-    return this.shadowRoot.querySelector('form#input-form')
-  }
-
   _fillUpInfoForm(data) {
     const bizplaceNameInput = this.infoForm.querySelector('input[name=bizplaceName]')
     const startedAtInput = this.infoForm.querySelector('input[name=startedAt')
@@ -196,6 +192,18 @@ class ExecuteRefVas extends localize(i18next)(AbstractExecuteVas) {
     // 2. pallet id is required for reference vas
     const palletId = this.palletIdInput.value
     if (!palletId) throw new Error(i18next.t('text.pallet_id_is_empty'))
+  }
+
+  /**
+   * @description Be called after requesting executeVas resolver
+   */
+  resetView() {
+    this._selectedVas = null
+    this._selectedTaskStatus = null
+    this.clearVasTemplate()
+    this.infoForm.reset()
+    this.detailInfoForm.reset()
+    this.palletIdInput.value = ''
   }
 
   /**

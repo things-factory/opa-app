@@ -12,7 +12,13 @@ import { css, html } from 'lit-element'
 import '../components/popup-note'
 import '../components/vas-templates'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
-import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, ORDER_TYPES, PRODUCT_TYPE } from '../order/constants'
+import {
+  VAS_BATCH_AND_PRODUCT_TYPE,
+  VAS_BATCH_NO_TYPE,
+  VAS_ETC_TYPE,
+  ORDER_TYPES,
+  VAS_PRODUCT_TYPE
+} from '../order/constants'
 import './target-inventory-assignment-popup'
 
 class WorksheetVas extends localize(i18next)(PageView) {
@@ -228,11 +234,11 @@ class WorksheetVas extends localize(i18next)(PageView) {
           header: i18next.t('field.target'),
           record: {
             renderer: (value, column, record, rowIndex, field) => {
-              if (record.targetType === BATCH_NO_TYPE) {
+              if (record.targetType === VAS_BATCH_NO_TYPE) {
                 return getRenderer()(record.targetBatchId, column, record, rowIndex, field)
-              } else if (record.targetType === PRODUCT_TYPE) {
+              } else if (record.targetType === VAS_PRODUCT_TYPE) {
                 return getRenderer('object')(record.targetProduct, column, record, rowIndex, field)
-              } else if (record.targetType === BATCH_AND_PRODUCT_TYPE) {
+              } else if (record.targetType === VAS_BATCH_AND_PRODUCT_TYPE) {
                 return getRenderer()(
                   `${record.targetBatchId} / ${record.targetProduct.name}`,
                   column,
@@ -240,7 +246,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
                   rowIndex,
                   field
                 )
-              } else if (record.targetType === ETC_TYPE) {
+              } else if (record.targetType === VAS_ETC_TYPE) {
                 return getRenderer()(record.otherTarget, column, record, rowIndex, field)
               }
             },
@@ -320,11 +326,11 @@ class WorksheetVas extends localize(i18next)(PageView) {
           header: i18next.t('field.target'),
           record: {
             renderer: (value, column, record, rowIndex, field) => {
-              if (record.targetType === BATCH_NO_TYPE) {
+              if (record.targetType === VAS_BATCH_NO_TYPE) {
                 return getRenderer()(record.targetBatchId, column, record, rowIndex, field)
-              } else if (record.targetType === PRODUCT_TYPE) {
+              } else if (record.targetType === VAS_PRODUCT_TYPE) {
                 return getRenderer('object')(record.targetProduct, column, record, rowIndex, field)
-              } else if (record.targetType === BATCH_AND_PRODUCT_TYPE) {
+              } else if (record.targetType === VAS_BATCH_AND_PRODUCT_TYPE) {
                 return getRenderer()(
                   `${record.targetBatchId} / ${record.targetProduct.name}`,
                   column,
@@ -332,7 +338,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
                   rowIndex,
                   field
                 )
-              } else if (record.targetType === ETC_TYPE) {
+              } else if (record.targetType === VAS_ETC_TYPE) {
                 return getRenderer()(record.otherTarget, column, record, rowIndex, field)
               }
             },
@@ -486,7 +492,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
               wsd.targetVas.inventory &&
               wsd.targetVas.inventory.location &&
               wsd.targetVas.inventory.location.name) ||
-            wsd.targetVas.targetType === ETC_TYPE
+            wsd.targetVas.targetType === VAS_ETC_TYPE
           ) {
             returnObj.assignedData.push({
               ...wsd.targetVas,
