@@ -18,12 +18,12 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
        */
       _ganNo: String,
       _importedOrder: Boolean,
-			_ownTransport: Boolean,
-			_refNo: String,
-			_containerNo: String,
-			_etaDate: String,
-			_deliveryOrderNo: String,
-			_truckNo: String,
+      _ownTransport: Boolean,
+      _refNo: String,
+      _containerNo: String,
+      _etaDate: String,
+      _deliveryOrderNo: String,
+      _truckNo: String,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -92,19 +92,54 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
         <fieldset>
           <legend>${i18next.t('title.arrival_notice')}</legend>
           <label>${i18next.t('label.ref_no')}</label>
-          <input name="refNo" value="${this._refNo}"/>
+          <input name="refNo" value="${this._refNo}" />
 
           <label>${i18next.t('label.container_no')}</label>
-          <input name="containerNo" value="${this._containerNo}"/>
+          <input name="containerNo" value="${this._containerNo}" />
 
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
-          <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" value="${this._deliveryOrderNo}"/>
+          <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" value="${this._deliveryOrderNo}" />
 
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
-          <input ?hidden="${!this._ownTransport}" name="truckNo" value="${this._truckNo}"/>
+          <input ?hidden="${!this._ownTransport}" name="truckNo" value="${this._truckNo}" />
 
           <label>${i18next.t('label.eta_date')}</label>
-          <input name="etaDate" type="date" min="${this._getStdDate()}" required/>
+          <input name="etaDate" type="date" min="${this._getStdDate()}" required />
+
+          <label>${i18next.t('label.container_size')}</label>
+          <select name="containerSize">
+            <option value="">--${i18next.t('label.please_select_a_container_size')}--</option>
+            ${(this.containerSizes || []).map(
+              containerSize =>
+                html`
+                  <option value="${containerSize && containerSize.name}">${containerSize && containerSize.name}</option>
+                `
+            )}
+          </select>
+
+          <label>${i18next.t('label.upload_documents')}</label>
+          <file-uploader
+            name="attachments"
+            id="uploadDocument"
+            label="${i18next.t('label.select_file')}"
+            accept="*"
+            multiple="true"
+            custom-input
+          ></file-uploader>
+
+          <input
+            id="container"
+            type="checkbox"
+            name="container"
+            ?checked="${this._hasContainer}"
+            @change="${e => {
+              this._hasContainer = e.currentTarget.checked
+            }}"
+          />
+          <label for="container">${i18next.t('label.container')}</label>
+
+          <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" />
+          <label for="looseItem">${i18next.t('label.loose_item')}</label>
 
           <input
             id="importedOrder"
@@ -181,6 +216,10 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
 
   get vasGrist() {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
+  }
+
+  get _document() {
+    return this.shadowRoot.querySelector('#uploadDocument')
   }
 
   pageInitialized() {
@@ -346,12 +385,12 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
     }
   }
 
-	async pageUpdated(changes) {
+  async pageUpdated(changes) {
     if (this.active && changes.resourceId) {
       this._ganNo = changes.resourceId
-			await this._getOriginalArrivalNotice(this._ganNo)
-		}
-	}
+      await this._getOriginalArrivalNotice(this._ganNo)
+    }
+  }
 
   _getStdDate() {
     let date = new Date()
@@ -403,12 +442,12 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   async _getOriginalArrivalNotice(gan) {
-		const response = await client.query({
-			query: gql`
+    const response = await client.query({
+      query: gql`
 				query {
 					arrivalNotice(${gqlBuilder.buildArgs({
-						name: gan
-					})}) {
+            name: gan
+          })}) {
 						name
 						refNo
 						containerNo
@@ -431,21 +470,21 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
 					}
 				}
 			`
-		})
+    })
 
-		if (!response.errors) {
-			const arrivalNotice = response.data.arrivalNotice
-			const orderProducts = arrivalNotice.orderProducts
+    if (!response.errors) {
+      const arrivalNotice = response.data.arrivalNotice
+      const orderProducts = arrivalNotice.orderProducts
 
-			this._refNo = arrivalNotice.refNo || ''
-			this._containerNo = arrivalNotice.containerNo || ''
-			this._etaDate = arrivalNotice.etaDate
-			this._deliveryOrderNo = arrivalNotice.deliveryOrderNo || ''
-			this._truckNo = arrivalNotice.truckNo || ''
-			this._ownTransport = arrivalNotice.ownTransport
-			this._importedOrder = arrivalNotice.importCargo
-			this.productData = { records: orderProducts }
-		}
+      this._refNo = arrivalNotice.refNo || ''
+      this._containerNo = arrivalNotice.containerNo || ''
+      this._etaDate = arrivalNotice.etaDate
+      this._deliveryOrderNo = arrivalNotice.deliveryOrderNo || ''
+      this._truckNo = arrivalNotice.truckNo || ''
+      this._ownTransport = arrivalNotice.ownTransport
+      this._importedOrder = arrivalNotice.importCargo
+      this.productData = { records: orderProducts }
+    }
   }
 
   async _generateArrivalNotice() {
@@ -465,6 +504,12 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
 
       let arrivalNotice = this._getFormInfo()
       arrivalNotice.orderProducts = this._getOrderProducts()
+
+      let attachments
+      if (this._ownTransport) {
+        attachments = this._document.files
+      }
+
       if (arrivalNotice.orderProducts.some(orderProduct => !orderProduct.palletQty)) {
         const result = await CustomAlert({
           title: i18next.t('title.are_you_sure'),
@@ -484,13 +529,19 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
 
       const response = await client.query({
         query: gql`
-            mutation {
-              generateArrivalNotice(${gqlBuilder.buildArgs(args)}) {
+            mutation ($attachments: Upload) {
+              generateArrivalNotice(${gqlBuilder.buildArgs(args)}, file:$attachments) {
                 id
                 name
               }
             }
-          `
+          `,
+        variables: {
+          attachments
+        },
+        context: {
+          hasUpload: true
+        }
       })
 
       if (!response.errors) {

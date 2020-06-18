@@ -6,6 +6,7 @@ import { openPopup } from '@things-factory/layout-base'
 import { client, CustomAlert, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import '../../components/attachment-viewer'
 import '../../components/popup-note'
 import '../../components/vas-templates'
 import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, ORDER_STATUS, PRODUCT_TYPE } from '../constants'
@@ -18,6 +19,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
       _ownTransport: Boolean,
       _hasContainer: Boolean,
       _looseItem: Boolean,
+      _attachments: Array,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -76,6 +78,15 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
 
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
+        }
+
+        .gan-preview {
+          display: flex;
+          flex-direction: row;
+          flex: 1;
+        }
+        attachment-viewer {
+          flex: 1;
         }
       `
     ]
@@ -142,13 +153,33 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
         </fieldset>
       </fieldset>
 
-
         <fieldset>
           <legend>${i18next.t('title.assign_warehouse')}</legend>
           <label>${i18next.t('label.warehouse')}</label>
           <input id="buffer-location" name="buffer-location" readonly @click="${this._openBufferSelector.bind(this)}" />
         </fieldset>
       </form>
+
+      <div class="gan-attachment-container">
+        <form name="ganAttachment" class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.attachment')}</legend>
+            <div class="gan-preview">
+              ${(this._attachments || []).map(
+                attachment =>
+                  html`
+                    <attachment-viewer
+                      name="${attachment.name}"
+                      src="${location.origin}/attachment/${attachment.path}"
+                      .mimetype="${attachment.mimetype}"
+                      .downloadable="${this._downloadable}"
+                    ></attachment-viewer>
+                  `
+              )}
+            </div>
+          </fieldset>
+        </form>
+      </div>
 
       <div class="container">
       <div class="grist">
@@ -183,6 +214,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
     super()
     this.productData = { records: [] }
     this.vasData = { records: [] }
+    this._downloadable = true
     this._importedOrder = false
     this._ownTransport = true
   }
@@ -408,6 +440,13 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
             truckNo
             refNo
             importCargo
+            attachment {
+              id
+              name
+              refBy
+              path
+              mimetype
+            }
             orderProducts {
               id
               batchId
@@ -468,6 +507,10 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
         ...arrivalNotice,
         ...arrivalNotice.jobSheet
       })
+
+      if (arrivalNotice && arrivalNotice?.attachment) {
+        this._attachments = arrivalNotice && arrivalNotice.attachment
+      }
 
       this.productData = { records: orderProducts }
       this.vasData = {

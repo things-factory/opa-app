@@ -10,6 +10,7 @@ import { css, html } from 'lit-element'
 import '../../components/vas-templates'
 import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, PRODUCT_TYPE } from '../constants'
 import { ORDER_PRODUCT_STATUS, ORDER_STATUS } from '../constants/order'
+import '../../components/attachment-viewer'
 import './extra-product-popup'
 import './proceed-extra-product-popup'
 
@@ -28,6 +29,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       _looseItem: Boolean,
       isUserBelongsDomain: Boolean,
       _status: String,
+      _attachments: Array,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -86,6 +88,15 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
 
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
+        }
+
+        .gan-preview {
+          display: flex;
+          flex-direction: row;
+          flex: 1;
+        }
+        attachment-viewer {
+          flex: 1;
         }
       `
     ]
@@ -150,6 +161,27 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         </fieldset>
       </form>
 
+      <div class="gan-attachment-container">
+        <form name="ganAttachment" class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.attachment')}</legend>
+            <div class="gan-preview">
+              ${(this._attachments || []).map(
+                attachment =>
+                  html`
+                    <attachment-viewer
+                      name="${attachment.name}"
+                      src="${location.origin}/attachment/${attachment.path}"
+                      .mimetype="${attachment.mimetype}"
+                      .downloadable="${this._downloadable}"
+                    ></attachment-viewer>
+                  `
+              )}
+            </div>
+          </fieldset>
+        </form>
+      </div>
+
       <div class="container">
         <div class="grist">
           <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product')}</h2>
@@ -179,6 +211,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
   constructor() {
     super()
     this.productData = { records: [] }
+    this._downloadable = true
     this.vasData = { records: [] }
   }
 
@@ -415,6 +448,13 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             jobSheet {
               containerSize
             }
+            attachment {
+              id
+              name
+              refBy
+              path
+              mimetype
+            }
             orderProducts {
               id
               batchId
@@ -473,6 +513,10 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         ...arrivalNotice,
         ...arrivalNotice.jobSheet
       })
+
+      if (arrivalNotice && arrivalNotice?.attachment) {
+        this._attachments = arrivalNotice && arrivalNotice.attachment
+      }
 
       this.productData = { records: orderProducts }
       this.vasData = {

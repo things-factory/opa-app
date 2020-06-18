@@ -23,6 +23,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       _ownTransport: Boolean,
       _hasContainer: Boolean,
       _looseItem: Boolean,
+      _files: Array,
       containerSizes: Array,
       productGristConfig: Object,
       vasGristConfig: Object,
@@ -121,6 +122,16 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             )}
           </select>
 
+          <label>${i18next.t('label.upload_documents')}</label>
+          <file-uploader
+            name="attachments"
+            id="uploadDocument"
+            label="${i18next.t('label.select_file')}"
+            accept="*"
+            multiple="true"
+            custom-input
+          ></file-uploader>
+
           <input
             id="container"
             type="checkbox"
@@ -216,6 +227,10 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
   get vasGrist() {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
+  }
+
+  get _document() {
+    return this.shadowRoot.querySelector('#uploadDocument')
   }
 
   async pageInitialized() {
@@ -456,6 +471,11 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
       let arrivalNotice = this._getFormInfo()
       arrivalNotice.orderProducts = this._getOrderProducts()
+      let attachments
+      if (this._ownTransport) {
+        attachments = this._document.files
+      }
+
       if (arrivalNotice.orderProducts.some(orderProduct => !orderProduct.palletQty)) {
         const result = await CustomAlert({
           title: i18next.t('title.are_you_sure'),
@@ -480,13 +500,19 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
       const response = await client.query({
         query: gql`
-            mutation {
-              generateArrivalNotice(${gqlBuilder.buildArgs(args)}) {
+            mutation ($attachments: Upload) {
+              generateArrivalNotice(${gqlBuilder.buildArgs(args)}, file:$attachments) {
                 id
                 name
               }
             }
-          `
+          `,
+        variables: {
+          attachments
+        },
+        context: {
+          hasUpload: true
+        }
       })
 
       if (!response.errors) {

@@ -5,6 +5,7 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import '../../components/attachment-viewer'
 import '../../components/popup-note'
 import '../../components/vas-templates'
 import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, ORDER_STATUS, PRODUCT_TYPE } from '../constants'
@@ -17,6 +18,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
       _hasContainer: Boolean,
       _looseItem: Boolean,
       _path: String,
+      _attachments: Array,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -78,6 +80,15 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
 
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
+        }
+
+        .gan-preview {
+          display: flex;
+          flex-direction: row;
+          flex: 1;
+        }
+        attachment-viewer {
+          flex: 1;
         }
       `
     ]
@@ -181,6 +192,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
     super()
     this.productData = { records: [] }
     this.vasData = { records: [] }
+    this._downloadable = true
     this._path = ''
   }
 
@@ -410,7 +422,13 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
             looseItem
             jobSheet {
               containerSize
-              adviseMtDate
+            }
+            attachment {
+              id
+              name
+              refBy
+              path
+              mimetype
             }
             orderProducts {
               id
@@ -468,6 +486,10 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
         ...arrivalNotice,
         ...arrivalNotice.jobSheet
       })
+
+      if (arrivalNotice && arrivalNotice?.attachment) {
+        this._attachments = arrivalNotice && arrivalNotice.attachment
+      }
 
       this.productData = { records: orderProducts }
       this.vasData = {
