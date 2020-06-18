@@ -1,3 +1,4 @@
+import { getCodeByName } from '@things-factory/code-base'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -22,6 +23,10 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
       _refNo: String,
       _containerNo: String,
       _etaDate: String,
+      _hasContainer: Boolean,
+      _looseItem: Boolean,
+      _files: Array,
+      containerSizes: Array,
       _deliveryOrderNo: String,
       _truckNo: String,
       productGristConfig: Object,
@@ -94,9 +99,6 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
           <label>${i18next.t('label.ref_no')}</label>
           <input name="refNo" value="${this._refNo}" />
 
-          <label>${i18next.t('label.container_no')}</label>
-          <input name="containerNo" value="${this._containerNo}" />
-
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
           <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" value="${this._deliveryOrderNo}" />
 
@@ -105,6 +107,9 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
 
           <label>${i18next.t('label.eta_date')}</label>
           <input name="etaDate" type="date" min="${this._getStdDate()}" required />
+
+          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
+          <input name="containerNo" value="${this._containerNo}" ?hidden="${!this._hasContainer}" />
 
           <label>${i18next.t('label.container_size')}</label>
           <select name="containerSize">
@@ -214,6 +219,10 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist#product-grist')
   }
 
+  get containerNo() {
+    return this.shadowRoot.querySelector('input[name=containerNo]')
+  }
+
   get vasGrist() {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
   }
@@ -222,7 +231,9 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('#uploadDocument')
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    this.containerSizes = await getCodeByName('CONTAINER_SIZES')
+
     this.productGristConfig = {
       pagination: { infinite: true },
       list: { fields: ['batch_no', 'product', 'packingType', 'totalWeight'] },
@@ -478,6 +489,8 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
 
       this._refNo = arrivalNotice.refNo || ''
       this._containerNo = arrivalNotice.containerNo || ''
+
+      this._hasContainer = arrivalNotice.containerNo ? true : false
       this._etaDate = arrivalNotice.etaDate
       this._deliveryOrderNo = arrivalNotice.deliveryOrderNo || ''
       this._truckNo = arrivalNotice.truckNo || ''
@@ -526,6 +539,8 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
       const args = {
         arrivalNotice: { ...arrivalNotice, ownTransport: this._importedOrder ? true : this._ownTransport }
       }
+
+      delete args.arrivalNotice.container
 
       const response = await client.query({
         query: gql`
