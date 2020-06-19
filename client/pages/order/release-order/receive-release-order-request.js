@@ -150,7 +150,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
         </form>
       </div>
 
-      <div class="do-attachment-container">
+      <div class="do-attachment-container" ?hidden="${this._attachments > 0 ? false : true}">
         <form name="doAttachment" class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.attachment')}</legend>
@@ -201,6 +201,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
     super()
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
+    this._attachments = []
     this._exportOption = false
     this._downloadable = true
     this._ownTransport = true

@@ -486,6 +486,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
         if (!result.value) return
       }
+
       await this._executeRelatedTrxs()
       arrivalNotice.orderVass = this._getOrderVass()
 
@@ -727,6 +728,9 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     this.arrivalNoticeForm.reset()
     this.productData = { ...this.productData, records: [] }
     this.vasData = { ...this.vasData, records: [] }
+    if (this._document?._files) {
+      this._document._files = []
+    }
   }
 
   _serializeForm(form) {

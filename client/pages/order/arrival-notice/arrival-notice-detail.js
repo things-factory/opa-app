@@ -161,7 +161,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         </fieldset>
       </form>
 
-      <div class="gan-attachment-container">
+      <div class="gan-attachment-container" ?hidden="${this._attachments.length > 0 ? false : true}">
         <form name="ganAttachment" class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.attachment')}</legend>
@@ -212,6 +212,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     super()
     this.productData = { records: [] }
     this._downloadable = true
+    this._attachments = []
     this.vasData = { records: [] }
   }
 

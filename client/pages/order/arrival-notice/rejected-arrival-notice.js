@@ -161,6 +161,27 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
         </fieldset>
       </form>
 
+      <div class="gan-attachment-container" ?hidden="${this._attachments > 0 ? false : true}">
+        <form name="ganAttachment" class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.attachment')}</legend>
+            <div class="gan-preview">
+              ${(this._attachments || []).map(
+                attachment =>
+                  html`
+                    <attachment-viewer
+                      name="${attachment.name}"
+                      src="${location.origin}/attachment/${attachment.path}"
+                      .mimetype="${attachment.mimetype}"
+                      .downloadable="${this._downloadable}"
+                    ></attachment-viewer>
+                  `
+              )}
+            </div>
+          </fieldset>
+        </form>
+      </div>
+
       <div class="container">
         <div class="grist">
           <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product')}</h2>
@@ -193,6 +214,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
     this.productData = { records: [] }
     this.vasData = { records: [] }
     this._downloadable = true
+    this._attachments = []
     this._path = ''
   }
 

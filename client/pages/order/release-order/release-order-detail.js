@@ -143,7 +143,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         </form>
       </div>
 
-      <div class="do-attachment-container">
+      <div class="do-attachment-container" ?hidden="${this._attachments > 0 ? false : true}">
         <form name="doAttachment" class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.attachment')}</legend>
@@ -195,6 +195,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
     this._exportOption = false
     this._ownTransport = true
     this._downloadable = true
+    this._attachments = []
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
   }

@@ -567,6 +567,7 @@
   "text.accept_release_order": "accept release order",
   "text.inspected_qty_is_empty": "inspected qty is empty",
   "text.inspected_weight_is_empty": "inspected weight is empty",
+  "text.invalid_batch_no": "invalid batch no",
   "text.selected_qty_is_less_than_expected": "selected qty is less than expected",
   "text.inspection_is_completed": "inspection is completed",
   "text.selected_qty_is_more_than_expected": "selected qty is more than expected",

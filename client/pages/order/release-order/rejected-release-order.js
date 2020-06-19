@@ -146,6 +146,27 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
         </form>
       </div>
 
+      <div class="do-attachment-container" ?hidden="${this._attachments > 0 ? false : true}">
+        <form name="doAttachment" class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.attachment')}</legend>
+            <div class="do-preview">
+              ${(this._attachments || []).map(
+                attachment =>
+                  html`
+                    <attachment-viewer
+                      name="${attachment.name}"
+                      src="${location.origin}/attachment/${attachment.path}"
+                      .mimetype="${attachment.mimetype}"
+                      .downloadable="${this._downloadable}"
+                    ></attachment-viewer>
+                  `
+              )}
+            </div>
+          </fieldset>
+        </form>
+      </div>
+
       <div class="container">
         <div class="grist">
           <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.release_product_list')}</h2>
@@ -176,6 +197,7 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
     super()
     this._exportOption = false
     this._ownTransport = true
+    this._attachments = []
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
   }
@@ -396,6 +418,13 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
             refNo
             collectionOrderNo
             remark
+            attachment {
+              id
+              name
+              refBy
+              path
+              mimetype
+            }
             inventoryInfos {
               batchId
               productName
@@ -453,6 +482,11 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
       } else if (!this._exportOption) {
         this._ownTransport = releaseOrder.ownTransport
       }
+
+      if (this._ownTransport) {
+        this._attachments = releaseOrder && releaseOrder.attachment
+      }
+
       this._rejectReason = releaseOrder.remark
       this._fillupRGForm(releaseOrder)
       if (this._exportOption) this._fillupSOForm(shippingOrder)
