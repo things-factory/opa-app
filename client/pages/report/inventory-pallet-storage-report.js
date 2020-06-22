@@ -2,7 +2,7 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { html, css } from 'lit-element'
 import { client, PageView, store } from '@things-factory/shell'
-import { gqlBuilder, flattenObject } from '@things-factory/utils'
+import { gqlBuilder, flattenObject, isMobileDevice } from '@things-factory/utils'
 import { connect } from 'pwa-helpers/connect-mixin'
 import { localize, i18next } from '@things-factory/i18n-base'
 import gql from 'graphql-tag'
@@ -16,7 +16,8 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
         width: 100%;
       }
 
-      data-report {
+      data-grist {
+        overflow-y: auto;
         flex: 1;
       }
     `
@@ -41,6 +42,9 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
     }
   }
 
+  get dataGrist() {
+    return this.shadowRoot.querySelector('data-grist')
+  }
   get report() {
     return this.shadowRoot.querySelector('data-report')
   }
@@ -63,9 +67,10 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
 
   render() {
     return html`
-      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.report.fetch()}></search-form>
+      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
-      <data-report
+      <data-grist
+        .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
         .config=${this._config}
         .fetchHandler="${this.fetchHandler.bind(this)}"
       ></data-grist>
@@ -90,12 +95,6 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
             .sort(this._compareValues('name', 'asc'))
         ],
         props: { searchOper: 'eq' }
-      },
-      {
-        label: i18next.t('field.product'),
-        name: 'product',
-        type: 'string',
-        props: { searchOper: 'in' }
       },
       {
         label: i18next.t('field.from_date'),
@@ -133,46 +132,33 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
   get reportConfig() {
     return {
       pagination: { infinite: true },
+      list: {
+        fields: ['location|type', 'location|name', 'palletId']
+      },
       rows: {
-        selectable: false,
-        groups: [{ column: 'product|name' }],
-        totals: ['openingBalance', 'inBalance', 'outBalance', 'closingBalance']
+        selectable: false
       },
       columns: [
         {
           type: 'string',
-          name: 'product|name',
+          name: 'location|type',
           record: { editable: false, align: 'left' },
-          header: 'Products',
-          width: 450
+          header: i18next.t('field.location_type'),
+          width: 200
         },
         {
-          type: 'float',
-          name: 'openingBalance',
-          record: { editable: false, align: 'center' },
-          header: i18next.t('field.opening_balance'),
-          width: 160
+          type: 'string',
+          name: 'location|name',
+          record: { editable: false, align: 'left' },
+          header: i18next.t('field.location'),
+          width: 200
         },
         {
-          type: 'float',
-          name: 'inBalance',
-          record: { editable: false, align: 'center' },
-          header: i18next.t('field.inbound'),
-          width: 160
-        },
-        {
-          type: 'float',
-          name: 'outBalance',
-          record: { editable: false, align: 'center' },
-          header: i18next.t('field.outbound'),
-          width: 160
-        },
-        {
-          type: 'float',
-          name: 'closingBalance',
-          record: { editable: false, align: 'center' },
-          header: i18next.t('field.closing_balance'),
-          width: 160
+          type: 'string',
+          name: 'palletId',
+          record: { editable: false, align: 'left' },
+          header: i18next.t('field.palletId'),
+          width: 800
         }
       ]
     }
@@ -188,7 +174,7 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
 
   async pageUpdated(changes, lifecycle) {
     if (this.active) {
-      this.report.fetch()
+      this.dataGrist.fetch()
     }
   }
 
@@ -196,37 +182,48 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
     try {
       this._validate()
 
+      let filter = this.searchForm.queryFilters.map(filter => {
+        switch (filter.name) {
+          case 'fromDate':
+            let fromDt = new Date(filter.value)
+            fromDt.setHours(0)
+            filter.value = fromDt.toISOString()
+            break
+          case 'toDate':
+            let toDt = new Date(filter.value)
+            toDt.setHours(23, 59, 59)
+            filter.value = toDt.toISOString()
+            break
+          default:
+            break
+        }
+
+        return filter
+      })
+
       const response = await client.query({
         query: gql`
           query {
-            inventoryHistoryPalletReport(${gqlBuilder.buildArgs({
-              filters: [
-                ...this.searchForm.queryFilters.map(filter => {
-                  return filter
-                })
-              ],
+            inventoryHistoryPalletStorageReport(${gqlBuilder.buildArgs({
+              filters: filter,
               pagination: { page, limit },
               sortings: sorters
             })}) {
               bizplace {
                 name
-                description
               }
-              product {
+              location {
                 name
-                description
+                type
               }
-              openingBalance
-              inBalance
-              outBalance
-              closingBalance
+              palletId
             }
           }
         `
       })
       return {
-        total: 0,
-        records: response.data.inventoryHistoryPalletReport.map(item => flattenObject(item)) || []
+        total: response.data.inventoryHistoryPalletStorageReport.length,
+        records: response.data.inventoryHistoryPalletStorageReport.map(item => flattenObject(item)) || []
       }
     } catch (e) {
       console.log(e)

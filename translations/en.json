@@ -160,6 +160,7 @@
   "field.load_type": "load type",
   "field.load_weight": "load weight",
   "field.location": "location",
+  "field.location_type": "location type",
   "field.loose_item": "loose item",
   "field.main_bizplace": "main customer",
   "field.name": "name",

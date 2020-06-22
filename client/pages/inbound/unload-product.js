@@ -255,10 +255,12 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
     }
 
     if (this._unloadedInventories && this._unloadedInventories.length > 0) {
-      actions = [
-        ...actions,
-        { title: i18next.t('button.partial_complete'), action: this._completePartially.bind(this) }
-      ]
+      if (this.orderProductData.records.some(task => !task.validity)) {
+        actions = [
+          ...actions,
+          { title: i18next.t('button.partial_complete'), action: this._completePartially.bind(this) }
+        ]
+      }
     }
 
     if (this._selectedInventory) {
