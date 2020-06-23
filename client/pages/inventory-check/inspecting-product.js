@@ -9,6 +9,7 @@ import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { fetchLocationSortingRule } from '../../fetch-location-sorting-rule'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
+import { LOCATION_SORTING_RULE } from '../contants/location-sorting-rule'
 
 class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -297,7 +298,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       ]
     }
 
-    this.locationSortingRules = await fetchLocationSortingRule()
+    this.locationSortingRules = await fetchLocationSortingRule(LOCATION_SORTING_RULE.INSPECTING_PRODUCT.value)
   }
 
   pageUpdated() {

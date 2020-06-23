@@ -1059,6 +1059,8 @@
   "text.wrong_release_qty": "wrong release qty",
   "title.location_sorting_rule": "location sorting rule",
   "title.add_rule_field": "add rule field",
+  "label.rule_field": "rule field",
+  "label.process_type": "process type",
   "label.asc": "ascending",
   "label.desc": "descending",
   "field.field.zone": "field zone",

@@ -2,9 +2,7 @@ import { client } from '@things-factory/shell'
 import { gqlBuilder } from '@things-factory/utils'
 import gql from 'graphql-tag'
 
-const LOCATION_SORTING_RULE_KEY = 'location-sorting-rule'
-
-export async function fetchLocationSortingRule() {
+export async function fetchLocationSortingRule(LOCATION_SORTING_RULE_KEY) {
   const response = await client.query({
     query: gql`
       query {

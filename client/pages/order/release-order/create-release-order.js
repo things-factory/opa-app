@@ -7,6 +7,7 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { fetchLocationSortingRule } from '../../../fetch-location-sorting-rule'
+import { LOCATION_SORTING_RULE } from '../../contants/location-sorting-rule'
 import '../../components/vas-templates'
 import '../../order/vas-order/popup/vas-create-popup'
 import {
@@ -458,7 +459,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         ]
       }
     } else {
-      const locationSortingRules = await fetchLocationSortingRule()
+      const locationSortingRules = await fetchLocationSortingRule(LOCATION_SORTING_RULE.CREATE_RELEASE_ORDER.value)
       this.inventoryGristConfig = {
         pagination: { infinite: true },
         rows: { selectable: { multiple: true } },
