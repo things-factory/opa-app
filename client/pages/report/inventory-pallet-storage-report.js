@@ -6,6 +6,7 @@ import { gqlBuilder, flattenObject, isMobileDevice } from '@things-factory/utils
 import { connect } from 'pwa-helpers/connect-mixin'
 import { localize, i18next } from '@things-factory/i18n-base'
 import gql from 'graphql-tag'
+import { getCodeByName } from '@things-factory/code-base'
 
 class InventoryPalletStorageReport extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -28,6 +29,7 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
       _searchFields: Object,
       _config: Object,
       _userBizplaces: Object,
+      _locationTypes: Object,
       data: Object
     }
   }
@@ -35,18 +37,15 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
   get context() {
     return {
       title: i18next.t('title.inventory_pallet_storage_report'),
-      printable: {
-        accept: ['preview'],
-        content: this
+      exportable: {
+        name: i18next.t('title.inventory_pallet_storage_report'),
+        data: this._exportableData.bind(this)
       }
     }
   }
 
   get dataGrist() {
     return this.shadowRoot.querySelector('data-grist')
-  }
-  get report() {
-    return this.shadowRoot.querySelector('data-report')
   }
 
   get searchForm() {
@@ -97,6 +96,27 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
         props: { searchOper: 'eq' }
       },
       {
+        label: i18next.t('field.location_type'),
+        name: 'locationType',
+        type: 'select',
+        options: [
+          { value: '' },
+          ...this._locationTypes.map(locType => {
+            return {
+              name: locType.name,
+              value: locType.name
+            }
+          })
+        ],
+        props: { searchOper: 'eq' }
+      },
+      {
+        label: i18next.t('field.zone'),
+        name: 'zone',
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
         label: i18next.t('field.from_date'),
         name: 'fromDate',
         type: 'date',
@@ -131,9 +151,8 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
 
   get reportConfig() {
     return {
-      pagination: { infinite: true },
       list: {
-        fields: ['location|type', 'location|name', 'palletId']
+        fields: ['location|zone', 'location|name', 'location|type', 'palletId']
       },
       rows: {
         selectable: false
@@ -141,24 +160,35 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
       columns: [
         {
           type: 'string',
-          name: 'location|type',
-          record: { editable: false, align: 'left' },
-          header: i18next.t('field.location_type'),
-          width: 200
+          name: 'location|zone',
+          record: { editable: false, align: 'center' },
+          imex: { header: i18next.t('field.zone'), key: 'location|zone', width: 15, type: 'string' },
+          header: i18next.t('field.zone'),
+          width: 80
         },
         {
           type: 'string',
           name: 'location|name',
-          record: { editable: false, align: 'left' },
+          record: { editable: false, align: 'center' },
+          imex: { header: i18next.t('field.location'), key: 'location|name', width: 25, type: 'string' },
           header: i18next.t('field.location'),
-          width: 200
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'location|type',
+          record: { editable: false, align: 'center' },
+          imex: { header: i18next.t('field.location_type'), key: 'location|type', width: 25, type: 'string' },
+          header: i18next.t('field.location_type'),
+          width: 150
         },
         {
           type: 'string',
           name: 'palletId',
           record: { editable: false, align: 'left' },
+          imex: { header: i18next.t('field.palletId'), key: 'palletId', width: 200, type: 'string' },
           header: i18next.t('field.palletId'),
-          width: 800
+          width: 900
         }
       ]
     }
@@ -167,6 +197,7 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
   async pageInitialized() {
     this._products = []
     this._userBizplaces = [...(await this._fetchBizplaceList())]
+    this._locationTypes = await getCodeByName('LOCATION_TYPE')
 
     this._searchFields = this.searchFields
     this._config = this.reportConfig
@@ -209,21 +240,25 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
               pagination: { page, limit },
               sortings: sorters
             })}) {
-              bizplace {
-                name
+              items{
+                bizplace {
+                  name
+                }
+                location {
+                  name
+                  type
+                  zone
+                }
+                palletId
               }
-              location {
-                name
-                type
-              }
-              palletId
+              total
             }
           }
         `
       })
       return {
-        total: response.data.inventoryHistoryPalletStorageReport.length,
-        records: response.data.inventoryHistoryPalletStorageReport.map(item => flattenObject(item)) || []
+        total: response.data.inventoryHistoryPalletStorageReport.total,
+        records: response.data.inventoryHistoryPalletStorageReport.items.map(item => flattenObject(item)) || []
       }
     } catch (e) {
       console.log(e)
@@ -291,6 +326,35 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
     min = min.toISOString().split('T')[0]
 
     this._toDateInput.min = min
+  }
+
+  async _exportableData() {
+    try {
+      let header = [
+        ...this.dataGrist._config.columns
+          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+          .map(column => {
+            return column.imex
+          })
+      ]
+
+      let data = (await this.fetchHandler({ page: 1, limit: 9999999 })).records
+
+      return { header, data }
+    } catch (e) {
+      this._showToast(e)
+    }
+  }
+
+  _showToast({ type, message }) {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: {
+          type,
+          message
+        }
+      })
+    )
   }
 }
 
