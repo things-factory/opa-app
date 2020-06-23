@@ -7,11 +7,6 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import { ORDER_TYPES } from '../order/constants'
-<<<<<<< Updated upstream
-=======
-import { fetchLocationSortingRule } from '../../fetch-location-sorting-rule'
-import { LOCATION_SORTING_RULE } from '../contants/location-sorting-rule'
->>>>>>> Stashed changes
 import { PICKING_STRATEGY } from './constants'
 
 class InventoryAssignPopup extends localize(i18next)(LitElement) {
@@ -147,11 +142,6 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
   }
 
   async firstUpdated() {
-<<<<<<< Updated upstream
-=======
-    this.locationSortingRules = await fetchLocationSortingRule(LOCATION_SORTING_RULE.INVENTORY_ASSIGNMENT.value)
-
->>>>>>> Stashed changes
     this.config = {
       list: { fields: ['palletId', 'product', 'location', 'qty'] },
       pagination: { infinite: true },
