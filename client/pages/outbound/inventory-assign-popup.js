@@ -7,6 +7,8 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import { ORDER_TYPES } from '../order/constants'
+import { fetchLocationSortingRule } from '../../fetch-location-sorting-rule'
+import { LOCATION_SORTING_RULE } from '../contants/location-sorting-rule'
 import { PICKING_STRATEGY } from './constants'
 
 class InventoryAssignPopup extends localize(i18next)(LitElement) {
@@ -142,6 +144,8 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
   }
 
   async firstUpdated() {
+    this.locationSortingRules = await fetchLocationSortingRule(LOCATION_SORTING_RULE.INVENTORY_ASSIGNMENT.value)
+
     this.config = {
       list: { fields: ['palletId', 'product', 'location', 'qty'] },
       pagination: { infinite: true },
@@ -268,7 +272,8 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
             bizplaceId: this.bizplaceId,
             productName: this.productName,
             packingType: this.packingType,
-            pickingStrategy: this.selectedStrategy
+            pickingStrategy: this.selectedStrategy,
+            locationSortingRules: this.locationSortingRules
           })}) {
             items {
               id
@@ -326,9 +331,14 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
           pickQty = leftQty > item.qty ? item.qty : leftQty
           pickWeight = leftWeight > item.weight ? item.weight : leftWeight
 
+          // rounding off the pickWeight will update the *Pick Weight* column on grist
+          pickWeight = Math.round(pickWeight * 100) / 100
           this.pickQty += pickQty
           this.pickWeight += pickWeight
         }
+        
+        // need to round off so that it will bypass the validation upon submission
+        this.pickWeight = Math.round(this.pickWeight * 100) / 100
 
         return {
           ...item,
@@ -350,9 +360,17 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
       if (columnName === 'pickQty') {
         this.data = {
           records: this.grist.dirtyData.records.map(data => {
-            const pickQty = data.pickQty
+            let pickQty = data.pickQty
             let pickWeight = (data.weight / data.qty) * data.pickQty
             pickWeight = Math.round(pickWeight * 100) / 100
+
+            if (pickQty > data.qty || Number.isNaN(pickQty)) {
+              pickQty = data.qty
+              pickWeight = data.weight
+            } else if (pickQty < 0) {
+              pickQty = 0
+              pickWeight = 0
+            }
 
             totalPickQty += pickQty
             totalPickWeight += pickWeight
@@ -368,16 +386,24 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
       } else if (columnName === 'pickWeight') {
         this.data = {
           records: this.grist.dirtyData.records.map(data => {
-            const pickQty = Math.round((data.qty * data.pickWeight) / data.weight)
-            const pickWeight = data.pickWeight
+            let pickQty = Math.round((data.qty * data.pickWeight) / data.weight)
+            let pickWeight = data.pickWeight
+
+            if (pickWeight > data.weight || Number.isNaN(pickWeight)) {
+              pickQty = data.qty
+              pickWeight = data.weight
+            } else if (pickWeight < 0) {
+              pickQty = 0
+              pickWeight = 0
+            }
 
             totalPickQty += pickQty
             totalPickWeight += pickWeight
-
+            
             return {
               ...data,
-              pickQty: Math.round((data.qty * data.pickWeight) / data.weight),
-              pickWeight: data.pickWeight,
+              pickQty: Math.round((pickQty * data.weight) / data.weight),
+              pickWeight,
               picked: Boolean(data.pickWeight)
             }
           })
@@ -386,7 +412,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
 
       await this.grist.updateComplete
       this.pickQty = totalPickQty
-      this.pickWeight = totalPickWeight
+      this.pickWeight = Math.round(totalPickWeight * 100) / 100
     }
   }
 
