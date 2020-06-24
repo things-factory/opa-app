@@ -5,7 +5,10 @@ const settings = [
   { name: 'dashboard:W/H MANAGER', description: 'dashboard for W/H MANAGER', category: 'board' },
   { name: 'location-label', description: 'board id for location label', category: 'board' },
   { name: 'pallet-label', description: 'board id for pallet label', category: 'board' },
-  { name: 'rule-for-inventory-assignment', description: 'location sorting rules', category: 'location', value: '{"name":"ASC"}' },
+  { name: 'rule-for-creating-ro', description: 'location sorting rules', category: 'location' },
+  { name: 'rule-for-inspecting-product', description: 'location sorting rules', category: 'location' },
+  { name: 'rule-for-inventory-assignment', description: 'location sorting rules', category: 'location' },
+  { name: 'rule-for-picking-product', description: 'location sorting rules', category: 'location' },
   { name: 'pallet-id-rule', description: 'Pallet ID Rule', category: 'id-rule' }
 ]
 
