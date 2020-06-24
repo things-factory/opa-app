@@ -360,7 +360,7 @@ export class AbstractExecuteVas extends LitElement {
 
   _formatTask(task) {
     return {
-      palletId: task.inventory.palletId,
+      palletId: task.inventory?.palletId || '',
       name: task.name,
       vas: task.vas,
       remark: task.remark,
@@ -502,7 +502,7 @@ export class AbstractExecuteVas extends LitElement {
           mutation {
             completeVas(${gqlBuilder.buildArgs({
               orderNo: this.orderNo,
-              orderType: VAS_ORDER.value
+              orderType: this.orderType
             })})
           }
         `

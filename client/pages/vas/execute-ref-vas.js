@@ -66,14 +66,17 @@ class ExecuteRefVas extends localize(i18next)(AbstractExecuteVas) {
             </fieldset>
           </form>
 
-          <form id="input-form" class="single-column-form" @keypress="${this.inputFormKeypressHandler}">
-            <fieldset>
-              <legend>${i18next.t('label.scan_area')}</legend>
-              <label>${i18next.t('label.pallet')}</label>
-              <barcode-scanable-input name="palletId" custom-input></barcode-scanable-input>
-            </fieldset>
-          </form>
-
+          ${this._template
+            ? html``
+            : html`
+                <form id="input-form" class="single-column-form" @keypress="${this.inputFormKeypressHandler}">
+                  <fieldset>
+                    <legend>${i18next.t('label.scan_area')}</legend>
+                    <label>${i18next.t('label.pallet')}</label>
+                    <barcode-scanable-input name="palletId" custom-input></barcode-scanable-input>
+                  </fieldset>
+                </form>
+              `}
           ${this._template}
         </div>
       </div>
@@ -81,7 +84,7 @@ class ExecuteRefVas extends localize(i18next)(AbstractExecuteVas) {
   }
 
   get palletIdInput() {
-    return this.shadowRoot.querySelector('barcode-scanable-input[name=palletId]').shadowRoot.querySelector('input')
+    return this.shadowRoot.querySelector('barcode-scanable-input[name=palletId]')?.shadowRoot?.querySelector('input')
   }
 
   get fetchVasQuery() {
@@ -113,7 +116,6 @@ class ExecuteRefVas extends localize(i18next)(AbstractExecuteVas) {
           qty
           weight
           operationGuide
-          locationInv 
           vas {
             id
             name
@@ -163,23 +165,6 @@ class ExecuteRefVas extends localize(i18next)(AbstractExecuteVas) {
     this.palletIdInput.focus()
   }
 
-  _formatTask(task) {
-    return {
-      name: task.name,
-      vas: task.vas,
-      remark: task.remark,
-      status: task.status,
-      locationInv: task.locationInv,
-      operationGuide: task.operationGuide,
-      completed: task.status === WORKSHEET_STATUS.DONE.value,
-      description: task.description,
-      qty: task.qty,
-      weight: task.weight,
-      inventory: task.inventory,
-      issue: task.issue
-    }
-  }
-
   async inputFormKeypressHandler(e) {
     if (e.keyCode === 13) {
       await this._executeVas()
@@ -190,8 +175,11 @@ class ExecuteRefVas extends localize(i18next)(AbstractExecuteVas) {
     // 1. validate for vas selection
     if (!this._selectedVas) throw new Error(i18next.t('text.target_doesnt_selected'))
     // 2. pallet id is required for reference vas
-    const palletId = this.palletIdInput.value
-    if (!palletId) throw new Error(i18next.t('text.pallet_id_is_empty'))
+
+    if (this.palletIdInput) {
+      const palletId = this.palletIdInput.value
+      if (!palletId) throw new Error(i18next.t('text.pallet_id_is_empty'))
+    }
   }
 
   /**
@@ -203,7 +191,9 @@ class ExecuteRefVas extends localize(i18next)(AbstractExecuteVas) {
     this.clearVasTemplate()
     this.infoForm.reset()
     this.detailInfoForm.reset()
-    this.palletIdInput.value = ''
+    if (this.palletIdInput) {
+      this.palletIdInput.value = ''
+    }
   }
 
   /**
@@ -215,7 +205,14 @@ class ExecuteRefVas extends localize(i18next)(AbstractExecuteVas) {
     const worksheetDetail = this.taskGrist.dirtyData.records.filter(record => record.name === this._selectedVas.name)[0]
     let vasWorkseetDetail = { name: worksheetDetail.name }
     if (worksheetDetail.issue) vasWorkseetDetail.issue = worksheetDetail.issue
-    return { worksheetDetail: vasWorkseetDetail, palletId: this.palletIdInput.value }
+    const args = {
+      worksheetDetail: vasWorkseetDetail
+    }
+    const palletId = this.palletIdInput?.value
+    if (palletId) {
+      args.palletId = palletId
+    }
+    return args
   }
 }
 

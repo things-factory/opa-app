@@ -83,6 +83,16 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
           </fieldset>
         </form>
 
+        ${this.isExecuting
+          ? html`
+              <form id="input-form" class="single-column-form">
+                <fieldset>
+                  <label>${i18next.t('label.from_pallet')}</label>
+                  <barcode-scanable-input name="from-pallet-id" custom-input></barcode-scanable-input>
+                </fieldset>
+              </form>
+            `
+          : ''}
         ${!this._isEditable && this._newLabelPath
           ? html`
               <div class="label-preview" ?hidden="${this._isEditable}">
@@ -193,6 +203,20 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
       toBatchId: this._selectedBatchId,
       newLabel: {
         files: this.newLabelInput.files
+      }
+    }
+  }
+
+  async init() {
+    await this.updateComplete
+    this.isExecuting = !this.record.completed
+    if (this.isExecuting) {
+      this.inputForm.reset()
+      this.fromPalletIdInput.setAttribute('readonly', true)
+      if (this.record.palletId) {
+        this.fromPalletIdInput.value = this.record.palletId
+      } else {
+        await this._assignInventories()
       }
     }
   }
@@ -349,6 +373,31 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
 
     if (!result.value) {
       throw new Error(i18next.t('text.please_finish_relabeling'))
+    }
+  }
+
+  /**
+   * @description Assign target inventories
+   * if it doesn't have assigned inventories, meaning the VAS comes with Arrival Notice or Release Goods
+   */
+  async _assignInventories() {
+    await client.query({
+      query: gql`
+        mutation {
+          assignRelabelInventories(${gqlBuilder.buildArgs({
+            worksheetDetailName: this.record.name
+          })})
+        }
+      `
+    })
+
+    this.dispatchEvent(new CustomEvent('completed'))
+  }
+
+  checkRelabelable() {
+    if (!this.fromPalletIdInput.value) {
+      this.fromPalletIdInput.select()
+      throw new Error(i18next.t('text.from_pallet_id_is_emplty'))
     }
   }
 }

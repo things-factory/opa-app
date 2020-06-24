@@ -11,6 +11,16 @@ export class VasTemplate extends LitElement {
     return !this.record.status
   }
 
+  get fromPalletIdInput() {
+    return this.shadowRoot
+      .querySelector('barcode-scanable-input[name=from-pallet-id]')
+      .shadowRoot.querySelector('input')
+  }
+
+  get inputForm() {
+    return this.shadowRoot.querySelector('form#input-form')
+  }
+
   get transactions() {
     throw new Error('transactions getter should be implemented by component which extends VasTemplate')
   }
