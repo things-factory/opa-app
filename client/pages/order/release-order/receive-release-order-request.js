@@ -150,7 +150,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
         </form>
       </div>
 
-      <div class="do-attachment-container" ?hidden="${this._attachments > 0 ? false : true}">
+      <div class="do-attachment-container" ?hidden="${this._attachments.length > 0 ? false : true}">
         <form name="doAttachment" class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.attachment')}</legend>
