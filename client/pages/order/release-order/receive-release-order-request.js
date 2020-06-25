@@ -498,7 +498,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
       }
       this._status = releaseOrder.status
 
-      if (this._ownTransport) {
+      if (releaseOrder && releaseOrder?.attachment) {
         this._attachments = releaseOrder && releaseOrder.attachment
       }
 

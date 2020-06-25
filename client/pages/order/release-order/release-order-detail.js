@@ -516,7 +516,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
 
       this._fillupRGForm(response.data.releaseGoodDetail)
 
-      if (this._ownTransport) {
+      if (releaseOrder && releaseOrder?.attachment) {
         this._attachments = releaseOrder && releaseOrder.attachment
       }
 

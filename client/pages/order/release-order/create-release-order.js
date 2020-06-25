@@ -731,9 +731,10 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         }
 
         let attachments
-        if (this._ownTransport) {
+        if (this._document?.files) {
           attachments = this._document.files
         }
+
         if (this._exportOption && this._ownTransport) args.shippingOrder = this._getShippingOrder()
 
         const response = await client.query({
