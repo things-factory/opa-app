@@ -70,7 +70,6 @@ class VasWorksheetList extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
-    const _worksheetTypes = await getCodeByName('WORKSHEET_TYPES')
     const _worksheetStatus = await getCodeByName('WORKSHEET_STATUS')
 
     this._searchFields = [

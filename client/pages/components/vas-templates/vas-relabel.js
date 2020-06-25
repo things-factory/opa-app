@@ -363,19 +363,6 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
     }
   }
 
-  async checkCompleteValidity() {
-    const result = await CustomAlert({
-      title: i18next.t('title.relabeling'),
-      text: i18next.t('text.is_operation_finished'),
-      confirmButton: { text: i18next.t('button.confirm') },
-      cancelButton: { text: i18next.t('button.cancel') }
-    })
-
-    if (!result.value) {
-      throw new Error(i18next.t('text.please_finish_relabeling'))
-    }
-  }
-
   /**
    * @description Assign target inventories
    * if it doesn't have assigned inventories, meaning the VAS comes with Arrival Notice or Release Goods

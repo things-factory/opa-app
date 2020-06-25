@@ -480,8 +480,20 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
               completed: record.status === WORKSHEET_STATUS.DONE.value
             }
           })
-          .sort((a, b) => b.completed - a.completed)
-          .reverse()
+          .sort((a, b) => {
+            if (a.completed !== b.completed) {
+              if (a.completed) return 1
+              if (b.completed) return -1
+            }
+
+            if (a.batchId > b.batchId) return 1
+            if (b.batchId < b.batchId) return -1
+
+            if (a.palletId > b.palletId) return 1
+            if (a.palletId < b.palletId) return -1
+
+            return 0
+          })
       }
 
       this._completeHandler()
@@ -714,7 +726,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
   async _undoPutaway() {
     try {
       if (!this._selectedOrderProduct) throw new Error(i18next.t('text.there_is_no_selected_items'))
-      
+
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.undo_putaway'),

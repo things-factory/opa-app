@@ -3,16 +3,17 @@ import '@things-factory/grist-ui'
 import { getRenderer } from '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, CustomAlert, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-factory/shell'
+import { client, CustomAlert, navigate, PageView } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/popup-note'
 import '../../components/vas-templates'
 import {
+  ORDER_STATUS,
   VAS_BATCH_AND_PRODUCT_TYPE,
   VAS_BATCH_NO_TYPE,
   VAS_ETC_TYPE,
-  ORDER_STATUS,
   VAS_PRODUCT_TYPE
 } from '../constants'
 import './buffer-location-selector'

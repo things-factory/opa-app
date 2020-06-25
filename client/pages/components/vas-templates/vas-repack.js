@@ -347,7 +347,10 @@ class VasRepack extends localize(i18next)(VasTemplate) {
           }
         })
       } else {
-        result.push(repackedInv)
+        result.push({
+          ...repackedInv,
+          qty: repackedInv.repackedPkgQty
+        })
       }
 
       return result
