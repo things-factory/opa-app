@@ -37,7 +37,7 @@ export class VasTemplate extends LitElement {
     return
   }
 
-  checkCompleteValidity() {
+  checkExecutionValidity() {
     if (!this.record.operationGuide.completed) throw new Error(i18next.t('text.vas_is_not_completed_yet'))
   }
 

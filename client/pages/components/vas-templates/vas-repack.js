@@ -106,7 +106,10 @@ class VasRepack extends localize(i18next)(VasTemplate) {
               ?disabled="${!this._isEditable}"
             />
 
-            <label>${i18next.t('label.required_package_qty')}</label>
+            ${this._getOperationGuideData('packingUnit') === PACKING_UNIT_QTY.value
+              ? html` <label>${i18next.t('label.required_package_qty')}</label> `
+              : html` <label>${i18next.t('label.required_package_weight')}</label> `}
+
             <input
               readonly
               type="number"
@@ -127,6 +130,15 @@ class VasRepack extends localize(i18next)(VasTemplate) {
                 }}"
               >
                 <fieldset>
+                  <label>${i18next.t('label.package_qty')}</label>
+                  <input
+                    name="package-qty"
+                    type="number"
+                    min="1"
+                    max="${this._getOperationGuideData('requiredPackageQty')}"
+                    value="1"
+                  />
+
                   <label>${i18next.t('label.from_pallet')}</label>
                   <barcode-scanable-input name="from-pallet-id" custom-input></barcode-scanable-input>
 
@@ -197,16 +209,16 @@ class VasRepack extends localize(i18next)(VasTemplate) {
     }
   }
 
+  get packageQtyInput() {
+    return this.shadowRoot.querySelector('input[name=package-qty]')
+  }
+
   get toPalletIdInput() {
     return this.shadowRoot.querySelector('barcode-scanable-input[name=to-pallet-id]').shadowRoot.querySelector('input')
   }
 
   get locationInput() {
     return this.shadowRoot.querySelector('barcode-scanable-input[name=location-name]').shadowRoot.querySelector('input')
-  }
-
-  get packageQtyInput() {
-    return this.shadowRoot.querySelector('input[name=package-qty]')
   }
 
   async firstUpdated() {
@@ -415,7 +427,8 @@ class VasRepack extends localize(i18next)(VasTemplate) {
               worksheetDetailName: this.record.name,
               fromPalletId: this.fromPalletIdInput.value,
               toPalletId: this.toPalletIdInput.value,
-              locationName: this.locationInput.value
+              locationName: this.locationInput.value,
+              packageQty: parseInt(this.packageQtyInput.value)
             })})
           }
         `
@@ -447,13 +460,19 @@ class VasRepack extends localize(i18next)(VasTemplate) {
   }
 
   _checkRepackable() {
+    if (!this.packageQtyInput.checkValidity()) {
+      this.packageQtyInput.value = 1
+      this.packageQtyInput.select()
+      throw new Error(i18next.t('text.invalid_quantity_input'))
+    }
+
     if (!this.fromPalletIdInput.value) {
-      this.fromPalletIdInput.select()
+      this.fromPalletIdInput.focus()
       throw new Error(i18next.t('text.from_pallet_id_is_emplty'))
     }
 
     if (!this.toPalletIdInput.value) {
-      this.toPalletIdInput.select()
+      this.toPalletIdInput.focus()
       throw new Error(i18next.t('text.to_pallet_id_is_empty'))
     }
 
@@ -474,15 +493,14 @@ class VasRepack extends localize(i18next)(VasTemplate) {
     }
   }
 
-  _showToast({ type, message }) {
-    document.dispatchEvent(
-      new CustomEvent('notify', {
-        detail: {
-          type,
-          message
-        }
-      })
-    )
+  checkExecutionValidity() {
+    try {
+      if (this._getOperationGuideData('requiredPackageQty') > 0) {
+        throw new Error(i18next.t('text.vas_is_not_completed_yet'))
+      }
+    } catch (e) {
+      this._showToast(e)
+    }
   }
 }
 

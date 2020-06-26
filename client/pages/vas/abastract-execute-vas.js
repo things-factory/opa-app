@@ -413,7 +413,7 @@ export class AbstractExecuteVas extends LitElement {
       this.checkExecutionValidity()
 
       if (this._template) {
-        await this._template.checkCompleteValidity()
+        await this._template.checkExecutionValidity()
       }
 
       const response = await client.query({
