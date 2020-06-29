@@ -164,7 +164,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         </fieldset>
       </form>
 
-      <div class="gan-attachment-container" ?hidden="${this._attachments > 0 ? false : true}">
+      <div class="gan-attachment-container" ?hidden="${this._attachments.length > 0 ? false : true}">
         <form name="ganAttachment" class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.attachment')}</legend>
