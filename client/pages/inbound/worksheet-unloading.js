@@ -10,6 +10,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../components/popup-note'
 import './adjust-pallet-qty'
+import './adjust-batch-id'
 import { WORKSHEET_STATUS } from './constants/worksheet'
 import './pallet-label-popup'
 import './putaway-worksheet-generate-popup'
@@ -172,11 +173,13 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
               this._showPalletQtyAdjustPopup(record)
             } else if (column.name === 'issue' && record.issue) {
               this._showIssueNotePopup(record)
+            } else if (column.name === 'batchId' && record.status === WORKSHEET_STATUS.DEACTIVATED.value) {
+              this._showBatchIdAdjustPopup(record)
             }
           }
         }
       },
-      list: { fields: ['batchId', 'product', 'palletQty', 'status'] },
+      list: { fields: ['remark', 'batchId', 'product', 'palletQty', 'packQty', 'totalWeight', 'status'] },
       pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -184,7 +187,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_no'),
-          record: { align: 'left' },
+          record: { align: 'center' },
           width: 150
         },
         {
@@ -239,6 +242,10 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
+  get _ganNoInput() {
+    return this.shadowRoot.querySelector('input[name=arrivalNotice]')
+  }
+
   async fetchWorksheet() {
     if (!this._worksheetNo) return
     const response = await client.query({
@@ -287,6 +294,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
                 description
                 packingType
                 packQty
+                remark
                 totalWeight
                 palletQty
               }
@@ -324,6 +332,12 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
             status: worksheetDetail.status,
             description: worksheetDetail.description,
             issue: worksheetDetail.issue,
+            initialBatchId: worksheetDetail.targetProduct.batchId,
+            hasBatchChanges:
+              worksheetDetail.targetProduct &&
+              worksheetDetail.targetProduct.batchId !== worksheetDetail.targetProduct.initialBatchId
+                ? false
+                : true,
             isPalletized:
               worksheetDetail.targetProduct &&
               worksheetDetail.targetProduct.palletQty &&
@@ -341,6 +355,17 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value) {
       this._actions = [{ title: i18next.t('button.activate'), action: this._activateWorksheet.bind(this) }]
     }
+
+    if (this.grist.data.records.some(record => record.hasBatchChanges)) {
+      this._actions = [{ title: i18next.t('button.submit'), action: this._submitForApproval.bind(this) }]
+    }
+
+    if (this._worksheetStatus === WORKSHEET_STATUS.PENDING_ADJUSTMENT.value) {
+      this._actions = [
+        { title: i18next.t('button.submit_for_approval'), action: this._submitForCustomerApproval.bind(this) }
+      ]
+    }
+
     if (this._worksheetStatus === WORKSHEET_STATUS.EXECUTING.value) {
       this._actions = [
         { title: i18next.t('button.pallet_label_print'), action: this._openPalletLabelPrintPopup.bind(this) }
@@ -382,6 +407,14 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       width: 200
     }
 
+    const initialBatchColumnConfig = {
+      type: 'string',
+      name: 'remark',
+      record: { align: 'center' },
+      header: i18next.t('field.initial_batch_id'),
+      width: 200
+    }
+
     this.preConfig.columns.map(column => {
       if (column.name === 'description') {
         column.record = { ...column.record, editable: this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value }
@@ -390,7 +423,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
 
     if (
       !this.preConfig.columns.some(e => e.name === 'status') &&
-      this._worksheetStatus !== WORKSHEET_STATUS.DEACTIVATED.value
+      this._worksheetStatus === WORKSHEET_STATUS.EXECUTING.value
     ) {
       this.preConfig.columns = [...this.preConfig.columns, statusColumnConfig, issueColumnConfig]
     } else if (
@@ -399,6 +432,14 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     ) {
       this.preConfig.columns.splice(this.preConfig.columns.map(e => e.name).indexOf('status'))
       this.preConfig.columns.splice(this.preConfig.columns.map(e => e.name).indexOf('issue'))
+    } else if (
+      this._worksheetStatus === WORKSHEET_STATUS.PENDING_APPROVAL.value ||
+      this._worksheetStatus === WORKSHEET_STATUS.PENDING_ADJUSTMENT.value
+    ) {
+      if (!this.preConfig.columns.some(e => e.name === 'remark')) {
+        const batchIdColumnIdx = this.preConfig.columns.map(c => c.name).indexOf('batchId')
+        this.preConfig.columns.splice(batchIdColumnIdx, 0, initialBatchColumnConfig)
+      }
     }
 
     this.config = { ...this.preConfig }
@@ -454,6 +495,35 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     )
   }
 
+  _showBatchIdAdjustPopup(record) {
+    openPopup(
+      html`
+        <adjust-batch-id
+          .record="${record}"
+          @batch-adjusted="${e => {
+            this.data = {
+              ...this.data,
+              records: this.data.records.map(item => {
+                if (item.name === record.name) {
+                  item.batchId = e.detail.currentBatchId
+                  item.hasBatchChanges = e.detail.hasBatchChanges
+                }
+
+                return item
+              })
+            }
+            this._updateContext()
+          }}"
+        ></adjust-batch-id>
+      `,
+      {
+        backdrop: true,
+        size: 'medium',
+        title: i18next.t('title.adjust_batch_id')
+      }
+    )
+  }
+
   _showIssueNotePopup(record) {
     openPopup(html` <popup-note title="${record.batchId}" value="${record.issue}" .readonly="${true}"></popup-note> `, {
       backdrop: true,
@@ -500,6 +570,79 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     }
   }
 
+  async _submitForApproval() {
+    try {
+      this._checkPalletQty()
+
+      if (!this.grist.dirtyData.records.every(record => record.batchId === record.prevBatchId)) {
+        const result = await CustomAlert({
+          title: i18next.t('title.edited_batch_no_detected'),
+          text: i18next.t('text.gan_will_be_sent_for_customer_approval'),
+          confirmButton: { text: i18next.t('button.confirm') },
+          cancelButton: { text: i18next.t('button.cancel') }
+        })
+
+        if (!result.value) return
+      }
+
+      const response = await client.query({
+        query: gql`
+            mutation {
+              editBatchNo(${gqlBuilder.buildArgs({
+                worksheetNo: this._worksheetNo,
+                unloadingWorksheetDetails: this._getUnloadingWorksheetDetails()
+              })}) {
+                name
+              }
+            }
+          `
+      })
+
+      if (!response.errors) {
+        this._showToast({ message: i18next.t('text.adjustment_pending_admin_approval') })
+
+        await this.fetchWorksheet()
+        this._updateContext()
+        this._updateGristConfig()
+      }
+    } catch (e) {
+      this._showToast(e)
+    }
+  }
+
+  async _submitForCustomerApproval() {
+    try {
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.submit_edited_batch_id_for_approval'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) return
+
+      const response = await client.query({
+        query: gql`
+            mutation {
+              submitAdjustmentForApproval(${gqlBuilder.buildArgs({
+                name: this._ganNo
+              })})
+            }
+          `
+      })
+
+      if (!response.errors) {
+        this._showToast({ message: i18next.t('text.gan_pending_customer_approval') })
+
+        await this.fetchWorksheet()
+        this._updateContext()
+        this._updateGristConfig()
+      }
+    } catch (e) {
+      this._showToast(e)
+    }
+  }
+
   _checkPalletQty() {
     if (!this.grist.dirtyData.records.every(record => record.palletQty && Number(record.palletQty) > 0))
       throw new Error(i18next.t('text.there_is_no_pallet_qty'))
@@ -516,6 +659,10 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       if (!worksheetDetail.isPalletized) {
         _tempObj.palletQty = worksheetDetail.palletQty
         _tempObj.palletizingDescription = worksheetDetail.palletizingDescription
+      }
+
+      if (worksheetDetail.initialBatchId) {
+        _tempObj.initialBatchId = worksheetDetail.initialBatchId
       }
 
       return _tempObj

@@ -50,6 +50,14 @@ export const WORKSHEET_STATUS = {
     name: 'adjusted',
     value: 'ADJUSTED'
   },
+  PENDING_APPROVAL: {
+    name: 'pending_approval',
+    value: 'PENDING_APPROVAL'
+  },
+  PENDING_ADJUSTMENT: {
+    name: 'pending_adjustment',
+    value: 'PENDING_ADJUSTMENT'
+  },
   PARTIALLY_UNLOADED: {
     name: 'partially_unloaded',
     value: 'PARTIALLY_UNLOADED'

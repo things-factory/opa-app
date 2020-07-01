@@ -12,6 +12,7 @@ import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, PRODUCT_TYPE } from '.
 import { ORDER_PRODUCT_STATUS, ORDER_STATUS } from '../constants/order'
 import '../../components/attachment-viewer'
 import './extra-product-popup'
+import './proceed-edited-batch-popup'
 import './proceed-extra-product-popup'
 
 class ArrivalNoticeDetail extends localize(i18next)(PageView) {
@@ -463,6 +464,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
                 name
                 description
               }
+              remark
               status
               packingType
               weight
@@ -552,6 +554,14 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       this.productData.records.some(product => product.status === ORDER_PRODUCT_STATUS.READY_TO_APPROVED.value)
     ) {
       this._actions = [{ title: i18next.t('button.approve'), action: this.openApproveProductPopup.bind(this) }]
+    }
+
+    if (
+      !this.isUserBelongsDomain &&
+      this._status === ORDER_STATUS.PENDING_APPROVAL.value &&
+      this.productData.records.some(product => product.status === ORDER_PRODUCT_STATUS.PENDING_APPROVAL.value)
+    ) {
+      this._actions = [{ title: i18next.t('button.approve'), action: this.openApproveBatchPopup.bind(this) }]
     }
 
     if (!this.isUserBelongsDomain && this._status !== ORDER_STATUS.PENDING.value) {
@@ -719,6 +729,26 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         backdrop: true,
         size: 'large',
         title: i18next.t('title.proceed_extra_product')
+      }
+    )
+  }
+
+  openApproveBatchPopup() {
+    openPopup(
+      html`
+        <proceed-edited-batch-popup
+          .ganNo="${this._ganNo}"
+          .data="${this.productData}"
+          @completed="${() => {
+            this._fetchGAN()
+            this._updateContext()
+          }}"
+        ></proceed-edited-batch-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.edited_batch_no_approval')
       }
     )
   }
