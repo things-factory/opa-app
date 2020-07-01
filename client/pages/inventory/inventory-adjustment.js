@@ -656,7 +656,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       ]
 
       const bizplaceFilters = (await this.searchForm.getQueryFilters()).filter(x => x.name === 'bizplaceId')
-
+      
       if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
         records = this.dataGrist.selected
         data = records
@@ -668,6 +668,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       }
 
       let bizplace = await this.fetchBizplaces(bizplaceFilters)
+
       let product = await this.fetchProduct(bizplaceFilters)
 
       headerSetting = headerSetting.map(column => {
@@ -729,6 +730,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async fetchProduct(bizplace = []) {
+    bizplace[0].name = "bizplace"
     const response = await client.query({
       query: gql`
           query {
