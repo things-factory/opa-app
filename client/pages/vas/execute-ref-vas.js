@@ -3,9 +3,8 @@ import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import { html } from 'lit-element'
-import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
 import { ARRIVAL_NOTICE, RELEASE_OF_GOODS } from '../order/constants'
-import { AbstractExecuteVas } from './abastract-execute-vas'
+import { AbstractExecuteVas } from './abstract-execute-vas'
 
 class ExecuteRefVas extends localize(i18next)(AbstractExecuteVas) {
   render() {
@@ -50,7 +49,7 @@ class ExecuteRefVas extends localize(i18next)(AbstractExecuteVas) {
           ></data-grist>
         </div>
 
-        <div class="right-column">
+        <div class="right-column" @completed="${this._templateCompletedHandler.bind(this)}">
           <form id="detail-info-form" class="single-column-form">
             <fieldset>
               <legend>${i18next.t('label.vas')}: ${this._vasName}</legend>

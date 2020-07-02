@@ -492,8 +492,8 @@ class TargetInventoryAssignmentPopup extends localize(i18next)(LitElement) {
         } else {
           return {
             ...record,
-            selected: 0,
-            selecte: false
+            selectedQty: 0,
+            selected: false
           }
         }
       })

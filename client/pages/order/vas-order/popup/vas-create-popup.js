@@ -488,13 +488,23 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
               if (vasIds.length) {
                 column.record.options.basicArgs = {
                   filters: [
-                    { name: 'operationGuide', operator: 'notin_with_null', value: ['vas-repack', 'vas-repalletizing'] },
+                    {
+                      name: 'operationGuide',
+                      operator: 'notin_with_null',
+                      value: ['vas-repack', 'vas-repalletizing', 'vas-relabel']
+                    },
                     { name: 'id', operator: 'notin', value: vasIds }
                   ]
                 }
               } else {
                 column.record.options.basicArgs = {
-                  filters: [{ name: 'operationGuide', operator: 'notin_with_null', value: ['vas-repack'] }]
+                  filters: [
+                    {
+                      name: 'operationGuide',
+                      operator: 'notin_with_null',
+                      value: ['vas-repack', 'vas-repalletizing', 'vas-relabel']
+                    }
+                  ]
                 }
               }
               return column

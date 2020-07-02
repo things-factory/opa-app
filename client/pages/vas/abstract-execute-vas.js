@@ -232,23 +232,21 @@ export class AbstractExecuteVas extends LitElement {
 
   initVasTemplate(record) {
     this._template = document.createElement(record.vas.operationGuide)
-    this._template.addEventListener('completed', this._templateCompletedHandler.bind(this))
     this._template.record = { ...record, operationGuide: JSON.parse(record.operationGuide) }
+    this._template.orderType = this.orderType
 
     if (!record.completed) {
       this._template.isExecuting = true
-      this._templateContextBtns = this._template.contextButtons
     } else {
       this._template.isExecuting = false
-      this._templateContextBtns = null
     }
 
+    this._templateContextBtns = this._template.contextButtons
     this._template.init()
   }
 
   clearVasTemplate() {
     if (!this._template) return
-    this._template.removeEventListener('completed', this._templateCompletedHandler)
     this._template = null
     this._templateContextBtns = null
   }
@@ -257,14 +255,22 @@ export class AbstractExecuteVas extends LitElement {
     const selectedVasName = this._selectedVas.name
     await this.fetchVas()
     this._selectedVas = this.vasTasks.records.find(record => record.name === selectedVasName)
-    this._fillUpDetailInfoForm(this._selectedVas)
-    this._selectedTaskStatus = this._selectedVas.status
-    this._template.record = { ...this._selectedVas, operationGuide: JSON.parse(this._selectedVas.operationGuide) }
-    this._template.init()
+    if (this._selectedVas && this._selectedVas.status === WORKSHEET_STATUS.EXECUTING.value) {
+      this._fillUpDetailInfoForm(this._selectedVas)
+      this._selectedTaskStatus = this._selectedVas.status
+      this._template.record = { ...this._selectedVas, operationGuide: JSON.parse(this._selectedVas.operationGuide) }
+      this._template.init()
+    } else {
+      this.clearVasTemplate()
+    }
   }
 
   _updateContext() {
     let actions = []
+
+    if (this._templateContextBtns && this._templateContextBtns.length) {
+      actions = this._templateContextBtns
+    }
 
     if (this._selectedTaskStatus === WORKSHEET_STATUS.EXECUTING.value) {
       actions = [
@@ -278,10 +284,6 @@ export class AbstractExecuteVas extends LitElement {
 
     if (this.vasSets && this.vasSets.records && this.vasSets.records.every(record => record.completed)) {
       actions = [...actions, { title: i18next.t('button.complete'), action: this._complete.bind(this) }]
-    }
-
-    if (this._templateContextBtns && this._templateContextBtns.length) {
-      actions = [...actions, ...this._templateContextBtns]
     }
 
     store.dispatch({

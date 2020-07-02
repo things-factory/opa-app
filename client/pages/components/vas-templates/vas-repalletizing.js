@@ -1,5 +1,6 @@
 import '@things-factory/barcode-ui'
 import { SingleColumnFormStyles } from '@things-factory/form-ui'
+import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, CustomAlert } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
@@ -417,8 +418,12 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
         `
       })
 
-      this.dispatchEvent(new CustomEvent('completed'))
-      this.init()
+      this.dispatchEvent(
+        new CustomEvent('completed', {
+          bubbles: true,
+          composed: true
+        })
+      )
     } catch (e) {
       this._showToast(e)
     }
@@ -437,8 +442,12 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
         `
       })
 
-      this.dispatchEvent(new CustomEvent('completed'))
-      this.init()
+      this.dispatchEvent(
+        new CustomEvent('completed', {
+          bubbles: true,
+          composed: true
+        })
+      )
     } catch (e) {
       this._showToast(e)
     }
@@ -456,8 +465,7 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
     }
 
     const requiredPalletQty = this._getOperationGuideData('requiredPalletQty')
-    const repalletizedPalletQty = this.palletData.records.filter(p => p.palletId !== this.toPalletIdInput.value).length
-    if (requiredPalletQty - repalletizedPalletQty === 0) {
+    if (requiredPalletQty === 0) {
       this.toPalletIdInput.select()
       throw new Error(i18next.t('text.qty_exceed_limit'))
     }

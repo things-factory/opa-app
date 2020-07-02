@@ -749,12 +749,11 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             await this.fetchOrderInventories()
             await this.fetchWorksheetDetails(
               this._worksheetNo,
-              this._selectedProduct.batchId,
-              this._selectedProduct.productName,
-              this._selectedProduct.packingType
+              this._selectedProduct?.batchId,
+              this._selectedProduct?.productName,
+              this._selectedProduct?.packingType
             )
 
-            this._selectedProduct.completed = true
             this._updateContext()
           }}"
         ></inventory-auto-assign-popup>
