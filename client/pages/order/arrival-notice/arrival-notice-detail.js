@@ -248,7 +248,9 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         appendable: false,
         classifier: (record, rowIndex) => {
           return {
-            emphasized: record.status === ORDER_PRODUCT_STATUS.READY_TO_APPROVED.value
+            emphasized:
+              record.status === ORDER_PRODUCT_STATUS.READY_TO_APPROVED.value ||
+              record.status === ORDER_PRODUCT_STATUS.PENDING_APPROVAL.value
           }
         }
       },
@@ -461,9 +463,11 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
               id
               batchId
               product {
+                id
                 name
                 description
               }
+              adjustedBatchId
               remark
               status
               packingType

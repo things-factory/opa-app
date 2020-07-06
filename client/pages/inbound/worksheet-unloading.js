@@ -290,6 +290,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
                   description
                 }
                 batchId
+                adjustedBatchId
                 name
                 description
                 packingType
@@ -409,9 +410,9 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
 
     const initialBatchColumnConfig = {
       type: 'string',
-      name: 'remark',
+      name: 'adjustedBatchId',
       record: { align: 'center' },
-      header: i18next.t('field.initial_batch_id'),
+      header: i18next.t('field.adjusted_batch_id'),
       width: 200
     }
 
@@ -436,7 +437,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       this._worksheetStatus === WORKSHEET_STATUS.PENDING_APPROVAL.value ||
       this._worksheetStatus === WORKSHEET_STATUS.PENDING_ADJUSTMENT.value
     ) {
-      if (!this.preConfig.columns.some(e => e.name === 'remark')) {
+      if (!this.preConfig.columns.some(e => e.name === 'adjustedBatchId')) {
         const batchIdColumnIdx = this.preConfig.columns.map(c => c.name).indexOf('batchId')
         this.preConfig.columns.splice(batchIdColumnIdx, 0, initialBatchColumnConfig)
       }

@@ -160,8 +160,8 @@ export class ProceedEditedBatchPopup extends localize(i18next)(LitElement) {
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'string',
-          name: 'remark',
-          header: i18next.t('field.initial_batch_id'),
+          name: 'adjustedBatchId',
+          header: i18next.t('field.adjusted_batch_id'),
           record: { align: 'center' },
           width: 150
         },
@@ -284,10 +284,18 @@ export class ProceedEditedBatchPopup extends localize(i18next)(LitElement) {
             proceedEditedBatch(${gqlBuilder.buildArgs({
               ganNo: this.ganNo,
               approvedProducts: this.approveGrist.data.records.map(record => {
-                return { id: record.id }
+                return {
+                  id: record.id,
+                  adjustedBatchId: record.adjustedBatchId,
+                  batchId: record.batchId
+                }
               }),
               rejectedProducts: this.rejectGrist.data.records.map(record => {
-                return { id: record.id }
+                return {
+                  id: record.id,
+                  adjustedBatchId: record.adjustedBatchId,
+                  batchId: record.batchId
+                }
               })
             })})
           }

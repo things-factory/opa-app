@@ -144,7 +144,7 @@
   "field.id_field": "id field",
   "field.import_cargo": "import cargo",
   "field.in": "in",
-  "field.initial_batch_id": "initial batch no",
+  "field.adjusted_batch_id": "adjusted batch no",
   "field.inbound": "inbound",
   "field.inventory": "inventory",
   "field.inventory_list": "inventory list",
