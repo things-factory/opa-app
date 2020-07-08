@@ -788,7 +788,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         }
 
         let attachments
-        if (this._ownTransport) {
+        if (this._document?.files) {
           attachments = this._document.files
         }
 
