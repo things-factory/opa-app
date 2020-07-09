@@ -209,10 +209,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               <select name="truckNo" ?hidden="${this._ownCollection}">
                 <option value="">-- ${i18next.t('text.please_select_a_truck')} --</option>
                 ${(this.transportVehicles || []).map(
-                  truck =>
-                    html`
-                      <option value="${truck && truck.name}">${truck && truck.name}</option>
-                    `
+                  truck => html` <option value="${truck && truck.name}">${truck && truck.name}</option> `
                 )}
               </select>
 

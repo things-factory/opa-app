@@ -41,9 +41,9 @@ export class VasTemplate extends LitElement {
     if (!this.record.operationGuide.completed) throw new Error(i18next.t('text.vas_is_not_completed_yet'))
   }
 
-  adjust() {
+  async adjust() {
     try {
-      this.validateAdjust()
+      await this.validateAdjust()
       return {
         data: this.data,
         transactions: this.transactions
@@ -53,7 +53,7 @@ export class VasTemplate extends LitElement {
     }
   }
 
-  validateAdjust() {
+  async validateAdjust() {
     throw new Error('validateAdjust function should be implemented by component which extends VasTemplate')
   }
 

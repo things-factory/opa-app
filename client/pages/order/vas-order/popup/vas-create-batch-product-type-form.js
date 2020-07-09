@@ -284,9 +284,10 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
           { totalQty: 0, totalWeight: 0 }
         )
 
+      // 현재 VAS에 포함된 수량과 weight을 더하여 return
       return {
-        totalQty: totalQty - choosenAmount.totalQty,
-        totalWeight: totalWeight - choosenAmount.totalWeight,
+        totalQty: totalQty - choosenAmount.totalQty + (this.record.qty || 0),
+        totalWeight: totalWeight - choosenAmount.totalWeight + (this.record.weight || 0),
         unitWeight
       }
     } else {

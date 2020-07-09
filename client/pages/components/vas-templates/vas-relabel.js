@@ -48,7 +48,6 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
       record: Object,
       orderType: String,
       config: Object,
-      config: Object,
       palletData: Object
     }
   }
@@ -383,49 +382,34 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
   }
 
   async validateAdjust() {
-    if (!this._selectedProduct && !this._selectedBatchId) {
-      throw new Error(i18next.t('text.target_does_not_selected'))
+    if (!this.targetInfo.qty) {
+      throw new Error(i18next.t('text.invalid_item_qty'))
     }
 
-    if (this._selectedBatchId) {
-      if (await this._checkBatchIdDuplication()) {
-        throw new Error(i18next.t('text.batch_id_is_duplicated'))
-      }
+    if (!this.targetInfo.weight) {
+      throw new Error(i18next.t('text.invalid_item_weight'))
     }
+
+    const isRelabelable = await this._checkValidInventory()
+    if (!isRelabelable) throw new Error(i18next.t('text.inventory_should_be_excatly_same_or_totally_different'))
   }
 
-  async _checkBatchIdDuplication() {
+  async _checkValidInventory() {
     const response = await client.query({
       query: gql`
         query {
-          inventories(${gqlBuilder.buildArgs({
-            filters: [
-              {
-                name: 'batchId',
-                operator: 'eq',
-                value: this._selectedBatchId
-              }
-            ],
-            pagination: {
-              limit: 1
-            }
-          })}) {
-            items {
-              batchId
-            }
-          }
+          checkRelabelable(${gqlBuilder.buildArgs({
+            batchId: this._selectedBatchId || this.targetInfo.target.batchId,
+            productId: this._selectedProduct?.id || this.targetInfo.target.productId,
+            packingType: this.targetInfo.packingType,
+            unitWeight: this.targetInfo.weight / this.targetInfo.qty
+          })})
         }
       `
     })
 
     if (!response.errors) {
-      if (response.data.inventories.items.length) {
-        return true // there's duplicated batch id already
-      } else {
-        return false // there's no duplicated batch id
-      }
-    } else {
-      return false
+      return response.data.checkRelabelable
     }
   }
 

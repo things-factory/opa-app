@@ -65,18 +65,7 @@ class ExecuteRefVas extends localize(i18next)(AbstractExecuteVas) {
             </fieldset>
           </form>
 
-          ${this._template
-            ? html``
-            : html`
-                <form id="input-form" class="single-column-form" @keypress="${this.inputFormKeypressHandler}">
-                  <fieldset>
-                    <legend>${i18next.t('label.scan_area')}</legend>
-                    <label>${i18next.t('label.pallet')}</label>
-                    <barcode-scanable-input name="palletId" custom-input></barcode-scanable-input>
-                  </fieldset>
-                </form>
-              `}
-          ${this._template}
+          ${this._template ? html`${this._template}` : ''}
         </div>
       </div>
     `
@@ -159,11 +148,6 @@ class ExecuteRefVas extends localize(i18next)(AbstractExecuteVas) {
     remarkInput.value = data.remark || ''
   }
 
-  initCommonVas() {
-    this.palletIdInput.value = ''
-    this.palletIdInput.focus()
-  }
-
   async inputFormKeypressHandler(e) {
     if (e.keyCode === 13) {
       await this._executeVas()
@@ -175,9 +159,12 @@ class ExecuteRefVas extends localize(i18next)(AbstractExecuteVas) {
     if (!this._selectedVas) throw new Error(i18next.t('text.target_doesnt_selected'))
     // 2. pallet id is required for reference vas
 
-    if (this.palletIdInput) {
-      const palletId = this.palletIdInput.value
-      if (!palletId) throw new Error(i18next.t('text.pallet_id_is_empty'))
+    if (
+      this._template &&
+      this._template.checkExecutionValidity &&
+      typeof this._template.checkExecutionValidity === 'function'
+    ) {
+      this._template.checkExecutionValidity()
     }
   }
 
