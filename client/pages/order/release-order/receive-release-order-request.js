@@ -567,8 +567,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
       })
 
       if (!response.errors) {
-        history.back()
-
+        navigate(`outbound_worksheets`)
         this._showToast({ message: i18next.t('text.release_order_received') })
       }
     } catch (e) {
