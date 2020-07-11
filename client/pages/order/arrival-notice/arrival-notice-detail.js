@@ -565,7 +565,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       this._status === ORDER_STATUS.PENDING_APPROVAL.value &&
       this.productData.records.some(product => product.status === ORDER_PRODUCT_STATUS.PENDING_APPROVAL.value)
     ) {
-      this._actions = [{ title: i18next.t('button.approve'), action: this.openApproveBatchPopup.bind(this) }]
+      this._actions = [{ title: i18next.t('button.inspect_changes'), action: this.openApproveBatchPopup.bind(this) }]
     }
 
     if (

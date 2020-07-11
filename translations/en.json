@@ -5,6 +5,7 @@
   "button.adjust": "adjust",
   "button.adjust_inventory": "adjust inventory",
   "button.approve": "approve",
+  "button.inspect_changes": "inspect changes",
   "button.arrived": "arrived",
   "button.cycle_count": "cycle count",
   "button.assign_warehouse": "assign warehouse",
