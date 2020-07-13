@@ -4,13 +4,13 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, CustomAlert, PageView, ScrollbarStyles, store, navigate } from '@things-factory/shell'
+import { client, PageView, ScrollbarStyles, store } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
 import { PALLET_LABEL_SETTING_KEY } from '../../setting-constants'
-import '../components/import-pop-up'
+import '@things-factory/import-ui'
 import './inventory-history-by-pallet'
 
 class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
@@ -656,7 +656,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       ]
 
       const bizplaceFilters = (await this.searchForm.getQueryFilters()).filter(x => x.name === 'bizplaceId')
-      
+
       if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
         records = this.dataGrist.selected
         data = records
@@ -730,7 +730,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async fetchProduct(bizplace = []) {
-    bizplace[0].name = "bizplace"
+    bizplace[0].name = 'bizplace'
     const response = await client.query({
       query: gql`
           query {
