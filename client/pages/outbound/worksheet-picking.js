@@ -204,7 +204,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               )
               this._selectedProduct = {
                 batchId: record.batchId,
-                productName: record.productName,
+                product: record.product,
                 packingType: record.packingType,
                 releaseQty: record.releaseQty,
                 releaseWeight: record.releaseWeight,
@@ -234,7 +234,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
 
               this._selectedProduct = {
                 batchId: record.batchId,
-                productName: record.productName,
+                product: record.product,
                 bizplaceId: record.bizplaceId,
                 packingType: record.packingType,
                 releaseQty: record.releaseQty,
@@ -252,8 +252,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           width: 100
         },
         {
-          type: 'string',
-          name: 'productName',
+          type: 'object',
+          name: 'product',
           header: i18next.t('field.product'),
           record: { align: 'left' },
           width: 250
@@ -379,7 +379,11 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             orderInventories {
               status
               batchId
-              productName
+              product {
+                id
+                name
+                description
+              }
               packingType
               releaseQty
               releaseWeight
@@ -401,7 +405,11 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               status
               targetInventory {
                 batchId
-                productName
+                product {
+                  id
+                  name
+                  description
+                }
                 packingType
                 releaseQty
                 releaseWeight
@@ -481,7 +489,6 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             return {
               ...item,
               ...item.inventory,
-              product: { name: item.productName },
               ...item.inventory.location,
               description: item.description
             }
@@ -520,7 +527,6 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               name
               description
               targetInventory {
-                productName
                 releaseQty
                 releaseWeight
                 inventory {
@@ -709,7 +715,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           <inventory-assign-popup
             .worksheetNo="${this._worksheetNo}"
             .batchId="${this._selectedProduct.batchId}"
-            .productName="${this._selectedProduct.productName}"
+            .productName="${this._selectedProduct.product.name}"
             .bizplaceId="${this._selectedProduct.bizplaceId}"
             .packingType="${this._selectedProduct.packingType}"
             .releaseQty="${this._selectedProduct.releaseQty}"

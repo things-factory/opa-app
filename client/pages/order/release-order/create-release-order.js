@@ -1066,7 +1066,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
           releaseQty: record.releaseQty,
           releaseWeight: record.releaseWeight,
           batchId: record.inventory.batchId,
-          productName: record.inventory.productName,
+          product: { id: record.inventory.productId, name: record.inventory.productName },
           packingType: record.inventory.packingType,
           type: ORDER_TYPES.RELEASE_OF_GOODS.value,
           status: ORDER_INVENTORY_STATUS.PENDING.value
@@ -1077,11 +1077,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         return {
           releaseQty: record.releaseQty,
           releaseWeight: record.releaseWeight,
-          inventory: {
-            id: record.id
-          },
+          inventory: { id: record.id },
           batchId: record.inventory.batchId,
-          productName: record.inventory.product.name,
+          product: { id: record.inventory.product.id, name: record.inventory.product.name },
           packingType: record.inventory.packingType,
           type: ORDER_TYPES.RELEASE_OF_GOODS.value,
           status: ORDER_INVENTORY_STATUS.PENDING.value
