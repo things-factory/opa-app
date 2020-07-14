@@ -89,12 +89,12 @@ class JobSheetReport extends localize(i18next)(PageView) {
           })}) {
             containerNo
             looseItem
+            ata
             bizplace {
                 id
                 name
             }
             jobSheet {
-              ata
               name
               containerSize
               containerMtDate
