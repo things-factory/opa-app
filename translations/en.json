@@ -1036,7 +1036,7 @@
   "label.approver": "approver",
   "label.approved_at": "approved at",
   "label.inventory_accuracy": "inventory accuracy",
-  "label.container_mt_date": "container MT date",
+  "label.container_return_date": "container return date",
   "text.cannot_delete_unsaved_location(s)": "cannot delete unsaved location(s)",
   "text.cycle_count_date_invalid": "cycle count date invalid",
   "text.cycle_count_worksheet_created": "cycle count worksheet created",

@@ -71,10 +71,10 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
           <label for="looseItem">${i18next.t('label.loose_item')}</label>
 
           <label>${i18next.t('label.advise_mt_date')}</label>
-          <input name="adviseMtDate" type="date" min="${this._getStdDate()}" />
+          <input name="adviseMtDate" type="date" />
 
-          <label>${i18next.t('label.container_mt_date')}</label>
-          <input name="containerMtDate" type="date" min="${this._getStdDate()}" />
+          <label>${i18next.t('label.container_return_date')}</label>
+          <input name="containerMtDate" type="date" />
 
           <label>${i18next.t('label.total_pallet_qty')}</label>
           <input name="sumPalletQty" />
@@ -143,12 +143,6 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
 
   _getInputByName(name) {
     return this.shadowRoot.querySelector(`textarea[name=${name}], select[name=${name}], input[name=${name}]`)
-  }
-
-  _getStdDate() {
-    let date = new Date()
-    date.setDate(date.getDate())
-    return date.toISOString().split('T')[0]
   }
 
   _fillUpForm(form, data) {
