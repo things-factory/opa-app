@@ -511,26 +511,26 @@ class VasRepack extends localize(i18next)(VasTemplate) {
       throw new Error(i18next.t('text.to_pallet_id_is_empty'))
     }
 
-    const toPalleId = this.toPalletIdInput.value
-    const foundPallet = this._getOperationGuideData('repackedInvs', []).find(ri => ri.palletId === toPalleId)
-    if (foundPallet?.repackedFrom?.length) {
-      const packingUnit = this._getOperationGuideData('packingUnit')
-      const stdAmount = this._getOperationGuideData('stdAmount')
-      const totalAmount = foundPallet.repackedFrom.reduce((totalAmount, rf) => {
-        if (packingUnit === PACKING_UNIT_QTY.value) {
-          totalAmount += rf.reducedQty
-        } else {
-          totalAmount += rf.reducedWeight
-        }
-        return totalAmount
-      }, 0)
+    // const toPalleId = this.toPalletIdInput.value
+    // const foundPallet = this._getOperationGuideData('repackedInvs', []).find(ri => ri.palletId === toPalleId)
+    // if (foundPallet?.repackedFrom?.length) {
+    //   const packingUnit = this._getOperationGuideData('packingUnit')
+    //   const stdAmount = this._getOperationGuideData('stdAmount')
+    //   const totalAmount = foundPallet.repackedFrom.reduce((totalAmount, rf) => {
+    //     if (packingUnit === PACKING_UNIT_QTY.value) {
+    //       totalAmount += rf.reducedQty
+    //     } else {
+    //       totalAmount += rf.reducedWeight
+    //     }
+    //     return totalAmount
+    //   }, 0)
 
-      if (totalAmount && totalAmount >= stdAmount) {
-        this.toPalletIdInput.value = ''
-        this.toPalletIdInput.focus()
-        throw new Error(i18next.t('text.qty_exceed_limit'))
-      }
-    }
+    //   if (totalAmount && totalAmount >= stdAmount) {
+    //     this.toPalletIdInput.value = ''
+    //     this.toPalletIdInput.focus()
+    //     throw new Error(i18next.t('text.qty_exceed_limit'))
+    //   }
+    // }
 
     if (!this.locationInput.value) {
       // location에 값이 없을 경우 기존에 추가된 팔렛에 현재 추가하려는 팔렛이 있는지 확인하고
