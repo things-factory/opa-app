@@ -10,6 +10,7 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
     return {
       containerMtDate: String,
       adviseMtDate: String,
+      ata: String,
       containerSize: String,
       containerNo: String,
       looseItem: Boolean,
@@ -70,6 +71,9 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
           <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" disabled />
           <label for="looseItem">${i18next.t('label.loose_item')}</label>
 
+          <label>${i18next.t('label.ata')}</label>
+          <input name="ata" type="date" />
+
           <label>${i18next.t('label.advise_mt_date')}</label>
           <input name="adviseMtDate" type="date" />
 
@@ -92,6 +96,7 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
       containerNo: this.containerNo,
       containerMtDate: this.containerMtDate,
       looseItem: this.looseItem,
+      ata: this.ata,
       adviseMtDate: this.adviseMtDate,
       containerSize: this.containerSize,
       sumPalletQty: this.sumPalletQty
@@ -132,6 +137,7 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
   _getJobSheetInfo() {
     if (this.shadowRoot.querySelector('form').checkValidity()) {
       return {
+        ata: this._getInputByName('ata').value,
         containerMtDate: this._getInputByName('containerMtDate').value,
         adviseMtDate: this._getInputByName('adviseMtDate').value,
         sumPalletQty: parseInt(this._getInputByName('sumPalletQty').value)
