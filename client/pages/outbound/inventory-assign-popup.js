@@ -16,6 +16,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
     return {
       worksheetNo: String,
       batchId: String,
+      productId: String,
       productName: String,
       bizplaceId: String,
       packingType: String,
@@ -336,7 +337,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
           this.pickQty += pickQty
           this.pickWeight += pickWeight
         }
-        
+
         // need to round off so that it will bypass the validation upon submission
         this.pickWeight = Math.round(this.pickWeight * 100) / 100
 
@@ -399,7 +400,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
 
             totalPickQty += pickQty
             totalPickWeight += pickWeight
-            
+
             return {
               ...data,
               pickQty: Math.round((pickQty * data.weight) / data.weight),
@@ -425,7 +426,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
             generateReleaseGoodWorksheetDetails(${gqlBuilder.buildArgs({
               worksheetNo: this.worksheetNo,
               batchId: this.batchId,
-              productName: this.productName,
+              productId: this.productId,
               packingType: this.packingType,
               worksheetDetails: this._composeWorksheetDetails()
             })})

@@ -195,11 +195,11 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         },
         handlers: {
           click: async (columns, data, column, record, rowIndex) => {
-            if (record.batchId && record.productName && record.packingType) {
+            if (record.batchId && record.product?.name && record.packingType) {
               await this.fetchWorksheetDetails(
                 this._worksheetNo,
                 record.batchId,
-                record.productName,
+                record.product.name,
                 record.packingType
               )
               this._selectedProduct = {
@@ -501,7 +501,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
   }
 
   _checkSameOrderInv(a, b) {
-    return a.batchId === b.batchId && a.productName === b.productName && a.packingType === b.packingType
+    return a.batchId === b.batchId && a.product?.name === b.product?.name && a.packingType === b.packingType
   }
 
   async fetchWorksheetDetails(worksheetNo, batchId, productName, packingType) {
@@ -715,6 +715,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           <inventory-assign-popup
             .worksheetNo="${this._worksheetNo}"
             .batchId="${this._selectedProduct.batchId}"
+            .productId="${this._selectedProduct.product.id}"
             .productName="${this._selectedProduct.product.name}"
             .bizplaceId="${this._selectedProduct.bizplaceId}"
             .packingType="${this._selectedProduct.packingType}"
@@ -725,7 +726,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               await this.fetchWorksheetDetails(
                 this._worksheetNo,
                 this._selectedProduct.batchId,
-                this._selectedProduct.productName,
+                this._selectedProduct.product.name,
                 this._selectedProduct.packingType
               )
 
@@ -756,7 +757,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             await this.fetchWorksheetDetails(
               this._worksheetNo,
               this._selectedProduct?.batchId,
-              this._selectedProduct?.productName,
+              this._selectedProduct?.product?.name,
               this._selectedProduct?.packingType
             )
 
@@ -791,7 +792,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             undoPickingAssigment(${gqlBuilder.buildArgs({
               worksheetNo: this._worksheetNo,
               batchId: this._selectedProduct.batchId,
-              productName: this._selectedProduct.productName,
+              productId: this._selectedProduct.product.id,
               packingType: this._selectedProduct.packingType
             })})
           }
@@ -802,7 +803,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       await this.fetchWorksheetDetails(
         this._worksheetNo,
         this._selectedProduct.batchId,
-        this._selectedProduct.productName,
+        this._selectedProduct.product.name,
         this._selectedProduct.packingType
       )
 
