@@ -714,7 +714,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
   async _undoPutaway() {
     try {
       if (!this._selectedOrderProduct) throw new Error(i18next.t('text.there_is_no_selected_items'))
-      
+
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.undo_putaway'),
@@ -748,8 +748,6 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     } catch (e) {
       this._showToast(e)
     }
-
-    console.log(this._selectedOrderProduct)
   }
 
   async _completeHandler() {

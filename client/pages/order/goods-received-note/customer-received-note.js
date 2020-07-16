@@ -63,7 +63,11 @@ class CustomerReceivedNote extends localize(i18next)(PageView) {
 
   _fetchGRNTemplate() {
     var { domain } = getPathInfo(location.pathname) // find out better way later.
-    this.shadowRoot.querySelector('#container').src = `/view_document_grn/${domain}/${this._grnNo}`
+    if (domain === 'elccl') {
+      this.shadowRoot.querySelector('#container').src = `/view_elccl_grn/${domain}/${this._grnNo}`
+    } else if (domain === 'kimeda') {
+      this.shadowRoot.querySelector('#container').src = `/view_kimeda_grn/${domain}/${this._grnNo}`
+    }
   }
 
   async _fetchGRN() {
