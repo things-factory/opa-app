@@ -381,7 +381,12 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
     this.vasGristData = { records: [] }
   }
 
-  _onFieldChange() {
+  _onFieldChange(e) {
+    if (e.detail.column.name === 'vas') {
+      this._template = null
+      delete this.vasGrist.dirtyData.records[e.detail.row].operationGuide
+    }
+
     this.vasGristData = {
       ...this.vasGrist.dirtyData,
       records: this.vasGrist.dirtyData.records.map(record => {
