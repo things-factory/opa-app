@@ -44,9 +44,11 @@ export const ORDER_PRODUCT_STATUS = {
   UNLOADING: { name: 'product_status_unloading', value: 'UNLOADING' },
   UNLOADED: { name: 'product_status_unloaded', value: 'UNLOADED' },
   PUTTING_AWAY: { name: 'product_status_putting_away', value: 'PUTTING_AWAY' },
+  INSPECTED: { name: 'product_status_inspected', value: 'INSPECTED' },
   PENDING_APPROVAL: { name: 'product_status_pending_approval', value: 'PENDING_APPROVAL' },
+  PENDING_ADJUSTMENT: { name: 'product_status_pending_adjustment', value: 'PENDING_ADJUSTMENT' },
   STORED: { name: 'product_status_stored', value: 'STORED' },
-  READY_TO_COLLECT: { name: 'product_status_ready_to_collect', value: 'READY_TO_COLLECT' },
+  READY_TO_UNLOAD: { name: 'product_status_ready_to_unload', value: 'READY_TO_UNLOAD' },
   READY_TO_DELIVER: { name: 'product_status_ready_to_deliver', value: 'READY_TO_DELIVER' },
   COLLECTED: { name: 'product_status_collected', value: 'COLLECTED' },
   DELIVERED: { name: 'product_status_delivered', value: 'DELIVERED' }
