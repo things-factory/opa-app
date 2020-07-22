@@ -98,7 +98,7 @@ class CustomerGrnList extends localize(i18next)(PageView) {
 
     this.config = {
       list: {
-        fields: ['name', 'bizplace', 'orderRefNo', 'arrivalNotice', 'updater', 'updatedAt']
+        fields: ['name', 'bizplace', 'refNo', 'arrivalNotice', 'updater', 'updatedAt']
       },
       rows: { appendable: false, selectable: { multiple: true } },
       columns: [
@@ -115,7 +115,7 @@ class CustomerGrnList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'orderRefNo',
+          name: 'refNo',
           header: i18next.t('field.ref_no'),
           record: { align: 'left' },
           sortable: true,
@@ -211,7 +211,7 @@ class CustomerGrnList extends localize(i18next)(PageView) {
           response.data.goodsReceivalNotes.items.map(grn => {
             return {
               ...grn,
-              orderRefNo: grn.arrivalNotice.refNo || ''
+              refNo: grn.arrivalNotice.refNo || ''
             }
           }) || []
       }
