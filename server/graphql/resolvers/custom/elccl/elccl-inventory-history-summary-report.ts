@@ -2,6 +2,7 @@ import { ListParam } from '@things-factory/shell'
 import { getManager, EntityManager, getRepository } from 'typeorm'
 import { User } from '@things-factory/auth-base'
 import { Bizplace, BizplaceUser } from '@things-factory/biz-base'
+import { InventoryHistory } from '@things-factory/warehouse-base'
 
 export const elcclInventoryHistorySummaryReport = {
   async elcclInventoryHistorySummaryReport(_: any, params: ListParam, context: any) {
@@ -105,7 +106,20 @@ export const elcclInventoryHistorySummaryReport = {
 
         let items = result.map(itm => {
           return {
-            ...itm
+            ...itm,
+            batchId: itm.batch_id,
+            packingType: itm.packing_type,
+            openingQty: itm.opening_qty,
+            closingQty: itm.closing_qty,
+            totalInQty: itm.total_in_qty,
+            totalOutQty: itm.total_out_qty,
+            initialQty: itm.initial_qty,
+            initialDate: itm.initial_date,
+            product: {
+              id: itm.product_id,
+              name: itm.product_name,
+              description: itm.product_description
+            }
           }
         })
 

@@ -142,16 +142,19 @@ class ElcclInventorySummaryReport extends connect(store)(localize(i18next)(PageV
         ]
       },
       rows: {
-        selectable: false
+        selectable: false,
+        insertable: false,
+        appendable: false
       },
       columns: [
+        { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'string',
           name: 'batchId',
           record: { editable: false, align: 'center' },
           imex: { header: i18next.t('field.batchId'), key: 'batchId', width: 15, type: 'string' },
           header: i18next.t('field.batchId'),
-          width: 200
+          width: 180
         },
         {
           type: 'string',
@@ -159,7 +162,7 @@ class ElcclInventorySummaryReport extends connect(store)(localize(i18next)(PageV
           header: i18next.t('field.product'),
           record: { editable: false, align: 'center' },
           imex: { header: i18next.t('field.product'), key: 'product|name', width: 75, type: 'string' },
-          width: 300
+          width: 320
         },
         {
           type: 'string',
@@ -167,43 +170,47 @@ class ElcclInventorySummaryReport extends connect(store)(localize(i18next)(PageV
           header: i18next.t('field.packing_type'),
           record: { editable: false, align: 'center' },
           imex: { header: i18next.t('field.packing_type'), key: 'packingType', width: 25, type: 'string' },
+          width: 160
+        },
+        {
+          type: 'date',
+          name: 'initialDate',
+          header: i18next.t('field.initial_inbound_date'),
+          record: { editable: false, align: 'center' },
+          imex: { header: i18next.t('field.initial_inbound_date'), key: 'initialDate', width: 25, type: 'date' },
           width: 180
         },
         {
-          type: 'string',
-          name: 'initialInbound',
-          header: i18next.t('field.initial_inbound'),
+          type: 'float',
+          name: 'initialQty',
+          header: i18next.t('field.initial_inbound_qty'),
           record: { editable: false, align: 'center' },
-          imex: { header: i18next.t('field.initial_inbound'), key: 'initial_inbound', width: 25, type: 'string' },
-          width: 360
+          imex: { header: i18next.t('field.initial_inbound_qty'), key: 'initialQty', width: 25, type: 'string' },
+          width: 140
         },
         {
           type: 'float',
-          name: 'openingBalance',
+          name: 'openingQty',
           record: { editable: false, align: 'center' },
           header: i18next.t('field.opening_balance'),
-          width: 160
+          imex: { header: i18next.t('field.opening_balance'), key: 'openingQty', width: 25, type: 'string' },
+          width: 140
         },
         {
           type: 'float',
-          name: 'inBalance',
+          name: 'totalOutQty',
           record: { editable: false, align: 'center' },
-          header: i18next.t('field.inbound'),
-          width: 160
+          header: i18next.t('field.outbound_qty'),
+          imex: { header: i18next.t('field.outbound_qty'), key: 'totalOutQty', width: 25, type: 'string' },
+          width: 140
         },
         {
           type: 'float',
-          name: 'outBalance',
-          record: { editable: false, align: 'center' },
-          header: i18next.t('field.outbound'),
-          width: 160
-        },
-        {
-          type: 'float',
-          name: 'closingBalance',
+          name: 'closingQty',
           record: { editable: false, align: 'center' },
           header: i18next.t('field.closing_balance'),
-          width: 160
+          imex: { header: i18next.t('field.closing_balance'), key: 'closingQty', width: 25, type: 'string' },
+          width: 140
         }
       ]
     }
@@ -225,7 +232,7 @@ class ElcclInventorySummaryReport extends connect(store)(localize(i18next)(PageV
 
   async fetchHandler({ page, limit, sorters = [] }) {
     try {
-      //   this._validate()
+      this._validate()
       let filter = this.searchForm.queryFilters.map(filter => {
         switch (filter.name) {
           case 'fromDate':
@@ -252,7 +259,19 @@ class ElcclInventorySummaryReport extends connect(store)(localize(i18next)(PageV
                 sortings: sorters
               })}) {
                 items{
-                  palletId
+                  batchId
+                  packingType
+                  product{
+                    id
+                    name
+                    description
+                  }
+                  openingQty
+                  closingQty
+                  totalInQty
+                  totalOutQty
+                  initialQty
+                  initialDate
                 }
                 total
               }
@@ -264,7 +283,8 @@ class ElcclInventorySummaryReport extends connect(store)(localize(i18next)(PageV
         records: response.data.elcclInventoryHistorySummaryReport.items.map(item => flattenObject(item)) || []
       }
     } catch (e) {
-      console.log(e)
+      // console.log(e)
+      this._showToast(e)
     }
   }
 
