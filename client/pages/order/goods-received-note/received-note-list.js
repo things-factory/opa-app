@@ -171,7 +171,7 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'orderRefNo',
+          name: 'refNo',
           header: i18next.t('field.ref_no'),
           record: { align: 'left' },
           sortable: true,
@@ -273,7 +273,7 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
           response.data.goodsReceivalNotes.items.map(grn => {
             return {
               ...grn,
-              orderRefNo: grn.arrivalNotice.refNo || ''
+              refNo: grn.arrivalNotice.refNo || ''
             }
           }) || []
       }

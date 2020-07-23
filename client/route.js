@@ -271,6 +271,10 @@ export default function route(page) {
       import('./pages/inbound/putaway-product')
       return page
 
+    case 'preunload':
+      import('./pages/inbound/preunload-product')
+      return page
+
     case 'worksheet_unloading':
       import('./pages/inbound/worksheet-unloading')
       return page

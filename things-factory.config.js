@@ -302,6 +302,10 @@ export default {
       page: 'putaway'
     },
     {
+      tagname: 'preunload-product',
+      page: 'preunload'
+    },
+    {
       tagname: 'execute-vas',
       page: 'execute_vas'
     },
