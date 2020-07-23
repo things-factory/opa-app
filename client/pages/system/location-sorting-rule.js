@@ -6,8 +6,9 @@ import { client, PageView } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import { LOCATION_SORTING_RULE } from '../contants/location-sorting-rule'
 
-const LOC_SORTING_RULE_SETTING_KEY = 'location-sorting-rule'
+let LOC_SORTING_RULE_SETTING_KEY = ''
 
 class LocationSortingRule extends localize(i18next)(PageView) {
   static get properties() {
@@ -16,7 +17,8 @@ class LocationSortingRule extends localize(i18next)(PageView) {
       _orderTypes: Array,
       config: Object,
       data: Object,
-      sortingRule: Object
+      sortingRule: Object,
+      _processTypes: Array
     }
   }
 
@@ -61,6 +63,9 @@ class LocationSortingRule extends localize(i18next)(PageView) {
       { name: i18next.t('label.desc'), value: 'DESC' }
     ]
     this.sortingRule = {}
+    this._processTypes = Object.keys(LOCATION_SORTING_RULE).map(function(key) {
+      return LOCATION_SORTING_RULE[key]
+    }) || []
   }
 
   get context() {
@@ -72,6 +77,10 @@ class LocationSortingRule extends localize(i18next)(PageView) {
           action: this._getPreviewData.bind(this)
         },
         {
+          title: i18next.t('button.reset'),
+          action: this._resetRule.bind(this)
+        },
+        {
           title: i18next.t('button.save'),
           action: this._saveSetting.bind(this)
         }
@@ -81,6 +90,37 @@ class LocationSortingRule extends localize(i18next)(PageView) {
 
   render() {
     return html`
+
+      <form class="multi-column-form">
+        <fieldset>
+          <legend>${i18next.t('title.add_rule_field')}</legend>
+
+          <label>${i18next.t('label.process_type')}</label>
+          <select id="process-type" @change="${e => this._changeProcessType(e.currentTarget.value)}">
+            <option value=""></option>
+            ${(this._processTypes || []).map(
+              processType => html`
+                <option value="${processType.value}"
+                  >${processType.name}</option
+                >
+              `
+            )}
+          </select>
+
+          <label>${i18next.t('label.rule_field')}</label>
+          <select id="rule-column" @change="${this._addRule.bind(this)}">
+            <option value=""></option>
+            ${this._locationColumns
+              .filter(column => Object.keys(this.sortingRule).indexOf(column.value) < 0)
+              .map(
+                column => html`
+                  <option value="${column.value}">${i18next.t(`field.${column.name}`)}</option>
+                `
+              )}
+          </select>
+        </fieldset>
+      </form>
+
       <form class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.location_sorting_rule')}</legend>
@@ -102,24 +142,6 @@ class LocationSortingRule extends localize(i18next)(PageView) {
           )}
         </fieldset>
       </form>
-
-      <form class="multi-column-form">
-        <fieldset>
-          <legend>${i18next.t('title.add_rule_field')}</legend>
-
-          <select id="rule-column" @change="${this._addRule.bind(this)}">
-            <option value=""></option>
-            ${this._locationColumns
-              .filter(column => Object.keys(this.sortingRule).indexOf(column.value) < 0)
-              .map(
-                column => html`
-                  <option value="${column.value}">${i18next.t(`field.${column.name}`)}</option>
-                `
-              )}
-          </select>
-        </fieldset>
-      </form>
-
       <data-grist .mode=${isMobileDevice() ? 'LIST' : 'GRID'} .config=${this.config} .data="${this.data}"></data-grist>
     `
   }
@@ -165,6 +187,17 @@ class LocationSortingRule extends localize(i18next)(PageView) {
       this.sortingRule =
         response.data.setting && response.data.setting.value ? JSON.parse(response.data.setting.value) : {}
     }
+  }
+
+  async _changeProcessType(key) {
+    LOC_SORTING_RULE_SETTING_KEY = key
+    await this._getCurrentSortingRule()
+    this._resetRule()
+  }
+
+  _resetRule() {
+    this.sortingRule = {}
+    this.data = []
   }
 
   _addRule() {
@@ -242,8 +275,8 @@ class LocationSortingRule extends localize(i18next)(PageView) {
             createSetting(${gqlBuilder.buildArgs({
               setting: {
                 name: LOC_SORTING_RULE_SETTING_KEY,
-                category: 'Location',
-                description: 'Location sorting rules',
+                category: 'location',
+                description: 'location sorting rules',
                 value: JSON.stringify(this.sortingRule)
               }
             })}) {

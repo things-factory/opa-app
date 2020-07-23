@@ -1,25 +1,9 @@
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import { i18next } from '@things-factory/i18n-base'
-import { html, LitElement } from 'lit-element'
+import { html } from 'lit-element'
+import { VAS_BATCH_NO_TYPE, VAS_PRODUCT_TYPE } from '../../constants'
+import { AbstractVasCreateForm } from './abastract-vas-create-form'
 
-export class VasCreateBatchProductTypeForm extends LitElement {
-  static get properties() {
-    return {
-      selectedBatchId: String,
-      selectedProductId: String,
-      selectedPackingType: String,
-      targetList: Array,
-      targetBatchList: Array,
-      targetProductList: Array,
-      packingTypeList: Array,
-      record: Object
-    }
-  }
-
-  static get styles() {
-    return [MultiColumnFormStyles]
-  }
-
+export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
   render() {
     return html` <form
       class="multi-column-form"
@@ -130,28 +114,12 @@ export class VasCreateBatchProductTypeForm extends LitElement {
     }
   }
 
-  get form() {
-    return this.shadowRoot.querySelector('form')
-  }
-
   get targetProductSelector() {
     return this.shadowRoot.querySelector('select#target-product-selector')
   }
 
-  get packingTypeSelector() {
-    return this.shadowRoot.querySelector('select#packing-type-selector')
-  }
-
-  get qtyInput() {
-    return this.shadowRoot.querySelector('input#qty-input')
-  }
-
   get weightInput() {
     return this.shadowRoot.querySelector('input#weight-input')
-  }
-
-  get targetBatchList() {
-    return this.targetList.map(target => target.batchId).filter((batchId, idx, arr) => arr.indexOf(batchId) === idx)
   }
 
   get targetProductList() {
@@ -176,14 +144,6 @@ export class VasCreateBatchProductTypeForm extends LitElement {
     }
   }
 
-  get targetDisplay() {
-    const selectedProdct = this.targetList.find(target => target.product.id === this.selectedProductId).product
-
-    return `${this.selectedBatchId} - ${selectedProdct.name} ${
-      selectedProdct.description ? `(${selectedProdct.description})` : ''
-    }`
-  }
-
   get target() {
     return {
       batchId: this.selectedBatchId,
@@ -191,8 +151,12 @@ export class VasCreateBatchProductTypeForm extends LitElement {
     }
   }
 
-  get qty() {
-    return this.qtyInput.value
+  get targetDisplay() {
+    const selectedProdct = this.targetList.find(target => target.product.id === this.selectedProductId).product
+
+    return `${this.selectedBatchId} - ${selectedProdct.name} ${
+      selectedProdct.description ? `(${selectedProdct.description})` : ''
+    }`
   }
 
   get weight() {
@@ -213,10 +177,6 @@ export class VasCreateBatchProductTypeForm extends LitElement {
     } else {
       return ''
     }
-  }
-
-  checkValidity() {
-    return this.form.checkValidity()
   }
 
   _checkQtyValidity() {
@@ -281,7 +241,7 @@ export class VasCreateBatchProductTypeForm extends LitElement {
     )
 
     if (targetItems.every(item => item.unitWeight === targetItems[0].unitWeight)) {
-      return targetItems.reduce(
+      let { totalQty, unitWeight, totalWeight } = targetItems.reduce(
         (availAmount, item) => {
           availAmount = {
             unitWeight: item.unitWeight,
@@ -296,20 +256,43 @@ export class VasCreateBatchProductTypeForm extends LitElement {
           totalWeight: 0
         }
       )
+
+      // Batch와 packing type이 같거나
+      // product id와 packing type이 같은 것들
+      const choosenAmount = this.vasList
+        .map(task => {
+          if (task.targetType === VAS_BATCH_NO_TYPE) {
+            task.target = { batchId: task.target }
+          } else if (task.targetType === VAS_PRODUCT_TYPE) {
+            task.target = { productId: task.target }
+          }
+
+          return task
+        })
+        .filter(
+          task =>
+            task.packingType === this.selectedPackingType &&
+            (task.target.batchId === this.selectedBatchId || task.target.productId === this.selectedProductId)
+        )
+        .reduce(
+          (choosenAmount, task) => {
+            choosenAmount.totalQty += task.qty
+            choosenAmount.totalWeight += task.weight
+
+            return choosenAmount
+          },
+          { totalQty: 0, totalWeight: 0 }
+        )
+
+      // 현재 VAS에 포함된 수량과 weight을 더하여 return
+      return {
+        totalQty: totalQty - choosenAmount.totalQty + (this.record.qty || 0),
+        totalWeight: totalWeight - choosenAmount.totalWeight + (this.record.weight || 0),
+        unitWeight
+      }
     } else {
       throw new Error(i18next.t('text.some_unit_weight_is_diff'))
     }
-  }
-
-  _showToast({ type, message }) {
-    document.dispatchEvent(
-      new CustomEvent('notify', {
-        detail: {
-          type,
-          message
-        }
-      })
-    )
   }
 }
 

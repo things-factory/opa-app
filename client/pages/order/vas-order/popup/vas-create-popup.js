@@ -4,8 +4,8 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import '@things-factory/import-ui'
 import { isMobileDevice } from '@things-factory/utils'
 import { css, html, LitElement } from 'lit-element'
-import '../../components/vas-templates'
-import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, PRODUCT_TYPE } from '../constants'
+import '../../../components/vas-templates'
+import { VAS_BATCH_AND_PRODUCT_TYPE, VAS_BATCH_NO_TYPE, VAS_ETC_TYPE, VAS_PRODUCT_TYPE } from '../../constants'
 import './vas-create-batch-product-type-form'
 import './vas-create-batch-type-form'
 import './vas-create-etc-type-form'
@@ -77,6 +77,7 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
       vasGristConfig: Object,
       vasGristData: Object,
       targetList: Array,
+      vasList: Array,
       record: Object,
       _template: Object
     }
@@ -129,8 +130,8 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
             id="batchId"
             type="checkbox"
             name="batchId"
-            ?checked="${(this.record && this.record.targetType === BATCH_NO_TYPE) ||
-            this.record.targetType === BATCH_AND_PRODUCT_TYPE}"
+            ?checked="${(this.record && this.record.targetType === VAS_BATCH_NO_TYPE) ||
+            this.record.targetType === VAS_BATCH_AND_PRODUCT_TYPE}"
           />
           <label for="batchId">${i18next.t('label.batch_id')}</label>
 
@@ -138,44 +139,52 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
             id="product"
             type="checkbox"
             name="product"
-            ?checked="${(this.record && this.record.targetType === PRODUCT_TYPE) ||
-            this.record.targetType === BATCH_AND_PRODUCT_TYPE}"
+            ?checked="${(this.record && this.record.targetType === VAS_PRODUCT_TYPE) ||
+            this.record.targetType === VAS_BATCH_AND_PRODUCT_TYPE}"
           />
           <label for="product">${i18next.t('label.product')}</label>
 
-          <input id="etc" type="checkbox" name="etc" ?checked="${this.record && this.record.targetType === ETC_TYPE}" />
+          <input
+            id="etc"
+            type="checkbox"
+            name="etc"
+            ?checked="${this.record && this.record.targetType === VAS_ETC_TYPE}"
+          />
           <label for="etc">${i18next.t('label.etc')}</label>
         </fieldset>
       </form>
 
-      ${this.selectedTargetType === BATCH_NO_TYPE
+      ${this.selectedTargetType === VAS_BATCH_NO_TYPE
         ? html`
             <vas-create-batch-type-form
               class="vas-create-form"
               .targetList="${this.targetList}"
+              .vasList="${this.vasList}"
               .record="${this.record}"
               @form-change="${this.resetVasTemplates}"
             ></vas-create-batch-type-form>
           `
-        : this.selectedTargetType === PRODUCT_TYPE
+        : this.selectedTargetType === VAS_PRODUCT_TYPE
         ? html`
             <vas-create-product-type-form
               class="vas-create-form"
               .targetList="${this.targetList}"
+              .vasList="${this.vasList}"
               .record="${this.record}"
               @form-change="${this.resetVasTemplates}"
             ></vas-create-product-type-form>
           `
-        : this.selectedTargetType === BATCH_AND_PRODUCT_TYPE
+        : this.selectedTargetType === VAS_BATCH_AND_PRODUCT_TYPE
         ? html`
             <vas-create-batch-product-type-form
               class="vas-create-form"
               .targetList="${this.targetList}"
+              .vasList="${this.vasList}"
               .record="${this.record}"
               @form-change="${this.resetVasTemplates}"
             ></vas-create-batch-product-type-form>
           `
-        : this.selectedTargetType === ETC_TYPE
+        : this.selectedTargetType === VAS_ETC_TYPE
         ? html`
             <vas-create-etc-type-form
               class="vas-create-form"
@@ -358,13 +367,13 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
     const isEtcType = this.etcTypeInput.checked
 
     if (isBatchIdType && isProductType) {
-      this.selectedTargetType = BATCH_AND_PRODUCT_TYPE
+      this.selectedTargetType = VAS_BATCH_AND_PRODUCT_TYPE
     } else if (isBatchIdType && !isProductType) {
-      this.selectedTargetType = BATCH_NO_TYPE
+      this.selectedTargetType = VAS_BATCH_NO_TYPE
     } else if (!isBatchIdType && isProductType) {
-      this.selectedTargetType = PRODUCT_TYPE
+      this.selectedTargetType = VAS_PRODUCT_TYPE
     } else if (isEtcType) {
-      this.selectedTargetType = ETC_TYPE
+      this.selectedTargetType = VAS_ETC_TYPE
     } else {
       this.selectedTargetType = undefined
     }
@@ -372,7 +381,12 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
     this.vasGristData = { records: [] }
   }
 
-  _onFieldChange() {
+  _onFieldChange(e) {
+    if (e.detail.column.name === 'vas') {
+      this._template = null
+      delete this.vasGrist.dirtyData.records[e.detail.row].operationGuide
+    }
+
     this.vasGristData = {
       ...this.vasGrist.dirtyData,
       records: this.vasGrist.dirtyData.records.map(record => {
@@ -451,7 +465,7 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
     }
 
     switch (this.selectedTargetType) {
-      case BATCH_AND_PRODUCT_TYPE:
+      case VAS_BATCH_AND_PRODUCT_TYPE:
         this.vasGristConfig = {
           ...this.vasGristConfig,
           columns: this.vasGristConfig.columns.map(column => {
@@ -479,13 +493,23 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
               if (vasIds.length) {
                 column.record.options.basicArgs = {
                   filters: [
-                    { name: 'operationGuide', operator: 'notin_with_null', value: ['vas-repack', 'vas-repalletizing'] },
+                    {
+                      name: 'operationGuide',
+                      operator: 'notin_with_null',
+                      value: ['vas-repack', 'vas-repalletizing', 'vas-relabel']
+                    },
                     { name: 'id', operator: 'notin', value: vasIds }
                   ]
                 }
               } else {
                 column.record.options.basicArgs = {
-                  filters: [{ name: 'operationGuide', operator: 'notin_with_null', value: ['vas-repack'] }]
+                  filters: [
+                    {
+                      name: 'operationGuide',
+                      operator: 'notin_with_null',
+                      value: ['vas-repack', 'vas-repalletizing', 'vas-relabel']
+                    }
+                  ]
                 }
               }
               return column

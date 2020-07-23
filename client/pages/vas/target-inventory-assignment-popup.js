@@ -6,7 +6,13 @@ import { client, CustomAlert } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
-import { BATCH_NO_TYPE, PRODUCT_TYPE, BATCH_AND_PRODUCT_TYPE, ETC_TYPE, ORDER_TYPES } from '../order/constants'
+import {
+  VAS_BATCH_NO_TYPE,
+  VAS_PRODUCT_TYPE,
+  VAS_BATCH_AND_PRODUCT_TYPE,
+  VAS_ETC_TYPE,
+  ORDER_TYPES
+} from '../order/constants'
 
 class TargetInventoryAssignmentPopup extends localize(i18next)(LitElement) {
   static get properties() {
@@ -115,19 +121,19 @@ class TargetInventoryAssignmentPopup extends localize(i18next)(LitElement) {
           <label>${i18next.t('label.target_type')}</label>
           <input id="target-type" value="${this.targetType}" readonly />
 
-          ${this.targetType === BATCH_NO_TYPE || this.targetType === BATCH_AND_PRODUCT_TYPE
+          ${this.targetType === VAS_BATCH_NO_TYPE || this.targetType === VAS_BATCH_AND_PRODUCT_TYPE
             ? html`
                 <label>${i18next.t('label.batch_no')}</label>
                 <input id="batch-id" value="${this.targetBatchId}" readonly />
               `
             : ''}
-          ${this.targetType === PRODUCT_TYPE || this.targetType === BATCH_AND_PRODUCT_TYPE
+          ${this.targetType === VAS_PRODUCT_TYPE || this.targetType === VAS_BATCH_AND_PRODUCT_TYPE
             ? html`
                 <label>${i18next.t('label.product')}</label>
                 <input id="batch-id" value="${this.targetProduct.name}" readonly />
               `
             : ''}
-          ${this.targetType === ETC_TYPE
+          ${this.targetType === VAS_ETC_TYPE
             ? html`
                 <label>${i18next.t('label.etc')}</label>
                 <input id="batch-id" value="${this.otherType}" readonly />
@@ -486,8 +492,8 @@ class TargetInventoryAssignmentPopup extends localize(i18next)(LitElement) {
         } else {
           return {
             ...record,
-            selected: 0,
-            selecte: false
+            selectedQty: 0,
+            selected: false
           }
         }
       })
