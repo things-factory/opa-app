@@ -372,6 +372,14 @@ export default {
     {
       tagname: 'customer-inventory-pallet-report',
       page: 'customer_inventory_pallet_report'
+    },
+
+    /**
+     * Custom ELCCL Menus Section
+     */
+    {
+      tagname: 'elccl-inventory-summary-report',
+      page: 'elccl_inventory_summary_report'
     }
   ],
   bootstrap

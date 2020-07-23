@@ -353,5 +353,12 @@ export default function route(page) {
     case 'customer_inventory_pallet_report':
       import('./pages/report/customer-inventory-pallet-report')
       return page
+
+    /**
+     * Custom ELCCL Menus Section
+     */
+    case 'elccl_inventory_summary_report':
+      import('./pages/report/custom-elccl/elccl-inventory-summary-report')
+      return page
   }
 }
