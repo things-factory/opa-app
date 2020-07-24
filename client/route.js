@@ -363,7 +363,7 @@ export default function route(page) {
      * Custom ELCCL Menus Section
      */
     case 'elccl_daily_collection_report':
-      import('./pages/report/elccl-daily-collection-report')
+      import('./pages/report/custom-elccl/elccl-daily-collection-report')
       return page
     case 'elccl_inventory_summary_report':
       import('./pages/report/custom-elccl/elccl-inventory-summary-report')
