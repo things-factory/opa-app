@@ -159,6 +159,30 @@ class ElcclDailyCollectionReport extends connect(store)(localize(i18next)(PageVi
         },
         {
           type: 'string',
+          name: 'batch_id',
+          record: { editable: false, align: 'left' },
+          header: i18next.t('field.container_no'),
+          imex: { header: i18next.t('field.container_no'), key: 'batch_id', width: 25, type: 'string' },
+          width: 180
+        },
+        {
+          type: 'float',
+          name: 'total_self_collect',
+          record: { editable: false, align: 'left' },
+          header: i18next.t('field.total_self_collect'),
+          imex: { header: i18next.t('field.total_self_collect'), key: 'total_self_collect', width: 20, type: 'string' },
+          width: 180
+        },
+        {
+          type: 'float',
+          name: 'total_delivery',
+          record: { editable: false, align: 'left' },
+          header: i18next.t('field.total_delivery'),
+          imex: { header: i18next.t('field.total_delivery'), key: 'total_delivery', width: 20, type: 'string' },
+          width: 180
+        },
+        {
+          type: 'string',
           name: 'self_collect',
           record: { editable: false, align: 'left' },
           header: i18next.t('field.self_collect'),
@@ -202,12 +226,15 @@ class ElcclDailyCollectionReport extends connect(store)(localize(i18next)(PageVi
               filters: [...this.searchForm.queryFilters],
               pagination: { page, limit },
               sortings: sorters
-            })}) {
+            })}) {              
               arrival_notice_name
               bizplace_name
               ended_at
+              batch_id
               self_collect
+              total_self_collect
               delivery
+              total_delivery
             }
           }
         `
@@ -280,7 +307,7 @@ class ElcclDailyCollectionReport extends connect(store)(localize(i18next)(PageVi
             return column.imex
           })
       ]
-
+      debugger
       return {
         header: headerSetting,
         data: this.report.data.records,

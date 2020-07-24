@@ -51,16 +51,22 @@ export const elcclDailyCollectionReport = {
           and ws.ended_at <= '${new Date(toDate.value).toLocaleDateString()} 23:59:59' 
           ${bizplaceQuery}
         )
-        select arrival_notice_name, bizplace_name, ended_at::varchar, batch_id,
-        case when own_collection = 'true' then concat(delivery_order_name, ' (', string_agg(pallet_id, ', ' ORDER BY pallet_id), ')') else '' end as self_collect,
-        case when own_collection = 'false' then concat(delivery_order_name, ' (', string_agg(pallet_id, ', ' ORDER BY pallet_id), ')') else '' end as delivery,
-        sum(case when own_collection = 'true' then 1 else 0 end) as total_self_collect,
-        sum(case when own_collection = 'false' then 1 else 0 end) as total_delivery
-        from src
-        where 1 = 1
-        ${arrivalNoticeQuery}
-        group by bizplace_name, arrival_notice_name, ended_at, delivery_order_name, own_collection, batch_id
-        order by bizplace_name, ended_at, arrival_notice_name
+        select bizplace_name, arrival_notice_name, ended_at, batch_id, trim(trailing ', ' from self_collect) as self_collect, trim(trailing ', ' from delivery) as delivery from(
+          select bizplace_name, arrival_notice_name, ended_at, batch_id,
+          string_agg(self_collect, '') as self_collect,
+          string_agg(delivery, '') delivery
+          from (
+            select arrival_notice_name, delivery_order_name, bizplace_name, ended_at::varchar, own_collection, batch_id,
+              case when own_collection = 'true' then concat(delivery_order_name, ' (', string_agg(pallet_id, ', ' ORDER BY pallet_id), '), ') else '' end as self_collect,
+              case when own_collection = 'false' then concat(delivery_order_name, ' (', string_agg(pallet_id, ', ' ORDER BY pallet_id), '), ') else '' end as delivery
+            from src
+            where 1 = 1
+            ${arrivalNoticeQuery}
+            group by bizplace_name, arrival_notice_name, ended_at, delivery_order_name, own_collection, batch_id
+          ) src
+          group by bizplace_name, arrival_notice_name, ended_at, batch_id
+          order by bizplace_name, ended_at, arrival_notice_name
+        ) src
       `)
 
       let items = result as any

@@ -15,5 +15,8 @@ export const ElcclDailyCollectionReport = gql`
     ended_at: String
     self_collect: String
     delivery: String
+    total_self_collect: Float
+    total_delivery: Float
+    batch_id: String
   }
 `
