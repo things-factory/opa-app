@@ -54,17 +54,17 @@
     "@things-factory/print-proxy-service": "^2.0.0",
     "@things-factory/print-service": "^2.0.0",
     "@things-factory/print-ui": "^2.0.0",
-    "@things-factory/product-base": "^2.5.0-beta.0",
+    "@things-factory/product-base": "^^2.5.0",
     "@things-factory/product-ui": "^2.5.0",
     "@things-factory/resource-ui": "^2.0.0",
-    "@things-factory/sales-base": "^2.6.0-beta.0",
+    "@things-factory/sales-base": "^2.5.0",
     "@things-factory/sales-ui": "^2.0.1",
     "@things-factory/setting-ui": "^2.0.0",
     "@things-factory/system-ui": "^2.0.0",
     "@things-factory/transport-base": "^2.0.0",
     "@things-factory/tutorial-ui": "^2.5.0",
-    "@things-factory/warehouse-base": "^2.6.0-beta.0",
-    "@things-factory/worksheet-base": "^2.6.0-beta.0",
+    "@things-factory/warehouse-base": "^2.5.0",
+    "@things-factory/worksheet-base": "^2.5.0",
     "@things-scene/chartjs": "*",
     "@things-scene/clock": "*",
     "@things-scene/clone": "*",
@@ -98,10 +98,5 @@
     "chalk": "^3.0.0",
     "inquirer": "^7.0.0"
   },
-  "resolutions": {
-    "@things-factory/worksheet-base": "^2.6.0-beta.0",
-    "@things-factory/sales-base": "^2.6.0-beta.0",
-    "@things-factory/warehouse-base": "^2.6.0-beta.0",
-    "@things-factory/product-base": "^2.5.0-beta.0"
-  }
+  "resolutions": {}
 }
