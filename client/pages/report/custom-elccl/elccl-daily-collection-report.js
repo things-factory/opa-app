@@ -7,7 +7,7 @@ import { connect } from 'pwa-helpers/connect-mixin'
 import { localize, i18next } from '@things-factory/i18n-base'
 import gql from 'graphql-tag'
 
-class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) {
+class ElcclDailyCollectionReport extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
     return css`
       :host {
@@ -153,8 +153,8 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
           type: 'string',
           name: 'arrival_notice_name',
           record: { editable: false, align: 'left' },
-          header: i18next.t('field.arrival_notice'),
-          imex: { header: i18next.t('field.arrival_notice'), key: 'arrival_notice_name', width: 40, type: 'string' },
+          header: i18next.t('field.job_sheet'),
+          imex: { header: i18next.t('field.job_sheet'), key: 'arrival_notice_name', width: 40, type: 'string' },
           width: 250
         },
         {
@@ -198,7 +198,7 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
       const response = await client.query({
         query: gql`
           query {
-            dailyCollectionReports(${gqlBuilder.buildArgs({
+            elcclDailyCollectionReport(${gqlBuilder.buildArgs({
               filters: [...this.searchForm.queryFilters],
               pagination: { page, limit },
               sortings: sorters
@@ -215,7 +215,7 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
 
       this.data = {
         filter: [...this.searchForm.queryFilters],
-        records: response.data.dailyCollectionReports || []
+        records: response.data.elcclDailyCollectionReport || []
       }
 
       return {
@@ -293,4 +293,4 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
   }
 }
 
-window.customElements.define('daily-collection-report', DailyCollectionReport)
+window.customElements.define('elccl-daily-collection-report', ElcclDailyCollectionReport)

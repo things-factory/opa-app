@@ -1,6 +1,6 @@
 import gql from 'graphql-tag'
 
-export const DailyCollectionReport = gql`
+export const ElcclDailyCollectionReport = gql`
   type DailyCollectionReport {
     id: String
     name: String

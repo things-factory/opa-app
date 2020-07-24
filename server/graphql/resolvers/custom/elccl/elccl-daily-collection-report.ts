@@ -4,8 +4,8 @@ import { User } from '@things-factory/auth-base'
 import { Bizplace, BizplaceUser } from '@things-factory/biz-base'
 import { InventoryHistory } from '@things-factory/warehouse-base'
 
-export const dailyCollectionReportsResolver = {
-  async dailyCollectionReports(_: any, params: ListParam, context: any) {
+export const elcclDailyCollectionReport = {
+  async elcclDailyCollectionReport(_: any, params: ListParam, context: any) {
     try {
       let bizplaceQuery = ''
       if (params.filters.find((filter: any) => filter.name === 'bizplace')) {
@@ -37,7 +37,7 @@ export const dailyCollectionReportsResolver = {
       const result = await getRepository(InventoryHistory).query(`
         with src as (
           select ar.name as release_good_name, COALESCE(ar.name, 'MIGRATE') as arrival_notice_name, bz.name as bizplace_name, 
-          ws.ended_at::date, delord.own_collection, delord.name as delivery_order_name, inv.pallet_id
+          ws.ended_at::date, delord.own_collection, delord.name as delivery_order_name, inv.pallet_id, inv.batch_id
           from release_goods rg
           inner join bizplaces bz on bz.id = rg.bizplace_id
           inner join worksheets ws on ws.release_good_id = rg.id and ws.type = 'LOADING'
@@ -51,13 +51,15 @@ export const dailyCollectionReportsResolver = {
           and ws.ended_at <= '${new Date(toDate.value).toLocaleDateString()} 23:59:59' 
           ${bizplaceQuery}
         )
-        select arrival_notice_name, bizplace_name, ended_at::varchar, 
+        select arrival_notice_name, bizplace_name, ended_at::varchar, batch_id,
         case when own_collection = 'true' then concat(delivery_order_name, ' (', string_agg(pallet_id, ', ' ORDER BY pallet_id), ')') else '' end as self_collect,
-        case when own_collection = 'false' then concat(delivery_order_name, ' (', string_agg(pallet_id, ', ' ORDER BY pallet_id), ')') else '' end as delivery
+        case when own_collection = 'false' then concat(delivery_order_name, ' (', string_agg(pallet_id, ', ' ORDER BY pallet_id), ')') else '' end as delivery,
+        sum(case when own_collection = 'true' then 1 else 0 end) as total_self_collect,
+        sum(case when own_collection = 'false' then 1 else 0 end) as total_delivery
         from src
         where 1 = 1
         ${arrivalNoticeQuery}
-        group by bizplace_name, arrival_notice_name, ended_at, delivery_order_name, own_collection
+        group by bizplace_name, arrival_notice_name, ended_at, delivery_order_name, own_collection, batch_id
         order by bizplace_name, ended_at, arrival_notice_name
       `)
 
