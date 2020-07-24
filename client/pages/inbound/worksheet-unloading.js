@@ -664,7 +664,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
         _tempObj.palletizingDescription = worksheetDetail.palletizingDescription
       }
 
-      if (worksheetDetail.initialBatchId) {
+      if (worksheetDetail?.initialBatchId) {
         _tempObj.initialBatchId = worksheetDetail.initialBatchId
       }
 
