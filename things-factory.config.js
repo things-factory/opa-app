@@ -350,10 +350,6 @@ export default {
      * Report Menus Section
      */
     {
-      tagname: 'daily-collection-report',
-      page: 'daily_collection_report'
-    },
-    {
       tagname: 'inventory-report',
       page: 'inventory_report'
     },
@@ -381,6 +377,10 @@ export default {
     /**
      * Custom ELCCL Menus Section
      */
+    {
+      tagname: 'elccl-daily-collection-report',
+      page: 'elccl_daily_collection_report'
+    },
     {
       tagname: 'elccl-inventory-summary-report',
       page: 'elccl_inventory_summary_report'
