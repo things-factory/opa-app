@@ -7,8 +7,8 @@ import { client, CustomAlert, navigate, PageView } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import '../../order/vas-order/vas-create-popup'
-import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, PRODUCT_TYPE } from '../constants'
+import '../../order/vas-order/popup/vas-create-popup'
+import { VAS_BATCH_AND_PRODUCT_TYPE, VAS_BATCH_NO_TYPE, VAS_PRODUCT_TYPE } from '../constants'
 
 class CreateArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
@@ -607,7 +607,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       ...this.vasData,
       records: this.vasGrist.dirtyData.records.map(record => {
         if (
-          record.targetType === BATCH_NO_TYPE &&
+          record.targetType === VAS_BATCH_NO_TYPE &&
           batchPackPairs.indexOf(`${record.target}-${record.packingType}`) < 0
         ) {
           return {
@@ -619,7 +619,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             qty: 1
           }
         } else if (
-          record.targetType === PRODUCT_TYPE &&
+          record.targetType === VAS_PRODUCT_TYPE &&
           productPackPairs.indexOf(`${record.target}-${record.packingType}`) < 0
         ) {
           return {
@@ -631,7 +631,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             qty: 1
           }
         } else if (
-          record.targetType === BATCH_AND_PRODUCT_TYPE &&
+          record.targetType === VAS_BATCH_AND_PRODUCT_TYPE &&
           batchProductPackPairs.indexOf(`${record.target.batchId}-${record.target.productId}-${record.packingType}`) < 0
         ) {
           return {
@@ -700,15 +700,15 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             result.operationGuide = JSON.stringify(orderVas.operationGuide)
           }
 
-          if (record.targetType === BATCH_NO_TYPE) {
+          if (record.targetType === VAS_BATCH_NO_TYPE) {
             result.targetBatchId = record.target
             result.packingType = record.packingType
             result.qty = record.qty
-          } else if (record.targetType === PRODUCT_TYPE) {
+          } else if (record.targetType === VAS_PRODUCT_TYPE) {
             result.targetProduct = { id: record.target }
             result.packingType = record.packingType
             result.qty = record.qty
-          } else if (record.targetType === BATCH_AND_PRODUCT_TYPE) {
+          } else if (record.targetType === VAS_BATCH_AND_PRODUCT_TYPE) {
             result.targetBatchId = record.target.batchId
             result.targetProduct = { id: record.target.productId }
             result.packingType = record.packingType
@@ -757,6 +757,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
                 totalWeight: record.weight * record.packQty
               }
             })}"
+            .vasList="${this.vasData.records}"
             .record="${record}"
             @completed="${e => {
               if (this.vasGrist.dirtyData.records.length === this._selectedVasRecordIdx) {

@@ -134,8 +134,8 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
           width: 100
         },
         {
-          type: 'string',
-          name: 'productName',
+          type: 'object',
+          name: 'product',
           header: i18next.t('field.product'),
           record: { align: 'center' },
           width: 150
@@ -213,7 +213,8 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
     }
   }
 
-  async fetchInventoriesByStrategy({ batchId, productName, packingType }, pickingStrategy, bizplaceId) {
+  async fetchInventoriesByStrategy({ batchId, product, packingType }, pickingStrategy, bizplaceId) {
+    const productName = product.name
     const response = await client.query({
       query: gql`
         query {
@@ -284,7 +285,7 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
     return worksheetDetails
   }
 
-  async submitPickedItems(worksheetNo, { batchId, productName, packingType }, worksheetDetails) {
+  async submitPickedItems(worksheetNo, { batchId, product, packingType }, worksheetDetails) {
     try {
       await client.query({
         query: gql`
@@ -292,7 +293,7 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
             generateReleaseGoodWorksheetDetails(${gqlBuilder.buildArgs({
               worksheetNo,
               batchId,
-              productName,
+              productId: product.id,
               packingType,
               worksheetDetails
             })})

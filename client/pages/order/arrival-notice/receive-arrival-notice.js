@@ -9,7 +9,13 @@ import { css, html } from 'lit-element'
 import '../../components/popup-note'
 import '../../components/attachment-viewer'
 import '../../components/vas-templates'
-import { BATCH_AND_PRODUCT_TYPE, BATCH_NO_TYPE, ETC_TYPE, ORDER_STATUS, PRODUCT_TYPE } from '../constants'
+import {
+  VAS_BATCH_AND_PRODUCT_TYPE,
+  VAS_BATCH_NO_TYPE,
+  VAS_ETC_TYPE,
+  ORDER_STATUS,
+  VAS_PRODUCT_TYPE
+} from '../constants'
 
 class ReceiveArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
@@ -341,11 +347,11 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
           header: i18next.t('field.target'),
           record: {
             renderer: (value, column, record, rowIndex, field) => {
-              if (record.targetType === BATCH_NO_TYPE) {
+              if (record.targetType === VAS_BATCH_NO_TYPE) {
                 return getRenderer()(record.targetBatchId, column, record, rowIndex, field)
-              } else if (record.targetType === PRODUCT_TYPE) {
+              } else if (record.targetType === VAS_PRODUCT_TYPE) {
                 return getRenderer('object')(record.targetProduct, column, record, rowIndex, field)
-              } else if (record.targetType === BATCH_AND_PRODUCT_TYPE) {
+              } else if (record.targetType === VAS_BATCH_AND_PRODUCT_TYPE) {
                 return getRenderer()(
                   `${record.targetBatchId} / ${record.targetProduct.name}`,
                   column,
@@ -353,7 +359,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
                   rowIndex,
                   field
                 )
-              } else if (record.targetType === ETC_TYPE) {
+              } else if (record.targetType === VAS_ETC_TYPE) {
                 return getRenderer()(record.otherTarget, column, record, rowIndex, field)
               }
             },

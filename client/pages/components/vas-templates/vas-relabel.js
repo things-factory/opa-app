@@ -1,12 +1,14 @@
+import '@things-factory/barcode-ui'
 import { SingleColumnFormStyles } from '@things-factory/form-ui'
+import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
 import { client, CustomAlert } from '@things-factory/shell'
-import { gqlBuilder } from '@things-factory/utils'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { WORKSHEET_STATUS } from '../../inbound/constants/worksheet'
-import { ORDER_VAS_STATUS } from '../../order/constants/order'
+import { ORDER_TYPES, ORDER_VAS_STATUS } from '../../order/constants/order'
 import '../image-viewer'
 import { VasTemplate } from './vas-template'
 
@@ -34,13 +36,19 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
         image-viewer {
           flex: 1;
         }
+        data-grist {
+          flex: 1;
+        }
       `
     ]
   }
 
   static get properties() {
     return {
-      record: Object
+      record: Object,
+      orderType: String,
+      config: Object,
+      palletData: Object
     }
   }
 
@@ -83,6 +91,40 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
           </fieldset>
         </form>
 
+        ${this.isExecuting
+          ? html`
+              <form
+                id="input-form"
+                class="single-column-form"
+                @submit="${e => e.preventDefault()}"
+                @keypress="${e => {
+                  if (e.keyCode === 13) this.relabel()
+                }}"
+              >
+                <fieldset>
+                  <label>${i18next.t('label.from_pallet')}</label>
+                  <barcode-scanable-input name="from-pallet-id" custom-input></barcode-scanable-input>
+
+                  <label>${i18next.t('label.to_pallet')}</label>
+                  <barcode-scanable-input name="to-pallet-id" custom-input></barcode-scanable-input>
+
+                  ${this.orderType === ORDER_TYPES.VAS_ORDER.value
+                    ? html`
+                        <label>${i18next.t('label.location')}</label>
+                        <barcode-scanable-input name="location-name" custom-input></barcode-scanable-input>
+                      `
+                    : ''}
+                </fieldset>
+              </form>
+
+              <data-grist
+                .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+                .config="${this.config}"
+                .data="${this.palletData}"
+              >
+              </data-grist>
+            `
+          : ''}
         ${!this._isEditable && this._newLabelPath
           ? html`
               <div class="label-preview" ?hidden="${this._isEditable}">
@@ -115,7 +157,7 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
       this.record &&
       this.record.operationGuide &&
       this.record.operationGuide.data &&
-      this.record.operationGuide.data.toProduct
+      this.record.operationGuide.data.ftoProduct
     ) {
       const toProduct = this.record.operationGuide.data.toProduct
       this._selectedProduct = toProduct
@@ -179,6 +221,14 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
     )
   }
 
+  get toPalletIdInput() {
+    return this.shadowRoot.querySelector('barcode-scanable-input[name=to-pallet-id]').shadowRoot.querySelector('input')
+  }
+
+  get locationInput() {
+    return this.shadowRoot.querySelector('barcode-scanable-input[name=location-name]').shadowRoot.querySelector('input')
+  }
+
   get transactions() {
     return [this.createNewLabel.bind(this)]
   }
@@ -195,6 +245,106 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
         files: this.newLabelInput.files
       }
     }
+  }
+
+  constructor() {
+    super()
+    this.config = {}
+    this.palletData = { records: [] }
+  }
+
+  async firstUpdated() {
+    await this.updateComplete
+    if (this.isExecuting) {
+      this._initExecutingConfig()
+    }
+  }
+
+  _initExecutingConfig() {
+    this.config = {
+      rows: { appendable: false },
+      pagination: { infinite: true },
+      list: { fields: ['palletId', 'locationName', 'qty'] },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'close',
+          handlers: {
+            click: async (columns, data, column, record, rowIndex) => {
+              const result = await CustomAlert({
+                title: i18next.t('title.are_you_sure'),
+                text: i18next.t('text.undo_relabeling'),
+                confirmButton: { text: i18next.t('button.confirm') },
+                cancelButton: { text: i18next.t('button.cancel') }
+              })
+
+              if (!result.value) {
+                return
+              }
+
+              this.undoRelabel(this.record.name, record.palletId)
+            }
+          }
+        },
+        {
+          type: 'string',
+          name: 'palletId',
+          header: i18next.t('field.pallet'),
+          width: 180
+        },
+        {
+          type: 'string',
+          name: 'locationName',
+          header: i18next.t('field.location'),
+          width: 180
+        },
+        {
+          type: 'integer',
+          name: 'qty',
+          header: i18next.t('field.qty'),
+          width: 60
+        }
+      ]
+    }
+  }
+
+  async init() {
+    await this.updateComplete
+    this.isExecuting = !this.record.completed
+    if (this.isExecuting) {
+      this.inputForm.reset()
+
+      if (this.record.palletId) {
+        this.fromPalletIdInput.value = this.record.palletId
+        this.fromPalletIdInput.setAttribute('readonly', true)
+        this.toPalletIdInput.focus()
+      } else {
+        this.fromPalletIdInput.value = ''
+        this.fromPalletIdInput.focus()
+      }
+
+      this.toPalletIdInput.value = ''
+      if (this.orderType === ORDER_TYPES.VAS_ORDER.value) {
+        this.locationInput.value = ''
+      }
+      this.palletData = {
+        records: this._formatPalletData(this.record.operationGuide.data.relabeledFrom, this.record.palletId)
+      }
+    }
+  }
+
+  _formatPalletData(relabeldFrom = [], palletId) {
+    return relabeldFrom
+      .filter(rf => rf.fromPalletId === palletId)
+      .map(rf => {
+        return {
+          palletId: rf.toPalletId,
+          locationName: rf.locationName,
+          qty: rf.reducedQty
+        }
+      })
   }
 
   _openProductPopup() {
@@ -232,49 +382,34 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
   }
 
   async validateAdjust() {
-    if (!this._selectedProduct && !this._selectedBatchId) {
-      throw new Error(i18next.t('text.target_does_not_selected'))
+    if (!this.targetInfo.qty) {
+      throw new Error(i18next.t('text.invalid_item_qty'))
     }
 
-    if (this._selectedBatchId) {
-      if (await this._checkBatchIdDuplication()) {
-        throw new Error(i18next.t('text.batch_id_is_duplicated'))
-      }
+    if (!this.targetInfo.weight) {
+      throw new Error(i18next.t('text.invalid_item_weight'))
     }
+
+    const isRelabelable = await this._checkValidInventory()
+    if (!isRelabelable) throw new Error(i18next.t('text.inventory_should_be_excatly_same_or_totally_different'))
   }
 
-  async _checkBatchIdDuplication() {
+  async _checkValidInventory() {
     const response = await client.query({
       query: gql`
         query {
-          inventories(${gqlBuilder.buildArgs({
-            filters: [
-              {
-                name: 'batchId',
-                operator: 'eq',
-                value: this._selectedBatchId
-              }
-            ],
-            pagination: {
-              limit: 1
-            }
-          })}) {
-            items {
-              batchId
-            }
-          }
+          checkRelabelable(${gqlBuilder.buildArgs({
+            batchId: this._selectedBatchId || this.targetInfo.target.batchId,
+            productId: this._selectedProduct?.id || this.targetInfo.target.productId,
+            packingType: this.targetInfo.packingType,
+            unitWeight: this.targetInfo.weight / this.targetInfo.qty
+          })})
         }
       `
     })
 
     if (!response.errors) {
-      if (response.data.inventories.items.length) {
-        return true // there's duplicated batch id already
-      } else {
-        return false // there's no duplicated batch id
-      }
-    } else {
-      return false
+      return response.data.checkRelabelable
     }
   }
 
@@ -339,17 +474,91 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
     }
   }
 
-  async checkCompleteValidity() {
-    const result = await CustomAlert({
-      title: i18next.t('title.relabeling'),
-      text: i18next.t('text.is_operation_finished'),
-      confirmButton: { text: i18next.t('button.confirm') },
-      cancelButton: { text: i18next.t('button.cancel') }
-    })
+  async relabel() {
+    try {
+      this._checkRelabelable()
+      let args = {
+        worksheetDetailName: this.record.name,
+        fromPalletId: this.fromPalletIdInput.value,
+        toPalletId: this.toPalletIdInput.value
+      }
+      if (this.orderType === ORDER_TYPES.VAS_ORDER.value) {
+        args.locationName = this.locationInput.value
+      }
 
-    if (!result.value) {
-      throw new Error(i18next.t('text.please_finish_relabeling'))
+      await client.query({
+        query: gql`
+          mutation {
+            relabeling(${gqlBuilder.buildArgs(args)})
+          }
+        `
+      })
+
+      this.dispatchEvent(
+        new CustomEvent('completed', {
+          bubbles: true,
+          composed: true
+        })
+      )
+    } catch (e) {
+      this._showToast(e)
     }
+  }
+
+  async undoRelabel(worksheetDetailName, toPalletId) {
+    try {
+      await client.query({
+        query: gql`
+          mutation {
+            undoRelabeling(${gqlBuilder.buildArgs({
+              worksheetDetailName,
+              toPalletId
+            })})
+          }
+        `
+      })
+
+      this.dispatchEvent(
+        new CustomEvent('completed', {
+          bubbles: true,
+          composed: true
+        })
+      )
+    } catch (e) {
+      this._showToast(e)
+    }
+  }
+
+  _checkRelabelable() {
+    const fromPalletId = this.fromPalletIdInput.value
+    if (!fromPalletId) {
+      this.fromPalletIdInput.focus()
+      throw new Error(i18next.t('text.from_pallet_id_is_emplty'))
+    }
+
+    const toPalletId = this.toPalletIdInput.value
+    if (!toPalletId) {
+      this.toPalletIdInput.focus()
+      throw new Error(i18next.t('text.to_pallet_id_is_empty'))
+    }
+
+    if (fromPalletId === toPalletId) {
+      this.toPalletIdInput.focus()
+      throw new Error(i18next.t('text.pallet_id_is_dulicated'))
+    }
+
+    if (this.orderType === ORDER_TYPES.VAS_ORDER.value) {
+      if (!this.locationInput.value) {
+        this.locationInput.select()
+        throw new Error(i18next.t('text.location_code_is_empty'))
+      }
+    }
+  }
+
+  checkExecutionValidity() {
+    if (!this.palletData.records?.length) throw new Error(i18next.t('text.there_is_no_relabeled_pallet'))
+    const totalQty = this.palletData.records.reduce((qty, r) => (qty += r.qty), 0)
+    if (totalQty !== this.record.qty) throw Error(i18next.t('text.invalid_item_qty'))
   }
 }
 

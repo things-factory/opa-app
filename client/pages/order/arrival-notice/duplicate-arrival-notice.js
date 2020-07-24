@@ -6,8 +6,8 @@ import { openPopup } from '@things-factory/layout-base'
 import { client, CustomAlert, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import '../../order/vas-order/vas-create-popup'
-import { BATCH_NO_TYPE, PRODUCT_TYPE } from '../constants'
+import '../../order/vas-order/popup/vas-create-popup'
+import { VAS_BATCH_NO_TYPE, VAS_PRODUCT_TYPE } from '../constants'
 
 class DuplicateArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
@@ -641,7 +641,7 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
       ...this.vasData,
       records: this.vasGrist.dirtyData.records.map(record => {
         if (
-          record.targetType === BATCH_NO_TYPE &&
+          record.targetType === VAS_BATCH_NO_TYPE &&
           batchPackPairs.indexOf(`${record.target}-${record.packingType}`) < 0
         ) {
           return {
@@ -653,7 +653,7 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
             qty: 1
           }
         } else if (
-          record.targetType === PRODUCT_TYPE &&
+          record.targetType === VAS_PRODUCT_TYPE &&
           productPackPairs.indexOf(`${record.target}-${record.packingType}`) < 0
         ) {
           return {
@@ -724,9 +724,9 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
             result.operationGuide = JSON.stringify(orderVas.operationGuide)
           }
 
-          if (record.targetType === BATCH_NO_TYPE) {
+          if (record.targetType === VAS_BATCH_NO_TYPE) {
             result.targetBatchId = record.target
-          } else if (record.targetType === PRODUCT_TYPE) {
+          } else if (record.targetType === VAS_PRODUCT_TYPE) {
             result.targetProduct = { id: record.target }
           } else {
             result.otherTarget = record.target

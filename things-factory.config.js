@@ -294,6 +294,10 @@ export default {
       page: 'worksheet_vas'
     },
     {
+      tagname: 'worksheet-ref-vas',
+      page: 'worksheet_ref_vas'
+    },
+    {
       tagname: 'unload-product',
       page: 'unloading'
     },

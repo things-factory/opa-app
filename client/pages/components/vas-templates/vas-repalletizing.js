@@ -1,5 +1,6 @@
 import '@things-factory/barcode-ui'
 import { SingleColumnFormStyles } from '@things-factory/form-ui'
+import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, CustomAlert } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
@@ -17,6 +18,9 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
         :host {
           display: flex;
           flex-direction: column;
+          flex: 1;
+        }
+        data-grist {
           flex: 1;
         }
       `
@@ -103,25 +107,25 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
               }}"
             >
               <fieldset>
-                <label>${i18next.t('label.total_qty')}</label>
-                ${this.record.inventory.qty === 0 && this.record.relatedOrderInv.releaseQty
-                  ? html` <input readonly value="${this.record.relatedOrderInv.releaseQty}" /> `
-                  : html` <input readonly value="${this.record.inventory.qty}" /> `}
+                <label>${i18next.t('label.from_pallet')}</label>
+                <barcode-scanable-input name="from-pallet-id" custom-input></barcode-scanable-input>
 
-                <label>${i18next.t('label.pallet')}</label>
-                <barcode-scanable-input name="pallet-id" custom-input></barcode-scanable-input>
+                <label>${i18next.t('label.to_pallet')}</label>
+                <barcode-scanable-input name="to-pallet-id" custom-input></barcode-scanable-input>
 
                 <label>${i18next.t('label.location')}</label>
                 <barcode-scanable-input name="location-name" custom-input></barcode-scanable-input>
-
-                <label>${i18next.t('label.package_qty')}</label>
-                <input name="package-qty" type="number" min="1" required />
               </fieldset>
             </form>
-
-            <data-grist .mode=${isMobileDevice() ? 'LIST' : 'GRID'} .config="${this.config}" .data="${this.palletData}">
-            </data-grist>
           `
+        : ''}
+      ${this.isExecuting || this.record?.completed
+        ? html` <data-grist
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config="${this.config}"
+            .data="${this.palletData}"
+          >
+          </data-grist>`
         : ''}
     `
   }
@@ -142,8 +146,8 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
     return this.shadowRoot.querySelector('input[name=requiredPalletQty]')
   }
 
-  get palletIdInput() {
-    return this.shadowRoot.querySelector('barcode-scanable-input[name=pallet-id]').shadowRoot.querySelector('input')
+  get toPalletIdInput() {
+    return this.shadowRoot.querySelector('barcode-scanable-input[name=to-pallet-id]').shadowRoot.querySelector('input')
   }
 
   get locationInput() {
@@ -152,10 +156,6 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
 
   get packageQtyInput() {
     return this.shadowRoot.querySelector('input[name=package-qty]')
-  }
-
-  get inputForm() {
-    return this.shadowRoot.querySelector('form#input-form')
   }
 
   constructor() {
@@ -168,44 +168,54 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
     await this.updateComplete
     this.palletType = this._getOperationGuideData('palletType') || this.palletTypeSelector.value
 
-    if (this.isExecuting) {
-      this._initExecutingConfig()
+    if (this.isExecuting || this.record?.completed) {
+      this._initExecutingConfig(this.record.completed)
     }
   }
 
-  _initExecutingConfig() {
-    this.locationInput.addEventListener('change', this._checkLocationValidity.bind(this))
+  _initExecutingConfig(isCompleted) {
+    let gutters = [{ type: 'gutter', gutterName: 'sequence' }]
+    if (!isCompleted) {
+      this.locationInput.addEventListener('change', this._checkLocationValidity.bind(this))
+      gutters.push({
+        type: 'gutter',
+        gutterName: 'button',
+        icon: 'close',
+        handlers: {
+          click: async (columns, data, column, record, rowIndex) => {
+            const result = await CustomAlert({
+              title: i18next.t('title.are_you_sure'),
+              text: i18next.t('text.undo_repalletizing'),
+              confirmButton: { text: i18next.t('button.confirm') },
+              cancelButton: { text: i18next.t('button.cancel') }
+            })
+
+            if (!result.value) {
+              return
+            }
+
+            this.undoRepallet(this.record.name, record.palletId)
+          }
+        }
+      })
+    }
+
     this.config = {
       rows: { appendable: false },
       pagination: { infinite: true },
-      list: { fields: ['palletId', 'locationName', 'addedQty'] },
+      list: { fields: ['fromPalletId', 'palletId', 'locationName', 'qty', 'weight'] },
       columns: [
-        { type: 'gutter', gutterName: 'sequence' },
+        ...gutters,
         {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'close',
-          handlers: {
-            click: async (columns, data, column, record, rowIndex) => {
-              const result = await CustomAlert({
-                title: i18next.t('title.are_you_sure'),
-                text: i18next.t('text.undo_repalletizing'),
-                confirmButton: { text: i18next.t('button.confirm') },
-                cancelButton: { text: i18next.t('button.cancel') }
-              })
-
-              if (!result.value) {
-                return
-              }
-
-              this.undoRepallet(this.record.name, record.palletId)
-            }
-          }
+          type: 'string',
+          name: 'fromPalletId',
+          header: i18next.t('field.from_pallet'),
+          width: 180
         },
         {
           type: 'string',
           name: 'palletId',
-          header: i18next.t('field.pallet'),
+          header: i18next.t('field.repalletized_pallet'),
           width: 180
         },
         {
@@ -216,8 +226,14 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
         },
         {
           type: 'integer',
-          name: 'addedQty',
+          name: 'qty',
           header: i18next.t('field.qty'),
+          width: 60
+        },
+        {
+          type: 'integer',
+          name: 'weight',
+          header: i18next.t('field.weight'),
           width: 60
         }
       ]
@@ -252,16 +268,47 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
 
   async init() {
     await this.updateComplete
+    this.isExecuting = !this.record.completed
     if (this.isExecuting) {
       this.inputForm.reset()
-      this.palletIdInput.value = ''
-      this.locationInput.value = ''
-      this.palletIdInput.focus()
-
-      this.palletData = {
-        records: this.record.operationGuide.data.repalletizedInvs
+      if (this.record.palletId) {
+        this.fromPalletIdInput.value = this.record.palletId
+        this.fromPalletIdInput.setAttribute('readonly', true)
+        this.toPalletIdInput.focus()
+      } else {
+        this.fromPalletIdInput.value = ''
+        this.fromPalletIdInput.focus()
       }
+      this.toPalletIdInput.value = ''
+      this.locationInput.value = ''
     }
+
+    if (this.isExecuting || this.record.completed) {
+      this.palletData = { records: this._formatPalletData(this.record.operationGuide.data.repalletizedInvs) }
+    }
+  }
+
+  _formatPalletData(repalletizedInvs = []) {
+    if (!this.record.palletId) return []
+
+    return repalletizedInvs
+      .map(ri => {
+        return {
+          ...ri,
+          fromPalletId: this.record.palletId,
+          ...ri.repalletizedFrom
+            .filter(rf => rf.fromPalletId === this.record.palletId)
+            .reduce(
+              (amount, rf) => {
+                amount.qty += rf.reducedQty
+                amount.weight += rf.reducedWeight
+                return amount
+              },
+              { qty: 0, weight: 0 }
+            )
+        }
+      })
+      .filter(ri => ri.qty)
   }
 
   validateAdjust() {
@@ -295,44 +342,51 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
 
   checkStdQtyValidity() {
     let stdQty = Number(this.stdQtyInput.value)
-    let errorMsg
 
     if (stdQty <= 0) {
-      errorMsg = i18next.t('text.qty_should_be_positive')
-      stdQty = 1
-    } else if (!stdQty) {
-      errorMsg = i18next.t('text.invalid_quantity_input')
-      stdQty = 1
-    } else if (stdQty > this.targetInfo.qty) {
-      errorMsg = i18next.t('text.qty_exceed_limit')
-      stdQty = this.targetInfo.qty
+      this.stdQtyInput.value = 1
+      this.stdQtyInput.focus()
+      throw new Error(i18next.t('text.qty_should_be_positive'))
+    }
+    if (!stdQty) {
+      this.stdQtyInput.value = 1
+      this.stdQtyInput.focus()
+      throw new Error(i18next.t('text.invalid_quantity_input'))
+    }
+    if (stdQty > this.targetInfo.qty) {
+      this.stdQtyInput.value = this.targetInfo.qty
+      this.stdQtyInput.focus()
+      throw new Error(i18next.t('text.qty_exceed_limit'))
     }
 
-    if (errorMsg) {
-      this.stdQtyInput.value = stdQty
+    if (this.targetInfo.qty % stdQty) {
+      this.stdQtyInput.value = 1
       this.stdQtyInput.focus()
-      throw new Error(errorMsg)
+      throw new Error(i18next.t('text.qty_cannot_be_divided_completely'))
     }
   }
 
   adjustPalletQty() {
     const stdQty = Number(this.stdQtyInput.value)
-    const maxPalletQtyByStd = Math.ceil(this.targetInfo.qty / stdQty)
+    let maxPalletQtyByStd = this.targetInfo.qty / stdQty
 
-    if (this.palletType === REUSABLE_PALLET.value) {
-      const availablePalletQty = Number(this.availablePalletQtyInput.value)
-      this.requiredPalletQtyInput.value =
-        maxPalletQtyByStd >= availablePalletQty ? availablePalletQty : maxPalletQtyByStd
-    } else {
-      this.requiredPalletQtyInput.value = maxPalletQtyByStd
-    }
-
-    if (!Number(this.requiredPalletQtyInput.value)) {
+    if (maxPalletQtyByStd < 0) {
       this.stdQtyInput.value = ''
-      this.requiredPalletQtyInput.value = ''
+      maxPalletQtyByStd = ''
       this.stdQtyInput.focus()
       this._showToast({ message: i18next.t('text.qty_should_be_positive') })
+    } else if (this.palletType === REUSABLE_PALLET.value) {
+      const availablePalletQty = Number(this.availablePalletQtyInput.value)
+
+      if (availablePalletQty < maxPalletQtyByStd) {
+        this.stdQtyInput.value = ''
+        maxPalletQtyByStd = ''
+        this.stdQtyInput.focus()
+        this._showToast({ message: i18next.t('text.reusable_pallet_is_not_enough') })
+      }
     }
+
+    this.requiredPalletQtyInput.value = maxPalletQtyByStd
   }
 
   async _checkLocationValidity() {
@@ -369,7 +423,7 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
           pallets(${gqlBuilder.buildArgs({
             filters: [
               {
-                name: 'holder',
+                name: 'inventory',
                 operator: 'is_null'
               }
             ]
@@ -387,75 +441,118 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
 
   async repallet() {
     try {
-      this._checkPalletAddable()
+      this._checkRepalletizable()
       await client.query({
         query: gql`
           mutation {
             repalletizing(${gqlBuilder.buildArgs({
               worksheetDetailName: this.record.name,
-              palletId: this.palletIdInput.value,
-              locationName: this.locationInput.value,
-              packageQty: parseInt(this.packageQtyInput.value)
+              fromPalletId: this.fromPalletIdInput.value,
+              toPalletId: this.toPalletIdInput.value,
+              locationName: this.locationInput.value
             })})
           }
         `
       })
 
-      this.dispatchEvent(new CustomEvent('completed'))
-      this.init()
+      this.dispatchEvent(
+        new CustomEvent('completed', {
+          bubbles: true,
+          composed: true
+        })
+      )
     } catch (e) {
       this._showToast(e)
     }
   }
 
-  async undoRepallet(worksheetDetailName, palletId) {
+  async undoRepallet(worksheetDetailName, toPalletId) {
     try {
       await client.query({
         query: gql`
           mutation {
             undoRepalletizing(${gqlBuilder.buildArgs({
               worksheetDetailName,
-              palletId
+              fromPalletId: this.fromPalletIdInput.value,
+              toPalletId
             })})
           }
         `
       })
 
-      this.dispatchEvent(new CustomEvent('completed'))
-      this.init()
+      this.dispatchEvent(
+        new CustomEvent('completed', {
+          bubbles: true,
+          composed: true
+        })
+      )
     } catch (e) {
       this._showToast(e)
     }
   }
 
-  _checkPalletAddable() {
-    if (!this.palletIdInput.value) {
-      this.palletIdInput.select()
-      throw new Error(i18next.t('text.pallet_id_is_empty'))
+  _checkRepalletizable() {
+    if (!this.fromPalletIdInput.value) {
+      this.fromPalletIdInput.select()
+      throw new Error(i18next.t('text.from_pallet_id_is_emplty'))
+    }
+
+    if (!this.toPalletIdInput.value) {
+      this.toPalletIdInput.select()
+      throw new Error(i18next.t('text.to_pallet_id_is_empty'))
+    }
+
+    const stdQty = this._getOperationGuideData('stdQty')
+    const toPalleId = this.toPalletIdInput.value
+    const foundPallet = this._getOperationGuideData('repalletizedInvs', []).find(ri => ri.palletId === toPalleId)
+    if (foundPallet?.repalletizedFrom?.length) {
+      const totalQty = foundPallet.repalletizedFrom.reduce((totalQty, rf) => {
+        totalQty += rf.reducedQty
+        return totalQty
+      }, 0)
+
+      if (totalQty && totalQty >= stdQty) {
+        this.toPalletIdInput.value = ''
+        this.toPalletIdInput.focus()
+        throw new Error(i18next.t('text.qty_exceed_limit'))
+      }
+    }
+
+    const nonCompletedPalletQty = this._getOperationGuideData('repalletizedInvs', [])
+      .filter(ri => ri.repalletizedFrom.reduce((qty, rf) => (qty += rf.reducedQty), 0) < stdQty)
+      .map(ri => ri.palletId)
+      .concat(toPalleId)
+      .filter((palletId, idx, palletIds) => palletIds.indexOf(palletId) === idx).length
+
+    if (nonCompletedPalletQty > this._getOperationGuideData('requiredPalletQty')) {
+      this.toPalletIdInput.select()
+      throw new Error(i18next.t('text.qty_exceed_limit'))
     }
 
     if (!this.locationInput.value) {
-      this.locationInput.select()
-      throw new Error(i18next.t('text.location_code_is_empty'))
-    }
+      // location에 값이 없을 경우 기존에 추가된 팔렛에 현재 추가하려는 팔렛이 있는지 확인하고
+      // 만약 있다면 기존 로케이션을 유지하는 것으로 간주하여 valid
+      // 없다면 로케이션을 필수로 입력해야 하기 때문에 invalid
 
-    if (!Number(this.packageQtyInput.value) || Number(this.packageQtyInput.value) <= 0) {
-      this.packageQtyInput.select()
-      throw new Error(i18next.t('text.package_qty_should_be_positive'))
-    }
-
-    const invQty = this.record.qty || this.record.relatedOrderInv.releaseQty
-    if (Number(this.packageQtyInput.value) > invQty - this.getTotalRepalletedQty()) {
-      this.packageQtyInput.select()
-      throw new Error(i18next.t('text.package_qty_is_exceed_inventory_qty'))
+      if (
+        this.record.operationGuide.data?.repalletizedInvs &&
+        this.record.operationGuide.data.repalletizedInvs.find(ri => ri.palletId === this.toPalletIdInput.value)
+      ) {
+        const samePallet = this.record.operationGuide.data.repalletizedInvs.find(
+          ri => ri.palletId === this.toPalletIdInput.value
+        )
+        this.locationInput.value = samePallet.locationName
+      } else {
+        this.locationInput.select()
+        throw new Error(i18next.t('text.location_code_is_empty'))
+      }
     }
   }
 
-  getTotalRepalletedQty() {
-    return (this.record.operationGuide.data.repalletizedInvs || []).reduce(
-      (totalQty, inv) => totalQty + inv.addedQty,
-      0
-    )
+  checkExecutionValidity() {
+    if (this._getOperationGuideData('requiredPalletQty' > 0)) {
+      throw new Error(i18next.t('text.repalletizing_is_not_completed'))
+    }
   }
 }
 

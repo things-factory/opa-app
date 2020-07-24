@@ -480,8 +480,20 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
               completed: record.status === WORKSHEET_STATUS.DONE.value
             }
           })
-          .sort((a, b) => b.completed - a.completed)
-          .reverse()
+          .sort((a, b) => {
+            if (a.completed !== b.completed) {
+              if (a.completed) return 1
+              if (b.completed) return -1
+            }
+
+            if (a.batchId > b.batchId) return 1
+            if (b.batchId < b.batchId) return -1
+
+            if (a.palletId > b.palletId) return 1
+            if (a.palletId < b.palletId) return -1
+
+            return 0
+          })
       }
 
       this._completeHandler()
@@ -776,7 +788,11 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
 
     if (!response.errors) {
       this._clearView()
-      this._showToast({ message: i18next.t('text.your_work_has_completed') })
+      await CustomAlert({
+        title: i18next.t('title.completed'),
+        text: i18next.t('text.putaway_completed'),
+        confirmButton: { text: i18next.t('button.confirm') }
+      })
     }
   }
 

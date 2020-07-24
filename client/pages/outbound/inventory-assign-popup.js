@@ -8,6 +8,7 @@ import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import { ORDER_TYPES } from '../order/constants'
 import { fetchLocationSortingRule } from '../../fetch-location-sorting-rule'
+import { LOCATION_SORTING_RULE } from '../contants/location-sorting-rule'
 import { PICKING_STRATEGY } from './constants'
 
 class InventoryAssignPopup extends localize(i18next)(LitElement) {
@@ -15,6 +16,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
     return {
       worksheetNo: String,
       batchId: String,
+      productId: String,
       productName: String,
       bizplaceId: String,
       packingType: String,
@@ -143,7 +145,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
   }
 
   async firstUpdated() {
-    this.locationSortingRules = await fetchLocationSortingRule()
+    this.locationSortingRules = await fetchLocationSortingRule(LOCATION_SORTING_RULE.INVENTORY_ASSIGNMENT.value)
 
     this.config = {
       list: { fields: ['palletId', 'product', 'location', 'qty'] },
@@ -335,7 +337,10 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
           this.pickQty += pickQty
           this.pickWeight += pickWeight
         }
-        
+
+        // need to round off so that it will bypass the validation upon submission
+        this.pickWeight = Math.round(this.pickWeight * 100) / 100
+
         // need to round off so that it will bypass the validation upon submission
         this.pickWeight = Math.round(this.pickWeight * 100) / 100
 
@@ -398,7 +403,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
 
             totalPickQty += pickQty
             totalPickWeight += pickWeight
-            
+
             return {
               ...data,
               pickQty: Math.round((pickQty * data.weight) / data.weight),
@@ -424,7 +429,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
             generateReleaseGoodWorksheetDetails(${gqlBuilder.buildArgs({
               worksheetNo: this.worksheetNo,
               batchId: this.batchId,
-              productName: this.productName,
+              productId: this.productId,
               packingType: this.packingType,
               worksheetDetails: this._composeWorksheetDetails()
             })})

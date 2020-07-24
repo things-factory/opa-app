@@ -1,23 +1,9 @@
-import { LitElement, html } from 'lit-element'
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import { i18next } from '@things-factory/i18n-base'
+import { html } from 'lit-element'
+import { AbstractVasCreateForm } from './abastract-vas-create-form'
+import { VAS_PRODUCT_TYPE } from '../../constants'
 
-export class VasCreateProductTypeForm extends LitElement {
-  static get properties() {
-    return {
-      selectedProductId: String,
-      selectedPackingType: String,
-      targetList: Array,
-      targetProductList: Array,
-      packingTypeList: Array,
-      record: Object
-    }
-  }
-
-  static get styles() {
-    return [MultiColumnFormStyles]
-  }
-
+export class VasCreateProductTypeForm extends AbstractVasCreateForm {
   render() {
     return html`
       <form
@@ -90,18 +76,6 @@ export class VasCreateProductTypeForm extends LitElement {
     }
   }
 
-  get form() {
-    return this.shadowRoot.querySelector('form')
-  }
-
-  get packingTypeSelector() {
-    return this.shadowRoot.querySelector('select#packing-type-selector')
-  }
-
-  get qtyInput() {
-    return this.shadowRoot.querySelector('input#qty-input')
-  }
-
   get targetProductList() {
     return this.targetList
       .map(target => target.product)
@@ -119,34 +93,41 @@ export class VasCreateProductTypeForm extends LitElement {
     }
   }
 
+  get target() {
+    return this.selectedProductId
+  }
+
   get targetDisplay() {
     const selectedProdct = this.targetList.find(target => target.product.id === this.selectedProductId).product
 
     return `${selectedProdct.name} ${selectedProdct.description ? `(${selectedProdct.description})` : ''}`
   }
 
-  get target() {
-    return this.selectedProductId
-  }
-
-  get qty() {
-    return this.qtyInput.value
-  }
-
   get maximumQty() {
     if (this.selectedProductId && this.selectedPackingType) {
-      return this.targetList
+      const packQty = this.targetList
         .filter(
           target => target.product.id === this.selectedProductId && target.packingType === this.selectedPackingType
         )
         .reduce((packQty, target) => packQty + target.packQty, 0)
+
+      const choosenQty = this.vasList
+        .map(task => {
+          if (task.targetType === VAS_PRODUCT_TYPE) {
+            task.target = { productId: task.target }
+          }
+
+          return task
+        })
+        .filter(
+          task => task.packingType === this.selectedPackingType && task.target.productId === this.selectedProductId
+        )
+        .reduce((choosenQty, task) => (choosenQty += task.qty), 0)
+
+      return packQty - choosenQty
     } else {
       return ''
     }
-  }
-
-  checkValidity() {
-    return this.form.checkValidity()
   }
 
   _checkQtyValidity() {
@@ -170,17 +151,6 @@ export class VasCreateProductTypeForm extends LitElement {
     } catch (e) {
       this._showToast(e)
     }
-  }
-
-  _showToast({ type, message }) {
-    document.dispatchEvent(
-      new CustomEvent('notify', {
-        detail: {
-          type,
-          message
-        }
-      })
-    )
   }
 }
 
