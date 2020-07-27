@@ -111,8 +111,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
           <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" />
 
-          <label>${i18next.t('label.container_size')}</label>
-          <select name="containerSize">
+          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_size')}</label>
+          <select name="containerSize" ?hidden="${!this._hasContainer}">
             <option value="">--${i18next.t('label.please_select_a_container_size')}--</option>
             ${(this.containerSizes || []).map(
               containerSize =>

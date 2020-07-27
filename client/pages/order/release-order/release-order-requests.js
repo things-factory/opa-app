@@ -82,12 +82,6 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' },
       },
       {
-        label: i18next.t('field.ref_no'),
-        name: 'refNo',
-        type: 'text',
-        props: { searchOper: 'i_like' },
-      },
-      {
         label: i18next.t('field.customer'),
         name: 'bizplaceId',
         type: 'select',
@@ -112,15 +106,21 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' },
       },
       {
-        label: i18next.t('field.import_cargo'),
-        name: 'importCargo',
+        label: i18next.t('field.ref_no'),
+        name: 'refNo',
+        type: 'text',
+        props: { searchOper: 'i_like' },
+      },
+      {
+        label: i18next.t('field.export_option'),
+        name: 'exportOption',
         type: 'checkbox',
         props: { searchOper: 'eq' },
         attrs: ['indeterminate'],
       },
       {
-        label: i18next.t('field.shipping_option'),
-        name: 'exportOption',
+        label: i18next.t('field.own_transport'),
+        name: 'ownTransport',
         type: 'checkbox',
         props: { searchOper: 'eq' },
         attrs: ['indeterminate'],
