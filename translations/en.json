@@ -311,6 +311,7 @@
   "label.assign_driver": "assign driver",
   "label.assign_vehicle": "assign vehicle",
   "label.assign_truck_driver": "assign truck and driver",
+  "label.availabel_pallet_qty": "available pallet qty",
   "label.delivery_information": "delivery information",
   "label.assigned": "assigned",
   "label.available_qty": "available qty",
