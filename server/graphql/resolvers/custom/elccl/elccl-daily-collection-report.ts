@@ -51,10 +51,15 @@ export const elcclDailyCollectionReport = {
           and ws.ended_at <= '${new Date(toDate.value).toLocaleDateString()} 23:59:59' 
           ${bizplaceQuery}
         )
-        select bizplace_name, arrival_notice_name, ended_at, batch_id, trim(trailing ', ' from self_collect) as self_collect, trim(trailing ', ' from delivery) as delivery from(
+        select bizplace_name, arrival_notice_name, ended_at, batch_id, 
+        trim(trailing ', ' from self_collect) as self_collect, trim(trailing ', ' from delivery) as delivery,
+        total_self_collect, total_delivery
+        from(
           select bizplace_name, arrival_notice_name, ended_at, batch_id,
           string_agg(self_collect, '') as self_collect,
-          string_agg(delivery, '') delivery
+          string_agg(delivery, '') delivery,
+          COUNT(case when own_collection = true then 1 end) as total_self_collect,
+          COUNT(case when own_collection = false then 1 end) as total_delivery
           from (
             select arrival_notice_name, delivery_order_name, bizplace_name, ended_at::varchar, own_collection, batch_id,
               case when own_collection = 'true' then concat(delivery_order_name, ' (', string_agg(pallet_id, ', ' ORDER BY pallet_id), '), ') else '' end as self_collect,
