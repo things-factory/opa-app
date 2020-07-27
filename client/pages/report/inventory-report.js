@@ -28,19 +28,24 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
       _searchFields: Object,
       _config: Object,
       _bizplaces: Object,
+      _date: String,
       data: Object
     }
   }
 
   get context() {
     return {
-      title: 'Inventory Report',
+      title: i18next.t('title.inventory_report'),
       printable: {
         accept: ['preview'],
         content: this
       },
       exportable: {
-        name: i18next.t('title.inventory_report'),
+        name: i18next.t('title.date_inventory_report', {
+          state: {
+            text: this._date
+          }
+        }),
         data: this._exportableData.bind(this)
       }
     }
@@ -225,6 +230,9 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
 
     this._searchFields = this.searchFields
     this._config = this.reportConfig
+
+    let date = new Date()
+    this._date = date.getFullYear().toString() + (date.getMonth()+1).toString() + date.getDate().toString()
   }
 
   async pageUpdated(changes, lifecycle) {

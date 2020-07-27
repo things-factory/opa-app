@@ -27,16 +27,25 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
       _searchFields: Object,
       _config: Object,
       _products: Object,
+      _date: String,
       data: Object
     }
   }
 
   get context() {
     return {
-      title: 'Inventory Report',
+      title: i18next.t('title.inventory_report'),
       printable: {
         accept: ['preview'],
         content: this
+      },
+      exportable: {
+        name: i18next.t('title.date_inventory_report', {
+          state: {
+            text: this._date
+          }
+        }),
+        data: this._exportableData.bind(this)
       }
     }
   }
@@ -114,6 +123,7 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
           name: 'product|name',
           header: i18next.t('field.product'),
           sortable: false,
+          imex: { header: i18next.t('field.product'), key: 'product|name', width: 75, type: 'string' },
           width: 400
         },
         {
@@ -124,6 +134,7 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
             editable: false,
             align: 'center'
           },
+          imex: { header: i18next.t('field.packing_type'), key: 'packingType', width: 25, type: 'string' },
           width: 180
         },
         {
@@ -132,6 +143,7 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
           header: i18next.t('field.batch_no'),
           record: { align: 'center' },
           sortable: false,
+          imex: { header: i18next.t('field.batch_no'), key: 'batchId', width: 25, type: 'string' },
           width: 200
         },
         {
@@ -139,6 +151,7 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
           name: 'orderName',
           header: i18next.t('field.order_no'),
           sortable: true,
+          imex: { header: i18next.t('field.order_no'), key: 'orderName', width: 25, type: 'string' },
           width: 300
         },
         {
@@ -146,6 +159,7 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
           name: 'orderRefNo',
           header: i18next.t('field.ref_no'),
           sortable: true,
+          imex: { header: i18next.t('field.ref_no'), key: 'orderRefNo', width: 25, type: 'string' },
           width: 300
         },
         {
@@ -154,6 +168,7 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
           header: i18next.t('field.date'),
           record: { editable: false, align: 'left' },
           sortable: true,
+          imex: { header: i18next.t('field.date'), key: 'createdAt', width: 25, type: 'string' },
           width: 110
         },
         {
@@ -162,6 +177,7 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
           header: i18next.t('field.qty'),
           record: { align: 'center' },
           sortable: true,
+          imex: { header: i18next.t('field.qty'), key: 'qty', width: 25, type: 'string' },
           width: 100
         },
         {
@@ -170,6 +186,7 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
           header: i18next.t('field.weight'),
           record: { align: 'center' },
           sortable: true,
+          imex: { header: i18next.t('field.weight'), key: 'weight', width: 25, type: 'string' },
           width: 100
         }
       ],
@@ -187,8 +204,10 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
 
   async pageInitialized() {
     this._searchFields = this.searchFields
-
     this._config = this.reportConfig
+
+    let date = new Date()
+    this._date = date.getFullYear().toString() + (date.getMonth()+1).toString() + date.getDate().toString()
   }
 
   async pageUpdated(changes, lifecycle) {
@@ -307,6 +326,27 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
       this._searchFields = [...this._searchFields]
     }
   }
+
+  _exportableData() {
+    try {
+      var headerSetting = [
+        ...this.report._config.columns
+          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+          .map(column => {
+            return column.imex
+          })
+      ]
+
+      return {
+        header: headerSetting,
+        data: this.report.data.records,
+        groups: this.report._config.rows.groups,
+        totals: this.report._config.rows.totals
+      }
+    } catch (e) {
+      this._showToast(e)
+    }
+  } 
 }
 
 window.customElements.define('customer-inventory-report', CustomerInventoryReport)
