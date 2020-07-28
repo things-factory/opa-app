@@ -217,7 +217,7 @@
   "field.ready": "completed",
   "field.receipt_reference_no": "receipt reference no",
   "field.receive_date": "receive date",
-  "field.ref_no": "ref no",
+  "field.ref_no": "ref no.",
   "field.opening_qty": "opening qty",
   "field.opening_weight": "opening weight",
   "field.order_type": "order type",
@@ -227,7 +227,7 @@
   "field.release_good_no": "release good no.",
   "field.release_goods": "release goods",
   "field.release_inventory_list": "release inventory list",
-  "field.release_order_no": "release no",
+  "field.release_order_no": "RO no.",
   "field.release_qty": "release quantity",
   "field.release_weight": "release weight",
   "field.remain_qty": "remain qty",
@@ -402,8 +402,8 @@
   "label.from_warehouse": "from warehouse",
   "label.full_container_load": "full container load",
   "label.full_load": "full load",
-  "label.grn_no": "GRN No",
-  "label.gan": "GAN",
+  "label.grn_no": "GRN No.",
+  "label.gan": "GAN no.",
   "label.gan_ref_if_any": "GAN no. ref if any",
   "label.half_load": "half load",
   "label.handling": "handling",
@@ -1173,5 +1173,7 @@
   "text.x_is_empty": "{state.x} is empty",
   "text.x_should_be_positive": "{state.x} should be positive value",
   "text.x_exceed_limit": "{state.x} exceed limit",
-  "text.invalid_x": "Invalid {state.x}"
+  "text.invalid_x": "invalid {state.x}",
+  "title.date_inventory_report": "{state.text} Inventory Report",
+  "title.inventory_report": "inventory report"
 }
