@@ -2,7 +2,7 @@ import { convertListParams, ListParam } from '@things-factory/shell'
 import { getRepository } from 'typeorm'
 import { User } from '@things-factory/auth-base'
 import { Bizplace, BizplaceUser } from '@things-factory/biz-base'
-import { InventoryHistory } from '../../../entities'
+import { InventoryHistory } from '@things-factory/warehouse-base'
 export const elcclInventoryHistoryReport = {
   async elcclInventoryHistoryReport(_: any, params: ListParam, context: any) {
     try {
