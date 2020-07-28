@@ -178,6 +178,20 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
         },
         {
           type: 'boolean',
+          name: 'crossDocking',
+          header: i18next.t('field.cross_docking'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'object',
+          name: 'arrivalNotice',
+          header: i18next.t('field.arrival_notice'),
+          record: { align: 'center' },
+          width: 180
+        },
+        {
+          type: 'boolean',
           name: 'exportOption',
           header: i18next.t('field.shipping_option'),
           record: { align: 'center' },
@@ -241,6 +255,10 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
                 name
               }
               ownTransport
+              crossDocking
+              arrivalNotice {
+                name
+              }
               refNo
               exportOption
               releaseDate

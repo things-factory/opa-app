@@ -3,16 +3,17 @@ import '@things-factory/grist-ui'
 import { getRenderer } from '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, CustomAlert, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-factory/shell'
+import { client, CustomAlert, navigate, PageView } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/popup-note'
 import '../../components/vas-templates'
 import {
-  VAS_BATCH_AND_PRODUCT_TYPE,
+  ORDER_STATUS, VAS_BATCH_AND_PRODUCT_TYPE,
   VAS_BATCH_NO_TYPE,
   VAS_ETC_TYPE,
-  ORDER_STATUS,
+
   VAS_PRODUCT_TYPE
 } from '../constants'
 
@@ -21,6 +22,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
     return {
       _ganNo: String,
       _ownTransport: Boolean,
+      _crossDocking: Boolean,
       _importCargo: Boolean,
       _hasContainer: Boolean,
       _looseItem: Boolean,
@@ -156,6 +158,19 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
             disabled
           />
           <label>${i18next.t('label.own_transport')}</label>
+
+          ${this._crossDocking
+            ? html`
+                <input
+                  id="crossDocking"
+                  type="checkbox"
+                  name="crossDocking"
+                  ?checked="${this._crossDocking}"
+                  disabled
+                />
+                <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+              `
+            : ''}
         </fieldset>
       </form>
 
@@ -409,6 +424,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
             }
             containerNo
             ownTransport
+            crossDocking
             etaDate
             deliveryOrderNo
             status
@@ -471,6 +487,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       this._hasContainer = arrivalNotice.containerNo ? true : false
       this._looseItem = arrivalNotice.looseItem
       this._ownTransport = arrivalNotice.ownTransport
+      this._crossDocking = arrivalNotice.crossDocking
       this._importCargo = arrivalNotice.importCargo
       this._status = arrivalNotice.status
       this._fillupANForm({

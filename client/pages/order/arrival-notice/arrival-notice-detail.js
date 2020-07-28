@@ -23,6 +23,8 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
        */
       _ganNo: String,
       _ownTransport: Boolean,
+      _crossDocking: Boolean,
+      _releaseGood: Object,
       _importCargo: Boolean,
       _hasContainer: Boolean,
       _looseItem: Boolean,
@@ -147,6 +149,19 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             disabled
           />
           <label>${i18next.t('label.own_transport')}</label>
+
+          ${this._crossDocking
+            ? html`
+                <input
+                  id="crossDocking"
+                  type="checkbox"
+                  name="crossDocking"
+                  ?checked="${this._crossDocking}"
+                  disabled
+                />
+                <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+              `
+            : ''}
         </fieldset>
       </form>
 
@@ -205,79 +220,6 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
 
   async pageInitialized() {
     this.isUserBelongsDomain = await this._checkUserBelongsDomain()
-
-    this.productGristConfig = {
-      list: { fields: ['batchId', 'product', 'packingType', 'totalWeight'] },
-      pagination: { infinite: true },
-      rows: {
-        appendable: false,
-        classifier: (record, rowIndex) => {
-          return {
-            emphasized: record.status === ORDER_PRODUCT_STATUS.READY_TO_APPROVED.value
-          }
-        }
-      },
-      columns: [
-        { type: 'gutter', gutterName: 'sequence' },
-        {
-          type: 'string',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
-          record: { align: 'center' },
-          width: 150
-        },
-        {
-          type: 'object',
-          name: 'product',
-          header: i18next.t('field.product'),
-          record: { align: 'center', options: { queryName: 'products' } },
-          width: 350
-        },
-        {
-          type: 'string',
-          name: 'packingType',
-          header: i18next.t('field.packing_type'),
-          record: { align: 'center' },
-          width: 150
-        },
-        {
-          type: 'float',
-          name: 'weight',
-          header: i18next.t('field.weight'),
-          record: { align: 'center' },
-          width: 80
-        },
-        {
-          type: 'string',
-          name: 'unit',
-          header: i18next.t('field.unit'),
-          record: { align: 'center' },
-          width: 80
-        },
-        {
-          type: 'integer',
-          name: 'packQty',
-          header: i18next.t('field.pack_qty'),
-          record: { align: 'center' },
-          width: 80
-        },
-        {
-          type: 'integer',
-          name: 'totalWeight',
-          header: i18next.t('field.total_weight'),
-          record: { align: 'center' },
-          width: 120
-        },
-        {
-          type: 'integer',
-          name: 'palletQty',
-          header: i18next.t('field.pallet_qty'),
-          record: { align: 'center' },
-          width: 80
-        }
-      ]
-    }
-
     this.vasGristConfig = {
       list: { fields: ['targetType', 'targetDisplay', 'packingType'] },
       pagination: { infinite: true },
@@ -389,6 +331,105 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     }
   }
 
+  setProductGristConfig() {
+    const crossDockingColumns = [
+      {
+        type: 'integer',
+        name: 'releaseQty',
+        header: i18next.t('field.release_qty'),
+        record: { editable: true, align: 'center' },
+        width: 160
+      },
+      {
+        type: 'float',
+        name: 'releaseWeight',
+        header: i18next.t('field.release_weight'),
+        record: { editable: true, align: 'center' },
+        width: 160
+      }
+    ]
+
+    let productGristColumns = [
+      { type: 'gutter', gutterName: 'sequence' },
+      {
+        type: 'string',
+        name: 'batchId',
+        header: i18next.t('field.batch_no'),
+        record: { align: 'center' },
+        width: 150
+      },
+      {
+        type: 'object',
+        name: 'product',
+        header: i18next.t('field.product'),
+        record: { align: 'center', options: { queryName: 'products' } },
+        width: 350
+      },
+      {
+        type: 'string',
+        name: 'packingType',
+        header: i18next.t('field.packing_type'),
+        record: { align: 'center' },
+        width: 150
+      },
+      {
+        type: 'float',
+        name: 'weight',
+        header: i18next.t('field.weight'),
+        record: { align: 'center' },
+        width: 80
+      },
+      {
+        type: 'string',
+        name: 'unit',
+        header: i18next.t('field.unit'),
+        record: { align: 'center' },
+        width: 80
+      },
+      {
+        type: 'integer',
+        name: 'packQty',
+        header: i18next.t('field.pack_qty'),
+        record: { align: 'center' },
+        width: 80
+      },
+      {
+        type: 'integer',
+        name: 'totalWeight',
+        header: i18next.t('field.total_weight'),
+        record: { align: 'center' },
+        width: 120
+      },
+      {
+        type: 'integer',
+        name: 'palletQty',
+        header: i18next.t('field.pallet_qty'),
+        record: { align: 'center' },
+        width: 80
+      }
+    ]
+
+    if (this._crossDocking) {
+      const packQtyColumnIdx =
+        productGristColumns.findIndex(column => column.name === 'packQty') || productGristColumns.length - 1
+      productGristColumns.splice(packQtyColumnIdx + 1, 0, ...crossDockingColumns)
+    }
+
+    this.productGristConfig = {
+      list: { fields: ['batchId', 'product', 'packingType', 'totalWeight'] },
+      pagination: { infinite: true },
+      rows: {
+        appendable: false,
+        classifier: (record, rowIndex) => {
+          return {
+            emphasized: record.status === ORDER_PRODUCT_STATUS.READY_TO_APPROVED.value
+          }
+        }
+      },
+      columns: productGristColumns
+    }
+  }
+
   async _fetchGAN() {
     if (!this._ganNo) return
     this._status = ''
@@ -405,6 +446,10 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             }
             containerNo
             ownTransport
+            crossDocking
+            releaseGood {
+              name
+            }
             etaDate
             looseItem
             deliveryOrderNo
@@ -429,6 +474,8 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
               packQty
               totalWeight
               palletQty
+              releaseQty
+              releaseWeight
             }
             orderVass {
               vas {
@@ -463,10 +510,12 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       const orderProducts = arrivalNotice.orderProducts
       const orderVass = arrivalNotice.orderVass
       this.orderBizplace = arrivalNotice.bizplace
-
       this._hasContainer = arrivalNotice.containerNo ? true : false
       this._looseItem = arrivalNotice.looseItem
       this._ownTransport = arrivalNotice.ownTransport
+      this._crossDocking = arrivalNotice.crossDocking
+      this._releaseGood = arrivalNotice.releaseGood
+
       this._importCargo = arrivalNotice.importCargo
       this._status = arrivalNotice.status
       this._fillupANForm({
@@ -474,6 +523,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         ...arrivalNotice.jobSheet
       })
 
+      this.setProductGristConfig()
       this.productData = { records: orderProducts }
       this.vasData = {
         records: orderVass
@@ -491,10 +541,16 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
   _updateContext() {
     this._actions = []
     if (this._status === ORDER_STATUS.PENDING.value) {
-      this._actions = [
-        { title: i18next.t('button.delete'), action: this._deleteArrivalNotice.bind(this) },
-        { title: i18next.t('button.confirm'), action: this._confirmArrivalNotice.bind(this) }
-      ]
+      this._actions = [{ title: i18next.t('button.delete'), action: this._deleteArrivalNotice.bind(this) }]
+
+      if (this._crossDocking && !this._releaseGood?.id) {
+        this._actions.push({
+          title: i18next.t('button.create_release_order'),
+          action: () => navigate(`create_release_order/${this._ganNo}`)
+        })
+      } else {
+        this._actions.push({ title: i18next.t('button.confirm'), action: this._confirmArrivalNotice.bind(this) })
+      }
     }
 
     if (this._status === ORDER_STATUS.PROCESSING.value && this.isUserBelongsDomain) {

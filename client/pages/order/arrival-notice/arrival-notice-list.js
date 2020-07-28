@@ -120,7 +120,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
     ]
 
     this.config = {
-      list: { fields: ['name', 'etaDate', 'importCargo', 'ownTransport', 'updatedAt', 'updater'] },
+      list: { fields: ['name', 'etaDate', 'importCargo', 'ownTransport', 'crossDocking', 'updatedAt', 'updater'] },
       rows: { appendable: false, selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
@@ -134,8 +134,6 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
               const status = record.status
               if (status === ORDER_STATUS.REJECTED.value) {
                 navigate(`rejected_arrival_notice/${record.name}`) // 1. move to rejected detail page
-              } else if (status === ORDER_STATUS.EDITING.value) {
-                navigate(`edit_arrival_notice/${record.name}`)
               } else {
                 navigate(`arrival_notice_detail/${record.name}`)
               }
@@ -181,6 +179,20 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           record: { align: 'center' },
           sortable: true,
           width: 100
+        },
+        {
+          type: 'boolean',
+          name: 'crossDocking',
+          header: i18next.t('field.cross_docking'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'object',
+          name: 'releaseGood',
+          header: i18next.t('field.release_good'),
+          record: { align: 'center' },
+          width: 180
         },
         {
           type: 'string',
@@ -234,6 +246,10 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
               status
               refNo
               ownTransport
+              crossDocking
+              releaseGood {
+                name
+              }
               importCargo
               createdAt
               updatedAt

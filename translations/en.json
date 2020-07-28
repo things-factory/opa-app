@@ -1129,5 +1129,7 @@
   "text.x_is_empty": "{state.x} is empty",
   "text.x_should_be_positive": "{state.x} should be positive value",
   "text.x_exceed_limit": "{state.x} exceed limit",
-  "text.invalid_x": "Invalid {state.x}"
+  "text.invalid_x": "invalid {state.x}",
+  "text.cannot_delete_cross_docking_products": "can't delete products for cross docking",
+  "text.cannot_change_x": "can't change {state.x}"
 }

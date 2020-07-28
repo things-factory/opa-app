@@ -6,13 +6,13 @@ import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import '../../components/vas-templates'
 import '../../components/attachment-viewer'
+import '../../components/vas-templates'
 import {
+  ORDER_STATUS,
   VAS_BATCH_AND_PRODUCT_TYPE,
   VAS_BATCH_NO_TYPE,
   VAS_ETC_TYPE,
-  ORDER_STATUS,
   VAS_PRODUCT_TYPE
 } from '../constants'
 
@@ -22,6 +22,8 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       _releaseOrderNo: String,
       _template: Object,
       _ownTransport: Boolean,
+      _crossDocking: Boolean,
+      _ganNo: String,
       _exportOption: Boolean,
       customerBizplaceId: String,
       partnerBizplaceId: String,
@@ -127,6 +129,22 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
             disabled
           />
           <label ?hidden="${this._exportOption}">${i18next.t('label.own_transport')}</label>
+
+          ${this._crossDocking
+            ? html`
+                <input
+                  id="crossDocking"
+                  type="checkbox"
+                  name="crossDocking"
+                  ?checked="${this._crossDocking}"
+                  disabled
+                />
+                <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+
+                <label for="ganNo">${i18next.t('label.arrival_notice')}</label>
+                <input readonly name="ganNo" value="${this._ganNo}" />
+              `
+            : ''}
         </fieldset>
       </form>
 
@@ -250,7 +268,15 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
 
     this.inventoryGristConfig = {
       pagination: { infinite: true },
-      rows: { selectable: { multiple: true }, appendable: false },
+      rows: {
+        selectable: { multiple: true },
+        appendable: false,
+        classifier: (record, rowIndex) => {
+          return {
+            emphasized: record.isCrossDocking
+          }
+        }
+      },
       list: { fields: ['productName', 'batchId', 'packingType', 'releaseQty', 'releaseWeight'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -438,6 +464,10 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
             status
             refNo
             ownTransport
+            crossDocking
+            arrivalNotice {
+              name
+            }
             exportOption
             releaseDate
             collectionOrderNo
@@ -516,6 +546,9 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       } else if (!this._exportOption) {
         this._ownTransport = response.data.releaseGoodDetail.ownTransport
       }
+
+      this._crossDocking = response.data.releaseGoodDetail?.crossDocking
+      this._ganNo = response.data.releaseGoodDetail?.arrivalNotice?.name
 
       this._status = releaseOrder.status
 
