@@ -477,6 +477,7 @@
   "label.package_qty": "package qty",
   "label.required_package_qty": "required package qty",
   "label.required_package_weight": "required package weight",
+  "label.repalletizing_vas": "repalletizing vas",
   "label.pallet": "pallet",
   "label.repalletizing": "repalletizing",
   "label.pallet_barcode": "pallet barcode",

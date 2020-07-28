@@ -463,7 +463,7 @@ class PreunloadProduct extends connect(store)(localize(i18next)(PageView)) {
               preunload(${gqlBuilder.buildArgs({
                 worksheetDetailName: this._selectedOrderProduct.name,
                 adjustedBatchId: this._isDifferent ? this._adjustedBatchId.value : null,
-                adjustedPalletQty: parseInt(this._adjustedPalletQty.value),
+                adjustedPalletQty: Math.round(parseInt(this._adjustedPalletQty.value)),
                 palletQty: parseInt(this._palletQty.value)
               })})
             }
