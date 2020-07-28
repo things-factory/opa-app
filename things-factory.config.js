@@ -388,6 +388,10 @@ export default {
     {
       tagname: 'elccl-inventory-summary-report',
       page: 'elccl_inventory_summary_report'
+    },
+    {
+      tagname: 'elccl-inventory-report',
+      page: 'elccl_inventory_report'
     }
   ],
   bootstrap

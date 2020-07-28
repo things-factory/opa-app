@@ -368,5 +368,8 @@ export default function route(page) {
     case 'elccl_inventory_summary_report':
       import('./pages/report/custom-elccl/elccl-inventory-summary-report')
       return page
+    case 'elccl_inventory_report':
+      import('./pages/report/custom-elccl/elccl-inventory-report')
+      return page
   }
 }

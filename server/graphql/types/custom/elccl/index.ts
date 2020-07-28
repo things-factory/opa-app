@@ -6,6 +6,7 @@ import { ElcclDailyCollectionReportList } from './elccl-daily-collection-report-
 export const Query = `
   elcclInventoryHistorySummaryReport(filters: [Filter], pagination: Pagination, sortings: [Sorting]): ElcclInventorySummaryReportList
   elcclDailyCollectionReport(filters: [Filter], pagination: Pagination, sortings: [Sorting]): [DailyCollectionReport]
+  elcclInventoryHistoryReport(filters: [Filter], pagination: Pagination, sortings: [Sorting]): [InventoryHistory]
 `
 
 export const Types = [
