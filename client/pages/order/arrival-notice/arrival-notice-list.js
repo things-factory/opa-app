@@ -77,16 +77,16 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
-        label: i18next.t('field.ref_no'),
-        name: 'refNo',
-        type: 'text',
-        props: { searchOper: 'i_like' }
-      },
-      {
         label: i18next.t('field.eta'),
         name: 'etaDate',
         type: 'date',
         props: { searchOper: 'eq' }
+      },
+      {
+        label: i18next.t('field.ref_no'),
+        name: 'refNo',
+        type: 'text',
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.import_cargo'),
