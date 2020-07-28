@@ -6,7 +6,6 @@ import { gqlBuilder, flattenObject } from '@things-factory/utils'
 import { connect } from 'pwa-helpers/connect-mixin'
 import { localize, i18next } from '@things-factory/i18n-base'
 import gql from 'graphql-tag'
-import { getCodeByName } from '@things-factory/code-base'
 
 class ElcclInventoryReport extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -35,10 +34,6 @@ class ElcclInventoryReport extends connect(store)(localize(i18next)(PageView)) {
   get context() {
     return {
       title: 'Inventory Report',
-      printable: {
-        accept: ['preview'],
-        content: this
-      },
       exportable: {
         name: i18next.t('title.inventory_report'),
         data: this._exportableData.bind(this)
@@ -96,6 +91,12 @@ class ElcclInventoryReport extends connect(store)(localize(i18next)(PageView)) {
       {
         label: i18next.t('field.product'),
         name: 'product',
+        type: 'string',
+        props: { searchOper: 'in' }
+      },
+      {
+        label: i18next.t('field.batch_no'),
+        name: 'batch_no',
         type: 'string',
         props: { searchOper: 'in' }
       },
@@ -182,10 +183,10 @@ class ElcclInventoryReport extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'string',
-          name: 'orderRefNo',
+          name: 'refNo',
           header: i18next.t('field.ref_no'),
           sortable: true,
-          imex: { header: i18next.t('field.ref_no'), key: 'orderRefNo', width: 25, type: 'string' },
+          imex: { header: i18next.t('field.ref_no'), key: 'refNo', width: 25, type: 'string' },
           width: 300
         },
         {
@@ -249,23 +250,18 @@ class ElcclInventoryReport extends connect(store)(localize(i18next)(PageView)) {
               pagination: { page, limit },
               sortings: sorters
             })}) {
-              palletId
               batchId
-              bizplace {
-                name
-                description
-              }
               product {
                 name
                 description
               }
+              packingType
+              refNo
+              openingQty
+              openingWeight
               qty
               weight
-              status
-              packingType
-              transactionType
               orderName
-              orderRefNo
               createdAt
             }
           }
@@ -274,7 +270,7 @@ class ElcclInventoryReport extends connect(store)(localize(i18next)(PageView)) {
       return {
         total: 0,
         records:
-          response.data.inventoryHistoryReport.map(item => {
+          response.data.elcclInventoryHistoryReport.map(item => {
             let date = new Date(parseInt(item.createdAt))
             return flattenObject({
               ...item,
