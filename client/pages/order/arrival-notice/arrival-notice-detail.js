@@ -481,7 +481,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
           .map(orderVas => {
             return {
               ...orderVas,
-              set: `Set ${orderVas.set}`
+              set: orderVas.set ? `Set ${orderVas.set}` : ''
             }
           })
       }
