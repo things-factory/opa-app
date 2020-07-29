@@ -85,7 +85,7 @@ export const elcclInventoryHistoryReport = {
             invh.transaction_type IN ('NEW', 'ADJUSTMENT', 'UNLOADING', 'PICKING', 'LOADING', 'UNDO_UNLOADING', 'CANCEL_ORDER', 'RETURN')
             AND invh.domain_id = $1
             AND invh.bizplace_id = $2
-            AND invh.created_at < $3
+            AND invh.created_at::date <= $3
             ${batchNoQuery}
             ${productQuery}
           ) 
