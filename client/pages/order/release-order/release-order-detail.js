@@ -268,15 +268,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
 
     this.inventoryGristConfig = {
       pagination: { infinite: true },
-      rows: {
-        selectable: { multiple: true },
-        appendable: false,
-        classifier: (record, rowIndex) => {
-          return {
-            emphasized: record.isCrossDocking
-          }
-        }
-      },
+      rows: { selectable: { multiple: true }, appendable: false },
       list: { fields: ['productName', 'batchId', 'packingType', 'releaseQty', 'releaseWeight'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -648,7 +640,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
 
   async _deleteReleaseOrder() {
     try {
-      const result = await CustomAlert({
+      let result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.you_wont_be_able_to_revert_this'),
         confirmButton: { text: i18next.t('button.confirm') },
@@ -656,6 +648,17 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       })
 
       if (!result.value) return
+
+      if (this._crossDocking) {
+        result = await CustomAlert({
+          title: i18next.t('label.cross_docking'),
+          text: i18next.t('text.arrival_notice_will_be_deleted'),
+          confirmButton: { text: i18next.t('button.confirm') },
+          cancelButton: { text: i18next.t('button.cancel') }
+        })
+
+        if (!result.value) return
+      }
 
       await this._executeRevertTransactions()
       const response = await client.query({
@@ -726,15 +729,24 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
   }
 
   async _confirmReleaseOrder() {
-    const result = await CustomAlert({
+    let result = await CustomAlert({
       title: i18next.t('title.are_you_sure'),
       text: i18next.t('text.confirm_release_good'),
       confirmButton: { text: i18next.t('button.confirm') },
       cancelButton: { text: i18next.t('button.cancel') }
     })
 
-    if (!result.value) {
-      return
+    if (!result.value) return
+
+    if (this._crossDocking) {
+      result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.arrival_notice_will_be_confirmed'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) return
     }
 
     try {

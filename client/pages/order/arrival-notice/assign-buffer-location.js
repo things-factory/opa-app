@@ -23,6 +23,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
     return {
       _ganNo: String,
       _ownTransport: Boolean,
+      _crossDocking: Boolean,
       _hasContainer: Boolean,
       _looseItem: Boolean,
       productGristConfig: Object,
@@ -146,6 +147,21 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
 
           <input id="ownTransport" type="checkbox" name="ownTransport" ?checked="${this._ownTransport}" disabled />
           <label>${i18next.t('label.own_transport')}</label>
+
+          ${
+            this._crossDocking
+              ? html`
+                  <input
+                    id="crossDocking"
+                    type="checkbox"
+                    name="crossDocking"
+                    ?checked="${this._crossDocking}"
+                    disabled
+                  />
+                  <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+                `
+              : ''
+          }
         </fieldset>
       </fieldset>
 
@@ -211,70 +227,6 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
   }
 
   pageInitialized() {
-    this.productGristConfig = {
-      pagination: { infinite: true },
-      rows: { selectable: { multiple: true }, appendable: false },
-      columns: [
-        { type: 'gutter', gutterName: 'sequence' },
-        {
-          type: 'string',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
-          record: { align: 'center' },
-          width: 150
-        },
-        {
-          type: 'object',
-          name: 'product',
-          header: i18next.t('field.product'),
-          record: { align: 'center', options: { queryName: 'products' } },
-          width: 350
-        },
-        {
-          type: 'code',
-          name: 'packingType',
-          header: i18next.t('field.packing_type'),
-          record: { align: 'center', codeName: 'PACKING_TYPES' },
-          width: 150
-        },
-        {
-          type: 'float',
-          name: 'weight',
-          header: i18next.t('field.weight'),
-          record: { align: 'center' },
-          width: 80
-        },
-        {
-          type: 'code',
-          name: 'unit',
-          header: i18next.t('field.unit'),
-          record: { align: 'center', codeName: 'WEIGHT_UNITS' },
-          width: 80
-        },
-        {
-          type: 'integer',
-          name: 'packQty',
-          header: i18next.t('field.pack_qty'),
-          record: { align: 'center' },
-          width: 80
-        },
-        {
-          type: 'integer',
-          name: 'totalWeight',
-          header: i18next.t('field.total_weight'),
-          record: { align: 'center' },
-          width: 120
-        },
-        {
-          type: 'integer',
-          name: 'palletQty',
-          header: i18next.t('field.pallet_qty'),
-          record: { align: 'center' },
-          width: 80
-        }
-      ]
-    }
-
     this.vasGristConfig = {
       list: { fields: ['targetType', 'targetDisplay', 'packingType'] },
       pagination: { infinite: true },
@@ -409,6 +361,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
             }
             containerNo
             ownTransport
+            crossDocking
             etaDate
             deliveryOrderNo
             status
@@ -429,6 +382,8 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
               packQty
               totalWeight
               palletQty
+              releaseQty
+              releaseWeight
             }
             jobSheet {
               containerSize
@@ -469,6 +424,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
 
       this._hasContainer = arrivalNotice.containerNo ? true : false
       this._ownTransport = arrivalNotice.ownTransport
+      this._crossDocking = arrivalNotice.crossDocking
       this._importCargo = arrivalNotice.importCargo
       this._status = arrivalNotice.status
       this._fillupANForm({
@@ -476,6 +432,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
         ...arrivalNotice.jobSheet
       })
 
+      this.setProductGristConfig()
       this.productData = { records: orderProducts }
       this.vasData = {
         records: orderVass
@@ -487,6 +444,97 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
             }
           })
       }
+    }
+  }
+
+  setProductGristConfig() {
+    const crossDockingColumns = [
+      {
+        type: 'integer',
+        name: 'releaseQty',
+        header: i18next.t('field.release_qty'),
+        record: { editable: true, align: 'center' },
+        width: 160
+      },
+      {
+        type: 'float',
+        name: 'releaseWeight',
+        header: i18next.t('field.release_weight'),
+        record: { editable: true, align: 'center' },
+        width: 160
+      }
+    ]
+
+    let productGristColumns = [
+      { type: 'gutter', gutterName: 'sequence' },
+      {
+        type: 'string',
+        name: 'batchId',
+        header: i18next.t('field.batch_no'),
+        record: { align: 'center' },
+        width: 150
+      },
+      {
+        type: 'object',
+        name: 'product',
+        header: i18next.t('field.product'),
+        record: { align: 'center', options: { queryName: 'products' } },
+        width: 350
+      },
+      {
+        type: 'code',
+        name: 'packingType',
+        header: i18next.t('field.packing_type'),
+        record: { align: 'center', codeName: 'PACKING_TYPES' },
+        width: 150
+      },
+      {
+        type: 'float',
+        name: 'weight',
+        header: i18next.t('field.weight'),
+        record: { align: 'center' },
+        width: 80
+      },
+      {
+        type: 'code',
+        name: 'unit',
+        header: i18next.t('field.unit'),
+        record: { align: 'center', codeName: 'WEIGHT_UNITS' },
+        width: 80
+      },
+      {
+        type: 'integer',
+        name: 'packQty',
+        header: i18next.t('field.pack_qty'),
+        record: { align: 'center' },
+        width: 80
+      },
+      {
+        type: 'integer',
+        name: 'totalWeight',
+        header: i18next.t('field.total_weight'),
+        record: { align: 'center' },
+        width: 120
+      },
+      {
+        type: 'integer',
+        name: 'palletQty',
+        header: i18next.t('field.pallet_qty'),
+        record: { align: 'center' },
+        width: 80
+      }
+    ]
+
+    if (this._crossDocking) {
+      const packQtyColumnIdx =
+        productGristColumns.findIndex(column => column.name === 'packQty') || productGristColumns.length - 1
+      productGristColumns.splice(packQtyColumnIdx + 1, 0, ...crossDockingColumns)
+    }
+
+    this.productGristConfig = {
+      pagination: { infinite: true },
+      rows: { selectable: { multiple: true }, appendable: false },
+      columns: productGristColumns
     }
   }
 
@@ -514,15 +562,24 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
     try {
       this._validateBufferLocation()
 
-      const result = await CustomAlert({
+      let result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.assign_warehouse'),
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
 
-      if (!result.value) {
-        return
+      if (!result.value) return
+
+      if (this._crossDocking) {
+        result = await CustomAlert({
+          title: i18next.t('title.cross_docking'),
+          text: i18next.t('text.picking_worksheet_will_be_generated'),
+          confirmButton: { text: i18next.t('button.confirm') },
+          cancelButton: { text: i18next.t('button.cancel') }
+        })
+
+        if (!result.value) return
       }
 
       const response = await client.query({

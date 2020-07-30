@@ -111,7 +111,8 @@ export class VasCreateProductTypeForm extends AbstractVasCreateForm {
         )
         .reduce((packQty, target) => packQty + target.packQty, 0)
 
-      const choosenQty = this.vasList
+      const copiedVasList = this.vasList.map(vas => Object.assign({}, vas))
+      const choosenQty = copiedVasList
         .map(task => {
           if (task.targetType === VAS_PRODUCT_TYPE) {
             task.target = { productId: task.target }
@@ -145,7 +146,7 @@ export class VasCreateProductTypeForm extends AbstractVasCreateForm {
         .reduce((packQty, target) => packQty + target.packQty, 0)
 
       if (packQty && qty > packQty) {
-        this.qtyInput.value = packQty
+        this.qtyInput.value = this.maximumQty
         throw new Error(i18next.t('text.qty_exceed_limit'))
       }
     } catch (e) {

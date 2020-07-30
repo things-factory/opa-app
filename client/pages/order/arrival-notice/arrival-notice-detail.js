@@ -209,15 +209,6 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
   }
 
-  async pageUpdated(changes) {
-    if (this.active) {
-      this._ganNo = changes.resourceId || this._ganNo || ''
-      this._template = null
-      await this._fetchGAN()
-      this._updateContext()
-    }
-  }
-
   async pageInitialized() {
     this.isUserBelongsDomain = await this._checkUserBelongsDomain()
     this.vasGristConfig = {
@@ -328,6 +319,15 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
           width: 350
         }
       ]
+    }
+  }
+
+  async pageUpdated(changes) {
+    if (this.active) {
+      this._ganNo = changes.resourceId || this._ganNo || ''
+      this._template = null
+      await this._fetchGAN()
+      this._updateContext()
     }
   }
 
@@ -448,7 +448,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             ownTransport
             crossDocking
             releaseGood {
-              name
+              id
             }
             etaDate
             looseItem
@@ -616,7 +616,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
 
   async _deleteArrivalNotice() {
     try {
-      const result = await CustomAlert({
+      let result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.you_wont_be_able_to_revert_this'),
         confirmButton: { text: i18next.t('button.confirm') },
@@ -624,6 +624,17 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       })
 
       if (!result.value) return
+
+      if (this._crossDocking) {
+        result = await CustomAlert({
+          title: i18next.t('label.cross_docking'),
+          text: i18next.t('text.release_order_will_be_deleted'),
+          confirmButton: { text: i18next.t('button.confirm') },
+          cancelButton: { text: i18next.t('button.cancel') }
+        })
+
+        if (!result.value) return
+      }
 
       this._executeRevertTransactions()
       const response = await client.query({
@@ -664,15 +675,24 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
   }
 
   async _confirmArrivalNotice() {
-    const result = await CustomAlert({
+    let result = await CustomAlert({
       title: i18next.t('title.are_you_sure'),
       text: i18next.t('text.confirm_arrival_notice'),
       confirmButton: { text: i18next.t('button.confirm') },
       cancelButton: { text: i18next.t('button.cancel') }
     })
 
-    if (!result.value) {
-      return
+    if (!result.value) return
+
+    if (this._crossDocking) {
+      result = await CustomAlert({
+        title: i18next.t('title.cross_docking'),
+        text: i18next.t('text.release_order_will_be_confirmed'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) return
     }
 
     try {

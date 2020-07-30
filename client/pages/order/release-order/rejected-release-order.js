@@ -14,6 +14,8 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
     return {
       _releaseOrderNo: String,
       _ownTransport: Boolean,
+      _crossDocking: Boolean,
+      _ganNo: String,
       _exportOption: Boolean,
       inventoryGristConfig: Object,
       vasGristConfig: Object,
@@ -81,18 +83,6 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
     ]
   }
 
-  get context() {
-    return {
-      title: i18next.t('title.rejected_release_order'),
-      actions: [
-        {
-          title: i18next.t('button.back'),
-          action: () => history.back()
-        }
-      ]
-    }
-  }
-
   render() {
     return html`
       <popup-note
@@ -124,6 +114,22 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
             disabled
           />
           <label ?hidden="${this._exportOption}">${i18next.t('label.own_transport')}</label>
+
+          ${this._crossDocking
+            ? html`
+                <input
+                  id="crossDocking"
+                  type="checkbox"
+                  name="crossDocking"
+                  ?checked="${this._crossDocking}"
+                  disabled
+                />
+                <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+
+                <label for="ganNo">${i18next.t('label.arrival_notice')}</label>
+                <input readonly name="ganNo" value="${this._ganNo}" />
+              `
+            : ''}
         </fieldset>
       </form>
 
@@ -178,6 +184,13 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
     this._ownTransport = true
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
+  }
+
+  get context() {
+    return {
+      title: i18next.t('title.rejected_release_order'),
+      actions: [{ title: i18next.t('button.back'), action: () => history.back() }]
+    }
   }
 
   get releaseOrderForm() {
@@ -391,6 +404,10 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
             truckNo
             status
             ownTransport
+            crossDocking
+            arrivalNotice {
+              name
+            }
             exportOption
             releaseDate
             refNo
@@ -453,6 +470,10 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
       } else if (!this._exportOption) {
         this._ownTransport = releaseOrder.ownTransport
       }
+
+      this._crossDocking = response.data.releaseGoodDetail?.crossDocking
+      this._ganNo = response.data.releaseGoodDetail?.arrivalNotice?.name
+
       this._rejectReason = releaseOrder.remark
       this._fillupRGForm(releaseOrder)
       if (this._exportOption) this._fillupSOForm(shippingOrder)

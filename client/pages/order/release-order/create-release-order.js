@@ -25,6 +25,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     return {
       _pickingStd: String,
       _ownTransport: Boolean,
+      etaDate: String,
       _crossDocking: Boolean,
       _exportOption: Boolean,
       _selectedInventories: Array,
@@ -111,7 +112,13 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
           <input name="refNo" />
 
           <label>${i18next.t('label.release_date')}</label>
-          <input name="releaseDate" type="date" min="${this._getStdDate()}" />
+          <input
+            name="releaseDate"
+            type="date"
+            min="${this._getStdDate()}"
+            value="${this._etaDate || ''}"
+            ?disabled="${this._crossDocking}"
+          />
 
           <label ?hidden="${!this._ownTransport || this._exportOption}">${i18next.t('label.co_no')}</label>
           <input name="collectionOrderNo" ?hidden="${!this._ownTransport || this._exportOption}" />
@@ -209,21 +216,26 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             @change="${e => {
               this._pickingStd = e.currentTarget.value
             }}"
-            ?checked="${this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value}"
+            .checked="${this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value}"
+            checked
           />
           <label for="pick-by-prod">${i18next.t(PICKING_STANDARD.SELECT_BY_PRODUCT.name)}</label>
 
-          <input
-            id="pick-by-pallet"
-            name="picking-std"
-            type="radio"
-            value="${PICKING_STANDARD.SELECT_BY_PALLET.value}"
-            @change="${e => {
-              this._pickingStd = e.currentTarget.value
-            }}"
-            ?checked="${this._pickingStd === PICKING_STANDARD.SELECT_BY_PALLET.value}"
-          />
-          <label for="pick-by-pallet">${i18next.t(PICKING_STANDARD.SELECT_BY_PALLET.name)}</label>
+          ${this._crossDocking
+            ? ''
+            : html`
+                <input
+                  id="pick-by-pallet"
+                  name="picking-std"
+                  type="radio"
+                  value="${PICKING_STANDARD.SELECT_BY_PALLET.value}"
+                  @change="${e => {
+                    this._pickingStd = e.currentTarget.value
+                  }}"
+                  .checked="${this._pickingStd === PICKING_STANDARD.SELECT_BY_PALLET.value && !this._crossDocking}"
+                />
+                <label for="pick-by-pallet">${i18next.t(PICKING_STANDARD.SELECT_BY_PALLET.name)}</label>
+              `}
         </fieldset>
       </form>
 
@@ -294,9 +306,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('#uploadDocument')
   }
 
-  async updated(changeProps) {
+  updated(changeProps) {
     if (changeProps.has('_pickingStd')) {
-      await this.switchPickingType()
+      this.switchPickingType()
 
       if (this.crossDockingProducts?.length > 0) {
         this.inventoryData = {
@@ -308,7 +320,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
     if (changeProps.has('_ganNo')) {
       if (this._ganNo) {
-        await this.fetchCrossDockingProducts()
+        this.fetchCrossDockingProducts()
       } else {
         this.crossDockingProducts = []
         this.inventoryData = {
@@ -319,9 +331,20 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     }
   }
 
-  async pageUpdated(changes) {
+  pageUpdated(changes) {
     if (changes.active) {
-      this._ganNo = changes.resourceId || null
+      const matches = location.pathname.match(/(?<=create_release_order\/)(.*)/g)
+      if (matches?.length) {
+        this._ganNo = matches[0]
+      } else {
+        this._ganNo = null
+      }
+      this._crossDocking = Boolean(this._ganNo)
+      if (this._crossDocking) {
+        this._pickingStd = PICKING_STANDARD.SELECT_BY_PRODUCT.value
+      } else {
+        this.crossDockingProducts = []
+      }
     }
   }
 
@@ -791,7 +814,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         this._validateInventories()
         this._validateVas()
 
-        const result = await CustomAlert({
+        let result = await CustomAlert({
           title: i18next.t('title.are_you_sure'),
           text: i18next.t('text.create_release_order'),
           confirmButton: { text: i18next.t('button.confirm') },
@@ -799,6 +822,17 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         })
 
         if (!result.value) return
+
+        if (this._crossDocking) {
+          result = await CustomAlert({
+            title: i18next.t('label.cross_docking'),
+            text: i18next.t('text.create_arrival_notice'),
+            confirmButton: { text: i18next.t('button.confirm') },
+            cancelButton: { text: i18next.t('button.cancel') }
+          })
+
+          if (!result.value) return
+        }
 
         await this._executeRelatedTrxs()
         let releaseGood = this._getFormInfo()
@@ -1313,6 +1347,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             arrivalNotice(${gqlBuilder.buildArgs({
               name: this._ganNo
             })}) {
+              etaDate
               crossDocking
               orderProducts {
                 batchId
@@ -1333,7 +1368,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       })
 
       if (!response.errors) {
+        this._etaDate = response.data.arrivalNotice?.etaDate
         this._crossDocking = response.data.arrivalNotice?.crossDocking
+        this._pickingStd = this._crossDocking ? PICKING_STANDARD.SELECT_BY_PRODUCT.value : this._pickingStd
         if (this._crossDocking) {
           this.crossDockingProducts = response.data.arrivalNotice.orderProducts
             .filter(op => op.releaseQty && op.releaseWeight)
@@ -1362,6 +1399,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         } else {
           throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('field.gan') } }))
         }
+      } else {
+        this._crossDocking = false
       }
     } catch (e) {
       this._showToast(e)

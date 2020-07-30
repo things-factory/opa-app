@@ -62,8 +62,21 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
   }
 
   pageUpdated(changes, lifecycle) {
+    if (changes?.params) {
+      this.fillUpSearchForm(changes.params)
+    }
+
     if (this.active) {
       this.dataGrist.fetch()
+    }
+  }
+
+  fillUpSearchForm(params) {
+    for (let fieldName in params) {
+      const input = this.searchForm.shadowRoot.querySelector(`[name=${fieldName}]`)
+      if (input) {
+        input.value = params[fieldName]
+      }
     }
   }
 
