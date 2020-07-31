@@ -352,7 +352,7 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
     if (this.record.status === ORDER_VAS_STATUS.PENDING.value) return
     const queryName = 'products'
     const basicArgs = {
-      filters: [{ name: 'product_ref_id', operator: 'is_not_null' }]
+      filters: [{ name: 'id', operator: 'noteq', value: this.targetInfo.target.productId }]
     }
     const confirmCallback = selected => {
       this._selectedProduct = selected
