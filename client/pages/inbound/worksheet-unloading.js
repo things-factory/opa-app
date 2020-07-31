@@ -9,6 +9,8 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../components/popup-note'
+import { ARRIVAL_NOTICE } from '../order/constants'
+import '../vas/related-vas-list'
 import './adjust-pallet-qty'
 import { WORKSHEET_STATUS } from './constants/worksheet'
 import './pallet-label-popup'
@@ -22,7 +24,8 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       _worksheetStatus: String,
       _ganNo: String,
       config: Object,
-      data: Object
+      data: Object,
+      vasWorksheetNo: String
     }
   }
 
@@ -68,16 +71,17 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
           border: var(--grist-title-border);
           color: var(--secondary-color);
         }
-
         .grist h2 mwc-icon {
           vertical-align: middle;
           margin: var(--grist-title-icon-margin);
           font-size: var(--grist-title-icon-size);
           color: var(--grist-title-icon-color);
         }
-
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
+        }
+        related-vas-list {
+          flex: 1;
         }
       `
     ]
@@ -87,10 +91,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     return {
       title: i18next.t('title.worksheet_unloading'),
       actions: this._actions,
-      printable: {
-        accept: ['preview'],
-        content: this
-      }
+      printable: { accept: ['preview'], content: this }
     }
   }
 
@@ -140,6 +141,8 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
           .config=${this.config}
           .data="${this.data}"
         ></data-grist>
+
+        <related-vas-list .worksheetNo="${this.vasWorksheetNo}"></related-vas-list>
       </div>
     `
   }
@@ -228,6 +231,12 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
           width: 200
         }
       ]
+    }
+  }
+
+  updated(changedProps) {
+    if (changedProps.has('_ganNo') && this._ganNo) {
+      this.checkHavingVas(this._ganNo)
     }
   }
 
@@ -336,6 +345,25 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     }
   }
 
+  async checkHavingVas(orderNo) {
+    const response = await client.query({
+      query: gql`
+        query {
+          havingVas(${gqlBuilder.buildArgs({
+            orderType: ARRIVAL_NOTICE.value,
+            orderNo
+          })}) {
+            name
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      this.vasWorksheetNo = response.data.havingVas.name
+    }
+  }
+
   _updateContext() {
     this._actions = []
     if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value) {
@@ -346,19 +374,15 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
         { title: i18next.t('button.pallet_label_print'), action: this._openPalletLabelPrintPopup.bind(this) }
       ]
 
-      if (
-        this.data &&
-        this.data.records &&
-        this.data.records.some(wsd => wsd.status === WORKSHEET_STATUS.PARTIALLY_UNLOADED.value)
-      ) {
-        this._actions = [
-          ...this._actions,
-          { title: i18next.t('button.create_putaway_worksheet'), action: this._showPutawayWorksheetPopup.bind(this) }
-        ]
+      if (this.data?.records?.some(wsd => wsd.status === WORKSHEET_STATUS.PARTIALLY_UNLOADED.value)) {
+        this._actions.push({
+          title: i18next.t('button.create_putaway_worksheet'),
+          action: this._showPutawayWorksheetPopup.bind(this)
+        })
       }
     }
 
-    this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
+    this._actions.push({ title: i18next.t('button.back'), action: () => history.back() })
 
     store.dispatch({
       type: UPDATE_CONTEXT,
@@ -388,17 +412,15 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       }
     })
 
-    if (
-      !this.preConfig.columns.some(e => e.name === 'status') &&
-      this._worksheetStatus !== WORKSHEET_STATUS.DEACTIVATED.value
-    ) {
+    const statusColumnIdx = this.preConfig?.columns?.findIndex(col => col.name === 'status')
+    const issueColumnIdx = this.preConfig?.columns?.findIndex(col => col.name === 'issue')
+    const hasStatusColumn = statusColumnIdx >= 0
+
+    if (!hasStatusColumn && this._worksheetStatus !== WORKSHEET_STATUS.DEACTIVATED.value) {
       this.preConfig.columns = [...this.preConfig.columns, statusColumnConfig, issueColumnConfig]
-    } else if (
-      this.preConfig.columns.some(e => e.name === 'status') &&
-      this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value
-    ) {
-      this.preConfig.columns.splice(this.preConfig.columns.map(e => e.name).indexOf('status'))
-      this.preConfig.columns.splice(this.preConfig.columns.map(e => e.name).indexOf('issue'))
+    } else if (hasStatusColumn && this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value) {
+      this.preConfig.columns.splice(statusColumnIdx)
+      this.preConfig.columns.splice(issueColumnIdx)
     }
 
     this.config = { ...this.preConfig }
@@ -547,7 +569,6 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
   }
 
   _showPutawayWorksheetPopup() {
-    this._ganNo
     openPopup(
       html`
         <putaway-worksheet-generate-popup

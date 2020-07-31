@@ -7,33 +7,47 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { fetchLocationSortingRule } from '../../../fetch-location-sorting-rule'
-import { LOCATION_SORTING_RULE } from '../../contants/location-sorting-rule'
 import '../../components/vas-templates'
+import { LOCATION_SORTING_RULE } from '../../contants/location-sorting-rule'
 import '../../order/vas-order/popup/vas-create-popup'
 import {
-  VAS_BATCH_AND_PRODUCT_TYPE,
-  VAS_BATCH_NO_TYPE,
   INVENTORY_STATUS,
   ORDER_INVENTORY_STATUS,
   ORDER_TYPES,
   PICKING_STANDARD,
+  VAS_BATCH_AND_PRODUCT_TYPE,
+  VAS_BATCH_NO_TYPE,
   VAS_PRODUCT_TYPE
 } from '../constants'
 
 class CreateReleaseOrder extends localize(i18next)(PageView) {
   static get properties() {
     return {
-      _pickingStd: String,
+      /* RO Form Fields */
       _ownTransport: Boolean,
       _exportOption: Boolean,
-      _selectedInventories: Array,
+      refNo: String,
+      releaseDate: Date,
+      collectionOrderNo: String,
+      /* RO Form Fields */
+
       _files: Array,
+
+      /* Export Form Fields */
+      containerNo: String,
+      containerArrivalDate: Date,
+      containerLeavingDate: Date,
+      shipName: String,
+      /* Export Form Fields */
+
+      _pickingStd: String,
+
+      _selectedInventories: Array,
       inventoryGristConfig: Object,
       vasGristConfig: Object,
       inventoryData: Object,
       vasData: Object,
-      _releaseOrderNo: String,
-      _template: Object
+      _releaseOrderNo: String
     }
   }
 
@@ -105,79 +119,87 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         <fieldset>
           <legend>${i18next.t('title.release_order')}</legend>
           <label>${i18next.t('label.ref_no')}</label>
-          <input name="refNo" />
+          <input name="refNo" .value="${this.refNo}" />
 
           <label>${i18next.t('label.release_date')}</label>
-          <input name="releaseDate" type="date" min="${this._getStdDate()}" />
+          <input name="releaseDate" type="date" min="${this._getStdDate()}" .value="${this.releaseDate}" required />
 
-          <label ?hidden="${!this._ownTransport || this._exportOption}">${i18next.t('label.co_no')}</label>
-          <input name="collectionOrderNo" ?hidden="${!this._ownTransport || this._exportOption}" />
+          ${this._ownTransport
+            ? html`
+                <label>${i18next.t('label.co_no')}</label>
+                <input name="collectionOrderNo" .value="${this.collectionOrderNo}" />
 
-          <label ?hidden="${!this._ownTransport || this._exportOption}">${i18next.t('label.upload_documents')}</label>
-          <file-uploader
-            name="attachments"
-            id="uploadDocument"
-            label="${i18next.t('label.select_file')}"
-            accept="*"
-            ?hidden="${!this._ownTransport || this._exportOption}"
-            multiple="true"
-            custom-input
-          ></file-uploader>
-
-          <input
-            id="exportOption"
-            type="checkbox"
-            name="exportOption"
-            ?checked="${this._exportOption}"
-            @change="${e => {
-              this._exportOption = e.currentTarget.checked
-            }}"
-          />
-          <label for="exportOption">${i18next.t('label.export')}</label>
+                <label>${i18next.t('label.upload_documents')}</label>
+                <file-uploader
+                  name="attachments"
+                  id="uploadDocument"
+                  label="${i18next.t('label.select_file')}"
+                  accept="*"
+                  multiple="true"
+                  custom-input
+                ></file-uploader>
+              `
+            : ''}
 
           <input
             id="ownTransport"
             type="checkbox"
             name="ownTransport"
-            ?checked="${this._ownTransport}"
+            .checked="${this._ownTransport}"
             @change="${e => (this._ownTransport = e.currentTarget.checked)}"
-            ?hidden="${this._exportOption}"
+            ?disabled="${this._exportOption}"
           />
-          <label for="ownTransport" ?hidden="${this._exportOption}">${i18next.t('label.own_transport')}</label>
+          <label for="ownTransport">${i18next.t('label.own_transport')}</label>
+
+          <input
+            id="exportOption"
+            type="checkbox"
+            name="exportOption"
+            .checked="${this._exportOption}"
+            @change="${e => {
+              this._exportOption = e.currentTarget.checked
+            }}"
+          />
+          <label for="exportOption">${i18next.t('label.export')}</label>
         </fieldset>
       </form>
 
-      <div class="so-form-container" ?hidden="${!this._exportOption || (this._exportOption && !this._ownTransport)}">
-        <form name="shippingOrder" class="multi-column-form" autocomplete="off">
-          <fieldset>
-            <legend>${i18next.t('title.export_order')}</legend>
-            <label>${i18next.t('label.container_no')}</label>
-            <input name="containerNo" ?required="${this._exportOption}" />
+      ${this._exportOption
+        ? html`
+            <div class="so-form-container">
+              <form name="shippingOrder" class="multi-column-form" autocomplete="off">
+                <fieldset>
+                  <legend>${i18next.t('title.export_order')}</legend>
+                  <label>${i18next.t('label.container_no')}</label>
+                  <input name="containerNo" required .value="${this.containerNo}" />
 
-            <label>${i18next.t('label.container_arrival_date')}</label>
-            <input
-              name="containerArrivalDate"
-              type="date"
-              @change="${e => {
-                this._conLeavingDateInput.setAttribute('min', e.currentTarget.value)
-              }}"
-              min="${this._getStdDate()}"
-              ?required="${this._exportOption}"
-            />
+                  <label>${i18next.t('label.container_arrival_date')}</label>
+                  <input
+                    name="containerArrivalDate"
+                    type="date"
+                    min="${this._getStdDate()}"
+                    .value="${this.containerArrivalDate}"
+                    required
+                    @change="${e => this._conLeavingDateInput.setAttribute('min', e.currentTarget.value)}"
+                  />
 
-            <label>${i18next.t('label.container_leaving_date')}</label>
-            <input
-              name="containerLeavingDate"
-              type="date"
-              min="${this._getStdDate()}"
-              ?required="${this._exportOption}"
-            />
+                  <label>${i18next.t('label.container_leaving_date')}</label>
+                  <input
+                    name="containerLeavingDate"
+                    type="date"
+                    min="${this._getStdDate()}"
+                    .value="${this.containerLeavingDate}"
+                    required
+                    @change="${e => this._containerArrivalDateInput.setAttribute('max', e.currentTarget.value)}"
+                  />
 
-            <label>${i18next.t('label.ship_name')}</label>
-            <input name="shipName" ?required="${this._exportOption}" />
-          </fieldset>
-        </form>
-      </div>
+                  <label>${i18next.t('label.ship_name')}</label>
+                  <input name="shipName" required .value="${this.shipName}" />
+                </fieldset>
+              </form>
+            </div>
+          `
+        : ''}
 
       <form class="picking-std-container multi-column-form">
         <fieldset>
@@ -187,10 +209,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             name="picking-std"
             type="radio"
             value="${PICKING_STANDARD.SELECT_BY_PRODUCT.value}"
-            @change="${e => {
-              this._pickingStd = e.currentTarget.value
-            }}"
-            ?checked="${this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value}"
+            @change="${e => (this._pickingStd = e.currentTarget.value)}"
+            .checked="${this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value}"
           />
           <label for="pick-by-prod">${i18next.t(PICKING_STANDARD.SELECT_BY_PRODUCT.name)}</label>
 
@@ -199,10 +219,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             name="picking-std"
             type="radio"
             value="${PICKING_STANDARD.SELECT_BY_PALLET.value}"
-            @change="${e => {
-              this._pickingStd = e.currentTarget.value
-            }}"
-            ?checked="${this._pickingStd === PICKING_STANDARD.SELECT_BY_PALLET.value}"
+            @change="${e => (this._pickingStd = e.currentTarget.value)}"
+            .checked="${this._pickingStd === PICKING_STANDARD.SELECT_BY_PALLET.value}"
           />
           <label for="pick-by-pallet">${i18next.t(PICKING_STANDARD.SELECT_BY_PALLET.name)}</label>
         </fieldset>
@@ -238,17 +256,12 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     `
   }
 
-  constructor() {
-    super()
-    this._exportOption = false
-    this._ownTransport = true
-    this.inventoryData = { records: [] }
-    this.vasData = { records: [] }
-    this._pickingStd = PICKING_STANDARD.SELECT_BY_PRODUCT.value
-  }
-
   get releaseOrderForm() {
     return this.shadowRoot.querySelector('form[name=releaseOrder]')
+  }
+
+  get _containerArrivalDateInput() {
+    return this.shadowRoot.querySelector('input[name=containerArrivalDate]')
   }
 
   get _conLeavingDateInput() {
@@ -263,6 +276,10 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('input[name=ownTransport]')
   }
 
+  get _exportOptionInput() {
+    return this.shadowRoot.querySelector('input[]')
+  }
+
   get inventoryGrist() {
     return this.shadowRoot.querySelector('data-grist#inventory-grist')
   }
@@ -275,9 +292,23 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('#uploadDocument')
   }
 
+  constructor() {
+    super()
+    this.initProperties()
+    this._pickingStd = PICKING_STANDARD.SELECT_BY_PRODUCT.value
+  }
+
   async updated(changeProps) {
     if (changeProps.has('_pickingStd')) {
       await this.switchPickingType()
+    }
+
+    if (changeProps.has('_files') && !this._files?.length) {
+      this._document.reset()
+    }
+
+    if (changeProps.has('_exportOption') && this._exportOption) {
+      this._ownTransport = true
     }
   }
 
@@ -361,8 +392,31 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     }
   }
 
+  initProperties() {
+    this._exportOption = false
+    this._ownTransport = true
+    this.refNo = ''
+    this.releaseDate = ''
+    this.collectionOrderNo = ''
+    this._files = []
+    this.containerNo = ''
+    this.containerArrivalDate = ''
+    this.containerLeavingDate = ''
+    this.shipName = ''
+
+    this.inventoryData = { ...this.inventoryData, records: [] }
+    this.vasData = { ...this.vasData, records: [] }
+  }
+
+  resetPage() {
+    this._selectedVasRecord = null
+    this._selectedVasRecordIdx = null
+    this.initProperties()
+    this._clearGristConditions()
+  }
+
   async switchPickingType() {
-    this._clearView()
+    this.resetPage()
     if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
       this.inventoryGristConfig = {
         pagination: { infinite: true },
@@ -585,86 +639,53 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   }
 
   _onInventoryFieldChanged(e) {
-    if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
-      let columnName = e.detail.column.name
-      let roundedWeight = e.detail.record.roundedWeight || 0
-      let releaseQty = 0
+    let columnName = e.detail.column.name
+    let roundedWeight = e.detail.record.roundedWeight || 0
+    let releaseQty = 0
 
-      if (columnName == 'releaseWeight' || columnName == 'releaseQty') {
-        let packageWeight = e.detail.record.remainWeight / e.detail.record.remainQty
-        if (
-          e.detail.record.remainWeight &&
-          e.detail.record.remainQty &&
-          e.detail.record.remainWeight > 0 &&
-          e.detail.record.remainQty > 0
-        ) {
-          if (columnName === 'releaseQty') {
-            releaseQty = e.detail.after
-          } else {
-            releaseQty = Math.round(e.detail.after / packageWeight)
-          }
-
-          roundedWeight = releaseQty * packageWeight
-          roundedWeight = parseFloat(roundedWeight.toFixed(2))
+    if (columnName == 'releaseWeight' || columnName == 'releaseQty') {
+      let packageWeight = e.detail.record.remainWeight / e.detail.record.remainQty
+      if (
+        e.detail.record.remainWeight &&
+        e.detail.record.remainQty &&
+        e.detail.record.remainWeight > 0 &&
+        e.detail.record.remainQty > 0
+      ) {
+        if (columnName === 'releaseQty') {
+          releaseQty = e.detail.after || 0
+        } else {
+          releaseQty = Math.round(e.detail.after / packageWeight)
         }
+
+        roundedWeight = releaseQty * packageWeight
+        roundedWeight = parseFloat(roundedWeight.toFixed(2))
       }
+    }
 
-      this.inventoryData = {
-        ...this.inventoryGrist.dirtyData,
-        records: this.inventoryGrist.dirtyData.records.map((record, idx) => {
-          if ((columnName == 'releaseWeight' || columnName == 'releaseQty') && idx === e.detail.row) {
-            if (columnName == 'releaseWeight') record.releaseQty = releaseQty
-            record.releaseWeight = roundedWeight
-          }
-          return {
-            ...record,
-            ...record.inventory,
-            product: {
-              id: record.inventory.productId,
-              name: record.inventory.productName
-            }
-          }
-        })
-      }
-    } else {
-      let columnName = e.detail.column.name
-      let currentTargetId = e.detail.record.id
-      let roundedWeight = e.detail.record.roundedWeight || 0
-      let releaseQty = 0
+    this.inventoryData = {
+      ...this.inventoryGrist.dirtyData,
+      records: this.inventoryGrist.dirtyData.records.map((record, idx) => {
+        const factor = this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value ? e.detail.row : e.detail.record.id
 
-      if (columnName == 'releaseWeight' || columnName == 'releaseQty') {
-        if (isNaN(e.detail.after)) e.detail.after = 0
-        let packageWeight = e.detail.record.remainWeight / e.detail.record.remainQty
-        if (
-          e.detail.record.remainWeight &&
-          e.detail.record.remainQty &&
-          e.detail.record.remainWeight > 0 &&
-          e.detail.record.remainQty > 0
-        ) {
-          if (columnName === 'releaseQty') {
-            releaseQty = e.detail.after
-          } else {
-            releaseQty = Math.round(e.detail.after / packageWeight)
-          }
-
-          roundedWeight = releaseQty * packageWeight
-          roundedWeight = parseFloat(roundedWeight.toFixed(2))
+        if ((columnName == 'releaseWeight' || columnName == 'releaseQty') && idx === factor) {
+          if (columnName == 'releaseWeight') record.releaseQty = releaseQty
+          record.releaseWeight = roundedWeight
         }
-      }
 
-      this.inventoryData = {
-        ...this.inventoryGrist.dirtyData,
-        records: this.inventoryGrist.dirtyData.records.map(record => {
-          if ((columnName == 'releaseWeight' || columnName == 'releaseQty') && record.id == currentTargetId) {
-            if (columnName == 'releaseWeight') record.releaseQty = releaseQty
-            record.releaseWeight = roundedWeight
+        let returnObj = {
+          ...record,
+          ...record.inventory
+        }
+
+        if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
+          returnObj.product = {
+            id: record.inventory.productId,
+            name: record.inventory.productName
           }
-          return {
-            ...record,
-            ...record.inventory
-          }
-        })
-      }
+        }
+
+        return returnObj
+      })
     }
   }
 
@@ -691,8 +712,6 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       throw new Error(i18next.t('text.available_quantity_insufficient'))
     } else if (releaseQty <= 0) {
       throw new Error(i18next.t('text.invalid_quantity_input'))
-    } else {
-      return
     }
   }
 
@@ -702,44 +721,36 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       throw new Error(i18next.t('text.available_weight_insufficient'))
     } else if (releaseWeight <= 0) {
       throw new Error(i18next.t('text.invalid_weight_input'))
-    } else {
-      return
     }
   }
 
   async _generateReleaseOrder() {
-    if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
-      try {
-        this._validateForm()
-        this._validateInventories()
-        this._validateVas()
+    try {
+      this._validateForm()
+      this._validateInventories()
+      this._validateVas()
 
-        const result = await CustomAlert({
-          title: i18next.t('title.are_you_sure'),
-          text: i18next.t('text.create_release_order'),
-          confirmButton: { text: i18next.t('button.confirm') },
-          cancelButton: { text: i18next.t('button.cancel') }
-        })
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.create_release_order'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
 
-        if (!result.value) return
+      if (!result.value) return
 
-        await this._executeRelatedTrxs()
-        let releaseGood = this._getFormInfo()
-        releaseGood.orderInventories = this._getOrderInventories()
-        releaseGood.orderVass = this._getOrderVass()
+      await this._executeRelatedTrxs()
+      let releaseGood = this._serializeForm(this.releaseOrderForm)
+      releaseGood.orderInventories = this._getOrderInventories()
+      releaseGood.orderVass = this._getOrderVass()
+      releaseGood.ownTransport = this._ownTransport
+      let args = { releaseGood }
 
-        let args = {
-          releaseGood: { ...releaseGood, ownTransport: this._exportOption ? true : this._ownTransport }
-        }
+      if (this._exportOption) args.shippingOrder = this._serializeForm(this.shippingOrderForm)
 
-        let attachments
-        if (this._ownTransport) {
-          attachments = this._document.files
-        }
-        if (this._exportOption && this._ownTransport) args.shippingOrder = this._getShippingOrder()
-
-        const response = await client.query({
-          query: gql`
+      const attachments = this._ownTransport ? this._document.files : undefined
+      const response = await client.query({
+        query: gql`
               mutation ($attachments: Upload) {
                 generateReleaseGood(${gqlBuilder.buildArgs(args)}, file:$attachments) {
                   id
@@ -747,154 +758,79 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                 }
               }
             `,
-          variables: {
-            attachments
-          },
-          context: {
-            hasUpload: true
-          }
-        })
-
-        if (!response.errors) {
-          this._clearView()
-          navigate(`release_order_detail/${response.data.generateReleaseGood.name}`)
-          this._showToast({ message: i18next.t('release_order_created') })
+        variables: {
+          attachments
+        },
+        context: {
+          hasUpload: true
         }
-      } catch (e) {
-        this._showToast(e)
+      })
+
+      if (!response.errors) {
+        this.resetPage()
+        navigate(`release_order_detail/${response.data.generateReleaseGood.name}`)
+        this._showToast({ message: i18next.t('release_order_created') })
       }
-    } else {
-      try {
-        this._validateForm()
-        this._validateInventories()
-        this._validateVas()
-
-        const result = await CustomAlert({
-          title: i18next.t('title.are_you_sure'),
-          text: i18next.t('text.create_release_order'),
-          confirmButton: { text: i18next.t('button.confirm') },
-          cancelButton: { text: i18next.t('button.cancel') }
-        })
-
-        if (!result.value) return
-
-        await this._executeRelatedTrxs()
-
-        let releaseGood = this._getFormInfo()
-        releaseGood.orderInventories = this._getOrderInventories()
-        releaseGood.orderVass = this._getOrderVass()
-
-        let args = {
-          releaseGood: { ...releaseGood, ownTransport: this._exportOption ? true : this._ownTransport }
-        }
-
-        let attachments
-        if (this._ownTransport) {
-          attachments = this._document.files
-        }
-
-        if (this._exportOption && this._ownTransport) args.shippingOrder = this._getShippingOrder()
-
-        const response = await client.query({
-          query: gql`
-              mutation ($attachments: Upload) {
-                generateReleaseGood(${gqlBuilder.buildArgs(args)}, file:$attachments) {
-                  id
-                  name
-                }
-              }
-            `,
-          variables: {
-            attachments
-          },
-          context: {
-            hasUpload: true
-          }
-        })
-
-        if (!response.errors) {
-          this._clearView()
-          navigate(`release_order_detail/${response.data.generateReleaseGood.name}`)
-          this._showToast({ message: i18next.t('release_order_created') })
-        }
-      } catch (e) {
-        this._showToast(e)
-      }
+    } catch (e) {
+      this._showToast(e)
     }
   }
 
   async _executeRelatedTrxs() {
-    if (!this.vasGrist.dirtyData || !this.vasGrist.dirtyData.records || !this.vasGrist.dirtyData.records.length) return
+    if (!this.vasGrist?.dirtyData?.records?.length) return
 
-    try {
-      this.vasData = {
-        ...this.vasData,
-        records: await (async () => {
-          const records = this.vasGrist.dirtyData.records
-          for (let record of records) {
-            const orderVass = record.orderVass
-            for (let orderVas of orderVass) {
-              if (orderVas.operationGuide && orderVas.operationGuide.transactions) {
-                const trxs = orderVas.operationGuide.transactions
-                for (let trx of trxs) {
-                  orderVas.operationGuide = await trx(orderVas.operationGuide)
-                }
+    this.vasData = {
+      ...this.vasData,
+      records: await (async () => {
+        const records = this.vasGrist.dirtyData.records
+        for (let record of records) {
+          const orderVass = record.orderVass
+          for (let orderVas of orderVass) {
+            if (orderVas.operationGuide && orderVas.operationGuide.transactions) {
+              const trxs = orderVas.operationGuide.transactions
+              for (let trx of trxs) {
+                orderVas.operationGuide = await trx(orderVas.operationGuide)
               }
             }
           }
-        })()
-      }
-    } catch (e) {
-      throw e
+        }
+      })()
     }
   }
 
   _validateForm() {
-    if (!this.releaseOrderForm.checkValidity()) throw new Error('text.release_order_form_invalid')
-
-    //    - condition: export is ticked and own transport
-    if (this._exportOption && this._ownTransport) {
-      if (!this.shippingOrderForm.checkValidity()) throw new Error('text.shipping_order_form_invalid')
+    if (this.releaseOrderForm.checkValidity()) {
+      throw new Error('text.release_order_form_invalid')
     }
 
-    if (!this._serializeForm(this.releaseOrderForm)['releaseDate'])
-      throw new Error(i18next.t('text.invalid_release_date'))
+    if (this._ownTransport && !this._files?.length) {
+      throw new Error('text.release_order_form_invalid')
+    }
+
+    //    - condition: export is ticked
+    if (this.shippingOrderForm && !this.shippingOrderForm.checkValidity()) {
+      throw new Error('text.shipping_order_form_invalid')
+    }
   }
 
   _validateInventories() {
-    if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
-      if (!this.inventoryGrist.dirtyData.records || !this.inventoryGrist.dirtyData.records.length)
-        throw new Error(i18next.t('text.no_products'))
+    const inventories = this.inventoryGrist?.dirtyData?.records
+    if (!inventories?.length) throw new Error(i18next.t('text.no_products'))
+    // required field (batchId, packingType, weight, unit, packQty)
+    if (inventories.some(record => record.releaseQty && record.batchId && record.packingType)) {
+      throw new Error(i18next.t('text.empty_value_in_list'))
+    }
 
-      // required field (batchId, packingType, weight, unit, packQty)
-      if (
-        this.inventoryGrist.dirtyData.records.filter(
-          record => !record.releaseQty || !record.batchId || !record.packingType
-        ).length
-      )
-        throw new Error(i18next.t('text.empty_value_in_list'))
+    if (inventories.some(record => record.releaseQty > record.remainQty)) {
+      throw new Error(i18next.t('text.invalid_quantity_input'))
+    }
 
-      if (this.inventoryGrist.dirtyData.records.filter(record => record.releaseQty > record.remainQty).length)
-        throw new Error(i18next.t('text.invalid_quantity_input'))
-    } else {
-      if (!this.inventoryGrist.dirtyData.records || !this.inventoryGrist.dirtyData.records.length)
-        throw new Error(i18next.t('text.no_products'))
-
-      // required field (batchId, packingType, weight, unit, packQty)
-      if (
-        this.inventoryGrist.dirtyData.records.filter(
-          record => !record.releaseQty || !record.batchId || !record.packingType
-        ).length
-      )
-        throw new Error(i18next.t('text.empty_value_in_list'))
-
-      if (this.inventoryGrist.dirtyData.records.filter(record => record.releaseQty > record.remainQty).length)
-        throw new Error(i18next.t('text.invalid_quantity_input'))
-
+    if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PALLET.value) {
       // duplication of pallet id
-      const palletIds = this.inventoryGrist.dirtyData.records.map(inventory => inventory.palletId)
-      if (palletIds.filter((palletId, idx, palletIds) => palletIds.indexOf(palletId) !== idx).length)
+      const palletIds = inventories.map(inv => inv.palletId)
+      if (palletIds.some((palletId, idx, palletIds) => palletIds.indexOf(palletId) !== idx)) {
         throw new Error(i18next.t('text.pallet_id_is_duplicated'))
+      }
     }
   }
 
@@ -966,13 +902,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   }
 
   _updateVasTargets(isFieldChanged) {
-    if (!this.vasGrist.dirtyData || !this.vasGrist.dirtyData.records || !this.vasGrist.dirtyData.records.length) return
+    if (!this.vasGrist?.dirtyData?.records?.length) return
 
-    if (
-      !this.inventoryGrist.dirtyData ||
-      !this.inventoryGrist.dirtyData.records ||
-      !this.inventoryGrist.dirtyData.records.length
-    ) {
+    if (!this.inventoryGrist?.dirtyData?.records?.length) {
       this.vasData = { ...this.vasData, records: [] }
       return
     }
@@ -1037,7 +969,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   }
 
   _clearGristConditions() {
-    if (this.inventoryGristConfig && this.inventoryGristConfig.columns && this.inventoryGristConfig.columns.length) {
+    if (this.inventoryGristConfig?.columns?.length) {
       this.inventoryGristConfig = {
         ...this.inventoryGristConfig,
         columns: this.inventoryGristConfig.columns.map(column => {
@@ -1055,83 +987,66 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     }
   }
 
-  _getFormInfo() {
-    return this._serializeForm(this.releaseOrderForm)
-  }
-
   _getOrderInventories() {
-    if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
-      return this.inventoryGrist.data.records.map(record => {
-        return {
-          releaseQty: record.releaseQty,
-          releaseWeight: record.releaseWeight,
-          batchId: record.inventory.batchId,
-          product: { id: record.inventory.productId, name: record.inventory.productName },
-          packingType: record.inventory.packingType,
-          type: ORDER_TYPES.RELEASE_OF_GOODS.value,
-          status: ORDER_INVENTORY_STATUS.PENDING.value
-        }
-      })
-    } else {
-      return this.inventoryGrist.data.records.map((record, idx) => {
-        return {
-          releaseQty: record.releaseQty,
-          releaseWeight: record.releaseWeight,
-          inventory: { id: record.id },
-          batchId: record.inventory.batchId,
-          product: { id: record.inventory.product.id, name: record.inventory.product.name },
-          packingType: record.inventory.packingType,
-          type: ORDER_TYPES.RELEASE_OF_GOODS.value,
-          status: ORDER_INVENTORY_STATUS.PENDING.value
-        }
-      })
-    }
+    return this.inventoryGrist.data.records.map(record => {
+      record = {
+        releaseQty: record.releaseQty,
+        releaseWeight: record.releaseWeight,
+        batchId: record.inventory.batchId,
+        packingType: record.inventory.packingType,
+        type: ORDER_TYPES.RELEASE_OF_GOODS.value,
+        status: ORDER_INVENTORY_STATUS.PENDING.value
+      }
+
+      if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
+        record.product = { id: record.inventory.productId, name: record.inventory.productName }
+      } else {
+        record.product = { id: record.inventory.product.id, name: record.inventory.product.name }
+        record.inventory = { id: record.id }
+      }
+
+      return record
+    })
   }
 
   _getOrderVass() {
-    if (!this.vasGrist.dirtyData || !this.vasGrist.dirtyData.records || !this.vasGrist.dirtyData.records.length) {
-      return []
-    }
+    if (!this.vasGrist?.dirtyData?.records?.length) return []
 
     const records = this.vasGrist.dirtyData.records
 
-    return records
-      .map((record, idx) => {
-        const orderVass = record.orderVass
-        return orderVass.map(orderVas => {
-          let result = {
-            set: idx + 1,
-            vas: { id: orderVas.vas.id },
-            remark: orderVas.remark,
-            targetType: record.targetType
-          }
+    return records.map((record, idx) => {
+      const orderVass = record.orderVass
+      return orderVass.map(orderVas => {
+        let result = {
+          set: idx + 1,
+          vas: { id: orderVas.vas.id },
+          remark: orderVas.remark,
+          targetType: record.targetType,
+          qty: record.qty,
+          packingType: record.packingType
+        }
 
-          if (orderVas.operationGuide && orderVas.operationGuide.data) {
-            result.operationGuide = JSON.stringify(orderVas.operationGuide)
-          }
+        if (orderVas.operationGuide && orderVas.operationGuide.data) {
+          result.operationGuide = JSON.stringify(orderVas.operationGuide)
+        }
 
-          if (record.targetType === VAS_BATCH_NO_TYPE) {
-            result.targetBatchId = record.target
-            result.packingType = record.packingType
-            result.qty = record.qty
-          } else if (record.targetType === VAS_PRODUCT_TYPE) {
-            result.targetProduct = { id: record.target }
-            result.packingType = record.packingType
-            result.qty = record.qty
-          } else if (record.targetType === VAS_BATCH_AND_PRODUCT_TYPE) {
-            result.targetBatchId = record.target.batchId
-            result.targetProduct = { id: record.target.productId }
-            result.packingType = record.packingType
-            result.qty = record.qty
-            result.weight = record.weight
-          } else {
-            result.otherTarget = record.target
-          }
+        if (record.targetType === VAS_BATCH_NO_TYPE) {
+          result.targetBatchId = record.target
+        } else if (record.targetType === VAS_PRODUCT_TYPE) {
+          result.targetProduct = { id: record.target }
+        } else if (record.targetType === VAS_BATCH_AND_PRODUCT_TYPE) {
+          result.targetBatchId = record.target.batchId
+          result.targetProduct = { id: record.target.productId }
+          result.weight = record.weight
+        } else {
+          result.otherTarget = record.target
+          delete result.qty
+          delete result.packingType
+        }
 
-          return result
-        })
+        return result
       })
-      .flat()
+    })
   }
 
   _serializeForm(form) {
@@ -1143,24 +1058,6 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     })
 
     return obj
-  }
-
-  _getShippingOrder() {
-    return this._serializeForm(this.shippingOrderForm)
-  }
-
-  _clearView() {
-    this._template = null
-    this._selectedVasRecord = null
-    this._selectedVasRecordIdx = null
-    if (this.releaseOrderForm) this.releaseOrderForm.reset()
-    if (this.shippingOrderForm) this.shippingOrderForm.reset()
-    this.inventoryData = { ...this.inventoryData, records: [] }
-    if (this._document?._files) {
-      this._document._files = []
-    }
-    this.vasData = { ...this.vasData, records: [] }
-    this._clearGristConditions()
   }
 
   openVasCreatePopup(record) {
@@ -1212,17 +1109,12 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   }
 
   checkInventoryValidity() {
-    if (!this.inventoryGrist.dirtyData.records || !this.inventoryGrist.dirtyData.records.length) {
-      throw new Error(i18next.t('text.there_is_no_inventory'))
-    }
+    const inventories = this.inventoryGrist?.dirtyData?.records
+    if (!inventories?.length) throw new Error(i18next.t('text.there_is_no_inventory'))
 
-    if (this.inventoryGrist.dirtyData.records.some(record => !record.inventory && !record.inventory.id))
-      throw new Error(i18next.t('text.invalid_inventory'))
+    if (inventories.some(record => !record?.inventory?.id)) throw new Error(i18next.t('text.invalid_inventory'))
 
-    if (this.inventoryGrist.dirtyData.records.some(record => !record.releaseQty))
-      throw new Error(i18next.t('text.invalid_release_qty'))
-
-    return true
+    if (inventories.some(record => !record.releaseQty)) throw new Error(i18next.t('text.invalid_release_qty'))
   }
 
   _showToast({ type, message }) {

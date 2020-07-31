@@ -806,13 +806,15 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           havingVas(${gqlBuilder.buildArgs({
             orderType: ARRIVAL_NOTICE.value,
             orderNo
-          })})
+          })}) {
+            id
+          }
         }
       `
     })
 
     if (!response.errors) {
-      return response.data.havingVas
+      return Boolean(response.data.havingVas.id)
     }
   }
 
