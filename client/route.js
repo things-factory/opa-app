@@ -349,9 +349,6 @@ export default function route(page) {
     case 'inventory_pallet_storage_report':
       import('./pages/report/inventory-pallet-storage-report')
       return page
-    case 'inventory_pallet_detail_report':
-      import('./pages/report/inventory-pallet-detail-report')
-      return page
     case 'customer_inventory_report':
       import('./pages/report/customer-inventory-report')
       return page
@@ -370,6 +367,9 @@ export default function route(page) {
       return page
     case 'elccl_inventory_report':
       import('./pages/report/custom-elccl/elccl-inventory-report')
+      return page
+    case 'elccl_inventory_pallet_detail_report':
+      import('./pages/report/custom-elccl/elccl-inventory-pallet-detail-report')
       return page
   }
 }

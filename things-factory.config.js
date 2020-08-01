@@ -366,10 +366,6 @@ export default {
       page: 'inventory_pallet_storage_report'
     },
     {
-      tagname: 'inventory-pallet-detail-report',
-      page: 'inventory_pallet_detail_report'
-    },
-    {
       tagname: 'customer-inventory-report',
       page: 'customer_inventory_report'
     },
@@ -392,6 +388,10 @@ export default {
     {
       tagname: 'elccl-inventory-report',
       page: 'elccl_inventory_report'
+    },
+    {
+      tagname: 'elccl-inventory-pallet-detail-report',
+      page: 'elccl_inventory_pallet_detail_report'
     }
   ],
   bootstrap

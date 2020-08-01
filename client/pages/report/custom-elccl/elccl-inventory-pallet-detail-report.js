@@ -7,7 +7,7 @@ import { connect } from 'pwa-helpers/connect-mixin'
 import { localize, i18next } from '@things-factory/i18n-base'
 import gql from 'graphql-tag'
 
-class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageView)) {
+class ElcclInventoryPalletDetailReport extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
     return css`
       :host {
@@ -84,21 +84,16 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
         type: 'select',
         options: [
           { value: '' },
-          ...this._userBizplaces.map(bizplaceList => {
-            return {
-              name: bizplaceList.name,
-              value: bizplaceList.id
-            }
-          })
-          .sort(this._compareValues('name', 'asc'))
+          ...this._userBizplaces
+            .map(bizplaceList => {
+              return {
+                name: bizplaceList.name,
+                value: bizplaceList.id
+              }
+            })
+            .sort(this._compareValues('name', 'asc'))
         ],
         props: { searchOper: 'eq' }
-      },
-      {
-        label: i18next.t('field.product'),
-        name: 'product',
-        type: 'string',
-        props: { searchOper: 'in' }
       },
       {
         label: i18next.t('field.from_date'),
@@ -138,7 +133,7 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
       pagination: { infinite: true },
       rows: {
         selectable: false,
-        groups: [{ column: 'bizplace|name' }, { column: 'product|name', title: 'Product Total' }],
+        groups: [{ column: 'bizplace|name' }],
         totals: ['openingBalance', 'inBalance', 'outBalance', 'closingBalance']
       },
       columns: [
@@ -151,13 +146,6 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
         },
         {
           type: 'string',
-          name: 'product|name',
-          record: { editable: false, align: 'left' },
-          header: i18next.t('field.product'),
-          width: 450
-        },
-        {
-          type: 'string',
           name: 'batchId',
           record: { editable: false, align: 'left' },
           header: i18next.t('field.batchId'),
@@ -165,9 +153,9 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
         },
         {
           type: 'string',
-          name: 'arrivalNoticeName',
+          name: 'jobSheet',
           record: { editable: false, align: 'left' },
-          header: i18next.t('field.arrival_notice'),
+          header: i18next.t('field.job_sheet'),
           width: 200
         },
         {
@@ -230,7 +218,7 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
       const response = await client.query({
         query: gql`
           query {
-            inventoryHistoryPalletDetailReport(${gqlBuilder.buildArgs({
+            elcclInventoryHistoryPalletDetailReport(${gqlBuilder.buildArgs({
               filters: [...this.searchForm.queryFilters],
               pagination: { page, limit },
               sortings: sorters
@@ -248,7 +236,7 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
               outBalance
               closingBalance
               batchId
-              arrivalNoticeName
+              jobSheet
               jsonDateMovement
               containerSize
             }
@@ -258,7 +246,7 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
 
       this.data = {
         filter: [...this.searchForm.queryFilters],
-        records: response.data.inventoryHistoryPalletDetailReport.map(item => flattenObject(item)) || []
+        records: response.data.elcclInventoryHistoryPalletDetailReport.map(item => flattenObject(item)) || []
       }
 
       return {
@@ -314,7 +302,6 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
   _validate() {
     if (!this.searchForm.shadowRoot.querySelector('form').checkValidity())
       throw new Error(i18next.t('text.invalid_form_value'))
-    // if (!this._bizplaceSelector.value) throw new Error(i18next.t('text.customer_does_not_selected'))
     if (!this._fromDateInput.value) throw new Error(i18next.t('text.from_date_is_empty'))
     if (!this._toDateInput.value) throw new Error(i18next.t('text.to_date_is_empty'))
   }
@@ -337,9 +324,8 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
     try {
       let headerSettingBegin = [
         { header: i18next.t('field.customer'), key: 'bizplace|name', width: 50, type: 'string' },
-        { header: i18next.t('field.product'), key: 'product|name', width: 75, type: 'string' },
         { header: i18next.t('field.batchId'), key: 'batchId', width: 25, type: 'string' },
-        { header: i18next.t('field.arrival_notice'), key: 'arrivalNoticeName', width: 30, type: 'string' },
+        { header: i18next.t('field.job_sheet'), key: 'jobSheet', width: 30, type: 'string' },
         { header: i18next.t('field.container_size'), key: 'containerSize', width: 10, type: 'string' },
         { header: i18next.t('field.opening_balance'), key: 'openingBalance', width: 25, type: 'string' }
       ]
@@ -395,4 +381,4 @@ class InventoryPalletDetailReport extends connect(store)(localize(i18next)(PageV
   }
 }
 
-window.customElements.define('inventory-pallet-detail-report', InventoryPalletDetailReport)
+window.customElements.define('elccl-inventory-pallet-detail-report', ElcclInventoryPalletDetailReport)

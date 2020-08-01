@@ -3,11 +3,13 @@ import { ElcclInventorySummaryReportList } from './elccl-inventory-summary-repor
 import { ElcclDailyCollectionReport } from './elccl-daily-collection-report'
 import { ElcclDailyCollectionReportList } from './elccl-daily-collection-report-list'
 import { ElcclInventoryReport } from './elccl-inventory-report'
+import { ElcclPalletDetailReport } from './elccl-pallet-detail-report'
 
 export const Query = `
   elcclInventoryHistorySummaryReport(filters: [Filter], pagination: Pagination, sortings: [Sorting]): ElcclInventorySummaryReportList
   elcclDailyCollectionReport(filters: [Filter], pagination: Pagination, sortings: [Sorting]): [DailyCollectionReport]
   elcclInventoryHistoryReport(filters: [Filter], pagination: Pagination, sortings: [Sorting]): [ElcclInventoryReport]
+  elcclInventoryHistoryPalletDetailReport(filters: [Filter], pagination: Pagination, sortings: [Sorting]): [ElcclPalletDetailReport]
 `
 
 export const Types = [
@@ -15,5 +17,6 @@ export const Types = [
   ElcclInventorySummaryReportList,
   ElcclDailyCollectionReport,
   ElcclDailyCollectionReportList,
-  ElcclInventoryReport
+  ElcclInventoryReport,
+  ElcclPalletDetailReport
 ]
