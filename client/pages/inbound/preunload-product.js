@@ -93,7 +93,7 @@ class PreunloadProduct extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.preunload_product')
+      title: i18next.t('title.adjustment')
     }
   }
 
@@ -163,7 +163,7 @@ class PreunloadProduct extends connect(store)(localize(i18next)(PageView)) {
 
       <div class="grist">
         <div class="left-column">
-          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.preunload_product')}</h2>
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.adjustment')}</h2>
           <data-grist
             .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
             .config=${this.config}
@@ -347,7 +347,7 @@ class PreunloadProduct extends connect(store)(localize(i18next)(PageView)) {
     store.dispatch({
       type: UPDATE_CONTEXT,
       context: {
-        title: i18next.t('title.preunload_product'),
+        title: i18next.t('title.adjustment'),
         actions
       }
     })
