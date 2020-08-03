@@ -383,10 +383,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       query: gql`
         query {
           inventories(${gqlBuilder.buildArgs({
-            filters: [
-              ...filters,
-              { name: 'status', operator: 'notin', value: ['UNLOADED', 'INTRANSIT', 'TERMINATED', 'DELETED'] }
-            ],
+            filters: [...filters, { name: 'status', operator: 'eq', value: 'STORED' }],
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -453,10 +450,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       query: gql`
         query {
           inventories(${gqlBuilder.buildArgs({
-            filters: [
-              ...filters,
-              { name: 'status', operator: 'notin', value: ['UNLOADED', 'INTRANSIT', 'TERMINATED', 'DELETED'] }
-            ],
+            filters: [...filters, { name: 'status', operator: 'eq', value: 'STORED' }],
             pagination: { page: 1, limit: 9999999 },
             sortings: []
           })}) {
