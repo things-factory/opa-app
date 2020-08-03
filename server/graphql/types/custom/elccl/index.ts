@@ -7,7 +7,7 @@ import { ElcclPalletDetailReport } from './elccl-pallet-detail-report'
 
 export const Query = `
   elcclInventoryHistorySummaryReport(filters: [Filter], pagination: Pagination, sortings: [Sorting]): ElcclInventorySummaryReportList
-  elcclDailyCollectionReport(filters: [Filter], pagination: Pagination, sortings: [Sorting]): [DailyCollectionReport]
+  elcclDailyCollectionReport(filters: [Filter], pagination: Pagination, sortings: [Sorting]): [ElcclDailyCollectionReport]
   elcclInventoryHistoryReport(filters: [Filter], pagination: Pagination, sortings: [Sorting]): [ElcclInventoryReport]
   elcclInventoryHistoryPalletDetailReport(filters: [Filter], pagination: Pagination, sortings: [Sorting]): [ElcclPalletDetailReport]
 `

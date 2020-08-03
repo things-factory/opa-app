@@ -1,7 +1,7 @@
 import gql from 'graphql-tag'
 
 export const ElcclDailyCollectionReport = gql`
-  type DailyCollectionReport {
+  type ElcclDailyCollectionReport {
     id: String
     name: String
     domain: Domain

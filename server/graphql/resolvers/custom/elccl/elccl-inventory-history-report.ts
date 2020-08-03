@@ -75,7 +75,7 @@ export const elcclInventoryHistoryReport = {
           `
           create temp table temp_data_src AS
           (
-            SELECT prd.name AS product_name, prd.description AS product_description, invh.batch_id, invh.product_id,
+            SELECT prd.name AS product_name, prd.description AS product_description, trim(invh.batch_id) as batch_id, invh.product_id,
             invh.packing_type, invh.bizplace_id, invh.domain_id,
             invh.ref_order_id, invh.order_no, invh.order_ref_no, invh.transaction_type, invh.created_at::date,
             invh.qty, invh.opening_qty, invh.weight, invh.opening_weight
@@ -113,7 +113,7 @@ export const elcclInventoryHistoryReport = {
               GROUP BY src.product_name, src.product_description, src.batch_id, src.product_id, src.packing_type, src.bizplace_id, 
               src.domain_id
             ) AS src 
-            LEFT JOIN inventory_histories invh ON src.batch_id = invh.batch_id AND 
+            LEFT JOIN inventory_histories invh ON src.batch_id = trim(invh.batch_id) AND 
             src.product_id = invh.product_id AND 
             src.packing_type = invh.packing_type AND 
             src.bizplace_id = invh.bizplace_id AND 

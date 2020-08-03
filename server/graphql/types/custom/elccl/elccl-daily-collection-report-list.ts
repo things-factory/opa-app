@@ -1,8 +1,8 @@
 import gql from 'graphql-tag'
 
 export const ElcclDailyCollectionReportList = gql`
-  type DailyCollectionReportList {
-    items: [DailyCollectionReport]
+  type ElcclDailyCollectionReportList {
+    items: [ElcclDailyCollectionReport]
     total: Int
   }
 `
