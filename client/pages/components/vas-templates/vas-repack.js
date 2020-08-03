@@ -71,9 +71,7 @@ class VasRepack extends localize(i18next)(VasTemplate) {
             ${this._isEditable
               ? html`
                   <select id="to-packing-type-selector" required>
-                    ${this.packingTypes
-                      .filter(packingType => packingType.name != this.targetInfo.packingType)
-                      .map(
+                    ${this.packingTypes.map(
                         packingType => html`
                           <option
                             value="${packingType.name}"

@@ -56,7 +56,7 @@ export class VasCreateBatchTypeForm extends AbstractVasCreateForm {
             type="number"
             min="1"
             placeholder="${this.maximumQty}"
-            value="${(this.record && this.record.qty) || 1}"
+            .value="${(this.record && this.record.qty) || this.maximumQty}"
             @change="${this._checkQtyValidity.bind(this)}"
           />
         </fieldset>

@@ -85,7 +85,7 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
           id="qty-input"
           type="number"
           min="1"
-          value="${(this.record && this.record.qty) || 1}"
+          .value="${(this.record && this.record.qty) || this.maximumQty}"
           placeholder="${this.maximumQty}"
           @change="${this._checkQtyValidity.bind(this)}"
         />
@@ -97,7 +97,7 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
           type="number"
           min="0.01"
           step="0.01"
-          value="${(this.record && this.record.qty) || 1}"
+          .value="${(this.record && this.record.qty) || this.maximumWeight}"
           @change="${this._checkWeightValidity.bind(this)}"
           placeholder="${this.maximumWeight}"
         />

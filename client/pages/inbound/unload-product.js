@@ -3,8 +3,9 @@ import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/f
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, CustomAlert, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { client, CustomAlert, PageView, store, UPDATE_CONTEXT, navigate } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
+import { ARRIVAL_NOTICE } from '../order/constants'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
@@ -762,17 +763,58 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!response.errors) {
-        await CustomAlert({
-          title: i18next.t('title.completed'),
-          text: i18next.t('text.unloading_completed'),
-          confirmButton: { text: i18next.t('button.confirm') }
-        })
+        const havingVas = await this.checkHavingVas(this._arrivalNoticeNo)
+        if (havingVas) {
+          const result = await CustomAlert({
+            title: i18next.t('title.completed'),
+            text: i18next.t('text.unloading_completed'),
+            confirmButton: { text: i18next.t('button.move_to_x', { state: { x: i18next.t('title.vas') } }) },
+            cancelButton: { text: i18next.t('button.cancel') }
+          })
+
+          if (!result.value) {
+            this._arrivalNoticeNo = null
+            this._clearView()
+            return
+          }
+
+          let searchParam = new URLSearchParams()
+          searchParam.append('orderNo', this._arrivalNoticeNo)
+          searchParam.append('orderType', ARRIVAL_NOTICE.value)
+
+          navigate(`execute_vas?${searchParam.toString()}`)
+        } else {
+          await CustomAlert({
+            title: i18next.t('title.completed'),
+            text: i18next.t('text.unloading_completed'),
+            confirmButton: { text: i18next.t('button.confirm') }
+          })
+        }
 
         this._arrivalNoticeNo = null
         this._clearView()
       }
     } catch (e) {
       this._showToast(e)
+    }
+  }
+
+  async checkHavingVas(orderNo) {
+    const response = await client.query({
+      query: gql`
+        query {
+          havingVas(${gqlBuilder.buildArgs({
+            orderType: ARRIVAL_NOTICE.value,
+            orderNo
+          })}) {
+            id
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      return Boolean(response.data.havingVas.id)
     }
   }
 
