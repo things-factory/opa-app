@@ -160,6 +160,13 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
           width: 180
         },
         {
+          type: 'boolean',
+          name: 'crossDocking',
+          header: i18next.t('field.cross_docking'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
           type: 'object',
           name: 'bizplace',
           header: i18next.t('field.customer'),
@@ -242,6 +249,7 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
                 name
                 description
                 refNo
+                crossDocking
               }
               bizplace {
                 id
@@ -270,7 +278,7 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
         total: response.data.worksheets.total || 0,
         records:
           response.data.worksheets.items.map(item => {
-            return { ...item, releaseRefNo: item.releaseGood.refNo || '' }
+            return { ...item, releaseRefNo: item.releaseGood.refNo || '', crossDocking: item.releaseGood.crossDocking }
           }) || {}
       }
     }
