@@ -1133,6 +1133,7 @@
   "field.field.column": "field column",
   "field.container_size": "container size",
   "field.field.shelf": "field shelf",
+  "field.show_balance_only": "show balance only",
   "field.set": "set",
   "field.system_qty": "system qty",
   "field.system_location": "system location",

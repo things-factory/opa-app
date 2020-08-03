@@ -9,6 +9,8 @@ export const elcclInventoryHistorySummaryReport = {
     try {
       let userFilter = params.filters.find(data => data.name === 'user')
 
+      let balanceOnlyFilter = params.filters.find(data => data.name === 'balanceOnly')
+
       let bizplaceFilter = { name: '', operator: '', value: '' }
 
       if (userFilter) {
@@ -41,6 +43,11 @@ export const elcclInventoryHistorySummaryReport = {
       const bizplace: Bizplace = await getRepository(Bizplace).findOne({
         id: bizplaceFilter.value
       })
+
+      let balanceOnlyQuery = ''
+      if (balanceOnlyFilter && balanceOnlyFilter.value) {
+        balanceOnlyQuery = 'and (opening_qty + total_in_qty + total_out_qty) > 0 '
+      }
 
       return await getManager().transaction(async (trxMgr: EntityManager) => {
         await trxMgr.query(
@@ -86,6 +93,7 @@ export const elcclInventoryHistorySummaryReport = {
             ) src
             inner join products prd on prd.id = src.product_id
             where (opening_qty > 0 or total_in_qty > 0)
+            ${balanceOnlyQuery}
           )
         `,
           [fromDate.value]
@@ -95,7 +103,7 @@ export const elcclInventoryHistorySummaryReport = {
 
         const result: any = await trxMgr.query(
           ` 
-          select * from temp_elccl_inventory_summary OFFSET $1 LIMIT $2
+          select * from temp_elccl_inventory_summary ORDER BY initial_date OFFSET $1 LIMIT $2
         `,
           [(params.pagination.page - 1) * params.pagination.limit, params.pagination.limit]
         )

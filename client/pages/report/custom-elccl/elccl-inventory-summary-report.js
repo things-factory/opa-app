@@ -123,6 +123,12 @@ class ElcclInventorySummaryReport extends connect(store)(localize(i18next)(PageV
           max: new Date().toISOString().split('T')[0]
         },
         value: new Date().toISOString().split('T')[0]
+      },
+      {
+        label: i18next.t('field.show_balance_only'),
+        name: 'balanceOnly',
+        type: 'checkbox',
+        props: { searchOper: 'eq' }
       }
     ]
   }
@@ -135,7 +141,6 @@ class ElcclInventorySummaryReport extends connect(store)(localize(i18next)(PageV
           'product|name',
           'packingType',
           'initialInbound',
-          'openingBalance',
           'inBalance',
           'outBalance',
           'closingBalance'
@@ -160,7 +165,7 @@ class ElcclInventorySummaryReport extends connect(store)(localize(i18next)(PageV
           type: 'string',
           name: 'product|name',
           header: i18next.t('field.product'),
-          record: { editable: false, align: 'center' },
+          record: { editable: false, align: 'left' },
           imex: { header: i18next.t('field.product'), key: 'product|name', width: 75, type: 'string' },
           width: 320
         },
@@ -186,14 +191,6 @@ class ElcclInventorySummaryReport extends connect(store)(localize(i18next)(PageV
           header: i18next.t('field.initial_inbound_qty'),
           record: { editable: false, align: 'center' },
           imex: { header: i18next.t('field.initial_inbound_qty'), key: 'initialQty', width: 25, type: 'string' },
-          width: 140
-        },
-        {
-          type: 'float',
-          name: 'openingQty',
-          record: { editable: false, align: 'center' },
-          header: i18next.t('field.opening_balance'),
-          imex: { header: i18next.t('field.opening_balance'), key: 'openingQty', width: 25, type: 'string' },
           width: 140
         },
         {
@@ -266,7 +263,6 @@ class ElcclInventorySummaryReport extends connect(store)(localize(i18next)(PageV
                     name
                     description
                   }
-                  openingQty
                   closingQty
                   totalInQty
                   totalOutQty
