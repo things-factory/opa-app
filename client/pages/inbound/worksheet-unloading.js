@@ -360,7 +360,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     })
 
     if (!response.errors) {
-      this.vasWorksheetNo = response.data.havingVas.name
+      this.vasWorksheetNo = response.data.havingVas?.name 
     }
   }
 
