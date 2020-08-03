@@ -799,7 +799,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   }
 
   _validateForm() {
-    if (this.releaseOrderForm.checkValidity()) {
+    if (!this.releaseOrderForm.checkValidity()) {
       throw new Error('text.release_order_form_invalid')
     }
 
@@ -817,7 +817,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     const inventories = this.inventoryGrist?.dirtyData?.records
     if (!inventories?.length) throw new Error(i18next.t('text.no_products'))
     // required field (batchId, packingType, weight, unit, packQty)
-    if (inventories.some(record => record.releaseQty && record.batchId && record.packingType)) {
+    if (!inventories.every(record => record.releaseQty && record.batchId && record.packingType)) {
       throw new Error(i18next.t('text.empty_value_in_list'))
     }
 
@@ -989,7 +989,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
   _getOrderInventories() {
     return this.inventoryGrist.data.records.map(record => {
-      record = {
+      let newRecord = {
         releaseQty: record.releaseQty,
         releaseWeight: record.releaseWeight,
         batchId: record.inventory.batchId,
@@ -999,13 +999,13 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       }
 
       if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
-        record.product = { id: record.inventory.productId, name: record.inventory.productName }
+        newRecord.product = { id: record.inventory.productId, name: record.inventory.productName }
       } else {
-        record.product = { id: record.inventory.product.id, name: record.inventory.product.name }
-        record.inventory = { id: record.id }
+        newRecord.product = { id: record.inventory.product.id, name: record.inventory.product.name }
+        newRecord.inventory = { id: record.id }
       }
 
-      return record
+      return newRecord
     })
   }
 
@@ -1014,39 +1014,41 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
     const records = this.vasGrist.dirtyData.records
 
-    return records.map((record, idx) => {
-      const orderVass = record.orderVass
-      return orderVass.map(orderVas => {
-        let result = {
-          set: idx + 1,
-          vas: { id: orderVas.vas.id },
-          remark: orderVas.remark,
-          targetType: record.targetType,
-          qty: record.qty,
-          packingType: record.packingType
-        }
+    return records
+      .map((record, idx) => {
+        const orderVass = record.orderVass
+        return orderVass.map(orderVas => {
+          let result = {
+            set: idx + 1,
+            vas: { id: orderVas.vas.id },
+            remark: orderVas.remark,
+            targetType: record.targetType,
+            qty: record.qty,
+            packingType: record.packingType
+          }
 
-        if (orderVas.operationGuide && orderVas.operationGuide.data) {
-          result.operationGuide = JSON.stringify(orderVas.operationGuide)
-        }
+          if (orderVas.operationGuide && orderVas.operationGuide.data) {
+            result.operationGuide = JSON.stringify(orderVas.operationGuide)
+          }
 
-        if (record.targetType === VAS_BATCH_NO_TYPE) {
-          result.targetBatchId = record.target
-        } else if (record.targetType === VAS_PRODUCT_TYPE) {
-          result.targetProduct = { id: record.target }
-        } else if (record.targetType === VAS_BATCH_AND_PRODUCT_TYPE) {
-          result.targetBatchId = record.target.batchId
-          result.targetProduct = { id: record.target.productId }
-          result.weight = record.weight
-        } else {
-          result.otherTarget = record.target
-          delete result.qty
-          delete result.packingType
-        }
+          if (record.targetType === VAS_BATCH_NO_TYPE) {
+            result.targetBatchId = record.target
+          } else if (record.targetType === VAS_PRODUCT_TYPE) {
+            result.targetProduct = { id: record.target }
+          } else if (record.targetType === VAS_BATCH_AND_PRODUCT_TYPE) {
+            result.targetBatchId = record.target.batchId
+            result.targetProduct = { id: record.target.productId }
+            result.weight = record.weight
+          } else {
+            result.otherTarget = record.target
+            delete result.qty
+            delete result.packingType
+          }
 
-        return result
+          return result
+        })
       })
-    })
+      .flat()
   }
 
   _serializeForm(form) {
