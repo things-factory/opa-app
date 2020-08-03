@@ -77,7 +77,7 @@ export const elcclInventoryHistoryReport = {
           (
             SELECT prd.name AS product_name, prd.description AS product_description, trim(invh.batch_id) as batch_id, invh.product_id,
             invh.packing_type, invh.bizplace_id, invh.domain_id,
-            invh.ref_order_id, invh.order_no, invh.order_ref_no, invh.transaction_type, invh.created_at::date,
+            invh.ref_order_id, invh.order_no, invh.order_ref_no, invh.transaction_type, invh.created_at,
             invh.qty, invh.opening_qty, invh.weight, invh.opening_weight
             FROM inventory_histories invh
             INNER JOIN products prd ON cast(prd.id AS VARCHAR) = invh.product_id
@@ -105,7 +105,7 @@ export const elcclInventoryHistoryReport = {
             'Opening Balance' AS order_name,
             '-' AS ref_no,
             0 AS rn,
-            $1::date AS created_at
+            $1 AS created_at
             FROM (
               SELECT src.product_name, src.product_description, src.batch_id, src.product_id, src.packing_type, src.bizplace_id, 
               src.domain_id
@@ -124,7 +124,7 @@ export const elcclInventoryHistoryReport = {
             src.domain_id
             UNION ALL
             SELECT product_name, product_description, batch_id, product_id, packing_type, bizplace_id, 
-            domain_id, sum(qty) as qty, sum(opening_qty) as qty, sum(weight) as qty, sum(opening_weight) as qty, order_name, ref_no, rn, created_at
+            domain_id, sum(qty) as qty, sum(opening_qty) as qty, sum(weight) as qty, sum(opening_weight) as qty, order_name, ref_no, rn, MIN(created_at) as created_at
             FROM (
               SELECT invh.product_name, invh.product_description, invh.batch_id, invh.product_id, invh.packing_type, invh.bizplace_id, 
               invh.domain_id,
@@ -146,14 +146,16 @@ export const elcclInventoryHistoryReport = {
               AND invh.created_at BETWEEN $1::timestamp AND $2::timestamp
             ) AS inv_movement 
             GROUP BY product_name, product_description, batch_id, product_id, packing_type, bizplace_id, 
-            domain_id, order_name, ref_no, rn, created_at
+            domain_id, order_name, ref_no, rn
           )`,
           [new Date(fromDate.value).toISOString(), new Date(toDate.value).toISOString()]
         )
 
         const result: any = await trxMgr.query(
           ` 
-          select * from temp_inv_history invh where
+          select product_name, product_description, batch_id, product_id, packing_type, bizplace_id, 
+          domain_id, qty, qty, qty, qty, order_name, ref_no, created_at::date
+          from temp_inv_history invh where
           exists (
             select * from (
               select batch_id, product_name, packing_type, sum(qty) as totalQty from temp_inv_history ih2 group by batch_id, product_name, packing_type
@@ -163,9 +165,11 @@ export const elcclInventoryHistoryReport = {
         `
         )
 
-        trxMgr.query(`
+        trxMgr.query(
+          `
           drop table temp_data_src, temp_inv_history
-        `)
+        `
+        )
 
         let items = result.map(itm => {
           return {
