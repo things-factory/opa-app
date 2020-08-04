@@ -25,7 +25,8 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       _ganNo: String,
       config: Object,
       data: Object,
-      vasWorksheetNo: String
+      vasWorksheetNo: String,
+      crossDocking: Boolean
     }
   }
 
@@ -126,6 +127,9 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
                 `
               )}
             </select>
+
+            <input name="crossDocking" type="checkbox" .checked="${this.crossDocking}" disabled />
+            <label>${i18next.t('label.cross_docking')}</label>
           </fieldset>
         </form>
 
@@ -264,6 +268,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
               name
               description
               refNo
+              crossDocking
             }
             bizplace {
               id
@@ -314,6 +319,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       this._gan = worksheet && worksheet.arrivalNotice
       this._ganNo = (this._gan && this._gan.name) || ''
       this._bizplace = worksheet.bizplace.name
+      this.crossDocking = worksheet?.arrivalNotice?.crossDocking
 
       this._fillupForm({
         ...worksheet,
@@ -360,7 +366,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     })
 
     if (!response.errors) {
-      this.vasWorksheetNo = response.data.havingVas?.name 
+      this.vasWorksheetNo = response.data.havingVas?.name
     }
   }
 
@@ -489,7 +495,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     try {
       this._checkPalletQty()
 
-      const result = await CustomAlert({
+      let result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.activate_unloading_worksheet'),
         confirmButton: { text: i18next.t('button.confirm') },
@@ -497,6 +503,17 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       })
 
       if (!result.value) return
+
+      if (this.crossDocking) {
+        result = await CustomAlert({
+          title: i18next.t('title.cross_docking'),
+          text: i18next.t('text.picking_worksheet_will_be_activated'),
+          confirmButton: { text: i18next.t('button.confirm') },
+          cancelButton: { text: i18next.t('button.cancel') }
+        })
+
+        if (!result.value) return
+      }
 
       const response = await client.query({
         query: gql`

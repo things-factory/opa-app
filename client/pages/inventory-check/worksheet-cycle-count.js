@@ -102,11 +102,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
             <label>${i18next.t('label.status')}</label>
             <select name="status" disabled>
               ${Object.keys(WORKSHEET_STATUS).map(
-                key => html`
-                  <option value="${WORKSHEET_STATUS[key].value}"
-                    >${i18next.t(`label.${WORKSHEET_STATUS[key].name}`)}</option
-                  >
-                `
+                key => html` <option value="${WORKSHEET_STATUS[key].value}">${WORKSHEET_STATUS[key].name}</option> `
               )}
             </select>
           </fieldset>
