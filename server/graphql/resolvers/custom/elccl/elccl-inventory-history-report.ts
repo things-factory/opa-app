@@ -158,8 +158,8 @@ export const elcclInventoryHistoryReport = {
           from temp_inv_history invh where
           exists (
             select * from (
-              select batch_id, product_name, packing_type, sum(qty) as totalQty from temp_inv_history ih2 group by batch_id, product_name, packing_type
-              ) src where src.batch_id = invh.batch_id and src.product_name = invh.product_name and src.packing_type = invh.packing_type and src.totalQty <> 0
+              select batch_id, product_name, packing_type, sum(qty) as totalQty, count(*) as totalRow from temp_inv_history ih2 group by batch_id, product_name, packing_type
+              ) src where src.batch_id = invh.batch_id and src.product_name = invh.product_name and src.packing_type = invh.packing_type and (src.totalRow > 1 or src.totalQty <> 0)
           )
           ORDER BY invh.batch_id asc, invh.product_name asc, invh.product_description asc, invh.packing_type asc, invh.rn asc, invh.created_at asc
         `
