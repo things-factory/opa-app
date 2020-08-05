@@ -104,7 +104,7 @@ class ElcclInventorySummaryReport extends connect(store)(localize(i18next)(PageV
         },
         value: (() => {
           let date = new Date()
-          date.setMonth(date.getMonth() - 1)
+          date.setMonth(date.getMonth() - 6)
           return date.toISOString().split('T')[0]
         })(),
         handlers: { change: this._modifyDateRange.bind(this) }
@@ -140,10 +140,11 @@ class ElcclInventorySummaryReport extends connect(store)(localize(i18next)(PageV
           'batchId',
           'product|name',
           'packingType',
-          'initialInbound',
-          'inBalance',
-          'outBalance',
-          'closingBalance'
+          'initialDate',
+          'initialQty',
+          'adjustmentQty',
+          'totalOutQty',
+          'closingQty'
         ]
       },
       rows: {
@@ -191,6 +192,14 @@ class ElcclInventorySummaryReport extends connect(store)(localize(i18next)(PageV
           header: i18next.t('field.initial_inbound_qty'),
           record: { editable: false, align: 'center' },
           imex: { header: i18next.t('field.initial_inbound_qty'), key: 'initialQty', width: 25, type: 'string' },
+          width: 140
+        },
+        {
+          type: 'float',
+          name: 'adjustmentQty',
+          header: i18next.t('field.adjustment_qty'),
+          record: { editable: false, align: 'center' },
+          imex: { header: i18next.t('field.adjustment_qty'), key: 'adjustmentQty', width: 25, type: 'string' },
           width: 140
         },
         {
@@ -263,6 +272,7 @@ class ElcclInventorySummaryReport extends connect(store)(localize(i18next)(PageV
                     name
                     description
                   }
+                  adjustmentQty
                   closingQty
                   totalInQty
                   totalOutQty

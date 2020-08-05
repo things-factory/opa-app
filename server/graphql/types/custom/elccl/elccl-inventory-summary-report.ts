@@ -6,6 +6,7 @@ export const ElcclInventorySummaryReport = gql`
     packingType: String
     product: Product
     openingQty: Float
+    adjustmentQty: Float
     closingQty: Float
     totalInQty: Float
     totalOutQty: Float

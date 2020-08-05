@@ -46,7 +46,7 @@ export const elcclInventoryHistorySummaryReport = {
 
       let balanceOnlyQuery = ''
       if (balanceOnlyFilter && balanceOnlyFilter.value) {
-        balanceOnlyQuery = 'and (opening_qty + total_in_qty + total_out_qty) > 0 '
+        balanceOnlyQuery = 'and (opening_qty + adjustment_qty + total_in_qty + total_out_qty) > 0 '
       }
 
       return await getManager().transaction(async (trxMgr: EntityManager) => {
@@ -78,15 +78,16 @@ export const elcclInventoryHistorySummaryReport = {
           `
           create temp table temp_elccl_inventory_summary as (
             select src.*,
-            opening_qty + total_in_qty + total_out_qty as closing_qty,
+            opening_qty + adjustment_qty + total_in_qty + total_out_qty as closing_qty,
             prd.name as product_name, prd.description as product_description 
             from (
               select ih.batch_id, ih.packing_type,
               min(created_at) as initial_date,
               sum(case when ih.transaction_type = 'UNLOADING' or ih.transaction_type = 'NEW' then qty else 0 end) as initial_qty,
+              sum(case when ih.created_at > $1 and ih.transaction_type = 'ADJUSTMENT' then ih.qty else 0 end) as adjustment_qty,
               sum(case when ih.created_at < $1 then qty else 0 end) as opening_qty,
-              sum(case when ih.created_at > $1 then case when ih.qty > 0 then ih.qty else 0 end else 0 end) as total_in_qty,
-              sum(case when ih.created_at > $1 then case when ih.qty < 0 then ih.qty else 0 end else 0 end) as total_out_qty,
+              sum(case when ih.created_at > $1 then case when ih.qty > 0 and ih.transaction_type <> 'ADJUSTMENT' then ih.qty else 0 end else 0 end) as total_in_qty,
+              sum(case when ih.created_at > $1 then case when ih.qty < 0 and ih.transaction_type <> 'ADJUSTMENT' then ih.qty else 0 end else 0 end) as total_out_qty,
               ih.product_id
               from temp_inv_history ih
               group by ih.batch_id, ih.product_id, ih.packing_type
@@ -118,6 +119,7 @@ export const elcclInventoryHistorySummaryReport = {
             batchId: itm.batch_id,
             packingType: itm.packing_type,
             openingQty: itm.opening_qty,
+            adjustmentQty: itm.adjustment_qty,
             closingQty: itm.closing_qty,
             totalInQty: itm.total_in_qty,
             totalOutQty: itm.total_out_qty,
