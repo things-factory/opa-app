@@ -98,5 +98,7 @@
     "chalk": "^3.0.0",
     "inquirer": "^7.0.0"
   },
-  "resolutions": {}
+  "resolutions": {
+    "lit-element": "1.31.1"
+  }
 }
