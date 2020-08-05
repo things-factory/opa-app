@@ -99,6 +99,6 @@
     "inquirer": "^7.0.0"
   },
   "resolutions": {
-    "lit-element": "1.31.1"
+    "lit-element": "2.2.1"
   }
 }
