@@ -327,6 +327,14 @@ export default {
     },
 
     /**
+     * Adjustment Menus Section
+     */
+    {
+      tagname: 'transfer-inventory',
+      page: 'transfer_inventory'
+    },
+
+    /**
      * Outbound Menus Section
      */
     {

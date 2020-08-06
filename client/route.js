@@ -312,6 +312,13 @@ export default function route(page) {
       return page
 
     /**
+     * Adjustment Menus Section
+     */
+    case 'transfer_inventory':
+      import('./pages/adjustment/transfer-inventory')
+      return page
+
+    /**
      * Outbound Menus Section
      */
     case 'outbound_worksheets':
