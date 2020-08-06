@@ -35,6 +35,10 @@ export default {
       tagname: 'pallet-list',
       page: 'pallets'
     },
+    {
+      tagname: 'picking-bin-list',
+      page: 'picking_bins'
+    },
 
     /**
      * Order Menus Section

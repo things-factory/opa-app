@@ -37,6 +37,10 @@ export default function route(page) {
       import('./pages/master/pallet-list')
       return page
 
+    case 'picking_bins':
+      import('./pages/master/picking-bin-list')
+      return page
+      
     /**
      * Order Menus Section
      */

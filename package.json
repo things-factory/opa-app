@@ -1,6 +1,6 @@
 {
   "name": "@things-factory/opa-app",
-  "version": "2.6.1",
+  "version": "2.6.3",
   "main": "dist-server/index.js",
   "browser": "client/index.js",
   "things-factory": true,
@@ -98,5 +98,7 @@
     "chalk": "^3.0.0",
     "inquirer": "^7.0.0"
   },
-  "resolutions": {}
+  "resolutions": {
+    "lit-element": "2.2.1"
+  }
 }
