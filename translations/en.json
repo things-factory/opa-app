@@ -141,6 +141,7 @@
   "field.do": "DO",
   "field.ro": "RO",
   "field.group_menu": "group menu",
+  "field.has_transaction_or_balance": "has transaction or balance",
   "field.hidden_flag": "hidden flag",
   "field.holder": "holder",
   "field.id": "id",

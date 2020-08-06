@@ -28,7 +28,6 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
       _searchFields: Object,
       _config: Object,
       _bizplaces: Object,
-      _date: String,
       data: Object
     }
   }
@@ -43,7 +42,10 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
       exportable: {
         name: i18next.t('title.date_inventory_report', {
           state: {
-            text: this._date
+            text: (() => {
+              let date = new Date()
+              return date.getFullYear().toString() + (date.getMonth() + 1).toString() + date.getDate().toString()
+            })()
           }
         }),
         data: this._exportableData.bind(this)
@@ -105,6 +107,12 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
         props: { searchOper: 'in' }
       },
       {
+        label: i18next.t('field.batch_no'),
+        name: 'batch_no',
+        type: 'string',
+        props: { searchOper: 'in' }
+      },
+      {
         label: i18next.t('field.from_date'),
         name: 'fromDate',
         type: 'date',
@@ -133,6 +141,13 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
           max: new Date().toISOString().split('T')[0]
         },
         value: new Date().toISOString().split('T')[0]
+      },
+      {
+        label: i18next.t('field.has_transaction_or_balance'),
+        name: 'hasTransactionOrBalance',
+        type: 'checkbox',
+        value: true,
+        props: { searchOper: 'eq' }
       }
     ]
   }
@@ -230,9 +245,6 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
 
     this._searchFields = this.searchFields
     this._config = this.reportConfig
-
-    let date = new Date()
-    this._date = date.getFullYear().toString() + (date.getMonth()+1).toString() + date.getDate().toString()
   }
 
   async pageUpdated(changes, lifecycle) {
