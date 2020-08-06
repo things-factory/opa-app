@@ -154,7 +154,7 @@ export const elcclInventoryHistoryReport = {
         const result: any = await trxMgr.query(
           ` 
           select product_name, product_description, batch_id, product_id, packing_type, bizplace_id, 
-          domain_id, qty, qty, qty, qty, order_name, ref_no, created_at::date
+          domain_id, qty, opening_qty, weight, opening_weight, order_name, ref_no, created_at::date
           from temp_inv_history invh where
           exists (
             select * from (
