@@ -47,6 +47,7 @@ class AttachmentViewer extends localize(i18next)(LitElement) {
         }
         .button-container > a {
           margin-left: auto;
+          text-decoration: none;
         }
       `
     ]
@@ -68,7 +69,7 @@ class AttachmentViewer extends localize(i18next)(LitElement) {
         ${this.downloadable
           ? html`
               <div class="button-container">
-                <a href="${this._fullPath}" download="${`${this.name ? this.name : 'image'}.${this._exetention}`}"
+                <a href="${this._fullPath}" download="${`${this.name ? this.name : 'image'}`}"
                   ><mwc-button>${i18next.t('button.download')}</mwc-button>
                 </a>
               </div>
@@ -88,7 +89,7 @@ class AttachmentViewer extends localize(i18next)(LitElement) {
     }
   }
 
-  get _exetention() {
+  get _extension() {
     if (this.src) return this.src.substring(this.src.lastIndexOf('.') + 1)
     return ''
   }
