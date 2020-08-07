@@ -5,18 +5,18 @@ import '@things-factory/grist-ui'
 import { getRenderer } from '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, CustomAlert, gqlBuilder, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
-import { isMobileDevice } from '@things-factory/utils'
+import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../components/popup-note'
 import '../components/vas-templates'
 import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
 import {
+  ORDER_TYPES,
   VAS_BATCH_AND_PRODUCT_TYPE,
   VAS_BATCH_NO_TYPE,
   VAS_ETC_TYPE,
-  ORDER_TYPES,
   VAS_PRODUCT_TYPE
 } from '../order/constants'
 import './target-inventory-assignment-popup'
@@ -137,10 +137,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
       </div>
 
       <div class="container">
-        ${this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value &&
-        this.nonAssignedVasSet &&
-        this.nonAssignedVasSet.records &&
-        this.nonAssignedVasSet.records.length
+        ${this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value && this.nonAssignedVasSet?.records?.length
           ? html`
               <div class="grist">
                 <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.non_assigned_vas')}</h2>
@@ -486,23 +483,12 @@ class WorksheetVas extends localize(i18next)(PageView) {
       .sort((a, b) => a.targetVas.set - b.targetVas.set)
       .reduce(
         (returnObj, wsd) => {
-          if (
-            (wsd &&
-              wsd.targetVas &&
-              wsd.targetVas.inventory &&
-              wsd.targetVas.inventory.location &&
-              wsd.targetVas.inventory.location.name) ||
-            wsd.targetVas.targetType === VAS_ETC_TYPE
-          ) {
+          if (wsd?.targetVas?.inventory?.location?.name || wsd.targetVas.targetType === VAS_ETC_TYPE) {
             returnObj.assignedData.push({
               ...wsd.targetVas,
               id: wsd.id,
               set: `Set ${wsd.targetVas.set}`,
-              locationInv:
-                (wsd.targetVas.inventory &&
-                  wsd.targetVas.inventory.location &&
-                  wsd.targetVas.inventory.location.name) ||
-                '',
+              locationInv: wsd?.targetVas?.inventory?.location?.name || '',
               name: wsd.name,
               issue: wsd.issue,
               status: wsd.status

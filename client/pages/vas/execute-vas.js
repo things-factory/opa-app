@@ -85,7 +85,19 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('#execute-vas')
   }
 
-  async pageInitialized() {
+  async pageInitialized(changes) {
+    if (this.active && changes.params) {
+      const { orderNo, orderType } = changes.params
+      if (orderNo && orderType) {
+        this.refOrderType = orderType
+        await this.updateComplete
+
+        this.orderNoInput.value = orderNo
+        this.orderTypeSelector.value = orderType
+
+        this.fetchVas()
+      }
+    }
     await this.updateComplete
     this.orderNoInput.focus()
     this.refOrderType = this.orderTypeSelector.value
@@ -100,12 +112,16 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
     if (e.keyCode === 13) {
       e.preventDefault()
 
-      const orderNo = this.orderNoInput.value
-      if (!orderNo) return
-
-      this.childComp.orderNo = orderNo
-      this.childComp.fetchVas()
+      this.fetchVas()
     }
+  }
+
+  fetchVas() {
+    const orderNo = this.orderNoInput.value
+    if (!orderNo) return
+
+    this.childComp.orderNo = orderNo
+    this.childComp.fetchVas()
   }
 }
 
