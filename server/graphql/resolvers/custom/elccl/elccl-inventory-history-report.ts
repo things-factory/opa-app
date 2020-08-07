@@ -81,9 +81,7 @@ export const elcclInventoryHistoryReport = {
             invh.qty, invh.opening_qty, invh.weight, invh.opening_weight
             FROM reduced_inventory_histories invh
             INNER JOIN products prd ON cast(prd.id AS VARCHAR) = invh.product_id
-            WHERE
-            invh.transaction_type IN ('NEW', 'ADJUSTMENT', 'UNLOADING', 'PICKING', 'LOADING', 'UNDO_UNLOADING', 'CANCEL_ORDER', 'RETURN')
-            AND invh.domain_id = $1
+            WHERE invh.domain_id = $1
             AND invh.bizplace_id = $2
             AND invh.created_at::date <= $3
             ${batchNoQuery}
