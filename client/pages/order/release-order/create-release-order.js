@@ -748,7 +748,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
       if (this._exportOption) args.shippingOrder = this._serializeForm(this.shippingOrderForm)
 
-      const attachments = this._ownTransport ? this._document.files : undefined
+      const attachments = this._document?.files ? this._document.files : undefined
       const response = await client.query({
         query: gql`
               mutation ($attachments: Upload) {
