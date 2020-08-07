@@ -277,7 +277,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   }
 
   get _exportOptionInput() {
-    return this.shadowRoot.querySelector('input[]')
+    return this.shadowRoot.querySelector('input[name=exportOption]')
   }
 
   get inventoryGrist() {
@@ -665,9 +665,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     this.inventoryData = {
       ...this.inventoryGrist.dirtyData,
       records: this.inventoryGrist.dirtyData.records.map((record, idx) => {
-        const factor = this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value ? e.detail.row : e.detail.record.id
+        // const factor = this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value ? e.detail.row : e.detail.record.id
 
-        if ((columnName == 'releaseWeight' || columnName == 'releaseQty') && idx === factor) {
+        if ((columnName == 'releaseWeight' || columnName == 'releaseQty') && idx === e.detail.row) {
           if (columnName == 'releaseWeight') record.releaseQty = releaseQty
           record.releaseWeight = roundedWeight
         }
@@ -803,9 +803,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       throw new Error('text.release_order_form_invalid')
     }
 
-    if (this._ownTransport && !this._document?._files?.length) {
-      throw new Error('text.release_order_form_invalid')
-    }
+    // if (this._ownTransport && !this._document?._files?.length) {
+    //   throw new Error('text.release_order_form_invalid')
+    // }
 
     //    - condition: export is ticked
     if (this.shippingOrderForm && !this.shippingOrderForm.checkValidity()) {
