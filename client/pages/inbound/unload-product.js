@@ -765,33 +765,39 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!response.errors) {
-        const havingVas = await this.checkHavingVas(this._arrivalNoticeNo)
-        if (havingVas) {
-          const result = await CustomAlert({
-            title: i18next.t('title.completed'),
-            text: i18next.t('text.unloading_completed'),
-            confirmButton: { text: i18next.t('button.move_to_x', { state: { x: i18next.t('title.vas') } }) },
-            cancelButton: { text: i18next.t('button.cancel') }
-          })
+        // const havingVas = await this.checkHavingVas(this._arrivalNoticeNo)
+        // if (havingVas) {
+        //   const result = await CustomAlert({
+        //     title: i18next.t('title.completed'),
+        //     text: i18next.t('text.unloading_completed'),
+        //     confirmButton: { text: i18next.t('button.move_to_x', { state: { x: i18next.t('title.vas') } }) },
+        //     cancelButton: { text: i18next.t('button.cancel') }
+        //   })
 
-          if (!result.value) {
-            this._arrivalNoticeNo = null
-            this._clearView()
-            return
-          }
+        //   if (!result.value) {
+        //     this._arrivalNoticeNo = null
+        //     this._clearView()
+        //     return
+        //   }
 
-          let searchParam = new URLSearchParams()
-          searchParam.append('orderNo', this._arrivalNoticeNo)
-          searchParam.append('orderType', ARRIVAL_NOTICE.value)
+        //   let searchParam = new URLSearchParams()
+        //   searchParam.append('orderNo', this._arrivalNoticeNo)
+        //   searchParam.append('orderType', ARRIVAL_NOTICE.value)
 
-          navigate(`execute_vas?${searchParam.toString()}`)
-        } else {
-          await CustomAlert({
-            title: i18next.t('title.completed'),
-            text: i18next.t('text.unloading_completed'),
-            confirmButton: { text: i18next.t('button.confirm') }
-          })
-        }
+        //   navigate(`execute_vas?${searchParam.toString()}`)
+        // } else {
+        //   await CustomAlert({
+        //     title: i18next.t('title.completed'),
+        //     text: i18next.t('text.unloading_completed'),
+        //     confirmButton: { text: i18next.t('button.confirm') }
+        //   })
+        // }
+
+        await CustomAlert({
+          title: i18next.t('title.completed'),
+          text: i18next.t('text.unloading_completed'),
+          confirmButton: { text: i18next.t('button.confirm') }
+        })
 
         this._arrivalNoticeNo = null
         this._clearView()
@@ -801,24 +807,24 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async checkHavingVas(orderNo) {
-    const response = await client.query({
-      query: gql`
-        query {
-          havingVas(${gqlBuilder.buildArgs({
-            orderType: ARRIVAL_NOTICE.value,
-            orderNo
-          })}) {
-            id
-          }
-        }
-      `
-    })
+  // async checkHavingVas(orderNo) {
+  //   const response = await client.query({
+  //     query: gql`
+  //       query {
+  //         havingVas(${gqlBuilder.buildArgs({
+  //           orderType: ARRIVAL_NOTICE.value,
+  //           orderNo
+  //         })}) {
+  //           id
+  //         }
+  //       }
+  //     `
+  //   })
 
-    if (!response.errors) {
-      return Boolean(response.data.havingVas.id)
-    }
-  }
+  //   if (!response.errors) {
+  //     return Boolean(response.data.havingVas.id)
+  //   }
+  // }
 
   _validateComplete() {
     if (!this._arrivalNoticeNo) throw new Error(i18next.t('text.there_is_no_arrival_notice_no'))
