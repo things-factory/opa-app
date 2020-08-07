@@ -45,7 +45,7 @@ class AttachmentViewer extends localize(i18next)(LitElement) {
         .button-container {
           display: flex;
         }
-        .button-container > mwc-button {
+        .button-container > a {
           margin-left: auto;
         }
       `
@@ -68,13 +68,9 @@ class AttachmentViewer extends localize(i18next)(LitElement) {
         ${this.downloadable
           ? html`
               <div ?hidden="${!this.downloadable}" class="button-container">
-                <a href="${this._fullPath}" download="${`${this.name ? this.name : 'image'}.${this._exetention}`}"></a>
-                <mwc-button
-                  @click="${() => {
-                    this.shadowRoot.querySelector('a').click()
-                  }}"
-                  >${i18next.t('button.download')}</mwc-button
-                >
+                <a href="${this._fullPath}" download="${`${this.name ? this.name : 'image'}.${this._exetention}`}">
+                  <mwc-button>${i18next.t('button.download')}</mwc-button>
+                </a>
               </div>
             `
           : ''}
