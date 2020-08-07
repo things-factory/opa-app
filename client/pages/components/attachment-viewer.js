@@ -68,9 +68,9 @@ class AttachmentViewer extends localize(i18next)(LitElement) {
 
         ${this.downloadable
           ? html`
-              <div class="button-container">
-                <a href="${this._fullPath}" download="${`${this.name ? this.name : 'image'}`}"
-                  ><mwc-button>${i18next.t('button.download')}</mwc-button>
+              <div ?hidden="${!this.downloadable}" class="button-container">
+                <a href="${this._fullPath}" download="${`${this.name ? this.name : 'image'}`}">
+                  <mwc-button>${i18next.t('button.download')}</mwc-button>
                 </a>
               </div>
             `

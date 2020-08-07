@@ -59,7 +59,7 @@ export class VasCreateProductTypeForm extends AbstractVasCreateForm {
             ?disabled="${!this.selectedProductId || !this.selectedPackingType}"
             type="number"
             min="1"
-            value="${(this.record && this.record.qty) || 1}"
+            .value="${(this.record && this.record.qty) || this.maximumQty}"
             @change="${this._checkQtyValidity.bind(this)}"
             placeholder="${this.maximumQty}"
           />
