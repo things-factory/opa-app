@@ -803,7 +803,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       throw new Error('text.release_order_form_invalid')
     }
 
-    if (this._ownTransport && !this._files?.length) {
+    if (this._ownTransport && !this._document?._files?.length) {
       throw new Error('text.release_order_form_invalid')
     }
 
