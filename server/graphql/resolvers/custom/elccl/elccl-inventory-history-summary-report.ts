@@ -56,19 +56,12 @@ export const elcclInventoryHistorySummaryReport = {
             select i2.pallet_id, i2.product_id, i2.packing_type, i2.batch_id,
             ih.id as inventory_history_id, ih.seq, ih.status, ih.transaction_type, ih.qty, ih.opening_qty, ih.weight, ih.opening_weight, ih.created_at
             from inventories i2 
-            inner join inventory_histories ih on ih.pallet_id = i2.pallet_id and ih.domain_id = i2.domain_id
+            inner join reduced_inventory_histories ih on ih.pallet_id = i2.pallet_id and ih.domain_id = i2.domain_id
             where 
             i2.domain_id = $1
             and i2.bizplace_id = $2
             and ih.created_at < $3
             and ih.qty <> 0
-            and not exists (
-              select * from inventory_histories ih2 where 
-              ih2.domain_id = ih.domain_id and 
-              ih2.pallet_id = ih.pallet_id and 
-              (ih2.seq = ih.seq + 1 or ih2.seq = ih.seq) and 
-              ih2.transaction_type ='UNDO_UNLOADING'
-            )
           )
         `,
           [context.state.domain.id, bizplace.id, toDate.value]

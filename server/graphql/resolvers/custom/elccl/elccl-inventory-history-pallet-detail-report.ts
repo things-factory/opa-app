@@ -62,7 +62,7 @@ export const elcclInventoryHistoryPalletDetailReport = {
           ih.id as inventory_history_id, ih.packing_type, ih.qty, ih.opening_qty,
           ih.weight, ih.opening_weight, ih.created_at
           from inventories i2 
-          inner join inventory_histories ih on ih.pallet_id = i2.pallet_id and ih.domain_id = i2.domain_id
+          inner join reduced_inventory_histories ih on ih.pallet_id = i2.pallet_id and ih.domain_id = i2.domain_id
           inner join bizplaces bzp on bzp.id = ih.bizplace_id
           left join order_inventories oi on oi.inventory_id = i2.id and oi.arrival_notice_id is not null
           left join arrival_notices ar on ar.id = oi.arrival_notice_id
