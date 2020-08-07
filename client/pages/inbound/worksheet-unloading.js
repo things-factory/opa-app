@@ -143,7 +143,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
           .data="${this.data}"
         ></data-grist>
 
-        <related-vas-list .worksheetNo="${this.vasWorksheetNo}"></related-vas-list>
+        <!-- <related-vas-list .worksheetNo="${this.vasWorksheetNo}"></related-vas-list> -->
       </div>
     `
   }
@@ -237,11 +237,11 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     }
   }
 
-  updated(changedProps) {
-    if (changedProps.has('_ganNo') && this._ganNo) {
-      this.checkHavingVas(this._ganNo)
-    }
-  }
+  // updated(changedProps) {
+  //   if (changedProps.has('_ganNo') && this._ganNo) {
+  //     this.checkHavingVas(this._ganNo)
+  //   }
+  // }
 
   get form() {
     return this.shadowRoot.querySelector('form')
@@ -360,24 +360,24 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     }
   }
 
-  async checkHavingVas(orderNo) {
-    const response = await client.query({
-      query: gql`
-        query {
-          havingVas(${gqlBuilder.buildArgs({
-            orderType: ARRIVAL_NOTICE.value,
-            orderNo
-          })}) {
-            name
-          }
-        }
-      `
-    })
+  // async checkHavingVas(orderNo) {
+  //   const response = await client.query({
+  //     query: gql`
+  //       query {
+  //         havingVas(${gqlBuilder.buildArgs({
+  //           orderType: ARRIVAL_NOTICE.value,
+  //           orderNo
+  //         })}) {
+  //           name
+  //         }
+  //       }
+  //     `
+  //   })
 
-    if (!response.errors) {
-      this.vasWorksheetNo = response.data.havingVas?.name
-    }
-  }
+  //   if (!response.errors) {
+  //     this.vasWorksheetNo = response.data.havingVas?.name
+  //   }
+  // }
 
   _updateContext() {
     this._actions = []
