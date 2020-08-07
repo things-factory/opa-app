@@ -370,6 +370,10 @@ export default {
       page: 'inventory_report'
     },
     {
+      tagname: 'inventory-summary-report',
+      page: 'inventory_summary_report'
+    },
+    {
       tagname: 'inventory-pallet-report',
       page: 'inventory_pallet_report'
     },

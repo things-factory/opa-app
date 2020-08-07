@@ -151,6 +151,7 @@
   "field.in": "in",
   "field.adjusted_batch_id": "adjusted batch no",
   "field.inbound": "inbound",
+  "field.inbound_qty": "inbound qty",
   "field.inventory": "inventory",
   "field.inventory_list": "inventory list",
   "field.inspected_qty": "inspected qty",
