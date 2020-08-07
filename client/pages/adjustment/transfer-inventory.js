@@ -12,7 +12,9 @@ import '../components/popup-note'
 
 class TransferInventory extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
-    return {}
+    return {
+      _palletId: String
+    }
   }
 
   static get styles() {
@@ -82,7 +84,8 @@ class TransferInventory extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: i18next.t('title.transfer_inventory')
+      title: i18next.t('title.transfer_inventory'),
+      actions: this._actions
     }
   }
 
@@ -106,6 +109,10 @@ class TransferInventory extends connect(store)(localize(i18next)(PageView)) {
 
   get palletIdInfo() {
     return this.shadowRoot.querySelector('input[name=palletId]')
+  }
+
+  get currentLocationInput() {
+    return this.shadowRoot.querySelector('input[name=locationName]')
   }
 
   get fromLocationInput() {
@@ -206,13 +213,18 @@ class TransferInventory extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _updateContext() {
-    let actions = []
+    this._actions = []
+
+    if (this._palletId) {
+      this._actions = [
+        ...this._actions,
+        { title: i18next.t('button.transfer'), action: this._transferInventory.bind(this) }
+      ]
+    }
+
     store.dispatch({
       type: UPDATE_CONTEXT,
-      context: {
-        title: i18next.t('title.transfer_inventory'),
-        actions
-      }
+      context: this.context
     })
   }
 
@@ -307,6 +319,8 @@ class TransferInventory extends connect(store)(localize(i18next)(PageView)) {
           productName: inventory.product.name,
           locationName: inventory.location.name
         })
+        this._palletId = inventory.palletId
+        this._updateContext()
       }
     } catch (e) {
       this.palletInput.focus()
@@ -316,6 +330,19 @@ class TransferInventory extends connect(store)(localize(i18next)(PageView)) {
 
   async _transferInventory() {
     try {
+      this._validateLocation()
+
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.complete_transfer'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) {
+        return
+      }
+
       const response = await client.query({
         query: gql`
           mutation {
@@ -329,6 +356,15 @@ class TransferInventory extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!response.errors) {
+        await CustomAlert({
+          title: i18next.t('title.completed'),
+          text: i18next.t('text.transfer_completed'),
+          confirmButton: { text: i18next.t('button.confirm') }
+        })
+
+        this._clearView()
+        this.palletInput.focus()
+        this._updateContext()
       }
     } catch (e) {
       this._showToast(e)
@@ -352,13 +388,45 @@ class TransferInventory extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
+  _validateLocation() {
+    if (!this.fromLocationInput.value) {
+      this._focusOnFromLocationInput()
+      throw new Error(i18next.t('text.there_is_no_from_location'))
+    }
+
+    if (!this.toLocationInput.value) {
+      this._focusOnToLocationInput()
+      throw new Error(i18next.t('text.there_is_no_to_location'))
+    }
+
+    if (this.currentLocationInput.value !== this.fromLocationInput.value) {
+      throw new Error(i18next.t('text.from_location_not_match_with_location'))
+    }
+
+    if (this.fromLocationInput.value == this.toLocationInput.value) {
+      throw new Error(i18next.t('text.from_location_is_same_as_to_location'))
+    }
+  }
+
   _focusOnPalletInput() {
     setTimeout(() => this.palletInput.focus(), 100)
   }
 
+  _focusOnToLocationInput() {
+    setTimeout(() => this.toLocationInput.focus(), 100)
+  }
+
+  _focusOnFromLocationInput() {
+    setTimeout(() => this.fromLocationInput.focus(), 100)
+  }
+
   _clearView() {
     this.infoForm.reset()
+    this.detailForm.reset()
+    this.fromLocationInput.value = ''
+    this.toLocationInput.value = ''
     this.palletInput.value = ''
+    this._palletId = ''
     this._updateContext()
   }
 
