@@ -115,12 +115,16 @@ class TransferInventory extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('input[name=locationName]')
   }
 
-  get fromLocationInput() {
-    return this.shadowRoot.querySelector('barcode-scanable-input[name=fromLocation]').shadowRoot.querySelector('input')
+  get fromLocationNameInput() {
+    return this.shadowRoot
+      .querySelector('barcode-scanable-input[name=fromLocationName]')
+      .shadowRoot.querySelector('input')
   }
 
-  get toLocationInput() {
-    return this.shadowRoot.querySelector('barcode-scanable-input[name=toLocation]').shadowRoot.querySelector('input')
+  get toLocationNameInput() {
+    return this.shadowRoot
+      .querySelector('barcode-scanable-input[name=toLocationName]')
+      .shadowRoot.querySelector('input')
   }
 
   render() {
@@ -176,12 +180,12 @@ class TransferInventory extends connect(store)(localize(i18next)(PageView)) {
 
               <label>${i18next.t('label.from_location')}</label>
               <barcode-scanable-input
-                name="fromLocation"
+                name="fromLocationName"
                 custom-input
                 @keypress="${e => {
                   if (e.keyCode === 13) {
                     e.preventDefault()
-                    if (this.fromLocationInput.value) {
+                    if (this.fromLocationNameInput.value) {
                       this._transferInventory()
                     }
                   }
@@ -190,12 +194,12 @@ class TransferInventory extends connect(store)(localize(i18next)(PageView)) {
 
               <label>${i18next.t('label.to_location')}</label>
               <barcode-scanable-input
-                name="toLocation"
+                name="toLocationName"
                 custom-input
                 @keypress="${e => {
                   if (e.keyCode === 13) {
                     e.preventDefault()
-                    if (this.toLocationInput.value) {
+                    if (this.toLocationNameInput.value) {
                       this._transferInventory()
                     }
                   }
@@ -348,8 +352,8 @@ class TransferInventory extends connect(store)(localize(i18next)(PageView)) {
           mutation {
             inventoryTransfer(${gqlBuilder.buildArgs({
               palletId: this.palletIdInfo.value,
-              fromLocation: this.fromLocationInput.value,
-              toLocation: this.toLocationInput.value
+              fromLocationName: this.fromLocationNameInput.value,
+              toLocationName: this.toLocationNameInput.value
             })})
           }
         `
@@ -389,21 +393,21 @@ class TransferInventory extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _validateLocation() {
-    if (!this.fromLocationInput.value) {
+    if (!this.fromLocationNameInput.value) {
       this._focusOnFromLocationInput()
       throw new Error(i18next.t('text.there_is_no_from_location'))
     }
 
-    if (!this.toLocationInput.value) {
+    if (!this.toLocationNameInput.value) {
       this._focusOnToLocationInput()
       throw new Error(i18next.t('text.there_is_no_to_location'))
     }
 
-    if (this.currentLocationInput.value !== this.fromLocationInput.value) {
+    if (this.currentLocationInput.value !== this.fromLocationNameInput.value) {
       throw new Error(i18next.t('text.from_location_not_match_with_location'))
     }
 
-    if (this.fromLocationInput.value == this.toLocationInput.value) {
+    if (this.fromLocationNameInput.value == this.toLocationNameInput.value) {
       throw new Error(i18next.t('text.from_location_is_same_as_to_location'))
     }
   }
@@ -413,18 +417,18 @@ class TransferInventory extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _focusOnToLocationInput() {
-    setTimeout(() => this.toLocationInput.focus(), 100)
+    setTimeout(() => this.toLocationNameInput.focus(), 100)
   }
 
   _focusOnFromLocationInput() {
-    setTimeout(() => this.fromLocationInput.focus(), 100)
+    setTimeout(() => this.fromLocationNameInput.focus(), 100)
   }
 
   _clearView() {
     this.infoForm.reset()
     this.detailForm.reset()
-    this.fromLocationInput.value = ''
-    this.toLocationInput.value = ''
+    this.fromLocationNameInput.value = ''
+    this.toLocationNameInput.value = ''
     this.palletInput.value = ''
     this._palletId = ''
     this._updateContext()
