@@ -116,9 +116,7 @@ class TransferInventory extends connect(store)(localize(i18next)(PageView)) {
   }
 
   get fromLocationNameInput() {
-    return this.shadowRoot
-      .querySelector('barcode-scanable-input[name=fromLocationName]')
-      .shadowRoot.querySelector('input')
+    return this.shadowRoot.querySelector('input[name=fromLocationName]')
   }
 
   get toLocationNameInput() {
@@ -179,9 +177,8 @@ class TransferInventory extends connect(store)(localize(i18next)(PageView)) {
               <legend>${i18next.t('title.input_section')}</legend>
 
               <label>${i18next.t('label.from_location')}</label>
-              <barcode-scanable-input
+              <input
                 name="fromLocationName"
-                custom-input
                 @keypress="${e => {
                   if (e.keyCode === 13) {
                     e.preventDefault()
@@ -190,7 +187,8 @@ class TransferInventory extends connect(store)(localize(i18next)(PageView)) {
                     }
                   }
                 }}"
-              ></barcode-scanable-input>
+                readonly
+              />
 
               <label>${i18next.t('label.to_location')}</label>
               <barcode-scanable-input
@@ -214,6 +212,7 @@ class TransferInventory extends connect(store)(localize(i18next)(PageView)) {
 
   constructor() {
     super()
+    this._palletId = ''
   }
 
   _updateContext() {
@@ -318,12 +317,19 @@ class TransferInventory extends connect(store)(localize(i18next)(PageView)) {
 
       if (!response.errors) {
         const inventory = response.data.inventoryByPallet
+        if (!inventory) {
+          this._focusOnPalletInput()
+          throw new Error(i18next.t('text.wrong_pallet_id'))
+        }
+
         this._fillUpDetailForm({
           ...inventory,
           productName: inventory.product.name,
           locationName: inventory.location.name
         })
         this._palletId = inventory.palletId
+        this.fromLocationNameInput.value = inventory.location.name
+        this.toLocationNameInput.focus()
         this._updateContext()
       }
     } catch (e) {
