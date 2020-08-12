@@ -753,7 +753,7 @@
   "text.release_order_confirmed": "release order confirmed",
   "text.release_order_form_invalid": "release order form invalid",
   "text.shipping_order_form_invalid": "shipping order form invalid",
-  "text.release_order_submit_for_cancellation": "release order submit for cancellation",
+  "text.release_order_is_submitted_for_cancellation": "release order is submitted for cancellation",
   "text.release_order_has_been_cancelled": "release order has been cancelled",
   "text.release_order_received": "release order received",
   "text.release_order_rejected": "release order rejected",
@@ -1205,5 +1205,7 @@
   "text.x_exceed_limit": "{state.x} exceed limit",
   "text.invalid_x": "invalid {state.x}",
   "title.date_inventory_report": "{state.text} Inventory Report",
-  "title.inventory_report": "inventory report"
+  "title.inventory_report": "inventory report",
+  "button.approve_cancellation": "approve cancellation",
+  "button.reject_cancellation": "reject cancellation"
 }

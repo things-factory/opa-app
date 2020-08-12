@@ -667,7 +667,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       })
 
       if (!response.errors) {
-        this._showToast({ message: i18next.t('text.release_order_submit_for_cancellation') })
+        this._showToast({ message: i18next.t('text.release_order_is_submitted_for_cancellation') })
         navigate(`release_orders`)
       }
     } catch (e) {
