@@ -196,7 +196,7 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
               filters: [
                 ...filters,
                 { name: 'product_id', operator: 'eq', value: this.productId },
-                { name: 'status', operator: 'notin', value: ['INTRANSIT', 'DELETED'] }
+                { name: 'status', operator: 'in', value: ['STORED', 'TERMINATED'] }
               ],
               pagination: { page, limit },
               sortings: sorters
