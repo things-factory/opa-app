@@ -113,6 +113,38 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
           record: { align: 'center' },
           sortable: true,
           width: 80
+        },
+        {
+          type: 'number',
+          name: 'lockedQty',
+          header: i18next.t('field.release_qty'),
+          record: { editable: false, align: 'center' },
+          sortable: false,
+          width: 80
+        },
+        {
+          type: 'number',
+          name: 'remainingQty',
+          header: i18next.t('field.remain_qty'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'number',
+          name: 'remainingQty',
+          header: i18next.t('field.remain_qty'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'number',
+          name: 'weight',
+          header: i18next.t('field.weight'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 80
         }
       ]
     }
@@ -182,6 +214,8 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
                 palletId
                 batchId
                 qty
+                weight
+                remainQty                
                 warehouse {
                   name
                   description
@@ -206,7 +240,14 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
       if (!response.errors) {
         return {
           total: response.data.inventories.total || 0,
-          records: response.data.inventories.items || []
+          records:
+            response.data.inventories.items.map(item => {
+              return {
+                ...item,
+                lockedQty: item.qty - item.remainQty,
+                remainingQty: item.remainQty
+              }
+            }) || []
         }
       }
     } catch (e) {
