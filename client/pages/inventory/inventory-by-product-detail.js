@@ -132,14 +132,6 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
         },
         {
           type: 'number',
-          name: 'remainingQty',
-          header: i18next.t('field.remain_qty'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 80
-        },
-        {
-          type: 'number',
           name: 'weight',
           header: i18next.t('field.weight'),
           record: { align: 'center' },
