@@ -120,7 +120,7 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
           header: i18next.t('field.release_qty'),
           record: { editable: false, align: 'center' },
           sortable: false,
-          width: 80
+          width: 160
         },
         {
           type: 'number',
@@ -128,7 +128,7 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
           header: i18next.t('field.remain_qty'),
           record: { align: 'center' },
           sortable: true,
-          width: 80
+          width: 160
         },
         {
           type: 'number',

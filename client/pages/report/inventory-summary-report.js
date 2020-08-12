@@ -416,7 +416,7 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
       {
         backdrop: true,
         size: 'large',
-        title: `${record['product|name']} ${record['product|description'] ? `(${record['product|description']})` : ''}`
+        title: `${record['product|name']}` + record['product|description'] ? `(${record['product|description']})` : ``
       }
     )
   }
