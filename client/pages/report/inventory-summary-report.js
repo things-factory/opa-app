@@ -411,12 +411,13 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
   }
 
   _showInventoryInfo(columns, data, column, record, rowIndex) {
+    debugger
     openPopup(
       html` <inventory-by-product-detail .productId="${record['product|id']}"></inventory-by-product-detail> `,
       {
         backdrop: true,
         size: 'large',
-        title: `${record['product|name']}` + record['product|description'] ? `(${record['product|description']})` : ``
+        title: `${record['product|name']}`
       }
     )
   }
