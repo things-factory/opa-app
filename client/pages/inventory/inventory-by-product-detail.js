@@ -84,6 +84,14 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
         },
         {
           type: 'string',
+          name: 'packingType',
+          header: i18next.t('field.packing_type'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'string',
           name: 'zone',
           header: i18next.t('field.zone'),
           record: { align: 'center' },
@@ -134,6 +142,13 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
         name: 'zone',
         type: 'text',
         props: { searchOper: 'i_like' }
+      },
+      {
+        label: i18next.t('field.has_balance'),
+        name: 'remainOnly',
+        type: 'checkbox',
+        value: true,
+        props: { searchOper: 'eq' }
       }
     ]
   }
@@ -157,13 +172,13 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
               filters: [
                 ...filters,
                 { name: 'product_id', operator: 'eq', value: this.productId },
-                { name: 'remainOnly', operator: 'eq', value: true },
                 { name: 'status', operator: 'notin', value: ['INTRANSIT', 'DELETED'] }
               ],
               pagination: { page, limit },
               sortings: sorters
             })}) {
               items {
+                packingType
                 palletId
                 batchId
                 qty

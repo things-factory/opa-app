@@ -108,13 +108,13 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
       },
       {
         label: i18next.t('field.product_description'),
-        name: 'product_description',
+        name: 'productDescription',
         type: 'string',
         props: { searchOper: 'in' }
       },
       {
         label: i18next.t('field.batch_no'),
-        name: 'batch_no',
+        name: 'batchNo',
         type: 'string',
         props: { searchOper: 'in' }
       },

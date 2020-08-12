@@ -102,8 +102,14 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
         props: { searchOper: 'in' }
       },
       {
+        label: i18next.t('field.product_description'),
+        name: 'productDescription',
+        type: 'string',
+        props: { searchOper: 'in' }
+      },
+      {
         label: i18next.t('field.batch_no'),
-        name: 'batch_no',
+        name: 'batchNo',
         type: 'string',
         props: { searchOper: 'in' }
       },
@@ -117,7 +123,7 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
         },
         value: (() => {
           let date = new Date()
-          date.setMonth(date.getMonth() - 6)
+          date.setMonth(date.getMonth() - 1)
           return date.toISOString().split('T')[0]
         })(),
         handlers: { change: this._modifyDateRange.bind(this) }
@@ -138,8 +144,15 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
         value: new Date().toISOString().split('T')[0]
       },
       {
-        label: i18next.t('field.show_balance_only'),
-        name: 'balanceOnly',
+        label: i18next.t('field.has_transaction_or_balance'),
+        name: 'hasTransactionOrBalance',
+        type: 'checkbox',
+        value: true,
+        props: { searchOper: 'eq' }
+      },
+      {
+        label: i18next.t('field.by_pallet'),
+        name: 'byPallet',
         type: 'checkbox',
         props: { searchOper: 'eq' }
       }
@@ -159,6 +172,7 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
           'closingQty'
         ]
       },
+      pagination: { pages: [20, 50, 100, 200, 500, 1000] },
       rows: {
         selectable: false,
         insertable: false,
@@ -284,12 +298,11 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
                     name
                     description
                   }
-                  adjustmentQty
-                  closingQty
+                  openingQty
                   totalInQty
                   totalOutQty
-                  initialQty
-                  initialDate
+                  adjustmentQty
+                  closingQty
                 }
                 total
               }
