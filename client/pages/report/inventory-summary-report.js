@@ -154,7 +154,8 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
         label: i18next.t('field.by_pallet'),
         name: 'byPallet',
         type: 'checkbox',
-        props: { searchOper: 'eq' }
+        props: { searchOper: 'eq' },
+        handlers: { change: this._submit.bind(this) }
       }
     ]
   }
@@ -379,6 +380,10 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
     min = min.toISOString().split('T')[0]
 
     this._toDateInput.min = min
+  }
+
+  _submit(e) {
+    this.searchForm.submit()
   }
 
   async _exportableData() {
