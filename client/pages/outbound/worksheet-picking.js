@@ -145,9 +145,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       </div>
 
       <div class="grist">
-        ${this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value &&
-        !this.isPalletPickingOrder &&
-        !this.crossDocking
+        ${this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value && !this.isPalletPickingOrder
           ? html`
               <div class="grist-column">
                 <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product')}</h2>
@@ -502,14 +500,9 @@ class WorksheetPicking extends localize(i18next)(PageView) {
 
       if (completedOrderInvs && completedOrderInvs.length && this.isPalletPickingOrder) {
         this.worksheetDetailData = {
-          records: completedOrderInvs.map(item => {
-            return {
-              ...item,
-              ...item.inventory,
-              ...item.inventory.location,
-              description: item.description
-            }
-          })
+          records: completedOrderInvs.map(item =>
+            Object.assign({ description: item.description }, item, item?.inventory, item?.inventory?.location)
+          )
         }
       }
 
@@ -617,8 +610,14 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               status
               description
               targetInventory {
+                batchId
                 releaseQty
-                releaseWeight                
+                releaseWeight
+                product {
+                  name
+                  description
+                }
+                packingType
                 inventory {
                   palletId
                   batchId
@@ -649,15 +648,21 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       const worksheetDetails = response.data.worksheet.worksheetDetails
 
       this.worksheetDetailData = {
-        records: worksheetDetails.map(worksheetDetail => {
-          return {
-            ...worksheetDetail.targetInventory.inventory,
-            name: worksheetDetail.name,
-            description: worksheetDetail.description,
-            status: worksheetDetail.status,
-            releaseQty: worksheetDetail.targetInventory.releaseQty,
-            releaseWeight: worksheetDetail.targetInventory.releaseWeight
+        records: worksheetDetails.map(wsd => {
+          let record = {
+            name: wsd.name,
+            description: wsd.description,
+            status: wsd.status,
+            releaseQty: wsd.targetInventory.releaseQty,
+            releaseWeight: wsd.targetInventory.releaseWeight
           }
+
+          if (this.crossDocking) {
+            record = Object.assign(record, wsd.targetInventory)
+          } else {
+            record = Object.assign(record, wsd.targetInventory.inventory)
+          }
+          return record
         })
       }
     }

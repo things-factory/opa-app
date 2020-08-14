@@ -459,7 +459,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
 
   async _validateInspection() {
     // 1. validate for order selection
-    if (!this._selectedOrderInventory) throw new Error(i18next.t('text.target_doesnt_selected'))
+    if (!this._selectedOrderInventory) throw new Error(i18next.t('text.target_is_not_selected'))
 
     // 2. pallet id existing
     if (!this.palletInput.value) {

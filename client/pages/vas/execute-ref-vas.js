@@ -156,7 +156,7 @@ class ExecuteRefVas extends localize(i18next)(AbstractExecuteVas) {
 
   checkExecutionValidity() {
     // 1. validate for vas selection
-    if (!this._selectedVas) throw new Error(i18next.t('text.target_doesnt_selected'))
+    if (!this._selectedVas) throw new Error(i18next.t('text.target_is_not_selected'))
     // 2. pallet id is required for reference vas
 
     if (

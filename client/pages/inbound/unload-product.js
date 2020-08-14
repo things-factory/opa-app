@@ -36,7 +36,6 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           display: flex;
           flex-direction: column;
         }
-
         .grist {
           background-color: var(--main-section-background-color);
           display: flex;
@@ -55,11 +54,9 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           flex: 1;
           flex-direction: column;
         }
-
         data-grist {
           flex: 1;
         }
-
         h2 {
           padding: var(--subtitle-padding);
           font: var(--subtitle-font);
@@ -71,18 +68,15 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           border: var(--grist-title-border);
           color: var(--secondary-color);
         }
-
         .grist h2 mwc-icon {
           vertical-align: middle;
           margin: var(--grist-title-icon-margin);
           font-size: var(--grist-title-icon-size);
           color: var(--grist-title-icon-color);
         }
-
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
-
         @media (max-width: 460px) {
           :host {
             display: block;

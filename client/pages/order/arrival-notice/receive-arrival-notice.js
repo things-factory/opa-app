@@ -557,15 +557,24 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
 
   async _receiveArrivalNotice() {
     try {
-      const result = await CustomAlert({
+      let result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.receive_arrival_notice'),
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
 
-      if (!result.value) {
-        return
+      if (!result.value) return
+
+      if (this._crossDocking) {
+        result = await CustomAlert({
+          title: i18next.t('title.are_you_sure'),
+          text: i18next.t('text.this_is_cross_docking'),
+          confirmButton: { text: i18next.t('button.confirm') },
+          cancelButton: { text: i18next.t('button.cancel') }
+        })
+
+        if (!result.value) return
       }
 
       const response = await client.query({

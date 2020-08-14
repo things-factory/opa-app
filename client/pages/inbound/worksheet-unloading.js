@@ -269,6 +269,9 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
               description
               refNo
               crossDocking
+              releaseGood {
+                name
+              }
             }
             bizplace {
               id
@@ -589,6 +592,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     openPopup(
       html`
         <putaway-worksheet-generate-popup
+          .crossDocking="${this.crossDocking}"
           .arrivalNotice="${this._gan}"
           @completed="${async () => {
             await this.fetchWorksheet()

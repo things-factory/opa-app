@@ -530,11 +530,11 @@ export class AbstractExecuteVas extends LitElement {
 
   checkExecutionValidity() {
     // 1. validate for vas selection
-    if (!this._selectedVas) throw new Error(i18next.t('text.target_doesnt_selected'))
+    if (!this._selectedVas) throw new Error(i18next.t('text.target_is_not_selected'))
   }
 
   checkUndoValidity() {
-    if (!this._selectedVas) throw new Error(i18next.t('text.target_doesnt_selected'))
+    if (!this._selectedVas) throw new Error(i18next.t('text.target_is_not_selected'))
   }
 
   _showToast({ type, message }) {

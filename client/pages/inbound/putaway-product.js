@@ -605,7 +605,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
 
   async _validatePutaway() {
     // 1. validate for order selection
-    if (!this._selectedOrderProduct) throw new Error(i18next.t('text.target_doesnt_selected'))
+    if (!this._selectedOrderProduct) throw new Error(i18next.t('text.target_is_not_selected'))
 
     // 2. pallet id existing
     if (!this.palletInput.value) {
@@ -645,7 +645,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
 
   _validateTransfer() {
     // 1. validate for order selection
-    if (!this._selectedOrderProduct) throw new Error(i18next.t('text.target_doesnt_selected'))
+    if (!this._selectedOrderProduct) throw new Error(i18next.t('text.target_is_not_selected'))
 
     // 2. pallet id existing
     if (!this.palletInput.value) {

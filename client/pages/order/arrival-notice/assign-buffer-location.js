@@ -111,7 +111,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
         <fieldset>
           <legend>${i18next.t('title.gan_no')}: ${this._ganNo}</legend>
           <label>${i18next.t('label.ref_no')}</label>
-          <input name="refNo" readonly/>
+          <input name="refNo" readonly />
 
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
           <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" readonly />
@@ -130,10 +130,10 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
 
           <label>${i18next.t('label.status')}</label>
           <select name="status" disabled
-          >${Object.keys(ORDER_STATUS).map(key => {
-            const status = ORDER_STATUS[key]
-            return html` <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option> `
-          })}</select
+            >${Object.keys(ORDER_STATUS).map(key => {
+              const status = ORDER_STATUS[key]
+              return html` <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option> `
+            })}</select
           >
 
           <input id="container" type="checkbox" name="container" ?checked="${this._hasContainer}" disabled />
@@ -148,23 +148,19 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
           <input id="ownTransport" type="checkbox" name="ownTransport" ?checked="${this._ownTransport}" disabled />
           <label>${i18next.t('label.own_transport')}</label>
 
-          ${
-            this._crossDocking
-              ? html`
-                  <input
-                    id="crossDocking"
-                    type="checkbox"
-                    name="crossDocking"
-                    ?checked="${this._crossDocking}"
-                    disabled
-                  />
-                  <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
-                `
-              : ''
-          }
+          ${this._crossDocking
+            ? html`
+                <input
+                  id="crossDocking"
+                  type="checkbox"
+                  name="crossDocking"
+                  ?checked="${this._crossDocking}"
+                  disabled
+                />
+                <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+              `
+            : ''}
         </fieldset>
-      </fieldset>
-
 
         <fieldset>
           <legend>${i18next.t('title.assign_warehouse')}</legend>
@@ -174,30 +170,29 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
       </form>
 
       <div class="container">
-      <div class="grist">
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product')}</h2>
+        <div class="grist">
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.product')}</h2>
 
-        <data-grist
-          id="product-grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.productGristConfig}
-          .data="${this.productData}"
-        ></data-grist>
+          <data-grist
+            id="product-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.productGristConfig}
+            .data="${this.productData}"
+          ></data-grist>
 
-        <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.vas')}</h2>
 
-        <data-grist
-          id="vas-grist"
-          .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-          .config=${this.vasGristConfig}
-          .data="${this.vasData}"
-        ></data-grist>
-      </div>
+          <data-grist
+            id="vas-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.vasGristConfig}
+            .data="${this.vasData}"
+          ></data-grist>
+        </div>
 
-      <div class="guide-container">
-      ${this._template}
-      </div>
-
+        <div class="guide-container">
+          ${this._template}
+        </div>
       </div>
     `
   }
