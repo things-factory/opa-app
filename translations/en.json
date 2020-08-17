@@ -1207,5 +1207,6 @@
   "title.date_inventory_report": "{state.text} Inventory Report",
   "title.inventory_report": "inventory report",
   "button.approve_cancellation": "approve cancellation",
-  "button.reject_cancellation": "reject cancellation"
+  "button.reject_cancellation": "reject cancellation",
+  "text.cancellation_request_has_been_rejected": "cancellation request has been rejected"
 }
