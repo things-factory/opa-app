@@ -77,6 +77,24 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
   get searchFields() {
     return [
       {
+        label: i18next.t('field.product_name'),
+        name: 'product',
+        type: 'string',
+        props: { searchOper: 'in' }
+      },
+      {
+        label: i18next.t('field.product_description'),
+        name: 'productDescription',
+        type: 'string',
+        props: { searchOper: 'in' }
+      },
+      {
+        label: i18next.t('field.batch_no'),
+        name: 'batchNo',
+        type: 'string',
+        props: { searchOper: 'in' }
+      },
+      {
         label: i18next.t('field.from_date'),
         name: 'fromDate',
         type: 'date',
@@ -107,10 +125,11 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
         value: new Date().toISOString().split('T')[0]
       },
       {
-        label: i18next.t('field.product'),
-        name: 'product',
-        type: 'string',
-        props: { searchOper: 'in' }
+        label: i18next.t('field.has_transaction_or_balance'),
+        name: 'hasTransactionOrBalance',
+        type: 'checkbox',
+        value: true,
+        props: { searchOper: 'eq' }
       }
     ]
   }
@@ -207,7 +226,7 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
     this._config = this.reportConfig
 
     let date = new Date()
-    this._date = date.getFullYear().toString() + (date.getMonth()+1).toString() + date.getDate().toString()
+    this._date = date.getFullYear().toString() + (date.getMonth() + 1).toString() + date.getDate().toString()
   }
 
   async pageUpdated(changes, lifecycle) {
@@ -346,7 +365,7 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
     } catch (e) {
       this._showToast(e)
     }
-  } 
+  }
 }
 
 window.customElements.define('customer-inventory-report', CustomerInventoryReport)
