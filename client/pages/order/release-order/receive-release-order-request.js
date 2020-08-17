@@ -663,6 +663,36 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
     }
   }
 
+  async _rejectCancellationReleaseOrder() {
+    try {
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.you_wont_be_able_to_revert_this'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) return
+
+      const response = await client.query({
+        query: gql`
+            mutation {
+              rejectCancellationReleaseOrder(${gqlBuilder.buildArgs({
+                name: this._releaseOrderNo
+              })})
+            }
+          `
+      })
+
+      if (!response.errors) {
+        this._showToast({ message: i18next.t('text.cancellation_request_has_been_rejected') })
+        navigate(`release_order_requests`)
+      }
+    } catch (e) {
+      throw e
+    }
+  }
+
   _updateContext() {
     this._actions = []
     if (this._status === ORDER_STATUS.PENDING_RECEIVE.value) {
@@ -681,8 +711,12 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
     if (this._status === ORDER_STATUS.PENDING_CANCEL.value) {
       this._actions = [
         {
-          title: i18next.t('button.confirm'),
+          title: i18next.t('button.approve_cancellation'),
           action: this._confirmCancellationReleaseOrder.bind(this)
+        },
+        {
+          title: i18next.t('button.reject_cancellation'),
+          action: this._rejectCancellationReleaseOrder.bind(this)
         }
       ]
     }
