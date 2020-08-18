@@ -21,6 +21,21 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
         overflow-y: auto;
         flex: 1;
       }
+
+      .summary {
+        background-color: var(--main-section-background-color);
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+      }
+
+      .summary {
+        align-items: flex-end;
+        padding: var(--data-list-item-padding);
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        grid-auto-rows: minmax(24px, auto);
+      }
     `
   }
 
@@ -30,6 +45,7 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
       _config: Object,
       _userBizplaces: Object,
       _locationTypes: Object,
+      _gristData: Object,
       data: Object
     }
   }
@@ -37,6 +53,10 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
   get context() {
     return {
       title: i18next.t('title.inventory_pallet_storage_report'),
+      printable: {
+        accept: ['preview'],
+        content: this
+      },
       exportable: {
         name: i18next.t('title.inventory_pallet_storage_report'),
         data: this._exportableData.bind(this)
@@ -73,6 +93,11 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
         .config=${this._config}
         .fetchHandler="${this.fetchHandler.bind(this)}"
       ></data-grist>
+
+      <div class="summary">
+        <label>${i18next.t('label.total_location_used')} : ${this._gristData.total}</label>
+        <label>${i18next.t('label.total_location_without_inbound')} : ${this._gristData.totalWithoutInbound}</label>
+      </div>
     `
   }
 
@@ -154,10 +179,12 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
       list: {
         fields: ['location|zone', 'location|name', 'location|type', 'palletId']
       },
+      pagination: { pages: [20, 50, 100, 200, 500, 1000] },
       rows: {
         selectable: false
       },
       columns: [
+        { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'string',
           name: 'location|zone',
@@ -183,18 +210,43 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
           width: 150
         },
         {
+          type: 'float',
+          name: 'totalQty',
+          record: { editable: false, align: 'center' },
+          header: i18next.t('field.total'),
+          imex: { header: i18next.t('field.total'), key: 'totalQty', width: 25, type: 'string' },
+          width: 140
+        },
+        {
+          type: 'float',
+          name: 'inboundQty',
+          record: { editable: false, align: 'center' },
+          header: i18next.t('field.inbound'),
+          imex: { header: i18next.t('field.inbound'), key: 'inboundQty', width: 25, type: 'string' },
+          width: 140
+        },
+        {
           type: 'string',
           name: 'palletId',
           record: { editable: false, align: 'left' },
-          imex: { header: i18next.t('field.palletId'), key: 'palletId', width: 200, type: 'string' },
-          header: i18next.t('field.palletId'),
-          width: 900
+          imex: { header: i18next.t('field.pallet_id'), key: 'palletId', width: 70, type: 'string' },
+          header: i18next.t('field.pallet_id'),
+          width: 500
+        },
+        {
+          type: 'string',
+          name: 'inboundPalletId',
+          record: { editable: false, align: 'left' },
+          imex: { header: i18next.t('field.inbound_pallet_id'), key: 'inboundPalletId', width: 70, type: 'string' },
+          header: i18next.t('field.inbound_pallet_id'),
+          width: 500
         }
       ]
     }
   }
 
   async pageInitialized() {
+    this._gristData = { total: 0, totalWithoutInbound: 0, records: [] }
     this._products = []
     this._userBizplaces = [...(await this._fetchBizplaceList())]
     this._locationTypes = await getCodeByName('LOCATION_TYPE')
@@ -250,16 +302,26 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
                   zone
                 }
                 palletId
+                inboundPalletId
+                inboundQty
+                totalQty
               }
               total
+              totalWithoutInbound
             }
           }
         `
       })
-      return {
+
+      let data = {
         total: response.data.inventoryHistoryPalletStorageReport.total,
-        records: response.data.inventoryHistoryPalletStorageReport.items.map(item => flattenObject(item)) || []
+        records: response.data.inventoryHistoryPalletStorageReport.items.map(item => flattenObject(item)) || [],
+        totalWithoutInbound: response.data.inventoryHistoryPalletStorageReport.totalWithoutInbound
       }
+
+      this._gristData = { ...data }
+
+      return data
     } catch (e) {
       console.log(e)
     }

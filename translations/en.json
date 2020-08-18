@@ -570,6 +570,8 @@
   "label.total": "total",
   "label.total_amount": "total amount",
   "label.total_balance": "total balance",
+  "label.total_location_used": "total location used",
+  "label.total_location_without_inbound": "total location without inbound",
   "label.total_pack_qty": "total pack qty",
   "label.to_pallet": "to pallet",
   "label.total_pallet_qty": "total pallet qty",

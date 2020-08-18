@@ -37,6 +37,10 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
   get context() {
     return {
       title: i18next.t('title.inventory_summary_report'),
+      printable: {
+        accept: ['preview'],
+        content: this
+      },
       exportable: {
         name: i18next.t('title.inventory_summary_report'),
         data: this._exportableData.bind(this)
