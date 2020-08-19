@@ -916,16 +916,16 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
   _validateForm() {
     if (!this.releaseOrderForm.checkValidity()) {
-      throw new Error('text.release_order_form_invalid')
+      throw new Error(i18next.t('text.release_order_form_invalid'))
     }
 
     if (this._ownTransport && !this._files?.length) {
-      throw new Error('text.release_order_form_invalid')
+      throw new Error(i18next.t('text.release_order_form_invalid'))
     }
 
     //    - condition: export is ticked
     if (this.shippingOrderForm && !this.shippingOrderForm.checkValidity()) {
-      throw new Error('text.shipping_order_form_invalid')
+      throw new Error(i18next.t('text.shipping_order_form_invalid'))
     }
   }
 

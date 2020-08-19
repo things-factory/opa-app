@@ -10,6 +10,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import '../components/popup-note'
+import '../components/popup-unloading'
 
 class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -23,7 +24,10 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       palletProductData: Object,
       _selectedOrderProduct: Object,
       _selectedInventory: Object,
-      _unloadedInventories: Array
+      _unloadedInventories: Array,
+      _isReusablePallet: Boolean,
+      _reusablePalletId: Array,
+      _reusablePalletIdData: Object
     }
   }
 
@@ -213,7 +217,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
                 .value=${this._palletId}
                 without-enter
                 custom-input
-                @keypress="${this._unload.bind(this)}"
+                @keypress="${this._checkReusablePallet.bind(this)}"
               ></barcode-scanable-input>
 
               <label>${i18next.t('label.actual_qty')}</label>
@@ -227,9 +231,11 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
 
   constructor() {
     super()
+    this._isReusablePallet = false
     this._arrivalNoticeNo = ''
     this._productName = ''
     this.orderProductData = { records: [] }
+    this.reusablePalletIdData = { records: [] }
   }
 
   updated(changedProps) {
@@ -361,10 +367,18 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
         appendable: false,
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
-            if (record && record.palletId && this._selectedOrderProduct) {
-              this._selectedInventory = record
-              this.palletInput.value = record.palletId
-              this.actualQtyInput.value = record.qty
+            if (record.reusablePallet) {
+              this._openPopupUnloading(record.reusablePallet.name, this.orderProductData, {
+                records: this.palletProductData.records.filter(
+                  item => record.reusablePallet.id == item.reusablePallet.id
+                )
+              })
+            } else {
+              if (record && record.palletId && this._selectedOrderProduct) {
+                this._selectedInventory = record
+                this.palletInput.value = record.palletId
+                this.actualQtyInput.value = record.qty
+              }
             }
           }
         }
@@ -387,6 +401,12 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.actual_pack_qty'),
           record: { align: 'center' },
           width: 80
+        },
+        {
+          type: 'string',
+          name: 'reusablePalletName',
+          header: i18next.t('field.reusable_pallet'),
+          width: 240
         }
       ]
     }
@@ -464,6 +484,10 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
             batchId
             palletId
             qty
+            reusablePallet {
+              id
+              name
+            }
           }
         }
       `
@@ -474,6 +498,15 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       this._selectedInventory = null
       this.palletProductData = {
         records: this._unloadedInventories
+      }
+
+      this.palletProductData = {
+        records: this.palletProductData.records.map(palletProduct => {
+          return {
+            ...palletProduct,
+            reusablePalletName: palletProduct.reusablePallet.name
+          }
+        })
       }
 
       this.orderProductData = {
@@ -592,6 +625,32 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       setTimeout(() => this.actualQtyInput.select(), 100)
       throw new Error(i18next.t('text.qty_should_be_positive'))
     }
+  }
+
+  _openPopupUnloading(reusablePallet, unloadingData, unloadedData) {
+    openPopup(
+      html`
+        <popup-unloading
+          .title="${i18next.t('title.unloading_with_reusable_pallet')}"
+          .ganNo="${this._arrivalNoticeNo}"
+          .reusablePallet="${reusablePallet}"
+          .unloadingGristData="${unloadingData}"
+          .unloadedGristData="${unloadedData}"
+          .reusablePalletData="${this.reusablePalletIdData}"
+          @unloading-pallet="${e => {
+            this.orderProductData = e.detail
+          }}"
+          @unloaded-pallet="${e => {
+            this.palletProductData = e.detail
+          }}"
+        ></popup-unloading>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.unloading_with_reusable_pallet')
+      }
+    )
   }
 
   _openIssueNote() {
@@ -790,6 +849,39 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       }
     } catch (e) {
       this._showToast(e)
+    }
+  }
+
+  async _checkReusablePallet(e) {
+    if (e.keyCode === 13) {
+      try {
+        if (!this.palletInput.value) return
+
+        const response = await client.query({
+          query: gql`
+            query {
+              pallet(${gqlBuilder.buildArgs({
+                name: this.palletInput.value
+              })}) {
+                id
+                name
+              }
+            }
+          `
+        })
+
+        if (!response.errors) {
+          if (response.data.pallet) {
+            // this._reusablePalletId = response.data.pallet
+            // this.reusablePalletIdData = [this._reusablePalletId]
+            this.reusablePalletIdData = response.data.pallet
+            this._isReusablePallet = true
+            this._openPopupUnloading(this.palletInput.value)
+          }
+        }
+      } catch (e) {
+        this._showToast({ message: e.message })
+      }
     }
   }
 

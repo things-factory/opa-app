@@ -237,6 +237,7 @@
   "field.resource_name": "resource name",
   "field.resource_type": "resource type",
   "field.resource_url": "resource url",
+  "field.reusable_pallet": "reusable pallet",
   "field.rounded_weight": "rounded weight",
   "field.routing": "routing",
   "field.routing_type": "routing type",
