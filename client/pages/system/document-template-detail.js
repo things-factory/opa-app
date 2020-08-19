@@ -1,9 +1,8 @@
-import { SingleColumnFormStyles } from '@things-factory/form-ui'
 import { getCodeByName } from '@things-factory/code-base'
+import { SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client } from '@things-factory/shell'
-import { gqlBuilder } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 

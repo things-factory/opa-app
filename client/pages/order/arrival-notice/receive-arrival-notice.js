@@ -15,7 +15,7 @@ import {
   VAS_BATCH_NO_TYPE,
   VAS_ETC_TYPE,
   VAS_PRODUCT_TYPE
-} from '../constants'
+} from '../../constants'
 
 class ReceiveArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {

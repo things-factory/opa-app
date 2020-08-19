@@ -1,7 +1,7 @@
 import { i18next } from '@things-factory/i18n-base'
 import { html } from 'lit-element'
+import { VAS_PRODUCT_TYPE } from '../../../constants'
 import { AbstractVasCreateForm } from './abastract-vas-create-form'
-import { VAS_PRODUCT_TYPE } from '../../constants'
 
 export class VasCreateProductTypeForm extends AbstractVasCreateForm {
   render() {

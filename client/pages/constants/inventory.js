@@ -34,5 +34,5 @@ export const INVENTORY_STATUS = {
   PICKED: {
     name: 'picked',
     value: 'PICKED'
-  }
+  },
 }

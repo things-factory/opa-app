@@ -16,12 +16,12 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/vas-templates'
 import {
+  ORDER_STATUS,
   VAS_BATCH_AND_PRODUCT_TYPE,
   VAS_BATCH_NO_TYPE,
   VAS_ETC_TYPE,
-  ORDER_STATUS,
   VAS_PRODUCT_TYPE
-} from '../constants'
+} from '../../constants'
 
 class VasOrderDetail extends localize(i18next)(PageView) {
   static get properties() {

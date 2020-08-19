@@ -8,17 +8,17 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { fetchLocationSortingRule } from '../../../fetch-location-sorting-rule'
 import '../../components/vas-templates'
-import { LOCATION_SORTING_RULE } from '../../contants/location-sorting-rule'
-import '../../order/vas-order/popup/vas-create-popup'
 import {
   INVENTORY_STATUS,
+  LOCATION_SORTING_RULE,
   ORDER_INVENTORY_STATUS,
   ORDER_TYPES,
   PICKING_STANDARD,
   VAS_BATCH_AND_PRODUCT_TYPE,
   VAS_BATCH_NO_TYPE,
   VAS_PRODUCT_TYPE
-} from '../constants'
+} from '../../constants'
+import '../../order/vas-order/popup/vas-create-popup'
 
 class CreateReleaseOrder extends localize(i18next)(PageView) {
   static get properties() {

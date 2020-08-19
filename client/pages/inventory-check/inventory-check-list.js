@@ -7,8 +7,7 @@ import { ScrollbarStyles } from '@things-factory/styles'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { WORKSHEET_TYPE } from '../inbound/constants/worksheet'
-import { ORDER_STATUS } from '../order/constants/order'
+import { ORDER_STATUS, WORKSHEET_TYPE } from '../constants'
 
 class InventoryCheckList extends localize(i18next)(PageView) {
   static get styles() {

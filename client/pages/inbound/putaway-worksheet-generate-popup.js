@@ -1,10 +1,9 @@
-import { localize, i18next } from '@things-factory/i18n-base'
-import { html, css, LitElement } from 'lit-element'
-import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
+import { i18next, localize } from '@things-factory/i18n-base'
 import { client, CustomAlert } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
-import { INVENTORY_STATUS } from '../inventory/constants'
-import { WORKSHEET_STATUS } from './constants/worksheet'
+import { css, html, LitElement } from 'lit-element'
+import { INVENTORY_STATUS, ORDER_INVENTORY_STATUS } from '../constants'
 
 class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
   static get properties() {
@@ -318,12 +317,14 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
           })}) {
             orderInventories {
               batchId
+                id
                 packingType
                 product {
                   id
                   name
                   description
                 }
+                status
                 releaseQty
                 releaseWeight
             }
@@ -334,7 +335,9 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
 
     if (!response.errors) {
       this.crossDockGristData = {
-        records: response.data.releaseGood.orderInventories
+        records: response.data.releaseGood.orderInventories.filter(
+          record => record.status === ORDER_INVENTORY_STATUS.READY_TO_PICK.value
+        )
       }
     } else {
       history.back()

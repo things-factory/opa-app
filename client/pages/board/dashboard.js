@@ -1,6 +1,5 @@
-import { html, css } from 'lit-element'
 import { BoardViewerPage } from '@things-factory/board-ui'
-import { HOME_DASHBOARD_SETTING_KEY } from '../../setting-constants'
+import { HOME_DASHBOARD_SETTING_KEY } from '../constants'
 
 class Dashboard extends BoardViewerPage {
   get oopsNote() {

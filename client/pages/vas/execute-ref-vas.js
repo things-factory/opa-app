@@ -3,7 +3,7 @@ import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import { html } from 'lit-element'
-import { ARRIVAL_NOTICE, RELEASE_OF_GOODS } from '../order/constants'
+import { ARRIVAL_NOTICE, RELEASE_OF_GOODS } from '../constants'
 import { AbstractExecuteVas } from './abstract-execute-vas'
 
 class ExecuteRefVas extends localize(i18next)(AbstractExecuteVas) {

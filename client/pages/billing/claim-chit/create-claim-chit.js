@@ -1,13 +1,13 @@
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import { getCodeByName } from '@things-factory/code-base'
-import { TRIP_CLAIM } from '../constants/claim'
 import '@things-factory/form-ui'
+import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder, isMobileDevice, PageView, store } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
+
 
 class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {

@@ -7,8 +7,8 @@ import { client, CustomAlert, navigate, PageView } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import { VAS_BATCH_AND_PRODUCT_TYPE, VAS_BATCH_NO_TYPE, VAS_PRODUCT_TYPE } from '../../constants'
 import '../../order/vas-order/popup/vas-create-popup'
-import { VAS_BATCH_AND_PRODUCT_TYPE, VAS_BATCH_NO_TYPE, VAS_PRODUCT_TYPE } from '../constants'
 
 class CreateArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {

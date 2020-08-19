@@ -1,11 +1,10 @@
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
-import gql from 'graphql-tag'
-import { gqlBuilder } from '@things-factory/utils'
 import { ScrollbarStyles } from '@things-factory/styles'
-import { getPathInfo } from '@things-factory/utils'
+import { getPathInfo, gqlBuilder } from '@things-factory/utils'
+import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { ORDER_STATUS } from '../constants'
+import { ORDER_STATUS } from '../../constants'
 
 class CustomerReceivedNote extends localize(i18next)(PageView) {
   static get properties() {

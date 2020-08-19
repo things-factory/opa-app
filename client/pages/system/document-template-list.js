@@ -5,9 +5,9 @@ import { openPopup } from '@things-factory/layout-base'
 import { client, CustomAlert, PageView, ScrollbarStyles, store } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
-import { connect } from 'pwa-helpers/connect-mixin'
 import { css, html } from 'lit-element'
-import { TEMPLATE_TYPES } from './constants/template-type'
+import { connect } from 'pwa-helpers/connect-mixin'
+import { TEMPLATE_TYPES } from '../constants'
 import './document-upload-template'
 
 class DocumentTemplateList extends connect(store)(localize(i18next)(PageView)) {

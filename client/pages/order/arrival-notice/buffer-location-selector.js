@@ -6,7 +6,7 @@ import { client, ScrollbarStyles } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
-import { LOCATION_TYPE } from '../constants/location'
+import { LOCATION_TYPE } from '../../constants'
 
 export class BufferLocationSelector extends localize(i18next)(LitElement) {
   static get styles() {

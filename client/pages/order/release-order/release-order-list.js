@@ -5,7 +5,7 @@ import { client, navigate, PageView, ScrollbarStyles } from '@things-factory/she
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { ORDER_STATUS } from '../constants/order'
+import { ORDER_STATUS } from '../../constants'
 
 class ReleaseOrderList extends localize(i18next)(PageView) {
   static get styles() {

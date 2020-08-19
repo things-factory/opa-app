@@ -6,7 +6,7 @@ import { client, PageView } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { LOCATION_SORTING_RULE } from '../contants/location-sorting-rule'
+import { LOCATION_SORTING_RULE } from '../constants'
 
 let LOC_SORTING_RULE_SETTING_KEY = ''
 
@@ -63,9 +63,10 @@ class LocationSortingRule extends localize(i18next)(PageView) {
       { name: i18next.t('label.desc'), value: 'DESC' }
     ]
     this.sortingRule = {}
-    this._processTypes = Object.keys(LOCATION_SORTING_RULE).map(function(key) {
-      return LOCATION_SORTING_RULE[key]
-    }) || []
+    this._processTypes =
+      Object.keys(LOCATION_SORTING_RULE).map(function (key) {
+        return LOCATION_SORTING_RULE[key]
+      }) || []
   }
 
   get context() {
@@ -90,7 +91,6 @@ class LocationSortingRule extends localize(i18next)(PageView) {
 
   render() {
     return html`
-
       <form class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.add_rule_field')}</legend>
@@ -99,11 +99,7 @@ class LocationSortingRule extends localize(i18next)(PageView) {
           <select id="process-type" @change="${e => this._changeProcessType(e.currentTarget.value)}">
             <option value=""></option>
             ${(this._processTypes || []).map(
-              processType => html`
-                <option value="${processType.value}"
-                  >${processType.name}</option
-                >
-              `
+              processType => html` <option value="${processType.value}">${processType.name}</option> `
             )}
           </select>
 
@@ -112,11 +108,7 @@ class LocationSortingRule extends localize(i18next)(PageView) {
             <option value=""></option>
             ${this._locationColumns
               .filter(column => Object.keys(this.sortingRule).indexOf(column.value) < 0)
-              .map(
-                column => html`
-                  <option value="${column.value}">${i18next.t(`field.${column.name}`)}</option>
-                `
-              )}
+              .map(column => html` <option value="${column.value}">${i18next.t(`field.${column.name}`)}</option> `)}
           </select>
         </fieldset>
       </form>

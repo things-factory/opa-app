@@ -4,7 +4,7 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { PageView, store } from '@things-factory/shell'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { ARRIVAL_NOTICE, RELEASE_OF_GOODS, VAS_ORDER } from '../order/constants'
+import { ARRIVAL_NOTICE, RELEASE_OF_GOODS, VAS_ORDER } from '../constants'
 import './execute-pure-vas'
 import './execute-ref-vas'
 

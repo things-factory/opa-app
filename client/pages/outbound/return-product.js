@@ -7,7 +7,7 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
+import { WORKSHEET_STATUS } from '../constants'
 
 const OPERATION_TYPE = {
   PUTAWAY: 'putaway',

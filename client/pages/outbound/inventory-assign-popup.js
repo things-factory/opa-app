@@ -6,10 +6,8 @@ import { client } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
-import { ORDER_TYPES } from '../order/constants'
 import { fetchLocationSortingRule } from '../../fetch-location-sorting-rule'
-import { LOCATION_SORTING_RULE } from '../contants/location-sorting-rule'
-import { PICKING_STRATEGY } from './constants'
+import { LOCATION_SORTING_RULE, ORDER_TYPES, PICKING_STRATEGY } from '../constants'
 
 class InventoryAssignPopup extends localize(i18next)(LitElement) {
   static get properties() {

@@ -6,8 +6,7 @@ import { client, CustomAlert } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
-import { ORDER_TYPES } from '../order/constants'
-import { PICKING_STRATEGY } from './constants'
+import { ORDER_TYPES, PICKING_STRATEGY } from '../constants'
 
 class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
   static get properties() {

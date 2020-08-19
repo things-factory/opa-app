@@ -1,3 +1,4 @@
+import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -5,8 +6,7 @@ import { client, navigate, PageView, ScrollbarStyles } from '@things-factory/she
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { ORDER_STATUS } from '../constants/order'
-import { getCodeByName } from '@things-factory/code-base'
+import { ORDER_STATUS } from '../../constants'
 
 class ArrivalNoticeList extends localize(i18next)(PageView) {
   static get styles() {
