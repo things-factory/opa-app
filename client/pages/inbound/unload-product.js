@@ -883,7 +883,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
             // this.reusablePalletIdData = [this._reusablePalletId]
             this.reusablePalletIdData = response.data.pallet
             this._isReusablePallet = true
-            this._openPopupUnloading(this.palletInput.value)
+            this._openPopupUnloading(this.palletInput.value, this.orderProductData, this.palletProductData)
           } else {
             this._unload(e)
           }

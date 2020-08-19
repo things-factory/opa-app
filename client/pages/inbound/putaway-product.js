@@ -377,6 +377,12 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.qty'),
           record: { align: 'center' },
           width: 80
+        },
+        {
+          type: 'string',
+          name: 'reusablePalletName',
+          header: i18next.t('field.reusable_pallet'),
+          width: 140
         }
       ]
     }
@@ -462,6 +468,10 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
                 name
                 description
               }
+              reusablePallet {
+                id
+                name
+              }
             }
           }
         }
@@ -472,12 +482,17 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       this.arrivalNoticeNo = arrivalNoticeNo
       this._fillUpForm(this.infoForm, response.data.putawayWorksheet.worksheetInfo)
 
+      let reusablePalletName = ''
       this.data = {
         records: response.data.putawayWorksheet.worksheetDetailInfos
           .map(record => {
+            if (record.reusablePallet) {
+              reusablePalletName = record.reusablePallet.name
+            }
             return {
               ...record,
-              completed: record.status === WORKSHEET_STATUS.DONE.value
+              completed: record.status === WORKSHEET_STATUS.DONE.value,
+              reusablePalletName: reusablePalletName
             }
           })
           .sort((a, b) => {
@@ -614,9 +629,11 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     }
 
     // 3. equality of pallet id
-    if (this._selectedOrderProduct.palletId !== this.palletInput.value) {
-      setTimeout(() => this.palletInput.select(), 100)
-      throw new Error(i18next.t('text.wrong_pallet_id'))
+    if (this._selectedOrderProduct.reusablePallet.name !== this.palletInput.value) {
+      if (this._selectedOrderProduct.palletId !== this.palletInput.value) {
+        setTimeout(() => this.palletInput.select(), 100)
+        throw new Error(i18next.t('text.wrong_pallet_id'))
+      }
     }
 
     // 4. location code existing
