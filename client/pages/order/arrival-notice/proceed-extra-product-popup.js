@@ -4,7 +4,7 @@ import { client, CustomAlert, ScrollbarStyles } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
-import { ORDER_PRODUCT_STATUS } from '../constants/order'
+import { ORDER_PRODUCT_STATUS } from '../../constants'
 
 export class ProceedExtraProductPopup extends localize(i18next)(LitElement) {
   static get styles() {

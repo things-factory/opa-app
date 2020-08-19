@@ -5,7 +5,7 @@ import { client, ScrollbarStyles } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
-import { LOCATION_TYPE } from '../order/constants/location'
+import { LOCATION_TYPE } from '../constants'
 
 export class LocationSelector extends localize(i18next)(LitElement) {
   static get styles() {

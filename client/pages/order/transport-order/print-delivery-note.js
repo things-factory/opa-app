@@ -1,12 +1,12 @@
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
 import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
-import { getPathInfo, gqlBuilder } from '@things-factory/utils'
 import { ScrollbarStyles } from '@things-factory/styles'
+import { getPathInfo, gqlBuilder } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/popup-note'
-import { ORDER_STATUS } from '../constants/order'
+import { ORDER_STATUS } from '../../constants'
 import './delivery-note-popup'
 
 class PrintDeliveryOrder extends localize(i18next)(PageView) {
@@ -58,9 +58,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
   }
 
   render() {
-    return html`
-      <iframe id="container"></iframe>
-    `
+    return html` <iframe id="container"></iframe> `
   }
 
   async pageUpdated(changes) {

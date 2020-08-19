@@ -6,9 +6,9 @@ import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { WORKSHEET_STATUS } from './constants/worksheet'
+import { WORKSHEET_STATUS } from '../constants'
 
-class WorksheetPutaway extends localize(i18next)(PageView) {
+class WorksheetPutaway extends localize(i18next)(PageView) {Ø
   static get properties() {
     return {
       _worksheetNo: String,

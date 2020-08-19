@@ -4,11 +4,11 @@ import { getRenderer } from '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
-import { css, html, LitElement } from 'lit-element'
 import gql from 'graphql-tag'
+import { css, html, LitElement } from 'lit-element'
 import '../components/popup-note'
 import '../components/vas-templates'
-import { VAS_BATCH_AND_PRODUCT_TYPE, VAS_BATCH_NO_TYPE, VAS_ETC_TYPE, VAS_PRODUCT_TYPE } from '../order/constants'
+import { VAS_BATCH_AND_PRODUCT_TYPE, VAS_BATCH_NO_TYPE, VAS_ETC_TYPE, VAS_PRODUCT_TYPE } from '../constants'
 import './target-inventory-assignment-popup'
 
 class RelatedVasList extends localize(i18next)(LitElement) {

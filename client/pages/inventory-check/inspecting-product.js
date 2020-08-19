@@ -8,8 +8,8 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { fetchLocationSortingRule } from '../../fetch-location-sorting-rule'
-import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
-import { LOCATION_SORTING_RULE } from '../contants/location-sorting-rule'
+import { LOCATION_SORTING_RULE, WORKSHEET_STATUS } from '../constants'
+
 
 class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {

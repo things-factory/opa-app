@@ -11,14 +11,14 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../components/popup-note'
 import '../components/vas-templates'
-import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
 import {
   ORDER_TYPES,
   VAS_BATCH_AND_PRODUCT_TYPE,
   VAS_BATCH_NO_TYPE,
   VAS_ETC_TYPE,
-  VAS_PRODUCT_TYPE
-} from '../order/constants'
+  VAS_PRODUCT_TYPE,
+  WORKSHEET_STATUS
+} from '../constants'
 import './target-inventory-assignment-popup'
 
 class WorksheetVas extends localize(i18next)(PageView) {

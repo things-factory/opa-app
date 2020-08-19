@@ -1,6 +1,6 @@
 import { i18next } from '@things-factory/i18n-base'
 import { html } from 'lit-element'
-import { VAS_BATCH_NO_TYPE, VAS_PRODUCT_TYPE } from '../../constants'
+import { VAS_BATCH_NO_TYPE, VAS_PRODUCT_TYPE } from '../../../constants'
 import { AbstractVasCreateForm } from './abastract-vas-create-form'
 
 export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
