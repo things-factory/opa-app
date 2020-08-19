@@ -502,9 +502,16 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
 
       this.palletProductData = {
         records: this.palletProductData.records.map(palletProduct => {
-          return {
-            ...palletProduct,
-            reusablePalletName: palletProduct.reusablePallet.name
+          if (palletProduct.reusablePallet) {
+            return {
+              ...palletProduct,
+              reusablePalletName: palletProduct.reusablePallet.name
+            }
+          } else {
+            return {
+              ...palletProduct,
+              reusablePalletName: ''
+            }
           }
         })
       }
@@ -877,6 +884,8 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
             this.reusablePalletIdData = response.data.pallet
             this._isReusablePallet = true
             this._openPopupUnloading(this.palletInput.value)
+          } else {
+            this._unload(e)
           }
         }
       } catch (e) {
