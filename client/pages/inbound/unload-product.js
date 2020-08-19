@@ -909,7 +909,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      return Boolean(response.data.havingVas.id)
+      return Boolean(response.data.havingVas?.id)
     }
   }
 
