@@ -103,9 +103,7 @@ class SystemUserBizplaces extends connect(store)(localize(i18next)(PageView)) {
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
               openPopup(
-                html`
-                  <system-user-bizplaces-detail .email="${record.email}"></system-user-bizplaces-detail>
-                `,
+                html` <system-user-bizplaces-detail .email="${record.email}"></system-user-bizplaces-detail> `,
                 {
                   backdrop: true,
                   size: 'large',

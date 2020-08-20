@@ -3,13 +3,14 @@ import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/f
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, CustomAlert, PageView, store, UPDATE_CONTEXT, navigate } from '@things-factory/shell'
+import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
-import { ARRIVAL_NOTICE } from '../order/constants'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import '../components/popup-note'
+import '../components/popup-unloading'
+import { ARRIVAL_NOTICE } from '../constants'
 
 class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -23,7 +24,10 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       palletProductData: Object,
       _selectedOrderProduct: Object,
       _selectedInventory: Object,
-      _unloadedInventories: Array
+      _unloadedInventories: Array,
+      _isReusablePallet: Boolean,
+      _reusablePalletId: Array,
+      _reusablePalletIdData: Object
     }
   }
 
@@ -36,7 +40,6 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           display: flex;
           flex-direction: column;
         }
-
         .grist {
           background-color: var(--main-section-background-color);
           display: flex;
@@ -55,11 +58,9 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           flex: 1;
           flex-direction: column;
         }
-
         data-grist {
           flex: 1;
         }
-
         h2 {
           padding: var(--subtitle-padding);
           font: var(--subtitle-font);
@@ -71,18 +72,15 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           border: var(--grist-title-border);
           color: var(--secondary-color);
         }
-
         .grist h2 mwc-icon {
           vertical-align: middle;
           margin: var(--grist-title-icon-margin);
           font-size: var(--grist-title-icon-size);
           color: var(--grist-title-icon-color);
         }
-
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
-
         @media (max-width: 460px) {
           :host {
             display: block;
@@ -219,7 +217,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
                 .value=${this._palletId}
                 without-enter
                 custom-input
-                @keypress="${this._unload.bind(this)}"
+                @keypress="${this._checkReusablePallet.bind(this)}"
               ></barcode-scanable-input>
 
               <label>${i18next.t('label.actual_qty')}</label>
@@ -233,9 +231,11 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
 
   constructor() {
     super()
+    this._isReusablePallet = false
     this._arrivalNoticeNo = ''
     this._productName = ''
     this.orderProductData = { records: [] }
+    this.reusablePalletIdData = { records: [] }
   }
 
   updated(changedProps) {
@@ -369,10 +369,18 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
         appendable: false,
         handlers: {
           click: (columns, data, column, record, rowIndex) => {
-            if (record && record.palletId && this._selectedOrderProduct) {
-              this._selectedInventory = record
-              this.palletInput.value = record.palletId
-              this.actualQtyInput.value = record.qty
+            if (record.reusablePallet) {
+              this._openPopupUnloading(record.reusablePallet.name, this.orderProductData, {
+                records: this.palletProductData.records.filter(
+                  item => record.reusablePallet.id == item.reusablePallet.id
+                )
+              })
+            } else {
+              if (record && record.palletId && this._selectedOrderProduct) {
+                this._selectedInventory = record
+                this.palletInput.value = record.palletId
+                this.actualQtyInput.value = record.qty
+              }
             }
           }
         }
@@ -395,6 +403,12 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.actual_pack_qty'),
           record: { align: 'center' },
           width: 80
+        },
+        {
+          type: 'string',
+          name: 'reusablePalletName',
+          header: i18next.t('field.reusable_pallet'),
+          width: 240
         }
       ]
     }
@@ -472,6 +486,10 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
             batchId
             palletId
             qty
+            reusablePallet {
+              id
+              name
+            }
           }
         }
       `
@@ -482,6 +500,22 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       this._selectedInventory = null
       this.palletProductData = {
         records: this._unloadedInventories
+      }
+
+      this.palletProductData = {
+        records: this.palletProductData.records.map(palletProduct => {
+          if (palletProduct.reusablePallet) {
+            return {
+              ...palletProduct,
+              reusablePalletName: palletProduct.reusablePallet.name
+            }
+          } else {
+            return {
+              ...palletProduct,
+              reusablePalletName: ''
+            }
+          }
+        })
       }
 
       this.orderProductData = {
@@ -600,6 +634,32 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       setTimeout(() => this.actualQtyInput.select(), 100)
       throw new Error(i18next.t('text.qty_should_be_positive'))
     }
+  }
+
+  _openPopupUnloading(reusablePallet, unloadingData, unloadedData) {
+    openPopup(
+      html`
+        <popup-unloading
+          .title="${i18next.t('title.unloading_with_reusable_pallet')}"
+          .ganNo="${this._arrivalNoticeNo}"
+          .reusablePallet="${reusablePallet}"
+          .unloadingGristData="${unloadingData}"
+          .unloadedGristData="${unloadedData}"
+          .reusablePalletData="${this.reusablePalletIdData}"
+          @unloading-pallet="${e => {
+            this.orderProductData = e.detail
+          }}"
+          @unloaded-pallet="${e => {
+            this.palletProductData = e.detail
+          }}"
+        ></popup-unloading>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.unloading_with_reusable_pallet')
+      }
+    )
   }
 
   _openIssueNote() {
@@ -825,6 +885,41 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
   //     return Boolean(response.data.havingVas.id)
   //   }
   // }
+
+  async _checkReusablePallet(e) {
+    if (e.keyCode === 13) {
+      try {
+        if (!this.palletInput.value) return
+
+        const response = await client.query({
+          query: gql`
+            query {
+              pallet(${gqlBuilder.buildArgs({
+                name: this.palletInput.value
+              })}) {
+                id
+                name
+              }
+            }
+          `
+        })
+
+        if (!response.errors) {
+          if (response.data.pallet) {
+            // this._reusablePalletId = response.data.pallet
+            // this.reusablePalletIdData = [this._reusablePalletId]
+            this.reusablePalletIdData = response.data.pallet
+            this._isReusablePallet = true
+            this._openPopupUnloading(this.palletInput.value, this.orderProductData, this.palletProductData)
+          } else {
+            this._unload(e)
+          }
+        }
+      } catch (e) {
+        this._showToast({ message: e.message })
+      }
+    }
+  }
 
   _validateComplete() {
     if (!this._arrivalNoticeNo) throw new Error(i18next.t('text.there_is_no_arrival_notice_no'))

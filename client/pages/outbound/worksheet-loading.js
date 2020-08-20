@@ -6,7 +6,7 @@ import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
+import { WORKSHEET_STATUS } from '../constants'
 
 class WorksheetLoading extends localize(i18next)(PageView) {
   static get properties() {
@@ -108,11 +108,7 @@ class WorksheetLoading extends localize(i18next)(PageView) {
             <label>${i18next.t('label.status')}</label>
             <select name="status" disabled>
               ${Object.keys(WORKSHEET_STATUS).map(
-                key => html`
-                  <option value="${WORKSHEET_STATUS[key].value}"
-                    >${i18next.t(`label.${WORKSHEET_STATUS[key].name}`)}</option
-                  >
-                `
+                key => html` <option value="${WORKSHEET_STATUS[key].value}">${WORKSHEET_STATUS[key].name}</option> `
               )}
             </select>
           </fieldset>

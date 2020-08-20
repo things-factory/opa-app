@@ -3,15 +3,13 @@ import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { client, CustomAlert, navigate, PageView } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
-import { ORDER_INVENTORY_STATUS } from '../order/constants'
+import { ORDER_INVENTORY_STATUS, ORDER_STATUS, WORKSHEET_STATUS } from '../../constants'
 import './inventory-assign-popup'
 import './inventory-auto-assign-popup'
-import { ORDER_STATUS } from '../constants'
 
 class WorksheetPicking extends localize(i18next)(PageView) {
   static get properties() {

@@ -1,53 +1,55 @@
+import { i18next } from '@things-factory/i18n-base'
+
 export const WORKSHEET_TYPE = {
   UNLOADING: {
-    name: 'unloading',
+    name: i18next.t('label.unloading'),
     value: 'UNLOADING'
   },
   PUTAWAY: {
-    name: 'putaway',
+    name: i18next.t('label.putaway'),
     value: 'PUTAWAY'
   },
   CYCLE_COUNT: {
-    name: 'cycle_count',
+    name: i18next.t('label.cycle_count'),
     value: 'CYCLE_COUNT'
   },
   STOCK_TAKE: {
-    name: 'stock_take',
+    name: i18next.t('label.stock_take'),
     value: 'STOCK_TAKE'
   },
   VAS: {
-    name: 'vas',
+    name: i18next.t('label.vas'),
     value: 'VAS'
   },
   RETURN: {
-    name: 'return',
+    name: i18next.t('label.return'),
     value: 'RETURN'
   },
   PICKING: {
-    name: 'picking',
+    name: i18next.t('label.picking'),
     value: 'PICKING'
   },
   LOADING: {
-    name: 'loading',
+    name: i18next.t('label.loading'),
     value: 'LOADING'
   }
 }
 
 export const WORKSHEET_STATUS = {
   DEACTIVATED: {
-    name: 'deactivated',
+    name: i18next.t('label.deactivated'),
     value: 'DEACTIVATED'
   },
   EXECUTING: {
-    name: 'executing',
+    name: i18next.t('label.executing'),
     value: 'EXECUTING'
   },
   DONE: {
-    name: 'done',
+    name: i18next.t('label.done'),
     value: 'DONE'
   },
   ADJUSTED: {
-    name: 'adjusted',
+    name: i18next.t('label.adjusted'),
     value: 'ADJUSTED'
   },
   PENDING_APPROVAL: {
@@ -59,11 +61,11 @@ export const WORKSHEET_STATUS = {
     value: 'PENDING_ADJUSTMENT'
   },
   PARTIALLY_UNLOADED: {
-    name: 'partially_unloaded',
+    name: i18next.t('label.partially_unloaded'),
     value: 'PARTIALLY_UNLOADED'
   },
   NOT_TALLY: {
-    name: 'not_tally',
+    name: i18next.t('label.not_tally'),
     value: 'NOT_TALLY'
   }
 }

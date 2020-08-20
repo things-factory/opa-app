@@ -8,23 +8,24 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { fetchLocationSortingRule } from '../../../fetch-location-sorting-rule'
 import '../../components/vas-templates'
-import { LOCATION_SORTING_RULE } from '../../contants/location-sorting-rule'
-import '../../order/vas-order/popup/vas-create-popup'
 import {
   INVENTORY_STATUS,
+  LOCATION_SORTING_RULE,
   ORDER_INVENTORY_STATUS,
   ORDER_TYPES,
   PICKING_STANDARD,
   VAS_BATCH_AND_PRODUCT_TYPE,
   VAS_BATCH_NO_TYPE,
   VAS_PRODUCT_TYPE
-} from '../constants'
+} from '../../constants'
+import '../../order/vas-order/popup/vas-create-popup'
 
 class CreateReleaseOrder extends localize(i18next)(PageView) {
   static get properties() {
     return {
       /* RO Form Fields */
       _ownTransport: Boolean,
+      _crossDocking: Boolean,
       _exportOption: Boolean,
       refNo: String,
       releaseDate: Date,
@@ -47,7 +48,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       vasGristConfig: Object,
       inventoryData: Object,
       vasData: Object,
-      _releaseOrderNo: String
+      _releaseOrderNo: String,
+      _ganNo: String,
+      crossDockingProducts: Array
     }
   }
 
@@ -122,7 +125,14 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
           <input name="refNo" .value="${this.refNo}" />
 
           <label>${i18next.t('label.release_date')}</label>
-          <input name="releaseDate" type="date" min="${this._getStdDate()}" .value="${this.releaseDate}" required />
+          <input
+            name="releaseDate"
+            type="date"
+            min="${this._getStdDate()}"
+            .value="${this.releaseDate}"
+            required
+            ?disabled="${this._crossDocking}"
+          />
 
           ${this._ownTransport
             ? html`
@@ -161,6 +171,22 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             }}"
           />
           <label for="exportOption">${i18next.t('label.export')}</label>
+
+          ${this._crossDocking
+            ? html`
+                <input
+                  id="crossDocking"
+                  type="checkbox"
+                  name="crossDocking"
+                  ?checked="${this._crossDocking}"
+                  disabled
+                />
+                <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+
+                <label for="ganNo">${i18next.t('label.arrival_notice')}</label>
+                <input readonly name="ganNo" value="${this._ganNo}" />
+              `
+            : ''}
         </fieldset>
       </form>
 
@@ -209,20 +235,29 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             name="picking-std"
             type="radio"
             value="${PICKING_STANDARD.SELECT_BY_PRODUCT.value}"
-            @change="${e => (this._pickingStd = e.currentTarget.value)}"
+            @change="${e => {
+              this._pickingStd = e.currentTarget.value
+            }}"
             .checked="${this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value}"
+            checked
           />
           <label for="pick-by-prod">${i18next.t(PICKING_STANDARD.SELECT_BY_PRODUCT.name)}</label>
 
-          <input
-            id="pick-by-pallet"
-            name="picking-std"
-            type="radio"
-            value="${PICKING_STANDARD.SELECT_BY_PALLET.value}"
-            @change="${e => (this._pickingStd = e.currentTarget.value)}"
-            .checked="${this._pickingStd === PICKING_STANDARD.SELECT_BY_PALLET.value}"
-          />
-          <label for="pick-by-pallet">${i18next.t(PICKING_STANDARD.SELECT_BY_PALLET.name)}</label>
+          ${this._crossDocking
+            ? ''
+            : html`
+                <input
+                  id="pick-by-pallet"
+                  name="picking-std"
+                  type="radio"
+                  value="${PICKING_STANDARD.SELECT_BY_PALLET.value}"
+                  @change="${e => {
+                    this._pickingStd = e.currentTarget.value
+                  }}"
+                  .checked="${this._pickingStd === PICKING_STANDARD.SELECT_BY_PALLET.value && !this._crossDocking}"
+                />
+                <label for="pick-by-pallet">${i18next.t(PICKING_STANDARD.SELECT_BY_PALLET.name)}</label>
+              `}
         </fieldset>
       </form>
 
@@ -300,10 +335,29 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
   async updated(changeProps) {
     if (changeProps.has('_pickingStd')) {
-      await this.switchPickingType()
+      this.switchPickingType()
+
+      if (this.crossDockingProducts?.length > 0) {
+        this.inventoryData = {
+          ...this.inventoryData,
+          records: this.crossDockingProducts
+        }
+      }
     }
 
-    if (changeProps.has('_files') && !this._files?.length) {
+    if (changeProps.has('_ganNo')) {
+      if (this._ganNo) {
+        this.fetchCrossDockingProducts()
+      } else {
+        this.crossDockingProducts = []
+        this.inventoryData = {
+          ...this.inventoryData,
+          records: []
+        }
+      }
+    }
+
+    if (changeProps.has('_files') && this._files?.length) {
       this._document.reset()
     }
 
@@ -312,8 +366,24 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     }
   }
 
+  pageUpdated(changes) {
+    if (changes.active) {
+      const matches = location.pathname.match(/(?<=create_release_order\/)(.*)/g)
+      if (matches?.length) {
+        this._ganNo = matches[0]
+      } else {
+        this._ganNo = null
+      }
+      this._crossDocking = Boolean(this._ganNo)
+      if (this._crossDocking) {
+        this._pickingStd = PICKING_STANDARD.SELECT_BY_PRODUCT.value
+      } else {
+        this.crossDockingProducts = []
+      }
+    }
+  }
+
   async pageInitialized() {
-    await this.switchPickingType()
     this.vasGristConfig = {
       list: { fields: ['ready', 'targetType', 'targetDisplay', 'packingType'] },
       pagination: { infinite: true },
@@ -420,7 +490,14 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
       this.inventoryGristConfig = {
         pagination: { infinite: true },
-        rows: { selectable: { multiple: true } },
+        rows: {
+          selectable: { multiple: true },
+          classifier: (record, rowIndex) => {
+            return {
+              emphasized: record.isCrossDocking
+            }
+          }
+        },
         list: { fields: ['inventory', 'product', 'location', 'releaseQty'] },
         columns: [
           { type: 'gutter', gutterName: 'sequence' },
@@ -430,10 +507,15 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             icon: 'close',
             handlers: {
               click: (columns, data, column, record, rowIndex) => {
-                const newData = data.records.filter((_, idx) => idx !== rowIndex)
-                this.inventoryData = { ...this.inventoryData, records: newData }
-                this.inventoryGrist.dirtyData.records = newData
-                this._updateInventoryList()
+                try {
+                  if (record.isCrossDocking) throw new Error(i18next.t('text.cannot_delete_cross_docking_products'))
+                  const newData = data.records.filter((_, idx) => idx !== rowIndex)
+                  this.inventoryData = { ...this.inventoryData, records: newData }
+                  this.inventoryGrist.dirtyData.records = newData
+                  this._updateInventoryList()
+                } catch (e) {
+                  this._showToast(e)
+                }
               }
             }
           },
@@ -493,6 +575,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             type: 'integer',
             name: 'releaseQty',
             header: i18next.t('field.release_qty'),
+
             record: { editable: true, align: 'center', options: { min: 0 } },
             width: 140
           },
@@ -516,7 +599,14 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       const locationSortingRules = await fetchLocationSortingRule(LOCATION_SORTING_RULE.CREATE_RELEASE_ORDER.value)
       this.inventoryGristConfig = {
         pagination: { infinite: true },
-        rows: { selectable: { multiple: true } },
+        rows: {
+          selectable: { multiple: true },
+          classifier: (record, rowIndex) => {
+            return {
+              emphasized: record.isCrossDocking
+            }
+          }
+        },
         list: { fields: ['inventory', 'product', 'location', 'releaseQty'] },
         columns: [
           { type: 'gutter', gutterName: 'sequence' },
@@ -644,6 +734,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     let releaseQty = 0
 
     if (columnName == 'releaseWeight' || columnName == 'releaseQty') {
+      if (e.detail.record.isCrossDocking) return
+
       let packageWeight = e.detail.record.remainWeight / e.detail.record.remainQty
       if (
         e.detail.record.remainWeight &&
@@ -695,14 +787,27 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
     try {
       if (changedColumn === 'releaseQty') {
+        if (changeRecord.isCrossDocking) {
+          throw new Error(i18next.t('text.cannot_change_x', { state: { x: i18next.t('label.cross_docking') } }))
+        }
+
         this._validateReleaseQty(changeRecord.releaseQty, changeRecord.remainQty)
       } else if (changedColumn === 'releaseWeight') {
+        if (changeRecord.isCrossDocking) {
+          throw new Error(i18next.t('text.cannot_change_x', { state: { x: i18next.t('label.cross_docking') } }))
+        }
+
         this._validateReleaseWeight(changeRecord.releaseWeight, changeRecord.remainWeight)
       }
       this._updateInventoryList()
     } catch (e) {
+      const beforeValue = event.detail.before && event.detail.before[event.detail.column.name]
+      if (beforeValue) {
+        event.detail.after[event.detail.column.name] = beforeValue
+      } else {
+        delete event.detail.after[event.detail.column.name]
+      }
       this._showToast(e)
-      delete event.detail.after[changedColumn]
     }
   }
 
@@ -730,7 +835,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       this._validateInventories()
       this._validateVas()
 
-      const result = await CustomAlert({
+      let result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.create_release_order'),
         confirmButton: { text: i18next.t('button.confirm') },
@@ -738,6 +843,17 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       })
 
       if (!result.value) return
+
+      if (this._crossDocking) {
+        result = await CustomAlert({
+          title: i18next.t('label.cross_docking'),
+          text: i18next.t('text.create_arrival_notice'),
+          confirmButton: { text: i18next.t('button.confirm') },
+          cancelButton: { text: i18next.t('button.cancel') }
+        })
+
+        if (!result.value) return
+      }
 
       await this._executeRelatedTrxs()
       let releaseGood = this._serializeForm(this.releaseOrderForm)
@@ -800,16 +916,12 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
   _validateForm() {
     if (!this.releaseOrderForm.checkValidity()) {
-      throw new Error('text.release_order_form_invalid')
+      throw new Error(i18next.t('text.release_order_form_invalid'))
     }
-
-    // if (this._ownTransport && !this._document?._files?.length) {
-    //   throw new Error('text.release_order_form_invalid')
-    // }
 
     //    - condition: export is ticked
     if (this.shippingOrderForm && !this.shippingOrderForm.checkValidity()) {
-      throw new Error('text.shipping_order_form_invalid')
+      throw new Error(i18next.t('text.shipping_order_form_invalid'))
     }
   }
 
@@ -840,13 +952,15 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
   async _updateInventoryList() {
     if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
-      const _selectedInv = (this.inventoryGrist.dirtyData.records || []).map(record => {
-        return {
-          batchId: record.inventory.batchId,
-          packingType: record.inventory.packingType,
-          productId: record.inventory.productId
-        }
-      })
+      const _selectedInv = (this.inventoryGrist.dirtyData.records || [])
+        .filter(record => !record.isCrossDocking)
+        .map(record => {
+          return {
+            batchId: record.inventory.batchId,
+            packingType: record.inventory.packingType,
+            productId: record.inventory.productId
+          }
+        })
 
       this.inventoryGristConfig = {
         ...this.inventoryGristConfig,
@@ -1114,9 +1228,79 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     const inventories = this.inventoryGrist?.dirtyData?.records
     if (!inventories?.length) throw new Error(i18next.t('text.there_is_no_inventory'))
 
-    if (inventories.some(record => !record?.inventory?.id)) throw new Error(i18next.t('text.invalid_inventory'))
+    if (!this._crossDocking && inventories.some(record => !record?.inventory?.id))
+      throw new Error(i18next.t('text.invalid_inventory'))
 
     if (inventories.some(record => !record.releaseQty)) throw new Error(i18next.t('text.invalid_release_qty'))
+  }
+
+  async fetchCrossDockingProducts() {
+    if (!this._ganNo) return
+    try {
+      const response = await client.query({
+        query: gql`
+          query {
+            arrivalNotice(${gqlBuilder.buildArgs({
+              name: this._ganNo
+            })}) {
+              etaDate
+              crossDocking
+              orderProducts {
+                batchId
+                packingType
+                packQty
+                weight
+                releaseWeight
+                releaseQty
+                product {
+                  id
+                  name
+                  description
+                }
+              }
+            }
+          }
+        `
+      })
+
+      if (!response.errors) {
+        this.releaseDate = response.data.arrivalNotice?.etaDate
+        this._crossDocking = response.data.arrivalNotice?.crossDocking
+        this._pickingStd = this._crossDocking ? PICKING_STANDARD.SELECT_BY_PRODUCT.value : this._pickingStd
+        if (this._crossDocking) {
+          this.crossDockingProducts = response.data.arrivalNotice.orderProducts
+            .filter(op => op.releaseQty && op.releaseWeight)
+            .map(op => {
+              op.isCrossDocking = true
+              op.inventory = {
+                batchId: op.batchId,
+                productId: op.product.id,
+                product: op.product,
+                productName: op.product.name,
+                palletId: i18next.t('label.cross_docking'),
+                packingType: op.packingType
+              }
+              op.remainQty = op.packQty
+              op.remainWeight = op.packQty * op.weight
+              op.location = {
+                name: i18next.t('label.cross_docking')
+              }
+              return op
+            })
+
+          this.inventoryData = {
+            ...this.inventoryData,
+            records: this.crossDockingProducts
+          }
+        } else {
+          throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('field.gan') } }))
+        }
+      } else {
+        this._crossDocking = false
+      }
+    } catch (e) {
+      this._showToast(e)
+    }
   }
 
   _showToast({ type, message }) {

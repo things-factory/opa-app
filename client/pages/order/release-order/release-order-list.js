@@ -1,10 +1,11 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { ORDER_STATUS } from '../constants/order'
+import { ORDER_STATUS } from '../../constants'
 
 class ReleaseOrderList extends localize(i18next)(PageView) {
   static get styles() {
@@ -178,6 +179,20 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
         },
         {
           type: 'boolean',
+          name: 'crossDocking',
+          header: i18next.t('field.cross_docking'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'object',
+          name: 'arrivalNotice',
+          header: i18next.t('field.arrival_notice'),
+          record: { align: 'center' },
+          width: 180
+        },
+        {
+          type: 'boolean',
           name: 'exportOption',
           header: i18next.t('field.shipping_option'),
           record: { align: 'center' },
@@ -241,6 +256,10 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
                 name
               }
               ownTransport
+              crossDocking
+              arrivalNotice {
+                name
+              }
               refNo
               exportOption
               releaseDate

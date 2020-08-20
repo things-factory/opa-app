@@ -2,25 +2,27 @@ import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { getRenderer } from '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
+import { client, PageView } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/attachment-viewer'
 import '../../components/popup-note'
 import '../../components/vas-templates'
 import {
+  ORDER_STATUS,
   VAS_BATCH_AND_PRODUCT_TYPE,
   VAS_BATCH_NO_TYPE,
   VAS_ETC_TYPE,
-  ORDER_STATUS,
   VAS_PRODUCT_TYPE
-} from '../constants'
+} from '../../constants'
 
 class RejectedArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _ganNo: String,
       _ownTransport: Boolean,
+      _crossDocking: Boolean,
       _hasContainer: Boolean,
       _looseItem: Boolean,
       _path: String,
@@ -164,6 +166,19 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
             disabled
           />
           <label>${i18next.t('label.own_transport')}</label>
+
+          ${this._crossDocking
+            ? html`
+                <input
+                  id="crossDocking"
+                  type="checkbox"
+                  name="crossDocking"
+                  ?checked="${this._crossDocking}"
+                  disabled
+                />
+                <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+              `
+            : ''}
         </fieldset>
       </form>
 
@@ -241,71 +256,6 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
   }
 
   pageInitialized() {
-    this.productGristConfig = {
-      list: { fields: ['batchId', 'product', 'packingType', 'totalWeight'] },
-      pagination: { infinite: true },
-      rows: { selectable: { multiple: true }, appendable: false },
-      columns: [
-        { type: 'gutter', gutterName: 'sequence' },
-        {
-          type: 'string',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
-          record: { align: 'center' },
-          width: 150
-        },
-        {
-          type: 'object',
-          name: 'product',
-          header: i18next.t('field.product'),
-          record: { align: 'center', options: { queryName: 'products' } },
-          width: 350
-        },
-        {
-          type: 'code',
-          name: 'packingType',
-          header: i18next.t('field.packing_type'),
-          record: { align: 'center', codeName: 'PACKING_TYPES' },
-          width: 150
-        },
-        {
-          type: 'float',
-          name: 'weight',
-          header: i18next.t('field.weight'),
-          record: { align: 'center' },
-          width: 80
-        },
-        {
-          type: 'code',
-          name: 'unit',
-          header: i18next.t('field.unit'),
-          record: { align: 'center', codeName: 'WEIGHT_UNITS' },
-          width: 80
-        },
-        {
-          type: 'integer',
-          name: 'packQty',
-          header: i18next.t('field.pack_qty'),
-          record: { align: 'center' },
-          width: 80
-        },
-        {
-          type: 'integer',
-          name: 'totalWeight',
-          header: i18next.t('field.total_weight'),
-          record: { align: 'center' },
-          width: 120
-        },
-        {
-          type: 'integer',
-          name: 'palletQty',
-          header: i18next.t('field.pallet_qty'),
-          record: { align: 'center' },
-          width: 80
-        }
-      ]
-    }
-
     this.vasGristConfig = {
       list: { fields: ['targetType', 'targetDisplay', 'packingType'] },
       pagination: { infinite: true },
@@ -424,6 +374,98 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
     }
   }
 
+  setProductGristConfig() {
+    const crossDockingColumns = [
+      {
+        type: 'integer',
+        name: 'releaseQty',
+        header: i18next.t('field.release_qty'),
+        record: { editable: true, align: 'center' },
+        width: 160
+      },
+      {
+        type: 'float',
+        name: 'releaseWeight',
+        header: i18next.t('field.release_weight'),
+        record: { editable: true, align: 'center' },
+        width: 160
+      }
+    ]
+
+    let productGristColumns = [
+      { type: 'gutter', gutterName: 'sequence' },
+      {
+        type: 'string',
+        name: 'batchId',
+        header: i18next.t('field.batch_no'),
+        record: { align: 'center' },
+        width: 150
+      },
+      {
+        type: 'object',
+        name: 'product',
+        header: i18next.t('field.product'),
+        record: { align: 'center', options: { queryName: 'products' } },
+        width: 350
+      },
+      {
+        type: 'code',
+        name: 'packingType',
+        header: i18next.t('field.packing_type'),
+        record: { align: 'center', codeName: 'PACKING_TYPES' },
+        width: 150
+      },
+      {
+        type: 'float',
+        name: 'weight',
+        header: i18next.t('field.weight'),
+        record: { align: 'center' },
+        width: 80
+      },
+      {
+        type: 'code',
+        name: 'unit',
+        header: i18next.t('field.unit'),
+        record: { align: 'center', codeName: 'WEIGHT_UNITS' },
+        width: 80
+      },
+      {
+        type: 'integer',
+        name: 'packQty',
+        header: i18next.t('field.pack_qty'),
+        record: { align: 'center' },
+        width: 80
+      },
+      {
+        type: 'integer',
+        name: 'totalWeight',
+        header: i18next.t('field.total_weight'),
+        record: { align: 'center' },
+        width: 120
+      },
+      {
+        type: 'integer',
+        name: 'palletQty',
+        header: i18next.t('field.pallet_qty'),
+        record: { align: 'center' },
+        width: 80
+      }
+    ]
+
+    if (this._crossDocking) {
+      const packQtyColumnIdx =
+        productGristColumns.findIndex(column => column.name === 'packQty') || productGristColumns.length - 1
+      productGristColumns.splice(packQtyColumnIdx + 1, 0, ...crossDockingColumns)
+    }
+
+    this.productGristConfig = {
+      list: { fields: ['batchId', 'product', 'packingType', 'totalWeight'] },
+      pagination: { infinite: true },
+      rows: { selectable: { multiple: true }, appendable: false },
+      columns: productGristColumns
+    }
+  }
+
   async _fetchGAN() {
     if (!this._ganNo) return
     this._status = ''
@@ -441,6 +483,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
             remark
             containerNo
             ownTransport
+            crossDocking
             etaDate
             deliveryOrderNo
             status
@@ -472,6 +515,8 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
               packQty
               totalWeight
               palletQty
+              releaseQty
+              releaseWeight
             }
             orderVass {
               vas {
@@ -509,6 +554,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
       this._hasContainer = arrivalNotice.containerNo ? true : false
       this._looseItem = arrivalNotice.looseItem
       this._ownTransport = arrivalNotice.ownTransport
+      this._crossDocking = arrivalNotice.crossDocking
       this._rejectReason = arrivalNotice.remark
       this._fillupANForm({
         ...arrivalNotice,
@@ -519,6 +565,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
         this._attachments = arrivalNotice && arrivalNotice.attachment
       }
 
+      this.setProductGristConfig()
       this.productData = { records: orderProducts }
       this.vasData = {
         records: orderVass

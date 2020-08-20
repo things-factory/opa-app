@@ -7,8 +7,7 @@ import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
-import { ORDER_INVENTORY_STATUS } from '../order/constants'
+import { ORDER_INVENTORY_STATUS, WORKSHEET_STATUS, WORKSHEET_TYPE } from '../constants'
 import './inventory-assign-popup'
 import './inventory-auto-assign-popup'
 
@@ -19,10 +18,12 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       _worksheetNo: String,
       _worksheetStatus: String,
       _roNo: String,
+      ganNo: String,
       productGristConfig: Object,
       wsdGristConfig: Object,
       productGristData: Object,
-      worksheetDetailData: Object
+      worksheetDetailData: Object,
+      crossDocking: Boolean
     }
   }
 
@@ -121,22 +122,21 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             <label>${i18next.t('label.ref_no')}</label>
             <input name="refNo" readonly />
 
-            <input id="ownCollection" type="checkbox" name="ownCollection" disabled />
-            <label for="ownCollection">${i18next.t('label.own_collection')}</label>
-
             <label>${i18next.t('label.release_date')}</label>
             <input name="releaseDate" type="date" readonly />
 
             <label>${i18next.t('label.status')}</label>
             <select name="status" disabled>
               ${Object.keys(WORKSHEET_STATUS).map(
-                key => html`
-                  <option value="${WORKSHEET_STATUS[key].value}"
-                    >${i18next.t(`label.${WORKSHEET_STATUS[key].name}`)}</option
-                  >
-                `
+                key => html`<option value="${WORKSHEET_STATUS[key].value}">${WORKSHEET_STATUS[key].name}</option>`
               )}
             </select>
+
+            <input id="ownCollection" type="checkbox" name="ownCollection" disabled />
+            <label for="ownCollection">${i18next.t('label.own_collection')}</label>
+
+            <input name="crossDocking" type="checkbox" .checked="${this.crossDocking}" disabled />
+            <label>${i18next.t('field.cross_docking')}</label>
           </fieldset>
         </form>
 
@@ -170,6 +170,14 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         </div>
       </div>
     `
+  }
+
+  async updated(changeProps) {
+    if (changeProps.has('crossDocking') || changeProps.has('ganNo')) {
+      if (this.crossDocking && this.ganNo) {
+        this.unloadingWorksheetNo = await this.fetchUnloadingWorksheet()
+      }
+    }
   }
 
   async pageUpdated(changes) {
@@ -374,7 +382,11 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               description
               refNo
               ownTransport
+              crossDocking
               releaseDate
+              arrivalNotice {
+                name
+              }
             }
             orderInventories {
               status
@@ -432,7 +444,9 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       const worksheet = response.data.worksheet
       this.worksheetDetails = worksheet.worksheetDetails
       this._worksheetStatus = worksheet.status
-      this._roNo = (worksheet.releaseGood && worksheet.releaseGood.name) || ''
+      this._roNo = worksheet?.releaseGood?.name || ''
+      this.crossDocking = worksheet?.releaseGood?.crossDocking
+      this.ganNo = worksheet?.releaseGood?.arrivalNotice?.name
 
       this._fillupForm({
         ...worksheet,
@@ -490,19 +504,32 @@ class WorksheetPicking extends localize(i18next)(PageView) {
 
       if (completedOrderInvs && completedOrderInvs.length && this.isPalletPickingOrder) {
         this.worksheetDetailData = {
-          records: completedOrderInvs.map(item => {
-            return {
-              ...item,
-              ...item.inventory,
-              ...item.inventory.location,
-              description: item.description,
-              availableQty: item.inventory.qty - item.inventory.lockedQty + item.releaseQty
-            }
-          })
+          records: completedOrderInvs.map(item =>
+            Object.assign({ description: item.description }, item, item?.inventory, item?.inventory?.location)
+          )
         }
       }
 
       this._updateContext()
+    }
+  }
+
+  async fetchUnloadingWorksheet() {
+    const response = await client.query({
+      query: gql`
+        query {
+          worksheetByOrderNo(${gqlBuilder.buildArgs({
+            orderType: WORKSHEET_TYPE.UNLOADING.value,
+            orderNo: this.ganNo
+          })}) {
+            name
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      return response.data.worksheetByOrderNo.name
     }
   }
 
@@ -569,7 +596,10 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             ...item.targetInventory.inventory,
             ...item.targetInventory.inventory.location,
             description: item.description,
-            availableQty: item.targetInventory.inventory.qty - item.targetInventory.inventory.lockedQty + item.targetInventory.releaseQty
+            availableQty:
+              item.targetInventory.inventory.qty -
+              item.targetInventory.inventory.lockedQty +
+              item.targetInventory.releaseQty
           }
         }),
         total: response.data.worksheetDetailsByProductGroup.total
@@ -590,8 +620,14 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               status
               description
               targetInventory {
+                batchId
                 releaseQty
-                releaseWeight                
+                releaseWeight
+                product {
+                  name
+                  description
+                }
+                packingType
                 inventory {
                   qty
                   lockedQty
@@ -624,19 +660,21 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       const worksheetDetails = response.data.worksheet.worksheetDetails
 
       this.worksheetDetailData = {
-        records: worksheetDetails.map(worksheetDetail => {
-          return {
-            ...worksheetDetail.targetInventory.inventory,
-            name: worksheetDetail.name,
-            description: worksheetDetail.description,
-            status: worksheetDetail.status,
-            availableQty:
-              worksheetDetail.targetInventory.inventory.qty -
-              worksheetDetail.targetInventory.inventory.lockedQty +
-              worksheetDetail.targetInventory.releaseQty,
-            releaseQty: worksheetDetail.targetInventory.releaseQty,
-            releaseWeight: worksheetDetail.targetInventory.releaseWeight
+        records: worksheetDetails.map(wsd => {
+          let record = {
+            name: wsd.name,
+            description: wsd.description,
+            status: wsd.status,
+            releaseQty: wsd.targetInventory.releaseQty,
+            releaseWeight: wsd.targetInventory.releaseWeight
           }
+
+          if (this.crossDocking) {
+            record = Object.assign(record, wsd.targetInventory)
+          } else {
+            record = Object.assign(record, wsd.targetInventory.inventory)
+          }
+          return record
         })
       }
     }
@@ -645,35 +683,45 @@ class WorksheetPicking extends localize(i18next)(PageView) {
   _updateContext() {
     this._actions = []
 
-    if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value && !this.isPalletPickingOrder) {
-      if (this.productGristData.records.some(record => record.completed)) {
-        if (this._selectedProduct && this._selectedProduct.completed) {
-          this._actions = [
-            ...this._actions,
-            { title: i18next.t('button.undo'), action: this._undoAssignment.bind(this) }
-          ]
+    if (this.crossDocking && this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value) {
+      this._actions.push({
+        title: i18next.t('button.move_to_x', { state: { x: i18next.t('title.worksheet_unloading') } }),
+        action: () => navigate(`worksheet_unloading/${this.unloadingWorksheetNo}`)
+      })
+    } else {
+      if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value && !this.isPalletPickingOrder) {
+        if (this.productGristData.records.some(record => record.completed)) {
+          if (this._selectedProduct && this._selectedProduct.completed) {
+            this._actions.push({
+              title: i18next.t('button.undo'),
+              action: this._undoAssignment.bind(this)
+            })
+          }
         }
-      }
 
-      if (this.productGristData.records.every(record => record.completed)) {
-        this._actions = [
-          ...this._actions,
-          { title: i18next.t('button.activate'), action: this._activateWorksheet.bind(this) }
-        ]
-      } else {
-        this._actions = [
-          ...this._actions,
-          { title: i18next.t('button.auto_assign'), action: this._showAutoAssignPopup.bind(this) }
-        ]
+        if (this.productGristData.records.every(record => record.completed)) {
+          this._actions.push({
+            title: i18next.t('button.activate'),
+            action: this._activateWorksheet.bind(this)
+          })
+        } else {
+          this._actions.push({
+            title: i18next.t('button.auto_assign'),
+            action: this._showAutoAssignPopup.bind(this)
+          })
+        }
+      } else if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value) {
+        this._actions.push({
+          title: i18next.t('button.activate'),
+          action: this._activateWorksheet.bind(this)
+        })
       }
-    } else if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value) {
-      this._actions = [
-        ...this._actions,
-        { title: i18next.t('button.activate'), action: this._activateWorksheet.bind(this) }
-      ]
     }
 
-    this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
+    this._actions.push({
+      title: i18next.t('button.back'),
+      action: () => history.back()
+    })
 
     store.dispatch({
       type: UPDATE_CONTEXT,

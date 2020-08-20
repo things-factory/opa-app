@@ -1,6 +1,6 @@
 import { i18next } from '@things-factory/i18n-base'
 import { html } from 'lit-element'
-import { VAS_BATCH_NO_TYPE } from '../../constants'
+import { VAS_BATCH_NO_TYPE } from '../../../constants'
 import { AbstractVasCreateForm } from './abastract-vas-create-form'
 
 export class VasCreateBatchTypeForm extends AbstractVasCreateForm {
@@ -97,7 +97,8 @@ export class VasCreateBatchTypeForm extends AbstractVasCreateForm {
         .filter(target => target.batchId === this.selectedBatchId && target.packingType === this.selectedPackingType)
         .reduce((packQty, target) => packQty + target.packQty, 0)
 
-      const choosenQty = this.vasList
+      const copiedVasList = this.vasList.map(vas => Object.assign({}, vas))
+      const choosenQty = copiedVasList
         .map(task => {
           if (task.targetType === VAS_BATCH_NO_TYPE) {
             task.target = { batchId: task.target }
@@ -127,7 +128,7 @@ export class VasCreateBatchTypeForm extends AbstractVasCreateForm {
         .reduce((packQty, target) => (packQty += target.packQty), 0)
 
       if (packQty && qty > packQty) {
-        this.qtyInput.value = packQty
+        this.qtyInput.value = this.maximumQty
         throw new Error(i18next.t('text.qty_exceed_limit'))
       }
     } catch (e) {

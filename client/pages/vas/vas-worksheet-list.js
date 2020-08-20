@@ -3,12 +3,11 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, navigate, PageView } from '@things-factory/shell'
-import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import { ScrollbarStyles } from '@things-factory/styles'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { WORKSHEET_TYPE } from '../inbound/constants/worksheet'
-import { ORDER_TYPES } from '../order/constants/order'
+import { ORDER_TYPES, WORKSHEET_TYPE } from '../constants'
 
 class VasWorksheetList extends localize(i18next)(PageView) {
   static get styles() {

@@ -3,11 +3,11 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, navigate, PageView } from '@things-factory/shell'
-import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import { ScrollbarStyles } from '@things-factory/styles'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { WORKSHEET_TYPE } from '../inbound/constants/worksheet'
+import { WORKSHEET_TYPE } from '../constants'
 
 class OutboundWorksheet extends localize(i18next)(PageView) {
   static get styles() {
@@ -160,6 +160,13 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
           width: 180
         },
         {
+          type: 'boolean',
+          name: 'crossDocking',
+          header: i18next.t('field.cross_docking'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
           type: 'object',
           name: 'bizplace',
           header: i18next.t('field.customer'),
@@ -242,6 +249,7 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
                 name
                 description
                 refNo
+                crossDocking
               }
               bizplace {
                 id
@@ -270,7 +278,7 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
         total: response.data.worksheets.total || 0,
         records:
           response.data.worksheets.items.map(item => {
-            return { ...item, releaseRefNo: item.releaseGood.refNo || '' }
+            return { ...item, releaseRefNo: item.releaseGood.refNo || '', crossDocking: item.releaseGood.crossDocking }
           }) || {}
       }
     }

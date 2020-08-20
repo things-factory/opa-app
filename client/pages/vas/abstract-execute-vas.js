@@ -8,14 +8,13 @@ import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import '../components/popup-note'
 import '../components/vas-templates'
-import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
 import {
   VAS_BATCH_AND_PRODUCT_TYPE,
   VAS_BATCH_NO_TYPE,
   VAS_ETC_TYPE,
   VAS_PRODUCT_TYPE,
-  VAS_ORDER
-} from '../order/constants'
+  WORKSHEET_STATUS
+} from '../constants'
 
 export class AbstractExecuteVas extends LitElement {
   static get styles() {
@@ -530,11 +529,11 @@ export class AbstractExecuteVas extends LitElement {
 
   checkExecutionValidity() {
     // 1. validate for vas selection
-    if (!this._selectedVas) throw new Error(i18next.t('text.target_doesnt_selected'))
+    if (!this._selectedVas) throw new Error(i18next.t('text.target_is_not_selected'))
   }
 
   checkUndoValidity() {
-    if (!this._selectedVas) throw new Error(i18next.t('text.target_doesnt_selected'))
+    if (!this._selectedVas) throw new Error(i18next.t('text.target_is_not_selected'))
   }
 
   _showToast({ type, message }) {

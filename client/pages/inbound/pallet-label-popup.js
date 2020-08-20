@@ -6,7 +6,7 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
-import { PALLET_LABEL_SETTING_KEY } from '../../setting-constants'
+import { PALLET_LABEL_SETTING_KEY } from '../constants'
 
 class PalletLabelPopup extends connect(store)(localize(i18next)(LitElement)) {
   static get properties() {

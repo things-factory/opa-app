@@ -2,11 +2,11 @@ import { client } from '@things-factory/shell'
 import { gqlBuilder } from '@things-factory/utils'
 import gql from 'graphql-tag'
 
-export async function fetchLocationSortingRule(LOCATION_SORTING_RULE_KEY) {
+export async function fetchLocationSortingRule(sortingRule) {
   const response = await client.query({
     query: gql`
       query {
-        setting(${gqlBuilder.buildArgs({ name: LOCATION_SORTING_RULE_KEY })}) {
+        setting(${gqlBuilder.buildArgs({ name: sortingRule })}) {
           value
         }
       }
@@ -14,14 +14,15 @@ export async function fetchLocationSortingRule(LOCATION_SORTING_RULE_KEY) {
   })
 
   if (!response.errors) {
-    const sortingRule = JSON.parse(response.data.setting.value)
-    const fields = Object.keys(sortingRule)
-    if (fields.length > 0) {
-      return fields.map(field => {
-        return { name: field, desc: sortingRule[field] === 'DESC' ? true : false }
+    let filters = []
+
+    if (response.data.setting?.value) {
+      const sortingRule = JSON.parse(response.data.setting.value)
+      filters = Object.keys(sortingRule).map(field => {
+        return { name: field, desc: sortingRule[field] === 'DESC' }
       })
-    } else {
-      return []
     }
+
+    return filters
   }
 }

@@ -6,8 +6,8 @@ import { openPopup } from '@things-factory/layout-base'
 import { client, CustomAlert, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import { VAS_BATCH_NO_TYPE, VAS_PRODUCT_TYPE } from '../../constants'
 import '../../order/vas-order/popup/vas-create-popup'
-import { VAS_BATCH_NO_TYPE, VAS_PRODUCT_TYPE } from '../constants'
 
 class DuplicateArrivalNotice extends localize(i18next)(PageView) {
   static get properties() {

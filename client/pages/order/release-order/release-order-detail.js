@@ -6,15 +6,15 @@ import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import '../../components/vas-templates'
 import '../../components/attachment-viewer'
+import '../../components/vas-templates'
 import {
+  ORDER_STATUS,
   VAS_BATCH_AND_PRODUCT_TYPE,
   VAS_BATCH_NO_TYPE,
   VAS_ETC_TYPE,
-  ORDER_STATUS,
   VAS_PRODUCT_TYPE
-} from '../constants'
+} from '../../constants'
 
 class ReleaseOrderDetail extends localize(i18next)(PageView) {
   static get properties() {
@@ -22,6 +22,8 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       _releaseOrderNo: String,
       _template: Object,
       _ownTransport: Boolean,
+      _crossDocking: Boolean,
+      _ganNo: String,
       _exportOption: Boolean,
       customerBizplaceId: String,
       partnerBizplaceId: String,
@@ -127,6 +129,22 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
             disabled
           />
           <label ?hidden="${this._exportOption}">${i18next.t('label.own_transport')}</label>
+
+          ${this._crossDocking
+            ? html`
+                <input
+                  id="crossDocking"
+                  type="checkbox"
+                  name="crossDocking"
+                  ?checked="${this._crossDocking}"
+                  disabled
+                />
+                <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+
+                <label for="ganNo">${i18next.t('label.arrival_notice')}</label>
+                <input readonly name="ganNo" value="${this._ganNo}" />
+              `
+            : ''}
         </fieldset>
       </form>
 
@@ -439,6 +457,10 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
             status
             refNo
             ownTransport
+            crossDocking
+            arrivalNotice {
+              name
+            }
             exportOption
             releaseDate
             collectionOrderNo
@@ -517,6 +539,9 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       } else if (!this._exportOption) {
         this._ownTransport = response.data.releaseGoodDetail.ownTransport
       }
+
+      this._crossDocking = response.data.releaseGoodDetail?.crossDocking
+      this._ganNo = response.data.releaseGoodDetail?.arrivalNotice?.name
 
       this._status = releaseOrder.status
 
@@ -617,7 +642,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
 
   async _deleteReleaseOrder() {
     try {
-      const result = await CustomAlert({
+      let result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.you_wont_be_able_to_revert_this'),
         confirmButton: { text: i18next.t('button.confirm') },
@@ -625,6 +650,17 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       })
 
       if (!result.value) return
+
+      if (this._crossDocking) {
+        result = await CustomAlert({
+          title: i18next.t('label.cross_docking'),
+          text: i18next.t('text.arrival_notice_will_be_deleted'),
+          confirmButton: { text: i18next.t('button.confirm') },
+          cancelButton: { text: i18next.t('button.cancel') }
+        })
+
+        if (!result.value) return
+      }
 
       await this._executeRevertTransactions()
       const response = await client.query({
@@ -695,15 +731,24 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
   }
 
   async _confirmReleaseOrder() {
-    const result = await CustomAlert({
+    let result = await CustomAlert({
       title: i18next.t('title.are_you_sure'),
       text: i18next.t('text.confirm_release_good'),
       confirmButton: { text: i18next.t('button.confirm') },
       cancelButton: { text: i18next.t('button.cancel') }
     })
 
-    if (!result.value) {
-      return
+    if (!result.value) return
+
+    if (this._crossDocking) {
+      result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.arrival_notice_will_be_confirmed'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) return
     }
 
     try {

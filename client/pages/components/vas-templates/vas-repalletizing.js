@@ -6,7 +6,7 @@ import { client, CustomAlert } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { PALLET_TYPES, REUSABLE_PALLET } from './constants'
+import { PALLET_TYPES, REUSABLE_PALLET } from '../../constants'
 import './vas-pallet-add-popup'
 import { VasTemplate } from './vas-template'
 

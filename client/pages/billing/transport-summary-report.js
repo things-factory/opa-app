@@ -1,14 +1,13 @@
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
-import { TRIP_CLAIM } from './constants/claim'
 import '@things-factory/form-ui'
+import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, PageView, store } from '@things-factory/shell'
-import { gqlBuilder, isMobileDevice, flattenObject } from '@things-factory/utils'
+import { flattenObject, gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import jsPDF from 'jspdf'
+import { TRIP_CLAIM } from '../constants'
 
 class TransportSummaryReport extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {

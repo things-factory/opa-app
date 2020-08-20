@@ -8,9 +8,15 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/vas-templates'
-import { VAS_BATCH_AND_PRODUCT_TYPE, VAS_BATCH_NO_TYPE, VAS_ETC_TYPE, VAS_PRODUCT_TYPE } from '../constants'
-import { ORDER_PRODUCT_STATUS, ORDER_STATUS } from '../constants/order'
 import '../../components/attachment-viewer'
+import {
+  ORDER_PRODUCT_STATUS,
+  ORDER_STATUS,
+  VAS_BATCH_AND_PRODUCT_TYPE,
+  VAS_BATCH_NO_TYPE,
+  VAS_ETC_TYPE,
+  VAS_PRODUCT_TYPE
+} from '../../constants'
 import './extra-product-popup'
 import './proceed-edited-batch-popup'
 import './proceed-extra-product-popup'
@@ -25,6 +31,8 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
        */
       _ganNo: String,
       _ownTransport: Boolean,
+      _crossDocking: Boolean,
+      _releaseGood: Object,
       _importCargo: Boolean,
       _hasContainer: Boolean,
       _looseItem: Boolean,
@@ -159,6 +167,19 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             disabled
           />
           <label>${i18next.t('label.own_transport')}</label>
+
+          ${this._crossDocking
+            ? html`
+                <input
+                  id="crossDocking"
+                  type="checkbox"
+                  name="crossDocking"
+                  ?checked="${this._crossDocking}"
+                  disabled
+                />
+                <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+              `
+            : ''}
         </fieldset>
       </form>
 
@@ -229,92 +250,8 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist#vas-grist')
   }
 
-  async pageUpdated(changes) {
-    if (this.active) {
-      this._ganNo = changes.resourceId || this._ganNo || ''
-      this._template = null
-      await this._fetchGAN()
-      this._updateContext()
-    }
-  }
-
   async pageInitialized() {
     this.isUserBelongsDomain = await this._checkUserBelongsDomain()
-
-    this.productGristConfig = {
-      list: { fields: ['batchId', 'product', 'packingType', 'totalWeight'] },
-      pagination: { infinite: true },
-      rows: {
-        appendable: false,
-        classifier: (record, rowIndex) => {
-          return {
-            emphasized:
-              record.status === ORDER_PRODUCT_STATUS.READY_TO_APPROVED.value ||
-              record.status === ORDER_PRODUCT_STATUS.PENDING_APPROVAL.value
-          }
-        }
-      },
-      columns: [
-        { type: 'gutter', gutterName: 'sequence' },
-        {
-          type: 'string',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
-          record: { align: 'center' },
-          width: 150
-        },
-        {
-          type: 'object',
-          name: 'product',
-          header: i18next.t('field.product'),
-          record: { align: 'center', options: { queryName: 'products' } },
-          width: 350
-        },
-        {
-          type: 'string',
-          name: 'packingType',
-          header: i18next.t('field.packing_type'),
-          record: { align: 'center' },
-          width: 150
-        },
-        {
-          type: 'float',
-          name: 'weight',
-          header: i18next.t('field.weight'),
-          record: { align: 'center' },
-          width: 80
-        },
-        {
-          type: 'string',
-          name: 'unit',
-          header: i18next.t('field.unit'),
-          record: { align: 'center' },
-          width: 80
-        },
-        {
-          type: 'integer',
-          name: 'packQty',
-          header: i18next.t('field.pack_qty'),
-          record: { align: 'center' },
-          width: 80
-        },
-        {
-          type: 'integer',
-          name: 'totalWeight',
-          header: i18next.t('field.total_weight'),
-          record: { align: 'center' },
-          width: 120
-        },
-        {
-          type: 'integer',
-          name: 'palletQty',
-          header: i18next.t('field.pallet_qty'),
-          record: { align: 'center' },
-          width: 80
-        }
-      ]
-    }
-
     this.vasGristConfig = {
       list: { fields: ['targetType', 'targetDisplay', 'packingType'] },
       pagination: { infinite: true },
@@ -426,6 +363,114 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     }
   }
 
+  async pageUpdated(changes) {
+    if (this.active) {
+      this._ganNo = changes.resourceId || this._ganNo || ''
+      this._template = null
+      await this._fetchGAN()
+      this._updateContext()
+    }
+  }
+
+  setProductGristConfig() {
+    const crossDockingColumns = [
+      {
+        type: 'integer',
+        name: 'releaseQty',
+        header: i18next.t('field.release_qty'),
+        record: { editable: true, align: 'center' },
+        width: 160
+      },
+      {
+        type: 'float',
+        name: 'releaseWeight',
+        header: i18next.t('field.release_weight'),
+        record: { editable: true, align: 'center' },
+        width: 160
+      }
+    ]
+
+    let productGristColumns = [
+      { type: 'gutter', gutterName: 'sequence' },
+      {
+        type: 'string',
+        name: 'batchId',
+        header: i18next.t('field.batch_no'),
+        record: { align: 'center' },
+        width: 150
+      },
+      {
+        type: 'object',
+        name: 'product',
+        header: i18next.t('field.product'),
+        record: { align: 'center', options: { queryName: 'products' } },
+        width: 350
+      },
+      {
+        type: 'string',
+        name: 'packingType',
+        header: i18next.t('field.packing_type'),
+        record: { align: 'center' },
+        width: 150
+      },
+      {
+        type: 'float',
+        name: 'weight',
+        header: i18next.t('field.weight'),
+        record: { align: 'center' },
+        width: 80
+      },
+      {
+        type: 'string',
+        name: 'unit',
+        header: i18next.t('field.unit'),
+        record: { align: 'center' },
+        width: 80
+      },
+      {
+        type: 'integer',
+        name: 'packQty',
+        header: i18next.t('field.pack_qty'),
+        record: { align: 'center' },
+        width: 80
+      },
+      {
+        type: 'integer',
+        name: 'totalWeight',
+        header: i18next.t('field.total_weight'),
+        record: { align: 'center' },
+        width: 120
+      },
+      {
+        type: 'integer',
+        name: 'palletQty',
+        header: i18next.t('field.pallet_qty'),
+        record: { align: 'center' },
+        width: 80
+      }
+    ]
+
+    if (this._crossDocking) {
+      const packQtyColumnIdx =
+        productGristColumns.findIndex(column => column.name === 'packQty') || productGristColumns.length - 1
+      productGristColumns.splice(packQtyColumnIdx + 1, 0, ...crossDockingColumns)
+    }
+
+    this.productGristConfig = {
+      list: { fields: ['batchId', 'product', 'packingType', 'totalWeight'] },
+      pagination: { infinite: true },
+      rows: {
+        appendable: false,
+        classifier: (record, rowIndex) => {
+          return {
+            emphasized: record.status === ORDER_PRODUCT_STATUS.READY_TO_APPROVED.value
+          }
+        }
+      },
+      columns: productGristColumns
+    }
+  }
+
   async _fetchGAN() {
     if (!this._ganNo) return
     this._status = ''
@@ -442,6 +487,10 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             }
             containerNo
             ownTransport
+            crossDocking
+            releaseGood {
+              id
+            }
             etaDate
             looseItem
             deliveryOrderNo
@@ -476,6 +525,8 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
               packQty
               totalWeight
               palletQty
+              releaseQty
+              releaseWeight
             }
             orderVass {
               vas {
@@ -510,10 +561,12 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       const orderProducts = arrivalNotice.orderProducts
       const orderVass = arrivalNotice.orderVass
       this.orderBizplace = arrivalNotice.bizplace
-
       this._hasContainer = arrivalNotice.containerNo ? true : false
       this._looseItem = arrivalNotice.looseItem
       this._ownTransport = arrivalNotice.ownTransport
+      this._crossDocking = arrivalNotice.crossDocking
+      this._releaseGood = arrivalNotice.releaseGood
+
       this._importCargo = arrivalNotice.importCargo
       this._status = arrivalNotice.status
       this._fillupANForm({
@@ -525,6 +578,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         this._attachments = arrivalNotice && arrivalNotice.attachment
       }
 
+      this.setProductGristConfig()
       this.productData = { records: orderProducts }
       this.vasData = {
         records: orderVass
@@ -542,10 +596,16 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
   _updateContext() {
     this._actions = []
     if (this._status === ORDER_STATUS.PENDING.value) {
-      this._actions = [
-        { title: i18next.t('button.delete'), action: this._deleteArrivalNotice.bind(this) },
-        { title: i18next.t('button.confirm'), action: this._confirmArrivalNotice.bind(this) }
-      ]
+      this._actions = [{ title: i18next.t('button.delete'), action: this._deleteArrivalNotice.bind(this) }]
+
+      if (this._crossDocking && !this._releaseGood?.id) {
+        this._actions.push({
+          title: i18next.t('button.create_release_order'),
+          action: () => navigate(`create_release_order/${this._ganNo}`)
+        })
+      } else {
+        this._actions.push({ title: i18next.t('button.confirm'), action: this._confirmArrivalNotice.bind(this) })
+      }
     }
 
     if (this._status === ORDER_STATUS.PROCESSING.value && this.isUserBelongsDomain) {
@@ -623,7 +683,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
 
   async _deleteArrivalNotice() {
     try {
-      const result = await CustomAlert({
+      let result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.you_wont_be_able_to_revert_this'),
         confirmButton: { text: i18next.t('button.confirm') },
@@ -631,6 +691,17 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       })
 
       if (!result.value) return
+
+      if (this._crossDocking) {
+        result = await CustomAlert({
+          title: i18next.t('label.cross_docking'),
+          text: i18next.t('text.release_order_will_be_deleted'),
+          confirmButton: { text: i18next.t('button.confirm') },
+          cancelButton: { text: i18next.t('button.cancel') }
+        })
+
+        if (!result.value) return
+      }
 
       this._executeRevertTransactions()
       const response = await client.query({
@@ -671,15 +742,24 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
   }
 
   async _confirmArrivalNotice() {
-    const result = await CustomAlert({
+    let result = await CustomAlert({
       title: i18next.t('title.are_you_sure'),
       text: i18next.t('text.confirm_arrival_notice'),
       confirmButton: { text: i18next.t('button.confirm') },
       cancelButton: { text: i18next.t('button.cancel') }
     })
 
-    if (!result.value) {
-      return
+    if (!result.value) return
+
+    if (this._crossDocking) {
+      result = await CustomAlert({
+        title: i18next.t('title.cross_docking'),
+        text: i18next.t('text.release_order_will_be_confirmed'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) return
     }
 
     try {

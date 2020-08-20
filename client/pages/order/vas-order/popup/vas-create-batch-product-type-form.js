@@ -1,6 +1,6 @@
 import { i18next } from '@things-factory/i18n-base'
 import { html } from 'lit-element'
-import { VAS_BATCH_NO_TYPE, VAS_PRODUCT_TYPE } from '../../constants'
+import { VAS_BATCH_NO_TYPE, VAS_PRODUCT_TYPE } from '../../../constants'
 import { AbstractVasCreateForm } from './abastract-vas-create-form'
 
 export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
@@ -188,6 +188,11 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
       unitWeight = amount.unitWeight
       const qty = Number(this.qtyInput.value)
 
+      if (!totalQty) {
+        this.qtyInput.value = ''
+        throw new Error('text.there_is_no_product')
+      }
+
       if (qty <= 0) {
         this.qtyInput.value = 1
         throw new Error('text.qty_should_be_positive')
@@ -212,8 +217,12 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
       const amount = this._calcAvailAmount()
       totalWeight = amount.totalWeight
       unitWeight = amount.unitWeight
-
       const weight = Number(this.weightInput.value)
+
+      if (totalWeight) {
+        this.qtyInput.value = ''
+        throw new Error('text.there_is_no_product')
+      }
 
       if (weight <= 0) {
         this.weightInput.value = 1
@@ -259,7 +268,8 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
 
       // Batch와 packing type이 같거나
       // product id와 packing type이 같은 것들
-      const choosenAmount = this.vasList
+      const copiedVasList = this.vasList.map(vas => Object.assign({}, vas))
+      const choosenAmount = copiedVasList
         .map(task => {
           if (task.targetType === VAS_BATCH_NO_TYPE) {
             task.target = { batchId: task.target }

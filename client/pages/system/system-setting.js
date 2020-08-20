@@ -1,12 +1,12 @@
 import '@things-factory/form-ui'
+import { getEditor, getRenderer } from '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { store, client, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, PageView, ScrollbarStyles, store } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { getRenderer, getEditor } from '@things-factory/grist-ui'
-import { fetchBoardSettings } from '../../fetch-board-settings'
 import { UPDATE_DASHBOARD_SETTINGS } from '../../actions/dashboard-settings'
+import { fetchBoardSettings } from '../../fetch-board-settings'
 
 class SystemSetting extends localize(i18next)(PageView) {
   static get styles() {
@@ -140,10 +140,10 @@ class SystemSetting extends localize(i18next)(PageView) {
           name: 'value',
           header: i18next.t('field.value'),
           record: {
-            editor: function(value, column, record, rowIndex, field) {
+            editor: function (value, column, record, rowIndex, field) {
               return getEditor(record.category)(value, column, record, rowIndex, field)
             },
-            renderer: function(value, column, record, rowIndex, field) {
+            renderer: function (value, column, record, rowIndex, field) {
               return getRenderer(record.category)(value, column, record, rowIndex, field)
             },
             editable: true,

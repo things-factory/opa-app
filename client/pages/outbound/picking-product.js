@@ -9,8 +9,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { fetchLocationSortingRule } from '../../fetch-location-sorting-rule'
-import { LOCATION_SORTING_RULE } from '../contants/location-sorting-rule'
-import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
+import { LOCATION_SORTING_RULE, WORKSHEET_STATUS } from '../constants'
 import './outbound-reusable-pallet'
 import './picking-replacement-popup'
 
@@ -23,7 +22,8 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
       _productName: String,
       _selectedTaskStatus: String,
       _reusablePalletList: Object,
-      isWholePicking: Boolean
+      isWholePicking: Boolean,
+      crossDocking: Boolean
     }
   }
 
@@ -85,10 +85,6 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
           padding-top: var(--grist-title-with-grid-padding);
         }
 
-        fieldset[hidden] {
-          display: none;
-        }
-
         div.reusable_pallet {
           grid-column: span 12 / auto;
           display: inline-flex;
@@ -142,6 +138,14 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('input[name=confirmedQty]')
   }
 
+  get scannable() {
+    return this._selectedTaskStatus && this._selectedTaskStatus === WORKSHEET_STATUS.EXECUTING.value
+  }
+
+  get completed() {
+    return this.data.records.every(record => record.completed)
+  }
+
   render() {
     return html`
       <form id="info-form" class="multi-column-form">
@@ -174,6 +178,13 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
 
           <label>${i18next.t('label.started_at')}</label>
           <input name="startedAt" type="datetime-local" readonly />
+
+          ${this.crossDocking
+            ? html`
+                <input name="crossDocking" type="checkbox" .checked="${this.crossDocking}" disabled />
+                <label>${i18next.t('label.cross_docking')}</label>
+              `
+            : ''}
         </fieldset>
       </form>
 
@@ -208,30 +219,35 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
               <input name="description" readonly />
             </fieldset>
 
-            <fieldset ?hidden=${this.releaseGoodNo == ''}>
-              <legend>${i18next.t('title.reusable_pallet')}</legend>
-              <div class="reusable_pallet" @click="${this._openPalletOutbound.bind(this)}">
-                <mwc-icon>apps</mwc-icon>Reusable Pallets
-              </button>
-            </fieldset>
+            ${this.releaseGoodNo
+              ? html`
+                  <fieldset>
+                    <legend>${i18next.t('title.reusable_pallet')}</legend>
+                    <div class="reusable_pallet" @click="${this._openPalletOutbound.bind(this)}">
+                      <mwc-icon>apps</mwc-icon>Reusable Pallets
+                    </div>
+                  </fieldset>
+                `
+              : ''}
+            ${this.scannable
+              ? html`
+                  <fieldset>
+                    <legend>${i18next.t('title.input_section')}</legend>
+                    <label>${i18next.t('label.pallet_barcode')}</label>
+                    <barcode-scanable-input name="palletId" custom-input></barcode-scanable-input>
 
-            <fieldset ?hidden=${!this.scannable}>
-              <legend>${i18next.t('title.input_section')}</legend>
-              <label>${i18next.t('label.pallet_barcode')}</label>
-              <barcode-scanable-input name="palletId" custom-input></barcode-scanable-input>
+                    <label>${i18next.t('label.picked_qty')}</label>
+                    <input type="number" min="1" name="confirmedQty" />
 
-              <label>${i18next.t('label.picked_qty')}</label>
-              <input type="number" min="1" name="confirmedQty" />
-
-              ${
-                this.isWholePicking
-                  ? ''
-                  : html`
-                      <label>${i18next.t('label.return_location')}</label>
-                      <barcode-scanable-input name="locationName" custom-input></barcode-scanable-input>
-                    `
-              }
-            </fieldset>
+                    ${this.isWholePicking || this.crossDocking
+                      ? ''
+                      : html`
+                          <label>${i18next.t('label.return_location')}</label>
+                          <barcode-scanable-input name="locationName" custom-input></barcode-scanable-input>
+                        `}
+                  </fieldset>
+                `
+              : ''}
           </form>
         </div>
       </div>
@@ -247,14 +263,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     this._selectedTaskStatus = null
     this._reusablePalletList = { records: [] }
     this.locationSortingRules = []
-  }
-
-  get scannable() {
-    return this._selectedTaskStatus && this._selectedTaskStatus === WORKSHEET_STATUS.EXECUTING.value
-  }
-
-  get completed() {
-    return this.data.records.every(record => record.completed)
+    this.crossDocking = false
   }
 
   updated(changedProps) {
@@ -268,22 +277,25 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
       rows: {
         appendable: false,
         handlers: {
-          click: (columns, data, column, record, rowIndex) => {
+          click: async (columns, data, column, record, rowIndex) => {
             if (data.records.length && record) {
-              if (this._selectedOrderInventory && this._selectedOrderInventory.name === record) {
+              if (this._selectedOrderInventory?.name === record) {
                 return
               }
 
               this._selectedOrderInventory = record
-              this._selectedTaskStatus = null
+              // this._selectedTaskStatus = null
               this._selectedTaskStatus = record.status
+              await this.updateComplete
               this._productName = `${record.product.name} ${
                 record.product.description ? `(${record.product.description})` : ''
               }`
               this.isWholePicking = this._selectedOrderInventory.releaseQty === this._selectedOrderInventory.qty
 
               this._fillUpForm(this.inputForm, record)
-              this._focusOnInput(this.palletInput)
+              if (this.scannable) {
+                this.selectInput(this.palletInput)
+              }
             }
           }
         }
@@ -334,7 +346,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
 
   pageUpdated() {
     if (this.active) {
-      this._focusOnInput(this.releaseGoodNoInput)
+      this.selectInput(this.releaseGoodNoInput)
     }
   }
 
@@ -353,12 +365,11 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     })
   }
 
-  _focusOnInput(target) {
-    setTimeout(() => target.focus(), 100)
+  async selectInput(target) {
+    target.select()
   }
 
   async _fetchInventories(releaseGoodNo) {
-    this._clearView()
     const response = await client.query({
       query: gql`
         query {
@@ -370,6 +381,9 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
               bizplaceName
               refNo
               startedAt
+              releaseGood {
+                crossDocking
+              }
             }
             worksheetDetailInfos {
               name
@@ -389,6 +403,14 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
                 name
                 description
               }
+              relatedOrderInv {
+                batchId
+                packingType
+                product {
+                  name
+                  description
+                }
+              }
             }
           }
         }
@@ -396,24 +418,33 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
+      this._clearView()
       this.releaseGoodNo = releaseGoodNo
-      this._fillUpForm(this.infoForm, response.data.pickingWorksheet.worksheetInfo)
+      if (!response.data?.pickingWorksheet) return
 
-      this.data = {
-        records: response.data.pickingWorksheet.worksheetDetailInfos
-          .map(record => {
-            return {
-              ...record,
-              completed: record.status === WORKSHEET_STATUS.DONE.value,
-              locationName: record.location.name
-            }
-          })
-          .sort((a, b) => b.completed - a.completed)
-          .reverse()
-      }
-
+      const { worksheetInfo, worksheetDetailInfos } = response.data.pickingWorksheet
+      this.crossDocking = worksheetInfo.releaseGood?.crossDocking
+      this._fillUpForm(this.infoForm, { ...worksheetInfo, crossDocking: this.crossDocking })
+      this.data = { records: this.formatWorksheetDetailInfos(worksheetDetailInfos) }
       this._completeHandler()
     }
+  }
+
+  formatWorksheetDetailInfos(wsdInfos) {
+    return wsdInfos
+      .map(record => {
+        record.completed = record.status === WORKSHEET_STATUS.DONE.value
+        record.locationName = record?.location?.name
+        record.product = record.relatedOrderInv.product
+
+        if (this.crossDocking) {
+          record.batchId = record.relatedOrderInv.batchId
+          record.packingType = record.relatedOrderInv.packingType
+        }
+
+        return record
+      })
+      .sort((a, b) => a.completed - b.completed)
   }
 
   async _fetchPalletsHandler(releaseGoodNo) {
@@ -440,11 +471,12 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
               status
             }
           }
+        }
       `
     })
 
     if (!response.errors) {
-      this._reusablePalletList = { records: response.data.pallets.items }
+      this._resuablePalletList = { records: response.data.pallets.items }
     }
   }
 
@@ -454,6 +486,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     this.inputForm.reset()
     this._productName = ''
     this.releaseGoodNo = ''
+    this.crossDocking = false
     this._selectedOrderInventory = null
     this._selectedTaskStatus = null
   }
@@ -485,69 +518,20 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
       try {
         await this._validatePicking()
 
-        if (this.isReplacement) {
-          openPopup(
-            html`
-              <picking-replacement-popup
-                .orderInventory="${this._selectedOrderInventory}"
-                .replacePalletId="${this.palletInput.value}"
-                @completed="${() => {
-                  this._fetchInventories(this.releaseGoodNoInput.value)
-                  this._fetchPalletsHandler(this.releaseGoodNoInput.value)
-                  this._selectedTaskStatus = null
-                  this._selectedOrderInventory = null
-                  this.palletInput.value = ''
-                }}"
-              ></picking-replacement-popup>
-            `,
-            {
-              backdrop: true,
-              size: 'large',
-              title: i18next.t('title.pallet_replacement')
-            }
-          )
+        let response
+        if (this.crossDocking) {
+          response = await this.pickCrossDocking()
         } else {
-          const locationName = this.isWholePicking
-            ? this._selectedOrderInventory.location.name
-            : this.locationInput.value
-          // 1. Check whether location is changed
-          if (this._selectedOrderInventory.location.name !== locationName) {
-            const result = await CustomAlert({
-              title: i18next.t('title.relocate'),
-              text: i18next.t('text.are_you_sure'),
-              confirmButton: { text: i18next.t('button.relocate') },
-              cancelButton: { text: i18next.t('button.cancel') }
-            })
+          response = await this.pickCommonPicking()
+        }
 
-            if (!result.value) {
-              return
-            }
-          }
-
-          const response = await client.query({
-            query: gql`
-                mutation {
-                  picking(${gqlBuilder.buildArgs({
-                    worksheetDetailName: this._selectedOrderInventory.name,
-                    palletId: this.palletInput.value,
-                    locationName,
-                    releaseQty: parseInt(this.releaseQtyInput.value)
-                  })})
-                }
-              `
-          })
-
-          if (!response.errors) {
-            this._fetchInventories(this.releaseGoodNo)
-            this._focusOnInput(this.palletInput)
-            this._selectedTaskStatus = null
-            this._selectedOrderInventory = null
-            this.palletInput.value = ''
-            this.releaseQtyInput.value = ''
-            if (!this.isWholePicking) {
-              this.locationInput.value = ''
-            }
-          }
+        if (!response.errors) {
+          this.palletInput.value = ''
+          this.releaseQtyInput.value = ''
+          if (!this.isWholePicking && !this.crossDocking) this.locationInput.value = ''
+          this._fetchInventories(this.releaseGoodNo)
+          this._selectedTaskStatus = null
+          this._selectedOrderInventory = null
         }
 
         this.isReplacement = false
@@ -557,51 +541,123 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _validatePicking() {
-    // 1. validate for order selection
-    if (!this._selectedOrderInventory) throw new Error(i18next.t('text.target_doesnt_selected'))
+  async pickCrossDocking() {
+    return await client.query({
+      query: gql`
+        mutation {
+          crossDockPicking(${gqlBuilder.buildArgs({
+            worksheetDetailName: this._selectedOrderInventory.name,
+            palletId: this.palletInput.value,
+            releaseQty: parseInt(this.releaseQtyInput.value)
+          })})
+        }
+      `
+    })
+  }
 
-    // 2. pallet id existing
+  async pickCommonPicking() {
+    if (this.isReplacement) {
+      openPopup(
+        html`
+          <picking-replacement-popup
+            .orderInventory="${this._selectedOrderInventory}"
+            .replacePalletId="${this.palletInput.value}"
+            @completed="${() => {
+              this._fetchInventories(this.releaseGoodNoInput.value)
+              this._fetchPalletsHandler(this.releaseGoodNoInput.value)
+              this._selectedTaskStatus = null
+              this._selectedOrderInventory = null
+              this.palletInput.value = ''
+            }}"
+          ></picking-replacement-popup>
+        `,
+        {
+          backdrop: true,
+          size: 'large',
+          title: i18next.t('title.pallet_replacement')
+        }
+      )
+    } else {
+      const locationName = this.isWholePicking ? this._selectedOrderInventory.location.name : this.locationInput.value
+      // 1. Check whether location is changed
+      if (this._selectedOrderInventory.location.name !== locationName) {
+        const result = await CustomAlert({
+          title: i18next.t('title.relocate'),
+          text: i18next.t('text.are_you_sure'),
+          confirmButton: { text: i18next.t('button.relocate') },
+          cancelButton: { text: i18next.t('button.cancel') }
+        })
+
+        if (!result.value) return
+      }
+
+      return await client.query({
+        query: gql`
+            mutation {
+              picking(${gqlBuilder.buildArgs({
+                worksheetDetailName: this._selectedOrderInventory.name,
+                palletId: this.palletInput.value,
+                locationName,
+                releaseQty: parseInt(this.releaseQtyInput.value)
+              })})
+            }
+          `
+      })
+    }
+  }
+
+  async _validatePicking() {
+    // pallet id existing
     if (!this.palletInput.value) {
-      this._focusOnInput(this.palletInput)
+      this.selectInput(this.palletInput)
       throw new Error(i18next.t('text.pallet_id_is_empty'))
     }
 
-    // 3. Equality of pallet id
-    if (this._selectedOrderInventory.palletId !== this.palletInput.value) {
-      const isInProgressing = await this.checkProgressingPallet(this.palletInput.value)
-      if (isInProgressing) throw new Error(i18next.t('text.pallet_is_in_progressing'))
-      this.isReplacement = await this.checkProductIdenticality(
-        this._selectedOrderInventory.palletId,
-        this.palletInput.value
-      )
-      if (!this.isReplacement) {
-        setTimeout(() => this.palletInput.select(), 100)
-        throw new Error(i18next.t('text.wrong_pallet_id'))
-      } else {
-        return
-      }
-    }
-
-    // 4. Release qty existing
+    // Release qty existing
     if (!parseInt(this.releaseQtyInput.value)) {
-      this._focusOnInput(this.releaseQtyInput)
+      this.selectInput(this.releaseQtyInput)
       throw new Error(i18next.t('text.release_qty_is_empty'))
     }
 
-    // 5. typed qty should be matched with release qty.
-    if (parseInt(this.releaseQtyInput.value) !== this._selectedOrderInventory.releaseQty) {
-      setTimeout(() => this.releaseQtyInput.select(), 100)
-      throw new Error(i18next.t('text.wrong_release_qty'))
-    }
-
-    // 6. location id existing
-    if (!this.isWholePicking && !this.locationInput.value) {
-      this._focusOnInput(this.locationInput)
-      throw new Error(i18next.t('text.location_id_is_empty'))
-    }
-
+    // validate for order selection
+    if (!this._selectedOrderInventory) throw new Error(i18next.t('text.target_is_not_selected'))
     if (!this.releaseQtyInput.checkValidity()) throw new Error(i18next.t('text.release_qty_invalid'))
+
+    if (this.crossDocking) {
+      // typed qty should be smaller than release qty.
+      if (parseInt(this.releaseQtyInput.value) > this._selectedOrderInventory.releaseQty) {
+        this.selectInput(this.releaseQtyInput)
+        throw new Error(i18next.t('text.wrong_release_qty'))
+      }
+    } else {
+      // Equality of pallet id
+      if (this._selectedOrderInventory.palletId !== this.palletInput.value) {
+        const isInProgressing = await this.checkProgressingPallet(this.palletInput.value)
+        if (isInProgressing) throw new Error(i18next.t('text.pallet_is_in_progressing'))
+
+        this.isReplacement = await this.checkProductIdenticality(
+          this._selectedOrderInventory.palletId,
+          this.palletInput.value
+        )
+
+        if (!this.isReplacement) {
+          this.selectInput(this.palletInput)
+          throw new Error(i18next.t('text.wrong_pallet_id'))
+        }
+      }
+
+      // typed qty should be matched with release qty.
+      if (parseInt(this.releaseQtyInput.value) !== this._selectedOrderInventory.releaseQty) {
+        setTimeout(() => this.releaseQtyInput.select(), 100)
+        throw new Error(i18next.t('text.wrong_release_qty'))
+      }
+
+      // location id existing
+      if (!this.isWholePicking && !this.locationInput.value) {
+        this.selectInput(this.locationInput)
+        throw new Error(i18next.t('text.location_id_is_empty'))
+      }
+    }
   }
 
   async checkProgressingPallet(palletId) {
@@ -636,7 +692,8 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _completeHandler() {
-    if (!this.data.records.every(record => record.completed)) return
+    if (!this.data?.records?.length || this.data.records.some(record => !record.completed)) return
+
     this._updateContext()
     const result = await CustomAlert({
       title: i18next.t('title.picking'),

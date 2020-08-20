@@ -9,8 +9,9 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
-import { PALLET_LABEL_SETTING_KEY } from '../../setting-constants'
 import '@things-factory/import-ui'
+import '../components/import-pop-up'
+import { PALLET_LABEL_SETTING_KEY } from '../constants'
 import './inventory-history-by-pallet'
 
 class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {

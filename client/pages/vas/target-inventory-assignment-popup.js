@@ -7,12 +7,12 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import {
-  VAS_BATCH_NO_TYPE,
-  VAS_PRODUCT_TYPE,
+  ORDER_TYPES,
   VAS_BATCH_AND_PRODUCT_TYPE,
+  VAS_BATCH_NO_TYPE,
   VAS_ETC_TYPE,
-  ORDER_TYPES
-} from '../order/constants'
+  VAS_PRODUCT_TYPE
+} from '../constants'
 
 class TargetInventoryAssignmentPopup extends localize(i18next)(LitElement) {
   static get properties() {

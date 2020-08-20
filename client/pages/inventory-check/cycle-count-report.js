@@ -6,8 +6,7 @@ import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
-import { ORDER_STATUS } from '../order/constants/order'
+import { ORDER_STATUS, WORKSHEET_STATUS } from '../constants'
 
 class CycleCountReport extends localize(i18next)(PageView) {
   static get properties() {

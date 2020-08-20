@@ -9,11 +9,10 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../components/popup-note'
-import { ARRIVAL_NOTICE } from '../order/constants'
+import { ARRIVAL_NOTICE, WORKSHEET_STATUS } from '../constants'
 import '../vas/related-vas-list'
 import './adjust-pallet-qty'
 import './adjust-batch-id'
-import { WORKSHEET_STATUS } from './constants/worksheet'
 import './pallet-label-popup'
 import './putaway-worksheet-generate-popup'
 
@@ -26,7 +25,8 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       _ganNo: String,
       config: Object,
       data: Object,
-      vasWorksheetNo: String
+      vasWorksheetNo: String,
+      crossDocking: Boolean
     }
   }
 
@@ -127,6 +127,9 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
                 `
               )}
             </select>
+
+            <input name="crossDocking" type="checkbox" .checked="${this.crossDocking}" disabled />
+            <label>${i18next.t('label.cross_docking')}</label>
           </fieldset>
         </form>
 
@@ -271,6 +274,10 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
               name
               description
               refNo
+              crossDocking
+              releaseGood {
+                name
+              }
             }
             bizplace {
               id
@@ -323,6 +330,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       this._gan = worksheet && worksheet.arrivalNotice
       this._ganNo = (this._gan && this._gan.name) || ''
       this._bizplace = worksheet.bizplace.name
+      this.crossDocking = worksheet?.arrivalNotice?.crossDocking
 
       this._fillupForm({
         ...worksheet,
@@ -560,7 +568,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     try {
       this._checkPalletQty()
 
-      const result = await CustomAlert({
+      let result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.activate_unloading_worksheet'),
         confirmButton: { text: i18next.t('button.confirm') },
@@ -568,6 +576,17 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       })
 
       if (!result.value) return
+
+      if (this.crossDocking) {
+        result = await CustomAlert({
+          title: i18next.t('title.cross_docking'),
+          text: i18next.t('text.picking_worksheet_will_be_activated'),
+          confirmButton: { text: i18next.t('button.confirm') },
+          cancelButton: { text: i18next.t('button.cancel') }
+        })
+
+        if (!result.value) return
+      }
 
       const response = await client.query({
         query: gql`
@@ -720,6 +739,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     openPopup(
       html`
         <putaway-worksheet-generate-popup
+          .crossDocking="${this.crossDocking}"
           .arrivalNotice="${this._gan}"
           @completed="${async () => {
             await this.fetchWorksheet()

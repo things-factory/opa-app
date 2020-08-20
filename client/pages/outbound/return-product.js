@@ -7,7 +7,7 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
+import { WORKSHEET_STATUS } from '../constants'
 
 const OPERATION_TYPE = {
   PUTAWAY: 'putaway',
@@ -207,9 +207,7 @@ class ReturnProduct extends connect(store)(localize(i18next)(PageView)) {
                     <label>${i18next.t('label.location')}</label>
 
                     ${!this.incompleteLocationName
-                      ? html`
-                          <barcode-scanable-input name="locationCode" custom-input></barcode-scanable-input>
-                        `
+                      ? html` <barcode-scanable-input name="locationCode" custom-input></barcode-scanable-input> `
                       : html`
                           <select
                             name="newLocationCode"
@@ -469,7 +467,7 @@ class ReturnProduct extends connect(store)(localize(i18next)(PageView)) {
 
   async _validateReturning() {
     // 1. validate for order selection
-    if (!this._selectedOrderProduct) throw new Error(i18next.t('text.target_doesnt_selected'))
+    if (!this._selectedOrderProduct) throw new Error(i18next.t('text.target_is_not_selected'))
 
     // 2. pallet id existing
     if (!this.palletInput.value) {

@@ -7,13 +7,15 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/popup-note'
 import '../../components/vas-templates'
-import { VAS_BATCH_AND_PRODUCT_TYPE, VAS_BATCH_NO_TYPE, VAS_ETC_TYPE, VAS_PRODUCT_TYPE } from '../../order/constants'
+import { VAS_BATCH_AND_PRODUCT_TYPE, VAS_BATCH_NO_TYPE, VAS_ETC_TYPE, VAS_PRODUCT_TYPE } from '../../constants'
 
 class RejectedReleaseOrder extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _releaseOrderNo: String,
       _ownTransport: Boolean,
+      _crossDocking: Boolean,
+      _ganNo: String,
       _exportOption: Boolean,
       inventoryGristConfig: Object,
       vasGristConfig: Object,
@@ -81,18 +83,6 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
     ]
   }
 
-  get context() {
-    return {
-      title: i18next.t('title.rejected_release_order'),
-      actions: [
-        {
-          title: i18next.t('button.back'),
-          action: () => history.back()
-        }
-      ]
-    }
-  }
-
   render() {
     return html`
       <popup-note
@@ -124,6 +114,22 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
             disabled
           />
           <label ?hidden="${this._exportOption}">${i18next.t('label.own_transport')}</label>
+
+          ${this._crossDocking
+            ? html`
+                <input
+                  id="crossDocking"
+                  type="checkbox"
+                  name="crossDocking"
+                  ?checked="${this._crossDocking}"
+                  disabled
+                />
+                <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+
+                <label for="ganNo">${i18next.t('label.arrival_notice')}</label>
+                <input readonly name="ganNo" value="${this._ganNo}" />
+              `
+            : ''}
         </fieldset>
       </form>
 
@@ -200,6 +206,13 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
     this._attachments = []
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
+  }
+
+  get context() {
+    return {
+      title: i18next.t('title.rejected_release_order'),
+      actions: [{ title: i18next.t('button.back'), action: () => history.back() }]
+    }
   }
 
   get releaseOrderForm() {
@@ -413,6 +426,10 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
             truckNo
             status
             ownTransport
+            crossDocking
+            arrivalNotice {
+              name
+            }
             exportOption
             releaseDate
             refNo
@@ -483,9 +500,12 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
         this._ownTransport = releaseOrder.ownTransport
       }
 
-      if (this._ownTransport) {
+      if (releaseOrder && releaseOrder?.attachment) {
         this._attachments = releaseOrder && releaseOrder.attachment
       }
+
+      this._crossDocking = response.data.releaseGoodDetail?.crossDocking
+      this._ganNo = response.data.releaseGoodDetail?.arrivalNotice?.name
 
       this._rejectReason = releaseOrder.remark
       this._fillupRGForm(releaseOrder)

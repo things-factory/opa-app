@@ -1,11 +1,12 @@
+import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { ORDER_STATUS } from '../constants/order'
-import { getCodeByName } from '@things-factory/code-base'
+import { ORDER_STATUS } from '../../constants'
 
 class ArrivalNoticeRequests extends localize(i18next)(PageView) {
   static get styles() {
@@ -26,7 +27,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           overflow-y: auto;
           flex: 1;
         }
-      `,
+      `
     ]
   }
 
@@ -34,17 +35,13 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
     return {
       _searchFields: Array,
       config: Object,
-      data: Object,
+      data: Object
     }
   }
 
   render() {
     return html`
-      <search-form
-        id="search-form"
-        .fields=${this._searchFields}
-        @submit=${(e) => this.dataGrist.fetch()}
-      ></search-form>
+      <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
 
       <data-grist
         .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
@@ -59,14 +56,27 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
       title: i18next.t('title.arrival_notice_requests'),
       exportable: {
         name: i18next.t('title.arrival_notice_requests'),
-        data: this._exportableData.bind(this),
-      },
+        data: this._exportableData.bind(this)
+      }
     }
   }
 
   pageUpdated(changes, lifecycle) {
+    if (changes?.params) {
+      this.fillUpSearchForm(changes.params)
+    }
+
     if (this.active) {
       this.dataGrist.fetch()
+    }
+  }
+
+  fillUpSearchForm(params) {
+    for (let fieldName in params) {
+      const input = this.searchForm.shadowRoot.querySelector(`[name=${fieldName}]`)
+      if (input) {
+        input.value = params[fieldName]
+      }
     }
   }
 
@@ -79,7 +89,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
         label: i18next.t('field.gan'),
         name: 'name',
         type: 'text',
-        props: { searchOper: 'i_like' },
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.customer'),
@@ -88,42 +98,42 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
         options: [
           { value: '' },
           ..._userBizplaces
-            .filter((userBizplaces) => !userBizplaces.mainBizplace)
-            .map((userBizplace) => {
+            .filter(userBizplaces => !userBizplaces.mainBizplace)
+            .map(userBizplace => {
               return {
                 name: userBizplace.name,
-                value: userBizplace.id,
+                value: userBizplace.id
               }
             })
-            .sort(this._compareValues('name', 'asc')),
+            .sort(this._compareValues('name', 'asc'))
         ],
-        props: { searchOper: 'eq' },
+        props: { searchOper: 'eq' }
       },
       {
         label: i18next.t('field.eta'),
         name: 'etaDate',
         type: 'date',
-        props: { searchOper: 'eq' },
+        props: { searchOper: 'eq' }
       },
       {
         label: i18next.t('field.ref_no'),
         name: 'refNo',
         type: 'text',
-        props: { searchOper: 'i_like' },
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.import_cargo'),
         name: 'importCargo',
         type: 'checkbox',
         props: { searchOper: 'eq' },
-        attrs: ['indeterminate'],
+        attrs: ['indeterminate']
       },
       {
         label: i18next.t('field.own_transport'),
         name: 'ownTransport',
         type: 'checkbox',
         props: { searchOper: 'eq' },
-        attrs: ['indeterminate'],
+        attrs: ['indeterminate']
       },
       {
         label: i18next.t('field.status'),
@@ -131,18 +141,18 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
         type: 'select',
         options: [
           { value: '' },
-          ..._orderStatus.map((status) => {
+          ..._orderStatus.map(status => {
             return { name: i18next.t(`label.${status.description}`), value: status.name }
-          }),
+          })
         ],
-        props: { searchOper: 'eq' },
-      },
+        props: { searchOper: 'eq' }
+      }
     ]
 
     this.config = {
       rows: { appendable: false, selectable: { multiple: true } },
       list: {
-        fields: ['bizplace', 'status', 'updatedAt'],
+        fields: ['bizplace', 'status', 'updatedAt']
       },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
@@ -163,8 +173,8 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
               } else {
                 navigate(`arrival_notice_detail/${record.name}`)
               }
-            },
-          },
+            }
+          }
         },
         {
           type: 'string',
@@ -172,7 +182,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.gan'),
           record: { align: 'left' },
           sortable: true,
-          width: 160,
+          width: 160
         },
         {
           type: 'object',
@@ -180,7 +190,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.customer'),
           record: { align: 'left' },
           sortable: true,
-          width: 250,
+          width: 250
         },
         {
           type: 'string',
@@ -188,7 +198,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.ref_no'),
           record: { align: 'left' },
           sortable: true,
-          width: 120,
+          width: 120
         },
         {
           type: 'date',
@@ -196,7 +206,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.eta'),
           record: { align: 'center' },
           sortable: true,
-          width: 100,
+          width: 100
         },
         {
           type: 'boolean',
@@ -204,7 +214,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.import_cargo'),
           record: { align: 'center' },
           sortable: true,
-          width: 120,
+          width: 120
         },
         {
           type: 'boolean',
@@ -212,7 +222,21 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.own_transport'),
           record: { align: 'center' },
           sortable: true,
-          width: 120,
+          width: 120
+        },
+        {
+          type: 'boolean',
+          name: 'crossDocking',
+          header: i18next.t('field.cross_docking'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'object',
+          name: 'releaseGood',
+          header: i18next.t('field.release_good'),
+          record: { align: 'center' },
+          width: 180
         },
         {
           type: 'string',
@@ -220,7 +244,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.status'),
           record: { align: 'left' },
           sortable: true,
-          width: 120,
+          width: 120
         },
         {
           type: 'datetime',
@@ -228,7 +252,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.updated_at'),
           record: { align: 'center' },
           sortable: true,
-          width: 160,
+          width: 160
         },
         {
           type: 'object',
@@ -236,9 +260,9 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.updater'),
           record: { align: 'left' },
           sortable: true,
-          width: 200,
-        },
-      ],
+          width: 200
+        }
+      ]
     }
   }
 
@@ -257,7 +281,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           arrivalNoticeRequests(${gqlBuilder.buildArgs({
             filters: await this.searchForm.getQueryFilters(),
             pagination: { page, limit },
-            sortings: sorters,
+            sortings: sorters
           })}) {
             items {
               id
@@ -270,6 +294,10 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
               refNo
               status
               ownTransport
+              crossDocking
+              releaseGood {
+                name
+              }
               importCargo
               updatedAt
               updater {
@@ -280,13 +308,13 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
             total
           }
         }
-      `,
+      `
     })
 
     if (!response.errors) {
       return {
         total: response.data.arrivalNoticeRequests.total || 0,
-        records: response.data.arrivalNoticeRequests.items || [],
+        records: response.data.arrivalNoticeRequests.items || []
       }
     }
   }
@@ -296,7 +324,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
       query: gql`
           query {
             bizplaces(${gqlBuilder.buildArgs({
-              filters: [...bizplace],
+              filters: [...bizplace]
             })}) {
               items{
                 id
@@ -305,7 +333,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
               }
             }
           }
-        `,
+        `
     })
     return response.data.bizplaces.items
   }

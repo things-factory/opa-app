@@ -8,22 +8,23 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
+import '../../components/attachment-viewer'
 import '../../components/popup-note'
 import '../../components/vas-templates'
-import '../../components/attachment-viewer'
 import {
+  ORDER_STATUS,
   VAS_BATCH_AND_PRODUCT_TYPE,
   VAS_BATCH_NO_TYPE,
   VAS_ETC_TYPE,
-  ORDER_STATUS,
   VAS_PRODUCT_TYPE
-} from '../constants'
+} from '../../constants'
 
 class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _releaseOrderNo: String,
       _ownTransport: Boolean,
+      _crossDocking: Boolean,
       _exportOption: Boolean,
       inventoryGristConfig: Object,
       vasGristConfig: Object,
@@ -134,6 +135,19 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
             disabled
           />
           <label ?hidden="${this._exportOption}">${i18next.t('label.own_transport')}</label>
+
+          ${this._crossDocking
+            ? html`
+                <input
+                  id="crossDocking"
+                  type="checkbox"
+                  name="crossDocking"
+                  ?checked="${this._crossDocking}"
+                  disabled
+                />
+                <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+              `
+            : ''}
         </fieldset>
       </form>
 
@@ -430,6 +444,10 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
             status
             refNo
             ownTransport
+            crossDocking
+            arrivalNotice {
+              name
+            }
             exportOption
             releaseDate
             collectionOrderNo
@@ -502,6 +520,11 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
       } else if (!this._exportOption) {
         this._ownTransport = releaseOrder.ownTransport
       }
+      this._crossDocking = releaseOrder.crossDocking
+      if (this._crossDocking) {
+        this._ganNo = releaseOrder.arrivalNotice.name
+      }
+
       this._status = releaseOrder.status
 
       if (releaseOrder && releaseOrder?.attachment) {
@@ -600,6 +623,17 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
                 return
               }
 
+              if (this._crossDocking) {
+                const result = await CustomAlert({
+                  title: i18next.t('title.cross_docking'),
+                  text: i18next.t('text.related_order_will_be_rejected'),
+                  confirmButton: { text: i18next.t('button.confirm') },
+                  cancelButton: { text: i18next.t('button.cancel') }
+                })
+
+                if (!result.value) return
+              }
+
               const response = await client.query({
                 query: gql`
                 mutation {
@@ -695,20 +729,20 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
 
   _updateContext() {
     this._actions = []
-    if (this._status === ORDER_STATUS.PENDING_RECEIVE.value) {
+    if (this._status === ORDER_STATUS.PENDING_RECEIVE.value && !this._crossDocking) {
       this._actions = [
-        {
-          title: i18next.t('button.reject'),
-          action: this._rejectReleaseOrder.bind(this)
-        },
-        {
-          title: i18next.t('button.receive'),
-          action: this._receiveReleaseOrder.bind(this)
-        }
+        { title: i18next.t('button.reject'), action: this._rejectReleaseOrder.bind(this) },
+        { title: i18next.t('button.receive'), action: this._receiveReleaseOrder.bind(this) }
       ]
     }
 
-    if (this._status === ORDER_STATUS.PENDING_CANCEL.value) {
+    if (this._status === ORDER_STATUS.PENDING_CANCEL.value && !this._crossDocking) {
+      this._actions = [{ title: i18next.t('button.confirm'), action: this._confirmCancellationReleaseOrder.bind(this) }]
+    }
+
+    if (this._crossDocking) {
+      const params = new URLSearchParams()
+      params.append('name', this._ganNo)
       this._actions = [
         {
           title: i18next.t('button.approve_cancellation'),
@@ -717,6 +751,10 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
         {
           title: i18next.t('button.reject_cancellation'),
           action: this._rejectCancellationReleaseOrder.bind(this)
+        },
+        {
+          title: i18next.t('button.move_to_x', { state: { x: i18next.t('title.arrival_notice') } }),
+          action: () => navigate(`arrival_notice_requests?${params.toString()}`)
         }
       ]
     }

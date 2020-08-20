@@ -6,7 +6,7 @@ import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { WORKSHEET_STATUS } from '../inbound/constants/worksheet'
+import { WORKSHEET_STATUS } from '../constants'
 
 class WorksheetReturn extends localize(i18next)(PageView) {
   static get properties() {
@@ -15,7 +15,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
       _worksheetStatus: String,
       _roNo: String,
       config: Object,
-      data: Object,
+      data: Object
     }
   }
 
@@ -72,7 +72,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
-      `,
+      `
     ]
   }
 
@@ -82,8 +82,8 @@ class WorksheetReturn extends localize(i18next)(PageView) {
       actions: this._actions,
       printable: {
         accept: ['preview'],
-        content: this,
-      },
+        content: this
+      }
     }
   }
 
@@ -105,11 +105,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
             <label>${i18next.t('label.status')}</label>
             <select name="status" disabled>
               ${Object.keys(WORKSHEET_STATUS).map(
-                (key) => html`
-                  <option value="${WORKSHEET_STATUS[key].value}"
-                    >${i18next.t(`label.${WORKSHEET_STATUS[key].name}`)}</option
-                  >
-                `
+                key => html` <option value="${WORKSHEET_STATUS[key].value}">${WORKSHEET_STATUS[key].name}</option> `
               )}
             </select>
           </fieldset>
@@ -152,43 +148,43 @@ class WorksheetReturn extends localize(i18next)(PageView) {
           name: 'batchId',
           header: i18next.t('field.batch_no'),
           record: { align: 'left' },
-          width: 150,
+          width: 150
         },
         {
           type: 'string',
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
           record: { align: 'left' },
-          width: 150,
+          width: 150
         },
         {
           type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
-          width: 350,
+          width: 350
         },
         {
           type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: { align: 'center' },
-          width: 100,
+          width: 100
         },
         {
           type: 'integer',
           name: 'qty',
           header: i18next.t('field.qty'),
           record: { align: 'center' },
-          width: 80,
+          width: 80
         },
         {
           type: 'object',
           name: 'location',
           header: i18next.t('field.location'),
           record: { align: 'center' },
-          width: 100,
-        },
-      ],
+          width: 100
+        }
+      ]
     }
   }
 
@@ -206,7 +202,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
       query: gql`
         query {
           worksheet(${gqlBuilder.buildArgs({
-            name: this._worksheetNo,
+            name: this._worksheetNo
           })}) {
             status
             releaseGood {
@@ -241,7 +237,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
             }
           }
         }
-      `,
+      `
     })
 
     if (!response.errors) {
@@ -253,17 +249,17 @@ class WorksheetReturn extends localize(i18next)(PageView) {
         ...worksheet,
         releaseGood: worksheet.releaseGood.name,
         bizplace: worksheet.bizplace.name,
-        refNo: worksheet.releaseGood.refNo,
+        refNo: worksheet.releaseGood.refNo
       })
       this.data = {
-        records: worksheetDetails.map((worksheetDetail) => {
+        records: worksheetDetails.map(worksheetDetail => {
           return {
             ...worksheetDetail.targetInventory.inventory,
             name: worksheetDetail.name,
             description: worksheetDetail.description,
-            status: worksheetDetail.status,
+            status: worksheetDetail.status
           }
-        }),
+        })
       }
     }
   }
@@ -279,7 +275,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
 
     store.dispatch({
       type: UPDATE_CONTEXT,
-      context: this.context,
+      context: this.context
     })
   }
 
@@ -289,26 +285,26 @@ class WorksheetReturn extends localize(i18next)(PageView) {
       name: 'status',
       header: i18next.t('field.status'),
       record: { align: 'center' },
-      width: 100,
+      width: 100
     }
 
-    this.preConfig.columns.map((column) => {
+    this.preConfig.columns.map(column => {
       if (column.name === 'description') {
         column.record = { ...column.record, editable: this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value }
       }
     })
 
     if (
-      !this.preConfig.columns.some((e) => e.name === 'status') &&
+      !this.preConfig.columns.some(e => e.name === 'status') &&
       this._worksheetStatus !== WORKSHEET_STATUS.DEACTIVATED.value
     ) {
       this.preConfig.columns = [...this.preConfig.columns, statusColumnConfig]
     } else if (
-      this.preConfig.columns.some((e) => e.name === 'status') &&
+      this.preConfig.columns.some(e => e.name === 'status') &&
       this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value
     ) {
-      this.preConfig.columns.splice(this.preConfig.columns.map((e) => e.name).indexOf('location'))
-      this.preConfig.columns.splice(this.preConfig.columns.map((e) => e.name).indexOf('status'))
+      this.preConfig.columns.splice(this.preConfig.columns.map(e => e.name).indexOf('location'))
+      this.preConfig.columns.splice(this.preConfig.columns.map(e => e.name).indexOf('status'))
     }
 
     this.config = { ...this.preConfig }
@@ -317,7 +313,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
 
   _fillupForm(data) {
     for (let key in data) {
-      Array.from(this.form.querySelectorAll('input, select')).forEach((field) => {
+      Array.from(this.form.querySelectorAll('input, select')).forEach(field => {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
         } else if (field.name === key) {
@@ -338,7 +334,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.activate_return_worksheet'),
         confirmButton: { text: i18next.t('button.confirm') },
-        cancelButton: { text: i18next.t('button.cancel') },
+        cancelButton: { text: i18next.t('button.cancel') }
       })
 
       if (!result.value) {
@@ -350,12 +346,12 @@ class WorksheetReturn extends localize(i18next)(PageView) {
           mutation {
             activateReturn(${gqlBuilder.buildArgs({
               worksheetNo: this._worksheetNo,
-              returnWorksheetDetails: this._getReturnWorksheetDetails(),
+              returnWorksheetDetails: this._getReturnWorksheetDetails()
             })}) {
               name
             }
           }
-        `,
+        `
       })
       if (!response.errors) {
         this._showToast({ message: i18next.t('text.worksheet_activated') })
@@ -370,10 +366,10 @@ class WorksheetReturn extends localize(i18next)(PageView) {
   }
 
   _getReturnWorksheetDetails() {
-    return this.grist.dirtyData.records.map((worksheetDetail) => {
+    return this.grist.dirtyData.records.map(worksheetDetail => {
       return {
         name: worksheetDetail.name,
-        description: worksheetDetail.description,
+        description: worksheetDetail.description
       }
     })
   }
@@ -383,8 +379,8 @@ class WorksheetReturn extends localize(i18next)(PageView) {
       new CustomEvent('notify', {
         detail: {
           type,
-          message,
-        },
+          message
+        }
       })
     )
   }

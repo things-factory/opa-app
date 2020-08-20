@@ -1,16 +1,16 @@
-import { html } from 'lit-element'
-import { addRoutingType, updateMenuProvider } from '@things-factory/menu-base'
-import { client, store, isMobileDevice, UPDATE_BASE_URL } from '@things-factory/shell'
-import gql from 'graphql-tag'
-import { UPDATE_DASHBOARD_SETTINGS } from './actions/dashboard-settings'
-import dashboard from './reducers/dashboard-settings'
-import { fetchBoardSettings } from './fetch-board-settings'
+import { APPEND_APP_TOOL } from '@things-factory/apptool-base'
 import { auth } from '@things-factory/auth-base'
 import { TOOL_POSITION } from '@things-factory/layout-base'
-import { APPEND_APP_TOOL } from '@things-factory/apptool-base'
+import { addRoutingType, updateMenuProvider } from '@things-factory/menu-base'
 import { ADD_SETTING } from '@things-factory/setting-base'
-
 import '@things-factory/setting-ui/client/setting-lets/domain-switch-let'
+import { client, store, UPDATE_BASE_URL } from '@things-factory/shell'
+import { isMobileDevice } from '@things-factory/utils'
+import gql from 'graphql-tag'
+import { html } from 'lit-element'
+import { UPDATE_DASHBOARD_SETTINGS } from './actions/dashboard-settings'
+import { fetchBoardSettings } from './fetch-board-settings'
+import dashboard from './reducers/dashboard-settings'
 
 console.log(`
  ▄▄  ▄▄▄  ▄▄▄ ▄▄▄   ▄▄  ▄▄▄  ▄▄
@@ -101,9 +101,7 @@ export default function bootstrap() {
     type: ADD_SETTING,
     setting: {
       seq: 30,
-      template: html`
-        <domain-switch-let></domain-switch-let>
-      `
+      template: html` <domain-switch-let></domain-switch-let> `
     }
   })
 }

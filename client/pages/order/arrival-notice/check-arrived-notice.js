@@ -9,12 +9,13 @@ import '../../components/attachment-viewer'
 import '../../components/popup-note'
 import '../../components/vas-templates'
 import {
+  ORDER_STATUS,
   VAS_BATCH_AND_PRODUCT_TYPE,
   VAS_BATCH_NO_TYPE,
   VAS_ETC_TYPE,
-  ORDER_STATUS,
   VAS_PRODUCT_TYPE
-} from '../constants'
+} from '../../constants'
+
 class CheckArrivedNotice extends localize(i18next)(PageView) {
   static get properties() {
     return {

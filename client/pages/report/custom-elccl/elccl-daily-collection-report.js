@@ -1,11 +1,11 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
-import { html, css } from 'lit-element'
+import { i18next, localize } from '@things-factory/i18n-base'
 import { client, PageView, store } from '@things-factory/shell'
-import { gqlBuilder, flattenObject } from '@things-factory/utils'
-import { connect } from 'pwa-helpers/connect-mixin'
-import { localize, i18next } from '@things-factory/i18n-base'
+import { gqlBuilder } from '@things-factory/utils'
 import gql from 'graphql-tag'
+import { css, html } from 'lit-element'
+import { connect } from 'pwa-helpers/connect-mixin'
 
 class ElcclDailyCollectionReport extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -65,7 +65,7 @@ class ElcclDailyCollectionReport extends connect(store)(localize(i18next)(PageVi
     return html`
       <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.report.fetch()}></search-form>
 
-      <data-report .config=${this._config} .fetchHandler="${this.fetchHandler.bind(this)}"></data-grist>
+      <data-report .config=${this._config} .fetchHandler="${this.fetchHandler.bind(this)}"></data-report>
     `
   }
 
