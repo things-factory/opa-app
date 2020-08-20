@@ -8,7 +8,6 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
-import '../components/import-pop-up'
 
 class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {

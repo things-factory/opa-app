@@ -10,7 +10,6 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
 import '@things-factory/import-ui'
-import '../components/import-pop-up'
 import { PALLET_LABEL_SETTING_KEY } from '../constants'
 import './inventory-history-by-pallet'
 
