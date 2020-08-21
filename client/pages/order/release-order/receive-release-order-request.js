@@ -737,21 +737,19 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
     }
 
     if (this._status === ORDER_STATUS.PENDING_CANCEL.value && !this._crossDocking) {
-      this._actions = [{ title: i18next.t('button.confirm'), action: this._confirmCancellationReleaseOrder.bind(this) }]
+      this._actions = [
+        { title: i18next.t('button.approve_cancellation'), action: this._confirmCancellationReleaseOrder.bind(this) },
+        {
+          title: i18next.t('button.reject_cancellation'),
+          action: this._rejectCancellationReleaseOrder.bind(this)
+        }
+      ]
     }
 
     if (this._crossDocking) {
       const params = new URLSearchParams()
       params.append('name', this._ganNo)
       this._actions = [
-        {
-          title: i18next.t('button.approve_cancellation'),
-          action: this._confirmCancellationReleaseOrder.bind(this)
-        },
-        {
-          title: i18next.t('button.reject_cancellation'),
-          action: this._rejectCancellationReleaseOrder.bind(this)
-        },
         {
           title: i18next.t('button.move_to_x', { state: { x: i18next.t('title.arrival_notice') } }),
           action: () => navigate(`arrival_notice_requests?${params.toString()}`)
