@@ -629,7 +629,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     }
 
     // 3. equality of pallet id
-    if (this._selectedOrderProduct.reusablePallet.name !== this.palletInput.value) {
+    if (this._selectedOrderProduct.reusablePalletName !== this.palletInput.value) {
       if (this._selectedOrderProduct.palletId !== this.palletInput.value) {
         setTimeout(() => this.palletInput.select(), 100)
         throw new Error(i18next.t('text.wrong_pallet_id'))
