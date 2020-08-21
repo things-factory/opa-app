@@ -117,7 +117,96 @@ class PopupUnloading extends localize(i18next)(LitElement) {
     return this.shadowRoot.querySelector('input[name=qty]')
   }
 
+  render() {
+    return html`
+      <form id="info-form" class="multi-column-form">
+        <fieldset>
+          <label>${i18next.t('label.reusable_pallet')}</label>
+          <input name="reusablePalletID" type="text" readonly />
+        </fieldset>
+      </form>
+
+      <div class="grist">
+        <div class="left-column">
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.unloading')}</h2>
+          <data-grist
+            id="unloading-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.unloadingGristConfig}
+            .data=${this.unloadingGristData}
+          ></data-grist>
+
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.unloaded')}</h2>
+          <data-grist
+            id="unloaded-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.unloadedGristConfig}
+            .data=${this.unloadedGristData}
+          ></data-grist>
+        </div>
+
+        <div class="right-column">
+          <form id="input-form" class="single-column-form">
+            <fieldset>
+              <legend>${i18next.t('title.product')}</legend>
+
+              <label>${i18next.t('label.batch_no')}</label>
+              <input name="batchId" readonly />
+
+              <label>${i18next.t('label.description')}</label>
+              <input name="description" readonly />
+
+              <label>${i18next.t('label.packing_type')}</label>
+              <input name="packingType" readonly />
+
+              <label>${i18next.t('label.total_pallet_qty')}</label>
+              <input name="palletQty" type="number" readonly />
+
+              <label>${i18next.t('label.total_pack_qty')}</label>
+              <input name="packQty" type="number" readonly />
+            </fieldset>
+
+            <fieldset>
+              <legend>${i18next.t('title.input_section')}</legend>
+
+              <label>${i18next.t('label.pallet_id')}</label>
+              <barcode-scanable-input
+                name="palletId"
+                .value=${this._palletId}
+                without-enter
+                custom-input
+                @keypress="${this._unload.bind(this)}"
+              ></barcode-scanable-input>
+
+              <label>${i18next.t('label.actual_qty')}</label>
+              <input name="qty" type="number" min="1" @keypress="${this._unload.bind(this)}" required />
+            </fieldset>
+          </form>
+        </div>
+      </div>
+
+      <div class="button-container">
+        <button @click="${this._undoUnloading.bind(this)}">
+          ${i18next.t('button.undo')}
+        </button>
+        <button
+          @click="${() => {
+            this.dispatchEvent(new CustomEvent('unloading-pallet', { detail: this.unloadingGristData }))
+            this.dispatchEvent(new CustomEvent('unloaded-pallet', { detail: this.unloadedGristData }))
+            history.back()
+          }}"
+        >
+          ${i18next.t('button.confirm')}
+        </button>
+      </div>
+    `
+  }
+
   firstUpdated() {
+    if (this._selectedOrderProduct) {
+      this._fillUpInputForm(this._selectedOrderProduct)
+    }
+
     this.unloadingGristConfig = {
       rows: {
         appendable: false,
@@ -227,12 +316,6 @@ class PopupUnloading extends localize(i18next)(LitElement) {
           header: i18next.t('field.actual_pack_qty'),
           record: { align: 'center' },
           width: 80
-        },
-        {
-          type: 'string',
-          name: 'reusablePalletName',
-          header: i18next.t('field.reusable_pallet'),
-          width: 150
         }
       ]
     }
@@ -242,91 +325,6 @@ class PopupUnloading extends localize(i18next)(LitElement) {
     if (changedProps.has('reusablePallet')) {
       this.reusablePalletInput.value = this.reusablePallet
     }
-  }
-
-  render() {
-    return html`
-      <form id="info-form" class="multi-column-form">
-        <fieldset>
-          <label>${i18next.t('label.reusable_pallet')}</label>
-          <input name="reusablePalletID" type="text" readonly />
-        </fieldset>
-      </form>
-
-      <div class="grist">
-        <div class="left-column">
-          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.unloading')}</h2>
-          <data-grist
-            id="unloading-grist"
-            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-            .config=${this.unloadingGristConfig}
-            .data=${this.unloadingGristData}
-          ></data-grist>
-
-          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.unloaded')}</h2>
-          <data-grist
-            id="unloaded-grist"
-            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-            .config=${this.unloadedGristConfig}
-            .data=${this.unloadedGristData}
-          ></data-grist>
-        </div>
-
-        <div class="right-column">
-          <form id="input-form" class="single-column-form">
-            <fieldset>
-              <legend>${i18next.t('title.product')}</legend>
-
-              <label>${i18next.t('label.batch_no')}</label>
-              <input name="batchId" readonly />
-
-              <label>${i18next.t('label.description')}</label>
-              <input name="description" readonly />
-
-              <label>${i18next.t('label.packing_type')}</label>
-              <input name="packingType" readonly />
-
-              <label>${i18next.t('label.total_pallet_qty')}</label>
-              <input name="palletQty" type="number" readonly />
-
-              <label>${i18next.t('label.total_pack_qty')}</label>
-              <input name="packQty" type="number" readonly />
-            </fieldset>
-
-            <fieldset>
-              <legend>${i18next.t('title.input_section')}</legend>
-
-              <label>${i18next.t('label.pallet_id')}</label>
-              <barcode-scanable-input
-                name="palletId"
-                .value=${this._palletId}
-                without-enter
-                custom-input
-                @keypress="${this._unload.bind(this)}"
-              ></barcode-scanable-input>
-
-              <label>${i18next.t('label.actual_qty')}</label>
-              <input name="qty" type="number" min="1" @keypress="${this._unload.bind(this)}" required />
-            </fieldset>
-          </form>
-        </div>
-      </div>
-
-      <div class="button-container">
-        <button @click="${this._undoUnloading.bind(this)}">
-          ${i18next.t('button.undo')}
-        </button>
-        <button
-          @click="${() => {
-            this.dispatchEvent(new CustomEvent('unloading-pallet', { detail: this.unloadingGristData }))
-            this.dispatchEvent(new CustomEvent('unloaded-pallet', { detail: this.unloadedGristData }))
-            history.back()
-          }}"
-        >
-          ${i18next.t('button.confirm')}
-        </button>
-      </div>
-    `
   }
 
   async _fetchProducts(arrivalNoticeNo) {
@@ -406,15 +404,6 @@ class PopupUnloading extends localize(i18next)(LitElement) {
       this._selectedInventory = null
       this.unloadedGristData = {
         records: this._unloadedInventories
-      }
-
-      this.unloadedGristData = {
-        records: this.unloadedGristData.records.map(unloading => {
-          return {
-            ...unloading,
-            reusablePalletName: unloading.reusablePallet.name
-          }
-        })
       }
 
       this.unloadingGristData = {
