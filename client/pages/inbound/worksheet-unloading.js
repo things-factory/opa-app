@@ -9,10 +9,10 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../components/popup-note'
-import { ARRIVAL_NOTICE, WORKSHEET_STATUS } from '../constants'
+import { WORKSHEET_STATUS } from '../constants'
 import '../vas/related-vas-list'
-import './adjust-pallet-qty'
 import './adjust-batch-id'
+import './adjust-pallet-qty'
 import './pallet-label-popup'
 import './putaway-worksheet-generate-popup'
 
@@ -508,7 +508,6 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
               ...this.data,
               records: this.data.records.map(item => {
                 if (item.name === record.name) {
-                  item.palletizingVasId = e.detail.palletizingVasId
                   item.palletQty = e.detail.palletQty
                   item.palletizingDescription = e.detail.palletizingDescription
                 }
@@ -700,7 +699,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       }
 
       if (!worksheetDetail.isPalletized) {
-        _tempObj.palletizingVasId = worksheetDetail.palletizingVasId
+        // _tempObj.palletizingVasId = worksheetDetail.palletizingVasId
         _tempObj.palletQty = worksheetDetail.palletQty
         _tempObj.palletizingDescription = worksheetDetail.palletizingDescription
       }
