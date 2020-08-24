@@ -98,7 +98,7 @@ class InventoryHistoryByPallet extends localize(i18next)(LitElement) {
         },
         {
           type: 'number',
-          name: 'opeingQty',
+          name: 'openingQty',
           header: i18next.t('field.opening_qty'),
           record: { align: 'center' },
           sortable: true,
