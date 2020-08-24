@@ -644,13 +644,12 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           .unloadingGristData="${unloadingData}"
           .unloadedGristData="${unloadedData}"
           .reusablePalletData="${this.reusablePalletIdData}"
-          ._selectedInventory="${this._selectedInventory}"
           ._selectedOrderProduct="${this._selectedOrderProduct}"
           @unloading-pallet="${e => {
             this.orderProductData = e.detail
           }}"
-          @unloaded-pallet="${async e => {
-            await this._fetchInventories()
+          @unloaded-pallet="${e => {
+            this.palletProductData = { records: [] }
           }}"
         ></popup-unloading>
       `,
