@@ -226,70 +226,58 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
             </fieldset>
 
             <fieldset>
-              <legend style="display: ${this.scannable ? 'flex' : 'none'}">${i18next.t('title.input_section')}</legend>
-              <label style="display: ${this.scannable ? 'flex' : 'none'}">${i18next.t('label.pallet_barcode')}</label>
-              <barcode-scanable-input
-                style="display: ${this.scannable ? 'flex' : 'none'}"
-                name="palletId"
-                .value=${this._pallet}
-                custom-input
-              ></barcode-scanable-input>
+              ${this.scannable
+                ? html`
+                    <legend>${i18next.t('title.input_section')}</legend>
+                    <label>${i18next.t('label.pallet_barcode')}</label>
+                    <barcode-scanable-input
+                      name="palletId"
+                      .value=${this._pallet}
+                      custom-input
+                    ></barcode-scanable-input>
 
-              <label
-                style="display: ${this.scannable && this._operationType === OPERATION_TYPE.PUTAWAY ? 'flex' : 'none'}"
-                >${i18next.t('label.location')}</label
-              >
-              <barcode-scanable-input
-                style="display: ${this.scannable &&
-                !this.incompleteLocationName &&
-                this._operationType === OPERATION_TYPE.PUTAWAY
-                  ? 'flex'
-                  : 'none'}"
-                name="locationCode"
-                .value=${this._location}
-                custom-input
-              ></barcode-scanable-input>
+                    ${this._operationType === OPERATION_TYPE.PUTAWAY
+                      ? html`
+                          <label>${i18next.t('label.location')}</label>
 
-              <select
-                style="display: ${this.incompleteLocationName && this._operationType === OPERATION_TYPE.PUTAWAY
-                  ? 'flex'
-                  : 'none'}"
-                name="newLocationCode"
-                @change="${e => (this.locationInput.value = e.currentTarget.value)}"
-              >
-                <option value="">-- ${i18next.t('text.please_select_the_location')} --</option>
-                ${(this.locations || []).map(
-                  location =>
-                    html`
-                      <option value="${location && location.name}"
-                        >${location && location.name}
-                        ${location && location.status ? ` (${location && location.status})` : ''}</option
-                      >
-                    `
-                )}
-              </select>
+                          ${this.incompleteLocationName
+                            ? html`
+                                <select
+                                  name="newLocationCode"
+                                  @change="${e => (this.locationInput.value = e.currentTarget.value)}"
+                                >
+                                  <option value="">-- ${i18next.t('text.please_select_the_location')} --</option>
+                                  ${(this.locations || []).map(
+                                    location =>
+                                      html`
+                                        <option value="${location?.name}">
+                                          ${location?.name} ${location?.status ? ` (${location?.status})` : ''}
+                                        </option>
+                                      `
+                                  )}
+                                </select>
+                              `
+                            : html`
+                                <barcode-scanable-input
+                                  name="locationCode"
+                                  .value=${this._location}
+                                  custom-input
+                                ></barcode-scanable-input>
+                              `}
+                        `
+                      : html`
+                          <label>${i18next.t('label.to_pallet_barcode')}</label>
+                          <barcode-scanable-input
+                            name="toPalletId"
+                            .value=${this._location}
+                            custom-input
+                          ></barcode-scanable-input>
 
-              <label
-                style="display: ${this.scannable && this._operationType === OPERATION_TYPE.TRANSFER ? 'flex' : 'none'}"
-                >${i18next.t('label.to_pallet_barcode')}</label
-              >
-              <barcode-scanable-input
-                style="display: ${this.scannable && this._operationType === OPERATION_TYPE.TRANSFER ? 'flex' : 'none'}"
-                name="toPalletId"
-                .value=${this._location}
-                custom-input
-              ></barcode-scanable-input>
-
-              <label
-                style="display: ${this.scannable && this._operationType === OPERATION_TYPE.TRANSFER ? 'flex' : 'none'}"
-                >${i18next.t('label.qty')}</label
-              >
-              <input
-                style="display: ${this.scannable && this._operationType === OPERATION_TYPE.TRANSFER ? 'flex' : 'none'}"
-                type="number"
-                min="1"
-                name="transferQty"
-              />
+                          <label>${i18next.t('label.qty')}</label>
+                          <input type="number" min="1" name="transferQty" />
+                        `}
+                  `
+                : ''}
             </fieldset>
           </form>
         </div>
@@ -308,7 +296,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   get scannable() {
-    return this._selectedTaskStatus && this._selectedTaskStatus === WORKSHEET_STATUS.EXECUTING.value
+    return this._selectedTaskStatus === WORKSHEET_STATUS.EXECUTING.value
   }
 
   get completed() {
@@ -414,28 +402,32 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     })
   }
 
+  _focusOnInput(input) {
+    setTimeout(() => input.focus(), 100)
+  }
+
   _focusOnArrivalNoticeField() {
-    setTimeout(() => this.arrivalNoticeNoInput.focus(), 100)
+    this._focusOnInput(this.arrivalNoticeNoInput)
   }
 
   _focusOnPalletInput() {
-    setTimeout(() => this.palletInput.focus(), 100)
+    this._focusOnInput(this.palletInput)
   }
 
   _focusOnLocationInput() {
-    setTimeout(() => this.locationInput.focus(), 100)
+    this._focusOnInput(this.locationInput)
   }
 
   _focusOnNewLocationInput() {
-    setTimeout(() => this.newLocationInput.focus(), 100)
+    this._focusOnInput(this.newLocationInput)
   }
 
   _focusOnToPalletInput() {
-    setTimeout(() => this.toPalletInput.focus(), 100)
+    this._focusOnInput(this.toPalletInput)
   }
 
   _focusOnQtyInput() {
-    setTimeout(() => this.qtyInput.focus(), 100)
+    this._focusOnInput(this.qtyInput)
   }
 
   async _fetchProducts(arrivalNoticeNo) {
@@ -559,7 +551,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  async _putaway(e) {
+  async _putaway() {
     try {
       await this._validatePutaway()
       if (!this.incompleteLocationName) {
