@@ -175,7 +175,10 @@ class WorksheetPicking extends localize(i18next)(PageView) {
   async updated(changeProps) {
     if (changeProps.has('crossDocking') || changeProps.has('ganNo')) {
       if (this.crossDocking && this.ganNo) {
-        this.unloadingWorksheetNo = await this.fetchUnloadingWorksheet()
+        const { name, status } = await this.fetchUnloadingWorksheet()
+        this.unloadingWorksheetNo = name
+        this.unloadingWorksheetStatus = status
+        this._updateContext()
       }
     }
   }
@@ -502,7 +505,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         })
       }
 
-      if (completedOrderInvs && completedOrderInvs.length && this.isPalletPickingOrder) {
+      if (completedOrderInvs && completedOrderInvs.length) {
         this.worksheetDetailData = {
           records: completedOrderInvs.map(item =>
             Object.assign({ description: item.description }, item, item?.inventory, item?.inventory?.location)
@@ -523,13 +526,14 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             orderNo: this.ganNo
           })}) {
             name
+            status
           }
         }
       `
     })
 
     if (!response.errors) {
-      return response.data.worksheetByOrderNo.name
+      return response.data.worksheetByOrderNo
     }
   }
 
@@ -669,11 +673,12 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             releaseWeight: wsd.targetInventory.releaseWeight
           }
 
-          if (this.crossDocking) {
-            record = Object.assign(record, wsd.targetInventory)
-          } else {
+          if (wsd.targetInventory?.inventory) {
             record = Object.assign(record, wsd.targetInventory.inventory)
+          } else {
+            record = Object.assign(record, wsd.targetInventory)
           }
+
           return record
         })
       }
@@ -681,41 +686,29 @@ class WorksheetPicking extends localize(i18next)(PageView) {
   }
 
   _updateContext() {
-    this._actions = []
+    if (this.crossDocking) {
+      this._actions = this._updateCrossDockingContext()
+    }
 
-    if (this.crossDocking && this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value) {
+    if (this.undoable) {
       this._actions.push({
-        title: i18next.t('button.move_to_x', { state: { x: i18next.t('title.worksheet_unloading') } }),
-        action: () => navigate(`worksheet_unloading/${this.unloadingWorksheetNo}`)
+        title: i18next.t('button.undo'),
+        action: this._undoAssignment.bind(this)
       })
-    } else {
-      if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value && !this.isPalletPickingOrder) {
-        if (this.productGristData.records.some(record => record.completed)) {
-          if (this._selectedProduct && this._selectedProduct.completed) {
-            this._actions.push({
-              title: i18next.t('button.undo'),
-              action: this._undoAssignment.bind(this)
-            })
-          }
-        }
+    }
 
-        if (this.productGristData.records.every(record => record.completed)) {
-          this._actions.push({
-            title: i18next.t('button.activate'),
-            action: this._activateWorksheet.bind(this)
-          })
-        } else {
-          this._actions.push({
-            title: i18next.t('button.auto_assign'),
-            action: this._showAutoAssignPopup.bind(this)
-          })
-        }
-      } else if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value) {
-        this._actions.push({
-          title: i18next.t('button.activate'),
-          action: this._activateWorksheet.bind(this)
-        })
-      }
+    if (this.activatable) {
+      this._actions.push({
+        title: i18next.t('button.activate'),
+        action: this._activateWorksheet.bind(this)
+      })
+    }
+
+    if (this.assignable) {
+      this._actions.push({
+        title: i18next.t('button.auto_assign'),
+        action: this._showAutoAssignPopup.bind(this)
+      })
     }
 
     this._actions.push({
@@ -723,10 +716,43 @@ class WorksheetPicking extends localize(i18next)(PageView) {
       action: () => history.back()
     })
 
-    store.dispatch({
-      type: UPDATE_CONTEXT,
-      context: this.context
-    })
+    store.dispatch({ type: UPDATE_CONTEXT, context: this.context })
+  }
+
+  get undoable() {
+    return this.productGristData.records.some(record => record.completed) && this._selectedProduct?.completed
+  }
+
+  get activatable() {
+    if (this.productGristData.records.every(record => record.completed)) {
+      if (this.crossDocking) {
+        return this.unloadingWorksheetStatus === WORKSHEET_STATUS.EXECUTING.value
+      } else {
+        return true
+      }
+    }
+  }
+
+  get assignable() {
+    return !this.productGristData.records.every(record => record.completed)
+  }
+
+  _updateCrossDockingContext() {
+    let actions = []
+
+    const isWorksheetDeactive = this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value
+    const isUnloadingWorksheetExecuted = this.unloadingWorksheetStatus === WORKSHEET_STATUS.EXECUTING.value
+
+    if (isWorksheetDeactive) {
+      if (!isUnloadingWorksheetExecuted) {
+        actions.push({
+          title: i18next.t('button.move_to_x', { state: { x: i18next.t('title.worksheet_unloading') } }),
+          action: () => navigate(`worksheet_unloading/${this.unloadingWorksheetNo}`)
+        })
+      }
+    }
+
+    return actions
   }
 
   _updateGristConfig() {

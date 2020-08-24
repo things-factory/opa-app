@@ -1112,6 +1112,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         status: ORDER_INVENTORY_STATUS.PENDING.value
       }
 
+      if (record.isCrossDocking) newRecord.crossDocking = true
+
       if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
         newRecord.product = { id: record.inventory.productId, name: record.inventory.productName }
       } else {
