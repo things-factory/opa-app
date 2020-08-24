@@ -10,7 +10,6 @@ import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import '../components/popup-note'
 import '../components/popup-unloading'
-import { ARRIVAL_NOTICE } from '../constants'
 
 class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -640,6 +639,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
         <popup-unloading
           .title="${i18next.t('title.unloading_with_reusable_pallet')}"
           .ganNo="${this._arrivalNoticeNo}"
+          ._productName="${this._productName}"
           .reusablePallet="${reusablePallet}"
           .unloadingGristData="${unloadingData}"
           .unloadedGristData="${unloadedData}"

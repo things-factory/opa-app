@@ -1,7 +1,9 @@
+import '@things-factory/barcode-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { css, html, LitElement } from 'lit-element'
+import '@things-factory/grist-ui'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
-import { client, CustomAlert } from '@things-factory/shell'
+import { client, CustomAlert, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/form-ui'
 import gql from 'graphql-tag'
 
@@ -148,7 +150,7 @@ class PopupUnloading extends localize(i18next)(LitElement) {
         <div class="right-column">
           <form id="input-form" class="single-column-form">
             <fieldset>
-              <legend>${i18next.t('title.product')}</legend>
+              <legend>${i18next.t('title.product')}: ${this._productName}</legend>
 
               <label>${i18next.t('label.batch_no')}</label>
               <input name="batchId" readonly />
@@ -202,11 +204,7 @@ class PopupUnloading extends localize(i18next)(LitElement) {
     `
   }
 
-  firstUpdated() {
-    if (this._selectedOrderProduct) {
-      this._fillUpInputForm(this._selectedOrderProduct)
-    }
-
+  async firstUpdated() {
     this.unloadingGristConfig = {
       rows: {
         appendable: false,
@@ -240,7 +238,7 @@ class PopupUnloading extends localize(i18next)(LitElement) {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_no'),
-          width: 200
+          width: 150
         },
         {
           type: 'object',
@@ -298,7 +296,7 @@ class PopupUnloading extends localize(i18next)(LitElement) {
           }
         }
       },
-      list: { fields: ['palletId', 'qty'] },
+      list: { fields: ['palletId', 'product', 'qty'] },
       pagination: {
         infinite: true
       },
@@ -311,6 +309,12 @@ class PopupUnloading extends localize(i18next)(LitElement) {
           width: 150
         },
         {
+          type: 'object',
+          name: 'product',
+          header: i18next.t('field.product'),
+          width: 200
+        },
+        {
           type: 'integer',
           name: 'qty',
           header: i18next.t('field.actual_pack_qty'),
@@ -319,12 +323,47 @@ class PopupUnloading extends localize(i18next)(LitElement) {
         }
       ]
     }
+
+    if (this._selectedOrderProduct) {
+      this._fillUpInputForm(this._selectedOrderProduct)
+    }
+
+    if (this.reusablePallet) {
+      await this._fetchInventoriesByReusablePallet()
+    }
   }
 
   updated(changedProps) {
     if (changedProps.has('reusablePallet')) {
       this.reusablePalletInput.value = this.reusablePallet
     }
+
+    // if (changedProps.has('_selectedInventory')) {
+    //   this._updateContext()
+    // }
+  }
+
+  _updateContext() {
+    let actions = []
+    if (this._selectedInventory) {
+      actions = [...actions, { title: i18next.t('button.undo'), action: this._undoUnloading.bind(this) }]
+    }
+
+    if (this.ganNo) {
+      actions = [
+        ...actions,
+        {
+          title: i18next.t('button.complete'),
+          action: this.confirmButtonAction()
+        }
+      ]
+    }
+  }
+
+  confirmButtonAction() {
+    this.dispatchEvent(new CustomEvent('unloading-pallet', { detail: this.unloadingGristData }))
+    this.dispatchEvent(new CustomEvent('unloaded-pallet', { detail: this.unloadedGristData }))
+    history.back()
   }
 
   async _fetchProducts(arrivalNoticeNo) {
@@ -378,21 +417,23 @@ class PopupUnloading extends localize(i18next)(LitElement) {
     }
   }
 
-  async _fetchInventories() {
+  async _fetchInventoriesByReusablePallet() {
     if (!this._selectedOrderProduct.name) return
 
     const response = await client.query({
       query: gql`
         query {
-          unloadedInventories(${gqlBuilder.buildArgs({
+          unloadedInventoriesByReusablePallet(${gqlBuilder.buildArgs({
+            reusablePalletId: this.reusablePallet,
             worksheetDetailName: this._selectedOrderProduct.name
           })}) {
             batchId
             palletId
             qty
-            reusablePallet {
+            product {
               id
               name
+              description
             }
           }
         }
@@ -400,7 +441,7 @@ class PopupUnloading extends localize(i18next)(LitElement) {
     })
 
     if (!response.errors) {
-      this._unloadedInventories = response.data.unloadedInventories
+      this._unloadedInventories = response.data.unloadedInventoriesByReusablePallet
       this._selectedInventory = null
       this.unloadedGristData = {
         records: this._unloadedInventories
@@ -445,7 +486,7 @@ class PopupUnloading extends localize(i18next)(LitElement) {
           this.actualQtyInput.value = ''
 
           await this._fetchProducts(this.ganNo)
-          await this._fetchInventories()
+          await this._fetchInventoriesByReusablePallet()
           this._focusOnPalletInput()
         }
       } catch (e) {
@@ -525,7 +566,7 @@ class PopupUnloading extends localize(i18next)(LitElement) {
         this.actualQtyInput.value = ''
       }
       await this._fetchProducts(this.ganNo)
-      await this._fetchInventories()
+      await this._fetchInventoriesByReusablePallet()
       this._focusOnPalletInput()
     } catch (e) {
       this._showToast(e)
