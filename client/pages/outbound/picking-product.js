@@ -629,7 +629,9 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
         this.selectInput(this.releaseQtyInput)
         throw new Error(i18next.t('text.wrong_release_qty'))
       }
-    } else {
+    }
+
+    if (this._selectedOrderInventory.palletId) {
       // Equality of pallet id
       if (this._selectedOrderInventory.palletId !== this.palletInput.value) {
         const isInProgressing = await this.checkProgressingPallet(this.palletInput.value)
