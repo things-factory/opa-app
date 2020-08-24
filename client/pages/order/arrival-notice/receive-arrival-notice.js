@@ -666,7 +666,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
               if (this._crossDocking) {
                 const result = await CustomAlert({
                   title: i18next.t('title.cross_docking'),
-                  text: i18next.t('text.related_order_will_be_rejected'),
+                  text: i18next.t('text.related_release_order_will_be_rejected'),
                   confirmButton: { text: i18next.t('button.confirm') },
                   cancelButton: { text: i18next.t('button.cancel') }
                 })

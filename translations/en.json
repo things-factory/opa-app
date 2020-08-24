@@ -1229,5 +1229,6 @@
   "text.cancellation_request_has_been_rejected": "cancellation request has been rejected",
   "text.cannot_delete_cross_docking_products": "can't delete products for cross docking",
   "text.cannot_change_x": "can't change {state.x}",
-  "button.move_to_x": "move to {state.x}"
+  "button.move_to_x": "move to {state.x}",
+  "text.related_release_order_will_be_rejected": "related release order will be rejected"
 }
