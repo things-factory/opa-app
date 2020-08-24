@@ -99,6 +99,15 @@ class PopupUnloading extends localize(i18next)(LitElement) {
     ]
   }
 
+  get context() {
+    const popupUnloadingButtons = document.querySelector('my-buttons')
+    popupUnloadingButtons.addEventListener('popup-unloading-buttons', e => {
+      return {
+        title: i18next.t('title.unloading_with_reusable_pallet')
+      }
+    })
+  }
+
   get inputForm() {
     return this.shadowRoot.querySelector('form#input-form')
   }
@@ -188,7 +197,7 @@ class PopupUnloading extends localize(i18next)(LitElement) {
       </div>
 
       <div class="button-container">
-        <button @click="${this._undoUnloading.bind(this)}">
+        <button ?hidden="${!this._selectedInventory}" @click="${this._undoUnloading.bind(this)}">
           ${i18next.t('button.undo')}
         </button>
         <button
@@ -217,6 +226,7 @@ class PopupUnloading extends localize(i18next)(LitElement) {
                 record.product.description ? `(${record.product.description})` : ''
               }`
 
+              this.palletInput.value = ''
               this._fillUpInputForm(record)
             }
           }
@@ -337,33 +347,6 @@ class PopupUnloading extends localize(i18next)(LitElement) {
     if (changedProps.has('reusablePallet')) {
       this.reusablePalletInput.value = this.reusablePallet
     }
-
-    // if (changedProps.has('_selectedInventory')) {
-    //   this._updateContext()
-    // }
-  }
-
-  _updateContext() {
-    let actions = []
-    if (this._selectedInventory) {
-      actions = [...actions, { title: i18next.t('button.undo'), action: this._undoUnloading.bind(this) }]
-    }
-
-    if (this.ganNo) {
-      actions = [
-        ...actions,
-        {
-          title: i18next.t('button.complete'),
-          action: this.confirmButtonAction()
-        }
-      ]
-    }
-  }
-
-  confirmButtonAction() {
-    this.dispatchEvent(new CustomEvent('unloading-pallet', { detail: this.unloadingGristData }))
-    this.dispatchEvent(new CustomEvent('unloaded-pallet', { detail: this.unloadedGristData }))
-    history.back()
   }
 
   async _fetchProducts(arrivalNoticeNo) {
@@ -434,6 +417,10 @@ class PopupUnloading extends localize(i18next)(LitElement) {
               id
               name
               description
+            }
+            reusablePallet {
+              id
+              name
             }
           }
         }

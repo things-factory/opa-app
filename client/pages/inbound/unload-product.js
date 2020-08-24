@@ -382,7 +382,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           }
         }
       },
-      list: { fields: ['palletId', 'qty'] },
+      list: { fields: ['palletId', 'qty', 'reusablePalletName'] },
       pagination: {
         infinite: true
       },
@@ -649,8 +649,8 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           @unloading-pallet="${e => {
             this.orderProductData = e.detail
           }}"
-          @unloaded-pallet="${e => {
-            this.palletProductData = e.detail
+          @unloaded-pallet="${async e => {
+            await this._fetchInventories()
           }}"
         ></popup-unloading>
       `,
