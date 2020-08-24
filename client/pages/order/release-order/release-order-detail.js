@@ -656,7 +656,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       if (this._crossDocking) {
         result = await CustomAlert({
           title: i18next.t('label.cross_docking'),
-          text: i18next.t('text.arrival_notice_will_be_deleted'),
+          text: i18next.t('text.related_arrival_notice_will_be_deleted'),
           confirmButton: { text: i18next.t('button.confirm') },
           cancelButton: { text: i18next.t('button.cancel') }
         })
