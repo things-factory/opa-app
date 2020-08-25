@@ -21,6 +21,7 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
     return {
       _ganNo: String,
       _ownTransport: Boolean,
+      _crossDocking: Boolean,
       _hasContainer: Boolean,
       _looseItem: Boolean,
       productGristConfig: Object,
@@ -153,6 +154,10 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
 
           <input id="ownTransport" type="checkbox" name="ownTransport" ?checked="${this._ownTransport}" disabled />
           <label>${i18next.t('label.own_transport')}</label>
+
+          <input id="crossDocking" type="checkbox" name="crossDocking" ?checked="${this._crossDocking}" disabled/>
+          <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+
         </fieldset>
       </form>
 
@@ -219,6 +224,10 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
 
   get _ownTransportInput() {
     return this.shadowRoot.querySelector('input[name=ownTransport]')
+  }
+
+  get _crossDockingInput() {
+    return this.shadowRoot.querySelector('input[name=crossDocking]')
   }
 
   get productGrist() {
@@ -429,6 +438,7 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
             }
             containerNo
             ownTransport
+            crossDocking
             etaDate
             deliveryOrderNo
             status
@@ -497,6 +507,7 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
 
       this._hasContainer = arrivalNotice.containerNo ? true : false
       this._ownTransport = arrivalNotice.ownTransport
+      this._crossDocking = arrivalNotice.crossDocking
       this._importCargo = arrivalNotice.importCargo
       this._status = arrivalNotice.status
       this._fillupANForm({
