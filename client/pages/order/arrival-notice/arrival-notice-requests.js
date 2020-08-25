@@ -211,32 +211,32 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
         {
           type: 'boolean',
           name: 'importCargo',
-          header: i18next.t('field.import_cargo'),
+          header: i18next.t('field.ic'),
           record: { align: 'center' },
           sortable: true,
-          width: 120
+          width: 60
         },
         {
           type: 'boolean',
           name: 'ownTransport',
-          header: i18next.t('field.own_transport'),
+          header: i18next.t('field.ot'),
           record: { align: 'center' },
           sortable: true,
-          width: 120
+          width: 60
         },
         {
           type: 'boolean',
           name: 'crossDocking',
-          header: i18next.t('field.cross_docking'),
+          header: i18next.t('field.cd'),
           record: { align: 'center' },
-          width: 100
+          width: 60
         },
         {
           type: 'object',
           name: 'releaseGood',
-          header: i18next.t('field.release_good'),
+          header: i18next.t('field.ro'),
           record: { align: 'center' },
-          width: 180
+          width: 160
         },
         {
           type: 'string',

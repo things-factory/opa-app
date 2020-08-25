@@ -175,29 +175,29 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
           header: i18next.t('field.own_transport'),
           record: { align: 'center' },
           sortable: true,
-          width: 100
+          width: 60
         },
         {
           type: 'boolean',
           name: 'crossDocking',
           header: i18next.t('field.cross_docking'),
           record: { align: 'center' },
-          width: 100
-        },
-        {
-          type: 'object',
-          name: 'arrivalNotice',
-          header: i18next.t('field.arrival_notice'),
-          record: { align: 'center' },
-          width: 180
+          width: 60
         },
         {
           type: 'boolean',
           name: 'exportOption',
-          header: i18next.t('field.shipping_option'),
+          header: i18next.t('field.eo'),
           record: { align: 'center' },
           sortable: true,
-          width: 100
+          width: 60
+        },
+        {
+          type: 'object',
+          name: 'arrivalNotice',
+          header: i18next.t('field.gan'),
+          record: { align: 'center' },
+          width: 160
         },
         {
           type: 'string',

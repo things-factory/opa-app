@@ -192,32 +192,32 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
         {
           type: 'boolean',
           name: 'ownTransport',
-          header: i18next.t('field.own_transport'),
+          header: i18next.t('field.ot'),
           record: { align: 'center' },
           sortable: true,
-          width: 100
+          width: 60
         },
         {
           type: 'boolean',
           name: 'crossDocking',
-          header: i18next.t('field.cross_docking'),
+          header: i18next.t('field.cd'),
           record: { align: 'center' },
-          width: 100
-        },
-        {
-          type: 'object',
-          name: 'arrivalNotice',
-          header: i18next.t('field.arrival_notice'),
-          record: { align: 'center' },
-          width: 180
+          width: 60
         },
         {
           type: 'boolean',
           name: 'exportOption',
-          header: i18next.t('field.export_option'),
+          header: i18next.t('field.eo'),
           record: { align: 'center' },
           sortable: true,
-          width: 100
+          width: 60
+        },
+        {
+          type: 'object',
+          name: 'arrivalNotice',
+          header: i18next.t('field.gan'),
+          record: { align: 'center' },
+          width: 160
         },
         {
           type: 'string',
