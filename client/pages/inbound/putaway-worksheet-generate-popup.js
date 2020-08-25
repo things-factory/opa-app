@@ -390,52 +390,54 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
   checkValidity() {
     if (!this.inventoryGrist.selected?.length) throw new Error(i18next.t('text.there_is_no_selected_items'))
     // Find out pallet which is included in cross dock picking
-    const compareIdenticality = function (a, b) {
-      return a.batchId === b.batchId && a.product.id === b.product.id && a.packingType === b.packingType
-    }
+    if (this.crossDocking) {
+      const compareIdenticality = function (a, b) {
+        return a.batchId === b.batchId && a.product.id === b.product.id && a.packingType === b.packingType
+      }
 
-    const { selectedInvs, nonSelectedInvs } = this.inventoryGrist.dirtyData.records.reduce(
-      (inventories, record) => {
-        if (record.__selected__) {
-          inventories.selectedInvs.push(record)
-        } else {
-          inventories.nonSelectedInvs.push(record)
+      const { selectedInvs, nonSelectedInvs } = this.inventoryGrist.dirtyData.records.reduce(
+        (inventories, record) => {
+          if (record.__selected__) {
+            inventories.selectedInvs.push(record)
+          } else {
+            inventories.nonSelectedInvs.push(record)
+          }
+
+          return inventories
+        },
+        { selectedInvs: [], nonSelectedInvs: [] }
+      )
+
+      const includedInvs = selectedInvs.filter(inv =>
+        this.crossDockGrist.dirtyData.records.find(ordInv => compareIdenticality(inv, ordInv))
+      )
+
+      // If there's included pallets
+      if (includedInvs.length) {
+        // 선택되지 않은 인벤토리의 수량의 합계가 처리하려는 작업의 수량 보다 크거나 같아야함
+
+        const isEveryQtySufficient = this.crossDockGrist.dirtyData.records.every(crossDockInv => {
+          if (!includedInvs.find(inv => compareIdenticality(inv, crossDockInv))) {
+            return true
+          }
+
+          const { qty, weight } = nonSelectedInvs
+            .filter(nonSelectedInv => compareIdenticality(nonSelectedInv, crossDockInv))
+            .reduce(
+              (amount, inv) => {
+                amount.qty += inv.qty
+                amount.weight += inv.weight
+                return amount
+              },
+              { qty: 0, weight: 0 }
+            )
+
+          return crossDockInv.releaseQty <= qty && crossDockInv.releaseWeight <= weight
+        })
+
+        if (!isEveryQtySufficient) {
+          throw new Error(i18next.t('text.product_should_be_remain_for_picking'))
         }
-
-        return inventories
-      },
-      { selectedInvs: [], nonSelectedInvs: [] }
-    )
-
-    const includedInvs = selectedInvs.filter(inv =>
-      this.crossDockGrist.dirtyData.records.find(ordInv => compareIdenticality(inv, ordInv))
-    )
-
-    // If there's included pallets
-    if (includedInvs.length) {
-      // 선택되지 않은 인벤토리의 수량의 합계가 처리하려는 작업의 수량 보다 크거나 같아야함
-
-      const isEveryQtySufficient = this.crossDockGrist.dirtyData.records.every(crossDockInv => {
-        if (!includedInvs.find(inv => compareIdenticality(inv, crossDockInv))) {
-          return true
-        }
-
-        const { qty, weight } = nonSelectedInvs
-          .filter(nonSelectedInv => compareIdenticality(nonSelectedInv, crossDockInv))
-          .reduce(
-            (amount, inv) => {
-              amount.qty += inv.qty
-              amount.weight += inv.weight
-              return amount
-            },
-            { qty: 0, weight: 0 }
-          )
-
-        return crossDockInv.releaseQty <= qty && crossDockInv.releaseWeight <= weight
-      })
-
-      if (!isEveryQtySufficient) {
-        throw new Error(i18next.t('text.product_should_be_remain_for_picking'))
       }
     }
   }
