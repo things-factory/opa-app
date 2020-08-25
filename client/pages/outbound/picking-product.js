@@ -287,9 +287,12 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
               // this._selectedTaskStatus = null
               this._selectedTaskStatus = record.status
               await this.updateComplete
-              this._productName = `${record.product.name} ${
-                record.product.description ? `(${record.product.description})` : ''
-              }`
+              this._productName = record.product?.name
+                ? `${record.product.name} ${record.product?.description ? `(${record.product.description})` : ''}`
+                : ''
+              // this._productName = `${record.product.name} ${
+              //   record.product.description ? `(${record.product.description})` : ''
+              // }`
               this.isWholePicking = this._selectedOrderInventory.releaseQty === this._selectedOrderInventory.qty
 
               this._fillUpForm(this.inputForm, record)
@@ -435,7 +438,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
       .map(record => {
         record.completed = record.status === WORKSHEET_STATUS.DONE.value
         record.locationName = record?.location?.name
-        record.product = record.relatedOrderInv.product
+        record.product = record?.relatedOrderInv && record?.relatedOrderInv?.product
 
         if (this.crossDocking) {
           record.batchId = record.relatedOrderInv.batchId
