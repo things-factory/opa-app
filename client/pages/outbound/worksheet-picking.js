@@ -715,9 +715,12 @@ class WorksheetPicking extends localize(i18next)(PageView) {
   get activatable() {
     if (this.productGristData.records.every(record => record.completed)) {
       if (this.crossDocking) {
-        return this.unloadingWorksheetStatus === WORKSHEET_STATUS.EXECUTING.value
+        return (
+          this.unloadingWorksheetStatus === WORKSHEET_STATUS.EXECUTING.value &&
+          this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value
+        )
       } else {
-        return true
+        return this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value
       }
     }
   }
