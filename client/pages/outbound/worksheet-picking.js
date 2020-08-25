@@ -686,6 +686,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
   }
 
   _updateContext() {
+    this._actions = []
+
     if (this.crossDocking) {
       this._actions = this._updateCrossDockingContext()
     }
