@@ -1233,5 +1233,6 @@
   "button.move_to_x": "move to {state.x}",
   "text.related_release_order_will_be_rejected": "related release order will be rejected",
   "title.unloaded_pallets": "unloaded pallets",
-  "text.related_arrival_notice_will_be_deleted": "related arrival notice will be deleted"
+  "text.related_arrival_notice_will_be_deleted": "related arrival notice will be deleted",
+  "text.theres_no_pallet_selected": "there's no pallet selected"
 }

@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner, getRepository } from 'typeorm'
 import { Setting } from '@things-factory/setting-base'
 import { Domain } from '@things-factory/shell'
-import { LOCATION_LABEL_SETTING_KEY, PALLET_LABEL_SETTING_KEY } from '..//opa-app-setting-constants'
+import { LOCATION_LABEL_SETTING_KEY, PALLET_LABEL_SETTING_KEY, REUSABLE_PALLET_LABEL_SETTING_KEY } from '..//opa-app-setting-constants'
 
 const SEED_SETTINGS = [
   {
@@ -13,6 +13,12 @@ const SEED_SETTINGS = [
   {
     name: PALLET_LABEL_SETTING_KEY,
     description: 'Pallet label ID',
+    value: '',
+    category: 'board'
+  },
+  {
+    name: REUSABLE_PALLET_LABEL_SETTING_KEY,
+    description: 'Reusable pallet label ID',
     value: '',
     category: 'board'
   }
