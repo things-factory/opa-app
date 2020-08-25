@@ -670,7 +670,11 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             description: wsd.description,
             status: wsd.status,
             releaseQty: wsd.targetInventory.releaseQty,
-            releaseWeight: wsd.targetInventory.releaseWeight
+            releaseWeight: wsd.targetInventory.releaseWeight,
+            availableQty:
+              wsd.targetInventory.inventory.qty -
+              wsd.targetInventory.inventory.lockedQty +
+              wsd.targetInventory.releaseQty
           }
 
           if (wsd.targetInventory?.inventory) {
