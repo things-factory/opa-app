@@ -583,10 +583,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
       let arrivalNotice = this._getFormInfo()
       arrivalNotice.orderProducts = this._getOrderProducts()
-      let attachments
-      if (this._ownTransport) {
-        attachments = this._document.files
-      }
+      const attachments = this._document?.files ? this._document.files : undefined
 
       if (arrivalNotice.orderProducts.some(orderProduct => !orderProduct.palletQty)) {
         const result = await CustomAlert({
