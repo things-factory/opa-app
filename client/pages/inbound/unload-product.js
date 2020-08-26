@@ -220,7 +220,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
               ></barcode-scanable-input>
 
               <label>${i18next.t('label.actual_qty')}</label>
-              <input name="qty" type="number" min="1" @keypress="${this._unload.bind(this)}" required />
+              <input name="qty" type="number" min="1" @keypress="${this._checkReusablePallet.bind(this)}" required />
             </fieldset>
           </form>
         </div>

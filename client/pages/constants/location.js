@@ -6,5 +6,9 @@ export const LOCATION_TYPE = {
   SHELF: {
     name: 'shelf_location',
     value: 'SHELF'
+  },
+  FLOOR: {
+    name: 'floor_location',
+    value: 'FLOOR'
   }
 }

@@ -160,18 +160,10 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'name',
-          header: i18next.t('field.release_good_no'),
+          header: i18next.t('field.ro'),
           record: { align: 'left' },
           sortable: true,
-          width: 180
-        },
-        {
-          type: 'string',
-          name: 'refNo',
-          header: i18next.t('field.ref_no'),
-          record: { align: 'left' },
-          sortable: true,
-          width: 160
+          width: 150
         },
         {
           type: 'object',
@@ -182,12 +174,29 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           width: 200
         },
         {
+          type: 'string',
+          name: 'refNo',
+          header: i18next.t('field.ref_no'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 160
+        },
+
+        {
           type: 'date',
           name: 'releaseDate',
           header: i18next.t('field.release_date'),
           record: { align: 'center' },
           sortable: true,
           width: 120
+        },
+        {
+          type: 'boolean',
+          name: 'exportOption',
+          header: i18next.t('field.eo'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 60
         },
         {
           type: 'boolean',
@@ -204,14 +213,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           record: { align: 'center' },
           width: 60
         },
-        {
-          type: 'boolean',
-          name: 'exportOption',
-          header: i18next.t('field.eo'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 60
-        },
+
         {
           type: 'object',
           name: 'arrivalNotice',

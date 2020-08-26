@@ -148,10 +148,10 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'name',
-          header: i18next.t('field.release_order_no'),
+          header: i18next.t('field.ro'),
           record: { align: 'left' },
           sortable: true,
-          width: 180
+          width: 150
         },
         {
           type: 'string',
@@ -171,8 +171,16 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
         },
         {
           type: 'boolean',
+          name: 'exportOption',
+          header: i18next.t('field.eo'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 60
+        },
+        {
+          type: 'boolean',
           name: 'ownTransport',
-          header: i18next.t('field.own_transport'),
+          header: i18next.t('field.ot'),
           record: { align: 'center' },
           sortable: true,
           width: 60
@@ -180,18 +188,11 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
         {
           type: 'boolean',
           name: 'crossDocking',
-          header: i18next.t('field.cross_docking'),
+          header: i18next.t('field.cd'),
           record: { align: 'center' },
           width: 60
         },
-        {
-          type: 'boolean',
-          name: 'exportOption',
-          header: i18next.t('field.eo'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 60
-        },
+
         {
           type: 'object',
           name: 'arrivalNotice',
