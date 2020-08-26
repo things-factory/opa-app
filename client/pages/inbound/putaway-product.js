@@ -312,7 +312,11 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   get completed() {
-    return this.data.records.every(record => record.completed)
+    if (this.data.records.length === 0) {
+      return false
+    } else {
+      return this.data.records.every(record => record.completed)
+    }
   }
 
   updated(changedProps) {
