@@ -193,7 +193,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
         {
           type: 'boolean',
           name: 'exportOption',
-          header: i18next.t('field.eo'),
+          header: i18next.t('field.export_option'),
           record: { align: 'center' },
           sortable: true,
           width: 60
@@ -201,7 +201,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
         {
           type: 'boolean',
           name: 'ownTransport',
-          header: i18next.t('field.ot'),
+          header: i18next.t('field.own_transport'),
           record: { align: 'center' },
           sortable: true,
           width: 60
@@ -209,7 +209,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
         {
           type: 'boolean',
           name: 'crossDocking',
-          header: i18next.t('field.cd'),
+          header: i18next.t('field.cross_docking'),
           record: { align: 'center' },
           width: 60
         },

@@ -167,7 +167,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
         {
           type: 'boolean',
           name: 'importCargo',
-          header: i18next.t('field.ic'),
+          header: i18next.t('field.import_cargo'),
           record: { align: 'center' },
           sortable: true,
           width: 60
@@ -175,7 +175,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
         {
           type: 'boolean',
           name: 'ownTransport',
-          header: i18next.t('field.ot'),
+          header: i18next.t('field.own_transport'),
           record: { align: 'center' },
           sortable: true,
           width: 60
@@ -183,7 +183,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
         {
           type: 'boolean',
           name: 'crossDocking',
-          header: i18next.t('field.cd'),
+          header: i18next.t('field.cross_docking'),
           record: { align: 'center' },
           width: 60
         },
