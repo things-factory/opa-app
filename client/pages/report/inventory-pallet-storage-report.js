@@ -33,6 +33,8 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
         align-items: flex-end;
         padding: var(--data-list-item-padding);
         display: grid;
+        font-size: 14px;
+        color: #394E64;
         grid-template-columns: repeat(2, 1fr);
         grid-auto-rows: minmax(24px, auto);
       }
@@ -95,8 +97,8 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
       ></data-grist>
 
       <div class="summary">
-        <label>${i18next.t('label.total_location_used')} : ${this._gristData.total}</label>
-        <label>${i18next.t('label.total_location_without_inbound')} : ${this._gristData.totalWithoutInbound}</label>
+        <label>${i18next.t('label.total_location_used')}: ${this._gristData.total}</label>
+        <label>${i18next.t('label.total_location_with_opening_balance')}: ${this._gristData.totalWithOpeningBalance}</label>
       </div>
     `
   }
@@ -246,7 +248,7 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
   }
 
   async pageInitialized() {
-    this._gristData = { total: 0, totalWithoutInbound: 0, records: [] }
+    this._gristData = { total: 0, totalWithOpeningBalance: 0, records: [] }
     this._products = []
     this._userBizplaces = [...(await this._fetchBizplaceList())]
     this._locationTypes = await getCodeByName('LOCATION_TYPE')
@@ -307,7 +309,7 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
                 totalQty
               }
               total
-              totalWithoutInbound
+              totalWithOpeningBalance
             }
           }
         `
@@ -316,7 +318,7 @@ class InventoryPalletStorageReport extends connect(store)(localize(i18next)(Page
       let data = {
         total: response.data.inventoryHistoryPalletStorageReport.total,
         records: response.data.inventoryHistoryPalletStorageReport.items.map(item => flattenObject(item)) || [],
-        totalWithoutInbound: response.data.inventoryHistoryPalletStorageReport.totalWithoutInbound
+        totalWithOpeningBalance: response.data.inventoryHistoryPalletStorageReport.totalWithOpeningBalance
       }
 
       this._gristData = { ...data }
