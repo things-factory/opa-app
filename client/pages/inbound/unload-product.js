@@ -297,8 +297,8 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
               this.inputForm.reset()
               this.palletInput.value = ''
               this._fillUpInputForm(record)
-              this._focusOnPalletInput()
               this._fetchInventories()
+              this._focusOnPalletInput()
             }
           }
         }
@@ -734,7 +734,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
 
   _validateCompletePartially() {
     if (!this._selectedOrderProduct) {
-      throw new Error('text.target_does_not_selected')
+      throw new Error('text.target_is_not_selected')
     }
 
     if (!this._unloadedInventories || this._unloadedInventories.length <= 0) {
@@ -889,6 +889,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
   async _checkReusablePallet(e) {
     if (e.keyCode === 13) {
       try {
+        if (!this._selectedOrderProduct) throw new Error(i18next.t('text.target_is_not_selected'))
         if (!this.palletInput.value) return
 
         const response = await client.query({
