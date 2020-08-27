@@ -369,6 +369,9 @@ export default function route(page) {
     case 'customer_inventory_pallet_report':
       import('./pages/report/customer-inventory-pallet-report')
       return page
+    case 'customer_inventory_summary_report':
+      import('./pages/report/customer-inventory-summary-report')
+      return page
 
     /**
      * Custom ELCCL Menus Section

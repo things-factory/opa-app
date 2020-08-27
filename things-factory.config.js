@@ -389,6 +389,10 @@ export default {
       tagname: 'customer-inventory-pallet-report',
       page: 'customer_inventory_pallet_report'
     },
+    {
+      tagname: 'customer-inventory-summary-report',
+      page: 'customer_inventory_summary_report'
+    },
 
     /**
      * Custom ELCCL Menus Section
