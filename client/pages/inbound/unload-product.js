@@ -8,6 +8,7 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
+import { PALLET_STATUS } from '../constants'
 import '../components/popup-note'
 import '../components/popup-unloading'
 
@@ -893,8 +894,9 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
         const response = await client.query({
           query: gql`
             query {
-              pallet(${gqlBuilder.buildArgs({
-                name: this.palletInput.value
+              palletByStatus(${gqlBuilder.buildArgs({
+                name: this.palletInput.value,
+                status: PALLET_STATUS.ACTIVE.value
               })}) {
                 id
                 name
@@ -904,10 +906,10 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
         })
 
         if (!response.errors) {
-          if (response.data.pallet) {
+          if (response.data.palletByStatus) {
             // this._reusablePalletId = response.data.pallet
             // this.reusablePalletIdData = [this._reusablePalletId]
-            this.reusablePalletIdData = response.data.pallet
+            this.reusablePalletIdData = response.data.palletByStatus
             this._isReusablePallet = true
             this._openPopupUnloading(this.palletInput.value, this.orderProductData, this.palletProductData)
           } else {
