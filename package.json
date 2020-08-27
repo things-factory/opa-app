@@ -97,8 +97,5 @@
     "@things-factory/opa-test": "^2.0.0",
     "chalk": "^3.0.0",
     "inquirer": "^7.0.0"
-  },
-  "resolutions": {
-    "lit-element": "2.2.1"
   }
 }
