@@ -83,12 +83,12 @@ export const elcclInventoryHistoryReport = {
             INNER JOIN products prd ON cast(prd.id AS VARCHAR) = invh.product_id
             WHERE invh.domain_id = $1
             AND invh.bizplace_id = $2
-            AND invh.created_at::date <= $3
+            AND invh.created_at <= $3
             ${batchNoQuery}
             ${productQuery}
           ) 
         `,
-          [context.state.domain.id, bizplace.id, new Date(toDate.value).toISOString()]
+          [context.state.domain.id, bizplace.id, toDate.value]
         )
 
         await trxMgr.query(
@@ -146,7 +146,7 @@ export const elcclInventoryHistoryReport = {
             GROUP BY product_name, product_description, batch_id, product_id, packing_type, bizplace_id, 
             domain_id, order_name, ref_no, rn
           )`,
-          [new Date(fromDate.value).toISOString(), new Date(toDate.value).toISOString()]
+          [fromDate.value, toDate.value]
         )
 
         const result: any = await trxMgr.query(
