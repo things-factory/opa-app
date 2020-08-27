@@ -228,6 +228,7 @@ class PopupUnloading extends localize(i18next)(LitElement) {
 
               this.palletInput.value = ''
               this._fillUpInputForm(record)
+              this._fetchInventoriesByReusablePallet()
               this._focusOnPalletInput()
             }
           }
