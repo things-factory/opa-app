@@ -1168,6 +1168,7 @@
   "text.extra_products_have_been_processed": "extra products have been processed",
   "title.proceed_extra_product": "proceed extra products",
   "text.release_order_has_been_deleted": "release order has been deleted",
+  "text.release_order_will_be_deleted": "release order will be deleted",
   "text.reject_release_order": "reject release order",
   "text.wrong_release_qty": "wrong release qty",
   "title.location_sorting_rule": "location sorting rule",
