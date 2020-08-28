@@ -382,6 +382,10 @@ export default {
       page: 'inventory_pallet_storage_report'
     },
     {
+      tagname: 'customer-inventory-pallet-storage-report',
+      page: 'customer_inventory_pallet_storage_report'
+    },
+    {
       tagname: 'customer-inventory-report',
       page: 'customer_inventory_report'
     },

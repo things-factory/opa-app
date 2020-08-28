@@ -673,6 +673,7 @@
   "text.creating_release_order_is_required": "creating release order is required",
   "text.create_vas_order": "create vas order",
   "text.customer_does_not_selected": "customer does not selected",
+  "text.bizplace_not_found": "bizplace not found",
   "text.data_deleted_successfully": "data deleted successfully",
   "text.data_imported_successfully": "data imported successfully",
   "text.data_updated_successfully": "data updated successfully",

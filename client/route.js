@@ -363,6 +363,9 @@ export default function route(page) {
     case 'inventory_pallet_storage_report':
       import('./pages/report/inventory-pallet-storage-report')
       return page
+    case 'customer_inventory_pallet_storage_report':
+      import('./pages/report/customer-inventory-pallet-storage-report')
+      return page
     case 'customer_inventory_report':
       import('./pages/report/customer-inventory-report')
       return page
