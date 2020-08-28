@@ -6,10 +6,9 @@ import { gqlBuilder, flattenObject, isMobileDevice } from '@things-factory/utils
 import { connect } from 'pwa-helpers/connect-mixin'
 import { localize, i18next } from '@things-factory/i18n-base'
 import gql from 'graphql-tag'
-import '../inventory/inventory-by-product-detail'
-import { openPopup } from '@things-factory/layout-base'
+import { getCodeByName } from '@things-factory/code-base'
 
-class CustomerInventorySummaryReport extends connect(store)(localize(i18next)(PageView)) {
+class CustomerInventoryPalletStorageReport extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
     return css`
       :host {
@@ -22,6 +21,23 @@ class CustomerInventorySummaryReport extends connect(store)(localize(i18next)(Pa
         overflow-y: auto;
         flex: 1;
       }
+
+      .summary {
+        background-color: var(--main-section-background-color);
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+      }
+
+      .summary {
+        align-items: flex-end;
+        padding: var(--data-list-item-padding);
+        display: grid;
+        font-size: 14px;
+        color: #394E64;
+        grid-template-columns: repeat(2, 1fr);
+        grid-auto-rows: minmax(24px, auto);
+      }
     `
   }
 
@@ -29,19 +45,21 @@ class CustomerInventorySummaryReport extends connect(store)(localize(i18next)(Pa
     return {
       _searchFields: Object,
       _config: Object,
+      _locationTypes: Object,
+      _gristData: Object,
       data: Object
     }
   }
 
   get context() {
     return {
-      title: i18next.t('title.inventory_summary_report'),
+      title: i18next.t('title.inventory_pallet_storage_report'),
       printable: {
         accept: ['preview'],
         content: this
       },
       exportable: {
-        name: i18next.t('title.inventory_summary_report'),
+        name: i18next.t('title.inventory_pallet_storage_report'),
         data: this._exportableData.bind(this)
       }
     }
@@ -72,28 +90,36 @@ class CustomerInventorySummaryReport extends connect(store)(localize(i18next)(Pa
         .config=${this._config}
         .fetchHandler="${this.fetchHandler.bind(this)}"
       ></data-grist>
+
+      <div class="summary">
+        <label>${i18next.t('label.total_location_used')}: ${this._gristData.total}</label>
+        <label>${i18next.t('label.total_location_with_opening_balance')}: ${this._gristData.totalWithOpeningBalance}</label>
+      </div>
     `
   }
 
   get searchFields() {
     return [
       {
-        label: i18next.t('field.product'),
-        name: 'product',
-        type: 'string',
-        props: { searchOper: 'in' }
+        label: i18next.t('field.location_type'),
+        name: 'locationType',
+        type: 'select',
+        options: [
+          { value: '' },
+          ...this._locationTypes.map(locType => {
+            return {
+              name: locType.name,
+              value: locType.name
+            }
+          })
+        ],
+        props: { searchOper: 'eq' }
       },
       {
-        label: i18next.t('field.product_description'),
-        name: 'productDescription',
-        type: 'string',
-        props: { searchOper: 'in' }
-      },
-      {
-        label: i18next.t('field.batch_no'),
-        name: 'batchNo',
-        type: 'string',
-        props: { searchOper: 'in' }
+        label: i18next.t('field.zone'),
+        name: 'zone',
+        type: 'text',
+        props: { searchOper: 'i_like' }
       },
       {
         label: i18next.t('field.from_date'),
@@ -124,20 +150,6 @@ class CustomerInventorySummaryReport extends connect(store)(localize(i18next)(Pa
           max: new Date().toISOString().split('T')[0]
         },
         value: new Date().toISOString().split('T')[0]
-      },
-      {
-        label: i18next.t('field.has_transaction_or_balance'),
-        name: 'hasTransactionOrBalance',
-        type: 'checkbox',
-        value: true,
-        props: { searchOper: 'eq' }
-      },
-      {
-        label: i18next.t('field.by_pallet'),
-        name: 'byPallet',
-        type: 'checkbox',
-        props: { searchOper: 'eq' },
-        handlers: { change: this._submit.bind(this) }
       }
     ]
   }
@@ -145,94 +157,78 @@ class CustomerInventorySummaryReport extends connect(store)(localize(i18next)(Pa
   get reportConfig() {
     return {
       list: {
-        fields: [
-          'product|name',
-          'packingType',
-          'adjustmentQty',
-          'openingQty',
-          'totalInQty',
-          'totalOutQty',
-          'closingQty'
-        ]
+        fields: ['location|zone', 'location|name', 'location|type', 'palletId']
       },
       pagination: { pages: [20, 50, 100, 200, 500, 1000] },
       rows: {
-        selectable: false,
-        insertable: false,
-        appendable: false
+        selectable: false
       },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'reorder',
-          handlers: {
-            click: this._showInventoryInfo.bind(this)
-          }
+          type: 'string',
+          name: 'location|zone',
+          record: { editable: false, align: 'center' },
+          imex: { header: i18next.t('field.zone'), key: 'location|zone', width: 15, type: 'string' },
+          header: i18next.t('field.zone'),
+          width: 80
         },
         {
           type: 'string',
-          name: 'product|name',
-          header: i18next.t('field.product'),
+          name: 'location|name',
+          record: { editable: false, align: 'center' },
+          imex: { header: i18next.t('field.location'), key: 'location|name', width: 25, type: 'string' },
+          header: i18next.t('field.location'),
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'location|type',
+          record: { editable: false, align: 'center' },
+          imex: { header: i18next.t('field.location_type'), key: 'location|type', width: 25, type: 'string' },
+          header: i18next.t('field.location_type'),
+          width: 150
+        },
+        {
+          type: 'float',
+          name: 'totalQty',
+          record: { editable: false, align: 'center' },
+          header: i18next.t('field.total'),
+          imex: { header: i18next.t('field.total'), key: 'totalQty', width: 25, type: 'string' },
+          width: 140
+        },
+        {
+          type: 'float',
+          name: 'inboundQty',
+          record: { editable: false, align: 'center' },
+          header: i18next.t('field.inbound'),
+          imex: { header: i18next.t('field.inbound'), key: 'inboundQty', width: 25, type: 'string' },
+          width: 140
+        },
+        {
+          type: 'string',
+          name: 'palletId',
           record: { editable: false, align: 'left' },
-          imex: { header: i18next.t('field.product'), key: 'product|name', width: 75, type: 'string' },
-          width: 400
+          imex: { header: i18next.t('field.pallet_id'), key: 'palletId', width: 70, type: 'string' },
+          header: i18next.t('field.pallet_id'),
+          width: 500
         },
         {
           type: 'string',
-          name: 'packingType',
-          header: i18next.t('field.packing_type'),
-          record: { editable: false, align: 'center' },
-          imex: { header: i18next.t('field.packing_type'), key: 'packingType', width: 25, type: 'string' },
-          width: 160
-        },
-        {
-          type: 'float',
-          name: 'openingQty',
-          record: { editable: false, align: 'center' },
-          header: i18next.t('field.opening_balance'),
-          imex: { header: i18next.t('field.opening_balance'), key: 'openingQty', width: 25, type: 'string' },
-          width: 140
-        },
-        {
-          type: 'float',
-          name: 'totalInQty',
-          record: { editable: false, align: 'center' },
-          header: i18next.t('field.inbound_qty'),
-          imex: { header: i18next.t('field.inbound_qty'), key: 'totalInQty', width: 25, type: 'string' },
-          width: 140
-        },
-        {
-          type: 'float',
-          name: 'adjustmentQty',
-          header: i18next.t('field.adjustment_qty'),
-          record: { editable: false, align: 'center' },
-          imex: { header: i18next.t('field.adjustment_qty'), key: 'adjustmentQty', width: 25, type: 'string' },
-          width: 140
-        },
-        {
-          type: 'float',
-          name: 'totalOutQty',
-          record: { editable: false, align: 'center' },
-          header: i18next.t('field.outbound_qty'),
-          imex: { header: i18next.t('field.outbound_qty'), key: 'totalOutQty', width: 25, type: 'string' },
-          width: 140
-        },
-        {
-          type: 'float',
-          name: 'closingQty',
-          record: { editable: false, align: 'center' },
-          header: i18next.t('field.closing_balance'),
-          imex: { header: i18next.t('field.closing_balance'), key: 'closingQty', width: 25, type: 'string' },
-          width: 140
+          name: 'inboundPalletId',
+          record: { editable: false, align: 'left' },
+          imex: { header: i18next.t('field.inbound_pallet_id'), key: 'inboundPalletId', width: 70, type: 'string' },
+          header: i18next.t('field.inbound_pallet_id'),
+          width: 500
         }
       ]
     }
   }
 
   async pageInitialized() {
+    this._gristData = { total: 0, totalWithOpeningBalance: 0, records: [] }
     this._products = []
+    this._locationTypes = await getCodeByName('LOCATION_TYPE')
 
     this._searchFields = this.searchFields
     this._config = this.reportConfig
@@ -251,6 +247,7 @@ class CustomerInventorySummaryReport extends connect(store)(localize(i18next)(Pa
   async fetchHandler({ page, limit, sorters = [] }) {
     try {
       this._validate()
+
       let filter = this.searchForm.queryFilters.map(filter => {
         switch (filter.name) {
           case 'fromDate':
@@ -266,39 +263,45 @@ class CustomerInventorySummaryReport extends connect(store)(localize(i18next)(Pa
           default:
             break
         }
+
         return filter
       })
+
       const response = await client.query({
         query: gql`
-            query {
-              inventoryHistorySummaryReport(${gqlBuilder.buildArgs({
-                filters: [...filter, ...[{ name: 'user', value: this._user, operator: 'eq' }]],
-                pagination: { page, limit },
-                sortings: sorters
-              })}) {
-                items{
-                  batchId
-                  packingType
-                  product{
-                    id
-                    name
-                    description
-                  }
-                  openingQty
-                  totalInQty
-                  totalOutQty
-                  adjustmentQty
-                  closingQty
+          query {
+            inventoryHistoryPalletStorageReport(${gqlBuilder.buildArgs({
+              filters: [...filter, ...[{ name: 'user', value: this._user, operator: 'eq' }]],
+              pagination: { page, limit },
+              sortings: sorters
+            })}) {
+              items{
+                location {
+                  name
+                  type
+                  zone
                 }
-                total
+                palletId
+                inboundPalletId
+                inboundQty
+                totalQty
               }
+              total
+              totalWithOpeningBalance
             }
-          `
+          }
+        `
       })
-      return {
-        total: response.data.inventoryHistorySummaryReport.total,
-        records: response.data.inventoryHistorySummaryReport.items.map(item => flattenObject(item)) || []
+
+      let data = {
+        total: response.data.inventoryHistoryPalletStorageReport.total,
+        records: response.data.inventoryHistoryPalletStorageReport.items.map(item => flattenObject(item)) || [],
+        totalWithOpeningBalance: response.data.inventoryHistoryPalletStorageReport.totalWithOpeningBalance
       }
+
+      this._gristData = { ...data }
+
+      return data
     } catch (e) {
       console.log(e)
     }
@@ -345,10 +348,6 @@ class CustomerInventorySummaryReport extends connect(store)(localize(i18next)(Pa
     this._toDateInput.min = min
   }
 
-  _submit(e) {
-    this.searchForm.submit()
-  }
-
   async _exportableData() {
     try {
       let header = [
@@ -363,7 +362,7 @@ class CustomerInventorySummaryReport extends connect(store)(localize(i18next)(Pa
 
       return { header, data }
     } catch (e) {
-      console.log(e)
+      this._showToast(e)
     }
   }
 
@@ -377,17 +376,6 @@ class CustomerInventorySummaryReport extends connect(store)(localize(i18next)(Pa
       })
     )
   }
-
-  _showInventoryInfo(columns, data, column, record, rowIndex) {
-    openPopup(
-      html` <inventory-by-product-detail .productId="${record['product|id']}"></inventory-by-product-detail> `,
-      {
-        backdrop: true,
-        size: 'large',
-        title: `${record['product|name']}`
-      }
-    )
-  }
 }
 
-window.customElements.define('customer-inventory-summary-report', CustomerInventorySummaryReport)
+window.customElements.define('customer-inventory-pallet-storage-report', CustomerInventoryPalletStorageReport)
