@@ -8,6 +8,7 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { VAS_BATCH_AND_PRODUCT_TYPE, VAS_BATCH_NO_TYPE, VAS_PRODUCT_TYPE } from '../../constants'
+import { fetchSettingRule } from '../../../fetch-setting-value'
 import '../../order/vas-order/popup/vas-create-popup'
 
 class CreateArrivalNotice extends localize(i18next)(PageView) {
@@ -26,6 +27,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       _hasContainer: Boolean,
       _looseItem: Boolean,
       _files: Array,
+      _disableCrossDockingSetting: Boolean,
+      _hideCrossDockingSetting: Boolean,
       containerSizes: Array,
       productGristConfig: Object,
       vasGristConfig: Object,
@@ -195,7 +198,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             name="warehouseTransport"
             ?checked="${this._warehouseTransport}"
             @change="${e => {
-              /*this._warehouseTransport = e.currentTarget.checked
+            /*this._warehouseTransport = e.currentTarget.checked
               if (this._warehouseTransport) {
                 this._ownTransportInput.checked = false
                 this._ownTransport = false
@@ -203,19 +206,25 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
                 this._ownTransportInput.checked = true
                 this._ownTransport = true
               }*/
-            }}"
+          }}"
             ?hidden="${this._importedOrder}"
           />
-          <label for="warehouseTransport" ?hidden="${this._importedOrder}">${i18next.t('label.warehouse_transport')}</label> -->
+          <label for="warehouseTransport" ?hidden="${this._importedOrder}">${i18next.t(
+            'label.warehouse_transport'
+          )}</label> -->
 
           <input
             id="crossDocking"
             type="checkbox"
             name="crossDocking"
             ?checked="${this._crossDocking}"
+            ?disabled="${this._disableCrossDockingSetting}"
+            ?hidden="${this._hideCrossDockingSetting}"
             @change="${e => (this._crossDocking = e.currentTarget.checked)}"
           />
-          <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+          <label for="crossDocking" ?hidden="${this._hideCrossDockingSetting}"
+            >${i18next.t('label.cross_docking')}</label
+          >
         </fieldset>
       </form>
 
@@ -286,6 +295,9 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
+    this._disableCrossDockingSetting = await fetchSettingRule('disable-cross-dock')
+    this._hideCrossDockingSetting = await fetchSettingRule('hide-cross-dock')
+
     this.containerSizes = await getCodeByName('CONTAINER_SIZES')
     this._configureProductGrist()
 
@@ -717,12 +729,9 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   _validateForm() {
-    if (!this.arrivalNoticeForm.checkValidity())
-      throw new Error(i18next.t('text.arrival_notice_form_invalid'))
+    if (!this.arrivalNoticeForm.checkValidity()) throw new Error(i18next.t('text.arrival_notice_form_invalid'))
 
-    if (this._hasContainer)
-      if (!this.containerNo.value)
-        throw new Error(i18next.t('text.container_no_is_empty'))
+    if (this._hasContainer) if (!this.containerNo.value) throw new Error(i18next.t('text.container_no_is_empty'))
 
     // if (this._ownTransport && this._warehouseTransport)
     //   throw new Error(i18next.t('text.you_can_only_select_one_transport_type'))
