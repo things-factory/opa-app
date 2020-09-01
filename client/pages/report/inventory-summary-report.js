@@ -22,6 +22,20 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
         overflow-y: auto;
         flex: 1;
       }
+
+      .summary {
+        background-color: var(--main-section-background-color);
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        align-items: flex-end;
+        padding: var(--data-list-item-padding);
+        display: grid;
+        font-size: 14px;
+        color: #394e64;
+        grid-template-columns: repeat(2, 1fr);
+        grid-auto-rows: minmax(24px, auto);
+      }
     `
   }
 
@@ -30,6 +44,8 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
       _searchFields: Object,
       _config: Object,
       _userBizplaces: Object,
+      _gristData: Object,
+      _byPallet: Boolean,
       data: Object
     }
   }
@@ -68,6 +84,10 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
     return this.searchForm.shadowRoot.querySelector('input[name=toDate]')
   }
 
+  get _byPalletInput() {
+    return this.searchForm.shadowRoot.querySelector('input[name=byPallet]')
+  }
+
   render() {
     return html`
       <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
@@ -77,6 +97,12 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
         .config=${this._config}
         .fetchHandler="${this.fetchHandler.bind(this)}"
       ></data-grist>
+
+      <div class="summary">
+        <label ?hidden="${!this._byPallet}"
+          >${i18next.t('label.total_inbound_pallet')}: ${this._gristData.totalInboundQty}</label
+        >
+      </div>
     `
   }
 
@@ -254,6 +280,8 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
   }
 
   async pageInitialized() {
+    this._byPallet = false
+    this._gristData = { total: 0, totalWithOpeningBalance: 0, records: [] }
     this._products = []
     this._userBizplaces = [...(await this._fetchBizplaceList())]
 
@@ -269,6 +297,7 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
 
   async fetchHandler({ page, limit, sorters = [] }) {
     try {
+      this._byPallet = this._byPalletInput.checked
       this._validate()
       let filter = this.searchForm.queryFilters.map(filter => {
         switch (filter.name) {
@@ -310,14 +339,20 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
                   closingQty
                 }
                 total
+                totalInboundQty
               }
             }
           `
       })
-      return {
+
+      const data = {
         total: response.data.inventoryHistorySummaryReport.total,
         records: response.data.inventoryHistorySummaryReport.items.map(item => flattenObject(item)) || []
       }
+
+      this._gristData = { ...data, totalInboundQty: response.data.inventoryHistorySummaryReport.totalInboundQty || 0 }
+
+      return data
     } catch (e) {
       console.log(e)
     }
