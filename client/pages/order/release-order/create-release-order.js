@@ -177,6 +177,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             type="checkbox"
             name="warehouseTransport"
             ?checked="${this._warehouseTransport}"
+            ?hidden="${this._importedOrder}"
             @change="${e => {
               this._warehouseTransport = e.currentTarget.checked
               if (this._warehouseTransport) {
@@ -188,7 +189,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
               }
             }}"
           />
-          <label for="warehouseTransport">${i18next.t('label.warehouse_transport')}</label>
+          <label for="warehouseTransport" ?hidden="${this._importedOrder}">${i18next.t('label.warehouse_transport')}</label>
 
           <input
             id="exportOption"

@@ -159,6 +159,9 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
           <input id="ownTransport" type="checkbox" name="ownTransport" ?checked="${this._ownTransport}" disabled />
           <label>${i18next.t('label.own_transport')}</label>
 
+          <input id="warehouseTransport" type="checkbox" name="warehouseTransport" ?checked="${!this._ownTransport}" disabled />
+          <label>${i18next.t('label.warehouse_transport')}</label>
+
           ${this._crossDocking
             ? html`
                 <input

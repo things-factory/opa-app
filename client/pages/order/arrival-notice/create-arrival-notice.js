@@ -197,8 +197,9 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
                 this._ownTransport = true
               }
             }}"
+            ?hidden="${this._importedOrder}"
           />
-          <label for="warehouseTransport">${i18next.t('label.warehouse_transport')}</label>
+          <label for="warehouseTransport" ?hidden="${this._importedOrder}">${i18next.t('label.warehouse_transport')}</label>
 
           <input
             id="crossDocking"
