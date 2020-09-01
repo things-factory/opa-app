@@ -21,6 +21,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       _ganNo: String,
       _importedOrder: Boolean,
       _ownTransport: Boolean,
+      _warehouseTransport: Boolean,
       _crossDocking: Boolean,
       _hasContainer: Boolean,
       _looseItem: Boolean,
@@ -107,7 +108,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           <input ?hidden="${!this._ownTransport}" name="truckNo" />
 
           <label>${i18next.t('label.eta_date')}</label>
-          <input name="etaDate" type="date" min="${this._getStdDate()}" required />
+          <input name="etaDate" type="date" required />
 
           <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
           <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" />
@@ -167,10 +168,37 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             type="checkbox"
             name="ownTransport"
             ?checked="${this._ownTransport}"
-            @change="${e => (this._ownTransport = e.currentTarget.checked)}"
+            @change="${e => {
+              this._ownTransport = e.currentTarget.checked
+              if (this._ownTransport) {
+                this._warehouseTransportInput.checked = false
+                this._warehouseTransport = false
+              } else {
+                this._warehouseTransportInput.checked = true
+                this._warehouseTransport = true
+              }
+            }}"
             ?hidden="${this._importedOrder}"
           />
           <label for="ownTransport" ?hidden="${this._importedOrder}">${i18next.t('label.own_transport')}</label>
+
+          <input
+            id="warehouseTransport"
+            type="checkbox"
+            name="warehouseTransport"
+            ?checked="${this._warehouseTransport}"
+            @change="${e => {
+              this._warehouseTransport = e.currentTarget.checked
+              if (this._warehouseTransport) {
+                this._ownTransportInput.checked = false
+                this._ownTransport = false
+              } else {
+                this._ownTransportInput.checked = true
+                this._ownTransport = true
+              }
+            }}"
+          />
+          <label for="warehouseTransport">${i18next.t('label.warehouse_transport')}</label>
 
           <input
             id="crossDocking"
@@ -215,7 +243,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     this.containerSizes = []
     this._importedOrder = false
     this._hasContainer = false
-    this._ownTransport = true
+    this._ownTransport = false
+    this._warehouseTransport = false
     this._crossDocking = false
     this._orderType = null
   }
@@ -226,6 +255,10 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
   get _ownTransportInput() {
     return this.shadowRoot.querySelector('input[name=ownTransport]')
+  }
+
+  get _warehouseTransportInput() {
+    return this.shadowRoot.querySelector('input[name=warehouseTransport]')
   }
 
   get productGrist() {
@@ -454,12 +487,6 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     }
   }
 
-  _getStdDate() {
-    let date = new Date()
-    date.setDate(date.getDate())
-    return date.toISOString().split('T')[0]
-  }
-
   _onProductChangeHandler(event) {
     try {
       this._checkProductDuplication()
@@ -681,11 +708,18 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   _validateForm() {
-    if (!this.arrivalNoticeForm.checkValidity()) throw new Error(i18next.t('text.arrival_notice_form_invalid'))
+    if (!this.arrivalNoticeForm.checkValidity())
+      throw new Error(i18next.t('text.arrival_notice_form_invalid'))
 
-    if (this._hasContainer) {
-      if (!this.containerNo.value) throw new Error(i18next.t('text.container_no_is_empty'))
-    }
+    if (this._hasContainer)
+      if (!this.containerNo.value)
+        throw new Error(i18next.t('text.container_no_is_empty'))
+
+    if (this._ownTransport && this._warehouseTransport)
+      throw new Error(i18next.t('text.you_can_only_select_one_transport_type'))
+
+    else if (!this._ownTransport && !this._warehouseTransport)
+      throw new Error(i18next.t('text.please_select_transport_type'))
   }
 
   _validateProducts() {

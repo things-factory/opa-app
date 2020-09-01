@@ -25,6 +25,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     return {
       /* RO Form Fields */
       _ownTransport: Boolean,
+      _warehouseTransport: Boolean,
       _crossDocking: Boolean,
       _exportOption: Boolean,
       refNo: String,
@@ -151,15 +152,43 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             custom-input
           ></file-uploader>
 
+          
           <input
             id="ownTransport"
             type="checkbox"
             name="ownTransport"
-            .checked="${this._ownTransport}"
-            @change="${e => (this._ownTransport = e.currentTarget.checked)}"
-            ?disabled="${this._exportOption}"
+            ?checked="${this._ownTransport}"
+            @change="${e => {
+              this._ownTransport = e.currentTarget.checked
+              if (this._ownTransport) {
+                this._warehouseTransportInput.checked = false
+                this._warehouseTransport = false
+              } else {
+                this._warehouseTransportInput.checked = true
+                this._warehouseTransport = true
+              }
+            }}"
+            ?hidden="${this._importedOrder}"
           />
-          <label for="ownTransport">${i18next.t('label.own_transport')}</label>
+          <label for="ownTransport" ?hidden="${this._importedOrder}">${i18next.t('label.own_transport')}</label>
+
+          <input
+            id="warehouseTransport"
+            type="checkbox"
+            name="warehouseTransport"
+            ?checked="${this._warehouseTransport}"
+            @change="${e => {
+              this._warehouseTransport = e.currentTarget.checked
+              if (this._warehouseTransport) {
+                this._ownTransportInput.checked = false
+                this._ownTransport = false
+              } else {
+                this._ownTransportInput.checked = true
+                this._ownTransport = true
+              }
+            }}"
+          />
+          <label for="warehouseTransport">${i18next.t('label.warehouse_transport')}</label>
 
           <input
             id="exportOption"
@@ -309,6 +338,10 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
   get _ownTransportInput() {
     return this.shadowRoot.querySelector('input[name=ownTransport]')
+  }
+
+  get _warehouseTransportInput() {
+    return this.shadowRoot.querySelector('input[name=warehouseTransport]')
   }
 
   get _exportOptionInput() {
@@ -464,7 +497,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
   initProperties() {
     this._exportOption = false
-    this._ownTransport = true
+    this._ownTransport = false
+    this._warehouseTransport = false
     this.refNo = ''
     this.releaseDate = ''
     this.collectionOrderNo = ''
@@ -922,6 +956,12 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     //    - condition: export is ticked
     if (this.shippingOrderForm && !this.shippingOrderForm.checkValidity()) {
       throw new Error(i18next.t('text.shipping_order_form_invalid'))
+    }
+
+    if (this._ownTransport && this._warehouseTransport){
+      throw new Error(i18next.t('text.you_can_only_select_one_transport_type'))
+    } else if (!this._ownTransport && !this._warehouseTransport) {
+      throw new Error(i18next.t('text.please_select_transport_type'))
     }
   }
 
