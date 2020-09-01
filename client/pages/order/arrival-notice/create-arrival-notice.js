@@ -609,6 +609,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       if (!result.value) return
 
       let arrivalNotice = this._getFormInfo()
+      delete arrivalNotice.warehouseTransport
       arrivalNotice.orderProducts = this._getOrderProducts()
       const attachments = this._document?.files ? this._document.files : undefined
 

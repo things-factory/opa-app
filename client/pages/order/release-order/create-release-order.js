@@ -891,6 +891,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
       await this._executeRelatedTrxs()
       let releaseGood = this._serializeForm(this.releaseOrderForm)
+      delete releaseGood.warehouseTransport
       releaseGood.orderInventories = this._getOrderInventories()
       releaseGood.orderVass = this._getOrderVass()
       releaseGood.ownTransport = this._ownTransport
