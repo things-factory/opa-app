@@ -22,6 +22,20 @@ class CustomerInventorySummaryReport extends connect(store)(localize(i18next)(Pa
         overflow-y: auto;
         flex: 1;
       }
+
+      .summary {
+        background-color: var(--main-section-background-color);
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        align-items: flex-end;
+        padding: var(--data-list-item-padding);
+        display: grid;
+        font-size: 14px;
+        color: #394e64;
+        grid-template-columns: repeat(2, 1fr);
+        grid-auto-rows: minmax(24px, auto);
+      }
     `
   }
 
@@ -29,7 +43,9 @@ class CustomerInventorySummaryReport extends connect(store)(localize(i18next)(Pa
     return {
       _searchFields: Object,
       _config: Object,
-      data: Object
+      data: Object,
+      _byPallet: Boolean,
+      _gristData: Object
     }
   }
 
