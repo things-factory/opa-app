@@ -198,6 +198,7 @@
   "field.outbound": "outbound",
   "field.outbound_qty": "outbound qty",
   "field.own_transport": "own transport",
+  "field.warehouse_transport": "warehouse transport",
   "field.own_collection": "own collection",
   "field.owner": "owner",
   "field.partner": "partner",
@@ -488,6 +489,7 @@
   "label.other_destination": "other destination",
   "label.other": "other",
   "label.own_transport": "own transport",
+  "label.warehouse_transport": "warehouse transport",
   "label.own_collection": "own collection",
   "label.pending": "pending",
   "label.partner": "partner",
@@ -1242,5 +1244,7 @@
   "text.related_release_order_will_be_rejected": "related release order will be rejected",
   "title.unloaded_pallets": "unloaded pallets",
   "text.related_arrival_notice_will_be_deleted": "related arrival notice will be deleted",
-  "text.theres_no_pallet_selected": "there's no pallet selected"
+  "text.theres_no_pallet_selected": "there's no pallet selected",
+  "text.please_select_transport_type": "please select transport type",
+  "text.you_can_only_select_one_transport_type": "you can only select one transport type"
 }
