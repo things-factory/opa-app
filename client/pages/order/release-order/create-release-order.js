@@ -161,35 +161,35 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             @change="${e => {
               this._ownTransport = e.currentTarget.checked
               if (this._ownTransport) {
-                this._warehouseTransportInput.checked = false
-                this._warehouseTransport = false
+                // this._warehouseTransportInput.checked = false
+                // this._warehouseTransport = false
               } else {
-                this._warehouseTransportInput.checked = true
-                this._warehouseTransport = true
+                // this._warehouseTransportInput.checked = true
+                // this._warehouseTransport = true
               }
             }}"
             ?hidden="${this._importedOrder}"
           />
           <label for="ownTransport" ?hidden="${this._importedOrder}">${i18next.t('label.own_transport')}</label>
 
-          <input
+          <!-- <input
             id="warehouseTransport"
             type="checkbox"
             name="warehouseTransport"
             ?checked="${this._warehouseTransport}"
             ?hidden="${this._importedOrder}"
             @change="${e => {
-              this._warehouseTransport = e.currentTarget.checked
+              /*this._warehouseTransport = e.currentTarget.checked
               if (this._warehouseTransport) {
                 this._ownTransportInput.checked = false
                 this._ownTransport = false
               } else {
                 this._ownTransportInput.checked = true
                 this._ownTransport = true
-              }
+              }*/
             }}"
           />
-          <label for="warehouseTransport" ?hidden="${this._importedOrder}">${i18next.t('label.warehouse_transport')}</label>
+          <label for="warehouseTransport" ?hidden="${this._importedOrder}">${i18next.t('label.warehouse_transport')}</label> -->
 
           <input
             id="exportOption"
@@ -892,7 +892,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
       await this._executeRelatedTrxs()
       let releaseGood = this._serializeForm(this.releaseOrderForm)
-      delete releaseGood.warehouseTransport
+      // delete releaseGood.warehouseTransport
       releaseGood.orderInventories = this._getOrderInventories()
       releaseGood.orderVass = this._getOrderVass()
       releaseGood.ownTransport = this._ownTransport
@@ -960,11 +960,11 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       throw new Error(i18next.t('text.shipping_order_form_invalid'))
     }
 
-    if (this._ownTransport && this._warehouseTransport){
-      throw new Error(i18next.t('text.you_can_only_select_one_transport_type'))
-    } else if (!this._ownTransport && !this._warehouseTransport) {
-      throw new Error(i18next.t('text.please_select_transport_type'))
-    }
+    // if (this._ownTransport && this._warehouseTransport){
+    //   throw new Error(i18next.t('text.you_can_only_select_one_transport_type'))
+    // } else if (!this._ownTransport && !this._warehouseTransport) {
+    //   throw new Error(i18next.t('text.please_select_transport_type'))
+    // }
   }
 
   _validateInventories() {

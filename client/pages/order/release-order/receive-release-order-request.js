@@ -136,8 +136,8 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
           />
           <label ?hidden="${this._exportOption}">${i18next.t('label.own_transport')}</label>
 
-          <input id="warehouseTransport" type="checkbox" name="warehouseTransport" ?checked="${!this._ownTransport}" ?hidden="${this._exportOption}" disabled />
-          <label ?hidden="${this._exportOption}">${i18next.t('label.warehouse_transport')}</label>
+          <!-- <input id="warehouseTransport" type="checkbox" name="warehouseTransport" ?checked="${!this._ownTransport}" ?hidden="${this._exportOption}" disabled />
+          <label ?hidden="${this._exportOption}">${i18next.t('label.warehouse_transport')}</label> -->
 
           ${this._crossDocking
             ? html`
