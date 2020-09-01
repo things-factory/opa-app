@@ -518,6 +518,10 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     this._selectedVasRecordIdx = null
     this.initProperties()
     this._clearGristConditions()
+    
+    if (this._ownTransportInput.checked) 
+      this._ownTransport = true
+    else this._ownTransport = false
   }
 
   async switchPickingType() {
