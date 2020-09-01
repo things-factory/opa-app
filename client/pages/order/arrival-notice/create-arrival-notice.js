@@ -158,6 +158,13 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
               if (this._importedOrder) {
                 this._ownTransportInput.checked = true
                 this._ownTransport = true
+                this._warehouseTransportInput.checked = false
+                this._warehouseTransport = false
+              } else {
+                this._ownTransportInput.checked = false
+                this._ownTransport = false
+                this._warehouseTransportInput.checked = false
+                this._warehouseTransport = false
               }
             }}"
           />
