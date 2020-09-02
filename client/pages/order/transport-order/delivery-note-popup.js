@@ -1,27 +1,30 @@
-import { SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
-import { i18next, localize } from '@things-factory/i18n-base'
 import { client, gqlBuilder } from '@things-factory/shell'
-import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
+import { fetchSettingRule } from '../../../fetch-setting-value'
+import { i18next, localize } from '@things-factory/i18n-base'
+import { SingleColumnFormStyles } from '@things-factory/form-ui'
+import gql from 'graphql-tag'
 
 class DeliveryNotePopup extends localize(i18next)(LitElement) {
   static get properties() {
     return {
-      contactPoints: Array,
-      ownCollection: Boolean,
-      truckNo: String,
-      _truckExist: Boolean,
-      doNo: String,
       _driverList: Array,
+      _isDisabled: Boolean,
+      _otherDestination: Boolean,
+      _truckExist: Boolean,
       _truckList: Array,
-      _otherDestination: Boolean
+      contactPoints: Array,
+      doNo: String,
+      ownCollection: Boolean,
+      truckNo: String
     }
   }
 
   constructor() {
     super()
     this._otherDestination = false
+    this._isDisabled = true
   }
 
   static get styles() {
@@ -65,6 +68,7 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
   async firstUpdated() {
     this._driverList = await this._fetchTruckDriver()
     this._truckList = await this._fetchTrucks()
+    this._isDisabled = await fetchSettingRule('disable-reusable-pallet')
   }
 
   render() {
@@ -129,6 +133,9 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
 
           <label ?hidden="${!this._otherDestination}">${i18next.t('label.other_destination')}</label>
           <textarea name="otherDestination" ?hidden="${!this._otherDestination}"></textarea>
+
+          <label ?hidden="${this._isDisabled}">${i18next.t('label.reusable_pallet')}</label>
+          <textarea name="reusablePallet" ?hidden="${this._isDisabled}" ?disabled="${this._isDisabled}" placeholder="(${i18next.t('text.optional')})"></textarea>
         </fieldset>
       </form>
 
@@ -229,7 +236,8 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
         ownTruck: this.ownCollection ? null : this._getInputByName('ownTruck').value,
         contactPoint: this._getInputByName('contactPoint').value,
         contactName: this._getInputByName('contactName').value,
-        otherDestination: this._getInputByName('otherDestination').value
+        otherDestination: this._getInputByName('otherDestination').value,
+        reusablePallet: this._getInputByName('reusablePallet').value
       }
     } else {
       throw new Error(i18next.t('text.delivery_info_not_valid'))

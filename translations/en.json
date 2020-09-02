@@ -1246,5 +1246,6 @@
   "text.related_arrival_notice_will_be_deleted": "related arrival notice will be deleted",
   "text.theres_no_pallet_selected": "there's no pallet selected",
   "text.please_select_transport_type": "please select transport type",
-  "text.you_can_only_select_one_transport_type": "you can only select one transport type"
+  "text.you_can_only_select_one_transport_type": "you can only select one transport type",
+  "text.optional": "optional"
 }
