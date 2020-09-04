@@ -191,13 +191,15 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                   ?hidden="${!this._checkTransport}"
                   disabled
                 />
-                <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+                <label for="crossDocking" ?hidden="${!this._checkTransport}">${i18next.t('label.cross_docking')}</label>
               `
             : ''}
         </fieldset>
 
         <fieldset>
-          <legend ?hidden="${!this._checkTransport}"></legend>
+          ${this._crossDocking
+            ? html` <legend></legend> `
+            : html` <legend ?hidden="${!this._checkTransport}"></legend>`}
           <label ?hidden="${!this._checkTransport}">${i18next.t('label.ref_no')}</label>
           <input name="refNo" .value="${this.refNo}" ?hidden="${!this._checkTransport}" />
 
