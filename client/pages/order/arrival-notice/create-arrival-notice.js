@@ -21,8 +21,13 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
        */
       _ganNo: String,
       _importedOrder: Boolean,
+      _checkTransport: Boolean,
+      _checkTransportCrossDocking: Boolean,
       _ownTransport: Boolean,
       _warehouseTransport: Boolean,
+      _enableTransportationServiceSetting: Boolean,
+      _enableTransportForCustomClearanceSetting: Boolean,
+      _disableTransport: Boolean,
       _crossDocking: Boolean,
       _hasContainer: Boolean,
       _looseItem: Boolean,
@@ -101,17 +106,115 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       <form name="arrivalNotice" class="multi-column-form" autocomplete="off">
         <fieldset>
           <legend>${i18next.t('title.arrival_notice')}</legend>
-          <label>${i18next.t('label.ref_no')}</label>
-          <input name="refNo" />
 
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
-          <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" />
+          <input
+            id="ownTransport"
+            type="checkbox"
+            name="ownTransport"
+            ?checked="${this._ownTransport}"
+            ?disabled="${this._disableTransport}"
+            @change="${e => {
+              this._ownTransport = e.currentTarget.checked
+              if (this._ownTransport) {
+                this._warehouseTransportInput.checked = false
+                this._warehouseTransport = false
+              } else {
+                this._warehouseTransportInput.checked = true
+                this._warehouseTransport = true
+              }
+              this._validateTransport()
+            }}"
+          />
+          <label for="ownTransport">${i18next.t('label.own_transport')}</label>
 
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
-          <input ?hidden="${!this._ownTransport}" name="truckNo" />
+          <input
+            id="warehouseTransport"
+            type="checkbox"
+            name="warehouseTransport"
+            ?disabled="${this._disableTransport}"
+            ?checked="${this._warehouseTransport}"
+            @change="${e => {
+              this._warehouseTransport = e.currentTarget.checked
+              if (this._warehouseTransport) {
+                this._ownTransportInput.checked = false
+                this._ownTransport = false
+              } else {
+                this._ownTransportInput.checked = true
+                this._ownTransport = true
+              }
+              this._validateTransport()
+            }}"
+          />
+          <label for="warehouseTransport">${i18next.t('label.warehouse_transport')}</label>
+        </fieldset>
 
-          <label>${i18next.t('label.eta_date')}</label>
-          <input name="etaDate" type="date" required />
+        <fieldset>
+          <input
+            id="container"
+            type="checkbox"
+            name="container"
+            ?checked="${this._hasContainer}"
+            @change="${e => {
+              this._hasContainer = e.currentTarget.checked
+            }}"
+            ?hidden="${!this._checkTransport}"
+          />
+          <label for="container" ?hidden="${!this._checkTransport}">${i18next.t('label.container')}</label>
+
+          <input
+            id="looseItem"
+            type="checkbox"
+            name="looseItem"
+            ?checked="${this._looseItem}"
+            ?hidden="${!this._checkTransport}"
+          />
+          <label for="looseItem" ?hidden="${!this._checkTransport}">${i18next.t('label.loose_item')}</label>
+
+          <input
+            id="importedOrder"
+            type="checkbox"
+            name="importCargo"
+            ?checked="${this._importedOrder}"
+            @change="${e => {
+              this._importedOrder = e.currentTarget.checked
+              this._validateImportCargo()
+            }}"
+            ?hidden="${!this._checkTransport}"
+          />
+          <label for="importedOrder" ?hidden="${!this._checkTransport}">${i18next.t('label.import_cargo')}</label>
+
+          <input
+            id="crossDocking"
+            type="checkbox"
+            name="crossDocking"
+            ?checked="${this._crossDocking}"
+            ?disabled="${this._disableCrossDockingSetting}"
+            ?hidden="${!this._checkTransportCrossDocking}"
+            @change="${e => (this._crossDocking = e.currentTarget.checked)}"
+          />
+          <label for="crossDocking" ?hidden="${!this._checkTransportCrossDocking}"
+            >${i18next.t('label.cross_docking')}</label
+          >
+        </fieldset>
+
+        <fieldset>
+          <legend ?hidden="${!this._checkTransport}"></legend>
+          <label ?hidden="${!this._checkTransport}">${i18next.t('label.ref_no')}</label>
+          <input name="refNo" ?hidden="${!this._checkTransport}" />
+
+          <label ?hidden="${!this._checkTransport}">${i18next.t('label.eta_date')}</label>
+          <input name="etaDate" type="date" ?hidden="${!this._checkTransport}" required />
+
+          <label ?hidden="${!this._checkTransport}">${i18next.t('label.upload_documents')}</label>
+          <file-uploader
+            name="attachments"
+            id="uploadDocument"
+            label="${i18next.t('label.select_file')}"
+            accept="*"
+            multiple="true"
+            ?hidden="${!this._checkTransport}"
+            custom-input
+          ></file-uploader>
 
           <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
           <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" />
@@ -127,104 +230,11 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             )}
           </select>
 
-          <label>${i18next.t('label.upload_documents')}</label>
-          <file-uploader
-            name="attachments"
-            id="uploadDocument"
-            label="${i18next.t('label.select_file')}"
-            accept="*"
-            multiple="true"
-            custom-input
-          ></file-uploader>
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
+          <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" />
 
-          <input
-            id="container"
-            type="checkbox"
-            name="container"
-            ?checked="${this._hasContainer}"
-            @change="${e => {
-              this._hasContainer = e.currentTarget.checked
-            }}"
-          />
-          <label for="container">${i18next.t('label.container')}</label>
-
-          <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" />
-          <label for="looseItem">${i18next.t('label.loose_item')}</label>
-
-          <input
-            id="importedOrder"
-            type="checkbox"
-            name="importCargo"
-            ?checked="${this._importedOrder}"
-            @change="${e => {
-              this._importedOrder = e.currentTarget.checked
-              if (this._importedOrder) {
-                this._ownTransportInput.checked = true
-                this._ownTransport = true
-                // this._warehouseTransportInput.checked = false
-                // this._warehouseTransport = false
-              } else {
-                this._ownTransportInput.checked = false
-                this._ownTransport = false
-                // this._warehouseTransportInput.checked = false
-                // this._warehouseTransport = false
-              }
-            }}"
-          />
-          <label for="importedOrder">${i18next.t('label.import_cargo')}</label>
-
-          <input
-            id="ownTransport"
-            type="checkbox"
-            name="ownTransport"
-            ?checked="${this._ownTransport}"
-            @change="${e => {
-              this._ownTransport = e.currentTarget.checked
-              if (this._ownTransport) {
-                // this._warehouseTransportInput.checked = false
-                // this._warehouseTransport = false
-              } else {
-                // this._warehouseTransportInput.checked = true
-                // this._warehouseTransport = true
-              }
-            }}"
-            ?hidden="${this._importedOrder}"
-          />
-          <label for="ownTransport" ?hidden="${this._importedOrder}">${i18next.t('label.own_transport')}</label>
-
-          <!-- <input
-            id="warehouseTransport"
-            type="checkbox"
-            name="warehouseTransport"
-            ?checked="${this._warehouseTransport}"
-            @change="${e => {
-            /*this._warehouseTransport = e.currentTarget.checked
-              if (this._warehouseTransport) {
-                this._ownTransportInput.checked = false
-                this._ownTransport = false
-              } else {
-                this._ownTransportInput.checked = true
-                this._ownTransport = true
-              }*/
-          }}"
-            ?hidden="${this._importedOrder}"
-          />
-          <label for="warehouseTransport" ?hidden="${this._importedOrder}">${i18next.t(
-            'label.warehouse_transport'
-          )}</label> -->
-
-          <input
-            id="crossDocking"
-            type="checkbox"
-            name="crossDocking"
-            ?checked="${this._crossDocking}"
-            ?disabled="${this._disableCrossDockingSetting}"
-            ?hidden="${this._hideCrossDockingSetting}"
-            @change="${e => (this._crossDocking = e.currentTarget.checked)}"
-          />
-          <label for="crossDocking" ?hidden="${this._hideCrossDockingSetting}"
-            >${i18next.t('label.cross_docking')}</label
-          >
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
+          <input ?hidden="${!this._ownTransport}" name="truckNo" />
         </fieldset>
       </form>
 
@@ -262,8 +272,13 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     this._hasContainer = false
     this._ownTransport = false
     this._warehouseTransport = false
+    this._checkTransport = false
+    this._checkTransportCrossDocking = false
     this._crossDocking = false
     this._orderType = null
+    this._enableTransportationServiceSetting = false
+    this._enableTransportForCustomClearanceSetting = false
+    this._disableTransport = false
   }
 
   get arrivalNoticeForm() {
@@ -295,8 +310,12 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
+    this._enableTransportationServiceSetting = await fetchSettingRule('enable-transportation-service')
+    this._enableTransportForCustomClearanceSetting = await fetchSettingRule('enable-custom-clearance-transportation')
     this._disableCrossDockingSetting = await fetchSettingRule('disable-cross-dock')
     this._hideCrossDockingSetting = await fetchSettingRule('hide-cross-dock')
+
+    this._validateTransport()
 
     this.containerSizes = await getCodeByName('CONTAINER_SIZES')
     this._configureProductGrist()
@@ -629,7 +648,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       if (!result.value) return
 
       let arrivalNotice = this._getFormInfo()
-      // delete arrivalNotice.warehouseTransport
+      delete arrivalNotice.warehouseTransport
       arrivalNotice.orderProducts = this._getOrderProducts()
       const attachments = this._document?.files ? this._document.files : undefined
 
@@ -728,16 +747,63 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     }
   }
 
+  _validateImportCargo() {
+    //Validation for Import Cargo
+    if (this._importedOrder) {
+      if (!this._enableTransportationServiceSetting) {
+        this._disableTransport = true
+        this._ownTransportInput.checked = true
+        this._ownTransport = true
+      } else {
+        if (this._enableTransportForCustomClearanceSetting) {
+          this._disableTransport = false
+        } else {
+          this._disableTransport = true
+          this._ownTransportInput.checked = true
+          this._ownTransport = true
+          this._warehouseTransportInput.checked = false
+          this._warehouseTransport = false
+        }
+      }
+    } else {
+      if (!this._enableTransportationServiceSetting) {
+        this._disableTransport = true
+        this._ownTransportInput.checked = true
+        this._ownTransport = true
+      } else {
+        this._disableTransport = false
+      }
+    }
+  }
+
+  _validateTransport() {
+    //Check if warehouse provide transport
+    if (!this._importedOrder) {
+      if (!this._enableTransportationServiceSetting) {
+        this._disableTransport = true
+        this._ownTransportInput.checked = true
+        this._ownTransport = true
+      }
+    }
+
+    if (this._ownTransport || this._warehouseTransport) {
+      this._checkTransport = true
+      this._checkTransportCrossDocking = true
+      if (this._hideCrossDockingSetting) {
+        this._checkTransportCrossDocking = false
+      }
+    }
+  }
+
   _validateForm() {
     if (!this.arrivalNoticeForm.checkValidity()) throw new Error(i18next.t('text.arrival_notice_form_invalid'))
 
     if (this._hasContainer) if (!this.containerNo.value) throw new Error(i18next.t('text.container_no_is_empty'))
 
-    // if (this._ownTransport && this._warehouseTransport)
-    //   throw new Error(i18next.t('text.you_can_only_select_one_transport_type'))
-
-    // else if (!this._ownTransport && !this._warehouseTransport)
-    //   throw new Error(i18next.t('text.please_select_transport_type'))
+    if (this._ownTransport && this._warehouseTransport)
+      throw new Error(i18next.t('text.you_can_only_select_one_transport_type'))
+    else if (!this._ownTransport && !this._warehouseTransport)
+      throw new Error(i18next.t('text.please_select_transport_type'))
   }
 
   _validateProducts() {

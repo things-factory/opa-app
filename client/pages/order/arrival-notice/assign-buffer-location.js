@@ -121,6 +121,45 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
       <form name="arrivalNotice" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.gan_no')}: ${this._ganNo}</legend>
+
+          <input id="container" type="checkbox" name="container" ?checked="${this._hasContainer}" disabled />
+          <label for="container">${i18next.t('label.container')}</label>
+
+          <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" disabled />
+          <label for="looseItem">${i18next.t('label.loose_item')}</label>
+
+          <input id="importCargo" type="checkbox" name="importCargo" ?checked="${this._importCargo}" disabled />
+          <label>${i18next.t('label.import_cargo')}</label>
+
+          <input id="ownTransport" type="checkbox" name="ownTransport" ?checked="${this._ownTransport}" disabled />
+          <label>${i18next.t('label.own_transport')}</label>
+
+          <input
+            id="warehouseTransport"
+            type="checkbox"
+            name="warehouseTransport"
+            ?checked="${!this._ownTransport}"
+            disabled
+          />
+          <label>${i18next.t('label.warehouse_transport')}</label>
+
+          ${this._crossDocking
+            ? html`
+                <input
+                  id="crossDocking"
+                  type="checkbox"
+                  name="crossDocking"
+                  ?checked="${this._crossDocking}"
+                  disabled
+                />
+                <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+              `
+            : ''}
+        </fieldset>
+
+        <fieldset>
+          <legend></legend>
+
           <label>${i18next.t('label.ref_no')}</label>
           <input name="refNo" readonly />
 
@@ -140,40 +179,12 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
           <input type="text" name="containerSize" readonly />
 
           <label>${i18next.t('label.status')}</label>
-          <select name="status" disabled
-            >${Object.keys(ORDER_STATUS).map(key => {
+          <select name="status" disabled>
+            ${Object.keys(ORDER_STATUS).map(key => {
               const status = ORDER_STATUS[key]
               return html` <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option> `
-            })}</select
-          >
-
-          <input id="container" type="checkbox" name="container" ?checked="${this._hasContainer}" disabled />
-          <label for="container">${i18next.t('label.container')}</label>
-
-          <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" disabled />
-          <label for="looseItem">${i18next.t('label.loose_item')}</label>
-
-          <input id="importCargo" type="checkbox" name="importCargo" ?checked="${this._importCargo}" disabled />
-          <label>${i18next.t('label.import_cargo')}</label>
-
-          <input id="ownTransport" type="checkbox" name="ownTransport" ?checked="${this._ownTransport}" disabled />
-          <label>${i18next.t('label.own_transport')}</label>
-
-          <!-- <input id="warehouseTransport" type="checkbox" name="warehouseTransport" ?checked="${!this._ownTransport}" disabled />
-          <label>${i18next.t('label.warehouse_transport')}</label> -->
-
-          ${this._crossDocking
-            ? html`
-                <input
-                  id="crossDocking"
-                  type="checkbox"
-                  name="crossDocking"
-                  ?checked="${this._crossDocking}"
-                  disabled
-                />
-                <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
-              `
-            : ''}
+            })}
+          </select>
         </fieldset>
 
         <fieldset>
@@ -225,9 +236,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
           ></data-grist>
         </div>
 
-        <div class="guide-container">
-          ${this._template}
-        </div>
+        <div class="guide-container">${this._template}</div>
       </div>
     `
   }

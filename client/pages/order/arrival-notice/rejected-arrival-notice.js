@@ -23,6 +23,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
       _ganNo: String,
       _ownTransport: Boolean,
       _crossDocking: Boolean,
+      _importCargo: Boolean,
       _hasContainer: Boolean,
       _looseItem: Boolean,
       _path: String,
@@ -122,40 +123,6 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
       <form name="arrivalNotice" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.gan_no')}: ${this._ganNo}</legend>
-          <label>${i18next.t('label.ref_no')}</label>
-          <input name="refNo" readonly />
-
-          <label>${i18next.t('label.do_no')}</label>
-          <input name="deliveryOrderNo" readonly />
-
-          <label>${i18next.t('label.eta_date')}</label>
-          <input name="etaDate" type="date" readonly />
-
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
-          <input ?hidden="${!this._ownTransport}" name="truckNo" readonly />
-
-          <label ?hidden="${this._importCargo || !this._ownTransport}">${i18next.t('label.truck_no')}</label>
-          <input ?hidden="${this._importCargo || !this._ownTransport}" name="truckNo" readonly />
-
-          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
-          <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" readonly />
-
-          <label>${i18next.t('label.container_size')}</label>
-          <input type="text" name="containerSize" readonly />
-
-          <label>${i18next.t('label.status')}</label>
-          <select name="status" disabled
-            >${Object.keys(ORDER_STATUS).map(key => {
-              const status = ORDER_STATUS[key]
-              return html` <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option> `
-            })}</select
-          >
-
-          <input id="container" type="checkbox" name="container" ?checked="${this._hasContainer}" disabled />
-          <label for="container">${i18next.t('label.container')}</label>
-
-          <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" disabled />
-          <label for="looseItem">${i18next.t('label.loose_item')}</label>
 
           <input
             id="ownTransport"
@@ -167,8 +134,23 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
           />
           <label>${i18next.t('label.own_transport')}</label>
 
-          <!-- <input id="warehouseTransport" type="checkbox" name="warehouseTransport" ?checked="${!this._ownTransport}" disabled />
-          <label>${i18next.t('label.warehouse_transport')}</label> -->
+          <input
+            id="warehouseTransport"
+            type="checkbox"
+            name="warehouseTransport"
+            ?checked="${!this._ownTransport}"
+            disabled
+          />
+          <label>${i18next.t('label.warehouse_transport')}</label>
+
+          <input id="container" type="checkbox" name="container" ?checked="${this._hasContainer}" disabled />
+          <label for="container">${i18next.t('label.container')}</label>
+
+          <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" disabled />
+          <label for="looseItem">${i18next.t('label.loose_item')}</label>
+
+          <input id="importedOrder" type="checkbox" name="importCargo" ?checked="${this._importedOrder}" disabled />
+          <label for="importedOrder">${i18next.t('label.import_cargo')}</label>
 
           ${this._crossDocking
             ? html`
@@ -182,6 +164,35 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
                 <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
               `
             : ''}
+        </fieldset>
+
+        <fieldset>
+          <legend></legend>
+          <label>${i18next.t('label.ref_no')}</label>
+          <input name="refNo" readonly />
+
+          <label>${i18next.t('label.eta_date')}</label>
+          <input name="etaDate" type="date" readonly />
+
+          <label>${i18next.t('label.do_no')}</label>
+          <input name="deliveryOrderNo" readonly />
+
+          <label ?hidden="${this._importedOrder || !this._ownTransport}">${i18next.t('label.truck_no')}</label>
+          <input ?hidden="${this._importedOrder || !this._ownTransport}" name="truckNo" readonly />
+
+          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
+          <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" readonly />
+
+          <label>${i18next.t('label.container_size')}</label>
+          <input type="text" name="containerSize" readonly />
+
+          <label>${i18next.t('label.status')}</label>
+          <select name="status" disabled>
+            ${Object.keys(ORDER_STATUS).map(key => {
+              const status = ORDER_STATUS[key]
+              return html` <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option> `
+            })}
+          </select>
         </fieldset>
       </form>
 
@@ -226,9 +237,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
           ></data-grist>
         </div>
 
-        <div class="guide-container">
-          ${this._template}
-        </div>
+        <div class="guide-container">${this._template}</div>
       </div>
     `
   }
@@ -558,6 +567,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
       this._looseItem = arrivalNotice.looseItem
       this._ownTransport = arrivalNotice.ownTransport
       this._crossDocking = arrivalNotice.crossDocking
+      this._importCargo = arrivalNotice.importCargo
       this._rejectReason = arrivalNotice.remark
       this._fillupANForm({
         ...arrivalNotice,

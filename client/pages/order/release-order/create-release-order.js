@@ -7,6 +7,7 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { fetchLocationSortingRule } from '../../../fetch-location-sorting-rule'
+import { fetchSettingRule } from '../../../fetch-setting-value'
 import '../../components/vas-templates'
 import {
   INVENTORY_STATUS,
@@ -51,7 +52,10 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       vasData: Object,
       _releaseOrderNo: String,
       _ganNo: String,
-      crossDockingProducts: Array
+      crossDockingProducts: Array,
+      _checkTransport: Boolean,
+      _disableTransport: Boolean,
+      _enableTransportationServiceSetting: Boolean
     }
   }
 
@@ -122,85 +126,60 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       <form name="releaseOrder" class="multi-column-form" autocomplete="off">
         <fieldset>
           <legend>${i18next.t('title.release_order')}</legend>
-          <label>${i18next.t('label.ref_no')}</label>
-          <input name="refNo" .value="${this.refNo}" />
 
-          <label>${i18next.t('label.release_date')}</label>
-          <input
-            name="releaseDate"
-            type="date"
-            min="${this._getStdDate()}"
-            .value="${this.releaseDate}"
-            required
-            ?disabled="${this._crossDocking}"
-          />
-
-          ${this._ownTransport
-            ? html`
-                <label>${i18next.t('label.co_no')}</label>
-                <input name="collectionOrderNo" .value="${this.collectionOrderNo}" />
-              `
-            : ''}
-
-          <label>${i18next.t('label.upload_documents')}</label>
-          <file-uploader
-            name="attachments"
-            id="uploadDocument"
-            label="${i18next.t('label.select_file')}"
-            accept="*"
-            multiple="true"
-            custom-input
-          ></file-uploader>
-
-          
           <input
             id="ownTransport"
             type="checkbox"
             name="ownTransport"
             ?checked="${this._ownTransport}"
+            ?disabled="${this._disableTransport}"
             @change="${e => {
               this._ownTransport = e.currentTarget.checked
               if (this._ownTransport) {
-                // this._warehouseTransportInput.checked = false
-                // this._warehouseTransport = false
+                this._warehouseTransportInput.checked = false
+                this._warehouseTransport = false
               } else {
-                // this._warehouseTransportInput.checked = true
-                // this._warehouseTransport = true
+                this._warehouseTransportInput.checked = true
+                this._warehouseTransport = true
               }
+              this._validateTransport()
             }}"
-            ?hidden="${this._importedOrder}"
           />
           <label for="ownTransport" ?hidden="${this._importedOrder}">${i18next.t('label.own_transport')}</label>
 
-          <!-- <input
+          <input
             id="warehouseTransport"
             type="checkbox"
             name="warehouseTransport"
             ?checked="${this._warehouseTransport}"
-            ?hidden="${this._importedOrder}"
+            ?disabled="${this._disableTransport}"
             @change="${e => {
-              /*this._warehouseTransport = e.currentTarget.checked
+              this._warehouseTransport = e.currentTarget.checked
               if (this._warehouseTransport) {
                 this._ownTransportInput.checked = false
                 this._ownTransport = false
               } else {
                 this._ownTransportInput.checked = true
                 this._ownTransport = true
-              }*/
+              }
+              this._validateTransport()
             }}"
           />
-          <label for="warehouseTransport" ?hidden="${this._importedOrder}">${i18next.t('label.warehouse_transport')}</label> -->
+          <label for="warehouseTransport" ?hidden="${this._importedOrder}"
+            >${i18next.t('label.warehouse_transport')}</label
+          >
 
           <input
             id="exportOption"
             type="checkbox"
             name="exportOption"
             .checked="${this._exportOption}"
+            ?hidden="${!this._checkTransport}"
             @change="${e => {
               this._exportOption = e.currentTarget.checked
             }}"
           />
-          <label for="exportOption">${i18next.t('label.export')}</label>
+          <label for="exportOption" ?hidden="${!this._checkTransport}">${i18next.t('label.export')}</label>
 
           ${this._crossDocking
             ? html`
@@ -209,10 +188,49 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                   type="checkbox"
                   name="crossDocking"
                   ?checked="${this._crossDocking}"
+                  ?hidden="${!this._checkTransport}"
                   disabled
                 />
                 <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+              `
+            : ''}
+        </fieldset>
 
+        <fieldset>
+          <legend ?hidden="${!this._checkTransport}"></legend>
+          <label ?hidden="${!this._checkTransport}">${i18next.t('label.ref_no')}</label>
+          <input name="refNo" .value="${this.refNo}" ?hidden="${!this._checkTransport}" />
+
+          <label ?hidden="${!this._checkTransport}">${i18next.t('label.release_date')}</label>
+          <input
+            name="releaseDate"
+            type="date"
+            min="${this._getStdDate()}"
+            .value="${this.releaseDate}"
+            required
+            ?disabled="${this._crossDocking}"
+            ?hidden="${!this._checkTransport}"
+          />
+
+          <label ?hidden="${!this._checkTransport}">${i18next.t('label.upload_documents')}</label>
+          <file-uploader
+            name="attachments"
+            id="uploadDocument"
+            label="${i18next.t('label.select_file')}"
+            accept="*"
+            multiple="true"
+            ?hidden="${!this._checkTransport}"
+            custom-input
+          ></file-uploader>
+
+          ${this._ownTransport
+            ? html`
+                <label>${i18next.t('label.co_no')}</label>
+                <input name="collectionOrderNo" .value="${this.collectionOrderNo}" />
+              `
+            : ''}
+          ${this._crossDocking
+            ? html`
                 <label for="ganNo">${i18next.t('label.arrival_notice')}</label>
                 <input readonly name="ganNo" value="${this._ganNo}" />
               `
@@ -395,9 +413,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       this._document.reset()
     }
 
-    if (changeProps.has('_exportOption') && this._exportOption) {
-      this._ownTransport = true
-    }
+    // if (changeProps.has('_exportOption') && this._exportOption) {
+    //   this._ownTransport = true
+    // }
   }
 
   pageUpdated(changes) {
@@ -418,6 +436,10 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
+    this._enableTransportationServiceSetting = await fetchSettingRule('enable-transportation-service')
+
+    this._validateTransport()
+
     this.vasGristConfig = {
       list: { fields: ['ready', 'targetType', 'targetDisplay', 'packingType'] },
       pagination: { infinite: true },
@@ -508,6 +530,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     this.containerArrivalDate = ''
     this.containerLeavingDate = ''
     this.shipName = ''
+    this._checkTransport = false
+    this._enableTransportationServiceSetting = false
+    this._disableTransport = false
 
     this.inventoryData = { ...this.inventoryData, records: [] }
     this.vasData = { ...this.vasData, records: [] }
@@ -518,9 +543,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     this._selectedVasRecordIdx = null
     this.initProperties()
     this._clearGristConditions()
-    
-    if (this._ownTransportInput.checked) 
-      this._ownTransport = true
+
+    if (this._ownTransportInput.checked) this._ownTransport = true
     else this._ownTransport = false
   }
 
@@ -896,7 +920,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
       await this._executeRelatedTrxs()
       let releaseGood = this._serializeForm(this.releaseOrderForm)
-      // delete releaseGood.warehouseTransport
+      delete releaseGood.warehouseTransport
       releaseGood.orderInventories = this._getOrderInventories()
       releaseGood.orderVass = this._getOrderVass()
       releaseGood.ownTransport = this._ownTransport
@@ -954,6 +978,19 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     }
   }
 
+  _validateTransport() {
+    //Check if warehouse provide transport
+    if (!this._enableTransportationServiceSetting) {
+      this._disableTransport = true
+      this._ownTransportInput.checked = true
+      this._ownTransport = true
+    }
+
+    if (this._ownTransport || this._warehouseTransport) {
+      this._checkTransport = true
+    }
+  }
+
   _validateForm() {
     if (!this.releaseOrderForm.checkValidity()) {
       throw new Error(i18next.t('text.release_order_form_invalid'))
@@ -964,11 +1001,11 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       throw new Error(i18next.t('text.shipping_order_form_invalid'))
     }
 
-    // if (this._ownTransport && this._warehouseTransport){
-    //   throw new Error(i18next.t('text.you_can_only_select_one_transport_type'))
-    // } else if (!this._ownTransport && !this._warehouseTransport) {
-    //   throw new Error(i18next.t('text.please_select_transport_type'))
-    // }
+    if (this._ownTransport && this._warehouseTransport) {
+      throw new Error(i18next.t('text.you_can_only_select_one_transport_type'))
+    } else if (!this._ownTransport && !this._warehouseTransport) {
+      throw new Error(i18next.t('text.please_select_transport_type'))
+    }
   }
 
   _validateInventories() {

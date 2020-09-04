@@ -108,17 +108,6 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       <form name="releaseOrder" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.release_order_no')}: ${this._releaseOrderNo}</legend>
-          <label>${i18next.t('label.ref_no')}</label>
-          <input name="refNo" readonly />
-
-          <label>${i18next.t('label.release_date')}</label>
-          <input name="releaseDate" type="date" readonly />
-
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
-          <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" readonly />
-
-          <input id="exportOption" type="checkbox" name="exportOption" ?checked="${this._exportOption}" disabled />
-          <label>${i18next.t('label.export')}</label>
 
           <input
             id="ownTransport"
@@ -130,8 +119,18 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
           />
           <label ?hidden="${this._exportOption}">${i18next.t('label.own_transport')}</label>
 
-          <!-- <input id="warehouseTransport" type="checkbox" name="warehouseTransport" ?checked="${!this._ownTransport}" ?hidden="${this._exportOption}" disabled />
-          <label ?hidden="${this._exportOption}">${i18next.t('label.warehouse_transport')}</label> -->
+          <input
+            id="warehouseTransport"
+            type="checkbox"
+            name="warehouseTransport"
+            ?checked="${!this._ownTransport}"
+            ?hidden="${this._exportOption}"
+            disabled
+          />
+          <label ?hidden="${this._exportOption}">${i18next.t('label.warehouse_transport')}</label>
+
+          <input id="exportOption" type="checkbox" name="exportOption" ?checked="${this._exportOption}" disabled />
+          <label>${i18next.t('label.export')}</label>
 
           ${this._crossDocking
             ? html`
@@ -143,7 +142,23 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
                   disabled
                 />
                 <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+              `
+            : ''}
+        </fieldset>
 
+        <fieldset>
+          <legend></legend>
+          <label>${i18next.t('label.ref_no')}</label>
+          <input name="refNo" readonly />
+
+          <label>${i18next.t('label.release_date')}</label>
+          <input name="releaseDate" type="date" readonly />
+
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
+          <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" readonly />
+
+          ${this._crossDocking
+            ? html`
                 <label for="ganNo">${i18next.t('label.arrival_notice')}</label>
                 <input readonly name="ganNo" value="${this._ganNo}" />
               `
@@ -210,9 +225,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
           ></data-grist>
         </div>
 
-        <div class="guide-container">
-          ${this._template}
-        </div>
+        <div class="guide-container">${this._template}</div>
       </div>
     `
   }

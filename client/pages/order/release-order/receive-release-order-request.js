@@ -114,17 +114,6 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
       <form name="releaseOrder" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.release_order_no')}: ${this._releaseOrderNo}</legend>
-          <label>${i18next.t('label.ref_no')}</label>
-          <input name="refNo" readonly />
-
-          <label>${i18next.t('label.release_date')}</label>
-          <input name="releaseDate" type="date" readonly />
-
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
-          <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" readonly />
-
-          <input id="exportOption" type="checkbox" name="exportOption" ?checked="${this._exportOption}" disabled />
-          <label>${i18next.t('label.export')}</label>
 
           <input
             id="ownTransport"
@@ -136,8 +125,18 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
           />
           <label ?hidden="${this._exportOption}">${i18next.t('label.own_transport')}</label>
 
-          <!-- <input id="warehouseTransport" type="checkbox" name="warehouseTransport" ?checked="${!this._ownTransport}" ?hidden="${this._exportOption}" disabled />
-          <label ?hidden="${this._exportOption}">${i18next.t('label.warehouse_transport')}</label> -->
+          <input
+            id="warehouseTransport"
+            type="checkbox"
+            name="warehouseTransport"
+            ?checked="${!this._ownTransport}"
+            ?hidden="${this._exportOption}"
+            disabled
+          />
+          <label ?hidden="${this._exportOption}">${i18next.t('label.warehouse_transport')}</label>
+
+          <input id="exportOption" type="checkbox" name="exportOption" ?checked="${this._exportOption}" disabled />
+          <label>${i18next.t('label.export')}</label>
 
           ${this._crossDocking
             ? html`
@@ -151,6 +150,18 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
                 <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
               `
             : ''}
+        </fieldset>
+
+        <fieldset>
+          <legend></legend>
+          <label>${i18next.t('label.ref_no')}</label>
+          <input name="refNo" readonly />
+
+          <label>${i18next.t('label.release_date')}</label>
+          <input name="releaseDate" type="date" readonly />
+
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
+          <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" readonly />
         </fieldset>
       </form>
 
@@ -213,9 +224,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
           ></data-grist>
         </div>
 
-        <div class="guide-container">
-          ${this._template}
-        </div>
+        <div class="guide-container">${this._template}</div>
       </div>
     `
   }
