@@ -522,8 +522,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
   initProperties() {
     this._exportOption = false
-    this._ownTransport = false
-    this._warehouseTransport = false
+    // this._ownTransport = false
+    // this._warehouseTransport = false
     this.refNo = ''
     this.releaseDate = ''
     this.collectionOrderNo = ''
@@ -532,9 +532,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     this.containerArrivalDate = ''
     this.containerLeavingDate = ''
     this.shipName = ''
-    this._checkTransport = false
-    this._enableTransportationServiceSetting = false
-    this._disableTransport = false
+    // this._checkTransport = false
+    // this._enableTransportationServiceSetting = false
+    // this._disableTransport = false
 
     this.inventoryData = { ...this.inventoryData, records: [] }
     this.vasData = { ...this.vasData, records: [] }
@@ -546,8 +546,10 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     this.initProperties()
     this._clearGristConditions()
 
-    if (this._ownTransportInput.checked) this._ownTransport = true
-    else this._ownTransport = false
+    // if (this._ownTransportInput.checked) this._ownTransport = true
+    // else this._ownTransport = false
+
+    this._validateTransport()
   }
 
   async switchPickingType() {
@@ -982,7 +984,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
   _validateTransport() {
     //Check if warehouse provide transport
-    if (!this._enableTransportationServiceSetting) {
+    if (this._enableTransportationServiceSetting != undefined && !this._enableTransportationServiceSetting) {
       this._disableTransport = true
       this._ownTransportInput.checked = true
       this._ownTransport = true
