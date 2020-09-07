@@ -201,10 +201,10 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
         <fieldset>
           <legend ?hidden="${!this._checkTransport}"></legend>
           <label ?hidden="${!this._checkTransport}">${i18next.t('label.ref_no')}</label>
-          <input name="refNo" ?hidden="${!this._checkTransport}" />
+          <input name="refNo" value="${this._refNo}" ?hidden="${!this._checkTransport}" />
 
           <label ?hidden="${!this._checkTransport}">${i18next.t('label.eta_date')}</label>
-          <input name="etaDate" type="date" ?hidden="${!this._checkTransport}" required />
+          <input name="etaDate" type="date" min="${this._getStdDate()}" ?hidden="${!this._checkTransport}" required />
 
           <label ?hidden="${!this._checkTransport}">${i18next.t('label.upload_documents')}</label>
           <file-uploader
@@ -218,7 +218,7 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
           ></file-uploader>
 
           <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
-          <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" />
+          <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" value="${this._containerNo}" />
 
           <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_size')}</label>
           <select name="containerSize" ?hidden="${!this._hasContainer}">
@@ -232,10 +232,10 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
           </select>
 
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
-          <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" />
+          <input name="deliveryOrderNo" value="${this._deliveryOrderNo}" ?hidden="${!this._ownTransport}" />
 
           <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
-          <input ?hidden="${!this._ownTransport}" name="truckNo" />
+          <input ?hidden="${!this._ownTransport}" value="${this._truckNo}" name="truckNo" />
         </fieldset>
       </form>
 
@@ -744,14 +744,14 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
           })}) {
 						name
             refNo
-            container
 						containerNo
 						ownTransport
 						etaDate
 						deliveryOrderNo
 						status
 						truckNo
-						importCargo
+            importCargo
+            crossDocking
 						orderProducts {
 							batchId
 							product {
@@ -774,7 +774,7 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
       this._refNo = arrivalNotice.refNo || ''
       this._containerNo = arrivalNotice.containerNo || ''
 
-      this._hasContainer = arrivalNotice.container
+      this._hasContainer = arrivalNotice.containerNo ? true : false
       this._etaDate = arrivalNotice.etaDate
       this._deliveryOrderNo = arrivalNotice.deliveryOrderNo || ''
       this._truckNo = arrivalNotice.truckNo || ''
@@ -782,6 +782,7 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
       if (!this._ownTransport) {
         this._warehouseTransport = true
       }
+      this._crossDocking = arrivalNotice.crossDocking
       this._importedOrder = arrivalNotice.importCargo
       this.productData = { records: orderProducts }
     }
