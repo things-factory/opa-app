@@ -122,15 +122,6 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
         <fieldset>
           <legend>${i18next.t('title.gan_no')}: ${this._ganNo}</legend>
 
-          <input id="container" type="checkbox" name="container" ?checked="${this._hasContainer}" disabled />
-          <label for="container">${i18next.t('label.container')}</label>
-
-          <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" disabled />
-          <label for="looseItem">${i18next.t('label.loose_item')}</label>
-
-          <input id="importCargo" type="checkbox" name="importCargo" ?checked="${this._importCargo}" disabled />
-          <label>${i18next.t('label.import_cargo')}</label>
-
           <input id="ownTransport" type="checkbox" name="ownTransport" ?checked="${this._ownTransport}" disabled />
           <label>${i18next.t('label.own_transport')}</label>
 
@@ -142,6 +133,15 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
             disabled
           />
           <label>${i18next.t('label.warehouse_transport')}</label>
+
+          <input id="container" type="checkbox" name="container" ?checked="${this._hasContainer}" disabled />
+          <label for="container">${i18next.t('label.container')}</label>
+
+          <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" disabled />
+          <label for="looseItem">${i18next.t('label.loose_item')}</label>
+
+          <input id="importCargo" type="checkbox" name="importCargo" ?checked="${this._importCargo}" disabled />
+          <label>${i18next.t('label.import_cargo')}</label>
 
           ${this._crossDocking
             ? html`

@@ -673,8 +673,6 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         }
       }
 
-      delete args.arrivalNotice.container
-
       const response = await client.query({
         query: gql`
             mutation ($attachments: Upload) {

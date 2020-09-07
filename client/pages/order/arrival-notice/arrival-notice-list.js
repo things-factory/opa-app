@@ -90,8 +90,8 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
-        label: i18next.t('field.import_cargo'),
-        name: 'importCargo',
+        label: i18next.t('field.container'),
+        name: 'container',
         type: 'checkbox',
         props: { searchOper: 'eq' },
         attrs: ['indeterminate']
@@ -164,6 +164,14 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
           record: { align: 'center' },
           sortable: true,
           width: 120
+        },
+        {
+          type: 'boolean',
+          name: 'container',
+          header: i18next.t('field.container'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 60
         },
         {
           type: 'boolean',
@@ -247,6 +255,7 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
               status
               refNo
               ownTransport
+              container
               crossDocking
               releaseGood {
                 name

@@ -123,12 +123,19 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
-        label: i18next.t('field.import_cargo'),
-        name: 'importCargo',
+        label: i18next.t('field.container'),
+        name: 'container',
         type: 'checkbox',
         props: { searchOper: 'eq' },
         attrs: ['indeterminate']
       },
+      // {
+      //   label: i18next.t('field.import_cargo'),
+      //   name: 'importCargo',
+      //   type: 'checkbox',
+      //   props: { searchOper: 'eq' },
+      //   attrs: ['indeterminate']
+      // },
       {
         label: i18next.t('field.own_transport'),
         name: 'ownTransport',
@@ -208,6 +215,14 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           record: { align: 'center' },
           sortable: true,
           width: 100
+        },
+        {
+          type: 'boolean',
+          name: 'container',
+          header: i18next.t('field.container'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 60
         },
         {
           type: 'boolean',
@@ -295,6 +310,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
               refNo
               status
               ownTransport
+              container
               crossDocking
               releaseGood {
                 name

@@ -7,7 +7,8 @@ import { client, CustomAlert, navigate, PageView } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { VAS_BATCH_NO_TYPE, VAS_PRODUCT_TYPE } from '../../constants'
+import { VAS_BATCH_AND_PRODUCT_TYPE, VAS_BATCH_NO_TYPE, VAS_PRODUCT_TYPE } from '../../constants'
+import { fetchSettingRule } from '../../../fetch-setting-value'
 import '../../order/vas-order/popup/vas-create-popup'
 
 class DuplicateArrivalNotice extends localize(i18next)(PageView) {
@@ -20,13 +21,22 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
        */
       _ganNo: String,
       _importedOrder: Boolean,
+      _checkTransport: Boolean,
+      _checkTransportCrossDocking: Boolean,
       _ownTransport: Boolean,
+      _warehouseTransport: Boolean,
+      _enableTransportationServiceSetting: Boolean,
+      _enableTransportForCustomClearanceSetting: Boolean,
+      _disableTransport: Boolean,
+      _crossDocking: Boolean,
       _refNo: String,
       _containerNo: String,
       _etaDate: String,
       _hasContainer: Boolean,
       _looseItem: Boolean,
       _files: Array,
+      _disableCrossDockingSetting: Boolean,
+      _hideCrossDockingSetting: Boolean,
       containerSizes: Array,
       _deliveryOrderNo: String,
       _truckNo: String,
@@ -97,23 +107,121 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
       <form name="arrivalNotice" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.arrival_notice')}</legend>
-          <label>${i18next.t('label.ref_no')}</label>
-          <input name="refNo" value="${this._refNo}" />
 
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
-          <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" value="${this._deliveryOrderNo}" />
+          <input
+            id="ownTransport"
+            type="checkbox"
+            name="ownTransport"
+            ?checked="${this._ownTransport}"
+            ?disabled="${this._disableTransport}"
+            @change="${e => {
+              this._ownTransport = e.currentTarget.checked
+              if (this._ownTransport) {
+                this._warehouseTransportInput.checked = false
+                this._warehouseTransport = false
+              } else {
+                this._warehouseTransportInput.checked = true
+                this._warehouseTransport = true
+              }
+              this._validateTransport()
+            }}"
+          />
+          <label for="ownTransport">${i18next.t('label.own_transport')}</label>
 
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
-          <input ?hidden="${!this._ownTransport}" name="truckNo" value="${this._truckNo}" />
+          <input
+            id="warehouseTransport"
+            type="checkbox"
+            name="warehouseTransport"
+            ?disabled="${this._disableTransport}"
+            ?checked="${this._warehouseTransport}"
+            @change="${e => {
+              this._warehouseTransport = e.currentTarget.checked
+              if (this._warehouseTransport) {
+                this._ownTransportInput.checked = false
+                this._ownTransport = false
+              } else {
+                this._ownTransportInput.checked = true
+                this._ownTransport = true
+              }
+              this._validateTransport()
+            }}"
+          />
+          <label for="warehouseTransport">${i18next.t('label.warehouse_transport')}</label>
+        </fieldset>
 
-          <label>${i18next.t('label.eta_date')}</label>
-          <input name="etaDate" type="date" min="${this._getStdDate()}" required />
+        <fieldset>
+          <input
+            id="container"
+            type="checkbox"
+            name="container"
+            ?checked="${this._hasContainer}"
+            @change="${e => {
+              this._hasContainer = e.currentTarget.checked
+            }}"
+            ?hidden="${!this._checkTransport}"
+          />
+          <label for="container" ?hidden="${!this._checkTransport}">${i18next.t('label.container')}</label>
+
+          <input
+            id="looseItem"
+            type="checkbox"
+            name="looseItem"
+            ?checked="${this._looseItem}"
+            ?hidden="${!this._checkTransport}"
+          />
+          <label for="looseItem" ?hidden="${!this._checkTransport}">${i18next.t('label.loose_item')}</label>
+
+          <input
+            id="importedOrder"
+            type="checkbox"
+            name="importCargo"
+            ?checked="${this._importedOrder}"
+            @change="${e => {
+              this._importedOrder = e.currentTarget.checked
+              this._validateImportCargo()
+            }}"
+            ?hidden="${!this._checkTransport}"
+          />
+          <label for="importedOrder" ?hidden="${!this._checkTransport}">${i18next.t('label.import_cargo')}</label>
+
+          <input
+            id="crossDocking"
+            type="checkbox"
+            name="crossDocking"
+            ?checked="${this._crossDocking}"
+            ?disabled="${this._disableCrossDockingSetting}"
+            ?hidden="${!this._checkTransportCrossDocking}"
+            @change="${e => (this._crossDocking = e.currentTarget.checked)}"
+          />
+          <label for="crossDocking" ?hidden="${!this._checkTransportCrossDocking}"
+            >${i18next.t('label.cross_docking')}</label
+          >
+        </fieldset>
+
+        <fieldset>
+          <legend ?hidden="${!this._checkTransport}"></legend>
+          <label ?hidden="${!this._checkTransport}">${i18next.t('label.ref_no')}</label>
+          <input name="refNo" ?hidden="${!this._checkTransport}" />
+
+          <label ?hidden="${!this._checkTransport}">${i18next.t('label.eta_date')}</label>
+          <input name="etaDate" type="date" ?hidden="${!this._checkTransport}" required />
+
+          <label ?hidden="${!this._checkTransport}">${i18next.t('label.upload_documents')}</label>
+          <file-uploader
+            name="attachments"
+            id="uploadDocument"
+            label="${i18next.t('label.select_file')}"
+            accept="*"
+            multiple="true"
+            ?hidden="${!this._checkTransport}"
+            custom-input
+          ></file-uploader>
 
           <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
-          <input name="containerNo" value="${this._containerNo}" ?hidden="${!this._hasContainer}" />
+          <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" />
 
-          <label>${i18next.t('label.container_size')}</label>
-          <select name="containerSize">
+          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_size')}</label>
+          <select name="containerSize" ?hidden="${!this._hasContainer}">
             <option value="">--${i18next.t('label.please_select_a_container_size')}--</option>
             ${(this.containerSizes || []).map(
               containerSize =>
@@ -123,54 +231,11 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
             )}
           </select>
 
-          <label>${i18next.t('label.upload_documents')}</label>
-          <file-uploader
-            name="attachments"
-            id="uploadDocument"
-            label="${i18next.t('label.select_file')}"
-            accept="*"
-            multiple="true"
-            custom-input
-          ></file-uploader>
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
+          <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" />
 
-          <input
-            id="container"
-            type="checkbox"
-            name="container"
-            ?checked="${this._hasContainer}"
-            @change="${e => {
-              this._hasContainer = e.currentTarget.checked
-            }}"
-          />
-          <label for="container">${i18next.t('label.container')}</label>
-
-          <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" />
-          <label for="looseItem">${i18next.t('label.loose_item')}</label>
-
-          <input
-            id="importedOrder"
-            type="checkbox"
-            name="importCargo"
-            ?checked="${this._importedOrder}"
-            @change="${e => {
-              this._importedOrder = e.currentTarget.checked
-              if (this._importedOrder) {
-                this._ownTransportInput.checked = true
-                this._ownTransport = true
-              }
-            }}"
-          />
-          <label for="importedOrder">${i18next.t('label.import_cargo')}</label>
-
-          <input
-            id="ownTransport"
-            type="checkbox"
-            name="ownTransport"
-            ?checked="${this._ownTransport}"
-            @change="${e => (this._ownTransport = e.currentTarget.checked)}"
-            ?hidden="${this._importedOrder}"
-          />
-          <label for="ownTransport" ?hidden="${this._importedOrder}">${i18next.t('label.own_transport')}</label>
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
+          <input ?hidden="${!this._ownTransport}" name="truckNo" />
         </fieldset>
       </form>
 
@@ -204,8 +269,15 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
     this.productData = { records: [] }
     this.vasData = { records: [] }
     this._importedOrder = false
-    this._ownTransport = true
+    this._ownTransport = false
+    this._warehouseTransport = false
+    this._checkTransport = false
+    this._checkTransportCrossDocking = false
+    this._crossDocking = false
     this._orderType = null
+    this._enableTransportationServiceSetting = false
+    this._enableTransportForCustomClearanceSetting = false
+    this._disableTransport = false
   }
 
   get arrivalNoticeForm() {
@@ -214,6 +286,10 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
 
   get _ownTransportInput() {
     return this.shadowRoot.querySelector('input[name=ownTransport]')
+  }
+
+  get _warehouseTransportInput() {
+    return this.shadowRoot.querySelector('input[name=warehouseTransport]')
   }
 
   get productGrist() {
@@ -233,6 +309,13 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
+    this._enableTransportationServiceSetting = await fetchSettingRule('enable-transportation-service')
+    this._enableTransportForCustomClearanceSetting = await fetchSettingRule('enable-custom-clearance-transportation')
+    this._disableCrossDockingSetting = await fetchSettingRule('disable-cross-dock')
+    this._hideCrossDockingSetting = await fetchSettingRule('hide-cross-dock')
+
+    this._validateTransport()
+
     this.containerSizes = await getCodeByName('CONTAINER_SIZES')
 
     this.productGristConfig = {
@@ -401,6 +484,13 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
     if (this.active && changes.resourceId) {
       this._ganNo = changes.resourceId
       await this._getOriginalArrivalNotice(this._ganNo)
+      this._validateTransport()
+    }
+  }
+
+  updated(changedProps) {
+    if (changedProps.has('_crossDocking')) {
+      this._configureProductGrist()
     }
   }
 
@@ -410,19 +500,150 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
     return date.toISOString().split('T')[0]
   }
 
+  /**
+   * @description Configure product grist
+   * Product grist columns should be change by value of _crossDocking
+   */
+  _configureProductGrist() {
+    const crossDockingColumns = [
+      {
+        type: 'integer',
+        name: 'releaseQty',
+        header: i18next.t('field.release_qty'),
+        record: { editable: true, align: 'center' },
+        width: 160
+      },
+      {
+        type: 'float',
+        name: 'releaseWeight',
+        header: i18next.t('field.release_weight'),
+        record: { editable: true, align: 'center' },
+        width: 160
+      }
+    ]
+
+    const productGristColumns = [
+      { type: 'gutter', gutterName: 'sequence' },
+      {
+        type: 'gutter',
+        gutterName: 'button',
+        icon: 'close',
+        handlers: {
+          click: (columns, data, column, record, rowIndex) => {
+            this.productData = {
+              ...this.productData,
+              records: data.records.filter((_, idx) => idx !== rowIndex)
+            }
+            this._updateVasTargets()
+          }
+        }
+      },
+      {
+        type: 'string',
+        name: 'batchId',
+        header: i18next.t('field.batch_no'),
+        record: { editable: true, align: 'center' },
+        width: 150
+      },
+      {
+        type: 'object',
+        name: 'product',
+        header: i18next.t('field.product'),
+        record: {
+          editable: true,
+          align: 'center',
+          options: {
+            queryName: 'products',
+            nameField: 'name',
+            descriptionField: 'description',
+            list: { fields: ['name', 'description'] }
+          }
+        },
+        width: 350
+      },
+      {
+        type: 'code',
+        name: 'packingType',
+        header: i18next.t('field.packing_type'),
+        record: {
+          editable: true,
+          align: 'center',
+          codeName: 'PACKING_TYPES'
+        },
+        width: 150
+      },
+      {
+        type: 'float',
+        name: 'weight',
+        header: i18next.t('field.weight'),
+        record: { editable: true, align: 'center', options: { min: 0 } },
+        width: 80
+      },
+      {
+        type: 'code',
+        name: 'unit',
+        header: i18next.t('field.unit'),
+        record: { editable: true, align: 'center', codeName: 'WEIGHT_UNITS' },
+        width: 80
+      },
+      {
+        type: 'integer',
+        name: 'packQty',
+        header: i18next.t('field.pack_qty'),
+        record: { editable: true, align: 'center', options: { min: 0 } },
+        width: 80
+      },
+      {
+        type: 'float',
+        name: 'totalWeight',
+        header: i18next.t('field.total_weight'),
+        record: { align: 'center' },
+        width: 120
+      },
+      {
+        type: 'integer',
+        name: 'palletQty',
+        header: i18next.t('field.pallet_qty'),
+        record: { editable: true, align: 'center', options: { min: 0 } },
+        width: 80
+      }
+    ]
+
+    if (this._crossDocking) {
+      const packQtyColumnIdx =
+        productGristColumns.findIndex(column => column.name === 'packQty') || productGristColumns.length - 1
+      productGristColumns.splice(packQtyColumnIdx + 1, 0, ...crossDockingColumns)
+    }
+
+    this.productGristConfig = {
+      pagination: { infinite: true },
+      list: { fields: ['batch_no', 'product', 'packingType', 'totalWeight'] },
+      columns: productGristColumns
+    }
+  }
+
   _onProductChangeHandler(event) {
     try {
       this._checkProductDuplication()
-      const changeRecord = event.detail.after
+      let changeRecord = event.detail.after
       const changedColumn = event.detail.column.name
 
-      if (changedColumn === 'weight' || changedColumn === 'unit' || changedColumn === 'packQty') {
-        changeRecord.totalWeight = this._calcTotalWeight(changeRecord.weight, changeRecord.unit, changeRecord.packQty)
+      const amountRelatedColumns = ['weight', 'unit', 'packQty', 'releaseQty', 'releaseWeight']
+      if (amountRelatedColumns.indexOf(changedColumn) >= 0) {
+        const calcedAmount = this._calcAmount(changedColumn, changeRecord)
+        for (let key in calcedAmount) {
+          changeRecord[key] = calcedAmount[key]
+        }
       }
 
       this._updateVasTargets(true)
     } catch (e) {
-      event.detail.after[event.detail.column.name] = event.detail.before[event.detail.column.name]
+      const beforeValue = event.detail.before && event.detail.before[event.detail.column.name]
+      if (beforeValue) {
+        event.detail.after[event.detail.column.name] = beforeValue
+      } else {
+        delete event.detail.after[event.detail.column.name]
+      }
       this._showToast(e)
     }
   }
@@ -453,6 +674,67 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
     }
   }
 
+  _calcAmount(changedColumn, changeRecord) {
+    let calcedRecord = {}
+    let { weight, unit, packQty, releaseQty, releaseWeight } = changeRecord
+
+    if (changedColumn === 'weight' && (!weight || weight < 0))
+      throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.weight') } }))
+    if (changedColumn === 'packQty' && (!packQty || packQty < 0))
+      throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.pack_qty') } }))
+    if (changedColumn === 'unit' && !unit)
+      throw new Error(i18next.t('text.x_is_empty', { state: { x: i18next.t('label.unit') } }))
+
+    if (weight && unit && packQty) {
+      calcedRecord.totalWeight = `${(weight * packQty).toFixed(2)} ${unit}`
+    } else {
+      calcedRecord.totalWeight = ''
+    }
+
+    if (!this._crossDocking) return calcedRecord
+
+    if (changedColumn === 'releaseQty' || changedColumn === 'releaseWeight') {
+      if (isNaN(releaseQty)) {
+        releaseQty = 0
+        calcedRecord.releaseQty = releaseQty
+      }
+      if (isNaN(releaseWeight)) {
+        releaseWeight = 0
+        calcedRecord.releaseWeight = releaseWeight
+      }
+
+      if (!weight) throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.weight') } }))
+      if (!packQty)
+        throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.pack_qty') } }))
+
+      if (changedColumn === 'releaseQty') {
+        if (typeof releaseQty === undefined || releaseQty < 0) {
+          throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.release_qty') } }))
+        }
+        if (releaseQty > packQty) {
+          throw new Error(i18next.t('text.x_exceed_limit', { state: { x: i18next.t('label.release_qty') } }))
+        }
+        calcedRecord.releaseWeight = releaseQty * weight
+      } else {
+        if (releaseWeight === undefined || releaseWeight < 0) {
+          throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.release_weight') } }))
+        }
+
+        if (releaseWeight > packQty * weight) {
+          throw new Error(i18next.t('text.x_exceed_limit', { state: { x: i18next.t('label.release_weight') } }))
+        }
+
+        if (releaseWeight % weight) {
+          throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('label.release_weight') } }))
+        }
+
+        calcedRecord.releaseQty = releaseWeight / weight
+      }
+    }
+
+    return calcedRecord
+  }
+
   async _getOriginalArrivalNotice(gan) {
     const response = await client.query({
       query: gql`
@@ -461,7 +743,8 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
             name: gan
           })}) {
 						name
-						refNo
+            refNo
+            container
 						containerNo
 						ownTransport
 						etaDate
@@ -491,11 +774,14 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
       this._refNo = arrivalNotice.refNo || ''
       this._containerNo = arrivalNotice.containerNo || ''
 
-      this._hasContainer = arrivalNotice.containerNo ? true : false
+      this._hasContainer = arrivalNotice.container
       this._etaDate = arrivalNotice.etaDate
       this._deliveryOrderNo = arrivalNotice.deliveryOrderNo || ''
       this._truckNo = arrivalNotice.truckNo || ''
       this._ownTransport = arrivalNotice.ownTransport
+      if (!this._ownTransport) {
+        this._warehouseTransport = true
+      }
       this._importedOrder = arrivalNotice.importCargo
       this.productData = { records: orderProducts }
     }
@@ -517,6 +803,7 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
       if (!result.value) return
 
       let arrivalNotice = this._getFormInfo()
+      delete arrivalNotice.warehouseTransport
       arrivalNotice.orderProducts = this._getOrderProducts()
 
       let attachments
@@ -541,14 +828,13 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
         arrivalNotice: { ...arrivalNotice, ownTransport: this._importedOrder ? true : this._ownTransport }
       }
 
-      delete args.arrivalNotice.container
-
       const response = await client.query({
         query: gql`
             mutation ($attachments: Upload) {
               generateArrivalNotice(${gqlBuilder.buildArgs(args)}, file:$attachments) {
                 id
                 name
+                crossDocking
               }
             }
           `,
@@ -562,7 +848,25 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
 
       if (!response.errors) {
         this._clearView()
-        navigate(`arrival_notice_detail/${response.data.generateArrivalNotice.name}`)
+        const ganNo = response.data.generateArrivalNotice.name
+        const isCrossDocking = response.data.generateArrivalNotice.crossDocking
+        if (!isCrossDocking) {
+          navigate(`arrival_notice_detail/${ganNo}`)
+        } else {
+          const result = await CustomAlert({
+            title: i18next.t('title.move_to_page', { state: { page: i18next.t('title.create_release_order') } }),
+            text: i18next.t('text.creating_release_order_is_required'),
+            confirmButton: { text: i18next.t('button.move') },
+            cancelButton: { text: i18next.t('button.cancel') }
+          })
+
+          if (!result.value) {
+            navigate(`arrival_notice_detail/${ganNo}`)
+          } else {
+            navigate(`create_release_order/${ganNo}`)
+          }
+        }
+
         this._showToast({ message: i18next.t('arrival_notice_created') })
       }
     } catch (e) {
@@ -596,8 +900,63 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
     }
   }
 
+  _validateImportCargo() {
+    //Validation for Import Cargo
+    if (this._importedOrder) {
+      if (!this._enableTransportationServiceSetting) {
+        this._disableTransport = true
+        this._ownTransportInput.checked = true
+        this._ownTransport = true
+      } else {
+        if (this._enableTransportForCustomClearanceSetting) {
+          this._disableTransport = false
+        } else {
+          this._disableTransport = true
+          this._ownTransportInput.checked = true
+          this._ownTransport = true
+          this._warehouseTransportInput.checked = false
+          this._warehouseTransport = false
+        }
+      }
+    } else {
+      if (!this._enableTransportationServiceSetting) {
+        this._disableTransport = true
+        this._ownTransportInput.checked = true
+        this._ownTransport = true
+      } else {
+        this._disableTransport = false
+      }
+    }
+  }
+
+  _validateTransport() {
+    //Check if warehouse provide transport
+    if (!this._importedOrder) {
+      if (!this._enableTransportationServiceSetting) {
+        this._disableTransport = true
+        this._ownTransportInput.checked = true
+        this._ownTransport = true
+      }
+    }
+
+    if (this._ownTransport || this._warehouseTransport) {
+      this._checkTransport = true
+      this._checkTransportCrossDocking = true
+      if (this._hideCrossDockingSetting) {
+        this._checkTransportCrossDocking = false
+      }
+    }
+  }
+
   _validateForm() {
     if (!this.arrivalNoticeForm.checkValidity()) throw new Error(i18next.t('text.arrival_notice_form_invalid'))
+
+    if (this._hasContainer) if (!this.containerNo.value) throw new Error(i18next.t('text.container_no_is_empty'))
+
+    if (this._ownTransport && this._warehouseTransport)
+      throw new Error(i18next.t('text.you_can_only_select_one_transport_type'))
+    else if (!this._ownTransport && !this._warehouseTransport)
+      throw new Error(i18next.t('text.please_select_transport_type'))
   }
 
   _validateProducts() {
@@ -612,6 +971,19 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
       ).length
     )
       throw new Error(i18next.t('text.empty_value_in_list'))
+
+    if (
+      this._crossDocking &&
+      this.productGrist.dirtyData.records.every(record => !record.releaseQty || !record.releaseWeight)
+    ) {
+      throw new Error(
+        i18next.t('text.invalid_x', {
+          state: {
+            x: `${i18next.t('label.release_qty')}, ${i18next.t('label.release_weight')}`
+          }
+        })
+      )
+    }
   }
 
   _validateVas() {
@@ -690,11 +1062,10 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
         totalWeight: record.totalWeight
       }
 
-      if (record.palletQty) {
-        orderProduct = {
-          ...orderProduct,
-          palletQty: record.palletQty
-        }
+      if (record.palletQty) orderProduct.palletQty = record.palletQty
+      if (this._crossDocking && record.releaseQty !== undefined && record.releaseWeight !== undefined) {
+        orderProduct.releaseQty = record.releaseQty
+        orderProduct.releaseWeight = record.releaseWeight
       }
 
       return orderProduct
