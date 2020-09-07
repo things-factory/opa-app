@@ -44,9 +44,9 @@ class ExecuteVas extends connect(store)(localize(i18next)(PageView)) {
           <select name="orderType" @change="${this.orderTypeChangeHandler.bind(this)}">
             ${Object.keys(AVAIL_ORDER_TYPES).map(
               key => html`
-                <option value="${AVAIL_ORDER_TYPES[key].value}"
-                  >${i18next.t(`label.${AVAIL_ORDER_TYPES[key].name}`)}</option
-                >
+                <option value="${AVAIL_ORDER_TYPES[key].value}">
+                  ${i18next.t(`label.${AVAIL_ORDER_TYPES[key].name}`)}
+                </option>
               `
             )}
           </select>

@@ -120,9 +120,9 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
             <select name="status" disabled>
               ${this._statusOptions.map(
                 status => html`
-                  <option value="${status.name}" ?selected="${this._worksheetStatus === status.name}"
-                    >${i18next.t(`label.${status.description}`)}</option
-                  >
+                  <option value="${status.name}" ?selected="${this._worksheetStatus === status.name}">
+                    ${i18next.t(`label.${status.description}`)}
+                  </option>
                 `
               )}
             </select>

@@ -11,6 +11,8 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../components/popup-note'
 import '../components/vas-templates'
+import './vas-pallet-label-popup'
+
 import {
   ORDER_TYPES,
   VAS_BATCH_AND_PRODUCT_TYPE,
@@ -35,7 +37,8 @@ class WorksheetVas extends localize(i18next)(PageView) {
       nonAssignedGristConfig: Object,
       assignedGristConfig: Object,
       nonAssignedVasSet: Object,
-      assignedData: Object
+      assignedData: Object,
+      _bizplace: String
     }
   }
 
@@ -164,9 +167,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
         </div>
       </div>
 
-      <div class="guide-container">
-        ${this._template}
-      </div>
+      <div class="guide-container">${this._template}</div>
     `
   }
 
@@ -467,6 +468,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
 
       this._worksheetStatus = worksheet.status
       this._voNo = worksheet.vasOrder.name
+      this._bizplace = worksheet.bizplace.name
       this._fillupForm(worksheet)
       const { nonAssignedVasSet, assignedData } = this._formatData(worksheetDetails)
       this.nonAssignedVasSet = {
@@ -534,14 +536,40 @@ class WorksheetVas extends localize(i18next)(PageView) {
       this._actions = [{ title: i18next.t('button.activate'), action: this._activateWorksheet.bind(this) }]
     }
 
-    this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
+    this._actions = [
+      ...this._actions,
+      { title: i18next.t('button.vas_pallet_label_print'), action: this._printVasLabel.bind(this) },
+      { title: i18next.t('button.back'), action: () => history.back() }
+    ]
 
     store.dispatch({
       type: UPDATE_CONTEXT,
       context: this.context
     })
   }
-
+  _printVasLabel() {
+    const _vas = {
+      records: this.assignedData.records.map(record => {
+        return {
+          id: record.id,
+          set: record.set,
+          palletId: record.palletId,
+          qty: record.qty,
+          printQty: record.qty,
+          packingType: record.packingType,
+          targetType: record.targetType,
+          product: record.targetProduct,
+          batchId: record.targetBatchId,
+          bizplace: this._bizplace
+        }
+      })
+    }
+    openPopup(html` <vas-pallet-label-popup .vas="${_vas}"></vas-pallet-label-popup> `, {
+      backdrop: true,
+      size: 'large',
+      title: i18next.t('title.vas_pallet_label')
+    })
+  }
   _updateGristConfig() {
     this.preConfig.columns.map(column => {
       if (column.name === 'description') {
