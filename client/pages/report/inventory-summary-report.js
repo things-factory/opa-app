@@ -102,6 +102,9 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
         <label ?hidden="${!this._byPallet}"
           >${i18next.t('label.total_inbound_pallet')}: ${this._gristData.totalInboundQty}</label
         >
+        <label ?hidden="${!this._byPallet}"
+          >${i18next.t('label.total_opening_balance')}: ${this._gristData.totalOpeningBal}</label
+        >
       </div>
     `
   }
@@ -340,6 +343,7 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
                 }
                 total
                 totalInboundQty
+                totalOpeningBal
               }
             }
           `
@@ -350,7 +354,11 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
         records: response.data.inventoryHistorySummaryReport.items.map(item => flattenObject(item)) || []
       }
 
-      this._gristData = { ...data, totalInboundQty: response.data.inventoryHistorySummaryReport.totalInboundQty || 0 }
+      this._gristData = {
+        ...data,
+        totalInboundQty: response.data.inventoryHistorySummaryReport.totalInboundQty || 0,
+        totalOpeningBal: response.data.inventoryHistorySummaryReport.totalOpeningBal || 0
+      }
 
       return data
     } catch (e) {

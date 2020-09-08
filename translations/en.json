@@ -1248,5 +1248,6 @@
   "text.theres_no_pallet_selected": "there's no pallet selected",
   "text.please_select_transport_type": "please select transport type",
   "text.you_can_only_select_one_transport_type": "you can only select one transport type",
-  "text.optional": "optional"
+  "text.optional": "optional",
+  "label.total_opening_balance": "total opening balance"
 }
