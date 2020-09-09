@@ -38,7 +38,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       _status: String,
       _mimetype: String,
       _doPath: String,
-      _disableROAddProductSetting: Boolean
+      _allowROAddProductSetting: Boolean
     }
   }
 
@@ -287,7 +287,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
   async pageInitialized() {
     await this._getUserBizplace()
 
-    this._disableROAddProductSetting = await fetchSettingRule('disable-ro-add-product')
+    this._allowROAddProductSetting = await fetchSettingRule('allow-ro-add-product')
 
     this.inventoryGristConfig = {
       pagination: { infinite: true },
@@ -631,7 +631,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       ORDER_STATUS.LOADING.value
     ]
 
-    if (addProductStatus.indexOf(this._status) >= 0 && !this._disableROAddProductSetting) {
+    if (addProductStatus.indexOf(this._status) >= 0 && this._allowROAddProductSetting) {
       this._actions = [
         { title: i18next.t('button.add'), action: this._openExtraProductPopup.bind(this) },
         ...this._actions
