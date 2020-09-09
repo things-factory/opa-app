@@ -2,6 +2,7 @@ import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { getRenderer } from '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import { openPopup } from '@things-factory/layout-base'
 import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
@@ -15,6 +16,8 @@ import {
   VAS_ETC_TYPE,
   VAS_PRODUCT_TYPE
 } from '../../constants'
+import './release-extra-product-popup'
+import { fetchSettingRule } from '../../../fetch-setting-value'
 
 class ReleaseOrderDetail extends localize(i18next)(PageView) {
   static get properties() {
@@ -34,7 +37,8 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       _attachments: Array,
       _status: String,
       _mimetype: String,
-      _doPath: String
+      _doPath: String,
+      _disableROAddProductSetting: Boolean
     }
   }
 
@@ -282,6 +286,8 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
 
   async pageInitialized() {
     await this._getUserBizplace()
+
+    this._disableROAddProductSetting = await fetchSettingRule('disable-ro-add-product')
 
     this.inventoryGristConfig = {
       pagination: { infinite: true },
@@ -617,6 +623,20 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         }
       ]
     }
+    let addProductStatus = [
+      ORDER_STATUS.PENDING_RECEIVE.value,
+      ORDER_STATUS.PENDING.value,
+      ORDER_STATUS.READY_TO_PICK.value,
+      ORDER_STATUS.PICKING.value,
+      ORDER_STATUS.LOADING.value
+    ]
+
+    if (addProductStatus.indexOf(this._status) >= 0 && !this._disableROAddProductSetting) {
+      this._actions = [
+        { title: i18next.t('button.add'), action: this._openExtraProductPopup.bind(this) },
+        ...this._actions
+      ]
+    }
 
     if (!this._crossDocking) {
       this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
@@ -814,6 +834,26 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         .slice(0, 1)
         .shift()
     }
+  }
+
+  _openExtraProductPopup() {
+    openPopup(
+      html`
+        <release-extra-product-popup
+          .releaseGoodNo="${this._releaseOrderNo}"
+          .bizplace="${this.customerBizplaceId}"
+          @completed="${e => {
+            this._fetchReleaseOrder(this._releaseOrderNo)
+            this._updateContext()
+          }}"
+        ></release-extra-product-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.extra_product')
+      }
+    )
   }
 
   _showToast({ type, message }) {
