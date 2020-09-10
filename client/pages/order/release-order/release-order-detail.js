@@ -5,6 +5,7 @@ import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
 import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
+import { connect } from 'pwa-helpers/connect-mixin'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/attachment-viewer'
@@ -19,9 +20,10 @@ import {
 import './release-extra-product-popup'
 import { fetchSettingRule } from '../../../fetch-setting-value'
 
-class ReleaseOrderDetail extends localize(i18next)(PageView) {
+class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
+      _userType: String,
       _releaseOrderNo: String,
       _template: Object,
       _ownTransport: Boolean,
@@ -623,15 +625,13 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         }
       ]
     }
-    let addProductStatus = [
-      ORDER_STATUS.PENDING_RECEIVE.value,
-      ORDER_STATUS.PENDING.value,
-      ORDER_STATUS.READY_TO_PICK.value,
-      ORDER_STATUS.PICKING.value,
-      ORDER_STATUS.LOADING.value
-    ]
+    let addProductStatus = [ORDER_STATUS.READY_TO_PICK.value, ORDER_STATUS.PICKING.value, ORDER_STATUS.LOADING.value]
 
-    if (addProductStatus.indexOf(this._status) >= 0 && this._allowROAddProductSetting) {
+    if (
+      this._userType == 'OFFICE ADMIN' &&
+      addProductStatus.indexOf(this._status) >= 0 &&
+      this._allowROAddProductSetting
+    ) {
       this._actions = [
         { title: i18next.t('button.add'), action: this._openExtraProductPopup.bind(this) },
         ...this._actions
@@ -865,6 +865,10 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         }
       })
     )
+  }
+
+  stateChanged(state) {
+    this._userType = state.auth && state.auth.user && state.auth.user.userType
   }
 }
 

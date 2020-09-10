@@ -98,37 +98,37 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
   }
 
   render() {
+    // <form class="picking-std-container multi-column-form">
+    //   <fieldset>
+    //     <legend>${i18next.t('title.inventory_selection_strategy')}</legend>
+    //     <input
+    //       id="pick-by-prod"
+    //       name="picking-std"
+    //       type="radio"
+    //       value="${PICKING_STANDARD.SELECT_BY_PRODUCT.value}"
+    //       @change="${e => {
+    //         this._pickingStd = e.currentTarget.value
+    //       }}"
+    //       .checked="${this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value}"
+    //       checked
+    //     />
+    //     <label for="pick-by-prod">${i18next.t(PICKING_STANDARD.SELECT_BY_PRODUCT.name)}</label>
+
+    //     <input
+    //       id="pick-by-pallet"
+    //       name="picking-std"
+    //       type="radio"
+    //       value="${PICKING_STANDARD.SELECT_BY_PALLET.value}"
+    //       @change="${e => {
+    //         this._pickingStd = e.currentTarget.value
+    //       }}"
+    //       .checked="${this._pickingStd === PICKING_STANDARD.SELECT_BY_PALLET.value}"
+    //     />
+    //     <label for="pick-by-pallet">${i18next.t(PICKING_STANDARD.SELECT_BY_PALLET.name)}</label>
+    //   </fieldset>
+    // </form>
+
     return html`
-      <form class="picking-std-container multi-column-form">
-        <fieldset>
-          <legend>${i18next.t('title.inventory_selection_strategy')}</legend>
-          <input
-            id="pick-by-prod"
-            name="picking-std"
-            type="radio"
-            value="${PICKING_STANDARD.SELECT_BY_PRODUCT.value}"
-            @change="${e => {
-              this._pickingStd = e.currentTarget.value
-            }}"
-            .checked="${this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value}"
-            checked
-          />
-          <label for="pick-by-prod">${i18next.t(PICKING_STANDARD.SELECT_BY_PRODUCT.name)}</label>
-
-          <input
-            id="pick-by-pallet"
-            name="picking-std"
-            type="radio"
-            value="${PICKING_STANDARD.SELECT_BY_PALLET.value}"
-            @change="${e => {
-              this._pickingStd = e.currentTarget.value
-            }}"
-            .checked="${this._pickingStd === PICKING_STANDARD.SELECT_BY_PALLET.value}"
-          />
-          <label for="pick-by-pallet">${i18next.t(PICKING_STANDARD.SELECT_BY_PALLET.name)}</label>
-        </fieldset>
-      </form>
-
       <div class="container">
         <div class="grist">
           <h2>
@@ -165,7 +165,7 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
   constructor() {
     super()
     this.initProperties()
-    this._pickingStd = PICKING_STANDARD.SELECT_BY_PRODUCT.value
+    this._pickingStd = PICKING_STANDARD.SELECT_BY_PALLET.value
   }
 
   initProperties() {
