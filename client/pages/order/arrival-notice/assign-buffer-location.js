@@ -404,6 +404,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
             ownTransport
             crossDocking
             etaDate
+            looseItem
             deliveryOrderNo
             status
             truckNo
@@ -471,6 +472,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
       this.orderBizplace = arrivalNotice.bizplace
 
       this._hasContainer = arrivalNotice.containerNo ? true : false
+      this._looseItem = arrivalNotice.looseItem
       this._ownTransport = arrivalNotice.ownTransport
       this._crossDocking = arrivalNotice.crossDocking
       this._importCargo = arrivalNotice.importCargo
