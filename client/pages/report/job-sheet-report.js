@@ -115,7 +115,7 @@ class JobSheetReport extends localize(i18next)(PageView) {
       this.shadowRoot.querySelector('#container').src = `/view_job_sheet/${domain}/${this._ganNo}`
 
       this._etaDate = arrivalNoticeInfo.etaDate
-      this._ata = arrivalNoticeInfo.ata ? arrivalNoticeInfo.ata : arrivalNoticeInfo.eta
+      this._ata = arrivalNoticeInfo.ata
       this._containerNo = arrivalNoticeInfo.containerNo
       this._looseItem = arrivalNoticeInfo.looseItem
       this._containerSize = arrivalNoticeInfo.jobSheet.containerSize || null
