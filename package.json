@@ -46,7 +46,7 @@
     "@things-factory/form-ui": "^2.0.0",
     "@things-factory/grist-ui": "^2.0.0",
     "@things-factory/i18n-ui": "^2.0.0",
-    "@things-factory/id-rule-base": "^0.0.3",
+    "@things-factory/id-rule-base": "^0.0.9",
     "@things-factory/import-ui": "^2.0.0",
     "@things-factory/import-ui-excel": "^2.0.0",
     "@things-factory/menu-ui": "^2.0.0",
