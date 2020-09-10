@@ -11,6 +11,7 @@ class JobSheetReport extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _ganNo: String,
+      _etaDate: String,
       _ata: String,
       _jobSheetNo: String,
       _containerNo: String,
@@ -89,6 +90,7 @@ class JobSheetReport extends localize(i18next)(PageView) {
           })}) {
             containerNo
             looseItem
+            etaDate
             ata
             bizplace {
                 id
@@ -112,7 +114,8 @@ class JobSheetReport extends localize(i18next)(PageView) {
       var { domain } = getPathInfo(location.pathname) // find out better way later.
       this.shadowRoot.querySelector('#container').src = `/view_job_sheet/${domain}/${this._ganNo}`
 
-      this._ata = arrivalNoticeInfo.ata
+      this._etaDate = arrivalNoticeInfo.etaDate
+      this._ata = arrivalNoticeInfo.ata ? arrivalNoticeInfo.ata : arrivalNoticeInfo.eta
       this._containerNo = arrivalNoticeInfo.containerNo
       this._looseItem = arrivalNoticeInfo.looseItem
       this._containerSize = arrivalNoticeInfo.jobSheet.containerSize || null
@@ -128,6 +131,7 @@ class JobSheetReport extends localize(i18next)(PageView) {
       html`
         <job-sheet-popup
           .containerMtDate="${this._mtDate}"
+          .etaDate="${this._etaDate}"
           .ata="${this._ata}"
           .adviseMtDate="${this._adviseMtDate}"
           .containerSize="${this._containerSize}"
