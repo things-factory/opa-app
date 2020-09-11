@@ -466,7 +466,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         (result, ordInv) => {
           if (ordInv.status === ORDER_INVENTORY_STATUS.PENDING_SPLIT.value) {
             result.tempOrderInvs.push(ordInv)
-          } else if (ordInv.status === ORDER_INVENTORY_STATUS.READY_TO_PICK.value) {
+          } else {
             result.completedOrderInvs.push(ordInv)
           }
 
