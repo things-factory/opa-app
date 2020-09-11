@@ -103,7 +103,7 @@ export const addReleaseGoodProducts = {
           if (existingWorksheetDetail) {
             existingWorksheetDetail = {
               ...existingWorksheetDetail,
-              status: WORKSHEET_STATUS.EXECUTING
+              status: WORKSHEET_STATUS.DEACTIVATED
             }
 
             await trxMgr.getRepository(WorksheetDetail).save(existingWorksheetDetail)
@@ -114,15 +114,7 @@ export const addReleaseGoodProducts = {
 
         if (!existingOrderInv && worksheet) {
           // if this is a new orderInventory and has existing worksheet then generate a new worksheet detail for it
-          await generatePickingWorksheetDetail(
-            trxMgr,
-            domain,
-            bizplace,
-            user,
-            worksheet,
-            savedOrderInv,
-            WORKSHEET_STATUS.EXECUTING
-          )
+          await generatePickingWorksheetDetail(trxMgr, domain, bizplace, user, worksheet, savedOrderInv)
         }
       }
 
