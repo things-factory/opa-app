@@ -1234,7 +1234,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     const inventories = this.inventoryGrist?.dirtyData?.records
     if (!inventories?.length) throw new Error(i18next.t('text.there_is_no_inventory'))
 
-    if (!this._crossDocking && inventories.some(record => !record?.inventory?.id))
+    if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PALLET && inventories.some(record => !record?.inventory?.id))
       throw new Error(i18next.t('text.invalid_inventory'))
 
     if (inventories.some(record => !record.releaseQty)) throw new Error(i18next.t('text.invalid_release_qty'))
