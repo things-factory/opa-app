@@ -32,8 +32,12 @@ export const addReleaseGoodProducts = {
 
       const bizplace: Bizplace = releaseGood.bizplace
 
-      let worksheet: Worksheet = await trxMgr.getRepository(Worksheet).findOne({
-        where: { releaseGood }
+      let pickingWorksheet: Worksheet = await trxMgr.getRepository(Worksheet).findOne({
+        where: { releaseGood, type: WORKSHEET_TYPE.PICKING }
+      })
+
+      let loadingWorksheet: Worksheet = await trxMgr.getRepository(Worksheet).findOne({
+        where: { releaseGood, type: WORKSHEET_TYPE.LOADING }
       })
 
       for (let oi of orderInventories) {
@@ -41,7 +45,7 @@ export const addReleaseGoodProducts = {
         let newOrderInv: OrderInventory = Object.assign({}, oi)
         newOrderInv.domain = domain
         newOrderInv.bizplace = bizplace
-        newOrderInv.status = worksheet ? ORDER_INVENTORY_STATUS.PICKING : ORDER_INVENTORY_STATUS.PENDING
+        newOrderInv.status = pickingWorksheet ? ORDER_INVENTORY_STATUS.PICKING : ORDER_INVENTORY_STATUS.PENDING
         newOrderInv.name = OrderNoGenerator.orderInventory()
         newOrderInv.releaseGood = releaseGood
         newOrderInv.product = await trxMgr.getRepository(Product).findOne(oi.product.id)
@@ -94,7 +98,7 @@ export const addReleaseGoodProducts = {
 
           let existingWorksheetDetail: WorksheetDetail = await trxMgr.getRepository(WorksheetDetail).findOne({
             where: {
-              worksheet,
+              pickingWorksheet,
               type: WORKSHEET_TYPE.PICKING,
               targetInventory: existingOrderInv
             }
@@ -112,20 +116,30 @@ export const addReleaseGoodProducts = {
 
         let savedOrderInv = await trxMgr.getRepository(OrderInventory).save(newOrderInv)
 
-        if (!existingOrderInv && worksheet) {
+        if (!existingOrderInv && pickingWorksheet) {
           // if this is a new orderInventory and has existing worksheet then generate a new worksheet detail for it
-          await generatePickingWorksheetDetail(trxMgr, domain, bizplace, user, worksheet, savedOrderInv)
+          await generatePickingWorksheetDetail(trxMgr, domain, bizplace, user, pickingWorksheet, savedOrderInv)
         }
       }
 
-      if (worksheet) {
-        // if has worksheet, status will be deactivated to prevent any action from warehouse operator until office admin has confirmation
-        worksheet = {
-          ...worksheet,
+      if (pickingWorksheet) {
+        // if has picking worksheet, status will be deactivated to prevent any action from warehouse operator until office admin has confirmation
+        pickingWorksheet = {
+          ...pickingWorksheet,
           status: WORKSHEET_STATUS.DEACTIVATED
         }
 
-        await trxMgr.getRepository(Worksheet).save(worksheet)
+        await trxMgr.getRepository(Worksheet).save(pickingWorksheet)
+      }
+
+      if (loadingWorksheet) {
+        // if has loading worksheet, status will be deactivated to prevent any action from warehouse operator until office admin has confirmation
+        loadingWorksheet = {
+          ...loadingWorksheet,
+          status: WORKSHEET_STATUS.DEACTIVATED
+        }
+
+        await trxMgr.getRepository(Worksheet).save(loadingWorksheet)
       }
     })
   }
