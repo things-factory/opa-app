@@ -155,9 +155,7 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
         >
           ${i18next.t('button.cancel')}
         </button>
-        <button @click="${this._addExtraProducts.bind(this)}">
-          ${i18next.t('button.add')}
-        </button>
+        <button @click="${this._addExtraProducts.bind(this)}">${i18next.t('button.add')}</button>
       </div>
     `
   }
@@ -184,227 +182,126 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
 
   async switchPickingType() {
     this.resetPage()
-    if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
-      this.inventoryGristConfig = {
-        pagination: { infinite: true },
-        rows: {
-          selectable: { multiple: true }
-        },
-        list: { fields: ['inventory', 'product', 'location', 'releaseQty'] },
-        columns: [
-          { type: 'gutter', gutterName: 'sequence' },
-          {
-            type: 'gutter',
-            gutterName: 'button',
-            icon: 'close',
-            handlers: {
-              click: (columns, data, column, record, rowIndex) => {
-                try {
-                  const newData = data.records.filter((_, idx) => idx !== rowIndex)
-                  this.inventoryData = { ...this.inventoryData, records: newData }
-                  this.inventoryGrist.dirtyData.records = newData
-                  this._updateInventoryList()
-                } catch (e) {
-                  this._showToast(e)
-                }
-              }
+    const locationSortingRules = await fetchLocationSortingRule(LOCATION_SORTING_RULE.CREATE_RELEASE_ORDER.value)
+    this.inventoryGristConfig = {
+      pagination: { infinite: true },
+      rows: {
+        selectable: { multiple: true }
+      },
+      list: { fields: ['inventory', 'product', 'location', 'releaseQty'] },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'gutter',
+          gutterName: 'button',
+          icon: 'close',
+          handlers: {
+            click: (columns, data, column, record, rowIndex) => {
+              const newData = data.records.filter((_, idx) => idx !== rowIndex)
+              this.inventoryData = { ...this.inventoryData, records: newData }
+              this.inventoryGrist.dirtyData.records = newData
+              this._updateInventoryList()
             }
-          },
-          {
-            type: 'object',
-            name: 'inventory',
-            header: i18next.t('field.inventory_list'),
-            record: {
-              editable: true,
-              align: 'left',
-              options: {
-                queryName: 'inventoryProductGroup',
-                basicArgs: { filters: [] },
-                nameField: 'batchId',
-                descriptionField: 'productName',
-                select: [
-                  { name: 'productId', hidden: true },
-                  { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'left' } },
-                  { name: 'productName', header: i18next.t('field.product'), record: { align: 'left' }, width: 280 },
-                  { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
-                  {
-                    name: 'remainQty',
-                    header: i18next.t('field.remain_qty'),
-                    record: { align: 'center' },
-                    ignoreCondition: true
-                  },
-                  {
-                    name: 'remainWeight',
-                    header: i18next.t('field.remain_weight'),
-                    record: { align: 'center' },
-                    ignoreCondition: true
-                  }
-                ],
-                list: { fields: ['batchId', 'productName', 'packingType', 'remainQty', 'remainWeight'] }
-              }
-            },
-            width: 300
-          },
-          {
-            type: 'code',
-            name: 'packingType',
-            header: i18next.t('field.packing_type'),
-            record: {
-              align: 'center',
-              codeName: 'PACKING_TYPES'
-            },
-            width: 150
-          },
-          {
-            type: 'integer',
-            name: 'remainQty',
-            header: i18next.t('field.available_qty'),
-            record: { align: 'center' },
-            width: 140
-          },
-          {
-            type: 'integer',
-            name: 'releaseQty',
-            header: i18next.t('field.release_qty'),
-
-            record: { editable: true, align: 'center', options: { min: 0 } },
-            width: 140
-          },
-          {
-            type: 'float',
-            name: 'remainWeight',
-            header: i18next.t('field.available_weight'),
-            record: { align: 'center' },
-            width: 140
-          },
-          {
-            type: 'float',
-            name: 'releaseWeight',
-            header: i18next.t('field.release_weight'),
-            record: { editable: true, align: 'center', options: { min: 0 } },
-            width: 140
           }
-        ]
-      }
-    } else {
-      const locationSortingRules = await fetchLocationSortingRule(LOCATION_SORTING_RULE.CREATE_RELEASE_ORDER.value)
-      this.inventoryGristConfig = {
-        pagination: { infinite: true },
-        rows: {
-          selectable: { multiple: true }
         },
-        list: { fields: ['inventory', 'product', 'location', 'releaseQty'] },
-        columns: [
-          { type: 'gutter', gutterName: 'sequence' },
-          {
-            type: 'gutter',
-            gutterName: 'button',
-            icon: 'close',
-            handlers: {
-              click: (columns, data, column, record, rowIndex) => {
-                const newData = data.records.filter((_, idx) => idx !== rowIndex)
-                this.inventoryData = { ...this.inventoryData, records: newData }
-                this.inventoryGrist.dirtyData.records = newData
-                this._updateInventoryList()
-              }
-            }
-          },
-          {
-            type: 'object',
-            name: 'inventory',
-            header: i18next.t('field.inventory_list'),
-            record: {
-              editable: true,
-              align: 'left',
-              options: {
-                queryName: 'inventoriesByPallet',
-                basicArgs: {
-                  filters: [{ name: 'status', operator: 'eq', value: INVENTORY_STATUS.STORED.value }],
-                  locationSortingRules
+        {
+          type: 'object',
+          name: 'inventory',
+          header: i18next.t('field.inventory_list'),
+          record: {
+            editable: true,
+            align: 'left',
+            options: {
+              queryName: 'inventoriesByPallet',
+              basicArgs: {
+                filters: [
+                  { name: 'status', operator: 'eq', value: INVENTORY_STATUS.STORED.value },
+                  { name: 'bizplace', value: [this.bizplace], operator: 'in' }
+                ],
+                locationSortingRules
+              },
+              nameField: 'batchId',
+              descriptionField: 'palletId',
+              select: [
+                { name: 'id', hidden: true },
+                { name: 'name', hidden: true },
+                { name: 'palletId', header: i18next.t('field.pallet_id'), record: { align: 'center' } },
+                { name: 'product', type: 'object', queryName: 'products' },
+                { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
+                {
+                  name: 'location',
+                  type: 'object',
+                  queryName: 'locations',
+                  field: 'name',
+                  record: { align: 'center' }
                 },
-                nameField: 'batchId',
-                descriptionField: 'palletId',
-                select: [
-                  { name: 'id', hidden: true },
-                  { name: 'name', hidden: true },
-                  { name: 'palletId', header: i18next.t('field.pallet_id'), record: { align: 'center' } },
-                  { name: 'product', type: 'object', queryName: 'products' },
-                  { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
-                  {
-                    name: 'location',
-                    type: 'object',
-                    queryName: 'locations',
-                    field: 'name',
-                    record: { align: 'center' }
-                  },
-                  { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
-                  { name: 'remainQty', type: 'float', record: { align: 'center' } },
-                  {
-                    name: 'remainWeight',
-                    type: 'float',
-                    header: i18next.t('field.total_weight'),
-                    record: { align: 'center' }
-                  }
-                ],
-                list: { fields: ['palletId', 'product', 'batchId', 'location', 'remainWeight'] }
-              }
-            },
-            width: 250
+                { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
+                { name: 'remainQty', type: 'float', record: { align: 'center' } },
+                {
+                  name: 'remainWeight',
+                  type: 'float',
+                  header: i18next.t('field.total_weight'),
+                  record: { align: 'center' }
+                }
+              ],
+              list: { fields: ['palletId', 'product', 'batchId', 'location', 'remainWeight'] }
+            }
           },
-          {
-            type: 'object',
-            name: 'product',
-            header: i18next.t('field.product'),
-            record: { align: 'left' },
-            width: 150
+          width: 250
+        },
+        {
+          type: 'object',
+          name: 'product',
+          header: i18next.t('field.product'),
+          record: { align: 'left' },
+          width: 150
+        },
+        {
+          type: 'object',
+          name: 'location',
+          header: i18next.t('field.location'),
+          record: { align: 'center' },
+          width: 150
+        },
+        {
+          type: 'code',
+          name: 'packingType',
+          header: i18next.t('field.packing_type'),
+          record: {
+            align: 'center',
+            codeName: 'PACKING_TYPES'
           },
-          {
-            type: 'object',
-            name: 'location',
-            header: i18next.t('field.location'),
-            record: { align: 'center' },
-            width: 150
-          },
-          {
-            type: 'code',
-            name: 'packingType',
-            header: i18next.t('field.packing_type'),
-            record: {
-              align: 'center',
-              codeName: 'PACKING_TYPES'
-            },
-            width: 150
-          },
-          {
-            type: 'integer',
-            name: 'remainQty',
-            header: i18next.t('field.available_qty'),
-            record: { align: 'center' },
-            width: 100
-          },
-          {
-            type: 'integer',
-            name: 'releaseQty',
-            header: i18next.t('field.release_qty'),
-            record: { editable: true, align: 'center', options: { min: 0 } },
-            width: 100
-          },
-          {
-            type: 'float',
-            name: 'remainWeight',
-            header: i18next.t('field.available_weight'),
-            record: { align: 'center' },
-            width: 100
-          },
-          {
-            type: 'float',
-            name: 'releaseWeight',
-            header: i18next.t('field.release_weight'),
-            record: { editable: true, align: 'center', options: { min: 0 } },
-            width: 100
-          }
-        ]
-      }
+          width: 150
+        },
+        {
+          type: 'integer',
+          name: 'remainQty',
+          header: i18next.t('field.available_qty'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'integer',
+          name: 'releaseQty',
+          header: i18next.t('field.release_qty'),
+          record: { editable: true, align: 'center', options: { min: 0 } },
+          width: 100
+        },
+        {
+          type: 'float',
+          name: 'remainWeight',
+          header: i18next.t('field.available_weight'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'float',
+          name: 'releaseWeight',
+          header: i18next.t('field.release_weight'),
+          record: { editable: true, align: 'center', options: { min: 0 } },
+          width: 100
+        }
+      ]
     }
   }
 

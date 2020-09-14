@@ -841,7 +841,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
       html`
         <release-extra-product-popup
           .releaseGoodNo="${this._releaseOrderNo}"
-          .bizplace="${this.customerBizplaceId}"
+          .bizplace="${this.partnerBizplaceId}"
           @completed="${e => {
             this._fetchReleaseOrder(this._releaseOrderNo)
             this._updateContext()
