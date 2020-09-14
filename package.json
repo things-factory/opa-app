@@ -64,7 +64,7 @@
     "@things-factory/transport-base": "^2.0.0",
     "@things-factory/tutorial-ui": "^2.5.0",
     "@things-factory/warehouse-base": "^2.7.0-beta.0 <2.7.0",
-    "@things-factory/worksheet-base": "^2.7.0-beta.0",
+    "@things-factory/worksheet-base": "git://github.com/leemyunggyu/worksheet-base#refactoring",
     "@things-scene/chartjs": "*",
     "@things-scene/clock": "*",
     "@things-scene/clone": "*",
@@ -99,7 +99,7 @@
     "inquirer": "^7.0.0"
   },
   "resolutions": {
-    "@things-factory/worksheet-base": "^2.7.0-beta.0",
+    "@things-factory/worksheet-base": "git://github.com/leemyunggyu/worksheet-base#refactoring",
     "@things-factory/sales-base": "^2.7.0-beta.0",
     "@things-factory/warehouse-base": "^2.7.0-beta.0  <2.7.0",
     "@things-factory/product-base": "^2.5.0-beta.0"
