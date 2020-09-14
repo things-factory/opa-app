@@ -91,5 +91,8 @@
     "@things-scene/visualizer": "*",
     "@things-scene/wheel-sorter": "*"
   },
-  "devDependencies": {}
+  "devDependencies": {},
+  "resolutions": {
+    "puppeteer": "5.2.1"
+  }
 }
