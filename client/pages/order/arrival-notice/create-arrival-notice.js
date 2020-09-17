@@ -568,6 +568,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
       let arrivalNotice = this._getFormInfo()
       arrivalNotice.orderProducts = this._getOrderProducts()
+
       if (arrivalNotice.orderProducts.some(orderProduct => !orderProduct.palletQty)) {
         const result = await CustomAlert({
           title: i18next.t('title.are_you_sure'),
@@ -666,21 +667,29 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
   _validateProducts() {
     // no records
-    if (!this.productGrist.dirtyData.records || !this.productGrist.dirtyData.records.length)
-      throw new Error(i18next.t('text.no_products'))
+    const records = this.productGrist.dirtyData.records
+    if (!records?.length) throw new Error(i18next.t('text.no_products'))
+
+    const checkRequiredFields = ({ batchId, packingType, weight, unit, packQty }) =>
+      !batchId || !packingType || !weight || !unit || !packQty
 
     // required field (batchId, packingType, weight, unit, packQty, palletQty)
-    if (
-      this.productGrist.dirtyData.records.filter(
-        record => !record.batchId || !record.packingType || !record.weight || !record.unit || !record.packQty
-      ).length
-    )
+    if (records.some(checkRequiredFields)) {
       throw new Error(i18next.t('text.empty_value_in_list'))
+    }
 
-    if (
-      this._crossDocking &&
-      this.productGrist.dirtyData.records.every(record => !record.releaseQty || !record.releaseWeight)
-    ) {
+    if (records.some(({ palletQty, packQty }) => palletQty > packQty)) {
+      throw new Error(
+        i18next.t('text.a_cannot_exceed_b', {
+          state: {
+            a: i18next.t('field.pallet_qty'),
+            b: i18next.t('field.pack_qty')
+          }
+        })
+      )
+    }
+
+    if (this._crossDocking && records.every(({ releaseQty, releaseWeight }) => !releaseQty || !releaseWeight)) {
       throw new Error(
         i18next.t('text.invalid_x', {
           state: {
@@ -692,17 +701,15 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   _validateVas() {
-    if (!this.vasGrist.dirtyData.records.every(record => record.ready)) throw new Error('there_is_not_ready_vas')
+    if (!this.vasGrist.dirtyData.records.every(record => record.ready)) {
+      throw new Error(i18next.t('text.invalid_vas_setting'))
+    }
   }
 
   _updateVasTargets(isFieldChanged) {
-    if (!this.vasGrist.dirtyData || !this.vasGrist.dirtyData.records || !this.vasGrist.dirtyData.records.length) return
+    if (!this.vasGrist.dirtyData?.records?.length) return
 
-    if (
-      !this.productGrist.dirtyData ||
-      !this.productGrist.dirtyData.records ||
-      !this.productGrist.dirtyData.records.length
-    ) {
+    if (!this.productGrist.dirtyData?.records?.length) {
       this.vasData = { ...this.vasData, records: [] }
       return
     }
@@ -795,7 +802,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
   }
 
   _getOrderVass() {
-    if (!this.vasGrist.dirtyData || !this.vasGrist.dirtyData.records || !this.vasGrist.dirtyData.records.length) {
+    if (!this.vasGrist.dirtyData?.records?.length) {
       return []
     }
 

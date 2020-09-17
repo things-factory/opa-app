@@ -1150,5 +1150,6 @@
   "text.invalid_x": "invalid {state.x}",
   "text.cannot_delete_cross_docking_products": "can't delete products for cross docking",
   "text.cannot_change_x": "can't change {state.x}",
-  "button.move_to_x": "move to {state.x}"
+  "button.move_to_x": "move to {state.x}",
+  "text.a_cannot_exceed_b": "{state.a} cannot excced {state.b}"
 }
