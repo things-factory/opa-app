@@ -20,6 +20,7 @@ export const ORDER_STATUS = {
   ARRIVED: { name: 'order_status_arrived', value: 'ARRIVED' },
   RECEIVED: { name: 'order_status_received', value: 'RECEIVED' },
   READY_TO_UNLOAD: { name: 'ready_to_unload', value: 'READY_TO_UNLOAD' },
+  PUTTING_AWAY: { name: 'putting_away', value: 'PUTTING_AWAY' },
   PROCESSING: { name: 'order_status_processing', value: 'PROCESSING' },
   DONE: { name: 'order_status_done', value: 'DONE' },
   COLLECTING: { name: 'order_status_collecting', value: 'COLLECTING' },
