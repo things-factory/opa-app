@@ -339,6 +339,9 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
         // need to round off so that it will bypass the validation upon submission
         this.pickWeight = Math.round(this.pickWeight * 100) / 100
 
+        // need to round off so that it will bypass the validation upon submission
+        this.pickWeight = Math.round(this.pickWeight * 100) / 100
+
         return {
           ...item,
           ...item.location,

@@ -2,7 +2,8 @@ import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, navigate, PageView } from '@things-factory/shell'
+import { ScrollbarStyles } from '@things-factory/styles'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
@@ -122,12 +123,19 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
-        label: i18next.t('field.import_cargo'),
-        name: 'importCargo',
+        label: i18next.t('field.container'),
+        name: 'container',
         type: 'checkbox',
         props: { searchOper: 'eq' },
         attrs: ['indeterminate']
       },
+      // {
+      //   label: i18next.t('field.import_cargo'),
+      //   name: 'importCargo',
+      //   type: 'checkbox',
+      //   props: { searchOper: 'eq' },
+      //   attrs: ['indeterminate']
+      // },
       {
         label: i18next.t('field.own_transport'),
         name: 'ownTransport',
@@ -210,11 +218,19 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
         },
         {
           type: 'boolean',
+          name: 'container',
+          header: i18next.t('field.container'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 60
+        },
+        {
+          type: 'boolean',
           name: 'importCargo',
           header: i18next.t('field.import_cargo'),
           record: { align: 'center' },
           sortable: true,
-          width: 120
+          width: 60
         },
         {
           type: 'boolean',
@@ -222,21 +238,21 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           header: i18next.t('field.own_transport'),
           record: { align: 'center' },
           sortable: true,
-          width: 120
+          width: 60
         },
         {
           type: 'boolean',
           name: 'crossDocking',
           header: i18next.t('field.cross_docking'),
           record: { align: 'center' },
-          width: 100
+          width: 60
         },
         {
           type: 'object',
           name: 'releaseGood',
-          header: i18next.t('field.release_good'),
+          header: i18next.t('field.ro'),
           record: { align: 'center' },
-          width: 180
+          width: 160
         },
         {
           type: 'string',
@@ -294,6 +310,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
               refNo
               status
               ownTransport
+              container
               crossDocking
               releaseGood {
                 name

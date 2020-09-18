@@ -8,6 +8,7 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/vas-templates'
+import '../../components/attachment-viewer'
 import {
   ORDER_PRODUCT_STATUS,
   ORDER_STATUS,
@@ -17,6 +18,7 @@ import {
   VAS_PRODUCT_TYPE
 } from '../../constants'
 import './extra-product-popup'
+import './proceed-edited-batch-popup'
 import './proceed-extra-product-popup'
 
 class ArrivalNoticeDetail extends localize(i18next)(PageView) {
@@ -36,6 +38,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       _looseItem: Boolean,
       isUserBelongsDomain: Boolean,
       _status: String,
+      _attachments: Array,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -95,6 +98,15 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
+
+        .gan-preview {
+          display: flex;
+          flex-direction: row;
+          flex: 1;
+        }
+        attachment-viewer {
+          flex: 1;
+        }
       `
     ]
   }
@@ -111,44 +123,6 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       <form name="arrivalNotice" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.gan_no')}: ${this._ganNo}</legend>
-          <label>${i18next.t('label.ref_no')}</label>
-          <input name="refNo" readonly />
-
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
-          <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" readonly />
-
-          <label>${i18next.t('label.eta_date')}</label>
-          <input name="etaDate" type="date" readonly />
-
-          <label ?hidden="${this._importedOrder || !this._ownTransport}">${i18next.t('label.truck_no')}</label>
-          <input ?hidden="${this._importedOrder || !this._ownTransport}" name="truckNo" readonly />
-
-          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
-          <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" readonly />
-
-          <label>${i18next.t('label.container_size')}</label>
-          <input type="text" name="containerSize" readonly />
-
-          <label>${i18next.t('label.status')}</label>
-          <select name="status" disabled>
-            ${Object.keys(ORDER_STATUS).map(key => {
-              const status = ORDER_STATUS[key]
-              return html`
-                <option .selected="${this._status === status.value}" value="${status.value}">
-                  ${i18next.t(`label.${status.name}`)}
-                </option>
-              `
-            })}
-          </select>
-
-          <input id="container" type="checkbox" name="container" ?checked="${this._hasContainer}" disabled />
-          <label for="container">${i18next.t('label.container')}</label>
-
-          <input id="importedOrder" type="checkbox" name="importCargo" ?checked="${this._importedOrder}" disabled />
-          <label for="importedOrder">${i18next.t('label.import_cargo')}</label>
-
-          <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" disabled />
-          <label for="looseItem">${i18next.t('label.loose_item')}</label>
 
           <input
             id="ownTransport"
@@ -159,6 +133,24 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             disabled
           />
           <label>${i18next.t('label.own_transport')}</label>
+
+          <input
+            id="warehouseTransport"
+            type="checkbox"
+            name="warehouseTransport"
+            ?checked="${!this._ownTransport}"
+            disabled
+          />
+          <label>${i18next.t('label.warehouse_transport')}</label>
+
+          <input id="container" type="checkbox" name="container" ?checked="${this._hasContainer}" disabled />
+          <label for="container">${i18next.t('label.container')}</label>
+
+          <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" disabled />
+          <label for="looseItem">${i18next.t('label.loose_item')}</label>
+
+          <input id="importedOrder" type="checkbox" name="importCargo" ?checked="${this._importedOrder}" disabled />
+          <label for="importedOrder">${i18next.t('label.import_cargo')}</label>
 
           ${this._crossDocking
             ? html`
@@ -173,7 +165,58 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
               `
             : ''}
         </fieldset>
+
+        <fieldset>
+          <legend></legend>
+
+          <label>${i18next.t('label.ref_no')}</label>
+          <input name="refNo" readonly />
+
+          <label>${i18next.t('label.eta_date')}</label>
+          <input name="etaDate" type="date" readonly />
+
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
+          <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" readonly />
+
+          <label ?hidden="${this._importedOrder || !this._ownTransport}">${i18next.t('label.truck_no')}</label>
+          <input ?hidden="${this._importedOrder || !this._ownTransport}" name="truckNo" readonly />
+
+          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
+          <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" readonly />
+
+          <label>${i18next.t('label.container_size')}</label>
+          <input type="text" name="containerSize" readonly />
+
+          <label>${i18next.t('label.status')}</label>
+          <select name="status" disabled>
+            ${Object.keys(ORDER_STATUS).map(key => {
+              const status = ORDER_STATUS[key]
+              return html` <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option> `
+            })}
+          </select>
+        </fieldset>
       </form>
+
+      <div class="gan-attachment-container" ?hidden="${this._attachments.length > 0 ? false : true}">
+        <form name="ganAttachment" class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.attachment')}</legend>
+            <div class="gan-preview">
+              ${(this._attachments || []).map(
+                attachment =>
+                  html`
+                    <attachment-viewer
+                      name="${attachment.name}"
+                      src="${location.origin}/attachment/${attachment.path}"
+                      .mimetype="${attachment.mimetype}"
+                      .downloadable="${this._downloadable}"
+                    ></attachment-viewer>
+                  `
+              )}
+            </div>
+          </fieldset>
+        </form>
+      </div>
 
       <div class="container">
         <div class="grist">
@@ -202,6 +245,8 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
   constructor() {
     super()
     this.productData = { records: [] }
+    this._downloadable = true
+    this._attachments = []
     this.vasData = { records: [] }
   }
 
@@ -468,13 +513,23 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
             jobSheet {
               containerSize
             }
+            attachment {
+              id
+              name
+              refBy
+              path
+              mimetype
+            }
             orderProducts {
               id
               batchId
               product {
+                id
                 name
                 description
               }
+              adjustedBatchId
+              remark
               status
               packingType
               weight
@@ -531,6 +586,10 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         ...arrivalNotice.jobSheet
       })
 
+      if (arrivalNotice && arrivalNotice?.attachment) {
+        this._attachments = arrivalNotice && arrivalNotice.attachment
+      }
+
       this.setProductGristConfig()
       this.productData = { records: orderProducts }
       this.vasData = {
@@ -573,7 +632,19 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       this._actions = [{ title: i18next.t('button.approve'), action: this.openApproveProductPopup.bind(this) }]
     }
 
-    if (!this.isUserBelongsDomain && this._status !== ORDER_STATUS.PENDING.value) {
+    if (
+      !this.isUserBelongsDomain &&
+      this._status === ORDER_STATUS.PENDING_APPROVAL.value &&
+      this.productData.records.some(product => product.status === ORDER_PRODUCT_STATUS.PENDING_APPROVAL.value)
+    ) {
+      this._actions = [{ title: i18next.t('button.inspect_changes'), action: this.openApproveBatchPopup.bind(this) }]
+    }
+
+    if (
+      !this.isUserBelongsDomain &&
+      this._status !== ORDER_STATUS.PENDING.value &&
+      this._status !== ORDER_STATUS.PENDING_APPROVAL.value
+    ) {
       this._actions = [
         ...this._actions,
         { title: i18next.t('button.duplicate'), action: () => window.open(`duplicate_arrival_notice/${this._ganNo}`) }
@@ -758,6 +829,26 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
         backdrop: true,
         size: 'large',
         title: i18next.t('title.proceed_extra_product')
+      }
+    )
+  }
+
+  openApproveBatchPopup() {
+    openPopup(
+      html`
+        <proceed-edited-batch-popup
+          .ganNo="${this._ganNo}"
+          .data="${this.productData}"
+          @completed="${() => {
+            this._fetchGAN()
+            this._updateContext()
+          }}"
+        ></proceed-edited-batch-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.edited_batch_no_approval')
       }
     )
   }

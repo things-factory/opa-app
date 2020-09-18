@@ -6,6 +6,7 @@ import { client, PageView } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import '../../components/attachment-viewer'
 import '../../components/popup-note'
 import '../../components/vas-templates'
 import {
@@ -22,9 +23,11 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
       _ganNo: String,
       _ownTransport: Boolean,
       _crossDocking: Boolean,
+      _importCargo: Boolean,
       _hasContainer: Boolean,
       _looseItem: Boolean,
       _path: String,
+      _attachments: Array,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -87,6 +90,15 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
+
+        .gan-preview {
+          display: flex;
+          flex-direction: row;
+          flex: 1;
+        }
+        attachment-viewer {
+          flex: 1;
+        }
       `
     ]
   }
@@ -111,40 +123,6 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
       <form name="arrivalNotice" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.gan_no')}: ${this._ganNo}</legend>
-          <label>${i18next.t('label.ref_no')}</label>
-          <input name="refNo" readonly />
-
-          <label>${i18next.t('label.do_no')}</label>
-          <input name="deliveryOrderNo" readonly />
-
-          <label>${i18next.t('label.eta_date')}</label>
-          <input name="etaDate" type="date" readonly />
-
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.truck_no')}</label>
-          <input ?hidden="${!this._ownTransport}" name="truckNo" readonly />
-
-          <label ?hidden="${this._importCargo || !this._ownTransport}">${i18next.t('label.truck_no')}</label>
-          <input ?hidden="${this._importCargo || !this._ownTransport}" name="truckNo" readonly />
-
-          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
-          <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" readonly />
-
-          <label>${i18next.t('label.container_size')}</label>
-          <input type="text" name="containerSize" readonly />
-
-          <label>${i18next.t('label.status')}</label>
-          <select name="status" disabled
-            >${Object.keys(ORDER_STATUS).map(key => {
-              const status = ORDER_STATUS[key]
-              return html` <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option> `
-            })}</select
-          >
-
-          <input id="container" type="checkbox" name="container" ?checked="${this._hasContainer}" disabled />
-          <label for="container">${i18next.t('label.container')}</label>
-
-          <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" disabled />
-          <label for="looseItem">${i18next.t('label.loose_item')}</label>
 
           <input
             id="ownTransport"
@@ -155,6 +133,24 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
             disabled
           />
           <label>${i18next.t('label.own_transport')}</label>
+
+          <input
+            id="warehouseTransport"
+            type="checkbox"
+            name="warehouseTransport"
+            ?checked="${!this._ownTransport}"
+            disabled
+          />
+          <label>${i18next.t('label.warehouse_transport')}</label>
+
+          <input id="container" type="checkbox" name="container" ?checked="${this._hasContainer}" disabled />
+          <label for="container">${i18next.t('label.container')}</label>
+
+          <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" disabled />
+          <label for="looseItem">${i18next.t('label.loose_item')}</label>
+
+          <input id="importedOrder" type="checkbox" name="importCargo" ?checked="${this._importedOrder}" disabled />
+          <label for="importedOrder">${i18next.t('label.import_cargo')}</label>
 
           ${this._crossDocking
             ? html`
@@ -169,7 +165,57 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
               `
             : ''}
         </fieldset>
+
+        <fieldset>
+          <legend></legend>
+          <label>${i18next.t('label.ref_no')}</label>
+          <input name="refNo" readonly />
+
+          <label>${i18next.t('label.eta_date')}</label>
+          <input name="etaDate" type="date" readonly />
+
+          <label>${i18next.t('label.do_no')}</label>
+          <input name="deliveryOrderNo" readonly />
+
+          <label ?hidden="${this._importedOrder || !this._ownTransport}">${i18next.t('label.truck_no')}</label>
+          <input ?hidden="${this._importedOrder || !this._ownTransport}" name="truckNo" readonly />
+
+          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
+          <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" readonly />
+
+          <label>${i18next.t('label.container_size')}</label>
+          <input type="text" name="containerSize" readonly />
+
+          <label>${i18next.t('label.status')}</label>
+          <select name="status" disabled>
+            ${Object.keys(ORDER_STATUS).map(key => {
+              const status = ORDER_STATUS[key]
+              return html` <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option> `
+            })}
+          </select>
+        </fieldset>
       </form>
+
+      <div class="gan-attachment-container" ?hidden="${this._attachments > 0 ? false : true}">
+        <form name="ganAttachment" class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.attachment')}</legend>
+            <div class="gan-preview">
+              ${(this._attachments || []).map(
+                attachment =>
+                  html`
+                    <attachment-viewer
+                      name="${attachment.name}"
+                      src="${location.origin}/attachment/${attachment.path}"
+                      .mimetype="${attachment.mimetype}"
+                      .downloadable="${this._downloadable}"
+                    ></attachment-viewer>
+                  `
+              )}
+            </div>
+          </fieldset>
+        </form>
+      </div>
 
       <div class="container">
         <div class="grist">
@@ -191,9 +237,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
           ></data-grist>
         </div>
 
-        <div class="guide-container">
-          ${this._template}
-        </div>
+        <div class="guide-container">${this._template}</div>
       </div>
     `
   }
@@ -202,6 +246,8 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
     super()
     this.productData = { records: [] }
     this.vasData = { records: [] }
+    this._downloadable = true
+    this._attachments = []
     this._path = ''
   }
 
@@ -459,7 +505,13 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
             looseItem
             jobSheet {
               containerSize
-              adviseMtDate
+            }
+            attachment {
+              id
+              name
+              refBy
+              path
+              mimetype
             }
             orderProducts {
               id
@@ -515,11 +567,16 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
       this._looseItem = arrivalNotice.looseItem
       this._ownTransport = arrivalNotice.ownTransport
       this._crossDocking = arrivalNotice.crossDocking
+      this._importCargo = arrivalNotice.importCargo
       this._rejectReason = arrivalNotice.remark
       this._fillupANForm({
         ...arrivalNotice,
         ...arrivalNotice.jobSheet
       })
+
+      if (arrivalNotice && arrivalNotice?.attachment) {
+        this._attachments = arrivalNotice && arrivalNotice.attachment
+      }
 
       this.setProductGristConfig()
       this.productData = { records: orderProducts }

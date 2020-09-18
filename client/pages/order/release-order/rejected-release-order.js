@@ -2,7 +2,8 @@ import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { getRenderer } from '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, PageView } from '@things-factory/shell'
+import { client, PageView } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/popup-note'
@@ -93,17 +94,6 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
       <form name="releaseOrder" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.release_order_no')}: ${this._releaseOrderNo}</legend>
-          <label>${i18next.t('label.ref_no')}</label>
-          <input name="refNo" readonly />
-
-          <label>${i18next.t('label.release_date')}</label>
-          <input name="releaseDate" type="date" readonly />
-
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
-          <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" readonly />
-
-          <input id="exportOption" type="checkbox" name="exportOption" ?checked="${this._exportOption}" disabled />
-          <label>${i18next.t('label.export')}</label>
 
           <input
             id="ownTransport"
@@ -115,6 +105,19 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
           />
           <label ?hidden="${this._exportOption}">${i18next.t('label.own_transport')}</label>
 
+          <input
+            id="warehouseTransport"
+            type="checkbox"
+            name="warehouseTransport"
+            ?checked="${!this._ownTransport}"
+            ?hidden="${this._exportOption}"
+            disabled
+          />
+          <label ?hidden="${this._exportOption}">${i18next.t('label.warehouse_transport')}</label>
+
+          <input id="exportOption" type="checkbox" name="exportOption" ?checked="${this._exportOption}" disabled />
+          <label>${i18next.t('label.export')}</label>
+
           ${this._crossDocking
             ? html`
                 <input
@@ -125,7 +128,23 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
                   disabled
                 />
                 <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+              `
+            : ''}
+        </fieldset>
 
+        <fieldset>
+          <legend></legend>
+          <label>${i18next.t('label.ref_no')}</label>
+          <input name="refNo" readonly />
+
+          <label>${i18next.t('label.release_date')}</label>
+          <input name="releaseDate" type="date" readonly />
+
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
+          <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" readonly />
+
+          ${this._crossDocking
+            ? html`
                 <label for="ganNo">${i18next.t('label.arrival_notice')}</label>
                 <input readonly name="ganNo" value="${this._ganNo}" />
               `
@@ -152,6 +171,27 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
         </form>
       </div>
 
+      <div class="do-attachment-container" ?hidden="${this._attachments > 0 ? false : true}">
+        <form name="doAttachment" class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.attachment')}</legend>
+            <div class="do-preview">
+              ${(this._attachments || []).map(
+                attachment =>
+                  html`
+                    <attachment-viewer
+                      name="${attachment.name}"
+                      src="${location.origin}/attachment/${attachment.path}"
+                      .mimetype="${attachment.mimetype}"
+                      .downloadable="${this._downloadable}"
+                    ></attachment-viewer>
+                  `
+              )}
+            </div>
+          </fieldset>
+        </form>
+      </div>
+
       <div class="container">
         <div class="grist">
           <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.release_product_list')}</h2>
@@ -171,9 +211,7 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
             .data="${this.vasData}"
           ></data-grist>
         </div>
-        <div class="guide-container">
-          ${this._template}
-        </div>
+        <div class="guide-container">${this._template}</div>
       </div>
     `
   }
@@ -182,6 +220,7 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
     super()
     this._exportOption = false
     this._ownTransport = true
+    this._attachments = []
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
   }
@@ -413,6 +452,13 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
             refNo
             collectionOrderNo
             remark
+            attachment {
+              id
+              name
+              refBy
+              path
+              mimetype
+            }
             inventoryInfos {
               batchId
               productName
@@ -469,6 +515,10 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
         this._ownTransport = true
       } else if (!this._exportOption) {
         this._ownTransport = releaseOrder.ownTransport
+      }
+
+      if (releaseOrder && releaseOrder?.attachment) {
+        this._attachments = releaseOrder && releaseOrder.attachment
       }
 
       this._crossDocking = response.data.releaseGoodDetail?.crossDocking

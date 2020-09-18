@@ -1,7 +1,9 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, navigate, PageView } from '@things-factory/shell'
+import { ScrollbarStyles } from '@things-factory/styles'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { getCodeByName } from '@things-factory/code-base'
@@ -98,7 +100,7 @@ class CustomerGrnList extends localize(i18next)(PageView) {
 
     this.config = {
       list: {
-        fields: ['name', 'bizplace', 'orderRefNo', 'arrivalNotice', 'updater', 'updatedAt']
+        fields: ['name', 'bizplace', 'refNo', 'arrivalNotice', 'updater', 'updatedAt']
       },
       rows: { appendable: false, selectable: { multiple: true } },
       columns: [
@@ -115,7 +117,7 @@ class CustomerGrnList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'orderRefNo',
+          name: 'refNo',
           header: i18next.t('field.ref_no'),
           record: { align: 'left' },
           sortable: true,
@@ -211,7 +213,7 @@ class CustomerGrnList extends localize(i18next)(PageView) {
           response.data.goodsReceivalNotes.items.map(grn => {
             return {
               ...grn,
-              orderRefNo: grn.arrivalNotice.refNo || ''
+              refNo: grn.arrivalNotice.refNo || ''
             }
           }) || []
       }

@@ -34,13 +34,20 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
 
   get context() {
     return {
-      title: 'Inventory Report',
+      title: i18next.t('title.inventory_report'),
       printable: {
         accept: ['preview'],
         content: this
       },
       exportable: {
-        name: i18next.t('title.inventory_report'),
+        name: i18next.t('title.date_inventory_report', {
+          state: {
+            text: (() => {
+              let date = new Date()
+              return date.getFullYear().toString() + (date.getMonth() + 1).toString() + date.getDate().toString()
+            })()
+          }
+        }),
         data: this._exportableData.bind(this)
       }
     }
@@ -94,8 +101,20 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
         props: { searchOper: 'eq' }
       },
       {
-        label: i18next.t('field.product'),
+        label: i18next.t('field.product_name'),
         name: 'product',
+        type: 'string',
+        props: { searchOper: 'in' }
+      },
+      {
+        label: i18next.t('field.product_description'),
+        name: 'productDescription',
+        type: 'string',
+        props: { searchOper: 'in' }
+      },
+      {
+        label: i18next.t('field.batch_no'),
+        name: 'batchNo',
         type: 'string',
         props: { searchOper: 'in' }
       },
@@ -128,6 +147,13 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
           max: new Date().toISOString().split('T')[0]
         },
         value: new Date().toISOString().split('T')[0]
+      },
+      {
+        label: i18next.t('field.has_transaction_or_balance'),
+        name: 'hasTransactionOrBalance',
+        type: 'checkbox',
+        value: true,
+        props: { searchOper: 'eq' }
       }
     ]
   }

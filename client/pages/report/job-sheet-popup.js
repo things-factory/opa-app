@@ -8,6 +8,8 @@ import { css, html, LitElement } from 'lit-element'
 class JobSheetPopup extends localize(i18next)(LitElement) {
   static get properties() {
     return {
+      etaDate: String,
+      ata: String,
       containerMtDate: String,
       adviseMtDate: String,
       containerSize: String,
@@ -70,11 +72,17 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
           <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" disabled />
           <label for="looseItem">${i18next.t('label.loose_item')}</label>
 
-          <label>${i18next.t('label.advise_mt_date')}</label>
-          <input name="adviseMtDate" type="date" min="${this._getStdDate()}" />
+          <label>${i18next.t('label.eta')}</label>
+          <input name="etaDate" type="date" disabled />
 
-          <label>${i18next.t('label.container_mt_date')}</label>
-          <input name="containerMtDate" type="date" min="${this._getStdDate()}" />
+          <label>${i18next.t('label.ata')}</label>
+          <input name="ata" type="datetime-local" />
+
+          <label>${i18next.t('label.advise_mt_date')}</label>
+          <input name="adviseMtDate" type="datetime-local" />
+
+          <label>${i18next.t('label.container_return_date')}</label>
+          <input name="containerMtDate" type="date" />
 
           <label>${i18next.t('label.total_pallet_qty')}</label>
           <input name="sumPalletQty" />
@@ -92,6 +100,8 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
       containerNo: this.containerNo,
       containerMtDate: this.containerMtDate,
       looseItem: this.looseItem,
+      etaDate: this.etaDate,
+      ata: this.ata ? this.ata : '',
       adviseMtDate: this.adviseMtDate,
       containerSize: this.containerSize,
       sumPalletQty: this.sumPalletQty
@@ -132,8 +142,9 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
   _getJobSheetInfo() {
     if (this.shadowRoot.querySelector('form').checkValidity()) {
       return {
+        ata: this._getInputByName('ata').value ? this._getInputByName('ata').value : null,
         containerMtDate: this._getInputByName('containerMtDate').value,
-        adviseMtDate: this._getInputByName('adviseMtDate').value,
+        adviseMtDate: this._getInputByName('adviseMtDate').value ? this._getInputByName('adviseMtDate').value : null,
         sumPalletQty: parseInt(this._getInputByName('sumPalletQty').value)
       }
     } else {
@@ -145,10 +156,10 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
     return this.shadowRoot.querySelector(`textarea[name=${name}], select[name=${name}], input[name=${name}]`)
   }
 
-  _getStdDate() {
-    let date = new Date()
-    date.setDate(date.getDate())
-    return date.toISOString().split('T')[0]
+  _getStdDatetime(datetime) {
+    let date = new Date(datetime)
+    date.setDate(date.getDate() + 1)
+    return `${date.toISOString().substr(0, 11)}00:00:00`
   }
 
   _fillUpForm(form, data) {
@@ -157,9 +168,13 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
         if (field.name === key && field.type === 'checkbox') {
           field.checked = data[key]
         } else if (field.name === key && field.type === 'datetime-local') {
-          const datetime = Number(data[key])
-          const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
-          field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
+          if (data[key]) {
+            const datetime = Number(data[key])
+            const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
+            field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
+          } else {
+            field.value = data[key]
+          }
         } else if (field.name === key) {
           if (data[key] instanceof Object) {
             const objectData = data[key]

@@ -336,7 +336,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'qty',
+          name: 'availableQty',
           header: i18next.t('field.available_qty'),
           record: { align: 'center' },
           width: 80
@@ -404,6 +404,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               releaseWeight
               inventory {
                 qty
+                lockedQty
                 palletId
                 location {
                   name
@@ -465,7 +466,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         (result, ordInv) => {
           if (ordInv.status === ORDER_INVENTORY_STATUS.PENDING_SPLIT.value) {
             result.tempOrderInvs.push(ordInv)
-          } else if (ordInv.status === ORDER_INVENTORY_STATUS.READY_TO_PICK.value) {
+          } else {
             result.completedOrderInvs.push(ordInv)
           }
 
@@ -487,6 +488,10 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 result.compQty += compOrdInv.releaseQty
                 result.compWeight += compOrdInv.releaseWeight
               }
+
+              // need to round off the completed weight to bypass the validation
+              result.compWeight = Math.round(result.compWeight * 100) / 100
+
               return result
             },
             { compQty: 0, compWeight: 0 }
@@ -562,6 +567,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 releaseQty
                 releaseWeight
                 inventory {
+                  qty
+                  lockedQty
                   batchId
                   palletId
                   packingType
@@ -592,7 +599,11 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             ...item.targetInventory,
             ...item.targetInventory.inventory,
             ...item.targetInventory.inventory.location,
-            description: item.description
+            description: item.description,
+            availableQty:
+              item.targetInventory.inventory.qty -
+              item.targetInventory.inventory.lockedQty +
+              item.targetInventory.releaseQty
           }
         }),
         total: response.data.worksheetDetailsByProductGroup.total
@@ -622,6 +633,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 }
                 packingType
                 inventory {
+                  qty
+                  lockedQty
                   palletId
                   batchId
                   packingType
@@ -657,7 +670,11 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             description: wsd.description,
             status: wsd.status,
             releaseQty: wsd.targetInventory.releaseQty,
-            releaseWeight: wsd.targetInventory.releaseWeight
+            releaseWeight: wsd.targetInventory.releaseWeight,
+            availableQty:
+              wsd.targetInventory.inventory.qty -
+              wsd.targetInventory.inventory.lockedQty +
+              wsd.targetInventory.releaseQty
           }
 
           if (wsd.targetInventory?.inventory) {

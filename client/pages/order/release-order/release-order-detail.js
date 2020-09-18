@@ -2,8 +2,10 @@ import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { getRenderer } from '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import { openPopup } from '@things-factory/layout-base'
 import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
+import { connect } from 'pwa-helpers/connect-mixin'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../../components/attachment-viewer'
@@ -15,10 +17,13 @@ import {
   VAS_ETC_TYPE,
   VAS_PRODUCT_TYPE
 } from '../../constants'
+import './release-extra-product-popup'
+import { fetchSettingRule } from '../../../fetch-setting-value'
 
-class ReleaseOrderDetail extends localize(i18next)(PageView) {
+class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
+      _userType: String,
       _releaseOrderNo: String,
       _template: Object,
       _ownTransport: Boolean,
@@ -34,7 +39,8 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       _attachments: Array,
       _status: String,
       _mimetype: String,
-      _doPath: String
+      _doPath: String,
+      _allowROAddProductSetting: Boolean
     }
   }
 
@@ -108,17 +114,6 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       <form name="releaseOrder" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.release_order_no')}: ${this._releaseOrderNo}</legend>
-          <label>${i18next.t('label.ref_no')}</label>
-          <input name="refNo" readonly />
-
-          <label>${i18next.t('label.release_date')}</label>
-          <input name="releaseDate" type="date" readonly />
-
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
-          <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" readonly />
-
-          <input id="exportOption" type="checkbox" name="exportOption" ?checked="${this._exportOption}" disabled />
-          <label>${i18next.t('label.export')}</label>
 
           <input
             id="ownTransport"
@@ -130,6 +125,19 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
           />
           <label ?hidden="${this._exportOption}">${i18next.t('label.own_transport')}</label>
 
+          <input
+            id="warehouseTransport"
+            type="checkbox"
+            name="warehouseTransport"
+            ?checked="${!this._ownTransport}"
+            ?hidden="${this._exportOption}"
+            disabled
+          />
+          <label ?hidden="${this._exportOption}">${i18next.t('label.warehouse_transport')}</label>
+
+          <input id="exportOption" type="checkbox" name="exportOption" ?checked="${this._exportOption}" disabled />
+          <label>${i18next.t('label.export')}</label>
+
           ${this._crossDocking
             ? html`
                 <input
@@ -140,7 +148,23 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
                   disabled
                 />
                 <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+              `
+            : ''}
+        </fieldset>
 
+        <fieldset>
+          <legend></legend>
+          <label>${i18next.t('label.ref_no')}</label>
+          <input name="refNo" readonly />
+
+          <label>${i18next.t('label.release_date')}</label>
+          <input name="releaseDate" type="date" readonly />
+
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
+          <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" readonly />
+
+          ${this._crossDocking
+            ? html`
                 <label for="ganNo">${i18next.t('label.arrival_notice')}</label>
                 <input readonly name="ganNo" value="${this._ganNo}" />
               `
@@ -167,7 +191,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         </form>
       </div>
 
-      <div class="do-attachment-container" ?hidden="${!this._ownTransport}">
+      <div class="do-attachment-container" ?hidden="${this._attachments.length > 0 ? false : true}">
         <form name="doAttachment" class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.attachment')}</legend>
@@ -207,9 +231,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
           ></data-grist>
         </div>
 
-        <div class="guide-container">
-          ${this._template}
-        </div>
+        <div class="guide-container">${this._template}</div>
       </div>
     `
   }
@@ -219,6 +241,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
     this._exportOption = false
     this._ownTransport = true
     this._downloadable = true
+    this._attachments = []
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
   }
@@ -265,6 +288,8 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
 
   async pageInitialized() {
     await this._getUserBizplace()
+
+    this._allowROAddProductSetting = await fetchSettingRule('allow-ro-add-product')
 
     this.inventoryGristConfig = {
       pagination: { infinite: true },
@@ -546,7 +571,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
 
       this._fillupRGForm(response.data.releaseGoodDetail)
 
-      if (this._ownTransport) {
+      if (releaseOrder && releaseOrder?.attachment) {
         this._attachments = releaseOrder && releaseOrder.attachment
       }
 
@@ -590,7 +615,8 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       this.partnerBizplaceId === this.customerBizplaceId &&
       this._status !== ORDER_STATUS.PENDING_RECEIVE.value &&
       this._status !== ORDER_STATUS.PENDING_CANCEL.value &&
-      this._status !== ORDER_STATUS.CANCELLED.value
+      this._status !== ORDER_STATUS.CANCELLED.value &&
+      this._status !== ORDER_STATUS.DONE.value
     ) {
       this._actions = [
         {
@@ -599,8 +625,22 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         }
       ]
     }
+    let addProductStatus = [ORDER_STATUS.READY_TO_PICK.value, ORDER_STATUS.PICKING.value, ORDER_STATUS.LOADING.value]
 
-    this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
+    if (
+      this._userType == 'OFFICE ADMIN' &&
+      addProductStatus.indexOf(this._status) >= 0 &&
+      this._allowROAddProductSetting
+    ) {
+      this._actions = [
+        { title: i18next.t('button.add'), action: this._openExtraProductPopup.bind(this) },
+        ...this._actions
+      ]
+    }
+
+    if (!this._crossDocking) {
+      this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
+    }
 
     store.dispatch({
       type: UPDATE_CONTEXT,
@@ -652,7 +692,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       if (this._crossDocking) {
         result = await CustomAlert({
           title: i18next.t('label.cross_docking'),
-          text: i18next.t('text.arrival_notice_will_be_deleted'),
+          text: i18next.t('text.related_arrival_notice_will_be_deleted'),
           confirmButton: { text: i18next.t('button.confirm') },
           cancelButton: { text: i18next.t('button.cancel') }
         })
@@ -702,7 +742,7 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
       })
 
       if (!response.errors) {
-        this._showToast({ message: i18next.t('text.release_order_submit_for_cancellation') })
+        this._showToast({ message: i18next.t('text.release_order_is_submitted_for_cancellation') })
         navigate(`release_orders`)
       }
     } catch (e) {
@@ -796,6 +836,26 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
     }
   }
 
+  _openExtraProductPopup() {
+    openPopup(
+      html`
+        <release-extra-product-popup
+          .releaseGoodNo="${this._releaseOrderNo}"
+          .bizplace="${this.partnerBizplaceId}"
+          @completed="${e => {
+            this._fetchReleaseOrder(this._releaseOrderNo)
+            this._updateContext()
+          }}"
+        ></release-extra-product-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.extra_product')
+      }
+    )
+  }
+
   _showToast({ type, message }) {
     document.dispatchEvent(
       new CustomEvent('notify', {
@@ -805,6 +865,10 @@ class ReleaseOrderDetail extends localize(i18next)(PageView) {
         }
       })
     )
+  }
+
+  stateChanged(state) {
+    this._userType = state.auth && state.auth.user && state.auth.user.userType
   }
 }
 

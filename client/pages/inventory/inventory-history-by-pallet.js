@@ -97,6 +97,30 @@ class InventoryHistoryByPallet extends localize(i18next)(LitElement) {
           width: 80
         },
         {
+          type: 'number',
+          name: 'openingQty',
+          header: i18next.t('field.opening_qty'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'number',
+          name: 'weight',
+          header: i18next.t('field.weight'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'number',
+          name: 'openingWeight',
+          header: i18next.t('field.opening_weight'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 80
+        },
+        {
           type: 'string',
           name: 'orderNo',
           header: i18next.t('field.order_no'),
@@ -108,6 +132,14 @@ class InventoryHistoryByPallet extends localize(i18next)(LitElement) {
           type: 'string',
           name: 'orderRefNo',
           header: i18next.t('field.ref_no'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
           record: { align: 'left' },
           sortable: true,
           width: 150
@@ -143,14 +175,7 @@ class InventoryHistoryByPallet extends localize(i18next)(LitElement) {
         query: gql`
           query {
             inventoryHistories(${gqlBuilder.buildArgs({
-              filters: [
-                { name: 'palletId', operator: 'eq', value: this.palletId },
-                {
-                  name: 'transactionType',
-                  operator: 'in',
-                  value: ['NEW', 'ADJUSTMENT', 'UNLOADING', 'UNDO_UNLOADING', 'PICKING', 'LOADING', 'UNDO_LOADING']
-                }
-              ],
+              filters: [{ name: 'palletId', operator: 'eq', value: this.palletId }],
               pagination: { page, limit },
               sortings: sorters
             })}) {
@@ -158,10 +183,15 @@ class InventoryHistoryByPallet extends localize(i18next)(LitElement) {
                 palletId
                 batchId
                 qty
+                openingQty
+                weight
+                openingWeight
                 orderRefNo
                 orderNo
                 weight
                 description
+                status
+                transactionType
                 product{
                   name
                   description

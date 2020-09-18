@@ -7,7 +7,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
 
-class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) {
+class ElcclDailyCollectionReport extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
     return css`
       :host {
@@ -153,9 +153,33 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
           type: 'string',
           name: 'arrival_notice_name',
           record: { editable: false, align: 'left' },
-          header: i18next.t('field.arrival_notice'),
-          imex: { header: i18next.t('field.arrival_notice'), key: 'arrival_notice_name', width: 40, type: 'string' },
+          header: i18next.t('field.job_sheet'),
+          imex: { header: i18next.t('field.job_sheet'), key: 'arrival_notice_name', width: 40, type: 'string' },
           width: 250
+        },
+        {
+          type: 'string',
+          name: 'batch_id',
+          record: { editable: false, align: 'left' },
+          header: i18next.t('field.container_no'),
+          imex: { header: i18next.t('field.container_no'), key: 'batch_id', width: 25, type: 'string' },
+          width: 180
+        },
+        {
+          type: 'float',
+          name: 'total_self_collect',
+          record: { editable: false, align: 'left' },
+          header: i18next.t('field.total_self_collect'),
+          imex: { header: i18next.t('field.total_self_collect'), key: 'total_self_collect', width: 20, type: 'string' },
+          width: 180
+        },
+        {
+          type: 'float',
+          name: 'total_delivery',
+          record: { editable: false, align: 'left' },
+          header: i18next.t('field.total_delivery'),
+          imex: { header: i18next.t('field.total_delivery'), key: 'total_delivery', width: 20, type: 'string' },
+          width: 180
         },
         {
           type: 'string',
@@ -198,16 +222,19 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
       const response = await client.query({
         query: gql`
           query {
-            dailyCollectionReports(${gqlBuilder.buildArgs({
+            elcclDailyCollectionReport(${gqlBuilder.buildArgs({
               filters: [...this.searchForm.queryFilters],
               pagination: { page, limit },
               sortings: sorters
-            })}) {
+            })}) {              
               arrival_notice_name
               bizplace_name
               ended_at
+              batch_id
               self_collect
+              total_self_collect
               delivery
+              total_delivery
             }
           }
         `
@@ -215,7 +242,7 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
 
       this.data = {
         filter: [...this.searchForm.queryFilters],
-        records: response.data.dailyCollectionReports || []
+        records: response.data.elcclDailyCollectionReport || []
       }
 
       return {
@@ -280,7 +307,7 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
             return column.imex
           })
       ]
-
+      debugger
       return {
         header: headerSetting,
         data: this.report.data.records,
@@ -293,4 +320,4 @@ class DailyCollectionReport extends connect(store)(localize(i18next)(PageView)) 
   }
 }
 
-window.customElements.define('daily-collection-report', DailyCollectionReport)
+window.customElements.define('elccl-daily-collection-report', ElcclDailyCollectionReport)

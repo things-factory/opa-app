@@ -261,10 +261,10 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
                 ${(this.locations || []).map(
                   location =>
                     html`
-                      <option value="${location && location.name}"
-                        >${location && location.name}
-                        ${location && location.status ? ` (${location && location.status})` : ''}</option
-                      >
+                      <option value="${location && location.name}">
+                        ${location && location.name}
+                        ${location && location.status ? ` (${location && location.status})` : ''}
+                      </option>
                     `
                 )}
               </select>
@@ -312,7 +312,11 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   get completed() {
-    return this.data.records.every(record => record.completed)
+    if (this.data.records.length === 0) {
+      return false
+    } else {
+      return this.data.records.every(record => record.completed)
+    }
   }
 
   updated(changedProps) {
@@ -482,10 +486,10 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       this.arrivalNoticeNo = arrivalNoticeNo
       this._fillUpForm(this.infoForm, response.data.putawayWorksheet.worksheetInfo)
 
-      let reusablePalletName = ''
       this.data = {
         records: response.data.putawayWorksheet.worksheetDetailInfos
           .map(record => {
+            let reusablePalletName = ''
             if (record.reusablePallet) {
               reusablePalletName = record.reusablePallet.name
             }
@@ -777,8 +781,6 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     } catch (e) {
       this._showToast(e)
     }
-
-    console.log(this._selectedOrderProduct)
   }
 
   async _completeHandler() {

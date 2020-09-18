@@ -3,14 +3,14 @@ import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/f
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { client, CustomAlert, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import '../components/popup-note'
 import '../components/popup-unloading'
-import { ARRIVAL_NOTICE } from '../constants'
+import { PALLET_STATUS } from '../constants'
 
 class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -221,7 +221,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
               ></barcode-scanable-input>
 
               <label>${i18next.t('label.actual_qty')}</label>
-              <input name="qty" type="number" min="1" @keypress="${this._unload.bind(this)}" required />
+              <input name="qty" type="number" min="1" @keypress="${this._checkReusablePallet.bind(this)}" required />
             </fieldset>
           </form>
         </div>
@@ -256,10 +256,12 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
     }
 
     if (this._unloadedInventories && this._unloadedInventories.length > 0) {
-      actions = [
-        ...actions,
-        { title: i18next.t('button.partial_complete'), action: this._completePartially.bind(this) }
-      ]
+      if (this.orderProductData.records.some(task => !task.validity)) {
+        actions = [
+          ...actions,
+          { title: i18next.t('button.partial_complete'), action: this._completePartially.bind(this) }
+        ]
+      }
     }
 
     if (this._selectedInventory) {
@@ -295,8 +297,8 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
               this.inputForm.reset()
               this.palletInput.value = ''
               this._fillUpInputForm(record)
-              this._focusOnPalletInput()
               this._fetchInventories()
+              this._focusOnPalletInput()
             }
           }
         }
@@ -369,9 +371,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           click: (columns, data, column, record, rowIndex) => {
             if (record.reusablePallet) {
               this._openPopupUnloading(record.reusablePallet.name, this.orderProductData, {
-                records: this.palletProductData.records.filter(
-                  item => record.reusablePallet.id == item.reusablePallet.id
-                )
+                records: this.palletProductData.records.filter(item => record.reusablePallet == item.reusablePallet)
               })
             } else {
               if (record && record.palletId && this._selectedOrderProduct) {
@@ -383,7 +383,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           }
         }
       },
-      list: { fields: ['palletId', 'qty'] },
+      list: { fields: ['palletId', 'qty', 'reusablePalletName'] },
       pagination: {
         infinite: true
       },
@@ -640,15 +640,17 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
         <popup-unloading
           .title="${i18next.t('title.unloading_with_reusable_pallet')}"
           .ganNo="${this._arrivalNoticeNo}"
+          ._productName="${this._productName}"
           .reusablePallet="${reusablePallet}"
           .unloadingGristData="${unloadingData}"
           .unloadedGristData="${unloadedData}"
           .reusablePalletData="${this.reusablePalletIdData}"
+          ._selectedOrderProduct="${this._selectedOrderProduct}"
           @unloading-pallet="${e => {
             this.orderProductData = e.detail
           }}"
           @unloaded-pallet="${e => {
-            this.palletProductData = e.detail
+            this.palletProductData = { records: [] }
           }}"
         ></popup-unloading>
       `,
@@ -732,7 +734,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
 
   _validateCompletePartially() {
     if (!this._selectedOrderProduct) {
-      throw new Error('text.target_does_not_selected')
+      throw new Error('text.target_is_not_selected')
     }
 
     if (!this._unloadedInventories || this._unloadedInventories.length <= 0) {
@@ -823,33 +825,39 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!response.errors) {
-        const havingVas = await this.checkHavingVas(this._arrivalNoticeNo)
-        if (havingVas) {
-          const result = await CustomAlert({
-            title: i18next.t('title.completed'),
-            text: i18next.t('text.unloading_completed'),
-            confirmButton: { text: i18next.t('button.move_to_x', { state: { x: i18next.t('title.vas') } }) },
-            cancelButton: { text: i18next.t('button.cancel') }
-          })
+        // const havingVas = await this.checkHavingVas(this._arrivalNoticeNo)
+        // if (havingVas) {
+        //   const result = await CustomAlert({
+        //     title: i18next.t('title.completed'),
+        //     text: i18next.t('text.unloading_completed'),
+        //     confirmButton: { text: i18next.t('button.move_to_x', { state: { x: i18next.t('title.vas') } }) },
+        //     cancelButton: { text: i18next.t('button.cancel') }
+        //   })
 
-          if (!result.value) {
-            this._arrivalNoticeNo = null
-            this._clearView()
-            return
-          }
+        //   if (!result.value) {
+        //     this._arrivalNoticeNo = null
+        //     this._clearView()
+        //     return
+        //   }
 
-          let searchParam = new URLSearchParams()
-          searchParam.append('orderNo', this._arrivalNoticeNo)
-          searchParam.append('orderType', ARRIVAL_NOTICE.value)
+        //   let searchParam = new URLSearchParams()
+        //   searchParam.append('orderNo', this._arrivalNoticeNo)
+        //   searchParam.append('orderType', ARRIVAL_NOTICE.value)
 
-          navigate(`execute_vas?${searchParam.toString()}`)
-        } else {
-          await CustomAlert({
-            title: i18next.t('title.completed'),
-            text: i18next.t('text.unloading_completed'),
-            confirmButton: { text: i18next.t('button.confirm') }
-          })
-        }
+        //   navigate(`execute_vas?${searchParam.toString()}`)
+        // } else {
+        //   await CustomAlert({
+        //     title: i18next.t('title.completed'),
+        //     text: i18next.t('text.unloading_completed'),
+        //     confirmButton: { text: i18next.t('button.confirm') }
+        //   })
+        // }
+
+        await CustomAlert({
+          title: i18next.t('title.completed'),
+          text: i18next.t('text.unloading_completed'),
+          confirmButton: { text: i18next.t('button.confirm') }
+        })
 
         this._arrivalNoticeNo = null
         this._clearView()
@@ -859,16 +867,37 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
+  // async checkHavingVas(orderNo) {
+  //   const response = await client.query({
+  //     query: gql`
+  //       query {
+  //         havingVas(${gqlBuilder.buildArgs({
+  //           orderType: ARRIVAL_NOTICE.value,
+  //           orderNo
+  //         })}) {
+  //           id
+  //         }
+  //       }
+  //     `
+  //   })
+
+  //   if (!response.errors) {
+  //     return Boolean(response.data.havingVas.id)
+  //   }
+  // }
+
   async _checkReusablePallet(e) {
     if (e.keyCode === 13) {
       try {
+        if (!this._selectedOrderProduct) throw new Error(i18next.t('text.target_is_not_selected'))
         if (!this.palletInput.value) return
 
         const response = await client.query({
           query: gql`
             query {
-              pallet(${gqlBuilder.buildArgs({
-                name: this.palletInput.value
+              palletByStatus(${gqlBuilder.buildArgs({
+                name: this.palletInput.value,
+                status: PALLET_STATUS.ACTIVE.value
               })}) {
                 id
                 name
@@ -878,10 +907,10 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
         })
 
         if (!response.errors) {
-          if (response.data.pallet) {
+          if (response.data.palletByStatus) {
             // this._reusablePalletId = response.data.pallet
             // this.reusablePalletIdData = [this._reusablePalletId]
-            this.reusablePalletIdData = response.data.pallet
+            this.reusablePalletIdData = response.data.palletByStatus
             this._isReusablePallet = true
             this._openPopupUnloading(this.palletInput.value, this.orderProductData, this.palletProductData)
           } else {
@@ -891,25 +920,6 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       } catch (e) {
         this._showToast({ message: e.message })
       }
-    }
-  }
-
-  async checkHavingVas(orderNo) {
-    const response = await client.query({
-      query: gql`
-        query {
-          havingVas(${gqlBuilder.buildArgs({
-            orderType: ARRIVAL_NOTICE.value,
-            orderNo
-          })}) {
-            id
-          }
-        }
-      `
-    })
-
-    if (!response.errors) {
-      return Boolean(response.data.havingVas?.id)
     }
   }
 

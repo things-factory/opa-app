@@ -2,9 +2,11 @@ import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { getRenderer } from '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, CustomAlert, gqlBuilder, isMobileDevice, navigate, PageView } from '@things-factory/shell'
+import { client, CustomAlert, navigate, PageView } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import '../../components/attachment-viewer'
 import '../../components/popup-note'
 import '../../components/vas-templates'
 import {
@@ -20,9 +22,11 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
     return {
       _ganNo: String,
       _ownTransport: Boolean,
+      _crossDocking: Boolean,
       _hasContainer: Boolean,
       _looseItem: Boolean,
       productGristConfig: Object,
+      _attachments: Array,
       vasGristConfig: Object,
       productData: Object,
       vasData: Object,
@@ -81,6 +85,14 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
+        .gan-preview {
+          display: flex;
+          flex-direction: row;
+          flex: 1;
+        }
+        attachment-viewer {
+          flex: 1;
+        }
       `
     ]
   }
@@ -106,31 +118,18 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
       <form name="arrivalNotice" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.gan_no')}: ${this._ganNo}</legend>
-          <label>${i18next.t('label.ref_no')}</label>
-          <input name="refNo" readonly />
 
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
-          <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" readonly />
+          <input id="ownTransport" type="checkbox" name="ownTransport" ?checked="${this._ownTransport}" disabled />
+          <label>${i18next.t('label.own_transport')}</label>
 
-          <label ?hidden="${this._importCargo || !this._ownTransport}">${i18next.t('label.truck_no')}</label>
-          <input ?hidden="${this._importCargo || !this._ownTransport}" name="truckNo" readonly />
-
-          <label>${i18next.t('label.eta_date')}</label>
-          <input name="etaDate" type="date" readonly />
-
-          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
-          <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" readonly />
-
-          <label>${i18next.t('label.container_size')}</label>
-          <input type="text" name="containerSize" readonly />
-
-          <label>${i18next.t('label.status')}</label>
-          <select name="status" disabled
-            >${Object.keys(ORDER_STATUS).map(key => {
-              const status = ORDER_STATUS[key]
-              return html` <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option> `
-            })}</select
-          >
+          <input
+            id="warehouseTransport"
+            type="checkbox"
+            name="warehouseTransport"
+            ?checked="${!this._ownTransport}"
+            disabled
+          />
+          <label>${i18next.t('label.warehouse_transport')}</label>
 
           <input id="container" type="checkbox" name="container" ?checked="${this._hasContainer}" disabled />
           <label for="container">${i18next.t('label.container')}</label>
@@ -141,10 +140,71 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
           <input id="importCargo" type="checkbox" name="importCargo" ?checked="${this._importCargo}" disabled />
           <label>${i18next.t('label.import_cargo')}</label>
 
-          <input id="ownTransport" type="checkbox" name="ownTransport" ?checked="${this._ownTransport}" disabled />
-          <label>${i18next.t('label.own_transport')}</label>
+          ${this._crossDocking
+            ? html`
+                <input
+                  id="crossDocking"
+                  type="checkbox"
+                  name="crossDocking"
+                  ?checked="${this._crossDocking}"
+                  disabled
+                />
+                <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+              `
+            : ''}
+        </fieldset>
+
+        <fieldset>
+          <legend></legend>
+
+          <label>${i18next.t('label.ref_no')}</label>
+          <input name="refNo" readonly />
+
+          <label>${i18next.t('label.eta_date')}</label>
+          <input name="etaDate" type="date" readonly />
+
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.do_no')}</label>
+          <input name="deliveryOrderNo" ?hidden="${!this._ownTransport}" readonly />
+
+          <label ?hidden="${this._importCargo || !this._ownTransport}">${i18next.t('label.truck_no')}</label>
+          <input ?hidden="${this._importCargo || !this._ownTransport}" name="truckNo" readonly />
+
+          <label ?hidden="${!this._hasContainer}">${i18next.t('label.container_no')}</label>
+          <input ?hidden="${!this._hasContainer}" type="text" name="containerNo" readonly />
+
+          <label>${i18next.t('label.container_size')}</label>
+          <input type="text" name="containerSize" readonly />
+
+          <label>${i18next.t('label.status')}</label>
+          <select name="status" disabled>
+            ${Object.keys(ORDER_STATUS).map(key => {
+              const status = ORDER_STATUS[key]
+              return html` <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option> `
+            })}
+          </select>
         </fieldset>
       </form>
+
+      <div class="gan-attachment-container" ?hidden="${this._attachments.length > 0 ? false : true}">
+        <form name="ganAttachment" class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.attachment')}</legend>
+            <div class="gan-preview">
+              ${(this._attachments || []).map(
+                attachment =>
+                  html`
+                    <attachment-viewer
+                      name="${attachment.name}"
+                      src="${location.origin}/attachment/${attachment.path}"
+                      .mimetype="${attachment.mimetype}"
+                      .downloadable="${this._downloadable}"
+                    ></attachment-viewer>
+                  `
+              )}
+            </div>
+          </fieldset>
+        </form>
+      </div>
 
       <div class="container">
         <div class="grist">
@@ -167,9 +227,7 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
           ></data-grist>
         </div>
 
-        <div class="guide-container">
-          ${this._template}
-        </div>
+        <div class="guide-container">${this._template}</div>
       </div>
     `
   }
@@ -177,6 +235,8 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
   constructor() {
     super()
     this.productData = { records: [] }
+    this._downloadable = true
+    this._attachments = []
     this.vasData = { records: [] }
   }
 
@@ -186,6 +246,10 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
 
   get _ownTransportInput() {
     return this.shadowRoot.querySelector('input[name=ownTransport]')
+  }
+
+  get _crossDockingInput() {
+    return this.shadowRoot.querySelector('input[name=crossDocking]')
   }
 
   get productGrist() {
@@ -396,6 +460,7 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
             }
             containerNo
             ownTransport
+            crossDocking
             etaDate
             deliveryOrderNo
             status
@@ -405,6 +470,13 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
             looseItem
             jobSheet {
               containerSize
+            }
+            attachment {
+              id
+              name
+              refBy
+              path
+              mimetype
             }
             orderProducts {
               id
@@ -457,12 +529,17 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
 
       this._hasContainer = arrivalNotice.containerNo ? true : false
       this._ownTransport = arrivalNotice.ownTransport
+      this._crossDocking = arrivalNotice.crossDocking
       this._importCargo = arrivalNotice.importCargo
       this._status = arrivalNotice.status
       this._fillupANForm({
         ...arrivalNotice,
         ...arrivalNotice.jobSheet
       })
+
+      if (arrivalNotice && arrivalNotice?.attachment) {
+        this._attachments = arrivalNotice && arrivalNotice.attachment
+      }
 
       this.productData = { records: orderProducts }
       this.vasData = {

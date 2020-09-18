@@ -8,7 +8,6 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
-import '../components/import-pop-up'
 
 class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -154,8 +153,8 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
                 case 'rejected':
                 case 'approved':
                   compareData = record.lastInventoryHistory
-                  compareData.qty = compareData.opening_qty + compareData.qty
-                  compareData.weight = compareData.opening_weight + compareData.weight
+                  compareData.qty = compareData.openingQty + compareData.qty
+                  compareData.weight = compareData.openingWeight + compareData.weight
                   break
                 default:
                   break
@@ -177,7 +176,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
                   recordDiff.push({
                     column: item.name,
                     current: currentVal,
-                    update: !!updatedVal && currentVal != updatedVal ? updatedVal : '[N/A]'
+                    update: updatedVal != null && currentVal != updatedVal ? updatedVal : '[N/A]'
                   })
                 })
               } else {
@@ -419,7 +418,9 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
                   name
                   description
                 }
+                openingQty
                 qty
+                openingWeight
                 weight
               }
               createdAt

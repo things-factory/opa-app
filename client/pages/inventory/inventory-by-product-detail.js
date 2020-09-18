@@ -84,6 +84,14 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
         },
         {
           type: 'string',
+          name: 'packingType',
+          header: i18next.t('field.packing_type'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 200
+        },
+        {
+          type: 'string',
           name: 'zone',
           header: i18next.t('field.zone'),
           record: { align: 'center' },
@@ -102,6 +110,30 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
           type: 'number',
           name: 'qty',
           header: i18next.t('field.qty'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'number',
+          name: 'lockedQty',
+          header: i18next.t('field.release_qty'),
+          record: { editable: false, align: 'center' },
+          sortable: false,
+          width: 160
+        },
+        {
+          type: 'number',
+          name: 'remainingQty',
+          header: i18next.t('field.remain_qty'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 160
+        },
+        {
+          type: 'number',
+          name: 'weight',
+          header: i18next.t('field.weight'),
           record: { align: 'center' },
           sortable: true,
           width: 80
@@ -134,6 +166,13 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
         name: 'zone',
         type: 'text',
         props: { searchOper: 'i_like' }
+      },
+      {
+        label: i18next.t('field.has_balance'),
+        name: 'remainOnly',
+        type: 'checkbox',
+        value: true,
+        props: { searchOper: 'eq' }
       }
     ]
   }
@@ -157,16 +196,18 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
               filters: [
                 ...filters,
                 { name: 'product_id', operator: 'eq', value: this.productId },
-                { name: 'remainOnly', operator: 'eq', value: true },
-                { name: 'status', operator: 'notin', value: ['INTRANSIT', 'DELETED'] }
+                { name: 'status', operator: 'in', value: ['STORED', 'TERMINATED'] }
               ],
               pagination: { page, limit },
               sortings: sorters
             })}) {
               items {
+                packingType
                 palletId
                 batchId
                 qty
+                weight
+                remainQty                
                 warehouse {
                   name
                   description
@@ -191,7 +232,14 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
       if (!response.errors) {
         return {
           total: response.data.inventories.total || 0,
-          records: response.data.inventories.items || []
+          records:
+            response.data.inventories.items.map(item => {
+              return {
+                ...item,
+                lockedQty: item.qty - item.remainQty,
+                remainingQty: item.remainQty
+              }
+            }) || []
         }
       }
     } catch (e) {

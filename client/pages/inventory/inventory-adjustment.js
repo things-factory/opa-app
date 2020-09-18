@@ -4,12 +4,13 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, PageView, ScrollbarStyles, store } from '@things-factory/shell'
+import { client, PageView, store } from '@things-factory/shell'
+import { ScrollbarStyles } from '@things-factory/styles'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
-import '../components/import-pop-up'
+import '@things-factory/import-ui'
 import { PALLET_LABEL_SETTING_KEY } from '../constants'
 import './inventory-history-by-pallet'
 
@@ -383,10 +384,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       query: gql`
         query {
           inventories(${gqlBuilder.buildArgs({
-            filters: [
-              ...filters,
-              { name: 'status', operator: 'notin', value: ['UNLOADED', 'INTRANSIT', 'TERMINATED', 'DELETED'] }
-            ],
+            filters: [...filters, { name: 'status', operator: 'eq', value: 'STORED' }],
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -453,10 +451,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       query: gql`
         query {
           inventories(${gqlBuilder.buildArgs({
-            filters: [
-              ...filters,
-              { name: 'status', operator: 'notin', value: ['UNLOADED', 'INTRANSIT', 'TERMINATED', 'DELETED'] }
-            ],
+            filters: [...filters, { name: 'status', operator: 'eq', value: 'STORED' }],
             pagination: { page: 1, limit: 9999999 },
             sortings: []
           })}) {
@@ -668,6 +663,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
       }
 
       let bizplace = await this.fetchBizplaces(bizplaceFilters)
+
       let product = await this.fetchProduct(bizplaceFilters)
 
       headerSetting = headerSetting.map(column => {
@@ -729,6 +725,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async fetchProduct(bizplace = []) {
+    bizplace[0].name = 'bizplace'
     const response = await client.query({
       query: gql`
           query {

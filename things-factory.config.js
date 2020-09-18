@@ -35,6 +35,10 @@ export default {
       tagname: 'pallet-list',
       page: 'pallets'
     },
+    {
+      tagname: 'picking-bin-list',
+      page: 'picking_bins'
+    },
 
     /**
      * Order Menus Section
@@ -306,6 +310,10 @@ export default {
       page: 'putaway'
     },
     {
+      tagname: 'preunload-product',
+      page: 'preunload'
+    },
+    {
       tagname: 'execute-vas',
       page: 'execute_vas'
     },
@@ -316,6 +324,14 @@ export default {
     {
       tagname: 'inbound-reusable-pallet',
       page: 'inbound_reusable_pallet'
+    },
+
+    /**
+     * Adjustment Menus Section
+     */
+    {
+      tagname: 'transfer-inventory',
+      page: 'transfer_inventory'
     },
 
     /**
@@ -350,20 +366,24 @@ export default {
      * Report Menus Section
      */
     {
-      tagname: 'daily-collection-report',
-      page: 'daily_collection_report'
-    },
-    {
       tagname: 'inventory-report',
       page: 'inventory_report'
+    },
+    {
+      tagname: 'inventory-summary-report',
+      page: 'inventory_summary_report'
     },
     {
       tagname: 'inventory-pallet-report',
       page: 'inventory_pallet_report'
     },
     {
-      tagname: 'inventory-pallet-detail-report',
-      page: 'inventory_pallet_detail_report'
+      tagname: 'inventory-pallet-storage-report',
+      page: 'inventory_pallet_storage_report'
+    },
+    {
+      tagname: 'customer-inventory-pallet-storage-report',
+      page: 'customer_inventory_pallet_storage_report'
     },
     {
       tagname: 'customer-inventory-report',
@@ -372,6 +392,30 @@ export default {
     {
       tagname: 'customer-inventory-pallet-report',
       page: 'customer_inventory_pallet_report'
+    },
+    {
+      tagname: 'customer-inventory-summary-report',
+      page: 'customer_inventory_summary_report'
+    },
+
+    /**
+     * Custom ELCCL Menus Section
+     */
+    {
+      tagname: 'elccl-daily-collection-report',
+      page: 'elccl_daily_collection_report'
+    },
+    {
+      tagname: 'elccl-inventory-summary-report',
+      page: 'elccl_inventory_summary_report'
+    },
+    {
+      tagname: 'elccl-inventory-report',
+      page: 'elccl_inventory_report'
+    },
+    {
+      tagname: 'elccl-inventory-pallet-detail-report',
+      page: 'elccl_inventory_pallet_detail_report'
     }
   ],
   bootstrap

@@ -9,6 +9,13 @@ const codes = [
       ]
   },
   {
+      name: 'WAREHOUSE_TYPES',
+      description: 'warehouse types',
+      details: [
+          { name: 'TYPE', description: 'type' }
+      ]
+  },
+  {
       name: 'SETTING_CATEGORIES',
       description: 'Setting categories',
       details: [
@@ -293,6 +300,17 @@ const codes = [
           { name: 'SG', description: 'Singapore' },
           { name: 'MY', description: 'Malaysia' },
           { name: 'KR', description: 'Korea' }
+      ]
+  },
+  {
+      name: 'CONTAINER_SIZES',
+      description: 'container sizes',
+      details: [
+          { name: '40ft', description: '40ft container' },
+          { name: '20ft', description: '20ft container' },
+          { name: '10 tonne', description: '10 tonne container' },
+          { name: '5 tonne', description: '5 tonne container' },
+          { name: '3 tonne', description: '3 tonne container' }
       ]
   }
 ]

@@ -1,7 +1,9 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, navigate, PageView } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
+import { ScrollbarStyles } from '@things-factory/styles'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { getCodeByName } from '@things-factory/code-base'
@@ -66,7 +68,7 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
 
   async pageInitialized() {
     const _grnStatus = await getCodeByName('GRN_STATUS')
-    const _userBizplaces = await this._fetchUserBizplaces()
+    const _userBizplaces = await this.fetchBizplaces()
 
     this._searchFields = [
       {
@@ -77,7 +79,7 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
       },
       {
         label: i18next.t('field.customer'),
-        name: 'bizplace',
+        name: 'bizplaceName',
         type: 'select',
         options: [
           { value: '' },
@@ -86,9 +88,10 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
             .map(userBizplace => {
               return {
                 name: userBizplace.name,
-                value: userBizplace.id
+                value: userBizplace.name
               }
             })
+            .sort(this._compareValues('name', 'asc'))
         ],
         props: { searchOper: 'eq' }
       },
@@ -170,7 +173,7 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'orderRefNo',
+          name: 'refNo',
           header: i18next.t('field.ref_no'),
           record: { align: 'left' },
           sortable: true,
@@ -272,50 +275,50 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
           response.data.goodsReceivalNotes.items.map(grn => {
             return {
               ...grn,
-              orderRefNo: grn.arrivalNotice.refNo || ''
+              refNo: grn.arrivalNotice.refNo || ''
             }
           }) || []
       }
     }
   }
 
-  async _fetchUserBizplaces() {
+  async fetchBizplaces(bizplace = []) {
     const response = await client.query({
       query: gql`
-        query {
-          userBizplaces(${gqlBuilder.buildArgs({
-            email: ''
-          })}) {
-            id
-            name
-            description
-            mainBizplace
+          query {
+            bizplaces(${gqlBuilder.buildArgs({
+              filters: [...bizplace]
+            })}) {
+              items{
+                id
+                name
+                description
+              }
+            }
           }
-        }
-      `
+        `
     })
-
-    if (!response.errors) {
-      return response.data.userBizplaces
-    }
+    return response.data.bizplaces.items
   }
 
-  // _uploadGRN(grnName, grnId) {
-  //   openPopup(
-  //     html`
-  //       <upload-received-note
-  //         .grnName="${grnName}"
-  //         .grnId="${grnId}"
-  //         .callback="${this.dataGrist.fetch.bind(this.dataGrist)}"
-  //       ></upload-received-note>
-  //     `,
-  //     {
-  //       backdrop: true,
-  //       size: 'large',
-  //       title: i18next.t('title.upload_signed_grn')
-  //     }
-  //   )
-  // }
+  _compareValues(key, order = 'asc') {
+    return function innerSort(a, b) {
+      if (!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
+        return 0
+      }
+
+      const varA = typeof a[key] === 'string' ? a[key].toUpperCase() : a[key]
+      const varB = typeof b[key] === 'string' ? b[key].toUpperCase() : b[key]
+
+      let comparison = 0
+      if (varA > varB) {
+        comparison = 1
+      } else if (varA < varB) {
+        comparison = -1
+      }
+      return order === 'desc' ? comparison * -1 : comparison
+    }
+  }
 
   get _columns() {
     return this.config.columns

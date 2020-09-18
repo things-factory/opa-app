@@ -70,35 +70,32 @@ class JobSheetList extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
-    const partners = await this._fetchPartners()
+    const _userBizplaces = await this.fetchBizplaces()
 
     this._searchFields = [
       {
         label: i18next.t('field.customer'),
-        name: 'bizplace',
+        name: 'bizplaceId',
         type: 'select',
         options: [
           { value: '' },
-          ...partners
-            .map(partner => {
+          ..._userBizplaces
+            .filter(userBizplaces => !userBizplaces.mainBizplace)
+            .map(userBizplace => {
               return {
-                name: `${partner.partnerBizplace.name} ${
-                  partner.partnerBizplace.description ? `(${partner.partnerBizplace.description})` : ''
-                }`,
-                value: partner.partnerBizplace.id
+                name: userBizplace.name,
+                value: userBizplace.id
               }
             })
             .sort(this._compareValues('name', 'asc'))
         ],
-        props: { searchOper: 'eq' },
-        attrs: ['custom']
+        props: { searchOper: 'eq' }
       },
       {
         label: i18next.t('field.job_sheet'),
-        name: 'jobSheetNo',
+        name: 'jobSheet',
         type: 'text',
-        props: { searchOper: 'i_like' },
-        attrs: ['custom']
+        props: { searchOper: 'i_like' }
       },
       {
         name: 'containerNo',
@@ -172,6 +169,14 @@ class JobSheetList extends localize(i18next)(PageView) {
           width: 150
         },
         {
+          type: 'object',
+          name: 'bizplace',
+          header: i18next.t('field.customer'),
+          record: { align: 'left' },
+          sortable: true,
+          width: 250
+        },
+        {
           type: 'string',
           name: 'containerNo',
           header: i18next.t('field.container_no'),
@@ -207,56 +212,34 @@ class JobSheetList extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('search-form')
   }
 
-  async _fetchPartners() {
+  async fetchBizplaces(bizplace = []) {
     const response = await client.query({
       query: gql`
-        query {
-          partners(${gqlBuilder.buildArgs({
-            filters: []
-          })}) {
-            items {
-              partnerBizplace {
+          query {
+            bizplaces(${gqlBuilder.buildArgs({
+              filters: [...bizplace]
+            })}) {
+              items{
                 id
                 name
                 description
               }
             }
           }
-        }
-      `
+        `
     })
-
-    if (!response.errors) {
-      return response.data.partners.items
-    }
+    return response.data.bizplaces.items
   }
 
-  async fetchHandler({ page, limit, sorters = [] }) {
+  async fetchHandler({ page, limit, sorters = [{ name: 'updatedAt', desc: true }] }) {
     try {
       this._validate()
-      let arrivalNotice = {}
-      let filters = []
-      const _customFields = this.searchForm
-        .getFields()
-        .filter(field => field.hasAttribute('custom'))
-        .map(field => field.name)
-      this.searchForm.queryFilters.forEach(filter => {
-        if (_customFields.includes(filter.name)) {
-          if (filter.name === 'bizplace') {
-            arrivalNotice[filter.name] = { id: filter.value }
-          } else {
-            arrivalNotice[filter.name] = filter.value
-          }
-        } else {
-          filters.push(filter)
-        }
-      })
+
       const response = await client.query({
         query: gql`
           query {
             bizplaceArrivalNotices(${gqlBuilder.buildArgs({
-              arrivalNotice,
-              filters,
+              filters: await this.searchForm.getQueryFilters(),
               pagination: { page, limit },
               sortings: sorters
             })}) {
@@ -299,7 +282,6 @@ class JobSheetList extends localize(i18next)(PageView) {
   _validate() {
     if (!this.searchForm.shadowRoot.querySelector('form').checkValidity())
       throw new Error(i18next.t('text.invalid_form_value'))
-    if (!this._bizplaceSelector.value) throw new Error(i18next.t('text.no_customer_is_selected'))
     if (!this._fromDateInput.value) throw new Error(i18next.t('text.from_date_is_empty'))
     if (!this._toDateInput.value) throw new Error(i18next.t('text.to_date_is_empty'))
   }

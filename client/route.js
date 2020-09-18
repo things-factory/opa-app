@@ -37,6 +37,10 @@ export default function route(page) {
       import('./pages/master/pallet-list')
       return page
 
+    case 'picking_bins':
+      import('./pages/master/picking-bin-list')
+      return page
+
     /**
      * Order Menus Section
      */
@@ -271,6 +275,10 @@ export default function route(page) {
       import('./pages/inbound/putaway-product')
       return page
 
+    case 'preunload':
+      import('./pages/inbound/preunload-product')
+      return page
+
     case 'worksheet_unloading':
       import('./pages/inbound/worksheet-unloading')
       return page
@@ -301,6 +309,13 @@ export default function route(page) {
 
     case 'inbound_reusable_pallet':
       import('./pages/inbound/inbound-reusable-pallet')
+      return page
+
+    /**
+     * Adjustment Menus Section
+     */
+    case 'transfer_inventory':
+      import('./pages/adjustment/transfer-inventory')
       return page
 
     /**
@@ -336,23 +351,45 @@ export default function route(page) {
     /**
      * Report Menus Section
      */
-    case 'daily_collection_report':
-      import('./pages/report/daily-collection-report')
-      return page
     case 'inventory_report':
       import('./pages/report/inventory-report')
+      return page
+    case 'inventory_summary_report':
+      import('./pages/report/inventory-summary-report')
       return page
     case 'inventory_pallet_report':
       import('./pages/report/inventory-pallet-report')
       return page
-    case 'inventory_pallet_detail_report':
-      import('./pages/report/inventory-pallet-detail-report')
+    case 'inventory_pallet_storage_report':
+      import('./pages/report/inventory-pallet-storage-report')
+      return page
+    case 'customer_inventory_pallet_storage_report':
+      import('./pages/report/customer-inventory-pallet-storage-report')
       return page
     case 'customer_inventory_report':
       import('./pages/report/customer-inventory-report')
       return page
     case 'customer_inventory_pallet_report':
       import('./pages/report/customer-inventory-pallet-report')
+      return page
+    case 'customer_inventory_summary_report':
+      import('./pages/report/customer-inventory-summary-report')
+      return page
+
+    /**
+     * Custom ELCCL Menus Section
+     */
+    case 'elccl_daily_collection_report':
+      import('./pages/report/custom-elccl/elccl-daily-collection-report')
+      return page
+    case 'elccl_inventory_summary_report':
+      import('./pages/report/custom-elccl/elccl-inventory-summary-report')
+      return page
+    case 'elccl_inventory_report':
+      import('./pages/report/custom-elccl/elccl-inventory-report')
+      return page
+    case 'elccl_inventory_pallet_detail_report':
+      import('./pages/report/custom-elccl/elccl-inventory-pallet-detail-report')
       return page
   }
 }

@@ -7,6 +7,7 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { fetchLocationSortingRule } from '../../../fetch-location-sorting-rule'
+import { fetchSettingRule } from '../../../fetch-setting-value'
 import '../../components/vas-templates'
 import {
   INVENTORY_STATUS,
@@ -25,6 +26,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     return {
       /* RO Form Fields */
       _ownTransport: Boolean,
+      _warehouseTransport: Boolean,
       _crossDocking: Boolean,
       _exportOption: Boolean,
       refNo: String,
@@ -50,7 +52,10 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       vasData: Object,
       _releaseOrderNo: String,
       _ganNo: String,
-      crossDockingProducts: Array
+      crossDockingProducts: Array,
+      _checkTransport: Boolean,
+      _disableTransport: Boolean,
+      _enableTransportationServiceSetting: Boolean
     }
   }
 
@@ -121,56 +126,60 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       <form name="releaseOrder" class="multi-column-form" autocomplete="off">
         <fieldset>
           <legend>${i18next.t('title.release_order')}</legend>
-          <label>${i18next.t('label.ref_no')}</label>
-          <input name="refNo" .value="${this.refNo}" />
-
-          <label>${i18next.t('label.release_date')}</label>
-          <input
-            name="releaseDate"
-            type="date"
-            min="${this._getStdDate()}"
-            .value="${this.releaseDate}"
-            required
-            ?disabled="${this._crossDocking}"
-          />
-
-          ${this._ownTransport
-            ? html`
-                <label>${i18next.t('label.co_no')}</label>
-                <input name="collectionOrderNo" .value="${this.collectionOrderNo}" />
-
-                <label>${i18next.t('label.upload_documents')}</label>
-                <file-uploader
-                  name="attachments"
-                  id="uploadDocument"
-                  label="${i18next.t('label.select_file')}"
-                  accept="*"
-                  multiple="true"
-                  custom-input
-                ></file-uploader>
-              `
-            : ''}
 
           <input
             id="ownTransport"
             type="checkbox"
             name="ownTransport"
-            .checked="${this._ownTransport}"
-            @change="${e => (this._ownTransport = e.currentTarget.checked)}"
-            ?disabled="${this._exportOption}"
+            ?checked="${this._ownTransport}"
+            ?disabled="${this._disableTransport}"
+            @change="${e => {
+              this._ownTransport = e.currentTarget.checked
+              if (this._ownTransport) {
+                this._warehouseTransportInput.checked = false
+                this._warehouseTransport = false
+              } else {
+                this._warehouseTransportInput.checked = true
+                this._warehouseTransport = true
+              }
+              this._validateTransport()
+            }}"
           />
-          <label for="ownTransport">${i18next.t('label.own_transport')}</label>
+          <label for="ownTransport" ?hidden="${this._importedOrder}">${i18next.t('label.own_transport')}</label>
+
+          <input
+            id="warehouseTransport"
+            type="checkbox"
+            name="warehouseTransport"
+            ?checked="${this._warehouseTransport}"
+            ?disabled="${this._disableTransport}"
+            @change="${e => {
+              this._warehouseTransport = e.currentTarget.checked
+              if (this._warehouseTransport) {
+                this._ownTransportInput.checked = false
+                this._ownTransport = false
+              } else {
+                this._ownTransportInput.checked = true
+                this._ownTransport = true
+              }
+              this._validateTransport()
+            }}"
+          />
+          <label for="warehouseTransport" ?hidden="${this._importedOrder}"
+            >${i18next.t('label.warehouse_transport')}</label
+          >
 
           <input
             id="exportOption"
             type="checkbox"
             name="exportOption"
             .checked="${this._exportOption}"
+            ?hidden="${!this._checkTransport}"
             @change="${e => {
               this._exportOption = e.currentTarget.checked
             }}"
           />
-          <label for="exportOption">${i18next.t('label.export')}</label>
+          <label for="exportOption" ?hidden="${!this._checkTransport}">${i18next.t('label.export')}</label>
 
           ${this._crossDocking
             ? html`
@@ -179,10 +188,51 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                   type="checkbox"
                   name="crossDocking"
                   ?checked="${this._crossDocking}"
+                  ?hidden="${!this._checkTransport}"
                   disabled
                 />
-                <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+                <label for="crossDocking" ?hidden="${!this._checkTransport}">${i18next.t('label.cross_docking')}</label>
+              `
+            : ''}
+        </fieldset>
 
+        <fieldset>
+          ${this._crossDocking
+            ? html` <legend></legend> `
+            : html` <legend ?hidden="${!this._checkTransport}"></legend>`}
+          <label ?hidden="${!this._checkTransport}">${i18next.t('label.ref_no')}</label>
+          <input name="refNo" .value="${this.refNo}" ?hidden="${!this._checkTransport}" />
+
+          <label ?hidden="${!this._checkTransport}">${i18next.t('label.release_date')}</label>
+          <input
+            name="releaseDate"
+            type="date"
+            min="${this._getStdDate()}"
+            .value="${this.releaseDate}"
+            required
+            ?disabled="${this._crossDocking}"
+            ?hidden="${!this._checkTransport}"
+          />
+
+          <label ?hidden="${!this._checkTransport}">${i18next.t('label.upload_documents')}</label>
+          <file-uploader
+            name="attachments"
+            id="uploadDocument"
+            label="${i18next.t('label.select_file')}"
+            accept="*"
+            multiple="true"
+            ?hidden="${!this._checkTransport}"
+            custom-input
+          ></file-uploader>
+
+          ${this._ownTransport
+            ? html`
+                <label>${i18next.t('label.co_no')}</label>
+                <input name="collectionOrderNo" .value="${this.collectionOrderNo}" />
+              `
+            : ''}
+          ${this._crossDocking
+            ? html`
                 <label for="ganNo">${i18next.t('label.arrival_notice')}</label>
                 <input readonly name="ganNo" value="${this._ganNo}" />
               `
@@ -311,8 +361,12 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('input[name=ownTransport]')
   }
 
+  get _warehouseTransportInput() {
+    return this.shadowRoot.querySelector('input[name=warehouseTransport]')
+  }
+
   get _exportOptionInput() {
-    return this.shadowRoot.querySelector('input[]')
+    return this.shadowRoot.querySelector('input[name=exportOption]')
   }
 
   get inventoryGrist() {
@@ -361,9 +415,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       this._document.reset()
     }
 
-    if (changeProps.has('_exportOption') && this._exportOption) {
-      this._ownTransport = true
-    }
+    // if (changeProps.has('_exportOption') && this._exportOption) {
+    //   this._ownTransport = true
+    // }
   }
 
   pageUpdated(changes) {
@@ -384,6 +438,10 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
+    this._enableTransportationServiceSetting = await fetchSettingRule('enable-transportation-service')
+
+    this._validateTransport()
+
     this.vasGristConfig = {
       list: { fields: ['ready', 'targetType', 'targetDisplay', 'packingType'] },
       pagination: { infinite: true },
@@ -464,7 +522,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
   initProperties() {
     this._exportOption = false
-    this._ownTransport = true
+    // this._ownTransport = false
+    // this._warehouseTransport = false
     this.refNo = ''
     this.releaseDate = ''
     this.collectionOrderNo = ''
@@ -473,6 +532,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     this.containerArrivalDate = ''
     this.containerLeavingDate = ''
     this.shipName = ''
+    // this._checkTransport = false
+    // this._enableTransportationServiceSetting = false
+    // this._disableTransport = false
 
     this.inventoryData = { ...this.inventoryData, records: [] }
     this.vasData = { ...this.vasData, records: [] }
@@ -483,6 +545,11 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     this._selectedVasRecordIdx = null
     this.initProperties()
     this._clearGristConditions()
+
+    // if (this._ownTransportInput.checked) this._ownTransport = true
+    // else this._ownTransport = false
+
+    this._validateTransport()
   }
 
   async switchPickingType() {
@@ -757,9 +824,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     this.inventoryData = {
       ...this.inventoryGrist.dirtyData,
       records: this.inventoryGrist.dirtyData.records.map((record, idx) => {
-        const factor = this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value ? e.detail.row : e.detail.record.id
+        // const factor = this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value ? e.detail.row : e.detail.record.id
 
-        if ((columnName == 'releaseWeight' || columnName == 'releaseQty') && idx === factor) {
+        if ((columnName == 'releaseWeight' || columnName == 'releaseQty') && idx === e.detail.row) {
           if (columnName == 'releaseWeight') record.releaseQty = releaseQty
           record.releaseWeight = roundedWeight
         }
@@ -857,6 +924,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
       await this._executeRelatedTrxs()
       let releaseGood = this._serializeForm(this.releaseOrderForm)
+      delete releaseGood.warehouseTransport
       releaseGood.orderInventories = this._getOrderInventories()
       releaseGood.orderVass = this._getOrderVass()
       releaseGood.ownTransport = this._ownTransport
@@ -864,7 +932,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
       if (this._exportOption) args.shippingOrder = this._serializeForm(this.shippingOrderForm)
 
-      const attachments = this._ownTransport ? this._document.files : undefined
+      const attachments = this._document?.files ? this._document.files : undefined
       const response = await client.query({
         query: gql`
               mutation ($attachments: Upload) {
@@ -914,18 +982,33 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     }
   }
 
-  _validateForm() {
-    if (!this.releaseOrderForm.checkValidity()) {
-      throw new Error(i18next.t('text.release_order_form_invalid'))
+  _validateTransport() {
+    //Check if warehouse provide transport
+    if (this._enableTransportationServiceSetting != undefined && !this._enableTransportationServiceSetting) {
+      this._disableTransport = true
+      this._ownTransportInput.checked = true
+      this._ownTransport = true
     }
 
-    if (this._ownTransport && !this._files?.length) {
+    if (this._ownTransport || this._warehouseTransport) {
+      this._checkTransport = true
+    }
+  }
+
+  _validateForm() {
+    if (!this.releaseOrderForm.checkValidity()) {
       throw new Error(i18next.t('text.release_order_form_invalid'))
     }
 
     //    - condition: export is ticked
     if (this.shippingOrderForm && !this.shippingOrderForm.checkValidity()) {
       throw new Error(i18next.t('text.shipping_order_form_invalid'))
+    }
+
+    if (this._ownTransport && this._warehouseTransport) {
+      throw new Error(i18next.t('text.you_can_only_select_one_transport_type'))
+    } else if (!this._ownTransport && !this._warehouseTransport) {
+      throw new Error(i18next.t('text.please_select_transport_type'))
     }
   }
 

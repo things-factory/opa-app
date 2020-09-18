@@ -1,7 +1,7 @@
 import gql from 'graphql-tag'
 
-export const DailyCollectionReport = gql`
-  type DailyCollectionReport {
+export const ElcclDailyCollectionReport = gql`
+  type ElcclDailyCollectionReport {
     id: String
     name: String
     domain: Domain
@@ -15,5 +15,8 @@ export const DailyCollectionReport = gql`
     ended_at: String
     self_collect: String
     delivery: String
+    total_self_collect: Float
+    total_delivery: Float
+    batch_id: String
   }
 `

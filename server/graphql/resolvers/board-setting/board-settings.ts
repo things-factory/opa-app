@@ -4,7 +4,8 @@ import { getRepository } from 'typeorm'
 import {
   HOME_DASHBOARD_PREFIX,
   LOCATION_LABEL_SETTING_KEY,
-  PALLET_LABEL_SETTING_KEY
+  PALLET_LABEL_SETTING_KEY,
+  REUSABLE_PALLET_LABEL_SETTING_KEY
 } from '../../../opa-app-setting-constants'
 
 export const boardSettingsResolver = {
@@ -12,7 +13,7 @@ export const boardSettingsResolver = {
     const HOME_BOARD = `${HOME_DASHBOARD_PREFIX}:${context.state.user.userType}`
 
     const queryBuilder = getRepository(Setting).createQueryBuilder()
-    const names = [LOCATION_LABEL_SETTING_KEY, PALLET_LABEL_SETTING_KEY, HOME_BOARD]
+    const names = [LOCATION_LABEL_SETTING_KEY, PALLET_LABEL_SETTING_KEY, REUSABLE_PALLET_LABEL_SETTING_KEY, HOME_BOARD]
 
     var qb = queryBuilder
       // .innerJoin(Board, 'Board', 'Board.id = CAST(Setting.value AS uuid)')

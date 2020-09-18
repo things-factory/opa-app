@@ -1,6 +1,7 @@
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, CustomAlert, ScrollbarStyles } from '@things-factory/shell'
+import { client, CustomAlert } from '@things-factory/shell'
+import { ScrollbarStyles } from '@things-factory/styles'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
@@ -95,9 +96,7 @@ export class ExtraProductPopup extends localize(i18next)(LitElement) {
         >
           ${i18next.t('button.cancel')}
         </button>
-        <button @click="${this._addExtraProducts.bind(this)}">
-          ${i18next.t('button.add')}
-        </button>
+        <button @click="${this._addExtraProducts.bind(this)}">${i18next.t('button.add')}</button>
       </div>
     `
   }

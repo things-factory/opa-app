@@ -224,11 +224,35 @@ class InventoryHistory extends localize(i18next)(PageView) {
         },
         {
           type: 'number',
+          name: 'openingQty',
+          header: i18next.t('field.opening_qty'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 80
+        },
+        {
+          type: 'number',
           name: 'qty',
           header: i18next.t('field.qty'),
           record: { align: 'center' },
           sortable: true,
           width: 80
+        },
+        {
+          type: 'number',
+          name: 'openingWeight',
+          header: i18next.t('field.opening_weight'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 100
+        },
+        {
+          type: 'number',
+          name: 'weight',
+          header: i18next.t('field.weight'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 100
         },
         {
           type: 'string',
@@ -379,7 +403,10 @@ class InventoryHistory extends localize(i18next)(PageView) {
                   name
                   description
                 }
+                openingQty
+                openingWeight
                 qty
+                weight
                 warehouse {
                   id
                   name

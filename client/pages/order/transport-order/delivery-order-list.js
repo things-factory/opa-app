@@ -3,7 +3,9 @@ import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { openPopup } from '@things-factory/layout-base'
-import { client, gqlBuilder, isMobileDevice, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, navigate, PageView } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
+import { ScrollbarStyles } from '@things-factory/styles'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import './upload-delivery-note'
@@ -116,20 +118,11 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
     ]
 
     this.config = {
+      list: { fields: ['name', 'refNo', 'bizplace', 'deliveryDate', 'ownCollection', 'status', 'updatedAt'] },
       rows: { selectable: { multiple: true }, appendable: false },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
-        {
-          type: 'gutter',
-          gutterName: 'button',
-          icon: 'post_add',
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              if (record.id) this._uploadDeliveryNote(record.name, record.id)
-            }
-          }
-        },
         {
           type: 'gutter',
           gutterName: 'button',
@@ -144,13 +137,6 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
           type: 'string',
           name: 'name',
           header: i18next.t('field.do_no'),
-          handlers: {
-            click: (columns, data, column, record, rowIndex) => {
-              if (record.attachments[0] && record.attachments[0].path) {
-                window.open(`/attachment/${record.attachments[0].path}`)
-              }
-            }
-          },
           sortable: true,
           width: 150
         },

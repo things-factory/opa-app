@@ -1,7 +1,8 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, navigate, PageView, ScrollbarStyles } from '@things-factory/shell'
+import { client, navigate, PageView } from '@things-factory/shell'
+import { ScrollbarStyles } from '@things-factory/styles'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
@@ -77,27 +78,27 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
-        label: i18next.t('field.ref_no'),
-        name: 'refNo',
-        type: 'text',
-        props: { searchOper: 'i_like' }
-      },
-      {
         label: i18next.t('field.release_date'),
         name: 'releaseDate',
         type: 'date',
         props: { searchOper: 'i_like' }
       },
       {
-        label: i18next.t('field.own_transport'),
-        name: 'ownTransport',
+        label: i18next.t('field.ref_no'),
+        name: 'refNo',
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
+        label: i18next.t('field.export_option'),
+        name: 'exportOption',
         type: 'checkbox',
         props: { searchOper: 'eq' },
         attrs: ['indeterminate']
       },
       {
-        label: i18next.t('field.shipping_option'),
-        name: 'exportOption',
+        label: i18next.t('field.own_transport'),
+        name: 'ownTransport',
         type: 'checkbox',
         props: { searchOper: 'eq' },
         attrs: ['indeterminate']
@@ -148,10 +149,10 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'name',
-          header: i18next.t('field.release_order_no'),
+          header: i18next.t('field.ro'),
           record: { align: 'left' },
           sortable: true,
-          width: 180
+          width: 150
         },
         {
           type: 'string',
@@ -171,33 +172,34 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
         },
         {
           type: 'boolean',
+          name: 'exportOption',
+          header: i18next.t('field.export_option'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 60
+        },
+        {
+          type: 'boolean',
           name: 'ownTransport',
           header: i18next.t('field.own_transport'),
           record: { align: 'center' },
           sortable: true,
-          width: 100
+          width: 60
         },
         {
           type: 'boolean',
           name: 'crossDocking',
           header: i18next.t('field.cross_docking'),
           record: { align: 'center' },
-          width: 100
+          width: 60
         },
+
         {
           type: 'object',
           name: 'arrivalNotice',
-          header: i18next.t('field.arrival_notice'),
+          header: i18next.t('field.gan'),
           record: { align: 'center' },
-          width: 180
-        },
-        {
-          type: 'boolean',
-          name: 'exportOption',
-          header: i18next.t('field.shipping_option'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 100
+          width: 160
         },
         {
           type: 'string',

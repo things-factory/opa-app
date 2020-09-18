@@ -33,7 +33,7 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
 
   get context() {
     return {
-      title: 'Inventory Pallet Report',
+      title: i18next.t('title.inventory_pallet_report'),
       printable: {
         accept: ['preview'],
         content: this

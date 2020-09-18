@@ -2,7 +2,8 @@ import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import '@things-factory/import-ui'
-import { client, ScrollbarStyles } from '@things-factory/shell'
+import { client } from '@things-factory/shell'
+import { ScrollbarStyles } from '@things-factory/styles'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
@@ -117,9 +118,7 @@ export class BufferLocationSelector extends localize(i18next)(LitElement) {
         >
           ${i18next.t('button.cancel')}
         </button>
-        <button @click=${this._selectLocation.bind(this)}>
-          ${i18next.t('button.confirm')}
-        </button>
+        <button @click=${this._selectLocation.bind(this)}>${i18next.t('button.confirm')}</button>
       </div>
     `
   }

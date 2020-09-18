@@ -7,6 +7,7 @@ import { client, CustomAlert, navigate, PageView } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
+import '../../components/attachment-viewer'
 import '../../components/popup-note'
 import '../../components/vas-templates'
 import {
@@ -26,6 +27,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
       _crossDocking: Boolean,
       _hasContainer: Boolean,
       _looseItem: Boolean,
+      _attachments: Array,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -85,6 +87,15 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
         }
+
+        .gan-preview {
+          display: flex;
+          flex-direction: row;
+          flex: 1;
+        }
+        attachment-viewer {
+          flex: 1;
+        }
       `
     ]
   }
@@ -110,6 +121,45 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
       <form name="arrivalNotice" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.gan_no')}: ${this._ganNo}</legend>
+
+          <input id="ownTransport" type="checkbox" name="ownTransport" ?checked="${this._ownTransport}" disabled />
+          <label>${i18next.t('label.own_transport')}</label>
+
+          <input
+            id="warehouseTransport"
+            type="checkbox"
+            name="warehouseTransport"
+            ?checked="${!this._ownTransport}"
+            disabled
+          />
+          <label>${i18next.t('label.warehouse_transport')}</label>
+
+          <input id="container" type="checkbox" name="container" ?checked="${this._hasContainer}" disabled />
+          <label for="container">${i18next.t('label.container')}</label>
+
+          <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" disabled />
+          <label for="looseItem">${i18next.t('label.loose_item')}</label>
+
+          <input id="importCargo" type="checkbox" name="importCargo" ?checked="${this._importCargo}" disabled />
+          <label>${i18next.t('label.import_cargo')}</label>
+
+          ${this._crossDocking
+            ? html`
+                <input
+                  id="crossDocking"
+                  type="checkbox"
+                  name="crossDocking"
+                  ?checked="${this._crossDocking}"
+                  disabled
+                />
+                <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
+              `
+            : ''}
+        </fieldset>
+
+        <fieldset>
+          <legend></legend>
+
           <label>${i18next.t('label.ref_no')}</label>
           <input name="refNo" readonly />
 
@@ -129,37 +179,12 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
           <input type="text" name="containerSize" readonly />
 
           <label>${i18next.t('label.status')}</label>
-          <select name="status" disabled
-            >${Object.keys(ORDER_STATUS).map(key => {
+          <select name="status" disabled>
+            ${Object.keys(ORDER_STATUS).map(key => {
               const status = ORDER_STATUS[key]
               return html` <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option> `
-            })}</select
-          >
-
-          <input id="container" type="checkbox" name="container" ?checked="${this._hasContainer}" disabled />
-          <label for="container">${i18next.t('label.container')}</label>
-
-          <input id="looseItem" type="checkbox" name="looseItem" ?checked="${this._looseItem}" disabled />
-          <label for="looseItem">${i18next.t('label.loose_item')}</label>
-
-          <input id="importCargo" type="checkbox" name="importCargo" ?checked="${this._importCargo}" disabled />
-          <label>${i18next.t('label.import_cargo')}</label>
-
-          <input id="ownTransport" type="checkbox" name="ownTransport" ?checked="${this._ownTransport}" disabled />
-          <label>${i18next.t('label.own_transport')}</label>
-
-          ${this._crossDocking
-            ? html`
-                <input
-                  id="crossDocking"
-                  type="checkbox"
-                  name="crossDocking"
-                  ?checked="${this._crossDocking}"
-                  disabled
-                />
-                <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
-              `
-            : ''}
+            })}
+          </select>
         </fieldset>
 
         <fieldset>
@@ -168,6 +193,27 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
           <input id="buffer-location" name="buffer-location" readonly @click="${this._openBufferSelector.bind(this)}" />
         </fieldset>
       </form>
+
+      <div class="gan-attachment-container" ?hidden="${this._attachments.length > 0 ? false : true}">
+        <form name="ganAttachment" class="multi-column-form">
+          <fieldset>
+            <legend>${i18next.t('title.attachment')}</legend>
+            <div class="gan-preview">
+              ${(this._attachments || []).map(
+                attachment =>
+                  html`
+                    <attachment-viewer
+                      name="${attachment.name}"
+                      src="${location.origin}/attachment/${attachment.path}"
+                      .mimetype="${attachment.mimetype}"
+                      .downloadable="${this._downloadable}"
+                    ></attachment-viewer>
+                  `
+              )}
+            </div>
+          </fieldset>
+        </form>
+      </div>
 
       <div class="container">
         <div class="grist">
@@ -190,9 +236,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
           ></data-grist>
         </div>
 
-        <div class="guide-container">
-          ${this._template}
-        </div>
+        <div class="guide-container">${this._template}</div>
       </div>
     `
   }
@@ -201,6 +245,8 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
     super()
     this.productData = { records: [] }
     this.vasData = { records: [] }
+    this._downloadable = true
+    this._attachments = []
     this._importedOrder = false
     this._ownTransport = true
   }
@@ -358,11 +404,19 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
             ownTransport
             crossDocking
             etaDate
+            looseItem
             deliveryOrderNo
             status
             truckNo
             refNo
             importCargo
+            attachment {
+              id
+              name
+              refBy
+              path
+              mimetype
+            }
             orderProducts {
               id
               batchId
@@ -418,6 +472,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
       this.orderBizplace = arrivalNotice.bizplace
 
       this._hasContainer = arrivalNotice.containerNo ? true : false
+      this._looseItem = arrivalNotice.looseItem
       this._ownTransport = arrivalNotice.ownTransport
       this._crossDocking = arrivalNotice.crossDocking
       this._importCargo = arrivalNotice.importCargo
@@ -426,6 +481,10 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
         ...arrivalNotice,
         ...arrivalNotice.jobSheet
       })
+
+      if (arrivalNotice && arrivalNotice?.attachment) {
+        this._attachments = arrivalNotice && arrivalNotice.attachment
+      }
 
       this.setProductGristConfig()
       this.productData = { records: orderProducts }

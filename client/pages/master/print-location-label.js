@@ -2,7 +2,8 @@ import '@things-factory/form-ui'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, ScrollbarStyles } from '@things-factory/shell'
+import { client } from '@things-factory/shell'
+import { ScrollbarStyles } from '@things-factory/styles'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
@@ -98,9 +99,7 @@ export class PrintLocationLabel extends localize(i18next)(LitElement) {
       </div>
 
       <div class="button-container">
-        <button @click="${this._printLocations.bind(this)}">
-          ${i18next.t('button.print')}
-        </button>
+        <button @click="${this._printLocations.bind(this)}">${i18next.t('button.print')}</button>
       </div>
     `
   }

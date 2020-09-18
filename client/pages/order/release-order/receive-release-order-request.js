@@ -114,17 +114,6 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
       <form name="releaseOrder" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.release_order_no')}: ${this._releaseOrderNo}</legend>
-          <label>${i18next.t('label.ref_no')}</label>
-          <input name="refNo" readonly />
-
-          <label>${i18next.t('label.release_date')}</label>
-          <input name="releaseDate" type="date" readonly />
-
-          <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
-          <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" readonly />
-
-          <input id="exportOption" type="checkbox" name="exportOption" ?checked="${this._exportOption}" disabled />
-          <label>${i18next.t('label.export')}</label>
 
           <input
             id="ownTransport"
@@ -135,6 +124,19 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
             disabled
           />
           <label ?hidden="${this._exportOption}">${i18next.t('label.own_transport')}</label>
+
+          <input
+            id="warehouseTransport"
+            type="checkbox"
+            name="warehouseTransport"
+            ?checked="${!this._ownTransport}"
+            ?hidden="${this._exportOption}"
+            disabled
+          />
+          <label ?hidden="${this._exportOption}">${i18next.t('label.warehouse_transport')}</label>
+
+          <input id="exportOption" type="checkbox" name="exportOption" ?checked="${this._exportOption}" disabled />
+          <label>${i18next.t('label.export')}</label>
 
           ${this._crossDocking
             ? html`
@@ -148,6 +150,18 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
                 <label for="crossDocking">${i18next.t('label.cross_docking')}</label>
               `
             : ''}
+        </fieldset>
+
+        <fieldset>
+          <legend></legend>
+          <label>${i18next.t('label.ref_no')}</label>
+          <input name="refNo" readonly />
+
+          <label>${i18next.t('label.release_date')}</label>
+          <input name="releaseDate" type="date" readonly />
+
+          <label ?hidden="${!this._ownTransport}">${i18next.t('label.co_no')}</label>
+          <input name="collectionOrderNo" ?hidden="${!this._ownTransport}" readonly />
         </fieldset>
       </form>
 
@@ -170,7 +184,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
         </form>
       </div>
 
-      <div class="do-attachment-container" ?hidden="${!this._ownTransport}">
+      <div class="do-attachment-container" ?hidden="${this._attachments.length > 0 ? false : true}">
         <form name="doAttachment" class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.attachment')}</legend>
@@ -210,9 +224,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
           ></data-grist>
         </div>
 
-        <div class="guide-container">
-          ${this._template}
-        </div>
+        <div class="guide-container">${this._template}</div>
       </div>
     `
   }
@@ -221,6 +233,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
     super()
     this.inventoryData = { records: [] }
     this.vasData = { records: [] }
+    this._attachments = []
     this._exportOption = false
     this._downloadable = true
     this._ownTransport = true
@@ -526,7 +539,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
 
       this._status = releaseOrder.status
 
-      if (this._ownTransport) {
+      if (releaseOrder && releaseOrder?.attachment) {
         this._attachments = releaseOrder && releaseOrder.attachment
       }
 
@@ -595,8 +608,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
       })
 
       if (!response.errors) {
-        history.back()
-
+        navigate(`outbound_worksheets`)
         this._showToast({ message: i18next.t('text.release_order_received') })
       }
     } catch (e) {
@@ -697,6 +709,36 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
     }
   }
 
+  async _rejectCancellationReleaseOrder() {
+    try {
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.you_wont_be_able_to_revert_this'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) return
+
+      const response = await client.query({
+        query: gql`
+            mutation {
+              rejectCancellationReleaseOrder(${gqlBuilder.buildArgs({
+                name: this._releaseOrderNo
+              })})
+            }
+          `
+      })
+
+      if (!response.errors) {
+        this._showToast({ message: i18next.t('text.cancellation_request_has_been_rejected') })
+        navigate(`release_order_requests`)
+      }
+    } catch (e) {
+      throw e
+    }
+  }
+
   _updateContext() {
     this._actions = []
     if (this._status === ORDER_STATUS.PENDING_RECEIVE.value && !this._crossDocking) {
@@ -707,7 +749,13 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
     }
 
     if (this._status === ORDER_STATUS.PENDING_CANCEL.value && !this._crossDocking) {
-      this._actions = [{ title: i18next.t('button.confirm'), action: this._confirmCancellationReleaseOrder.bind(this) }]
+      this._actions = [
+        { title: i18next.t('button.approve_cancellation'), action: this._confirmCancellationReleaseOrder.bind(this) },
+        {
+          title: i18next.t('button.reject_cancellation'),
+          action: this._rejectCancellationReleaseOrder.bind(this)
+        }
+      ]
     }
 
     if (this._crossDocking) {
