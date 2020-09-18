@@ -130,12 +130,16 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
           <input type="text" name="containerSize" readonly />
 
           <label>${i18next.t('label.status')}</label>
-          <select name="status" disabled
-            >${Object.keys(ORDER_STATUS).map(key => {
+          <select name="status" disabled>
+            ${Object.keys(ORDER_STATUS).map(key => {
               const status = ORDER_STATUS[key]
-              return html` <option value="${status.value}">${i18next.t(`label.${status.name}`)}</option> `
-            })}</select
-          >
+              return html`
+                <option .selected="${this._status === status.value}" value="${status.value}">
+                  ${i18next.t(`label.${status.name}`)}
+                </option>
+              `
+            })}
+          </select>
 
           <input id="container" type="checkbox" name="container" ?checked="${this._hasContainer}" disabled />
           <label for="container">${i18next.t('label.container')}</label>
@@ -190,9 +194,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
           ></data-grist>
         </div>
 
-        <div class="guide-container">
-          ${this._template}
-        </div>
+        <div class="guide-container">${this._template}</div>
       </div>
     `
   }
