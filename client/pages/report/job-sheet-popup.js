@@ -140,9 +140,10 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
   }
 
   _getJobSheetInfo() {
+    let utcTime = new Date(this._getInputByName('ata').value).toISOString().slice(0, -1)
     if (this.shadowRoot.querySelector('form').checkValidity()) {
       return {
-        ata: this._getInputByName('ata').value ? this._getInputByName('ata').value : null,
+        ata: this._getInputByName('ata').value ? utcTime : null,
         containerMtDate: this._getInputByName('containerMtDate').value,
         adviseMtDate: this._getInputByName('adviseMtDate').value ? this._getInputByName('adviseMtDate').value : null,
         sumPalletQty: parseInt(this._getInputByName('sumPalletQty').value)
@@ -171,7 +172,8 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
           if (data[key]) {
             const datetime = Number(data[key])
             const timezoneOffset = new Date(datetime).getTimezoneOffset() * 60000
-            field.value = new Date(datetime - timezoneOffset).toISOString().slice(0, -1)
+            let currTime = new Date(datetime - 2 * timezoneOffset).toISOString().slice(0, -1)
+            field.value = currTime
           } else {
             field.value = data[key]
           }
