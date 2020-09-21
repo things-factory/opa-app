@@ -156,7 +156,6 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
               `
             : ''}
         </fieldset>
-
         <fieldset>
           <legend></legend>
 

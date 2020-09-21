@@ -10,6 +10,7 @@ import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { WORKSHEET_STATUS } from '../constants'
 import './return-pallet-check-popup'
+import './transport-vehicles-popup'
 
 class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -115,7 +116,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   get selectTruckInput() {
-    return this.shadowRoot.querySelector('select[name=truckNo]')
+    return this.shadowRoot.querySelector('input[name=truckNo]')
   }
 
   get palletQty() {
@@ -132,6 +133,10 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
 
   get loadedProductGrist() {
     return this.shadowRoot.querySelector('data-grist#loaded-product-grist')
+  }
+
+  get transportVehiclesField() {
+    return this.shadowRoot.querySelector('input#truckNo')
   }
 
   get scannable() {
@@ -205,13 +210,14 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
             <fieldset>
               <legend>${i18next.t('label.delivery_information')}</legend>
               <label>${i18next.t('label.lorry_no')}</label>
-              <input ?hidden=${!this._ownCollection} name="truckNo" />
-              <select name="truckNo" ?hidden="${this._ownCollection}">
-                <option value="">-- ${i18next.t('text.please_select_a_truck')} --</option>
-                ${(this.transportVehicles || []).map(
-                  truck => html` <option value="${truck && truck.name}">${truck && truck.name}</option> `
-                )}
-              </select>
+              <input ?hidden=${!this._ownCollection} name="truckNo" readonly />
+              <input
+                ?hidden=${this._ownCollection}
+                id="truckNo"
+                name="truckNo"
+                readonly
+                @click="${this._openBufferSelector.bind(this)}"
+              />
 
               <label>${i18next.t('label.total_pallet_qty')}</label>
               <input name="palletQty" />
@@ -282,6 +288,24 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         actions
       }
     })
+  }
+
+  _openBufferSelector() {
+    openPopup(
+      html`
+        <transport-vehicles-popup
+          @selected="${e => {
+            this.transportVehiclesField.value = `${e.detail.name}`
+            this.transportVehiclesField.setAttribute('location-id', e.detail.id)
+          }}"
+        ></transport-vehicles-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('label.lorry_no')
+      }
+    )
   }
 
   async pageInitialized() {
@@ -402,7 +426,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
-        { type: 'gutter', gutterName: 'row-selector', multiple: true },
         {
           type: 'string',
           name: 'palletId',
@@ -575,12 +598,13 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   async _undoLoading() {
     try {
       this._validateUndoLoading()
+
       const response = await client.query({
         query: gql`
           mutation {
             undoLoading(${gqlBuilder.buildArgs({
               deliveryOrder: { id: this._selectedDeliveryOrder.id },
-              palletIds: this.loadedProductGrist.selected.map(item => item.palletId)
+              palletIds: this.loadedProductData.records.map(item => item.palletId)
             })})
           }
         `
@@ -719,7 +743,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _validateUndoLoading() {
-    if (!this.loadedProductGrist.selected || !this.loadedProductGrist.selected.length) {
+    if (!this.loadedProductData?.records?.length) {
       throw new Error(i18next.t('text.there_is_no_selected_items'))
     }
   }
