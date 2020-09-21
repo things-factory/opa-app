@@ -145,9 +145,7 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
       return {
         ata: this._getInputByName('ata').value ? utcTime : null,
         containerMtDate: this._getInputByName('containerMtDate').value,
-        adviseMtDate: this._getInputByName('adviseMtDate').value
-          ? new Date(this._getInputByName('adviseMtDate').value).toUTCString()
-          : null,
+        adviseMtDate: this._getInputByName('adviseMtDate').value ? this._getInputByName('adviseMtDate').value : null,
         sumPalletQty: parseInt(this._getInputByName('sumPalletQty').value)
       }
     } else {
