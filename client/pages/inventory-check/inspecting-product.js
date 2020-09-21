@@ -10,7 +10,6 @@ import { connect } from 'pwa-helpers/connect-mixin.js'
 import { fetchLocationSortingRule } from '../../fetch-location-sorting-rule'
 import { LOCATION_SORTING_RULE, WORKSHEET_STATUS } from '../constants'
 
-
 class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
@@ -434,8 +433,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                     worksheetDetailName: this._selectedOrderInventory.name,
                     palletId: this.palletInput.value,
                     locationName: this.locationInput.value,
-                    inspectedQty: parseInt(this.inspectedQtyInput.value),
-                    inspectedWeight: parseFloat(this.inspectedWeightInput.value)
+                    inspectedQty: parseInt(this.inspectedQtyInput.value)
                   })})
                 }
               `
