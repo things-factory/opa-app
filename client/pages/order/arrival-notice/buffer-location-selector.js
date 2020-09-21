@@ -117,9 +117,7 @@ export class BufferLocationSelector extends localize(i18next)(LitElement) {
         >
           ${i18next.t('button.cancel')}
         </button>
-        <button @click=${this._selectLocation.bind(this)}>
-          ${i18next.t('button.confirm')}
-        </button>
+        <button @click=${this._selectLocation.bind(this)}>${i18next.t('button.confirm')}</button>
       </div>
     `
   }
