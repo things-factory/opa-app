@@ -121,8 +121,8 @@ class TransportVehiclesPopup extends localize(i18next)(LitElement) {
   firstUpdated() {
     this._searchFields = [
       {
-        label: i18next.t('field.reg_number'),
-        name: 'regNumber',
+        label: i18next.t('label.lorry_no'),
+        name: 'name',
         type: 'text',
         props: { searchOper: 'i_like' }
       },
