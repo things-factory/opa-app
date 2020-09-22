@@ -112,7 +112,8 @@ class JobSheetReport extends localize(i18next)(PageView) {
       const arrivalNoticeInfo = response.data.arrivalNotice
 
       var { domain } = getPathInfo(location.pathname) // find out better way later.
-      this.shadowRoot.querySelector('#container').src = `/view_job_sheet/${domain}/${this._ganNo}`
+      var timezoneOffSet = new Date().getTimezoneOffset().toString()
+      this.shadowRoot.querySelector('#container').src = `/view_job_sheet/${domain}/${this._ganNo}/${timezoneOffSet}`
 
       this._etaDate = arrivalNoticeInfo.etaDate
       this._ata = arrivalNoticeInfo.ata
