@@ -135,12 +135,12 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('data-grist#loaded-product-grist')
   }
 
-  get transportVehiclesField() {
-    return this.shadowRoot.querySelector('input#truckNo')
-  }
-
   get scannable() {
     return this._selectedTaskStatus && this._selectedTaskStatus === WORKSHEET_STATUS.EXECUTING.value
+  }
+
+  get transportVehiclesField() {
+    return this.shadowRoot.querySelector('input#truckNo')
   }
 
   render() {
@@ -296,7 +296,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         <transport-vehicles-popup
           @selected="${e => {
             this.transportVehiclesField.value = `${e.detail.name}`
-            this.transportVehiclesField.setAttribute('location-id', e.detail.id)
+            this.selectTruckInput.setAttribute('value', e.detail.name)
           }}"
         ></transport-vehicles-popup>
       `,
@@ -568,6 +568,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       } else {
         truckNo = this.truckInput.value.toUpperCase().replace(/\s+/g, '')
       }
+
       const palletQty = this.palletQty.value
       const response = await client.query({
         query: gql`
@@ -650,6 +651,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
           }
         })
       }
+
       this._updateContext()
     } else {
       throw new Error(response.errors[0])
