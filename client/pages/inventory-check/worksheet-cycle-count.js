@@ -84,6 +84,10 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
         accept: ['preview'],
         content: this
       }
+      // exportable: {
+      //   name: i18next.t('title.worksheet_cycle_count'),
+      //   data: this._exportableData.bind(this)
+      // }
     }
   }
 
@@ -138,7 +142,19 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
   pageInitialized() {
     this.preConfig = {
       rows: { appendable: false },
-      list: { fields: ['batchId', 'palletId', 'product', 'packingType', 'releaseQty', 'status'] },
+      list: {
+        fields: [
+          'batchId',
+          'palletId',
+          'product',
+          'location',
+          'inspectedLocation',
+          'inspectedQty',
+          'inspectedWeight',
+          'inspectedBatchNo',
+          'status'
+        ]
+      },
       pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -147,6 +163,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           name: 'batchId',
           header: i18next.t('field.batch_no'),
           record: { align: 'left' },
+          imex: { header: i18next.t('field.batch_no'), key: 'batchId', width: 100, type: 'string' },
           width: 100
         },
         {
@@ -154,6 +171,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
           record: { align: 'left' },
+          imex: { header: i18next.t('field.pallet_id'), key: 'palletId', width: 150, type: 'string' },
           width: 150
         },
         {
@@ -161,6 +179,12 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           name: 'product',
           header: i18next.t('field.product'),
           record: { align: 'left' },
+          imex: {
+            header: i18next.t('field.product'),
+            key: 'product.name',
+            width: 50,
+            type: 'string'
+          },
           width: 350
         },
         {
@@ -168,6 +192,12 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           name: 'location',
           header: i18next.t('field.location'),
           record: { align: 'center' },
+          imex: {
+            header: i18next.t('field.location'),
+            key: 'location.name',
+            width: 15,
+            type: 'string'
+          },
           width: 80
         },
         {
@@ -175,6 +205,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: { align: 'center' },
+          imex: { header: i18next.t('field.packing_type'), key: 'packingType', width: 100, type: 'string' },
           width: 100
         },
         {
@@ -182,13 +213,28 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           name: 'inspectedLocation',
           header: i18next.t('field.inspected_location'),
           record: { align: 'center' },
+          imex: {
+            header: i18next.t('field.inspected_location'),
+            key: 'inspectedLocation.name',
+            width: 15,
+            type: 'string'
+          },
           width: 120
+        },
+        {
+          type: 'string',
+          name: 'inspectedBatchNo',
+          header: i18next.t('field.inspected_batch_no'),
+          record: { align: 'center' },
+          imex: { header: i18next.t('field.inspected_batch_no'), key: 'inspectedBatchNo', width: 100, type: 'string' },
+          width: 100
         },
         {
           type: 'integer',
           name: 'inspectedQty',
           header: i18next.t('field.inspected_qty'),
           record: { align: 'center' },
+          imex: { header: i18next.t('field.inspected_qty'), key: 'inspectedQty', width: 100, type: 'number' },
           width: 100
         },
         {
@@ -196,6 +242,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           name: 'inspectedWeight',
           header: i18next.t('field.inspected_weight'),
           record: { align: 'center' },
+          imex: { header: i18next.t('field.inspected_weight'), key: 'inspectedWeight', width: 100, type: 'number' },
           width: 100
         }
       ]
@@ -231,6 +278,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
               targetInventory {
                 inspectedQty
                 inspectedWeight
+                inspectedBatchNo
                 inspectedLocation {
                   id
                   name
@@ -280,6 +328,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
             inspectedLocation: worksheetDetail.targetInventory.inspectedLocation,
             inspectedQty: worksheetDetail.targetInventory.inspectedQty,
             inspectedWeight: worksheetDetail.targetInventory.inspectedWeight,
+            inspectedBatchNo: worksheetDetail.targetInventory.inspectedBatchNo,
             packingType: worksheetDetail.targetInventory.inventory.packingType
           }
         })
@@ -394,6 +443,118 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
       }
     })
   }
+
+  // async _exportableData() {
+  //   try {
+  //     let records = []
+  //     let data = []
+
+  //     var headerSetting = [
+  //       ...this.dataGrist._config.columns
+  //         .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+  //         .map(column => {
+  //           return column.imex
+  //         })
+  //     ]
+
+  //     const bizplaceFilters = (await this.searchForm.getQueryFilters()).filter(x => x.name === 'bizplaceId')
+
+  //     if (this.dataGrist.selected && this.dataGrist.selected.length > 0) {
+  //       records = this.dataGrist.selected
+  //       data = records
+  //     } else {
+  //       data = await this.fetchWorksheetDetailForExport()
+  //     }
+
+  //     let bizplace = await this.fetchBizplaces(bizplaceFilters)
+
+  //     let product = await this.fetchProduct(bizplaceFilters)
+
+  //     headerSetting = headerSetting.map(column => {
+  //       switch (column.key) {
+  //         case 'bizplace.name':
+  //           column.arrData = bizplace
+  //           break
+  //         case 'product.name':
+  //           column.arrData = product
+  //           break
+  //         default:
+  //           break
+  //       }
+  //       return column
+  //     })
+
+  //     data = data.map(item => {
+  //       return {
+  //         id: item.id,
+  //         ...this._columns
+  //           .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+  //           .reduce((record, column) => {
+  //             record[column.imex.key] = column.imex.key
+  //               .split('.')
+  //               .reduce((obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined), item)
+  //             return record
+  //           }, {})
+  //       }
+  //     })
+
+  //     return { header: headerSetting, data: data }
+  //   } catch (e) {
+  //     this._showToast(e)
+  //   }
+  // }
+
+  // async fetchWorksheetDetailForExport() {
+  //   const filters = await this.searchForm.getQueryFilters()
+  //   const response = await client.query({
+  //     query: gql`
+  //       query {
+  //         inventories(${gqlBuilder.buildArgs({
+  //           filters: [...filters],
+  //           pagination: { page: 1, limit: 9999999 },
+  //           sortings: []
+  //         })}) {
+  //           items {
+  //             id
+  //             palletId
+  //             batchId
+  //             packingType
+  //             weight
+  //             bizplace {
+  //               id
+  //               name
+  //               description
+  //             }
+  //             product {
+  //               id
+  //               name
+  //             }
+  //             qty
+  //             warehouse {
+  //               id
+  //               name
+  //               description
+  //             }
+  //             zone
+  //             location {
+  //               id
+  //               name
+  //               description
+  //             }
+  //             updatedAt
+  //             updater {
+  //               name
+  //               description
+  //             }
+  //           }
+  //           total
+  //         }
+  //       }
+  //     `
+  //   })
+
+  //   return response.data.inventories.items || []
+  // }
 
   _showToast({ type, message }) {
     document.dispatchEvent(

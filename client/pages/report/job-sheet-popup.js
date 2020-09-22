@@ -142,9 +142,11 @@ class JobSheetPopup extends localize(i18next)(LitElement) {
   _getJobSheetInfo() {
     if (this.shadowRoot.querySelector('form').checkValidity()) {
       return {
-        ata: this._getInputByName('ata').value ? this._getInputByName('ata').value : null,
+        ata: this._getInputByName('ata').value ? new Date(this._getInputByName('ata').value).toUTCString() : null,
         containerMtDate: this._getInputByName('containerMtDate').value,
-        adviseMtDate: this._getInputByName('adviseMtDate').value ? this._getInputByName('adviseMtDate').value : null,
+        adviseMtDate: this._getInputByName('adviseMtDate').value
+          ? new Date(this._getInputByName('adviseMtDate').value).toUTCString()
+          : null,
         sumPalletQty: parseInt(this._getInputByName('sumPalletQty').value)
       }
     } else {

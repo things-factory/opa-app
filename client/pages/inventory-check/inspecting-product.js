@@ -142,6 +142,10 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('input[name=inspectedWeight]')
   }
 
+  get inspectedBatchNoInput() {
+    return this.shadowRoot.querySelector('input[name=inspectedBatchNo]')
+  }
+
   render() {
     return html`
       <form id="info-form" class="multi-column-form">
@@ -185,7 +189,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
             <fieldset>
               <legend>${i18next.t('label.product')}: ${this._productName}</legend>
 
-              <label>${i18next.t('label.batch_no')}</label>
+              <label>${i18next.t('label.current_batch_no')}</label>
               <input name="batchId" />
 
               <label>${i18next.t('label.packing_type')}</label>
@@ -202,6 +206,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
 
               <label>${i18next.t('label.inspected_location')}</label>
               <barcode-scanable-input name="locationName" custom-input></barcode-scanable-input>
+
+              <label>${i18next.t('label.inspected_batch_no')}</label>
+              <input type="text" name="inspectedBatchNo" required />
 
               <label>${i18next.t('label.inspected_qty')}</label>
               <input type="number" min="1" name="inspectedQty" required />
@@ -433,7 +440,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                     worksheetDetailName: this._selectedOrderInventory.name,
                     palletId: this.palletInput.value,
                     locationName: this.locationInput.value,
-                    inspectedQty: parseInt(this.inspectedQtyInput.value)
+                    inspectedBatchNo: this.inspectedBatchNoInput.value,
+                    inspectedQty: parseInt(this.inspectedQtyInput.value),
+                    inspectedWeight: parseFloat(this.inspectedWeightInput.value)
                   })})
                 }
               `
@@ -445,6 +454,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           this._selectedTaskStatus = null
           this._selectedOrderInventory = null
           this.palletInput.value = ''
+          this.inspectedBatchNoInput.value = ''
           this.inspectedQtyInput.value = ''
           this.inspectedWeightInput.value = ''
           this.locationInput.value = ''
@@ -477,6 +487,12 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       throw new Error(i18next.t('text.location_id_is_empty'))
     }
 
+    // 4. batch id existing
+    if (!this.inspectedBatchNoInput.value) {
+      this._focusOnInput(this.inspectedBatchNoInput)
+      throw new Error(i18next.t('text.inspected_batch_no_is_empty'))
+    }
+
     // 5. inspected qty existing
     if (!this.inspectedQtyInput.value) {
       this._focusOnInput(this.inspectedQtyInput)
@@ -488,15 +504,15 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       throw new Error(i18next.t('text.inspected_qty_is_invalid'))
     }
 
-    if (this.inspectedWeightInput.value < 0) {
-      this._focusOnInput(this.inspectedWeightInput)
-      throw new Error(i18next.t('text.inspected_weight_is_invalid'))
-    }
-
-    // 6. inspected weight existing
+    // 5. inspected qty existing
     if (!this.inspectedWeightInput.value) {
       this._focusOnInput(this.inspectedWeightInput)
       throw new Error(i18next.t('text.inspected_weight_is_empty'))
+    }
+
+    if (this.inspectedWeightInput.value < 0) {
+      this._focusOnInput(this.inspectedWeightInput)
+      throw new Error(i18next.t('text.inspected_weight_is_invalid'))
     }
   }
 
@@ -574,6 +590,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         this.inspectedQtyInput.value = ''
         this.inspectedWeightInput.value = ''
         this.palletInput.value = ''
+        this.batchNoInput.value = ''
         this.locationInput.value = ''
       }
     } catch (e) {

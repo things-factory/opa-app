@@ -42,7 +42,8 @@ class InventoryHistory extends localize(i18next)(PageView) {
     return {
       _searchFields: Array,
       config: Object,
-      data: Object
+      data: Object,
+      exportItems: Object
     }
   }
 
@@ -196,6 +197,7 @@ class InventoryHistory extends localize(i18next)(PageView) {
           header: i18next.t('field.product'),
           record: { align: 'left' },
           sortable: true,
+          imex: { header: i18next.t('field.product'), key: 'productName', width: 75, type: 'string' },
           width: 200
         },
         {
@@ -204,6 +206,7 @@ class InventoryHistory extends localize(i18next)(PageView) {
           header: i18next.t('field.seq'),
           record: { align: 'center' },
           sortable: true,
+          imex: { header: i18next.t('field.seq'), key: 'seq', width: 75, type: 'integer' },
           width: 80
         },
         {
@@ -212,6 +215,7 @@ class InventoryHistory extends localize(i18next)(PageView) {
           header: i18next.t('field.pallet_id'),
           record: { align: 'left' },
           sortable: true,
+          imex: { header: i18next.t('field.pallet_id'), key: 'palletId', width: 75, type: 'string' },
           width: 150
         },
         {
@@ -220,6 +224,7 @@ class InventoryHistory extends localize(i18next)(PageView) {
           header: i18next.t('field.batch_no'),
           record: { align: 'left' },
           sortable: true,
+          imex: { header: i18next.t('field.batch_no'), key: 'batchId', width: 75, type: 'string' },
           width: 150
         },
         {
@@ -228,6 +233,7 @@ class InventoryHistory extends localize(i18next)(PageView) {
           header: i18next.t('field.opening_qty'),
           record: { align: 'center' },
           sortable: true,
+          imex: { header: i18next.t('field.opening_qty'), key: 'openingQty', width: 75, type: 'number' },
           width: 80
         },
         {
@@ -236,6 +242,7 @@ class InventoryHistory extends localize(i18next)(PageView) {
           header: i18next.t('field.qty'),
           record: { align: 'center' },
           sortable: true,
+          imex: { header: i18next.t('field.qty'), key: 'qty', width: 75, type: 'number' },
           width: 80
         },
         {
@@ -244,6 +251,7 @@ class InventoryHistory extends localize(i18next)(PageView) {
           header: i18next.t('field.opening_weight'),
           record: { align: 'center' },
           sortable: true,
+          imex: { header: i18next.t('field.opening_weight'), key: 'openingWeight', width: 75, type: 'number' },
           width: 100
         },
         {
@@ -252,6 +260,7 @@ class InventoryHistory extends localize(i18next)(PageView) {
           header: i18next.t('field.weight'),
           record: { align: 'center' },
           sortable: true,
+          imex: { header: i18next.t('field.weight'), key: 'weight', width: 75, type: 'number' },
           width: 100
         },
         {
@@ -260,6 +269,7 @@ class InventoryHistory extends localize(i18next)(PageView) {
           header: i18next.t('field.zone'),
           record: { align: 'center' },
           sortable: true,
+          imex: { header: i18next.t('field.zone'), key: 'zone', width: 75, type: 'string' },
           width: 80
         },
         {
@@ -268,6 +278,7 @@ class InventoryHistory extends localize(i18next)(PageView) {
           header: i18next.t('field.location'),
           record: { align: 'center' },
           sortable: true,
+          imex: { header: i18next.t('field.location'), key: 'locationName', width: 75, type: 'object' },
           width: 150
         },
         {
@@ -276,6 +287,7 @@ class InventoryHistory extends localize(i18next)(PageView) {
           header: i18next.t('field.order_no'),
           record: { align: 'left' },
           sortable: true,
+          imex: { header: i18next.t('field.order_no'), key: 'orderNo', width: 75, type: 'string' },
           width: 150
         },
         {
@@ -284,6 +296,7 @@ class InventoryHistory extends localize(i18next)(PageView) {
           header: i18next.t('field.ref_no'),
           record: { align: 'left' },
           sortable: true,
+          imex: { header: i18next.t('field.ref_no'), key: 'orderRefNo', width: 75, type: 'string' },
           width: 150
         },
         {
@@ -292,6 +305,7 @@ class InventoryHistory extends localize(i18next)(PageView) {
           header: i18next.t('field.status'),
           record: { align: 'left' },
           sortable: true,
+          imex: { header: i18next.t('field.status'), key: 'status', width: 75, type: 'string' },
           width: 150
         },
         {
@@ -300,6 +314,7 @@ class InventoryHistory extends localize(i18next)(PageView) {
           header: i18next.t('field.transaction_type'),
           record: { align: 'left' },
           sortable: true,
+          imex: { header: i18next.t('field.transaction_type'), key: 'transactionType', width: 75, type: 'string' },
           width: 200
         },
         {
@@ -308,6 +323,7 @@ class InventoryHistory extends localize(i18next)(PageView) {
           header: i18next.t('field.updated_at'),
           record: { align: 'left' },
           sortable: true,
+          imex: { header: i18next.t('field.updated_at'), key: 'updatedAt', width: 75, type: 'string' },
           width: 150
         },
         {
@@ -316,6 +332,7 @@ class InventoryHistory extends localize(i18next)(PageView) {
           header: i18next.t('field.updater'),
           record: { align: 'left' },
           sortable: true,
+          imex: { header: i18next.t('field.updater'), key: 'updaterName', width: 75, type: 'string' },
           width: 150
         }
       ]
@@ -433,6 +450,15 @@ class InventoryHistory extends localize(i18next)(PageView) {
         `
       })
 
+      response.data.bizplaceInventoryHistories.items = response.data.bizplaceInventoryHistories.items.map(item => {
+        return {
+          ...item,
+          productName: item.product.name,
+          locationName: item.location.name,
+          updaterName: item.updater.name
+        }
+      })
+
       return {
         total: response.data.bizplaceInventoryHistories.total || 0,
         records: response.data.bizplaceInventoryHistories.items || []
@@ -468,10 +494,6 @@ class InventoryHistory extends localize(i18next)(PageView) {
     return this.config.columns
   }
 
-  _exportableData() {
-    return this.dataGrist.exportRecords()
-  }
-
   _compareValues(key, order = 'asc') {
     return function innerSort(a, b) {
       if (!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
@@ -488,6 +510,27 @@ class InventoryHistory extends localize(i18next)(PageView) {
         comparison = -1
       }
       return order === 'desc' ? comparison * -1 : comparison
+    }
+  }
+
+  _exportableData() {
+    try {
+      var headerSetting = [
+        ...this.dataGrist.config.columns
+          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+          .map(column => {
+            return column.imex
+          })
+      ]
+
+      return {
+        header: headerSetting,
+        data: this.dataGrist.data.records
+        //   groups: this.dataGrist.config.rows.groups,
+        // totals: this.dataGrist.config.rows.totals
+      }
+    } catch (e) {
+      this._showToast(e)
     }
   }
 
