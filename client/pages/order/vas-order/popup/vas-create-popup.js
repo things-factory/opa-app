@@ -210,9 +210,7 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
           `
         : ''}
 
-      <div class="guide-container">
-        ${this._template}
-      </div>
+      <div class="guide-container">${this._template}</div>
 
       <div class="button-container">
         ${this._template
@@ -250,9 +248,7 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
         >
           ${i18next.t('button.cancel')}
         </button>
-        <button @click="${this.confirmHandler.bind(this)}">
-          ${i18next.t('button.confirm')}
-        </button>
+        <button @click="${this.confirmHandler.bind(this)}">${i18next.t('button.confirm')}</button>
       </div>
     `
   }
