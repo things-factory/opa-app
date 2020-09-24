@@ -10,6 +10,7 @@ export const Query = `
   elcclDailyCollectionReport(filters: [Filter], pagination: Pagination, sortings: [Sorting]): [ElcclDailyCollectionReport]
   elcclInventoryHistoryReport(filters: [Filter], pagination: Pagination, sortings: [Sorting]): [ElcclInventoryReport]
   elcclInventoryHistoryPalletDetailReport(filters: [Filter], pagination: Pagination, sortings: [Sorting]): [ElcclPalletDetailReport]
+  elcclOnhandInventoryCounter(filters: [Filter]): Int
 `
 
 export const Types = [
