@@ -77,14 +77,8 @@ class CustomerInventoryReport extends connect(store)(localize(i18next)(PageView)
   get searchFields() {
     return [
       {
-        label: i18next.t('field.product_name'),
+        label: i18next.t('field.product_info'),
         name: 'product',
-        type: 'string',
-        props: { searchOper: 'in' }
-      },
-      {
-        label: i18next.t('field.product_description'),
-        name: 'productDescription',
         type: 'string',
         props: { searchOper: 'in' }
       },

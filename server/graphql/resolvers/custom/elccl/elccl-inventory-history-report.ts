@@ -67,6 +67,22 @@ export const elcclInventoryHistoryReport = {
               return "'%" + prod.trim().replace(/'/g, "''") + "%'"
             })
             .join(',') +
+          ']) ' +
+          'OR prd.sku ILIKE ANY(ARRAY[' +
+          product.value
+            .split(',')
+            .map(prod => {
+              return "'%" + prod.trim().replace(/'/g, "''") + "%'"
+            })
+            .join(',') +
+          ']) ' +
+          'OR prd.description ILIKE ANY(ARRAY[' +
+          product.value
+            .split(',')
+            .map(prod => {
+              return "'%" + prod.trim().replace(/'/g, "''") + "%'"
+            })
+            .join(',') +
           '])'
       }
 

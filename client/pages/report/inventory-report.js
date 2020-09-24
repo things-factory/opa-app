@@ -101,14 +101,8 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
         props: { searchOper: 'eq' }
       },
       {
-        label: i18next.t('field.product_name'),
+        label: i18next.t('field.product_info'),
         name: 'product',
-        type: 'string',
-        props: { searchOper: 'in' }
-      },
-      {
-        label: i18next.t('field.product_description'),
-        name: 'productDescription',
         type: 'string',
         props: { searchOper: 'in' }
       },
