@@ -481,7 +481,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      this._resuablePalletList = { records: response.data.pallets.items }
+      this._reusablePalletList = { records: response.data.pallets.items }
     }
   }
 
@@ -573,6 +573,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
               this._selectedTaskStatus = null
               this._selectedOrderInventory = null
               this.palletInput.value = ''
+              this.isReplacement = false
             }}"
           ></picking-replacement-popup>
         `,
