@@ -18,11 +18,13 @@ export const elcclOnhandInventoryCounterResolver = {
           and bizplace_id in (${bizplaces})
           and domain_id = '${context.state.domain.id}'
           union all
-          select count(distinct reusable_pallet_id) as qty from inventories i2
+          select count(distinct ref_order_id) as qty from inventories i2
           where status not in ('INTRANSIT', 'TERMINATED', 'DELETED')
           and reusable_pallet_id notnull
+          and ref_order_id notnull
           and bizplace_id in (${bizplaces})
           and domain_id = '${context.state.domain.id}'
+          group by reusable_pallet_id
       ) as foo
     `
     )
