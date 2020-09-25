@@ -601,7 +601,12 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                 select: [
                   { name: 'productId', hidden: true },
                   { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'left' } },
-                  { name: 'productName', header: i18next.t('field.product'), record: { align: 'left' }, width: 280 },
+                  {
+                    name: 'productName',
+                    header: i18next.t('field.product_info'),
+                    record: { align: 'left' },
+                    width: 280
+                  },
                   { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
                   {
                     name: 'remainQty',
@@ -709,7 +714,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                   { name: 'id', hidden: true },
                   { name: 'name', hidden: true },
                   { name: 'palletId', header: i18next.t('field.pallet_id'), record: { align: 'center' } },
-                  { name: 'product', type: 'object', queryName: 'products' },
+                  { name: 'product', type: 'object', header: i18next.t('field.product_info'), queryName: 'products' },
                   { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
                   {
                     name: 'location',
