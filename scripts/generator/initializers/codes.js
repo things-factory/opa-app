@@ -137,6 +137,22 @@ const codes = [
       ]
   },
   {
+      name: 'RO_LIST_STATUS',
+      description: 'release order status',
+      details: [
+          { name: 'PENDING', description: 'order_status_pending' },
+          { name: 'PENDING_CANCEL', description: 'order_status_pending_cancel' },
+          { name: 'PENDING_RECEIVE', description: 'order_status_pending_receive' },
+          { name: 'READY_TO_PICK', description: 'order_status_ready_to_pick' },
+          { name: 'PICKING', description: 'order_status_picking' },
+          { name: 'LOADING', description: 'order_status_loading' },
+          { name: 'PARTIAL_RETURN', description: 'order_status_partial_return' },
+          { name: 'CANCELLED', description: 'order_status_cancelled' },
+          { name: 'DONE', description: 'order_status_done' },
+          { name: 'REJECTED', description: 'order_status_rejected' }
+      ]
+  },
+  {
       name: 'ORDER_STATUS',
       description: 'order status',
       details: [

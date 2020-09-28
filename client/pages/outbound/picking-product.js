@@ -23,6 +23,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
       _selectedTaskStatus: String,
       _reusablePalletList: Object,
       isWholePicking: Boolean,
+      isReplacement: Boolean,
       crossDocking: Boolean
     }
   }
@@ -264,6 +265,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     this._reusablePalletList = { records: [] }
     this.locationSortingRules = []
     this.crossDocking = false
+    this.isReplacement = false
   }
 
   updated(changedProps) {
@@ -479,7 +481,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
-      this._resuablePalletList = { records: response.data.pallets.items }
+      this._reusablePalletList = { records: response.data.pallets.items }
     }
   }
 
@@ -571,6 +573,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
               this._selectedTaskStatus = null
               this._selectedOrderInventory = null
               this.palletInput.value = ''
+              this.isReplacement = false
             }}"
           ></picking-replacement-popup>
         `,
