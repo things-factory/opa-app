@@ -326,10 +326,10 @@ class CycleCountReport extends localize(i18next)(PageView) {
               name: worksheetDetail.name,
               description: worksheetDetail.description,
               status: worksheetDetail.status,
-              inspectedLocation: worksheetDetail.targetInventory.inspectedLocation && worksheetDetail.targetInventory.inspectedLocation.name,
+              inspectedLocation: worksheetDetail.targetInventory.inspectedLocation?.name,
               inspectedQty: worksheetDetail.targetInventory.inspectedQty,
               inspectedWeight: worksheetDetail.targetInventory.inspectedWeight,
-              packingType: worksheetDetail.targetInventory.inventory.packingType
+              packingType: worksheetDetail.targetInventory.inventory?.packingType || ''
             }
           })
           .sort(this._compareValues('status', 'desc'))

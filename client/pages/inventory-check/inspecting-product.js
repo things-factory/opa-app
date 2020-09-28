@@ -280,9 +280,10 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           }
         }
       },
-      list: { fields: ['name', 'palletQty'] },
+      list: { fields: ['completed', 'name', 'palletQty'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
+        { type: 'boolean', name: 'completed', header: i18next.t('button.completed'), width: 80 },
         { type: 'string', name: 'name', header: i18next.t('field.name'), record: { align: 'center' }, width: 150 },
         {
           type: 'integer',
@@ -458,6 +459,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       })
 
     locations.forEach(location => {
+      if (location.inventories.every(inv => inv.completed)) {
+        location.completed = true
+      } else {
+        location.completed = false
+      }
       location.inventories.sort((a, b) => a.completed - b.completed)
     })
 
@@ -513,6 +519,13 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           title: i18next.t('button.relocate'),
           action: this.relocatePallet.bind(this)
         })
+    }
+
+    if (this.locationData.records.every(loc => loc.completed)) {
+      actions.push({
+        title: i18next.t('button.complete'),
+        action: this.completeCycleCount.bind(this)
+      })
     }
 
     store.dispatch({
@@ -730,6 +743,26 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       if (!response.errors) {
         await this.fetchCycleCountWorksheet()
         this.renewInventoryGrist()
+      }
+    } catch (e) {
+      this.showToast(e)
+    }
+  }
+
+  async completeCycleCount() {
+    try {
+      const response = await client.query({
+        query: gql`
+          mutation {
+            completeInspection(${gqlBuilder.buildArgs({
+              inventoryCheckNo: this.cycleCountNo
+            })})
+          }
+        `
+      })
+
+      if (!response.errors) {
+        this.clearView()
       }
     } catch (e) {
       this.showToast(e)
