@@ -1,6 +1,6 @@
 {
   "button.add_x": "add {state.x}",
-  "button.check_missed_x": "check missed {state.x}",
+  "button.check_missing_x": "check missing {state.x}",
 
   "field.batch_no": "批号",
   "field.buffer_location": "缓冲区位置",
@@ -89,6 +89,8 @@
   "label.purchase_order": "采购订单",
   "label.supplier_name": "供应商名称",
 
+  "text.same_pallet_is_founded_in_location": "same pallet is founded in {state.location}",
+
   "title.adjustment": "adjustment",
   "title.arrival_notice": "到货单",
   "title.arrival_notice_detail": "到货通知资料",
@@ -109,7 +111,7 @@
   "title.label_setting": "title.label_setting",
   "title.menu": "选单",
   "title.menu_management": "menu management",
-  "title.missed_pallets": "missed pallets",
+  "title.missing_pallets": "missing pallets",
   "title.picking_by_product": "按产品选择",
   "title.picking_by_unit": "按单位领料",
   "title.picking_by_unit_detail": "拣货资料",
@@ -123,6 +125,7 @@
   "title.receive_goods_master": "收货主单",
   "title.receive_shipping_notice": "收到发货通知",
   "title.receive_transport_order": "接收运输单",
+  "title.same_pallet_is_founded": "same pallet is founded",
   "title.shipping_notice": "出货单",
   "title.shipping_notice_detail": "出货单资料",
   "title.shipping_notice_master": "出货主单",

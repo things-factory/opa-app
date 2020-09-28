@@ -8,11 +8,12 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { fetchLocationSortingRule } from '../../fetch-location-sorting-rule'
-import { LOCATION_SORTING_RULE, WORKSHEET_STATUS } from '../constants'
+import { LOCATION_SORTING_RULE, WORKSHEET_STATUS, ORDER_INVENTORY_STATUS } from '../constants'
 
 const VIEW_TYPE = {
   LOCATION_SELECTED: 'LOCATION_SELECTED',
-  INVENTORY_SELECTED: 'INVENTORY_SELECTED'
+  INVENTORY_SELECTED: 'INVENTORY_SELECTED',
+  MISSING_PALLET_SELECTED: 'MISSING_PALLET_SELECTED'
 }
 
 class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
@@ -25,7 +26,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       inventoryData: Object,
       selectedLocation: Object,
       selectedInventory: Object,
-      viewType: String
+      viewType: String,
+      missingInventoryConfig: Object,
+      missingInventoryData: Object
     }
   }
 
@@ -57,6 +60,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           overflow: auto;
           display: flex;
           flex-direction: column;
+        }
+        .right-column > div#input-form-container {
+          flex: 1;
         }
         data-grist {
           flex: 1;
@@ -100,7 +106,10 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               if (e.keyCode === 13) {
                 e.preventDefault()
                 if (this.cycleCountNoInput.value) {
-                  this.fetchCycleCountWorksheet(this.cycleCountNoInput.value)
+                  this.clearView()
+                  this.updateContext()
+                  this.cycleCountNo = this.cycleCountNoInput.value
+                  this.fetchCycleCountWorksheet()
                 }
               }
             }}"
@@ -135,48 +144,63 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         </div>
 
         <div class="right-column">
-          ${this.viewType === VIEW_TYPE.LOCATION_SELECTED
+          ${this.selectedLocation
             ? html`
-                <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.missed_pallets')}</h2>
+                <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.missing_pallets')}</h2>
                 <data-grist
-                  id="missed-inventory-grist"
+                  id="missing-inventory-grist"
                   .mode="${isMobileDevice() ? 'LIST' : 'GRID'}"
-                  .config="${this.inventoryConfig}"
-                  .data="${this.missedInventoryData}"
+                  .config="${this.missingInventoryConfig}"
+                  .data="${this.missingInventoryData}"
                 ></data-grist>
               `
-            : html`
-                <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.extra_pallets')}</h2>
-                <data-grist
-                  id="inventory-grist"
-                  .mode="${isMobileDevice() ? 'LIST' : 'GRID'}"
-                  .config="${this.inventoryConfig}"
-                  .data="${this.extraPalletData}"
-                ></data-grist>
-              `}
+            : ''}
 
-          <form id="input-form" class="single-column-form">
-            <fieldset>
-              <legend>${i18next.t('field.inventory')}</legend>
+          <div id="input-form-container">
+            <form
+              id="input-form"
+              class="single-column-form"
+              @keypress="${e => {
+                if (e.keyCode === 13) {
+                  if (!this.selectedInventory) {
+                    this.addExtraPallet()
+                  } else if (!this.selectedInventory.completed) {
+                    this.submitInventoryCheck()
+                  }
+                }
+              }}"
+            >
+              <fieldset>
+                <legend>${i18next.t('field.inventory')}</legend>
 
-              <label>${i18next.t('field.pallet_id')}</label>
-              <input name="pallet-id" readonly .value="${this.selectedInventory?.palletId || ''}" />
+                <label>${i18next.t('field.pallet_id')}</label>
+                ${this.viewType === VIEW_TYPE.LOCATION_SELECTED
+                  ? html` <barcode-scanable-input name="palletId" custom-input></barcode-scanable-input> `
+                  : html` <input name="palletId" readonly .value="${this.selectedInventory?.palletId || ''}" /> `}
 
-              <label>${i18next.t('label.inspected_batch_no')}</label>
-              <input name="batch-id" .value="${this.selectedInventory?.batchId || ''}" />
+                <label>${i18next.t('label.inspected_batch_no')}</label>
+                <input name="inspectedBatchNo" .value="${this.selectedInventory?.batchId || ''}" />
 
-              <label>${i18next.t('label.inspected_qty')}</label>
-              <input name="inspected-qty" type="number" .value="${this.selectedInventory?.qty || ''}" />
+                <label>${i18next.t('label.inspected_qty')}</label>
+                <input name="inspectedQty" type="number" .value="${this.selectedInventory?.qty || ''}" />
 
-              <label>${i18next.t('label.inspected_weight')}</label>
-              <input
-                name="inspected-weight"
-                type="number"
-                step=".01"
-                .value="${this.selectedInventory?.weight || ''}"
-              />
-            </fieldset>
-          </form>
+                <label>${i18next.t('label.inspected_weight')}</label>
+                <input
+                  name="inspectedWeight"
+                  type="number"
+                  step=".01"
+                  .value="${this.selectedInventory?.weight || ''}"
+                />
+
+                ${this.viewType === VIEW_TYPE.LOCATION_SELECTED
+                  ? html`
+                      <label>${i18next.t('label.location')}</label>
+                      <input name="location" .value="${this.selectedLocation?.name || ''}" />
+                    `
+                  : ''}
+              </fieldset>
+            </form>
+          </div>
         </div>
       </div>
     `
@@ -198,16 +222,41 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     return this.renderRoot.querySelector('form#info-form')
   }
 
+  get inputForm() {
+    return this.renderRoot.querySelector('form#input-form')
+  }
+
   get cycleCountNoInput() {
     return this.renderRoot.querySelector('barcode-scanable-input[name=cycleCountNo]').renderRoot.querySelector('input')
   }
 
-  focusOnCycleCountNoInput() {
-    this.focusOnInput(this.cycleCountNoInput)
+  get palletIdInput() {
+    if (this.viewType === VIEW_TYPE.LOCATION_SELECTED) {
+      return this.renderRoot.querySelector('barcode-scanable-input[name=palletId]').renderRoot.querySelector('input')
+    } else {
+      return this.renderRoot.querySelector('input[name=palletId]')
+    }
   }
 
-  focusOnInput(input) {
-    setTimeout(() => input.focus(), 100)
+  get inspectedBatchNoInput() {
+    return this.renderRoot.querySelector('input[name=inspectedBatchNo]')
+  }
+
+  get inspectedQtyInput() {
+    return this.renderRoot.querySelector('input[name=inspectedQty]')
+  }
+  get inspectedQtyInput() {
+    return this.renderRoot.querySelector('input[name=inspectedQty]')
+  }
+  get inspectedWeightInput() {
+    return this.renderRoot.querySelector('input[name=inspectedWeight]')
+  }
+  get inspectedWeightInput() {
+    return this.renderRoot.querySelector('input[name=inspectedWeight]')
+  }
+
+  selectOnInput(input) {
+    setTimeout(() => input.select(), 100)
   }
 
   async pageInitialized() {
@@ -218,13 +267,15 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       rows: {
         appendable: false,
         handlers: {
-          click: (columns, data, column, record, rowIndex) => {
+          click: async (columns, data, column, record, rowIndex) => {
             if (!this.selectedLocation?.id !== record.id) {
               this.selectedInventory = null
               this.selectedLocation = record
               this.inventoryData = { records: this.selectedLocation.inventories }
               this.viewType = VIEW_TYPE.LOCATION_SELECTED
               this.updateContext(this.viewType)
+              await this.updateComplete
+              this.selectOnInput(this.palletIdInput)
             }
           }
         }
@@ -248,11 +299,13 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       rows: {
         appendable: false,
         handlers: {
-          click: (columns, data, column, record, rowIndex) => {
+          click: async (columns, data, column, record, rowIndex) => {
             if (!this.selectedInventory?.id !== record.id) {
               this.selectedInventory = record
               this.viewType = VIEW_TYPE.INVENTORY_SELECTED
-              this.updateContext(VIEW_TYPE.INVENTORY_SELECTED)
+              this.updateContext(this.viewType)
+              await this.updateComplete
+              this.selectOnInput(this.inspectedBatchNoInput)
             }
           }
         }
@@ -262,8 +315,15 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'boolean', name: 'completed', header: i18next.t('button.completed'), width: 80 },
         { type: 'string', name: 'palletId', header: i18next.t('label.pallet_id'), width: 160 },
+        {
+          type: 'string',
+          name: 'orderInventoryStatus',
+          header: i18next.t('label.status'),
+          record: { align: 'center' },
+          width: 100
+        },
         { type: 'string', name: 'batchId', header: i18next.t('label.batch_id'), width: 120 },
-        { type: 'integer', name: 'qty', header: i18next.t('label.qty'), width: 100, record: { align: 'center' } },
+        { type: 'integer', name: 'qty', header: i18next.t('label.qty'), width: 80, record: { align: 'center' } },
         {
           type: 'integer',
           name: 'inspectedQty',
@@ -271,31 +331,64 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           width: 100,
           record: { align: 'center' }
         },
-        { type: 'float', name: 'weight', header: i18next.t('label.weight'), width: 100, record: { align: 'center' } },
+        { type: 'float', name: 'weight', header: i18next.t('label.weight'), width: 80, record: { align: 'center' } },
         {
           type: 'float',
           name: 'inspectedWeight',
           header: i18next.t('label.inspected_weight'),
           width: 100,
           record: { align: 'center' }
+        },
+        {
+          type: 'float',
+          name: 'inspectedWeight',
+          header: i18next.t('label.inspected_weight'),
+          width: 100,
+          record: { align: 'center' }
+        },
+        {
+          type: 'object',
+          name: 'inspectedLocation',
+          header: i18next.t('label.inspected_location'),
+          width: 100,
+          record: { align: 'center' }
         }
       ]
+    }
+
+    const missingInventoryColumns = ['palletId', 'batchId', 'qty', 'weight']
+    this.missingInventoryConfig = {
+      pagination: { infinite: true },
+      rows: {
+        appendable: false,
+        handlers: {
+          click: async (columns, data, column, record, rowIndex) => {
+            if (!this.selectedInventory?.id !== record.id) {
+              this.selectedInventory = record
+              this.viewType = VIEW_TYPE.MISSING_PALLET_SELECTED
+              this.selectOnInput(this.inspectedBatchNoInput)
+              this.updateContext(this.viewType)
+            }
+          }
+        }
+      },
+      list: { fields: missingInventoryColumns },
+      columns: this.inventoryConfig.columns.filter(col => missingInventoryColumns.indexOf(col.name) >= 0)
     }
   }
 
   pageUpdated() {
     if (this.active) {
-      this.focusOnCycleCountNoInput()
+      this.selectOnInput(this.cycleCountNoInput)
     }
   }
 
-  async fetchCycleCountWorksheet(cycleCountNo) {
-    this.clearView()
+  async fetchCycleCountWorksheet() {
     const response = await client.query({
       query: gql`
         query {
           cycleCountWorksheet(${gqlBuilder.buildArgs({
-            inventoryCheckNo: cycleCountNo,
+            inventoryCheckNo: this.cycleCountNo,
             locationSortingRules: this.locationSortingRules
           })}) {
             worksheetInfo {
@@ -307,12 +400,19 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               batchId
               qty
               weight
+              status
               inspectedQty
               inspectedWeight
+              inspectedLocation {
+                name
+              }
               description
               location {
                 id
                 name
+              }
+              relatedOrderInv {
+                status
               }
             }
           }
@@ -326,69 +426,93 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
 
       this.fillUpForm(this.infoForm, worksheetInfo)
       this.locationData = { records: this.formatLocations(worksheetDetailInfos) }
+      this.missingInventoryData = { records: this.formatMissingInventories(worksheetDetailInfos) }
     }
   }
 
   formatLocations(worksheetDetailInfos) {
-    this.formattedLocations = worksheetDetailInfos.reduce((locations, wsdInfo) => {
-      const idx = locations.findIndex(loc => loc.id === wsdInfo.location.id)
-      if (idx >= 0) {
-        locations[idx].palletQty++
-        locations[idx].inventories.push({
-          palletId: wsdInfo.palletId,
-          batchId: wsdInfo.batchId,
-          qty: wsdInfo.qty,
-          inspectedQty: wsdInfo.inspectedQty || 0,
-          weight: wsdInfo.weight,
-          inspectedWeight: wsdInfo.inspectedWeight || 0
-        })
-      } else {
-        locations.push({
-          id: wsdInfo.location.id,
-          name: wsdInfo.location.name,
-          palletQty: 1,
-          inventories: [
-            {
-              palletId: wsdInfo.palletId,
-              batchId: wsdInfo.batchId,
-              qty: wsdInfo.qty,
-              inspectedQty: wsdInfo.inspectedQty || 0,
-              weight: wsdInfo.weight,
-              inspectedWeight: wsdInfo.inspectedWeight || 0
-            }
-          ]
-        })
-      }
+    const locations = worksheetDetailInfos
+      .filter(wsdInfo => wsdInfo.location)
+      .reduce((locations, wsdInfo) => {
+        const idx = locations.findIndex(loc => loc.id === wsdInfo.location.id)
+        if (idx >= 0) {
+          locations[idx].palletQty++
+          locations[idx].inventories.push(this.formatInventory(wsdInfo))
+        } else {
+          locations.push({
+            id: wsdInfo.location.id,
+            name: wsdInfo.location.name,
+            palletQty: 1,
+            inventories: [this.formatInventory(wsdInfo)]
+          })
+        }
 
-      return locations
-    }, [])
+        return locations
+      }, [])
 
+    worksheetDetailInfos
+      .filter(wsdInfo => !wsdInfo.location && wsdInfo.relatedOrderInv.status === ORDER_INVENTORY_STATUS.ADDED)
+      .forEach(wsdInfo => {
+        const idx = locations.findIndex(loc => loc.id === wsdInfo)
+        locations[idx].inventories.push(this.formatInventory(wsdInfo))
+      })
+
+    locations.forEach(location => {
+      location.inventories.sort((a, b) => a.completed - b.completed)
+    })
+
+    this.formattedLocations = locations
     return this.formattedLocations
+  }
+
+  formatInventory(wsdInfo) {
+    return {
+      worksheetDetailName: wsdInfo.name,
+      completed: wsdInfo.status !== WORKSHEET_STATUS.EXECUTING.value,
+      palletId: wsdInfo.palletId,
+      batchId: wsdInfo.batchId,
+      qty: wsdInfo.qty,
+      inspectedQty: wsdInfo.inspectedQty || 0,
+      weight: wsdInfo.weight,
+      inspectedWeight: wsdInfo.inspectedWeight || 0,
+      inspectedLocation: wsdInfo.inspectedLocation || 0,
+      orderInventoryStatus: wsdInfo.relatedOrderInv.status
+    }
+  }
+
+  formatMissingInventories(wsdInfos) {
+    return wsdInfos
+      .filter(wsdInfo => wsdInfo.relatedOrderInv.status === ORDER_INVENTORY_STATUS.MISSING.value)
+      .map(wsdInfo => this.formatInventory(wsdInfo))
   }
 
   updateContext(type) {
     let actions = []
     switch (type) {
       case VIEW_TYPE.LOCATION_SELECTED:
-        actions = [
-          {
-            title: i18next.t('button.add_x', { state: { x: i18next.t('label.pallet') } }),
-            action: this.addExtraPallet
-          }
-        ]
+        actions.push({
+          title: i18next.t('button.add_x', { state: { x: i18next.t('label.pallet') } }),
+          action: this.addExtraPallet.bind(this)
+        })
         break
 
       case VIEW_TYPE.INVENTORY_SELECTED:
-        actions = [
-          {
-            title: i18next.t('button.check_missed_x', {
-              state: { x: i18next.t('label.pallet') }
-            }),
-            action: this.checkMissedPallet
-          },
-          { title: i18next.t('button.submit'), action: this.submitInventoryCheck }
-        ]
+        if (this.selectedInventory.completed) {
+          actions.push({ title: i18next.t('button.undo'), action: this.undoInventoryCheck.bind(this) })
+        } else {
+          actions.push({
+            title: i18next.t('button.check_missing_x', { state: { x: i18next.t('label.pallet') } }),
+            action: this.checkMissingPallet.bind(this)
+          })
+          actions.push({ title: i18next.t('button.check'), action: this.submitInventoryCheck.bind(this) })
+        }
         break
+
+      case VIEW_TYPE.MISSING_PALLET_SELECTED:
+        actions.push({
+          title: i18next.t('button.relocate'),
+          action: this.relocatePallet.bind(this)
+        })
     }
 
     store.dispatch({
@@ -400,16 +524,260 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     })
   }
 
-  addExtraPallet() {
-    console.log('add extra pallet')
+  async addExtraPallet() {
+    try {
+      this.checkInputFormValidity()
+
+      const palletId = this.palletIdInput.value
+
+      let location
+      let inventory
+
+      for (let i = 0; i < this.formattedLocations.length; i++) {
+        location = this.formattedLocations[i]
+
+        for (let j = 0; j < location.inventories.length; j++) {
+          if (palletId === location.inventories[j].palletId) {
+            inventory = location.inventories[j]
+            break
+          }
+        }
+
+        if (inventory) break
+      }
+
+      if (inventory && location.id !== this.selectedLocation.id) {
+        const result = await CustomAlert({
+          title: i18next.t('title.same_pallet_is_founded'),
+          text: i18next.t('text.same_pallet_is_founded_in_location', { state: { location: location.name } }),
+          confirmButton: { text: i18next.t('button.relocate') },
+          cancelButton: { text: i18next.t('button.cancel') }
+        })
+
+        if (!result.value) {
+          return
+        }
+
+        this.selectedInventory = inventory
+        await this.relocatePallet()
+        return
+      } else if (inventory) {
+        this.selectOnInput(this.palletIdInput)
+        throw new Error(i18next.t('title.same_pallet_is_founded'))
+      }
+
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('button.add_x', { state: { x: i18next.t('label.pallet') } }),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) {
+        return
+      }
+
+      let { inspectedBatchNo, inspectedQty, inspectedWeight } = Object.fromEntries(
+        new FormData(this.inputForm).entries()
+      )
+      inspectedQty = Number(inspectedQty)
+      inspectedWeight = Number(inspectedWeight)
+
+      const response = await client.query({
+        query: gql`
+          mutation {
+            addExtraPallet(${gqlBuilder.buildArgs({
+              cycleCountNo: this.cycleCountNo,
+              palletId,
+              inspectedBatchNo,
+              inspectedQty,
+              inspectedWeight,
+              locationId: this.selectedLocation.id
+            })})
+          }
+        `
+      })
+
+      if (!response.errors) {
+        await this.fetchCycleCountWorksheet()
+        this.renewInventoryGrist()
+      }
+    } catch (e) {
+      this.showToast(e)
+    }
   }
 
-  async checkMissedPallet() {
-    console.log('check missed pallet')
+  async checkMissingPallet() {
+    try {
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('button.check_missing_x', { state: { x: i18next.t('field.pallet') } }),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) {
+        return
+      }
+
+      const response = await client.query({
+        query: gql`
+          mutation {
+            checkMissingPallet(${gqlBuilder.buildArgs({
+              worksheetDetailName: this.selectedInventory.worksheetDetailName
+            })})
+          }
+        `
+      })
+
+      if (!response.errors) {
+        await this.fetchCycleCountWorksheet()
+        this.renewInventoryGrist()
+      }
+    } catch (e) {
+      this.showToast(e)
+    }
+  }
+
+  async relocatePallet() {
+    try {
+      this.checkInputFormValidity()
+
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('button.relocate'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) {
+        return
+      }
+
+      let { inspectedBatchNo, inspectedQty, inspectedWeight } = Object.fromEntries(
+        new FormData(this.inputForm).entries()
+      )
+      inspectedQty = Number(inspectedQty)
+      inspectedWeight = Number(inspectedWeight)
+
+      const response = await client.query({
+        query: gql`
+          mutation {
+            relocatePallet(${gqlBuilder.buildArgs({
+              worksheetDetailName: this.selectedInventory.worksheetDetailName,
+              inspectedBatchNo,
+              inspectedQty,
+              inspectedWeight,
+              inspectedLocationId: this.selectedLocation.id
+            })})
+          }
+        `
+      })
+
+      if (!response.errors) {
+        await this.fetchCycleCountWorksheet()
+        this.renewInventoryGrist()
+      }
+    } catch (e) {
+      this.showToast(e)
+    }
   }
 
   async submitInventoryCheck() {
-    console.log('submit inventory check')
+    try {
+      this.checkInputFormValidity()
+
+      let { inspectedBatchNo, inspectedQty, inspectedWeight } = Object.fromEntries(
+        new FormData(this.inputForm).entries()
+      )
+      inspectedQty = Number(inspectedQty)
+      inspectedWeight = Number(inspectedWeight)
+
+      const response = await client.query({
+        query: gql`
+          mutation {
+            inspecting(${gqlBuilder.buildArgs({
+              worksheetDetailName: this.selectedInventory.worksheetDetailName,
+              inspectedBatchNo,
+              inspectedQty,
+              inspectedWeight
+            })})
+          }
+        `
+      })
+
+      if (!response.errors) {
+        await this.fetchCycleCountWorksheet()
+        this.renewInventoryGrist()
+      }
+    } catch (e) {
+      this.showToast(e)
+    }
+  }
+
+  async undoInventoryCheck() {
+    try {
+      const response = await client.query({
+        query: gql`
+          mutation {
+            undoInspection(${gqlBuilder.buildArgs({
+              worksheetDetailName: this.selectedInventory.worksheetDetailName
+            })})
+          }
+        `
+      })
+
+      if (!response.errors) {
+        await this.fetchCycleCountWorksheet()
+        this.renewInventoryGrist()
+      }
+    } catch (e) {
+      this.showToast(e)
+    }
+  }
+
+  renewInventoryGrist() {
+    this.selectedLocation = this.locationData.records.find(loc => loc.id === this.selectedLocation.id)
+    this.inventoryData = { records: this.selectedLocation.inventories }
+    this.selectedInventory = null
+    this.updateContext()
+  }
+
+  checkInputFormValidity() {
+    let { inspectedBatchNo, inspectedQty, inspectedWeight } = Object.fromEntries(new FormData(this.inputForm).entries())
+    inspectedQty = Number(inspectedQty)
+    inspectedWeight = Number(inspectedWeight)
+
+    const palletId = this.palletIdInput.value
+    if (!palletId) {
+      this.selectOnInput(this.palletIdInput)
+      throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('label.pallet_id') } }))
+    }
+
+    if (!inspectedBatchNo) {
+      this.selectOnInput(this.inspectedBatchNoInput)
+      throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('field.inspected_batch_no') } }))
+    }
+
+    if (!inspectedQty) {
+      this.selectOnInput(this.inspectedQtyInput)
+      throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('field.inspected_qty') } }))
+    }
+
+    if (inspectedQty <= 0) {
+      this.selectOnInput(this.inspectedQtyInput)
+      throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('field.inspected_qty') } }))
+    }
+
+    if (!inspectedWeight) {
+      this.selectOnInput(this.inspectedWeightInput)
+      throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('field.inspected_weight') } }))
+    }
+
+    if (inspectedWeight <= 0) {
+      this.selectOnInput(this.inspectedWeightInput)
+      throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('field.inspected_weight') } }))
+    }
   }
 
   clearView() {
@@ -440,6 +808,14 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         }
       })
     }
+  }
+
+  showToast({ type, message }) {
+    document.dispatchEvent(
+      new CustomEvent('notify', {
+        detail: { type, message }
+      })
+    )
   }
 }
 

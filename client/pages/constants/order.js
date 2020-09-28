@@ -68,6 +68,13 @@ export const ORDER_INVENTORY_STATUS = {
   RELEASED: { name: 'inventory_status_released', value: 'RELEASED' },
   DELIVERING: { name: 'inventory_status_delivering', value: 'DELIVERING' },
   RETURNING: { name: 'inventory_status_returning', value: 'RETURNING' },
+  INSPECTING: { name: 'inventory_status_inspecting', value: 'INSPECTING' },
+  INSPECTED: { name: 'inventory_status_inspected', value: 'INSPECTED' },
+  NOT_TALLY: { name: 'inventory_status_not_tally', value: 'NOT_TALLY' },
+  MISSING: { name: 'inventory_status_missing', value: 'MISSING' },
+  EXTRA: { name: 'inventory_status_extra', value: 'EXTRA' },
+  RELOCATED: { name: 'inventory_status_relocated', value: 'RELOCATED' },
+  ADDED: { name: 'inventory_status_added', value: 'ADDED' },
   TERMINATED: { name: 'inventory_status_terminated', value: 'TERMINATED' },
   DONE: { name: 'inventory_status_done', value: 'DONE' }
 }
