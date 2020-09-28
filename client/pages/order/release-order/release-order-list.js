@@ -3,6 +3,7 @@ import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { client, navigate, PageView } from '@things-factory/shell'
 import { ScrollbarStyles } from '@things-factory/styles'
+import { getCodeByName } from '@things-factory/code-base'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
@@ -69,7 +70,8 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
     }
   }
 
-  pageInitialized() {
+  async pageInitialized() {
+    const _orderStatus = await getCodeByName('RO_LIST_STATUS')
     this._searchFields = [
       {
         label: i18next.t('field.release_order_no'),
@@ -109,17 +111,9 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
         type: 'select',
         options: [
           { value: '' },
-          { name: i18next.t(`label.${ORDER_STATUS.PENDING.name}`), value: ORDER_STATUS.PENDING.value },
-          { name: i18next.t(`label.${ORDER_STATUS.EDITING.name}`), value: ORDER_STATUS.EDITING.value },
-          { name: i18next.t(`label.${ORDER_STATUS.CANCELLED.name}`), value: ORDER_STATUS.CANCELLED.value },
-          { name: i18next.t(`label.${ORDER_STATUS.PENDING_RECEIVE.name}`), value: ORDER_STATUS.PENDING_RECEIVE.value },
-          { name: i18next.t(`label.${ORDER_STATUS.PENDING_CANCEL.name}`), value: ORDER_STATUS.PENDING_CANCEL.value },
-          {
-            name: i18next.t(`label.${ORDER_STATUS.READY_TO_EXECUTE.name}`),
-            value: ORDER_STATUS.READY_TO_EXECUTE.value
-          },
-          { name: i18next.t(`label.${ORDER_STATUS.EXECUTING.name}`), value: ORDER_STATUS.EXECUTING.value },
-          { name: i18next.t(`label.${ORDER_STATUS.DONE.name}`), value: ORDER_STATUS.DONE.value }
+          ..._orderStatus.map(status => {
+            return { name: i18next.t(`label.${status.description}`), value: status.name }
+          })
         ],
         props: { searchOper: 'eq' }
       }
