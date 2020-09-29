@@ -196,7 +196,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
     this._searchFields = [
       {
         label: i18next.t('field.customer'),
-        name: 'bizplaceId',
+        name: 'bizplace',
         type: 'select',
         options: [
           { value: '' },
@@ -210,14 +210,13 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
             })
             .sort(this._compareValues('name', 'asc'))
         ],
-        props: { searchOper: 'eq' }
+        props: { searchOper: 'in' }
       },
       {
-        label: i18next.t('field.product_info'),
+        label: i18next.t('field.product'),
         name: 'product',
-        type: 'object',
-        queryName: 'products',
-        field: 'product_info'
+        type: 'text',
+        props: { searchOper: 'eq' }
       },
       {
         label: i18next.t('field.batch_no'),
@@ -252,6 +251,16 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
         type: 'object',
         queryName: 'locations',
         field: 'name'
+      },
+      {
+        label: i18next.t('field.date'),
+        name: 'created_at',
+        type: 'date',
+        props: {
+          searchOper: 'eq',
+          max: new Date().toISOString().split('T')[0]
+        },
+        value: new Date().toISOString().split('T')[0]
       }
     ]
   }
@@ -275,12 +284,13 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
     const response = await client.query({
       query: gql`
         query {
-          inventories(${gqlBuilder.buildArgs({
+          onhandInventories(${gqlBuilder.buildArgs({
             filters: [
               ...filters,
               { name: 'status', operator: 'notin', value: ['INTRANSIT', 'TERMINATED', 'DELETED'] },
               { name: 'remainOnly', operator: 'eq', value: true },
-              { name: 'unlockOnly', operator: 'eq', value: true }
+              { name: 'unlockOnly', operator: 'eq', value: true },
+              { name: 'timezoneOffset', operator: 'eq', value: new Date().getTimezoneOffset() }
             ],
             pagination: { page, limit },
             sortings: sorters
@@ -308,7 +318,6 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
                 name
                 description
               }
-              zone
               location {
                 id
                 name
@@ -327,8 +336,8 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
     })
 
     return {
-      total: response.data.inventories.total || 0,
-      records: response.data.inventories.items || []
+      total: response.data.onhandInventories.total || 0,
+      records: response.data.onhandInventories.items || []
     }
   }
 
@@ -337,8 +346,12 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
     const response = await client.query({
       query: gql`
         query {
-          inventories(${gqlBuilder.buildArgs({
-            filters: [...filters, { name: 'status', operator: 'notin', value: ['INTRANSIT', 'TERMINATED', 'DELETED'] }],
+          onhandInventories(${gqlBuilder.buildArgs({
+            filters: [
+              ...filters,
+              { name: 'status', operator: 'notin', value: ['INTRANSIT', 'TERMINATED', 'DELETED'] },
+              { name: 'timezoneOffset', operator: 'eq', value: new Date().getTimezoneOffset() }
+            ],
             pagination: { page: 1, limit: 9999999 },
             sortings: []
           })}) {
@@ -381,7 +394,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
       `
     })
 
-    return response.data.inventories.items || []
+    return response.data.onhandInventories.items || []
   }
 
   get _columns() {
