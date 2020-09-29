@@ -424,7 +424,6 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     if (!response.errors) {
       const worksheetInfo = response.data.cycleCountWorksheet.worksheetInfo
       const worksheetDetailInfos = response.data.cycleCountWorksheet.worksheetDetailInfos
-
       this.fillUpForm(this.infoForm, worksheetInfo)
       this.locationData = { records: this.formatLocations(worksheetDetailInfos) }
       this.missingInventoryData = { records: this.formatMissingInventories(worksheetDetailInfos) }
@@ -432,24 +431,27 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   formatLocations(worksheetDetailInfos) {
-    const locations = worksheetDetailInfos
-      .filter(wsdInfo => wsdInfo.location)
-      .reduce((locations, wsdInfo) => {
-        const idx = locations.findIndex(loc => loc.id === wsdInfo.location.id)
-        if (idx >= 0) {
-          locations[idx].palletQty++
-          locations[idx].inventories.push(this.formatInventory(wsdInfo))
-        } else {
-          locations.push({
-            id: wsdInfo.location.id,
-            name: wsdInfo.location.name,
-            palletQty: 1,
-            inventories: [this.formatInventory(wsdInfo)]
-          })
+    const locations = worksheetDetailInfos.reduce((locations, wsdInfo) => {
+      const idx = locations.findIndex(loc => {
+        if (wsdInfo.inspectedLocation) {
+          return loc.name === wsdInfo.inspectedLocation.name
         }
+        return loc.name === wsdInfo.location.name
+      })
+      if (idx >= 0) {
+        locations[idx].palletQty++
+        locations[idx].inventories.push(this.formatInventory(wsdInfo))
+      } else {
+        locations.push({
+          id: wsdInfo.location.id,
+          name: wsdInfo.location.name,
+          palletQty: 1,
+          inventories: [this.formatInventory(wsdInfo)]
+        })
+      }
 
-        return locations
-      }, [])
+      return locations
+    }, [])
 
     worksheetDetailInfos
       .filter(wsdInfo => !wsdInfo.location && wsdInfo.relatedOrderInv.status === ORDER_INVENTORY_STATUS.ADDED)
