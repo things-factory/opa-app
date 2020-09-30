@@ -218,6 +218,10 @@ export default {
       page: 'customer_intransit_inventory'
     },
     {
+      tagname: 'create-cycle-count',
+      page: 'create_cycle_count'
+    },
+    {
       tagname: 'inventory-check-list',
       page: 'inventory_check_list'
     },

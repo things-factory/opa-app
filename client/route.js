@@ -209,6 +209,10 @@ export default function route(page) {
       import('./pages/inventory/customer-intransit-inventory')
       return page
 
+    case 'create_cycle_count':
+      import('./pages/inventory-check/create-cycle-count')
+      return page
+
     case 'inventory_check_list':
       import('./pages/inventory-check/inventory-check-list')
       return page
