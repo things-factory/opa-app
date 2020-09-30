@@ -146,6 +146,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
       list: {
         fields: [
           'batchId',
+          'inspectedBatchNo',
           'palletId',
           'product',
           'packingType',
@@ -162,6 +163,13 @@ class CycleCountReport extends localize(i18next)(PageView) {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_no'),
+          record: { align: 'left' },
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'inspectedBatchNo',
+          header: i18next.t('field.inspected_batch_no'),
           record: { align: 'left' },
           width: 100
         },
@@ -267,6 +275,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
               status
               description
               targetInventory {
+                inspectedBatchNo
                 inspectedQty
                 inspectedWeight
                 inspectedLocation {
@@ -329,6 +338,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
               inspectedLocation: worksheetDetail.targetInventory.inspectedLocation?.name,
               inspectedQty: worksheetDetail.targetInventory.inspectedQty,
               inspectedWeight: worksheetDetail.targetInventory.inspectedWeight,
+              inspectedBatchNo: worksheetDetail.targetInventory.inspectedBatchNo,
               packingType: worksheetDetail.targetInventory.inventory?.packingType || ''
             }
           })

@@ -155,20 +155,12 @@ class InventoryCheckList extends localize(i18next)(PageView) {
           width: 150
         },
         {
-          type: 'string',
-          name: 'type',
-          header: i18next.t('field.type'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 100
-        },
-        {
           type: 'object',
           name: 'bizplace',
           header: i18next.t('field.customer'),
           record: { align: 'left' },
           sortable: true,
-          width: 200
+          width: 250
         },
         {
           type: 'date',

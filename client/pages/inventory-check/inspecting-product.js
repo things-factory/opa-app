@@ -117,7 +117,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         </fieldset>
 
         <fieldset>
-          <legend>${`${i18next.t('title.inventory_inspection')} ${`: ${this.cycleCountNo}`}`}</legend>
+          <legend>
+            ${`${i18next.t('title.inventory_inspection')} ${`: ${this.cycleCountNo ? this.cycleCountNo : ''}`}`}
+          </legend>
 
           <label>${i18next.t('label.started_at')}</label>
           <input name="startedAt" type="datetime-local" readonly />
@@ -179,7 +181,14 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                   : html` <input name="palletId" readonly .value="${this.selectedInventory?.palletId || ''}" /> `}
 
                 <label>${i18next.t('label.inspected_batch_no')}</label>
-                <input name="inspectedBatchNo" .value="${this.selectedInventory?.batchId || ''}" />
+                <input
+                  name="inspectedBatchNo"
+                  .value="${this.selectedInventory?.batchId
+                    ? this.selectedInventory?.inspectedBatchNo
+                      ? this.selectedInventory.inspectedBatchNo
+                      : this.selectedInventory.batchId
+                    : ''}"
+                />
 
                 <label>${i18next.t('label.inspected_qty')}</label>
                 <input name="inspectedQty" type="number" .value="${this.selectedInventory?.qty || ''}" />
@@ -311,7 +320,19 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           }
         }
       },
-      list: { fields: ['completed', 'palletId', 'batchId', 'qty', 'weight'] },
+      list: {
+        fields: [
+          'completed',
+          'palletId',
+          'batchId',
+          'inspectedBatchNo',
+          'qty',
+          'inspectedQty',
+          'weight',
+          'inspectedWeight',
+          'inspectedLocation'
+        ]
+      },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'boolean', name: 'completed', header: i18next.t('button.completed'), width: 80 },
@@ -324,6 +345,13 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           width: 100
         },
         { type: 'string', name: 'batchId', header: i18next.t('label.batch_id'), width: 120 },
+        {
+          type: 'string',
+          name: 'inspectedBatchNo',
+          header: i18next.t('label.inspected_batch_no'),
+          width: 100,
+          record: { align: 'center' }
+        },
         { type: 'integer', name: 'qty', header: i18next.t('label.qty'), width: 80, record: { align: 'center' } },
         {
           type: 'integer',
@@ -333,13 +361,6 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           record: { align: 'center' }
         },
         { type: 'float', name: 'weight', header: i18next.t('label.weight'), width: 80, record: { align: 'center' } },
-        {
-          type: 'float',
-          name: 'inspectedWeight',
-          header: i18next.t('label.inspected_weight'),
-          width: 100,
-          record: { align: 'center' }
-        },
         {
           type: 'float',
           name: 'inspectedWeight',
@@ -402,6 +423,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               qty
               weight
               status
+              inspectedBatchNo
               inspectedQty
               inspectedWeight
               inspectedLocation {
@@ -479,6 +501,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       completed: wsdInfo.status !== WORKSHEET_STATUS.EXECUTING.value,
       palletId: wsdInfo.palletId,
       batchId: wsdInfo.batchId,
+      inspectedBatchNo: wsdInfo.inspectedBatchNo || '',
       qty: wsdInfo.qty,
       inspectedQty: wsdInfo.inspectedQty || 0,
       weight: wsdInfo.weight,
@@ -563,8 +586,8 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
 
       if (inventory && location.id !== this.selectedLocation.id) {
         const result = await CustomAlert({
-          title: i18next.t('title.same_pallet_is_founded'),
-          text: i18next.t('text.same_pallet_is_founded_in_location', { state: { location: location.name } }),
+          title: i18next.t('title.same_pallet_is_found'),
+          text: i18next.t('text.same_pallet_is_found_in_location', { state: { location: location.name } }),
           confirmButton: { text: i18next.t('button.relocate') },
           cancelButton: { text: i18next.t('button.cancel') }
         })
@@ -573,12 +596,25 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           return
         }
 
+        // let { inspectedBatchNo, inspectedQty, inspectedWeight } = Object.fromEntries(
+        //   new FormData(this.inputForm).entries()
+        // )
+        // inspectedQty = Number(inspectedQty)
+        // inspectedWeight = Number(inspectedWeight)
+
+        // this.selectedInventory = {
+        //   ...inventory,
+        //   inspectedBatchNo,
+        //   inspectedQty,
+        //   inspectedWeight
+        // }
+
         this.selectedInventory = inventory
         await this.relocatePallet()
         return
       } else if (inventory) {
         this.selectOnInput(this.palletIdInput)
-        throw new Error(i18next.t('title.same_pallet_is_founded'))
+        throw new Error(i18next.t('title.same_pallet_is_found'))
       }
 
       const result = await CustomAlert({
