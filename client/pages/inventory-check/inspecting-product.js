@@ -191,14 +191,26 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                 />
 
                 <label>${i18next.t('label.inspected_qty')}</label>
-                <input name="inspectedQty" type="number" .value="${this.selectedInventory?.qty || ''}" />
+                <input
+                  name="inspectedQty"
+                  type="number"
+                  .value="${this.selectedInventory?.qty
+                    ? this.selectedInventory?.inspectedQty
+                      ? this.selectedInventory.inspectedQty
+                      : this.selectedInventory.qty
+                    : ''}"
+                />
 
                 <label>${i18next.t('label.inspected_weight')}</label>
                 <input
                   name="inspectedWeight"
                   type="number"
                   step=".01"
-                  .value="${this.selectedInventory?.weight || ''}"
+                  .value="${this.selectedInventory?.weight
+                    ? this.selectedInventory?.inspectedWeight
+                      ? this.selectedInventory.inspectedWeight
+                      : this.selectedInventory.weight
+                    : ''}"
                 />
 
                 ${this.viewType === VIEW_TYPE.LOCATION_SELECTED
@@ -596,11 +608,18 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           return
         }
 
-        // let { inspectedBatchNo, inspectedQty, inspectedWeight } = Object.fromEntries(
-        //   new FormData(this.inputForm).entries()
-        // )
-        // inspectedQty = Number(inspectedQty)
-        // inspectedWeight = Number(inspectedWeight)
+        let { inspectedBatchNo, inspectedQty, inspectedWeight } = Object.fromEntries(
+          new FormData(this.inputForm).entries()
+        )
+        inspectedQty = Number(inspectedQty)
+        inspectedWeight = Number(inspectedWeight)
+
+        inventory = {
+          ...inventory,
+          inspectedBatchNo,
+          inspectedQty,
+          inspectedWeight
+        }
 
         // this.selectedInventory = {
         //   ...inventory,
