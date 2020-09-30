@@ -752,6 +752,15 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async completeCycleCount() {
+    const result = await CustomAlert({
+      title: i18next.t('title.are_you_sure'),
+      text: i18next.t('text.complete_inspection'),
+      confirmButton: { text: i18next.t('button.complete') },
+      cancelButton: { text: i18next.t('button.cancel') }
+    })
+
+    if (!result.value) return
+
     try {
       const response = await client.query({
         query: gql`
