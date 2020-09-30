@@ -69,8 +69,26 @@ class InventoryCheckList extends localize(i18next)(PageView) {
 
   async pageInitialized() {
     const _worksheetStatus = await getCodeByName('WORKSHEET_STATUS')
+    this._bizplaces = [...(await this._fetchBizplaceList())]
 
     this._searchFields = [
+      {
+        name: 'bizplaceId',
+        label: i18next.t('field.customer'),
+        type: 'select',
+        options: [
+          { value: '' },
+          ...this._bizplaces
+            .map(bizplaceList => {
+              return {
+                name: bizplaceList.name,
+                value: bizplaceList.id
+              }
+            })
+            .sort(this._compareValues('name', 'asc'))
+        ],
+        props: { searchOper: 'eq' }
+      },
       {
         name: 'inventoryCheckNo',
         label: i18next.t('field.inventory_check_no'),
@@ -99,7 +117,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
 
     this.config = {
       list: {
-        fields: ['inventoryCheck', 'type', 'executionDate', 'status', 'startedAt', 'endedAt']
+        fields: ['inventoryCheck', 'type', 'Customer', 'executionDate', 'status', 'startedAt', 'endedAt']
       },
       rows: { appendable: false },
       columns: [
@@ -137,12 +155,12 @@ class InventoryCheckList extends localize(i18next)(PageView) {
           width: 150
         },
         {
-          type: 'string',
-          name: 'type',
-          header: i18next.t('field.type'),
-          record: { align: 'center' },
+          type: 'object',
+          name: 'bizplace',
+          header: i18next.t('field.customer'),
+          record: { align: 'left' },
           sortable: true,
-          width: 100
+          width: 250
         },
         {
           type: 'date',
@@ -254,6 +272,47 @@ class InventoryCheckList extends localize(i18next)(PageView) {
             }
           }) || {}
       }
+    }
+  }
+
+  async _fetchBizplaceList() {
+    const response = await client.query({
+      query: gql`
+          query {
+            bizplaces(${gqlBuilder.buildArgs({
+              filters: []
+            })}) {
+              items{
+                id
+                name
+                description
+              }
+            }
+          }
+        `
+    })
+
+    if (!response.errors) {
+      return response.data.bizplaces.items
+    }
+  }
+
+  _compareValues(key, order = 'asc') {
+    return function innerSort(a, b) {
+      if (!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
+        return 0
+      }
+
+      const varA = typeof a[key] === 'string' ? a[key].toUpperCase() : a[key]
+      const varB = typeof b[key] === 'string' ? b[key].toUpperCase() : b[key]
+
+      let comparison = 0
+      if (varA > varB) {
+        comparison = 1
+      } else if (varA < varB) {
+        comparison = -1
+      }
+      return order === 'desc' ? comparison * -1 : comparison
     }
   }
 
