@@ -361,7 +361,11 @@ class CycleCountReport extends localize(i18next)(PageView) {
               ...worksheetDetail.targetInventory.inventory,
               name: worksheetDetail.name,
               description: worksheetDetail.description,
-              productName: worksheetDetail.targetInventory.inventory.product.name,
+              productName:
+                worksheetDetail.targetInventory.inventory.product.name +
+                `(` +
+                worksheetDetail.targetInventory.inventory.product.description +
+                `)`,
               locationName: worksheetDetail.targetInventory.inventory.location.name,
               status: worksheetDetail.status,
               inspectedLocation: worksheetDetail.targetInventory.inspectedLocation?.name,
