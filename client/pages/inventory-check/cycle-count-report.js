@@ -78,6 +78,10 @@ class CycleCountReport extends localize(i18next)(PageView) {
       printable: {
         accept: ['preview'],
         content: this
+      },
+      exportable: {
+        name: i18next.t('title.cycle_count_report'),
+        data: this._exportableData.bind(this)
       }
     }
   }
@@ -88,6 +92,9 @@ class CycleCountReport extends localize(i18next)(PageView) {
         <form class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.cycle_count')}</legend>
+            <label>${i18next.t('label.customer')}</label>
+            <input name="bizplace" readonly />
+
             <label>${i18next.t('label.cycle_count_no')}</label>
             <input name="cycleCountNo" readonly />
 
@@ -116,7 +123,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           id="grist"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
-          .data="${this.data}"
+          .fetchHandler="${this.fetchWorksheet.bind(this)}"
         ></data-grist>
       </div>
     `
@@ -127,7 +134,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
       if (changes.resourceId) {
         this._worksheetNo = changes.resourceId
       }
-      await this.fetchWorksheet()
+      this.grist.fetch()
       this._updateContext()
     }
   }
@@ -158,11 +165,15 @@ class CycleCountReport extends localize(i18next)(PageView) {
       },
       pagination: { infinite: true },
       columns: [
-        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'gutter',
+          gutterName: 'sequence'
+        },
         {
           type: 'string',
           name: 'batchId',
           header: i18next.t('field.batch_no'),
+          imex: { header: i18next.t('field.batch_no'), key: 'batchId', width: 25, type: 'string' },
           record: { align: 'left' },
           width: 100
         },
@@ -170,6 +181,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           type: 'string',
           name: 'inspectedBatchNo',
           header: i18next.t('field.inspected_batch_no'),
+          imex: { header: i18next.t('field.inspected_batch_no'), key: 'inspectedBatchNo', width: 25, type: 'string' },
           record: { align: 'left' },
           width: 100
         },
@@ -177,6 +189,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           type: 'string',
           name: 'palletId',
           header: i18next.t('field.pallet_id'),
+          imex: { header: i18next.t('field.pallet_id'), key: 'palletId', width: 25, type: 'string' },
           record: { align: 'left' },
           width: 150
         },
@@ -184,6 +197,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           type: 'object',
           name: 'product',
           header: i18next.t('field.product'),
+          imex: { header: i18next.t('field.product'), key: 'productName', width: 60, type: 'string' },
           record: { align: 'left' },
           width: 350
         },
@@ -191,6 +205,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
+          imex: { header: i18next.t('field.packing_type'), key: 'packingType', width: 20, type: 'string' },
           record: { align: 'center' },
           width: 100
         },
@@ -198,6 +213,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           type: 'object',
           name: 'location',
           header: i18next.t('field.system_location'),
+          imex: { header: i18next.t('field.system_location'), key: 'locationName', width: 20, type: 'string' },
           record: { align: 'center' },
           width: 120
         },
@@ -205,6 +221,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           type: 'string',
           name: 'inspectedLocation',
           header: i18next.t('field.inspected_location'),
+          imex: { header: i18next.t('field.inspected_location'), key: 'inspectedLocation', width: 20, type: 'string' },
           record: { align: 'center' },
           width: 120
         },
@@ -212,6 +229,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           type: 'integer',
           name: 'qty',
           header: i18next.t('field.system_qty'),
+          imex: { header: i18next.t('field.system_qty'), key: 'qty', width: 20, type: 'string' },
           record: { align: 'center' },
           width: 100
         },
@@ -219,6 +237,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           type: 'integer',
           name: 'inspectedQty',
           header: i18next.t('field.inspected_qty'),
+          imex: { header: i18next.t('field.inspected_qty'), key: 'inspectedQty', width: 20, type: 'string' },
           record: { align: 'center' },
           width: 100
         },
@@ -226,6 +245,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           type: 'float',
           name: 'weight',
           header: i18next.t('field.system_weight'),
+          imex: { header: i18next.t('field.system_weight'), key: 'weight', width: 20, type: 'string' },
           record: { align: 'center' },
           width: 100
         },
@@ -233,6 +253,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           type: 'float',
           name: 'inspectedWeight',
           header: i18next.t('field.inspected_weight'),
+          imex: { header: i18next.t('field.inspected_weight'), key: 'inspectedWeight', width: 20, type: 'string' },
           record: { align: 'center' },
           width: 100
         },
@@ -240,6 +261,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           type: 'string',
           name: 'status',
           header: i18next.t('field.status'),
+          imex: { header: i18next.t('field.status'), key: 'status', width: 20, type: 'string' },
           record: { align: 'center' },
           width: 100
         }
@@ -269,6 +291,11 @@ class CycleCountReport extends localize(i18next)(PageView) {
               description
               executionDate
               status
+            }
+            bizplace {
+              id
+              name
+              description
             }
             worksheetDetails {
               name
@@ -327,13 +354,15 @@ class CycleCountReport extends localize(i18next)(PageView) {
         status: this._reportStatus,
         inventoryAccuracy: accuracyInv
       })
-      this.data = {
+      let data = {
         records: worksheetDetails
           .map(worksheetDetail => {
             return {
               ...worksheetDetail.targetInventory.inventory,
               name: worksheetDetail.name,
               description: worksheetDetail.description,
+              productName: worksheetDetail.targetInventory.inventory.product.name,
+              locationName: worksheetDetail.targetInventory.inventory.location.name,
               status: worksheetDetail.status,
               inspectedLocation: worksheetDetail.targetInventory.inspectedLocation?.name,
               inspectedQty: worksheetDetail.targetInventory.inspectedQty,
@@ -344,6 +373,8 @@ class CycleCountReport extends localize(i18next)(PageView) {
           })
           .sort(this._compareValues('status', 'desc'))
       }
+
+      return data
     }
   }
 
@@ -439,6 +470,24 @@ class CycleCountReport extends localize(i18next)(PageView) {
         description: worksheetDetail.description
       }
     })
+  }
+
+  async _exportableData() {
+    try {
+      let header = [
+        ...this.grist.config.columns
+          .filter(column => column.type !== 'gutter' && column.record !== undefined && column.imex !== undefined)
+          .map(column => {
+            return column.imex
+          })
+      ]
+
+      let data = (await this.fetchWorksheet()).records
+
+      return { header, data }
+    } catch (e) {
+      this._showToast(e)
+    }
   }
 
   _showToast({ type, message }) {
