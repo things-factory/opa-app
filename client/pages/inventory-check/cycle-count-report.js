@@ -80,7 +80,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
         content: this
       },
       exportable: {
-        name: i18next.t('title.cycle_count_report'),
+        name: this._cycleCountNo,
         data: this._exportableData.bind(this)
       }
     }
@@ -373,7 +373,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           })
           .sort(this._compareValues('status', 'desc'))
       }
-
+      this._updateContext()
       return data
     }
   }
