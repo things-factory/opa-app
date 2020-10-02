@@ -122,5 +122,6 @@
   "field.pack_in_qty": "包装数量",
   "field.quantity": "量",
   "field.label_id_for_location": "field.label_id_for_location",
-  "field.label_id_for_pallet": "field.label_id_for_pallet"
+  "field.label_id_for_pallet": "field.label_id_for_pallet",
+  "text.a_cannot_exceed_b": "{state.a} cannot excced {state.b}"
 }

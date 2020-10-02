@@ -1037,5 +1037,6 @@
   "text.assign_inventories": "assign inventories",
   "text.invalid_release_qty": "invalid release qty",
   "title.upload_document": "upload document",
-  "label.upload_grn": "upload GRN"
+  "label.upload_grn": "upload GRN",
+  "text.a_cannot_exceed_b": "{state.a}은(는) {state.b}을(를) 초과할 수 없습니다."
 }

@@ -336,7 +336,7 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
     if (!response.errors) {
       this.crossDockGristData = {
         records: response.data.releaseGood.orderInventories.filter(
-          record => record.status === ORDER_INVENTORY_STATUS.READY_TO_PICK.value
+          record => record.status === ORDER_INVENTORY_STATUS.PICKING.value
         )
       }
     } else {
