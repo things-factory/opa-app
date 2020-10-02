@@ -121,6 +121,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
             ${`${i18next.t('title.inventory_inspection')} ${`: ${this.cycleCountNo ? this.cycleCountNo : ''}`}`}
           </legend>
 
+          <label>${i18next.t('label.customer')}</label>
+          <input name="bizplace" readonly />
+
           <label>${i18next.t('label.started_at')}</label>
           <input name="startedAt" type="datetime-local" readonly />
         </fieldset>
@@ -390,7 +393,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       ]
     }
 
-    const missingInventoryColumns = ['palletId', 'batchId', 'qty', 'weight']
+    const missingInventoryColumns = ['sequence', 'palletId', 'batchId', 'qty', 'weight']
     this.missingInventoryConfig = {
       pagination: { infinite: true },
       rows: {
@@ -407,7 +410,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         }
       },
       list: { fields: missingInventoryColumns },
-      columns: this.inventoryConfig.columns.filter(col => missingInventoryColumns.indexOf(col.name) >= 0)
+      columns: this.inventoryConfig.columns.filter(
+        col => missingInventoryColumns.indexOf(col.name ? col.name : col.gutterName) >= 0
+      )
     }
   }
 
@@ -427,6 +432,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           })}) {
             worksheetInfo {
               startedAt
+              bizplace {
+                id
+                name
+                description
+              }
             }
             worksheetDetailInfos {
               name

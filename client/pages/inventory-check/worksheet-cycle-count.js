@@ -97,11 +97,14 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
         <form class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.cycle_count')}</legend>
+            <label>${i18next.t('label.customer')}</label>
+            <input name="bizplace" readonly />
+
             <label>${i18next.t('label.cycle_count_no')}</label>
             <input name="cycleCountNo" readonly />
 
             <label>${i18next.t('label.execute_date')}</label>
-            <input name="executionDate" readonly />
+            <input type="date" name="executionDate" readonly />
 
             <label>${i18next.t('label.status')}</label>
             <select name="status" disabled>
@@ -270,6 +273,11 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
               name
               description
               executionDate
+            }
+            bizplace {
+              id
+              name
+              description
             }
             worksheetDetails {
               name
