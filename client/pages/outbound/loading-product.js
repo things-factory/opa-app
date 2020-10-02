@@ -210,7 +210,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
             <fieldset>
               <legend>${i18next.t('label.delivery_information')}</legend>
               <label>${i18next.t('label.lorry_no')}</label>
-              <input ?hidden=${!this._ownCollection} name="truckNo" readonly />
+              <input ?hidden=${!this._ownCollection} name="truckNo" />
               <input
                 ?hidden=${this._ownCollection}
                 id="truckNo"
