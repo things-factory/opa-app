@@ -7,7 +7,8 @@ import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { ORDER_STATUS, WORKSHEET_STATUS } from '../constants'
+import { ORDER_STATUS, WORKSHEET_STATUS, WORKSHEET_TYPE } from '../constants'
+import './cycle-count-recheck-popup'
 
 class CycleCountReport extends localize(i18next)(PageView) {
   static get properties() {
@@ -15,6 +16,8 @@ class CycleCountReport extends localize(i18next)(PageView) {
       _worksheetNo: String,
       _reportStatus: String,
       _cycleCountNo: String,
+      cycleCountType: String,
+      customerId: String,
       config: Object,
       data: Object
     }
@@ -295,6 +298,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           worksheet(${gqlBuilder.buildArgs({
             name: this._worksheetNo
           })}) {
+            type
             status
             inventoryCheck {
               name
@@ -313,6 +317,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
               description
               targetInventory {
                 status
+                id
                 inspectedBatchNo
                 inspectedQty
                 inspectedWeight
@@ -346,6 +351,8 @@ class CycleCountReport extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const worksheet = response.data.worksheet
+      this.cycleCountType = worksheet.type
+      this.customerId = worksheet.bizplace.id
       const worksheetDetails = worksheet.worksheetDetails
       const tallyInv = worksheetDetails.filter(wd => wd.status === WORKSHEET_STATUS.DONE.value)
       const notTallyInv = worksheetDetails.filter(wd => wd.status === WORKSHEET_STATUS.NOT_TALLY.value)
@@ -384,7 +391,8 @@ class CycleCountReport extends localize(i18next)(PageView) {
               inspectedWeight: worksheetDetail.targetInventory.inspectedWeight,
               inspectedBatchNo: worksheetDetail.targetInventory.inspectedBatchNo,
               packingType: worksheetDetail.targetInventory.inventory?.packingType || '',
-              inspectedStatus: worksheetDetail.targetInventory.status
+              inspectedStatus: worksheetDetail.targetInventory.status,
+              orderInventoryId: worksheetDetail.targetInventory.id
             }
           })
           .sort(this._compareValues('status', 'desc'))
@@ -398,10 +406,17 @@ class CycleCountReport extends localize(i18next)(PageView) {
     this._actions = []
 
     if (this._reportStatus === ORDER_STATUS.PENDING_REVIEW.value) {
-      this._actions = [{ title: i18next.t('button.adjust_inventory'), action: this._adjustInventory.bind(this) }]
+      this._actions.push({ title: i18next.t('button.adjust_inventory'), action: this._adjustInventory.bind(this) })
     }
 
-    this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
+    if (this.cycleCountType === WORKSHEET_TYPE.CYCLE_COUNT.value) {
+      this._actions.push({
+        title: i18next.t('button.reject'),
+        action: this.openCycleCountRecheckPopup.bind(this)
+      })
+    }
+
+    this._actions.push({ title: i18next.t('button.back'), action: () => history.back() })
 
     store.dispatch({
       type: UPDATE_CONTEXT,
@@ -479,6 +494,26 @@ class CycleCountReport extends localize(i18next)(PageView) {
     }
   }
 
+  openCycleCountRecheckPopup() {
+    const notTallyInventories = this.grist.dirtyData.records.filter(
+      record => record.status === WORKSHEET_STATUS.NOT_TALLY.value
+    )
+    openPopup(
+      html`
+        <cycle-count-recheck-popup
+          .inventories="${notTallyInventories}"
+          .customerId="${this.customerId}"
+          @completed="${() => this.grist.fetch()}"
+        ></cycle-count-recheck-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.cycle_count_recheck')
+      }
+    )
+  }
+
   _getCycleCountWSD() {
     return this.grist.dirtyData.records.map(worksheetDetail => {
       return {
@@ -487,11 +522,6 @@ class CycleCountReport extends localize(i18next)(PageView) {
       }
     })
   }
-
-  //test
-  // _recreateCycleCount() {
-  //   openPopup(html` <cycle-count-recreate-popup></cycle-count-recreate-popup> `)
-  // }
 
   async _exportableData() {
     try {

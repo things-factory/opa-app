@@ -858,6 +858,7 @@
   "title.create_transport_order": "배송 지시 생성",
   "title.create_user": "create user",
   "title.create_vas_order": "create vas order",
+  "title.cycle_count": "재고 실사",
   "title.delivery_information": "delivery information",
   "title.delivery_order": "delivery order",
   "title.delivery_order_detail": "delivery order detail",

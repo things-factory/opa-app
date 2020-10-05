@@ -219,7 +219,11 @@ class InventoryCheckList extends localize(i18next)(PageView) {
     filters.push({
       name: 'type',
       operator: 'in',
-      value: [WORKSHEET_TYPE.CYCLE_COUNT.value, WORKSHEET_TYPE.STOCK_TAKE.value]
+      value: [
+        WORKSHEET_TYPE.CYCLE_COUNT.value,
+        WORKSHEET_TYPE.CYCLE_COUNT_RECHECK.value,
+        WORKSHEET_TYPE.STOCK_TAKE.value
+      ]
     })
     const response = await client.query({
       query: gql`

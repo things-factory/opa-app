@@ -2,13 +2,13 @@ import '@things-factory/barcode-ui'
 import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { client, CustomAlert, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { fetchLocationSortingRule } from '../../fetch-location-sorting-rule'
-import { LOCATION_SORTING_RULE, WORKSHEET_STATUS, ORDER_INVENTORY_STATUS } from '../constants'
+import { LOCATION_SORTING_RULE, ORDER_INVENTORY_STATUS, WORKSHEET_STATUS } from '../constants'
 
 const VIEW_TYPE = {
   LOCATION_SELECTED: 'LOCATION_SELECTED',
@@ -553,7 +553,10 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         break
 
       case VIEW_TYPE.INVENTORY_SELECTED:
-        if (this.selectedInventory.completed) {
+        if (
+          this.selectedInventory.completed &&
+          this.selectedInventory.orderInventoryStatus !== ORDER_INVENTORY_STATUS.TERMINATED.value
+        ) {
           actions.push({ title: i18next.t('button.undo'), action: this.undoInventoryCheck.bind(this) })
         } else {
           actions.push({
