@@ -703,7 +703,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       }
 
       if (!worksheetDetail.isPalletized) {
-        _tempObj.palletizingVasId = worksheetDetail.palletizingVasId
+        _tempObj.palletizingVasId = worksheetDetail.palletizingVasId ? worksheetDetail.palletizingVasId : null
         _tempObj.palletQty = worksheetDetail.palletQty
         _tempObj.palletizingDescription = worksheetDetail.palletizingDescription
       }
