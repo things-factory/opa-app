@@ -190,6 +190,7 @@
   "field.inspected_batch_no": "inspected batch no",
   "field.inspected_location": "inspected location",
   "field.inspected_qty": "inspected qty",
+  "field.inspected_status": "inspected status",
   "field.inspected_weight": "inspected weight",
   "field.inventory": "inventory",
   "field.inventory_check_no": "inventory check no",

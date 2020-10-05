@@ -2,6 +2,7 @@ import '@things-factory/barcode-ui'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import { openPopup } from '@things-factory/layout-base'
 import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
@@ -157,6 +158,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           'palletId',
           'product',
           'packingType',
+          'inspectedStatus',
           'inspectedLocation',
           'inspectedQty',
           'inspectedWeight',
@@ -206,6 +208,14 @@ class CycleCountReport extends localize(i18next)(PageView) {
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           imex: { header: i18next.t('field.packing_type'), key: 'packingType', width: 20, type: 'string' },
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'inspectedStatus',
+          header: i18next.t('field.inspected_status'),
+          imex: { header: i18next.t('field.inspected_status'), key: 'inspectedStatus', width: 20, type: 'string' },
           record: { align: 'center' },
           width: 100
         },
@@ -302,6 +312,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
               status
               description
               targetInventory {
+                status
                 inspectedBatchNo
                 inspectedQty
                 inspectedWeight
@@ -372,7 +383,8 @@ class CycleCountReport extends localize(i18next)(PageView) {
               inspectedQty: worksheetDetail.targetInventory.inspectedQty,
               inspectedWeight: worksheetDetail.targetInventory.inspectedWeight,
               inspectedBatchNo: worksheetDetail.targetInventory.inspectedBatchNo,
-              packingType: worksheetDetail.targetInventory.inventory?.packingType || ''
+              packingType: worksheetDetail.targetInventory.inventory?.packingType || '',
+              inspectedStatus: worksheetDetail.targetInventory.status
             }
           })
           .sort(this._compareValues('status', 'desc'))
@@ -475,6 +487,11 @@ class CycleCountReport extends localize(i18next)(PageView) {
       }
     })
   }
+
+  //test
+  // _recreateCycleCount() {
+  //   openPopup(html` <cycle-count-recreate-popup></cycle-count-recreate-popup> `)
+  // }
 
   async _exportableData() {
     try {

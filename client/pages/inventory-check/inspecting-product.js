@@ -477,22 +477,24 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
 
   formatLocations(worksheetDetailInfos) {
     const locations = worksheetDetailInfos.reduce((locations, wsdInfo) => {
-      const idx = locations.findIndex(loc => {
-        if (wsdInfo.inspectedLocation) {
-          return loc.name === wsdInfo.inspectedLocation.name
-        }
-        return loc.name === wsdInfo.location.name
-      })
-      if (idx >= 0) {
-        locations[idx].palletQty++
-        locations[idx].inventories.push(this.formatInventory(wsdInfo))
-      } else {
-        locations.push({
-          id: wsdInfo.inspectedLocation?.id || wsdInfo.location.id,
-          name: wsdInfo.inspectedLocation?.name || wsdInfo.location.name,
-          palletQty: 1,
-          inventories: [this.formatInventory(wsdInfo)]
+      if (wsdInfo.relatedOrderInv.status !== 'MISSING') {
+        const idx = locations.findIndex(loc => {
+          if (wsdInfo.inspectedLocation) {
+            return loc.name === wsdInfo.inspectedLocation.name
+          }
+          return loc.name === wsdInfo.location.name
         })
+        if (idx >= 0) {
+          locations[idx].palletQty++
+          locations[idx].inventories.push(this.formatInventory(wsdInfo))
+        } else {
+          locations.push({
+            id: wsdInfo.inspectedLocation?.id || wsdInfo.location.id,
+            name: wsdInfo.inspectedLocation?.name || wsdInfo.location.name,
+            palletQty: 1,
+            inventories: [this.formatInventory(wsdInfo)]
+          })
+        }
       }
 
       return locations
@@ -840,6 +842,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
 
       if (!response.errors) {
         this.clearView()
+        await CustomAlert({
+          title: i18next.t('title.completed'),
+          text: i18next.t('text.inspection_completed'),
+          confirmButton: { text: i18next.t('button.confirm') }
+        })
       }
     } catch (e) {
       this.showToast(e)
@@ -896,6 +903,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     this.selectedLocation = null
     this.selectedInventory = null
     this.formattedLocations = []
+    this.inputForm.reset()
   }
 
   fillUpForm(form, data) {
