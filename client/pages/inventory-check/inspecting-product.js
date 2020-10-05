@@ -449,6 +449,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               inspectedQty
               inspectedWeight
               inspectedLocation {
+                id
                 name
               }
               description
@@ -487,8 +488,8 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         locations[idx].inventories.push(this.formatInventory(wsdInfo))
       } else {
         locations.push({
-          id: wsdInfo.location.id,
-          name: wsdInfo.location.name,
+          id: wsdInfo.inspectedLocation?.id || wsdInfo.location.id,
+          name: wsdInfo.inspectedLocation?.name || wsdInfo.location.name,
           palletQty: 1,
           inventories: [this.formatInventory(wsdInfo)]
         })
