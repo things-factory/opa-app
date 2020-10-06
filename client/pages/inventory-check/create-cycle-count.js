@@ -219,11 +219,32 @@ class CreateCycleCount extends localize(i18next)(PageView) {
         cancelButton: { text: i18next.t('button.cancel') }
       })
 
-      this.generateCycleCountWorksheet(this.dataGrist.selected[0].id, this.date.value)
-
       if (!result.value) return
 
-      console.log('Request to server to create cycle count worksheet')
+      CustomAlert({
+        title: i18next.t('text.please_wait'),
+        text: i18next.t('text.creating_cycle_count_worksheet'),
+        allowOutsideClick: false,
+        allowEscapeKey: false
+      })
+
+      const worksheetNo = await this.generateCycleCountWorksheet(this.dataGrist.selected[0].id, this.date.value)
+
+      if (worksheetNo) {
+        await CustomAlert({
+          title: i18next.t('title.completed'),
+          text: i18next.t('text.completed_create_cycle_count_worksheet'),
+          confirmButton: { text: i18next.t('button.confirm') }
+        })
+
+        navigate(`worksheet_cycle_count/${worksheetNo}`)
+      } else {
+        CustomAlert({
+          title: i18next.t('title.error'),
+          text: i18next.t('text.create_error'),
+          confirmButton: { text: i18next.t('button.confirm') }
+        })
+      }
     } catch (e) {
       this._showToast(e)
     }
@@ -256,7 +277,9 @@ class CreateCycleCount extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const worksheetNo = response.data.generateCycleCountWorksheet.name
-      navigate(`worksheet_cycle_count/${worksheetNo}`)
+      return worksheetNo
+    } else {
+      return null
     }
   }
 

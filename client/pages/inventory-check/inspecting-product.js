@@ -568,10 +568,8 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         break
 
       case VIEW_TYPE.MISSING_PALLET_SELECTED:
-        actions.push({
-          title: i18next.t('button.relocate'),
-          action: this.relocatePallet.bind(this)
-        })
+        actions.push({ title: i18next.t('button.undo'), action: this.undoInventoryCheck.bind(this) })
+        actions.push({ title: i18next.t('button.relocate'), action: this.relocatePallet.bind(this) })
     }
 
     if (this.locationData.records.every(loc => loc.completed)) {
@@ -858,7 +856,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
 
   renewInventoryGrist() {
     this.selectedLocation = this.locationData.records.find(loc => loc.id === this.selectedLocation.id)
-    this.inventoryData = { records: this.selectedLocation.inventories }
+    this.inventoryData = { records: this.selectedLocation?.inventories || [] }
     this.selectedInventory = null
     this.updateContext()
   }
