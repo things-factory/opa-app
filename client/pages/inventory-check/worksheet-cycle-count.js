@@ -125,7 +125,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           id="grist"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
-          .data="${this.data}"
+          .fetchHandler="${this.fetchWorksheet.bind(this)}"
         ></data-grist>
       </div>
     `
@@ -136,7 +136,8 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
       if (changes.resourceId) {
         this._worksheetNo = changes.resourceId
       }
-      await this.fetchWorksheet()
+      // await this.fetchWorksheet()
+      this.grist.fetch()
       this._updateContext()
       this._updateGristConfig()
     }
@@ -158,7 +159,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           'status'
         ]
       },
-      pagination: { infinite: true },
+      // pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -260,13 +261,14 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  async fetchWorksheet() {
+  async fetchWorksheet({ page, limit }) {
     if (!this._worksheetNo) return
     const response = await client.query({
       query: gql`
         query {
-          worksheet(${gqlBuilder.buildArgs({
-            name: this._worksheetNo
+          worksheetWithPagination(${gqlBuilder.buildArgs({
+            name: this._worksheetNo,
+            pagination: { page, limit }
           })}) {
             status
             inventoryCheck {
@@ -316,7 +318,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
     })
 
     if (!response.errors) {
-      const worksheet = response.data.worksheet
+      const worksheet = response.data.worksheetWithPagination
       const worksheetDetails = worksheet.worksheetDetails
       this._worksheetStatus = worksheet.status
       this._cycleCountNo = (worksheet.inventoryCheck && worksheet.inventoryCheck.name) || ''
