@@ -302,6 +302,7 @@
   "field.your_name": "your name",
   "field.zone": "zone",
 
+  "label.activated": "activated",
   "label.COLLECTION": "COLLECTION",
   "label.DELIVERY": "DELIVERY",
   "label.Location_format": "location format",
@@ -575,6 +576,7 @@
   "label.zone_name": "zone name",
 
   "text.accept_release_order": "accept release order",
+  "text.activate": "activate",
   "text.activate_picking_worksheet": "activate picking worksheet",
   "text.activate_putaway_worksheet": "activate putaway worksheet",
   "text.activate_return_worksheet": "activate return worksheet",
@@ -605,8 +607,8 @@
   "text.collection_order_rejected": "collection order rejected",
   "text.complete_loading": "complete loading",
   "text.complete_unloading": "complete unloading",
+  "text.completed_x": "completed {state.x}",
   "text.completed_collection_order": "completed collection order",
-  "text.completed_create_cycle_count_worksheet": "completed create cycle count worksheet",
   "text.completed_delivery_order": "competed delivery order",
   "text.confirm": "confirm",
   "text.confirm_arrival_notice": "confirm arrival notice",
@@ -619,7 +621,6 @@
   "text.create_cycle_count": "create cycle count",
   "text.create_cycle_count_worksheet": "create cycle count worksheet",
   "text.create_delivery_order": "create delivery order",
-  "text.create_error": "create error",
   "text.create_goods_received_note": "create goods received note",
   "text.create_release_order": "create release order",
   "text.create_vas_order": "create vas order",
@@ -809,6 +810,7 @@
   "text.you_wont_be_able_to_revert_this": "you won't be able to revert this",
   "text.your_work_has_completed": "your work has completed",
   "text.your_working_is_completed": "your task for putaway is done",
+  "text.x_error": "{state.x} error",
 
   "title.add_rule_field": "add rule field",
   "title.adjust_pallet_qty": "adjust pallet qty",

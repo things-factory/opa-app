@@ -416,6 +416,13 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
         return
       }
 
+      CustomAlert({
+        title: i18next.t('text.please_wait'),
+        text: i18next.t('text.activate_cycle_count_worksheet'),
+        allowOutsideClick: false,
+        allowEscapeKey: false
+      })
+
       const response = await client.query({
         query: gql`
           mutation {
@@ -428,11 +435,22 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           }
         `
       })
+
       if (!response.errors) {
-        this._showToast({ message: i18next.t('text.worksheet_activated') })
+        await CustomAlert({
+          title: i18next.t('label.activated'),
+          text: i18next.t('text.completed_x', { state: { x: i18next.t('text.activate_cycle_count_worksheet') } }),
+          confirmButton: { text: i18next.t('button.confirm') }
+        })
         await this.grist.fetch()
         this._updateContext()
         navigate(`inventory_check_list`)
+      } else {
+        CustomAlert({
+          title: i18next.t('title.error'),
+          text: i18next.t('text.x_error', { state: { x: i18next.t('text.activate') } }),
+          confirmButton: { text: i18next.t('button.confirm') }
+        })
       }
     } catch (e) {
       this._showToast(e)
