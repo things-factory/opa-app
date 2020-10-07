@@ -136,7 +136,6 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
       if (changes.resourceId) {
         this._worksheetNo = changes.resourceId
       }
-      // await this.fetchWorksheet()
       this.grist.fetch()
       this._updateContext()
       this._updateGristConfig()
@@ -270,38 +269,26 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
             name: this._worksheetNo,
             pagination: { page, limit }
           })}) {
-            status
-            inventoryCheck {
-              name
-              description
-              executionDate
-            }
-            bizplace {
-              id
-              name
-              description
+            worksheet {
+              status
+              inventoryCheck {
+                name
+                executionDate
+              },
+              bizplace {
+                name
+              }
             }
             worksheetDetails {
               name
-              status
               description
+              status
               targetInventory {
-                inspectedQty
-                inspectedWeight
-                inspectedBatchNo
-                inspectedLocation {
-                  id
-                  name
-                  description
-                }
                 inventory {
-                  palletId
                   batchId
+                  palletId
                   packingType
-                  qty
-                  weight
                   location {
-                    id
                     name
                     description
                   }
@@ -309,17 +296,24 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
                     name
                     description
                   }
+                },
+                inspectedLocation {
+                  name
+                  description
                 }
+                inspectedBatchNo
+                inspectedQty
+                inspectedWeight
               }
             }
+            total
           }
         }
       `
     })
 
     if (!response.errors) {
-      const worksheet = response.data.worksheetWithPagination
-      const worksheetDetails = worksheet.worksheetDetails
+      const { worksheet, worksheetDetails, total } = response.data.worksheetWithPagination
       this._worksheetStatus = worksheet.status
       this._cycleCountNo = (worksheet.inventoryCheck && worksheet.inventoryCheck.name) || ''
 
@@ -328,21 +322,22 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
         cycleCountNo: worksheet.inventoryCheck.name,
         executionDate: worksheet.inventoryCheck.executionDate
       })
-      this.data = {
-        records: worksheetDetails.map(worksheetDetail => {
-          return {
-            ...worksheetDetail.targetInventory.inventory,
-            name: worksheetDetail.name,
-            description: worksheetDetail.description,
-            status: worksheetDetail.status,
-            inspectedLocation: worksheetDetail.targetInventory.inspectedLocation,
-            inspectedQty: worksheetDetail.targetInventory.inspectedQty,
-            inspectedWeight: worksheetDetail.targetInventory.inspectedWeight,
-            inspectedBatchNo: worksheetDetail.targetInventory.inspectedBatchNo,
-            packingType: worksheetDetail.targetInventory.inventory.packingType
-          }
-        })
-      }
+
+      const records = worksheetDetails.map(worksheetDetail => {
+        return {
+          ...worksheetDetail.targetInventory.inventory,
+          name: worksheetDetail.name,
+          description: worksheetDetail.description,
+          status: worksheetDetail.status,
+          inspectedLocation: worksheetDetail.targetInventory.inspectedLocation,
+          inspectedQty: worksheetDetail.targetInventory.inspectedQty,
+          inspectedWeight: worksheetDetail.targetInventory.inspectedWeight,
+          inspectedBatchNo: worksheetDetail.targetInventory.inspectedBatchNo,
+          packingType: worksheetDetail.targetInventory.inventory.packingType
+        }
+      })
+
+      return { records, total }
     }
   }
 
@@ -389,7 +384,6 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
     }
 
     this.config = { ...this.preConfig }
-    this.data = { ...this.data }
   }
 
   _fillupForm(data) {
@@ -436,7 +430,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
       })
       if (!response.errors) {
         this._showToast({ message: i18next.t('text.worksheet_activated') })
-        await this.fetchWorksheet()
+        await this.grist.fetch()
         this._updateContext()
         navigate(`inventory_check_list`)
       }
