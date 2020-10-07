@@ -168,7 +168,6 @@ class CycleCountReport extends localize(i18next)(PageView) {
           'status'
         ]
       },
-      pagination: { infinite: true },
       columns: [
         {
           type: 'gutter',
@@ -290,26 +289,26 @@ class CycleCountReport extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  async fetchWorksheet() {
+  async fetchWorksheet({ page, limit }) {
     if (!this._worksheetNo) return
     const response = await client.query({
       query: gql`
         query {
-          worksheet(${gqlBuilder.buildArgs({
-            name: this._worksheetNo
+          worksheetWithPagination(${gqlBuilder.buildArgs({
+            name: this._worksheetNo,
+            pagination: { page, limit }
           })}) {
-            type
-            status
-            inventoryCheck {
-              name
-              description
-              executionDate
+            worksheet {
+              type
               status
-            }
-            bizplace {
-              id
-              name
-              description
+              inventoryCheck {
+                name
+                executionDate
+                status
+              }
+              bizplace {
+                name
+              }
             }
             worksheetDetails {
               name
@@ -344,16 +343,17 @@ class CycleCountReport extends localize(i18next)(PageView) {
                 }
               }
             }
+            total
           }
         }
       `
     })
 
     if (!response.errors) {
-      const worksheet = response.data.worksheet
+      const worksheet = response.data.worksheetWithPagination.worksheet
       this.cycleCountType = worksheet.type
       this.customerId = worksheet.bizplace.id
-      const worksheetDetails = worksheet.worksheetDetails
+      const worksheetDetails = response.data.worksheetWithPagination.worksheetDetails
       const tallyInv = worksheetDetails.filter(wd => wd.status === WORKSHEET_STATUS.DONE.value)
       const notTallyInv = worksheetDetails.filter(wd => wd.status === WORKSHEET_STATUS.NOT_TALLY.value)
       const adjustedInv = worksheetDetails.filter(wd => wd.status === WORKSHEET_STATUS.ADJUSTED.value)
@@ -372,33 +372,33 @@ class CycleCountReport extends localize(i18next)(PageView) {
         status: this._reportStatus,
         inventoryAccuracy: accuracyInv
       })
-      let data = {
-        records: worksheetDetails
-          .map(worksheetDetail => {
-            return {
-              ...worksheetDetail.targetInventory.inventory,
-              name: worksheetDetail.name,
-              description: worksheetDetail.description,
-              productName:
-                worksheetDetail.targetInventory.inventory.product.name +
-                `(` +
-                worksheetDetail.targetInventory.inventory.product.description +
-                `)`,
-              locationName: worksheetDetail.targetInventory.inventory.location.name,
-              status: worksheetDetail.status,
-              inspectedLocation: worksheetDetail.targetInventory.inspectedLocation?.name,
-              inspectedQty: worksheetDetail.targetInventory.inspectedQty,
-              inspectedWeight: worksheetDetail.targetInventory.inspectedWeight,
-              inspectedBatchNo: worksheetDetail.targetInventory.inspectedBatchNo,
-              packingType: worksheetDetail.targetInventory.inventory?.packingType || '',
-              inspectedStatus: worksheetDetail.targetInventory.status,
-              orderInventoryId: worksheetDetail.targetInventory.id
-            }
-          })
-          .sort(this._compareValues('status', 'desc'))
-      }
+      const records = worksheetDetails
+        .map(worksheetDetail => {
+          return {
+            ...worksheetDetail.targetInventory.inventory,
+            name: worksheetDetail.name,
+            description: worksheetDetail.description,
+            productName:
+              worksheetDetail.targetInventory.inventory.product.name +
+              `(` +
+              worksheetDetail.targetInventory.inventory.product.description +
+              `)`,
+            locationName: worksheetDetail.targetInventory.inventory.location.name,
+            status: worksheetDetail.status,
+            inspectedLocation: worksheetDetail.targetInventory.inspectedLocation?.name,
+            inspectedQty: worksheetDetail.targetInventory.inspectedQty,
+            inspectedWeight: worksheetDetail.targetInventory.inspectedWeight,
+            inspectedBatchNo: worksheetDetail.targetInventory.inspectedBatchNo,
+            packingType: worksheetDetail.targetInventory.inventory?.packingType || '',
+            inspectedStatus: worksheetDetail.targetInventory.status,
+            orderInventoryId: worksheetDetail.targetInventory.id
+          }
+        })
+        .sort(this._compareValues('status', 'desc'))
+
       this._updateContext()
-      return data
+      const total = response.data.worksheetWithPagination.total
+      return { records, total }
     }
   }
 
@@ -407,13 +407,13 @@ class CycleCountReport extends localize(i18next)(PageView) {
 
     if (this._reportStatus === ORDER_STATUS.PENDING_REVIEW.value) {
       this._actions.push({ title: i18next.t('button.adjust_inventory'), action: this._adjustInventory.bind(this) })
-    }
 
-    if (this.cycleCountType === WORKSHEET_TYPE.CYCLE_COUNT.value) {
-      this._actions.push({
-        title: i18next.t('button.reject'),
-        action: this.openCycleCountRecheckPopup.bind(this)
-      })
+      if (this.cycleCountType === WORKSHEET_TYPE.CYCLE_COUNT.value) {
+        this._actions.push({
+          title: i18next.t('button.reject'),
+          action: this.openCycleCountRecheckPopup.bind(this)
+        })
+      }
     }
 
     this._actions.push({ title: i18next.t('button.back'), action: () => history.back() })
@@ -485,7 +485,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
       })
       if (!response.errors) {
         this._showToast({ message: i18next.t('text.inventory_has_been_adjusted') })
-        await this.fetchWorksheet()
+        await this.grist.fetch()
         this._updateContext()
         navigate(`inventory_check_list`)
       }
@@ -533,7 +533,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           })
       ]
 
-      let data = (await this.fetchWorksheet()).records
+      let data = this.grist.dirtyData.records
 
       return { header, data }
     } catch (e) {

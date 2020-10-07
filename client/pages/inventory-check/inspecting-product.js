@@ -701,15 +701,18 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
 
     let records = []
     if (selectedWarehouseName && selectedZone && (this.selectedRow || this.selectedColumn)) {
-      records = this.formattedLocations.filter(({ warehouse, zone, row, column }) => {
-        if (warehouse.name === selectedWarehouseName && zone === selectedZone) {
-          if (this.selectedRow && this.selectedColumn) return row === this.selectedRow && column === this.selectedColumn
-          if (this.selectedRow) return row === this.selectedRow
-          if (this.selectedColumn) return column === this.selectedColumn
-        } else {
-          return false
-        }
-      })
+      records = this.formattedLocations
+        .filter(({ warehouse, zone, row, column }) => {
+          if (warehouse.name === selectedWarehouseName && zone === selectedZone) {
+            if (this.selectedRow && this.selectedColumn)
+              return row === this.selectedRow && column === this.selectedColumn
+            if (this.selectedRow) return row === this.selectedRow
+            if (this.selectedColumn) return column === this.selectedColumn
+          } else {
+            return false
+          }
+        })
+        .sort(record => (record.completed ? 1 : -1))
     }
 
     this.rows = rows
