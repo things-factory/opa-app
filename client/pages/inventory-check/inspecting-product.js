@@ -28,7 +28,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       selectedInventory: Object,
       viewType: String,
       missingInventoryConfig: Object,
-      missingInventoryData: Object
+      missingInventoryData: Object,
+      warehouses: Array,
+      zones: Array,
+      rows: Array,
+      columns: Array
     }
   }
 
@@ -131,6 +135,36 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
 
       <div class="grist">
         <div class="left-column">
+          <form id="condition-form" class="multi-column-form" @change="${this.fillUpGrist.bind(this)}">
+            <fieldset>
+              <label>${i18next.t('field.warehouse')}</label>
+              <select name="warehouse">
+                <option></option>
+                ${this.warehouses.map(warehouse => html` <option>${warehouse}</option> `)}
+              </select>
+
+              <label>${i18next.t('field.zone')}</label>
+              <select name="zone">
+                <option></option>
+                ${this.zones.map(zone => html`<option>${zone}</option>`)}
+              </select>
+
+              <label>${i18next.t('field.row')}</label>
+              <select name="row">
+                <option selected></option>
+                ${this.rows.map(row => html`<option ?selected="${row === this.selectedRow}">${row}</option>`)}
+              </select>
+
+              <label>${i18next.t('field.column')}</label>
+              <select name="column">
+                <option selected></option>
+                ${this.columns.map(
+                  column => html`<option ?selected="${column === this.selectedColumn}">${column}</option>`
+                )}
+              </select>
+            </fieldset>
+          </form>
+
           <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.location')}</h2>
           <data-grist
             id="location-grist"
@@ -234,6 +268,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     super()
     this.locationData = { records: [] }
     this.inventoryData = { records: [] }
+    this.formattedLocations = []
+    this.warehouses = []
+    this.zones = []
+    this.rows = []
+    this.columns = []
   }
 
   get context() {
@@ -248,6 +287,26 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
 
   get inputForm() {
     return this.renderRoot.querySelector('form#input-form')
+  }
+
+  get conditionForm() {
+    return this.renderRoot.querySelector('form#condition-form')
+  }
+
+  get warehouseSelector() {
+    return this.conditionForm.querySelector('select[name=warehouse]')
+  }
+
+  get zoneSelector() {
+    return this.conditionForm.querySelector('select[name=zone]')
+  }
+
+  get rowSelector() {
+    return this.conditionForm.querySelector('select[name=row]')
+  }
+
+  get columnSelector() {
+    return this.conditionForm.querySelector('select[name=column]')
   }
 
   get cycleCountNoInput() {
@@ -269,12 +328,15 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
   get inspectedQtyInput() {
     return this.renderRoot.querySelector('input[name=inspectedQty]')
   }
+
   get inspectedQtyInput() {
     return this.renderRoot.querySelector('input[name=inspectedQty]')
   }
+
   get inspectedWeightInput() {
     return this.renderRoot.querySelector('input[name=inspectedWeight]')
   }
+
   get inspectedWeightInput() {
     return this.renderRoot.querySelector('input[name=inspectedWeight]')
   }
@@ -451,11 +513,23 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               inspectedLocation {
                 id
                 name
+                warehouse {
+                  name
+                }
+                zone
+                column
+                row
               }
               description
               location {
                 id
                 name
+                warehouse {
+                  name
+                }
+                zone
+                column
+                row
               }
               relatedOrderInv {
                 status
@@ -470,8 +544,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       const worksheetInfo = response.data.cycleCountWorksheet.worksheetInfo
       const worksheetDetailInfos = response.data.cycleCountWorksheet.worksheetDetailInfos
       this.fillUpForm(this.infoForm, worksheetInfo)
-      this.locationData = { records: this.formatLocations(worksheetDetailInfos) }
+      this.formattedLocations = this.formatLocations(worksheetDetailInfos)
       this.missingInventoryData = { records: this.formatMissingInventories(worksheetDetailInfos) }
+      this.fillUpGrist()
     }
   }
 
@@ -492,7 +567,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
             id: wsdInfo.inspectedLocation?.id || wsdInfo.location.id,
             name: wsdInfo.inspectedLocation?.name || wsdInfo.location.name,
             palletQty: 1,
-            inventories: [this.formatInventory(wsdInfo)]
+            inventories: [this.formatInventory(wsdInfo)],
+            warehouse: wsdInfo.inspectedLocation?.warehouse || wsdInfo.location.warehouse,
+            zone: wsdInfo.inspectedLocation?.zone || wsdInfo.location.zone,
+            column: wsdInfo.inspectedLocation?.column || wsdInfo.location.column,
+            row: wsdInfo.inspectedLocation?.row || wsdInfo.location.row
           })
         }
       }
@@ -516,8 +595,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       location.inventories.sort((a, b) => a.completed - b.completed)
     })
 
-    this.formattedLocations = locations
-    return this.formattedLocations
+    return locations
   }
 
   formatInventory(wsdInfo) {
@@ -542,37 +620,141 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       .map(wsdInfo => this.formatInventory(wsdInfo))
   }
 
+  fillUpGrist() {
+    this.locationData = { records: [] }
+    this.inventoryData = { records: [] }
+
+    const selectedWarehouseName = this.warehouseSelector.value
+    const selectedZone = this.zoneSelector.value
+    this.selectedRow = this.rowSelector.value
+    this.selectedColumn = this.columnSelector.value
+
+    this.warehouses = Array.from(new Set(this.formattedLocations.map(loc => loc.warehouse.name).sort()))
+
+    if (selectedWarehouseName) {
+      this.zones = Array.from(
+        new Set(
+          this.formattedLocations
+            .filter(loc => loc.warehouse.name === selectedWarehouseName)
+            .map(loc => loc.zone)
+            .sort()
+        )
+      )
+    } else {
+      this.zones = []
+    }
+
+    let rows = []
+    let columns = []
+
+    if (selectedWarehouseName && selectedZone) {
+      rows = Array.from(
+        new Set(
+          this.formattedLocations
+            .filter(loc => loc.warehouse.name === selectedWarehouseName && loc.zone === selectedZone)
+            .map(loc => loc.row)
+            .sort()
+        )
+      )
+
+      columns = Array.from(
+        new Set(
+          this.formattedLocations
+            .filter(loc => loc.warehouse.name === selectedWarehouseName && loc.zone === selectedZone)
+            .map(loc => loc.column)
+            .sort()
+        )
+      )
+    }
+
+    if (this.selectedRow) {
+      columns = Array.from(
+        new Set(
+          this.formattedLocations
+            .filter(
+              loc =>
+                loc.warehouse.name === selectedWarehouseName &&
+                loc.zone === selectedZone &&
+                loc.row === this.selectedRow
+            )
+            .map(loc => loc.column)
+            .sort()
+        )
+      )
+    }
+
+    if (this.selectedColumn) {
+      rows = Array.from(
+        new Set(
+          this.formattedLocations
+            .filter(
+              loc =>
+                loc.warehouse.name === selectedWarehouseName &&
+                loc.zone === selectedZone &&
+                loc.column === this.selectedColumn
+            )
+            .map(loc => loc.row)
+            .sort()
+        )
+      )
+    }
+
+    let records = []
+    if (selectedWarehouseName && selectedZone && (this.selectedRow || this.selectedColumn)) {
+      records = this.formattedLocations.filter(({ warehouse, zone, row, column }) => {
+        if (warehouse.name === selectedWarehouseName && zone === selectedZone) {
+          if (this.selectedRow && this.selectedColumn) return row === this.selectedRow && column === this.selectedColumn
+          if (this.selectedRow) return row === this.selectedRow
+          if (this.selectedColumn) return column === this.selectedColumn
+        } else {
+          return false
+        }
+      })
+    }
+
+    this.rows = rows
+    this.columns = columns
+    this.locationData = { records }
+  }
+
   updateContext(type) {
     let actions = []
     switch (type) {
       case VIEW_TYPE.LOCATION_SELECTED:
-        actions.push({
-          title: i18next.t('button.add_x', { state: { x: i18next.t('label.pallet') } }),
-          action: this.addExtraPallet.bind(this)
-        })
+        if (this.selectedLocation) {
+          actions.push({
+            title: i18next.t('button.add_x', { state: { x: i18next.t('label.pallet') } }),
+            action: this.addExtraPallet.bind(this)
+          })
+        }
         break
 
       case VIEW_TYPE.INVENTORY_SELECTED:
-        if (
-          this.selectedInventory.completed &&
-          this.selectedInventory.orderInventoryStatus !== ORDER_INVENTORY_STATUS.TERMINATED.value
-        ) {
-          actions.push({ title: i18next.t('button.undo'), action: this.undoInventoryCheck.bind(this) })
-        } else {
-          actions.push({
-            title: i18next.t('button.check_missing_x', { state: { x: i18next.t('label.pallet') } }),
-            action: this.checkMissingPallet.bind(this)
-          })
-          actions.push({ title: i18next.t('button.check'), action: this.submitInventoryCheck.bind(this) })
+        if (this.selectedInventory) {
+          if (
+            this.selectedInventory.completed &&
+            this.selectedInventory.orderInventoryStatus !== ORDER_INVENTORY_STATUS.TERMINATED.value
+          ) {
+            actions.push({ title: i18next.t('button.undo'), action: this.undoInventoryCheck.bind(this) })
+          } else {
+            actions.push({
+              title: i18next.t('button.check_missing_x', { state: { x: i18next.t('label.pallet') } }),
+              action: this.checkMissingPallet.bind(this)
+            })
+            actions.push({ title: i18next.t('button.check'), action: this.submitInventoryCheck.bind(this) })
+          }
         }
         break
 
       case VIEW_TYPE.MISSING_PALLET_SELECTED:
-        actions.push({ title: i18next.t('button.undo'), action: this.undoInventoryCheck.bind(this) })
-        actions.push({ title: i18next.t('button.relocate'), action: this.relocatePallet.bind(this) })
+        if (this.selectedInventory) {
+          actions.push({ title: i18next.t('button.undo'), action: this.undoInventoryCheck.bind(this) })
+          actions.push({ title: i18next.t('button.relocate'), action: this.relocatePallet.bind(this) })
+        }
+        break
     }
 
-    if (this.locationData.records.every(loc => loc.completed)) {
+    if (this.formattedLocations?.length && this.formattedLocations.every(loc => loc.completed)) {
       actions.push({
         title: i18next.t('button.complete'),
         action: this.completeCycleCount.bind(this)
@@ -625,22 +807,10 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         let { inspectedBatchNo, inspectedQty, inspectedWeight } = Object.fromEntries(
           new FormData(this.inputForm).entries()
         )
-        inspectedQty = Number(inspectedQty)
-        inspectedWeight = Number(inspectedWeight)
 
-        inventory = {
-          ...inventory,
-          inspectedBatchNo,
-          inspectedQty,
-          inspectedWeight
-        }
-
-        // this.selectedInventory = {
-        //   ...inventory,
-        //   inspectedBatchNo,
-        //   inspectedQty,
-        //   inspectedWeight
-        // }
+        inventory.inspectedBatchNo = inspectedBatchNo
+        inventory.inspectedQty = Number(inspectedQty)
+        inventory.inspectedWeight = Number(inspectedWeight)
 
         this.selectedInventory = inventory
         await this.relocatePallet()
@@ -855,7 +1025,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   renewInventoryGrist() {
-    this.selectedLocation = this.locationData.records.find(loc => loc.id === this.selectedLocation.id)
+    this.selectedLocation = this.formattedLocations.find(loc => loc.id === this.selectedLocation.id)
     this.inventoryData = { records: this.selectedLocation?.inventories || [] }
     this.selectedInventory = null
     this.updateContext()
@@ -905,6 +1075,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     this.selectedInventory = null
     this.formattedLocations = []
     this.inputForm.reset()
+    this.conditionForm.reset()
   }
 
   fillUpForm(form, data) {
