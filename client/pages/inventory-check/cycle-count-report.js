@@ -307,6 +307,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
                 status
               }
               bizplace {
+                id
                 name
               }
             }

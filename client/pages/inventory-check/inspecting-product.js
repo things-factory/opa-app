@@ -1005,6 +1005,13 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
 
     if (!result.value) return
 
+    CustomAlert({
+      title: i18next.t('text.please_wait'),
+      text: i18next.t('text.completing_inspection'),
+      allowOutsideClick: false,
+      allowEscapeKey: false
+    })
+
     try {
       const response = await client.query({
         query: gql`
@@ -1022,7 +1029,13 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         this.updateContext()
         await CustomAlert({
           title: i18next.t('title.completed'),
-          text: i18next.t('text.inspection_completed'),
+          text: i18next.t('text.inspection_is_completed'),
+          confirmButton: { text: i18next.t('button.confirm') }
+        })
+      } else {
+        CustomAlert({
+          title: i18next.t('title.error'),
+          text: i18next.t('text.x_error', { state: { x: i18next.t('text.inspection') } }),
           confirmButton: { text: i18next.t('button.confirm') }
         })
       }
