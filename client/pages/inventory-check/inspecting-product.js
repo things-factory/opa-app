@@ -55,7 +55,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
 
         .left-column {
           flex: 1;
-          overflow: auto;
+          overflow: hidden;
           display: flex;
           flex-direction: column;
         }
