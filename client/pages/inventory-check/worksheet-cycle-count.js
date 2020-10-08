@@ -97,11 +97,14 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
         <form class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.cycle_count')}</legend>
+            <label>${i18next.t('label.customer')}</label>
+            <input name="bizplace" readonly />
+
             <label>${i18next.t('label.cycle_count_no')}</label>
             <input name="cycleCountNo" readonly />
 
             <label>${i18next.t('label.execute_date')}</label>
-            <input name="executionDate" readonly />
+            <input type="date" name="executionDate" readonly />
 
             <label>${i18next.t('label.status')}</label>
             <select name="status" disabled>
@@ -122,7 +125,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           id="grist"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
-          .data="${this.data}"
+          .fetchHandler="${this.fetchWorksheet.bind(this)}"
         ></data-grist>
       </div>
     `
@@ -133,7 +136,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
       if (changes.resourceId) {
         this._worksheetNo = changes.resourceId
       }
-      await this.fetchWorksheet()
+      await this.grist.fetch()
       this._updateContext()
       this._updateGristConfig()
     }
@@ -155,7 +158,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           'status'
         ]
       },
-      pagination: { infinite: true },
+      // pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -257,41 +260,35 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  async fetchWorksheet() {
+  async fetchWorksheet({ page, limit }) {
     if (!this._worksheetNo) return
     const response = await client.query({
       query: gql`
         query {
-          worksheet(${gqlBuilder.buildArgs({
-            name: this._worksheetNo
+          worksheetWithPagination(${gqlBuilder.buildArgs({
+            name: this._worksheetNo,
+            pagination: { page, limit }
           })}) {
-            status
-            inventoryCheck {
-              name
-              description
-              executionDate
+            worksheet {
+              status
+              inventoryCheck {
+                name
+                executionDate
+              },
+              bizplace {
+                name
+              }
             }
             worksheetDetails {
               name
-              status
               description
+              status
               targetInventory {
-                inspectedQty
-                inspectedWeight
-                inspectedBatchNo
-                inspectedLocation {
-                  id
-                  name
-                  description
-                }
                 inventory {
-                  palletId
                   batchId
+                  palletId
                   packingType
-                  qty
-                  weight
                   location {
-                    id
                     name
                     description
                   }
@@ -299,17 +296,24 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
                     name
                     description
                   }
+                },
+                inspectedLocation {
+                  name
+                  description
                 }
+                inspectedBatchNo
+                inspectedQty
+                inspectedWeight
               }
             }
+            total
           }
         }
       `
     })
 
     if (!response.errors) {
-      const worksheet = response.data.worksheet
-      const worksheetDetails = worksheet.worksheetDetails
+      const { worksheet, worksheetDetails, total } = response.data.worksheetWithPagination
       this._worksheetStatus = worksheet.status
       this._cycleCountNo = (worksheet.inventoryCheck && worksheet.inventoryCheck.name) || ''
 
@@ -318,21 +322,22 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
         cycleCountNo: worksheet.inventoryCheck.name,
         executionDate: worksheet.inventoryCheck.executionDate
       })
-      this.data = {
-        records: worksheetDetails.map(worksheetDetail => {
-          return {
-            ...worksheetDetail.targetInventory.inventory,
-            name: worksheetDetail.name,
-            description: worksheetDetail.description,
-            status: worksheetDetail.status,
-            inspectedLocation: worksheetDetail.targetInventory.inspectedLocation,
-            inspectedQty: worksheetDetail.targetInventory.inspectedQty,
-            inspectedWeight: worksheetDetail.targetInventory.inspectedWeight,
-            inspectedBatchNo: worksheetDetail.targetInventory.inspectedBatchNo,
-            packingType: worksheetDetail.targetInventory.inventory.packingType
-          }
-        })
-      }
+
+      const records = worksheetDetails.map(worksheetDetail => {
+        return {
+          ...worksheetDetail.targetInventory.inventory,
+          name: worksheetDetail.name,
+          description: worksheetDetail.description,
+          status: worksheetDetail.status,
+          inspectedLocation: worksheetDetail.targetInventory.inspectedLocation,
+          inspectedQty: worksheetDetail.targetInventory.inspectedQty,
+          inspectedWeight: worksheetDetail.targetInventory.inspectedWeight,
+          inspectedBatchNo: worksheetDetail.targetInventory.inspectedBatchNo,
+          packingType: worksheetDetail.targetInventory.inventory.packingType
+        }
+      })
+
+      return { records, total }
     }
   }
 
@@ -379,7 +384,6 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
     }
 
     this.config = { ...this.preConfig }
-    this.data = { ...this.data }
   }
 
   _fillupForm(data) {
@@ -412,6 +416,13 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
         return
       }
 
+      CustomAlert({
+        title: i18next.t('text.please_wait'),
+        text: i18next.t('text.activate_cycle_count_worksheet'),
+        allowOutsideClick: false,
+        allowEscapeKey: false
+      })
+
       const response = await client.query({
         query: gql`
           mutation {
@@ -424,11 +435,22 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           }
         `
       })
+
       if (!response.errors) {
-        this._showToast({ message: i18next.t('text.worksheet_activated') })
-        await this.fetchWorksheet()
+        await CustomAlert({
+          title: i18next.t('label.activated'),
+          text: i18next.t('text.completed_x', { state: { x: i18next.t('text.activate_cycle_count_worksheet') } }),
+          confirmButton: { text: i18next.t('button.confirm') }
+        })
+        await this.grist.fetch()
         this._updateContext()
         navigate(`inventory_check_list`)
+      } else {
+        CustomAlert({
+          title: i18next.t('title.error'),
+          text: i18next.t('text.x_error', { state: { x: i18next.t('text.activate') } }),
+          confirmButton: { text: i18next.t('button.confirm') }
+        })
       }
     } catch (e) {
       this._showToast(e)
