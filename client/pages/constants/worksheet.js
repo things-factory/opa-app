@@ -13,6 +13,10 @@ export const WORKSHEET_TYPE = {
     name: i18next.t('label.cycle_count'),
     value: 'CYCLE_COUNT'
   },
+  CYCLE_COUNT_RECHECK: {
+    name: i18next.t('label.cycle_count_recheck'),
+    value: 'CYCLE_COUNT_RECHECK'
+  },
   STOCK_TAKE: {
     name: i18next.t('label.stock_take'),
     value: 'STOCK_TAKE'

@@ -69,6 +69,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
 
   async pageInitialized() {
     const _worksheetStatus = await getCodeByName('WORKSHEET_STATUS')
+
     this._bizplaces = [...(await this._fetchBizplaceList())]
 
     this._searchFields = [
@@ -103,7 +104,19 @@ class InventoryCheckList extends localize(i18next)(PageView) {
       },
       {
         name: 'status',
-        label: i18next.t('label.status'),
+        label: i18next.t('field.order_status'),
+        type: 'select',
+        options: [
+          { value: '' },
+          ..._worksheetStatus.map(status => {
+            return { name: i18next.t(`label.${status.description}`), value: status.name }
+          })
+        ],
+        props: { searchOper: 'eq' }
+      },
+      {
+        name: 'taskStatus',
+        label: i18next.t('field.task_status'),
         type: 'select',
         options: [
           { value: '' },
@@ -117,7 +130,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
 
     this.config = {
       list: {
-        fields: ['inventoryCheck', 'type', 'Customer', 'executionDate', 'status', 'startedAt', 'endedAt']
+        fields: ['inventoryCheck', 'type', 'Customer', 'executionDate', 'status', 'taskStatus', 'startedAt', 'endedAt']
       },
       rows: { appendable: false },
       columns: [
@@ -173,7 +186,15 @@ class InventoryCheckList extends localize(i18next)(PageView) {
         {
           type: 'string',
           name: 'status',
-          header: i18next.t('field.status'),
+          header: i18next.t('field.order_status'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 120
+        },
+        {
+          type: 'string',
+          name: 'taskStatus',
+          header: i18next.t('field.task_status'),
           record: { align: 'center' },
           sortable: true,
           width: 120
@@ -219,8 +240,13 @@ class InventoryCheckList extends localize(i18next)(PageView) {
     filters.push({
       name: 'type',
       operator: 'in',
-      value: [WORKSHEET_TYPE.CYCLE_COUNT.value, WORKSHEET_TYPE.STOCK_TAKE.value]
+      value: [
+        WORKSHEET_TYPE.CYCLE_COUNT.value,
+        WORKSHEET_TYPE.CYCLE_COUNT_RECHECK.value,
+        WORKSHEET_TYPE.STOCK_TAKE.value
+      ]
     })
+
     const response = await client.query({
       query: gql`
         query {
@@ -268,6 +294,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
             return {
               ...item,
               executionDate: item.inventoryCheck && item.inventoryCheck.executionDate,
+              taskStatus: item.status,
               status: item.inventoryCheck && item.inventoryCheck.status
             }
           }) || {}
