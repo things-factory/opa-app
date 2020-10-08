@@ -136,7 +136,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
       if (changes.resourceId) {
         this._worksheetNo = changes.resourceId
       }
-      this.grist.fetch()
+      await this.grist.fetch()
       this._updateContext()
       this._updateGristConfig()
     }

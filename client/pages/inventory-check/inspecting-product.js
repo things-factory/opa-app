@@ -29,6 +29,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       viewType: String,
       missingInventoryConfig: Object,
       missingInventoryData: Object,
+      formattedLocations: Array,
       warehouses: Array,
       zones: Array,
       rows: Array,
@@ -138,25 +139,25 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           <form id="condition-form" class="multi-column-form" @change="${this.fillUpGrist.bind(this)}">
             <fieldset>
               <label>${i18next.t('field.warehouse')}</label>
-              <select name="warehouse">
+              <select name="warehouse" .disabled="${!this.formattedLocations?.length}">
                 <option></option>
                 ${this.warehouses.map(warehouse => html` <option>${warehouse}</option> `)}
               </select>
 
               <label>${i18next.t('field.zone')}</label>
-              <select name="zone">
+              <select name="zone" .disabled="${!this.formattedLocations?.length}">
                 <option></option>
                 ${this.zones.map(zone => html`<option>${zone}</option>`)}
               </select>
 
               <label>${i18next.t('field.row')}</label>
-              <select name="row">
+              <select name="row" .disabled="${!this.formattedLocations?.length}">
                 <option selected></option>
                 ${this.rows.map(row => html`<option ?selected="${row === this.selectedRow}">${row}</option>`)}
               </select>
 
               <label>${i18next.t('field.column')}</label>
-              <select name="column">
+              <select name="column" .disabled="${!this.formattedLocations?.length}">
                 <option selected></option>
                 ${this.columns.map(
                   column => html`<option ?selected="${column === this.selectedColumn}">${column}</option>`
@@ -547,6 +548,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       this.formattedLocations = this.formatLocations(worksheetDetailInfos)
       this.missingInventoryData = { records: this.formatMissingInventories(worksheetDetailInfos) }
       this.fillUpGrist()
+      this.updateContext()
     }
   }
 
@@ -1015,7 +1017,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!response.errors) {
+        this.infoForm.reset()
         this.clearView()
+        this.updateContext()
         await CustomAlert({
           title: i18next.t('title.completed'),
           text: i18next.t('text.inspection_completed'),
@@ -1078,7 +1082,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     this.selectedInventory = null
     this.formattedLocations = []
     this.inputForm.reset()
-    this.conditionForm.reset()
+    this.conditionForm?.reset()
   }
 
   fillUpForm(form, data) {
