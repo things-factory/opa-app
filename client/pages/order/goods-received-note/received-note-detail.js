@@ -3,11 +3,13 @@ import { navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell
 import { ScrollbarStyles } from '@things-factory/styles'
 import { getPathInfo } from '@things-factory/utils'
 import { css, html } from 'lit-element'
+import { ORDER_STATUS } from '../../constants'
 
 class ReceivedNoteDetail extends localize(i18next)(PageView) {
   static get properties() {
     return {
-      _grnNo: String
+      _grnNo: String,
+      _status: String
     }
   }
 
@@ -50,6 +52,7 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
 
       if (this._grnNo) {
         await this._fetchGRNTemplate()
+        await this._fetchGRN()
       }
 
       this._updateContext()
@@ -66,8 +69,37 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
     }
   }
 
+  async _fetchGRN() {
+    if (!this._grnNo) return
+    const response = await client.query({
+      query: gql`
+        query {
+          goodsReceivalNote(${gqlBuilder.buildArgs({
+            name: this._grnNo
+          })}) {
+            id
+            name
+            status
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      const grn = response.data.goodsReceivalNote
+      this._status = grn.status
+    }
+  }
+
   _updateContext() {
+    this._actions = []
+
+    if (this._status === ORDER_STATUS.READY_TO_SEND.value) {
+      this._actions = [...this._actions, { title: i18next.t('button.send'), action: this._sendGrn.bind(this) }]
+    }
+
     this._actions = [
+      ...this._actions,
       {
         title: i18next.t('button.print'),
         action: () => {
@@ -81,6 +113,40 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
       type: UPDATE_CONTEXT,
       context: this.context
     })
+  }
+
+  async _sendGrn() {
+    try {
+      const result = await CustomAlert({
+        title: i18next.t('title.are_you_sure'),
+        text: i18next.t('text.send_goods_received_note'),
+        confirmButton: { text: i18next.t('button.confirm') },
+        cancelButton: { text: i18next.t('button.cancel') }
+      })
+
+      if (!result.value) {
+        return
+      }
+
+      const response = await client.query({
+        query: gql`
+        mutation {
+          sendGoodsReceivalNote(${gqlBuilder.buildArgs({
+            name: this._grnNo
+          })}) {
+            name
+          }
+        }
+      `
+      })
+
+      if (!response.errors) {
+        navigate('received_note_list')
+        this._showToast({ message: i18next.t('text.goods_received_note_has_been_sent_successfully') })
+      }
+    } catch (e) {
+      this._showToast(e)
+    }
   }
 
   _showToast({ type, message }) {
