@@ -221,8 +221,8 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
         },
         {
           type: 'object',
-          name: 'updater',
-          header: i18next.t('field.updater'),
+          name: 'creator',
+          header: i18next.t('field.created_by'),
           record: { align: 'left' },
           sortable: true,
           width: 200
@@ -264,6 +264,11 @@ class ArrivalNoticeList extends localize(i18next)(PageView) {
               createdAt
               updatedAt
               updater {
+                id
+                name
+                description
+              }
+              creator {
                 id
                 name
                 description

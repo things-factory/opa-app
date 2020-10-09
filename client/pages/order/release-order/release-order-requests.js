@@ -240,8 +240,8 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
         },
         {
           type: 'object',
-          name: 'updater',
-          header: i18next.t('field.updater'),
+          name: 'acceptedBy',
+          header: i18next.t('field.accepted_by'),
           record: { align: 'left' },
           sortable: true,
           width: 200
@@ -285,7 +285,7 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
               }
               exportOption
               updatedAt
-              updater {
+              acceptedBy {
                 id
                 name
                 description

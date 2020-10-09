@@ -129,13 +129,6 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
         props: { searchOper: 'eq' },
         attrs: ['indeterminate']
       },
-      // {
-      //   label: i18next.t('field.import_cargo'),
-      //   name: 'importCargo',
-      //   type: 'checkbox',
-      //   props: { searchOper: 'eq' },
-      //   attrs: ['indeterminate']
-      // },
       {
         label: i18next.t('field.own_transport'),
         name: 'ownTransport',
@@ -258,7 +251,7 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
           type: 'string',
           name: 'status',
           header: i18next.t('field.status'),
-          record: { align: 'left' },
+          record: { align: 'center' },
           sortable: true,
           width: 120
         },
@@ -272,8 +265,8 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
         },
         {
           type: 'object',
-          name: 'updater',
-          header: i18next.t('field.updater'),
+          name: 'acceptedBy',
+          header: i18next.t('field.accepted_by'),
           record: { align: 'left' },
           sortable: true,
           width: 200
@@ -317,7 +310,8 @@ class ArrivalNoticeRequests extends localize(i18next)(PageView) {
               }
               importCargo
               updatedAt
-              updater {
+              acceptedBy {
+                id
                 name
                 description
               }
