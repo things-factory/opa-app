@@ -1,5 +1,5 @@
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
+import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import gql from 'graphql-tag'
 import { ScrollbarStyles } from '@things-factory/styles'
 import { getPathInfo, gqlBuilder } from '@things-factory/utils'
