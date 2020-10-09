@@ -807,6 +807,7 @@
   "text.goods_received_in_good_order_condition": "goods received in good order condition",
   "text.goods_received_note_uploaded": "text.goods_received_note_uploaded",
   "text.goods_received_note_has_been_sent_successfully": "GRN has been sent successfully",
+  "text.goods_received_note_has_been_received": "GRN has been marked received",
   "text.info_created_successfully": "info created successfully",
   "text.info_delete_successfully": "info delete successfully",
   "text.info_update_successfully": "info update successfully",
