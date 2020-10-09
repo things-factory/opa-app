@@ -1,4 +1,5 @@
 import { Attachment, createAttachments } from '@things-factory/attachment-base'
+import { Domain } from '@things-factory/shell'
 import { User } from '@things-factory/auth-base'
 import { Bizplace, getMyBizplace } from '@things-factory/biz-base'
 import { Product } from '@things-factory/product-base'
@@ -23,8 +24,7 @@ export const addReleaseGoodProducts = {
   async addReleaseGoodProducts(_: any, { name, orderInventories }, context: any) {
     try {
       return await getManager().transaction(async trxMgr => {
-        const domain = context.state.domain
-        const user: User = context.state.user
+        const { domain, user }: { domain: Domain; user: User } = context.state
 
         let releaseGood: ReleaseGood = await trxMgr.getRepository(ReleaseGood).findOne({
           where: {
@@ -120,11 +120,24 @@ export const addReleaseGoodProducts = {
             }
           }
 
-          let savedOrderInv = await trxMgr.getRepository(OrderInventory).save(newOrderInv)
+          newOrderInv = await trxMgr.getRepository(OrderInventory).save(newOrderInv)
+
+          let curOrderInventories: OrderInventory[] = await trxMgr.getRepository(OrderInventory).find({
+            where: {
+              releaseGood
+            },
+            relations: ['bizplace']
+          })
+
+          let savedOrderInv: OrderInventory = curOrderInventories
+            .filter(curOrderInventory => curOrderInventory.name == newOrderInv.name)
+            .map((curOrderInventory: OrderInventory) => {
+              return curOrderInventory
+            })
 
           if (!existingOrderInv && pickingWorksheet) {
             // if this is a new orderInventory and has existing worksheet then generate a new worksheet detail for it
-            await generatePickingWorksheetDetail(trxMgr, domain, bizplace, user, pickingWorksheet, savedOrderInv)
+            await generatePickingWorksheetDetail(trxMgr, domain, user, pickingWorksheet, savedOrderInv[0])
           }
         }
 

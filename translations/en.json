@@ -694,6 +694,7 @@
   "text.accept_release_order": "accept release order",
   "text.activate": "activate",
   "text.activate_cycle_count_worksheet": "activate cycle count worksheet",
+  "text.activate_loading_worksheet": "activate loading worksheet",
   "text.activate_picking_worksheet": "activate picking worksheet",
   "text.activate_putaway_worksheet": "activate putaway worksheet",
   "text.activate_return_worksheet": "activate return worksheet",
