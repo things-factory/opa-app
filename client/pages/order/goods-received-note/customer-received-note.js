@@ -64,7 +64,7 @@ class CustomerReceivedNote extends localize(i18next)(PageView) {
     var { domain } = getPathInfo(location.pathname) // find out better way later.
     if (domain === 'elccl') {
       this.shadowRoot.querySelector('#container').src = `/view_elccl_grn/${domain}/${this._grnNo}`
-    } else if (domain === 'kimeda') {
+    } else {
       this.shadowRoot.querySelector('#container').src = `/view_kimeda_grn/${domain}/${this._grnNo}`
     }
   }
