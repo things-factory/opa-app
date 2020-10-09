@@ -141,7 +141,7 @@ class CustomerGrnList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'status',
+          name: 'customerStatus',
           header: i18next.t('field.grn_status'),
           record: { align: 'center' },
           sortable: true,
@@ -193,6 +193,7 @@ class CustomerGrnList extends localize(i18next)(PageView) {
                 name
                 description
                 refNo
+                status
               }
               customerStatus
               description

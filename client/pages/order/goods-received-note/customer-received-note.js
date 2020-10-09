@@ -79,7 +79,7 @@ class CustomerReceivedNote extends localize(i18next)(PageView) {
           })}) {
             id
             name
-            status
+            customerStatus
           }
         }
       `
@@ -87,7 +87,7 @@ class CustomerReceivedNote extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       const grn = response.data.goodsReceivalNote
-      this._status = grn.status
+      this._status = grn.customerStatus
     }
   }
 
