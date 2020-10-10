@@ -393,7 +393,6 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         handlers: {
           click: async (columns, data, column, record, rowIndex) => {
             if (!this.selectedInventory?.id !== record.id) {
-              console.log(record)
               this.selectedInventory = record
               this.viewType = VIEW_TYPE.INVENTORY_SELECTED
               this.updateContext(this.viewType)
