@@ -1050,7 +1050,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   renewInventoryGrist() {
-    this.selectedLocation = this.formattedLocations.find(loc => loc.id === this.selectedLocation.id)
+    this.selectedLocation = this.selectedLocation?.id
+      ? this.formattedLocations.find(loc => loc.id === this.selectedLocation.id)
+      : []
     this.inventoryData = { records: this.selectedLocation?.inventories || [] }
     this.selectedInventory = null
     this.updateContext()
