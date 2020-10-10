@@ -211,7 +211,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               }}"
             >
               <fieldset>
-                <legend>${i18next.t('field.inventory')}</legend>
+                <legend>
+                  ${i18next.t('field.inventory')}:
+                  ${this.selectedInventory?.productName ? this.selectedInventory.productName : ''}
+                  (${this.selectedInventory?.productDescription ? this.selectedInventory.productDescription : ''})
+                </legend>
 
                 <label>${i18next.t('field.pallet_id')}</label>
                 ${this.viewType === VIEW_TYPE.LOCATION_SELECTED
@@ -389,6 +393,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         handlers: {
           click: async (columns, data, column, record, rowIndex) => {
             if (!this.selectedInventory?.id !== record.id) {
+              console.log(record)
               this.selectedInventory = record
               this.viewType = VIEW_TYPE.INVENTORY_SELECTED
               this.updateContext(this.viewType)
@@ -521,6 +526,10 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                 column
                 row
               }
+              product {
+                name
+                description
+              }
               description
               location {
                 id
@@ -603,6 +612,8 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
   formatInventory(wsdInfo) {
     return {
       worksheetDetailName: wsdInfo.name,
+      productName: wsdInfo.product && wsdInfo.product.name,
+      productDescription: wsdInfo.product && wsdInfo.product.description,
       completed: wsdInfo.status !== WORKSHEET_STATUS.EXECUTING.value,
       palletId: wsdInfo.palletId,
       batchId: wsdInfo.batchId,
