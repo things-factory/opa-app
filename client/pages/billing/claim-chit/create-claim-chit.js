@@ -8,7 +8,6 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 
-
 class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
     return [
@@ -277,14 +276,12 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
           <legend>${i18next.t('title.create_claim_chit')}</legend>
 
           <label>${i18next.t('label.driver_name')}</label>
-          <select @change=${e => (this._selectedDriver = e.target.value)} name="transportDriver" @>
+          <select @change=${e => (this._selectedDriver = e.target.value)} name="transportDriver">
             <option value="">-- ${i18next.t('text.please_select_a_driver')} --</option>
 
             ${Object.keys(this._driverList.data.transportDrivers.items || {}).map(key => {
               let driver = this._driverList.data.transportDrivers.items[key]
-              return html`
-                <option value="${driver.id}">${driver.name} - ${driver.driverCode}</option>
-              `
+              return html` <option value="${driver.id}">${driver.name} - ${driver.driverCode}</option> `
             })}
           </select>
 
@@ -294,9 +291,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
 
             ${Object.keys(this._vehicleList.data.transportVehicles.items || {}).map(key => {
               let vehicle = this._vehicleList.data.transportVehicles.items[key]
-              return html`
-                <option value="${vehicle.id}">${vehicle.name}</option>
-              `
+              return html` <option value="${vehicle.id}">${vehicle.name}</option> `
             })}
           </select>
 
@@ -306,9 +301,7 @@ class CreateClaimChit extends connect(store)(localize(i18next)(PageView)) {
 
             ${Object.keys(this._bizplaceList.data.bizplaces.items || {}).map(key => {
               let bizplace = this._bizplaceList.data.bizplaces.items[key]
-              return html`
-                <option value="${bizplace.id}">${bizplace.name}</option>
-              `
+              return html` <option value="${bizplace.id}">${bizplace.name}</option> `
             })}
             <option value="others">Others</option>
           </select>
