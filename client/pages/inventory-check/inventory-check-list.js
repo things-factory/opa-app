@@ -69,7 +69,8 @@ class InventoryCheckList extends localize(i18next)(PageView) {
 
   async pageInitialized() {
     const _worksheetStatus = await getCodeByName('WORKSHEET_STATUS')
-
+    const _orderStatus = await getCodeByName('ORDER_STATUS')
+    console.log(_orderStatus, _worksheetStatus)
     this._bizplaces = [...(await this._fetchBizplaceList())]
 
     this._searchFields = [
@@ -103,19 +104,20 @@ class InventoryCheckList extends localize(i18next)(PageView) {
         props: { searchOper: 'eq' }
       },
       {
-        name: 'status',
+        name: 'orderStatus',
         label: i18next.t('field.order_status'),
         type: 'select',
         options: [
           { value: '' },
-          ..._worksheetStatus.map(status => {
+          ..._orderStatus.map(status => {
+            console.log(status)
             return { name: i18next.t(`label.${status.description}`), value: status.name }
           })
         ],
         props: { searchOper: 'eq' }
       },
       {
-        name: 'taskStatus',
+        name: 'status',
         label: i18next.t('field.task_status'),
         type: 'select',
         options: [
@@ -130,7 +132,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
 
     this.config = {
       list: {
-        fields: ['inventoryCheck', 'type', 'Customer', 'executionDate', 'status', 'taskStatus', 'startedAt', 'endedAt']
+        fields: ['inventoryCheck', 'type', 'Customer', 'executionDate', 'orderStatus', 'status', 'startedAt', 'endedAt']
       },
       rows: { appendable: false },
       columns: [
@@ -185,7 +187,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'status',
+          name: 'orderStatus',
           header: i18next.t('field.order_status'),
           record: { align: 'center' },
           sortable: true,
@@ -193,7 +195,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'taskStatus',
+          name: 'status',
           header: i18next.t('field.task_status'),
           record: { align: 'center' },
           sortable: true,
@@ -294,8 +296,8 @@ class InventoryCheckList extends localize(i18next)(PageView) {
             return {
               ...item,
               executionDate: item.inventoryCheck && item.inventoryCheck.executionDate,
-              taskStatus: item.status,
-              status: item.inventoryCheck && item.inventoryCheck.status
+              status: item.status,
+              orderStatus: item.inventoryCheck && item.inventoryCheck.status
             }
           }) || {}
       }

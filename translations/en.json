@@ -535,6 +535,7 @@
   "label.order_status_editing": "editing",
   "label.order_status_executing": "executing",
   "label.order_status_in_process": "in process",
+  "label.order_status_inspecting": "inspecting",
   "label.order_status_in_transit": "in transit",
   "label.order_status_intransit": "intransit",
   "label.order_status_loading": "loading",
