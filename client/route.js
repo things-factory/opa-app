@@ -1,4 +1,4 @@
-import { isMobileDevice } from '@things-factory/shell'
+import { isMobileDevice } from '@things-factory/utils'
 
 export default function route(page) {
   switch (page) {

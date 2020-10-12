@@ -184,17 +184,13 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         </div>
 
         <div class="right-column">
-          ${this.selectedLocation
-            ? html`
-                <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.missing_pallets')}</h2>
-                <data-grist
-                  id="missing-inventory-grist"
-                  .mode="${isMobileDevice() ? 'LIST' : 'GRID'}"
-                  .config="${this.missingInventoryConfig}"
-                  .data="${this.missingInventoryData}"
-                ></data-grist>
-              `
-            : ''}
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.missing_pallets')}</h2>
+          <data-grist
+            id="missing-inventory-grist"
+            .mode="${isMobileDevice() ? 'LIST' : 'GRID'}"
+            .config="${this.missingInventoryConfig}"
+            .data="${this.missingInventoryData}"
+          ></data-grist>
 
           <div id="input-form-container">
             <form
@@ -211,7 +207,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               }}"
             >
               <fieldset>
-                <legend>${i18next.t('field.inventory')}</legend>
+                <legend>
+                  ${i18next.t('field.inventory')}:
+                  ${this.selectedInventory?.productName ? this.selectedInventory.productName : ''}
+                  (${this.selectedInventory?.productDescription ? this.selectedInventory.productDescription : ''})
+                </legend>
 
                 <label>${i18next.t('field.pallet_id')}</label>
                 ${this.viewType === VIEW_TYPE.LOCATION_SELECTED
@@ -251,12 +251,10 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                     : ''}"
                 />
 
-                ${this.viewType === VIEW_TYPE.LOCATION_SELECTED
-                  ? html`
-                      <label>${i18next.t('label.location')}</label>
-                      <input name="location" .value="${this.selectedLocation?.name || ''}" />
-                    `
-                  : ''}
+                <label>${i18next.t('field.location')}</label>
+                ${this.viewType === VIEW_TYPE.INVENTORY_SELECTED
+                  ? html` <input name="location" readonly .value="${this.selectedLocation?.name || ''}" /> `
+                  : html` <barcode-scanable-input name="location" custom-input></barcode-scanable-input>`}
               </fieldset>
             </form>
           </div>
@@ -322,20 +320,20 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
+  get locationInput() {
+    if (this.viewType === VIEW_TYPE.MISSING_PALLET_SELECTED) {
+      return this.renderRoot.querySelector('barcode-scanable-input[name=location]').renderRoot.querySelector('input')
+    } else {
+      return this.renderRoot.querySelector('input[name=location]')
+    }
+  }
+
   get inspectedBatchNoInput() {
     return this.renderRoot.querySelector('input[name=inspectedBatchNo]')
   }
 
   get inspectedQtyInput() {
     return this.renderRoot.querySelector('input[name=inspectedQty]')
-  }
-
-  get inspectedQtyInput() {
-    return this.renderRoot.querySelector('input[name=inspectedQty]')
-  }
-
-  get inspectedWeightInput() {
-    return this.renderRoot.querySelector('input[name=inspectedWeight]')
   }
 
   get inspectedWeightInput() {
@@ -521,6 +519,10 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                 column
                 row
               }
+              product {
+                name
+                description
+              }
               description
               location {
                 id
@@ -603,6 +605,8 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
   formatInventory(wsdInfo) {
     return {
       worksheetDetailName: wsdInfo.name,
+      productName: wsdInfo.product && wsdInfo.product.name,
+      productDescription: wsdInfo.product && wsdInfo.product.description,
       completed: wsdInfo.status !== WORKSHEET_STATUS.EXECUTING.value,
       palletId: wsdInfo.palletId,
       batchId: wsdInfo.batchId,
@@ -918,6 +922,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       )
       inspectedQty = Number(inspectedQty)
       inspectedWeight = Number(inspectedWeight)
+      var locationName = this.locationInput.value
 
       const response = await client.query({
         query: gql`
@@ -927,7 +932,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               inspectedBatchNo,
               inspectedQty,
               inspectedWeight,
-              inspectedLocationId: this.selectedLocation.id
+              inspectedLocationName: locationName
             })})
           }
         `
@@ -1045,7 +1050,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   renewInventoryGrist() {
-    this.selectedLocation = this.formattedLocations.find(loc => loc.id === this.selectedLocation.id)
+    this.selectedLocation = this.selectedLocation?.id
+      ? this.formattedLocations.find(loc => loc.id === this.selectedLocation.id)
+      : []
     this.inventoryData = { records: this.selectedLocation?.inventories || [] }
     this.selectedInventory = null
     this.updateContext()

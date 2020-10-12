@@ -1,5 +1,6 @@
 import '@things-factory/grist-ui'
-import { client, gqlBuilder } from '@things-factory/shell'
+import { client } from '@things-factory/shell'
+import { gqlBuilder } from '@things-factory/utils'
 import { css, html, LitElement } from 'lit-element'
 import { fetchSettingRule } from '../../../fetch-setting-value'
 import { i18next, localize } from '@things-factory/i18n-base'
@@ -84,28 +85,18 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
           <select name="ownDriver" ?hidden="${this.ownCollection}">
             <option value="">-- ${i18next.t('text.please_select_a_driver')} --</option>
             ${(this._driverList || []).map(
-              driver =>
-                html`
-                  <option value="${driver && driver.name}">${driver && driver.name}</option>
-                `
+              driver => html` <option value="${driver && driver.name}">${driver && driver.name}</option> `
             )}
           </select>
-          
-          <label>${i18next.t('label.truck_no')}</label>
-          <input name="otherTruck" ?hidden="${!this.ownCollection}"
-            value="${this.truckNo}"/>
-          <select name="ownTruck" ?hidden="${this.ownCollection}">
-            ${this._truckExist == true ?
-              html `<option value="${this.truckNo}">${this.truckNo}</option>`
-              :
-              html `<option value="">-- ${i18next.t('text.please_select_a_truck')} --</option>`
-            }
 
+          <label>${i18next.t('label.truck_no')}</label>
+          <input name="otherTruck" ?hidden="${!this.ownCollection}" value="${this.truckNo}" />
+          <select name="ownTruck" ?hidden="${this.ownCollection}">
+            ${this._truckExist == true
+              ? html`<option value="${this.truckNo}">${this.truckNo}</option>`
+              : html`<option value="">-- ${i18next.t('text.please_select_a_truck')} --</option>`}
             ${(this._truckList || []).map(
-              truck =>
-                html`
-                  <option value="${truck && truck.name}">${truck && truck.name}</option>
-                `
+              truck => html` <option value="${truck && truck.name}">${truck && truck.name}</option> `
             )}
           </select>
 
@@ -113,10 +104,7 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
           <select name="contactPoint" ?hidden="${this._otherDestination}">
             <option value="">-- ${i18next.t('text.please_select_a_destination')} --</option>
             ${(this.contactPoints || []).map(
-              cp =>
-                html`
-                  <option value="${cp && cp.id}">${cp && cp.contactName},${cp && cp.address}</option>
-                `
+              cp => html` <option value="${cp && cp.id}">${cp && cp.contactName},${cp && cp.address}</option> `
             )}
           </select>
 
@@ -135,7 +123,12 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
           <textarea name="otherDestination" ?hidden="${!this._otherDestination}"></textarea>
 
           <label ?hidden="${this._isDisabled}">${i18next.t('label.reusable_pallet')}</label>
-          <textarea name="reusablePallet" ?hidden="${this._isDisabled}" ?disabled="${this._isDisabled}" placeholder="(${i18next.t('text.optional')})"></textarea>
+          <textarea
+            name="reusablePallet"
+            ?hidden="${this._isDisabled}"
+            ?disabled="${this._isDisabled}"
+            placeholder="(${i18next.t('text.optional')})"
+          ></textarea>
         </fieldset>
       </form>
 
@@ -155,7 +148,7 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
       query {
         transportDrivers(${gqlBuilder.buildArgs({
           filters: [],
-          sortings: [{name: 'name'}]
+          sortings: [{ name: 'name' }]
         })}) {
           items{
               id
@@ -178,7 +171,7 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
       query {
         transportVehicles(${gqlBuilder.buildArgs({
           filters: [],
-          sortings: [{name: 'name'}]
+          sortings: [{ name: 'name' }]
         })}) {
           items {
             id
@@ -232,7 +225,9 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
         deliveryDate: this._getInputByName('deliveryDate').value,
         otherDriver: this._getInputByName('otherDriver').value,
         ownDriver: this._getInputByName('ownDriver').value,
-        otherTruck: this.ownCollection ? this._getInputByName('otherTruck').value.toUpperCase().replace(/\s+/g, '') : null,
+        otherTruck: this.ownCollection
+          ? this._getInputByName('otherTruck').value.toUpperCase().replace(/\s+/g, '')
+          : null,
         ownTruck: this.ownCollection ? null : this._getInputByName('ownTruck').value,
         contactPoint: this._getInputByName('contactPoint').value,
         contactName: this._getInputByName('contactName').value,
