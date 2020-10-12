@@ -70,7 +70,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
   async pageInitialized() {
     const _worksheetStatus = await getCodeByName('WORKSHEET_STATUS')
     const _orderStatus = await getCodeByName('ORDER_STATUS')
-    console.log(_orderStatus, _worksheetStatus)
+
     this._bizplaces = [...(await this._fetchBizplaceList())]
 
     this._searchFields = [
@@ -110,7 +110,6 @@ class InventoryCheckList extends localize(i18next)(PageView) {
         options: [
           { value: '' },
           ..._orderStatus.map(status => {
-            console.log(status)
             return { name: i18next.t(`label.${status.description}`), value: status.name }
           })
         ],
