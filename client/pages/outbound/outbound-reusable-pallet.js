@@ -1,9 +1,10 @@
 import '@things-factory/barcode-ui'
+import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { isMobileDevice, client, gqlBuilder } from '@things-factory/shell'
+import { client } from '@things-factory/shell'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
-import { MultiColumnFormStyles, SingleColumnFormStyles } from '@things-factory/form-ui'
 import { css, html, LitElement } from 'lit-element'
 import '../components/popup-note'
 
