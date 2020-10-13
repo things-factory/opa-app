@@ -214,9 +214,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                 </legend>
 
                 <label>${i18next.t('field.pallet_id')}</label>
-                ${this.viewType === VIEW_TYPE.LOCATION_SELECTED
-                  ? html` <barcode-scanable-input name="palletId" custom-input></barcode-scanable-input> `
-                  : html` <input name="palletId" readonly .value="${this.selectedInventory?.palletId || ''}" /> `}
+                ${this.viewType === VIEW_TYPE.INVENTORY_SELECTED || this.viewType === VIEW_TYPE.MISSING_PALLET_SELECTED
+                  ? html` <input name="palletId" readonly .value="${this.selectedInventory?.palletId || ''}" /> `
+                  : html` <barcode-scanable-input name="palletId" custom-input></barcode-scanable-input>`}
 
                 <label>${i18next.t('label.inspected_batch_no')}</label>
                 <input
@@ -313,18 +313,18 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   get palletIdInput() {
-    if (this.viewType === VIEW_TYPE.LOCATION_SELECTED) {
-      return this.renderRoot.querySelector('barcode-scanable-input[name=palletId]').renderRoot.querySelector('input')
-    } else {
+    if (this.viewType === VIEW_TYPE.INVENTORY_SELECTED || this.viewType === VIEW_TYPE.MISSING_PALLET_SELECTED) {
       return this.renderRoot.querySelector('input[name=palletId]')
+    } else {
+      return this.renderRoot.querySelector('barcode-scanable-input[name=palletId]').renderRoot.querySelector('input')
     }
   }
 
   get locationInput() {
-    if (this.viewType === VIEW_TYPE.MISSING_PALLET_SELECTED) {
-      return this.renderRoot.querySelector('barcode-scanable-input[name=location]').renderRoot.querySelector('input')
-    } else {
+    if (this.viewType === VIEW_TYPE.INVENTORY_SELECTED) {
       return this.renderRoot.querySelector('input[name=location]')
+    } else {
+      return this.renderRoot.querySelector('barcode-scanable-input[name=location]').renderRoot.querySelector('input')
     }
   }
 
@@ -729,15 +729,6 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
   updateContext(type) {
     let actions = []
     switch (type) {
-      case VIEW_TYPE.LOCATION_SELECTED:
-        if (this.selectedLocation) {
-          actions.push({
-            title: i18next.t('button.add_x', { state: { x: i18next.t('label.pallet') } }),
-            action: this.addExtraPallet.bind(this)
-          })
-        }
-        break
-
       case VIEW_TYPE.INVENTORY_SELECTED:
         if (this.selectedInventory) {
           if (
@@ -770,6 +761,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       })
     }
 
+    actions.push({
+      title: i18next.t('button.add_x', { state: { x: i18next.t('label.pallet') } }),
+      action: this.addExtraPallet.bind(this)
+    })
+
     store.dispatch({
       type: UPDATE_CONTEXT,
       context: {
@@ -785,6 +781,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
 
       const palletId = this.palletIdInput.value
 
+      var locationName = this.locationInput.value
       let location
       let inventory
 
@@ -855,7 +852,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               inspectedBatchNo,
               inspectedQty,
               inspectedWeight,
-              locationId: this.selectedLocation.id
+              locationName
             })})
           }
         `
