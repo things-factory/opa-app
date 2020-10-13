@@ -547,8 +547,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
         query: gql`
           mutation {
             cycleCountAdjustment(${gqlBuilder.buildArgs({
-              cycleCountNo: this._cycleCountNo,
-              cycleCountWorksheetDetails: this._getCycleCountWSD()
+              cycleCountNo: this._cycleCountNo
             })}) 
           }
         `
@@ -582,15 +581,6 @@ class CycleCountReport extends localize(i18next)(PageView) {
         title: i18next.t('title.cycle_count_recheck')
       }
     )
-  }
-
-  _getCycleCountWSD() {
-    return this.grist.dirtyData.records.map(worksheetDetail => {
-      return {
-        name: worksheetDetail.name,
-        description: worksheetDetail.description
-      }
-    })
   }
 
   async _exportableData() {

@@ -145,7 +145,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
             click: (columns, data, column, record, rowIndex) => {
               if (!record.id) return
               const type = record.type
-              const status = record.status
+              const status = record.orderStatus
 
               // Handle PICKING
               if (
