@@ -8,7 +8,13 @@ import { ScrollbarStyles } from '@things-factory/styles'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { ORDER_STATUS, WORKSHEET_TYPE } from '../constants'
+import {
+  ORDER_STATUS,
+  ORDER_TYPES,
+  WORKSHEET_TYPE,
+  getWorksheetStatusCandidates,
+  getOrderStatusCandidates
+} from '../constants'
 import './search-popup'
 class InventoryCheckList extends localize(i18next)(PageView) {
   static get styles() {
@@ -69,8 +75,8 @@ class InventoryCheckList extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
-    const _worksheetStatus = await getCodeByName('WORKSHEET_STATUS')
-    const _orderStatus = await getCodeByName('ORDER_STATUS')
+    const _worksheetStatus = getWorksheetStatusCandidates(WORKSHEET_TYPE.CYCLE_COUNT)
+    const _orderStatus = getOrderStatusCandidates(ORDER_TYPES.CYCLE_COUNT)
 
     this._bizplaces = [...(await this._fetchBizplaceList())]
 
@@ -105,7 +111,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
         options: [
           { value: '' },
           ..._orderStatus.map(status => {
-            return { name: i18next.t(`label.${status.description}`), value: status.name }
+            return { name: i18next.t(`label.${status.name}`), value: status.value }
           })
         ],
         props: { searchOper: 'eq' }
@@ -114,12 +120,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
         name: 'status',
         label: i18next.t('field.task_status'),
         type: 'select',
-        options: [
-          { value: '' },
-          ..._worksheetStatus.map(status => {
-            return { name: i18next.t(`label.${status.description}`), value: status.name }
-          })
-        ],
+        options: [{ value: '' }, ..._worksheetStatus],
         props: { searchOper: 'eq' }
       }
     ]

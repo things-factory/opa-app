@@ -4,8 +4,9 @@ export const DELIVERY = { name: 'delivery_order', value: 'DELIVERY' }
 export const COLLECTION = { name: 'collection_order', value: 'COLLECTION' }
 export const RELEASE_OF_GOODS = { name: 'release_of_goods', value: 'RELEASE_OF_GOODS' }
 export const VAS_ORDER = { name: 'vas_order', value: 'VAS_ORDER' }
+export const CYCLE_COUNT = { name: 'cycle_count', value: 'CYCLE_COUNT' }
 
-export const ORDER_TYPES = { ARRIVAL_NOTICE, SHIPPING, DELIVERY, COLLECTION, RELEASE_OF_GOODS, VAS_ORDER }
+export const ORDER_TYPES = { ARRIVAL_NOTICE, SHIPPING, DELIVERY, COLLECTION, RELEASE_OF_GOODS, VAS_ORDER, CYCLE_COUNT }
 
 export const ORDER_STATUS = {
   PENDING: { name: 'order_status_pending', value: 'PENDING' },
@@ -108,4 +109,16 @@ export const GRN_STATUS = {
   RECEIVED: { name: 'received_status', value: 'RECEIVED' },
   NEW: { name: 'new_status', value: 'NEW' },
   OPENED: { name: 'opened_status', value: 'OPENED' }
+}
+
+export const getOrderStatusCandidates = function (orderType) {
+  if (!orderType) throw new Error('There is no order type')
+
+  switch (orderType) {
+    case ORDER_TYPES.CYCLE_COUNT:
+      return [ORDER_STATUS.PENDING, ORDER_STATUS.INSPECTING, ORDER_STATUS.PENDING_REVIEW, ORDER_STATUS.DONE]
+
+    default:
+      throw new Error('Failed to find via passed order type')
+  }
 }
