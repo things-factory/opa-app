@@ -861,6 +861,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       if (!response.errors) {
         await this.fetchCycleCountWorksheet()
         this.renewInventoryGrist()
+        this.inputForm.reset()
+        this.palletIdInput.value = ''
+        this.locationInput.value = ''
       }
     } catch (e) {
       this.showToast(e)
