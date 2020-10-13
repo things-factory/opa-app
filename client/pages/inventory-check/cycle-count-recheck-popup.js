@@ -8,6 +8,7 @@ import { css, html, LitElement } from 'lit-element'
 class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
   static get properties() {
     return {
+      cycleCountNo: String,
       inventories: Array,
       customerId: String,
       config: Object,
@@ -106,15 +107,15 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
     this.data = { records: [] }
   }
 
-  firstUpdated() {
+  async firstUpdated() {
     this.config = {
       rows: { appendable: false },
       list: {
         fields: [
-          'batchId',
-          'inspectedBatchNo',
           'palletId',
           'product',
+          'batchId',
+          'inspectedBatchNo',
           'packingType',
           'inspectedLocation',
           'inspectedQty',
@@ -126,20 +127,6 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'gutter', gutterName: 'row-selector', multiple: true },
-        {
-          type: 'string',
-          name: 'batchId',
-          header: i18next.t('field.batch_no'),
-          record: { align: 'left' },
-          width: 100
-        },
-        {
-          type: 'string',
-          name: 'inspectedBatchNo',
-          header: i18next.t('field.inspected_batch_no'),
-          record: { align: 'left' },
-          width: 100
-        },
         {
           type: 'string',
           name: 'palletId',
@@ -156,6 +143,20 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'string',
+          name: 'batchId',
+          header: i18next.t('field.batch_no'),
+          record: { align: 'left' },
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'inspectedBatchNo',
+          header: i18next.t('field.inspected_batch_no'),
+          record: { align: 'left' },
+          width: 100
+        },
+        {
+          type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
           record: { align: 'center' },
@@ -169,7 +170,7 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
           width: 120
         },
         {
-          type: 'string',
+          type: 'object',
           name: 'inspectedLocation',
           header: i18next.t('field.inspected_location'),
           record: { align: 'center' },
@@ -215,13 +216,74 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
   }
 
   updated(changedProps) {
-    if (changedProps.has('inventories')) {
-      this.data = { records: this.inventories }
+    if (changedProps.has('cycleCountNo')) {
+      this.fetchNotTallyInventories()
+    }
+  }
+
+  async fetchNotTallyInventories() {
+    const response = await client.query({
+      query: gql`
+        query {
+          notTallyTargetInventories(${gqlBuilder.buildArgs({
+            cycleCountNo: this.cycleCountNo
+          })}) {
+            id
+            inventory {
+              palletId
+              product {
+                name
+                description
+              }
+              packingType
+            }
+            originBatchNo
+            inspectedBatchNo
+            originLocation {
+              name
+              description
+            }
+            inspectedLocation {
+              name
+              description
+            }
+            originQty
+            inspectedQty
+            originWeight
+            inspectedWeight
+            status
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      this.data = {
+        records: response.data.notTallyTargetInventories.map(targetInv => {
+          return {
+            id: targetInv.id,
+            batchId: targetInv.originBatchNo,
+            inspectedBatchNo: targetInv.inspectedBatchNo,
+            palletId: targetInv.inventory.palletId,
+            product: targetInv.inventory.product,
+            packingType: targetInv.inventory.packingType,
+            location: targetInv.originLocation,
+            inspectedLocation: targetInv.inspectedLocation,
+            qty: targetInv.originQty,
+            inspectedQty: targetInv.inspectedQty,
+            weight: targetInv.originWeight,
+            inspectedWeight: targetInv.inspectedWeight,
+            status: targetInv.status
+          }
+        })
+      }
     }
   }
 
   async createCycleCountRecheck() {
     try {
+      this.checkValidity()
+
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.create_cycle_count_worksheet'),
@@ -233,8 +295,7 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
         return
       }
 
-      this.checkValidity()
-      const orderInventoryIds = this.grist.selected.map(record => record.orderInventoryId)
+      const orderInventoryIds = this.grist.selected.map(record => record.id)
       const response = await client.query({
         query: gql`
           mutation {
