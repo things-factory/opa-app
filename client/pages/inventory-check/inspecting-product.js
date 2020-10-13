@@ -1056,7 +1056,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   checkInputFormValidity() {
-    let { inspectedBatchNo, inspectedQty, inspectedWeight } = Object.fromEntries(new FormData(this.inputForm).entries())
+    let { inspectedBatchNo, inspectedQty, inspectedWeight, location } = Object.fromEntries(
+      new FormData(this.inputForm).entries()
+    )
     inspectedQty = Number(inspectedQty)
     inspectedWeight = Number(inspectedWeight)
 
@@ -1089,6 +1091,12 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     if (inspectedWeight <= 0) {
       this.selectOnInput(this.inspectedWeightInput)
       throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('field.inspected_weight') } }))
+    }
+
+    const locationName = this.locationInput.value
+    if (!locationName) {
+      this.selectOnInput(this.locationInput)
+      throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('label.location') } }))
     }
   }
 
