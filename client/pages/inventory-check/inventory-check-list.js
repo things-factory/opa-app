@@ -2,13 +2,14 @@ import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import { openPopup } from '@things-factory/layout-base'
 import { client, navigate, PageView } from '@things-factory/shell'
 import { ScrollbarStyles } from '@things-factory/styles'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { ORDER_STATUS, WORKSHEET_TYPE } from '../constants'
-
+import './search-popup'
 class InventoryCheckList extends localize(i18next)(PageView) {
   static get styles() {
     return [
@@ -75,21 +76,15 @@ class InventoryCheckList extends localize(i18next)(PageView) {
 
     this._searchFields = [
       {
-        name: 'bizplaceId',
-        label: i18next.t('field.customer'),
-        type: 'select',
-        options: [
-          { value: '' },
-          ...this._bizplaces
-            .map(bizplaceList => {
-              return {
-                name: bizplaceList.name,
-                value: bizplaceList.id
-              }
-            })
-            .sort(this._compareValues('name', 'asc'))
-        ],
-        props: { searchOper: 'eq' }
+        name: 'bizplace',
+        label: i18next.t(`field.customer`),
+        type: 'object',
+        queryName: 'bizplaces',
+        field: 'name',
+        handlers: {
+          click: this._showSearchCustomer.bind(this)
+        },
+        props: { searchOper: 'eq', readonly: true }
       },
       {
         name: 'inventoryCheckNo',
@@ -236,8 +231,12 @@ class InventoryCheckList extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
+  get bizplace() {
+    return this.searchForm.shadowRoot.querySelector('input[name=bizplace]')
+  }
+
   async fetchHandler({ page, limit, sorters = [{ name: 'createdAt', desc: true }] }) {
-    const filters = this.searchForm.queryFilters
+    const filters = await this.searchForm.getQueryFilters()
     filters.push({
       name: 'type',
       operator: 'in',
@@ -323,6 +322,23 @@ class InventoryCheckList extends localize(i18next)(PageView) {
     if (!response.errors) {
       return response.data.bizplaces.items
     }
+  }
+
+  _showSearchCustomer() {
+    openPopup(
+      html`
+        <search-popup
+          .complete="${async data => {
+            this.bizplace.value = data.name
+          }}"
+        ></search-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('field.customer')
+      }
+    )
   }
 
   _compareValues(key, order = 'asc') {
