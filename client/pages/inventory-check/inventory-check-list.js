@@ -235,7 +235,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
     return this.searchForm.shadowRoot.querySelector('input[name=bizplace]')
   }
 
-  async fetchHandler({ page, limit, sorters = [{ name: 'createdAt', desc: true }] }) {
+  async fetchHandler({ page, limit, sorters = [{ name: 'endedAt', desc: true }] }) {
     const filters = await this.searchForm.getQueryFilters()
     filters.push({
       name: 'type',
