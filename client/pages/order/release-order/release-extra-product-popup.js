@@ -34,6 +34,7 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
           display: flex;
           overflow-y: auto;
           min-height: 50vh;
+          margin: 10;
         }
         .grist {
           display: flex;
@@ -93,6 +94,7 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
       _selectedInventories: Array,
       _pickingStd: String,
       inventoryGristConfig: Object,
+      existingInventoryData: Object,
       inventoryData: Object
     }
   }
@@ -132,7 +134,23 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
       <div class="container">
         <div class="grist">
           <h2>
-            <mwc-icon>list_alt</mwc-icon>${i18next.t('title.release_product_list')}${` [${i18next.t(
+            <mwc-icon>list_alt</mwc-icon>${i18next.t('title.existing_release_product_list')}${` [${i18next.t(
+              PICKING_STANDARD[this._pickingStd].name
+            )}]`}
+          </h2>
+          <data-grist
+            id="existing-inventory-grist"
+            .mode="${isMobileDevice() ? 'LIST' : 'GRID'}"
+            .config="${this.existingInventoryGristConfig}"
+            .data="${this.existingInventoryData}"
+            @record-change="${this._onProductChangeHandler.bind(this)}"
+            @field-change="${this._onInventoryFieldChanged.bind(this)}"
+          ></data-grist>
+        </div>
+
+        <div class="grist">
+          <h2>
+            <mwc-icon>list_alt</mwc-icon>${i18next.t('title.new_release_product_list')}${` [${i18next.t(
               PICKING_STANDARD[this._pickingStd].name
             )}]`}
           </h2>
@@ -167,6 +185,10 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
   }
 
   initProperties() {
+    this.existingInventoryData = {
+      ...this.existingInventoryData,
+      records: this.existingInventoryData ? this.existingInventoryData : []
+    }
     this.inventoryData = { ...this.inventoryData, records: [] }
   }
 
@@ -176,6 +198,10 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
     }
   }
 
+  get existingInventoryGrist() {
+    return this.shadowRoot.querySelector('data-grist#existing-inventory-grist')
+  }
+
   get inventoryGrist() {
     return this.shadowRoot.querySelector('data-grist#inventory-grist')
   }
@@ -183,6 +209,116 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
   async switchPickingType() {
     this.resetPage()
     const locationSortingRules = await fetchLocationSortingRule(LOCATION_SORTING_RULE.CREATE_RELEASE_ORDER.value)
+
+    this.existingInventoryGristConfig = {
+      pagination: { infinite: true },
+      rows: {
+        appendable: false,
+        selectable: { multiple: true }
+      },
+      list: { fields: ['inventory', 'product', 'location', 'releaseQty'] },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'object',
+          name: 'inventory',
+          header: i18next.t('field.inventory_list'),
+          record: {
+            editable: false,
+            align: 'left',
+            options: {
+              queryName: 'inventoriesByPallet',
+              basicArgs: {
+                filters: [
+                  { name: 'status', operator: 'eq', value: INVENTORY_STATUS.STORED.value },
+                  { name: 'bizplace', value: [this.bizplace], operator: 'in' }
+                ],
+                locationSortingRules
+              },
+              nameField: 'batchId',
+              descriptionField: 'palletId',
+              select: [
+                { name: 'id', hidden: true },
+                { name: 'name', hidden: true },
+                { name: 'palletId', header: i18next.t('field.pallet_id'), record: { align: 'center' } },
+                { name: 'product', type: 'object', queryName: 'products' },
+                { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
+                {
+                  name: 'location',
+                  type: 'object',
+                  queryName: 'locations',
+                  field: 'name',
+                  record: { align: 'center' }
+                },
+                { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
+                { name: 'remainQty', type: 'float', record: { align: 'center' } },
+                {
+                  name: 'remainWeight',
+                  type: 'float',
+                  header: i18next.t('field.total_weight'),
+                  record: { align: 'center' }
+                }
+              ],
+              list: { fields: ['palletId', 'product', 'batchId', 'location', 'remainWeight'] }
+            }
+          },
+          width: 250
+        },
+        {
+          type: 'object',
+          name: 'product',
+          header: i18next.t('field.product'),
+          record: { align: 'left' },
+          width: 150
+        },
+        {
+          type: 'object',
+          name: 'location',
+          header: i18next.t('field.location'),
+          record: { align: 'center' },
+          width: 150
+        },
+        {
+          type: 'code',
+          name: 'packingType',
+          header: i18next.t('field.packing_type'),
+          record: {
+            align: 'center',
+            codeName: 'PACKING_TYPES'
+          },
+          width: 150
+        },
+        {
+          type: 'integer',
+          name: 'remainQty',
+          header: i18next.t('field.available_qty'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'integer',
+          name: 'releaseQty',
+          header: i18next.t('field.release_qty'),
+          record: { editable: true, align: 'center', options: { min: 0 } },
+          width: 100
+        },
+        {
+          type: 'float',
+          name: 'remainWeight',
+          header: i18next.t('field.available_weight'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'float',
+          name: 'releaseWeight',
+          header: i18next.t('field.release_weight'),
+          record: { editable: true, align: 'center', options: { min: 0 } },
+          width: 100
+        }
+      ]
+    }
+
     this.inventoryGristConfig = {
       pagination: { infinite: true },
       rows: {
@@ -197,10 +333,14 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
           icon: 'close',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              const newData = data.records.filter((_, idx) => idx !== rowIndex)
-              this.inventoryData = { ...this.inventoryData, records: newData }
-              this.inventoryGrist.dirtyData.records = newData
-              this._updateInventoryList()
+              try {
+                const newData = data.records.filter((_, idx) => idx !== rowIndex)
+                this.inventoryData = { ...this.inventoryData, records: newData }
+                this.inventoryGrist.dirtyData.records = newData
+                this._updateInventoryList()
+              } catch (e) {
+                this._showToast(e)
+              }
             }
           }
         },
@@ -447,6 +587,30 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
         return returnObj
       })
     }
+
+    this.existingInventoryData = {
+      ...this.existingInventoryGrist.dirtyData,
+      records: this.existingInventoryGrist.dirtyData.records.map((record, idx) => {
+        if ((columnName == 'releaseWeight' || columnName == 'releaseQty') && idx === e.detail.row) {
+          if (columnName == 'releaseWeight') record.releaseQty = releaseQty
+          record.releaseWeight = roundedWeight
+        }
+
+        let returnObj = {
+          ...record,
+          ...record.inventory
+        }
+
+        if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
+          returnObj.product = {
+            id: record.inventory.productId,
+            name: record.inventory.productName
+          }
+        }
+
+        return returnObj
+      })
+    }
   }
 
   _onProductChangeHandler(event) {
@@ -489,9 +653,11 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
     }
   }
 
+  _validateChanges(releaseItem) {}
+
   async _addExtraProducts() {
     try {
-      this._validateProducts()
+      // this._validateProducts()
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.add_extra_product'),
@@ -501,11 +667,13 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
 
       if (!result.value) return
 
+      let releaseItem = this._getReleaseData()
+
       const response = await client.query({
         query: gql`
           mutation {
             addReleaseGoodProducts(${gqlBuilder.buildArgs({
-              ...this._getReleaseData()
+              ...releaseItem
             })})
           }
         `
@@ -527,9 +695,10 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
   }
 
   _getReleaseData() {
-    let data = {
-      name: this.releaseGoodNo,
-      orderInventories: this.inventoryGrist.data.records.map(record => {
+    const inventoryLength = this.inventoryGrist.data.records.length
+    let orderInventories = []
+    if (inventoryLength > 0) {
+      orderInventories = this.inventoryGrist.data.records.map(record => {
         let newRecord = {
           releaseQty: record.releaseQty,
           releaseWeight: record.releaseWeight,
@@ -550,6 +719,38 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
 
         return newRecord
       })
+    }
+
+    const existingInventoryLength = this.existingInventoryGrist.data.records.length
+    let existingOrderInventories = []
+    if (existingInventoryLength > 0) {
+      existingOrderInventories = this.existingInventoryGrist.data.records.map(record => {
+        let existRecord = {
+          releaseQty: record.releaseQty,
+          releaseWeight: record.releaseWeight,
+          batchId: record.inventory.batchId,
+          packingType: record.inventory.packingType,
+          type: ORDER_TYPES.RELEASE_OF_GOODS.value,
+          status: ORDER_INVENTORY_STATUS.PENDING.value
+        }
+
+        if (record.isCrossDocking) newRecord.crossDocking = true
+
+        if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
+          existRecord.product = { id: record.inventory.productId, name: record.inventory.productName }
+        } else {
+          existRecord.product = { id: record.inventory.product.id, name: record.inventory.product.name }
+          existRecord.inventory = { id: record.id }
+        }
+
+        return existRecord
+      })
+    }
+
+    let data = {
+      name: this.releaseGoodNo,
+      orderInventories,
+      existingOrderInventories
     }
 
     return data
