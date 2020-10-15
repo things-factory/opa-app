@@ -16,11 +16,11 @@ export const ORDER_STATUS = {
   CANCELLED: { name: 'order_status_cancelled', value: 'CANCELLED' },
   EDITING: { name: 'order_status_editing', value: 'EDITING' },
   REJECTED: { name: 'order_status_rejected', value: 'REJECTED' },
-  PENDING_RECEIVE: { name: 'order_status_pending_receive', value: 'PENDING_RECEIVE' },
   INTRANSIT: { name: 'order_status_intransit', value: 'INTRANSIT' },
   ARRIVED: { name: 'order_status_arrived', value: 'ARRIVED' },
   RECEIVED: { name: 'order_status_received', value: 'RECEIVED' },
   READY_TO_UNLOAD: { name: 'ready_to_unload', value: 'READY_TO_UNLOAD' },
+  PUTTING_AWAY: { name: 'putting_away', value: 'PUTTING_AWAY' },
   PROCESSING: { name: 'order_status_processing', value: 'PROCESSING' },
   DONE: { name: 'order_status_done', value: 'DONE' },
   COLLECTING: { name: 'order_status_collecting', value: 'COLLECTING' },
@@ -33,7 +33,8 @@ export const ORDER_STATUS = {
   PICKING: { name: 'order_status_picking', value: 'PICKING' },
   LOADING: { name: 'order_status_loading', value: 'LOADING' },
   READY_TO_DISPATCH: { name: 'order_status_ready_to_dispatch', value: 'READY_TO_DISPATCH' },
-  READY_TO_EXECUTE: { name: 'order_status_ready_to_execute', value: 'READY_TO_EXECUTE' }
+  READY_TO_EXECUTE: { name: 'order_status_ready_to_execute', value: 'READY_TO_EXECUTE' },
+  READY_TO_SEND: { name: 'order_status_ready_to_send', value: 'READY_TO_SEND' }
 }
 
 export const ORDER_PRODUCT_STATUS = {

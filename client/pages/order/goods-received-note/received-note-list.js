@@ -128,16 +128,6 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
       rows: { appendable: false, selectable: { multiple: true } },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
-        // {
-        //   type: 'gutter',
-        //   gutterName: 'button',
-        //   icon: 'post_add',
-        //   handlers: {
-        //     click: (columns, data, column, record, rowIndex) => {
-        //       if (record.id) this._uploadGRN(record.name, record.id)
-        //     }
-        //   }
-        // },
         {
           type: 'gutter',
           gutterName: 'button',
@@ -189,8 +179,16 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
+          name: 'ganStatus',
+          header: i18next.t('field.gan_status'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 180
+        },
+        {
+          type: 'string',
           name: 'status',
-          header: i18next.t('field.status'),
+          header: i18next.t('field.grn_status'),
           record: { align: 'center' },
           sortable: true,
           width: 180
@@ -239,6 +237,7 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
                 id
                 name
                 description
+                status
                 refNo
               }
               status
@@ -275,7 +274,8 @@ class ReceivedNoteList extends localize(i18next)(PageView) {
           response.data.goodsReceivalNotes.items.map(grn => {
             return {
               ...grn,
-              refNo: grn.arrivalNotice.refNo || ''
+              refNo: grn.arrivalNotice.refNo || '',
+              ganStatus: grn.arrivalNotice.status
             }
           }) || []
       }

@@ -74,7 +74,7 @@ class CustomerInventoryPalletReport extends connect(store)(localize(i18next)(Pag
   get searchFields() {
     return [
       {
-        label: i18next.t('field.product'),
+        label: i18next.t('field.product_info'),
         name: 'product',
         type: 'string',
         props: { searchOper: 'in' }

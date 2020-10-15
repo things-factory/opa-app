@@ -1,12 +1,11 @@
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
-import { html, css } from 'lit-element'
+import { i18next, localize } from '@things-factory/i18n-base'
 import { client, PageView, store } from '@things-factory/shell'
-import { gqlBuilder, flattenObject } from '@things-factory/utils'
-import { connect } from 'pwa-helpers/connect-mixin'
-import { localize, i18next } from '@things-factory/i18n-base'
+import { flattenObject, gqlBuilder } from '@things-factory/utils'
 import gql from 'graphql-tag'
-import { getCodeByName } from '@things-factory/code-base'
+import { css, html } from 'lit-element'
+import { connect } from 'pwa-helpers/connect-mixin'
 
 class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -101,14 +100,8 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
         props: { searchOper: 'eq' }
       },
       {
-        label: i18next.t('field.product_name'),
+        label: i18next.t('field.product_info'),
         name: 'product',
-        type: 'string',
-        props: { searchOper: 'in' }
-      },
-      {
-        label: i18next.t('field.product_description'),
-        name: 'productDescription',
         type: 'string',
         props: { searchOper: 'in' }
       },

@@ -213,8 +213,8 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
         },
         {
           type: 'object',
-          name: 'updater',
-          header: i18next.t('field.updater'),
+          name: 'creator',
+          header: i18next.t('field.created_by'),
           record: { align: 'left' },
           sortable: true,
           width: 200
@@ -262,7 +262,7 @@ class ReleaseOrderList extends localize(i18next)(PageView) {
               status
               createdAt
               updatedAt
-              updater {
+              creator {
                 id
                 name
                 description

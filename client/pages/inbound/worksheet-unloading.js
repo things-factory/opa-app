@@ -121,9 +121,9 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
             <select name="status" disabled>
               ${this._statusOptions.map(
                 status => html`
-                  <option value="${status.name}" ?selected="${this._worksheetStatus === status.name}"
-                    >${i18next.t(`label.${status.description}`)}</option
-                  >
+                  <option value="${status.name}" ?selected="${this._worksheetStatus === status.name}">
+                    ${i18next.t(`label.${status.description}`)}
+                  </option>
                 `
               )}
             </select>
@@ -278,6 +278,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
               releaseGood {
                 name
               }
+              looseItem
             }
             bizplace {
               id
@@ -361,7 +362,8 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
               worksheetDetail.targetProduct.palletQty &&
               Number(worksheetDetail.targetProduct.palletQty) > 0
                 ? true
-                : false
+                : false,
+            isLooseItem: worksheet.arrivalNotice.looseItem ? true : false
           }
         })
       }
@@ -510,6 +512,8 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
                 if (item.name === record.name) {
                   item.palletQty = e.detail.palletQty
                   item.palletizingDescription = e.detail.palletizingDescription
+                  item.palletizingVasId = e.detail.palletizingVasId
+                  item.palletizingVasName = e.detail.palletizingVasName
                 }
 
                 return item
@@ -699,7 +703,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       }
 
       if (!worksheetDetail.isPalletized) {
-        // _tempObj.palletizingVasId = worksheetDetail.palletizingVasId
+        _tempObj.palletizingVasId = worksheetDetail.palletizingVasId ? worksheetDetail.palletizingVasId : null
         _tempObj.palletQty = worksheetDetail.palletQty
         _tempObj.palletizingDescription = worksheetDetail.palletizingDescription
       }

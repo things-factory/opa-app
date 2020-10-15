@@ -72,11 +72,11 @@ class CustomerInventoryByProduct extends localize(i18next)(PageView) {
   pageInitialized() {
     this._searchFields = [
       {
-        label: i18next.t('field.product'),
+        label: i18next.t('field.product_info'),
         name: 'id',
         type: 'object',
         queryName: 'products',
-        field: 'name'
+        field: 'product_info'
       },
       {
         label: i18next.t('field.product_ref'),

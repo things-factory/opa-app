@@ -170,11 +170,11 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
 
     this._searchFields = [
       {
-        label: i18next.t('field.product'),
+        label: i18next.t('field.product_info'),
         name: 'product',
         type: 'object',
         queryName: 'products',
-        field: 'name'
+        field: 'product_info'
       },
       {
         label: i18next.t('field.batch_no'),

@@ -296,6 +296,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
               //   record.product.description ? `(${record.product.description})` : ''
               // }`
               this.isWholePicking = this._selectedOrderInventory.releaseQty === this._selectedOrderInventory.qty
+              this.isReplacement = false
 
               this._fillUpForm(this.inputForm, record)
               if (this.scannable) {

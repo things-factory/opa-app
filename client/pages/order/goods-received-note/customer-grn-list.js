@@ -63,7 +63,7 @@ class CustomerGrnList extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
-    const _grnStatus = await getCodeByName('GRN_STATUS')
+    const _grnStatus = await getCodeByName('CUSTOMER_GRN_STATUS')
 
     this._searchFields = [
       {
@@ -86,7 +86,7 @@ class CustomerGrnList extends localize(i18next)(PageView) {
       },
       {
         label: i18next.t('field.status'),
-        name: 'status',
+        name: 'customerStatus',
         type: 'select',
         options: [
           { value: '' },
@@ -133,8 +133,16 @@ class CustomerGrnList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'status',
-          header: i18next.t('field.status'),
+          name: 'ganStatus',
+          header: i18next.t('field.gan_status'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 180
+        },
+        {
+          type: 'string',
+          name: 'customerStatus',
+          header: i18next.t('field.grn_status'),
           record: { align: 'center' },
           sortable: true,
           width: 180
@@ -168,11 +176,12 @@ class CustomerGrnList extends localize(i18next)(PageView) {
   }
 
   async fetchHandler({ page, limit, sorters = [{ name: 'createdAt', desc: true }] }) {
+    const filters = await this.searchForm.getQueryFilters()
     const response = await client.query({
       query: gql`
         query {
           goodsReceivalNotes(${gqlBuilder.buildArgs({
-            filters: this.searchForm.queryFilters,
+            filters: [...filters, { name: 'status', operator: 'notin', value: ['READY_TO_SEND'] }],
             pagination: { page, limit },
             sortings: sorters
           })}) {
@@ -184,8 +193,9 @@ class CustomerGrnList extends localize(i18next)(PageView) {
                 name
                 description
                 refNo
+                status
               }
-              status
+              customerStatus
               description
               bizplace {
                 id
@@ -213,7 +223,8 @@ class CustomerGrnList extends localize(i18next)(PageView) {
           response.data.goodsReceivalNotes.items.map(grn => {
             return {
               ...grn,
-              refNo: grn.arrivalNotice.refNo || ''
+              refNo: grn.arrivalNotice.refNo || '',
+              ganStatus: grn.arrivalNotice.status
             }
           }) || []
       }

@@ -1,18 +1,19 @@
-import { client, CustomAlert, ScrollbarStyles } from '@things-factory/shell'
+import { MultiColumnFormStyles } from '@things-factory/form-ui'
+import '@things-factory/grist-ui'
+import { i18next, localize } from '@things-factory/i18n-base'
+import { client, CustomAlert } from '@things-factory/shell'
+import { ScrollbarStyles } from '@things-factory/styles'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
-import { i18next, localize } from '@things-factory/i18n-base'
-import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
-import '@things-factory/grist-ui'
-import { MultiColumnFormStyles } from '@things-factory/form-ui'
-import {
-  LOCATION_SORTING_RULE,
-  INVENTORY_STATUS,
-  PICKING_STANDARD,
-  ORDER_TYPES,
-  ORDER_INVENTORY_STATUS
-} from '../../constants'
 import { fetchLocationSortingRule } from '../../../fetch-location-sorting-rule'
+import {
+  INVENTORY_STATUS,
+  LOCATION_SORTING_RULE,
+  ORDER_INVENTORY_STATUS,
+  ORDER_TYPES,
+  PICKING_STANDARD
+} from '../../constants'
 
 export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
   static get styles() {

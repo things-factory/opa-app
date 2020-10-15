@@ -64,7 +64,7 @@ class CustomerReceivedNote extends localize(i18next)(PageView) {
     var { domain } = getPathInfo(location.pathname) // find out better way later.
     if (domain === 'elccl') {
       this.shadowRoot.querySelector('#container').src = `/view_elccl_grn/${domain}/${this._grnNo}`
-    } else if (domain === 'kimeda') {
+    } else {
       this.shadowRoot.querySelector('#container').src = `/view_kimeda_grn/${domain}/${this._grnNo}`
     }
   }
@@ -79,23 +79,23 @@ class CustomerReceivedNote extends localize(i18next)(PageView) {
           })}) {
             id
             name
-            status
+            customerStatus
           }
         }
       `
     })
 
     if (!response.errors) {
-      const _grn = response.data.goodsReceivalNote
-      this._status = _grn.status
+      const grn = response.data.goodsReceivalNote
+      this._status = grn.customerStatus
     }
   }
 
   _updateContext() {
     this._actions = []
 
-    if (this._status !== ORDER_STATUS.RECEIVED.value) {
-      this._actions = [...this._actions, { title: i18next.t('button.accept'), action: this._receivedGrn.bind(this) }]
+    if (this._status === ORDER_STATUS.PENDING_RECEIVE.value) {
+      this._actions = [...this._actions, { title: i18next.t('button.receive'), action: this._receivedGrn.bind(this) }]
     }
 
     this._actions = [
@@ -141,7 +141,7 @@ class CustomerReceivedNote extends localize(i18next)(PageView) {
       })
 
       if (!response.errors) {
-        navigate('received_note_list')
+        navigate('customer_grn_list')
         this._showToast({ message: i18next.t('text.goods_received_note_has_been_received') })
       }
     } catch (e) {

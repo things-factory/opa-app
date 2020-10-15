@@ -876,6 +876,7 @@
   "title.worksheet_picking": "pengambilan stok lembaran kerja",
   "title.worksheet_putaway": "putaway lembaran kerja",
   "title.worksheet_return": "pemulangan stok lembaran kerja",
+  "text.a_cannot_exceed_b": "{state.a} cannot excced {state.b}",
   "title.worksheet_unloading": "pemunggahan lembaran kerja",
   "title.worksheet_vas": "VALUE ADDED SERVICE worksheet"
 }

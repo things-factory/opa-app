@@ -152,7 +152,7 @@ class CreateVasOrder extends localize(i18next)(PageView) {
               select: [
                 { name: 'productId', hidden: true },
                 { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'left' } },
-                { name: 'productName', header: i18next.t('field.product'), record: { align: 'left' }, width: 280 },
+                { name: 'productName', header: i18next.t('field.product_info'), record: { align: 'left' }, width: 280 },
                 { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
                 {
                   name: 'remainQty',

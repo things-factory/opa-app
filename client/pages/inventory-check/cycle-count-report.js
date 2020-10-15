@@ -18,6 +18,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
       _cycleCountNo: String,
       cycleCountType: String,
       customerId: String,
+      inventoryAccuracy: String,
       config: Object,
       data: Object
     }
@@ -106,7 +107,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
             <input name="executionDate" readonly />
 
             <label>${i18next.t('label.inventory_accuracy')}</label>
-            <input name="inventoryAccuracy" readonly />
+            <input name="inventoryAccuracy" value="${this.inventoryAccuracy ? this.inventoryAccuracy : ''}" readonly />
 
             <label>${i18next.t('label.status')}</label>
             <select name="status" disabled>
@@ -127,7 +128,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           id="grist"
           .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
           .config=${this.config}
-          .fetchHandler="${this.fetchWorksheet.bind(this)}"
+          .fetchHandler="${this.fetchWorksheetWithPagination.bind(this)}"
         ></data-grist>
       </div>
     `
@@ -139,6 +140,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
         this._worksheetNo = changes.resourceId
       }
       this.grist.fetch()
+      await this.fetchWorksheet()
       this._updateContext()
     }
   }
@@ -289,7 +291,82 @@ class CycleCountReport extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  async fetchWorksheet({ page, limit }) {
+  async fetchWorksheet() {
+    if (!this._worksheetNo) return
+    const response = await client.query({
+      query: gql`
+        query {
+          worksheetWithPagination(${gqlBuilder.buildArgs({
+            name: this._worksheetNo,
+            pagination: {}
+          })}) {
+            worksheet {
+              type
+              status
+              inventoryCheck {
+                name
+                executionDate
+                status
+              }
+              bizplace {
+                id
+                name
+              }
+            }
+            worksheetDetails {
+              name
+              status
+              description
+              targetInventory {
+                status
+                id
+                inspectedBatchNo
+                inspectedQty
+                inspectedWeight
+                inspectedLocation {
+                  id
+                  name
+                  description
+                }
+                inventory {
+                  palletId
+                  batchId
+                  packingType
+                  qty
+                  weight
+                  location {
+                    id
+                    name
+                    description
+                  }
+                  product {
+                    name
+                    description
+                  }
+                }
+              }
+            }
+            total
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      const worksheetDetails = response.data.worksheetWithPagination.worksheetDetails
+      const tallyInv = worksheetDetails.filter(wd => wd.status === WORKSHEET_STATUS.DONE.value)
+      const notTallyInv = worksheetDetails.filter(wd => wd.status === WORKSHEET_STATUS.NOT_TALLY.value)
+      const adjustedInv = worksheetDetails.filter(wd => wd.status === WORKSHEET_STATUS.ADJUSTED.value)
+
+      const accuracyInv =
+        (tallyInv.length / (tallyInv.length + (notTallyInv.length ? notTallyInv.length : adjustedInv.length))) * 100 +
+        `%`
+
+      this.inventoryAccuracy = accuracyInv
+    }
+  }
+
+  async fetchWorksheetWithPagination({ page, limit }) {
     if (!this._worksheetNo) return
     const response = await client.query({
       query: gql`
@@ -355,13 +432,6 @@ class CycleCountReport extends localize(i18next)(PageView) {
       this.cycleCountType = worksheet.type
       this.customerId = worksheet.bizplace.id
       const worksheetDetails = response.data.worksheetWithPagination.worksheetDetails
-      const tallyInv = worksheetDetails.filter(wd => wd.status === WORKSHEET_STATUS.DONE.value)
-      const notTallyInv = worksheetDetails.filter(wd => wd.status === WORKSHEET_STATUS.NOT_TALLY.value)
-      const adjustedInv = worksheetDetails.filter(wd => wd.status === WORKSHEET_STATUS.ADJUSTED.value)
-
-      const accuracyInv =
-        (tallyInv.length / (tallyInv.length + (notTallyInv.length ? notTallyInv.length : adjustedInv.length))) * 100 +
-        `%`
 
       this._reportStatus = worksheet.inventoryCheck.status
       this._cycleCountNo = (worksheet.inventoryCheck && worksheet.inventoryCheck.name) || ''
@@ -370,8 +440,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
         ...worksheet,
         cycleCountNo: worksheet.inventoryCheck.name,
         executionDate: worksheet.inventoryCheck.executionDate,
-        status: this._reportStatus,
-        inventoryAccuracy: accuracyInv
+        status: this._reportStatus
       })
       const records = worksheetDetails
         .map(worksheetDetail => {

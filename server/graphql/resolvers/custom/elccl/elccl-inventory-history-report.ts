@@ -59,15 +59,21 @@ export const elcclInventoryHistoryReport = {
 
       let productQuery = ''
       if (product) {
-        productQuery =
-          'AND prd.name ILIKE ANY(ARRAY[' +
+        let productValue =
           product.value
+            .toLowerCase()
             .split(',')
             .map(prod => {
               return "'%" + prod.trim().replace(/'/g, "''") + "%'"
             })
-            .join(',') +
-          '])'
+            .join(',') + ']) '
+        productQuery =
+          'AND prd.name ILIKE ANY(ARRAY[' +
+          productValue +
+          'OR prd.sku ILIKE ANY(ARRAY[' +
+          productValue +
+          'OR prd.description ILIKE ANY(ARRAY[' +
+          productValue
       }
 
       return await getManager().transaction(async (trxMgr: EntityManager) => {
