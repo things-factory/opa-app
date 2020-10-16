@@ -66,8 +66,8 @@ export const addReleaseGoodProducts = {
             })
 
             if (curOrderInv.releaseQty === 0) {
-              foundInv.lockedQty = foundInv.lockQty - existingOrderInv.releaseQty
-              foundInv.lockedWeight = foundInv.lockWeight - existingOrderInv.releaseWeight
+              foundInv.lockedQty = Number(foundInv.lockedQty) - Number(existingOrderInv.releaseQty)
+              foundInv.lockedWeight = Number(foundInv.lockedWeight) - Number(existingOrderInv.releaseWeight)
 
               await trxMgr.getRepository(Inventory).save(foundInv)
 
@@ -111,8 +111,8 @@ export const addReleaseGoodProducts = {
                   throw new Error(`${foundPickingHistory.palletId} has picked ${pickedQty}`)
               }
 
-              foundInv.lockedQty = curOrderInv.releaseQty
-              foundInv.lockedWeight = curOrderInv.releaseWeight
+              foundInv.lockedQty = Number(curOrderInv.releaseQty)
+              foundInv.lockedWeight = Number(curOrderInv.releaseWeight)
               foundInv.updater = user
 
               await trxMgr.getRepository(Inventory).save(foundInv)
@@ -205,7 +205,13 @@ export const addReleaseGoodProducts = {
             newOrderInv = {
               ...existingOrderInv,
               releaseQty: existingOrderInv.releaseQty + newOrderInv.releaseQty,
-              releaseWeight: existingOrderInv.releaseWeight + newOrderInv.releaseWeight
+              releaseWeight: existingOrderInv.releaseWeight + newOrderInv.releaseWeight,
+              status:
+                existingOrderInv.status === ORDER_INVENTORY_STATUS.CANCELLED
+                  ? pickingWorksheet
+                    ? ORDER_INVENTORY_STATUS.PICKING
+                    : ORDER_INVENTORY_STATUS.PENDING
+                  : existingOrderInv.status
             }
 
             let existingWorksheetDetail: WorksheetDetail = await trxMgr.getRepository(WorksheetDetail).findOne({
