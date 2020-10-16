@@ -736,7 +736,7 @@
   "text.complete_loading": "complete loading",
   "text.complete_transfer": "complete transfer",
   "text.complete_unloading": "complete unloading",
-  "text.completing_inspection": "completing instpection",
+  "text.completing_inspection": "completing inspection",
   "text.completed_x": "completed {state.x}",
   "text.completed_collection_order": "completed collection order",
   "text.completed_delivery_order": "competed delivery order",
