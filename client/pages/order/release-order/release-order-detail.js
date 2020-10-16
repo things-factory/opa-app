@@ -520,6 +520,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
                 id
                 name
               }
+              status
             }
             shippingOrderInfo {
               containerNo
@@ -574,6 +575,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           },
           remainQty: inventoryInfo.qty,
           remainWeight: inventoryInfo.weight,
+          status: inventoryInfo.status,
           existing: true,
           roundedWeight: inventoryInfo.releaseQty * (inventoryInfo.weight / inventoryInfo.qty) || ''
         }

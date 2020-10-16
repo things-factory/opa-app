@@ -10,7 +10,7 @@ import {
   WORKSHEET_STATUS,
   generatePickingWorksheetDetail
 } from '@things-factory/worksheet-base'
-import { getManager } from 'typeorm'
+import { getManager, In } from 'typeorm'
 import {
   ORDER_STATUS,
   ORDER_INVENTORY_STATUS,
@@ -39,6 +39,117 @@ export const addReleaseGoodProducts = {
       let loadingWorksheet: Worksheet = await trxMgr.getRepository(Worksheet).findOne({
         where: { releaseGood, type: WORKSHEET_TYPE.LOADING }
       })
+
+      if (existingOrderInventories) {
+        for (let oi of existingOrderInventories) {
+          // map input to OrderInventory Object
+          let curOrderInv: OrderInventory = Object.assign({}, oi)
+          curOrderInv.domain = domain
+          curOrderInv.bizplace = bizplace
+          curOrderInv.releaseGood = releaseGood
+          curOrderInv.product = await trxMgr.getRepository(Product).findOne(oi.product.id)
+
+          let existingOrderInv: OrderInventory
+
+          if (curOrderInv?.inventory?.id) {
+            const foundInv: Inventory = await trxMgr.getRepository(Inventory).findOne(curOrderInv.inventory.id)
+            curOrderInv.inventory = foundInv
+
+            existingOrderInv = await trxMgr.getRepository(OrderInventory).findOne({
+              where: {
+                releaseGood,
+                product: curOrderInv.product,
+                batchId: curOrderInv.batchId,
+                packingType: curOrderInv.packingType,
+                inventory: foundInv
+              }
+            })
+
+            if (curOrderInv.releaseQty === 0) {
+              foundInv.lockedQty = foundInv.lockQty - existingOrderInv.releaseQty
+              foundInv.lockedWeight = foundInv.lockWeight - existingOrderInv.releaseWeight
+
+              await trxMgr.getRepository(Inventory).save(foundInv)
+
+              if (existingOrderInv) {
+                // if found existing OrderInventory and worksheetDetail then qty, weight, and status are updated
+                curOrderInv = {
+                  ...existingOrderInv,
+                  releaseQty: curOrderInv.releaseQty,
+                  releaseWeight: curOrderInv.releaseWeight,
+                  status: ORDER_INVENTORY_STATUS.CANCELLED
+                }
+
+                let existingWorksheetDetail: WorksheetDetail = await trxMgr.getRepository(WorksheetDetail).findOne({
+                  where: {
+                    pickingWorksheet,
+                    type: WORKSHEET_TYPE.PICKING,
+                    targetInventory: curOrderInv
+                  }
+                })
+
+                existingWorksheetDetail = {
+                  ...existingWorksheetDetail,
+                  status: WORKSHEET_STATUS.CANCELLED
+                }
+                await trxMgr.getRepository(WorksheetDetail).save(existingWorksheetDetail)
+                await trxMgr.getRepository(OrderInventory).save(curOrderInv)
+              }
+            } else {
+              let foundPickingHistory: InventoryHistory = await trxMgr.getRepository(InventoryHistory).findOne({
+                where: {
+                  refOrderId: releaseGood.id,
+                  palletId: foundInv.palletId,
+                  transactionType: INVENTORY_TRANSACTION_TYPE.PICKING
+                }
+              })
+
+              if (foundPickingHistory) {
+                let pickedQty = Number(foundPickingHistory.qty.toString().replace('-', ''))
+
+                if (curOrderInv.releaseQty < pickedQty)
+                  throw new Error(`${foundPickingHistory.palletId} has picked ${pickedQty}`)
+              }
+
+              foundInv.lockedQty = curOrderInv.releaseQty
+              foundInv.lockedWeight = curOrderInv.releaseWeight
+              foundInv.updater = user
+
+              await trxMgr.getRepository(Inventory).save(foundInv)
+
+              if (existingOrderInv) {
+                // if found existing OrderInventory and worksheetDetail then qty, weight, and status are updated
+                curOrderInv = {
+                  ...existingOrderInv,
+                  releaseQty: curOrderInv.releaseQty,
+                  releaseWeight: curOrderInv.releaseWeight
+                }
+
+                let existingWorksheetDetail: WorksheetDetail = await trxMgr.getRepository(WorksheetDetail).findOne({
+                  where: {
+                    pickingWorksheet,
+                    type: WORKSHEET_TYPE.PICKING,
+                    targetInventory: existingOrderInv
+                  }
+                })
+
+                if (existingWorksheetDetail) {
+                  if (curOrderInv.releaseQty != existingOrderInv.releaseQty) {
+                    existingWorksheetDetail = {
+                      ...existingWorksheetDetail,
+                      status: WORKSHEET_STATUS.DEACTIVATED
+                    }
+
+                    await trxMgr.getRepository(WorksheetDetail).save(existingWorksheetDetail)
+                  }
+                }
+
+                await trxMgr.getRepository(OrderInventory).save(curOrderInv)
+              }
+            }
+          }
+        }
+      }
 
       if (orderInventories) {
         for (let oi of orderInventories) {
@@ -120,84 +231,6 @@ export const addReleaseGoodProducts = {
           if (!existingOrderInv && pickingWorksheet) {
             // if this is a new orderInventory and has existing worksheet then generate a new worksheet detail for it
             await generatePickingWorksheetDetail(trxMgr, domain, bizplace, user, pickingWorksheet, savedOrderInv)
-          }
-        }
-      }
-
-      if (existingOrderInventories) {
-        for (let oi of existingOrderInventories) {
-          // map input to OrderInventory Object
-          let curOrderInv: OrderInventory = Object.assign({}, oi)
-          curOrderInv.domain = domain
-          curOrderInv.bizplace = bizplace
-          curOrderInv.releaseGood = releaseGood
-          curOrderInv.product = await trxMgr.getRepository(Product).findOne(oi.product.id)
-
-          let existingOrderInv: OrderInventory
-
-          if (curOrderInv?.inventory?.id) {
-            // if release by inventory, then quantity and weight values are updated
-            const foundInv: Inventory = await trxMgr.getRepository(Inventory).findOne(curOrderInv.inventory.id)
-            curOrderInv.inventory = foundInv
-
-            let foundPickingHistory: InventoryHistory = await trxMgr.getRepository(InventoryHistory).findOne({
-              where: {
-                refOrderId: releaseGood.id,
-                palletId: foundInv.palletId,
-                transactionType: INVENTORY_TRANSACTION_TYPE.PICKING
-              }
-            })
-
-            if (foundPickingHistory) {
-              let pickedQty = Number(foundPickingHistory.qty.toString().replace('-', ''))
-
-              if (curOrderInv.releaseQty < pickedQty)
-                throw new Error(`${foundPickingHistory.palletId} has picked ${pickedQty}`)
-            }
-
-            existingOrderInv = await trxMgr.getRepository(OrderInventory).findOne({
-              where: {
-                releaseGood,
-                product: curOrderInv.product,
-                batchId: curOrderInv.batchId,
-                packingType: curOrderInv.packingType,
-                inventory: foundInv
-              }
-            })
-
-            foundInv.lockedQty = curOrderInv.releaseQty
-            foundInv.lockedWeight = curOrderInv.releaseWeight
-            foundInv.updater = user
-
-            await trxMgr.getRepository(Inventory).save(foundInv)
-          }
-
-          if (existingOrderInv) {
-            // if found existing OrderInventory and worksheetDetail then qty, weight, and status are updated
-            curOrderInv = {
-              ...existingOrderInv,
-              releaseQty: curOrderInv.releaseQty,
-              releaseWeight: curOrderInv.releaseWeight
-            }
-
-            let existingWorksheetDetail: WorksheetDetail = await trxMgr.getRepository(WorksheetDetail).findOne({
-              where: {
-                pickingWorksheet,
-                type: WORKSHEET_TYPE.PICKING,
-                targetInventory: existingOrderInv
-              }
-            })
-
-            if (existingWorksheetDetail) {
-              existingWorksheetDetail = {
-                ...existingWorksheetDetail,
-                status: WORKSHEET_STATUS.DEACTIVATED
-              }
-
-              await trxMgr.getRepository(WorksheetDetail).save(existingWorksheetDetail)
-            }
-
-            await trxMgr.getRepository(OrderInventory).save(curOrderInv)
           }
         }
       }

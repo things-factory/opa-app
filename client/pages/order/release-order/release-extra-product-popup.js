@@ -214,11 +214,35 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
       pagination: { infinite: true },
       rows: {
         appendable: false,
-        selectable: { multiple: true }
+        selectable: { multiple: true },
+        classifier: (record, rowIndex) => {
+          return {
+            emphasized: record.status === ORDER_INVENTORY_STATUS.PICKED.value
+          }
+        }
       },
       list: { fields: ['inventory', 'product', 'location', 'releaseQty'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
+        // {
+        //   type: 'gutter',
+        //   gutterName: 'button',
+        //   icon: 'close',
+        //   handlers: {
+        //     click: (columns, data, column, record, rowIndex) => {
+        //       try {
+        //         if (record.status === ORDER_INVENTORY_STATUS.PICKED.value)
+        //           throw new Error(i18next.t('text.cannot_delete_picked_products'))
+        //         const newData = data.records.filter((_, idx) => idx !== rowIndex)
+        //         this.existingInventoryData = { ...this.existingInventoryData, records: newData }
+        //         this.existingInventoryGrist.dirtyData.records = newData
+        //         this._updateInventoryList()
+        //       } catch (e) {
+        //         this._showToast(e)
+        //       }
+        //     }
+        //   }
+        // },
         {
           type: 'object',
           name: 'inventory',
@@ -287,6 +311,13 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
             codeName: 'PACKING_TYPES'
           },
           width: 150
+        },
+        {
+          type: 'string',
+          name: 'status',
+          header: i18next.t('field.status'),
+          record: { align: 'center' },
+          width: 100
         },
         {
           type: 'integer',
@@ -639,8 +670,6 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
     if (remainQty === undefined) throw new Error(i18next.t('text.there_is_no_selected_items'))
     if (releaseQty > remainQty) {
       throw new Error(i18next.t('text.available_quantity_insufficient'))
-    } else if (releaseQty <= 0) {
-      throw new Error(i18next.t('text.invalid_quantity_input'))
     }
   }
 
@@ -648,12 +677,8 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
     if (remainWeight === undefined) throw new Error(i18next.t('text.there_is_no_selected_items'))
     if (releaseWeight > remainWeight) {
       throw new Error(i18next.t('text.available_weight_insufficient'))
-    } else if (releaseWeight <= 0) {
-      throw new Error(i18next.t('text.invalid_weight_input'))
     }
   }
-
-  _validateChanges(releaseItem) {}
 
   async _addExtraProducts() {
     try {
@@ -695,10 +720,9 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
   }
 
   _getReleaseData() {
-    const inventoryLength = this.inventoryGrist.data.records.length
     let orderInventories = []
-    if (inventoryLength > 0) {
-      orderInventories = this.inventoryGrist.data.records.map(record => {
+    if (this.inventoryGrist.dirtyData.records.length > 0) {
+      orderInventories = this.inventoryGrist.dirtyData.records.map(record => {
         let newRecord = {
           releaseQty: record.releaseQty,
           releaseWeight: record.releaseWeight,
@@ -721,10 +745,9 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
       })
     }
 
-    const existingInventoryLength = this.existingInventoryGrist.data.records.length
     let existingOrderInventories = []
-    if (existingInventoryLength > 0) {
-      existingOrderInventories = this.existingInventoryGrist.data.records.map(record => {
+    if (this.existingInventoryGrist.dirtyData.records.length > 0) {
+      existingOrderInventories = this.existingInventoryGrist.dirtyData.records.map(record => {
         let existRecord = {
           releaseQty: record.releaseQty,
           releaseWeight: record.releaseWeight,

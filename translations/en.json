@@ -719,6 +719,7 @@
   "text.cancellation_request_has_been_rejected": "cancellation request has been rejected",
   "text.cannot_change_x": "can't change {state.x}",
   "text.cannot_delete_cross_docking_products": "can't delete products for cross docking",
+  "text.cannot_delete_picked_products": "cannot delete picked product",
   "text.cannot_delete_unsaved_location(s)": "cannot delete unsaved location(s)",
   "text.change_driver/vehicle": "change driver/truck",
   "text.change_to_editable": "change to editable",
