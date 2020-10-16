@@ -131,14 +131,19 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
     `
   }
 
-  async pageUpdated(changes) {
+  pageUpdated(changes) {
     if (this.active && (changes.resourceId || this._worksheetNo)) {
       if (changes.resourceId) {
         this._worksheetNo = changes.resourceId
       }
-      await this.grist.fetch()
-      this._updateContext()
+      this.grist.fetch()
       this._updateGristConfig()
+    }
+  }
+
+  updated(changedProps) {
+    if (changedProps.has('_worksheetStatus')) {
+      this._updateContext()
     }
   }
 

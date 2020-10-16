@@ -73,3 +73,21 @@ export const WORKSHEET_STATUS = {
     value: 'NOT_TALLY'
   }
 }
+
+export const getWorksheetStatusCandidates = function (worksheetType) {
+  if (!worksheetType) throw new Error('There is no worksheet type')
+
+  switch (worksheetType) {
+    case WORKSHEET_TYPE.CYCLE_COUNT:
+      return [
+        WORKSHEET_STATUS.DEACTIVATED,
+        WORKSHEET_STATUS.EXECUTING,
+        WORKSHEET_STATUS.DONE,
+        WORKSHEET_STATUS.ADJUSTED,
+        WORKSHEET_STATUS.NOT_TALLY
+      ]
+
+    default:
+      throw new Error('Failed to find via passed order type')
+  }
+}

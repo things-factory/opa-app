@@ -1,14 +1,20 @@
-import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import { openPopup } from '@things-factory/layout-base'
 import { client, navigate, PageView } from '@things-factory/shell'
 import { ScrollbarStyles } from '@things-factory/styles'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { ORDER_STATUS, WORKSHEET_TYPE } from '../constants'
-
+import {
+  getOrderStatusCandidates,
+  getWorksheetStatusCandidates,
+  ORDER_STATUS,
+  ORDER_TYPES,
+  WORKSHEET_TYPE
+} from '../constants'
+import './search-popup'
 class InventoryCheckList extends localize(i18next)(PageView) {
   static get styles() {
     return [
@@ -68,28 +74,22 @@ class InventoryCheckList extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
-    const _worksheetStatus = await getCodeByName('WORKSHEET_STATUS')
-    const _orderStatus = await getCodeByName('ORDER_STATUS')
+    const _worksheetStatus = getWorksheetStatusCandidates(WORKSHEET_TYPE.CYCLE_COUNT)
+    const _orderStatus = getOrderStatusCandidates(ORDER_TYPES.CYCLE_COUNT)
 
     this._bizplaces = [...(await this._fetchBizplaceList())]
 
     this._searchFields = [
       {
-        name: 'bizplaceId',
-        label: i18next.t('field.customer'),
-        type: 'select',
-        options: [
-          { value: '' },
-          ...this._bizplaces
-            .map(bizplaceList => {
-              return {
-                name: bizplaceList.name,
-                value: bizplaceList.id
-              }
-            })
-            .sort(this._compareValues('name', 'asc'))
-        ],
-        props: { searchOper: 'eq' }
+        name: 'bizplace',
+        label: i18next.t(`field.customer`),
+        type: 'object',
+        queryName: 'bizplaces',
+        field: 'name',
+        handlers: {
+          click: this._showSearchCustomer.bind(this)
+        },
+        props: { searchOper: 'eq', readonly: true }
       },
       {
         name: 'inventoryCheckNo',
@@ -110,7 +110,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
         options: [
           { value: '' },
           ..._orderStatus.map(status => {
-            return { name: i18next.t(`label.${status.description}`), value: status.name }
+            return { name: i18next.t(`label.${status.name}`), value: status.value }
           })
         ],
         props: { searchOper: 'eq' }
@@ -119,12 +119,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
         name: 'status',
         label: i18next.t('field.task_status'),
         type: 'select',
-        options: [
-          { value: '' },
-          ..._worksheetStatus.map(status => {
-            return { name: i18next.t(`label.${status.description}`), value: status.name }
-          })
-        ],
+        options: [{ value: '' }, ..._worksheetStatus],
         props: { searchOper: 'eq' }
       }
     ]
@@ -145,7 +140,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
             click: (columns, data, column, record, rowIndex) => {
               if (!record.id) return
               const type = record.type
-              const status = record.status
+              const status = record.orderStatus
 
               // Handle PICKING
               if (
@@ -236,8 +231,12 @@ class InventoryCheckList extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  async fetchHandler({ page, limit, sorters = [{ name: 'createdAt', desc: true }] }) {
-    const filters = this.searchForm.queryFilters
+  get bizplace() {
+    return this.searchForm.shadowRoot.querySelector('input[name=bizplace]')
+  }
+
+  async fetchHandler({ page, limit, sorters = [{ name: 'endedAt', desc: true }] }) {
+    const filters = await this.searchForm.getQueryFilters()
     filters.push({
       name: 'type',
       operator: 'in',
@@ -323,6 +322,23 @@ class InventoryCheckList extends localize(i18next)(PageView) {
     if (!response.errors) {
       return response.data.bizplaces.items
     }
+  }
+
+  _showSearchCustomer() {
+    openPopup(
+      html`
+        <search-popup
+          .complete="${async data => {
+            this.bizplace.value = data.name
+          }}"
+        ></search-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('field.customer')
+      }
+    )
   }
 
   _compareValues(key, order = 'asc') {

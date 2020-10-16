@@ -395,9 +395,17 @@ class CycleCountReport extends localize(i18next)(PageView) {
               targetInventory {
                 status
                 id
+                originBatchNo
                 inspectedBatchNo
+                originQty
                 inspectedQty
+                originWeight
                 inspectedWeight
+                originLocation {
+                  id
+                  name
+                  description
+                }
                 inspectedLocation {
                   id
                   name
@@ -405,15 +413,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
                 }
                 inventory {
                   palletId
-                  batchId
                   packingType
-                  qty
-                  weight
-                  location {
-                    id
-                    name
-                    description
-                  }
                   product {
                     name
                     description
@@ -453,12 +453,16 @@ class CycleCountReport extends localize(i18next)(PageView) {
               `(` +
               worksheetDetail.targetInventory.inventory.product.description +
               `)`,
-            locationName: worksheetDetail.targetInventory.inventory.location.name,
+            locationName: worksheetDetail.targetInventory.originLocation.name,
             status: worksheetDetail.status,
-            inspectedLocation: worksheetDetail.targetInventory.inspectedLocation?.name,
-            inspectedQty: worksheetDetail.targetInventory.inspectedQty,
-            inspectedWeight: worksheetDetail.targetInventory.inspectedWeight,
+            batchId: worksheetDetail.targetInventory.originBatchNo,
             inspectedBatchNo: worksheetDetail.targetInventory.inspectedBatchNo,
+            qty: worksheetDetail.targetInventory.originQty,
+            inspectedQty: worksheetDetail.targetInventory.inspectedQty,
+            weight: worksheetDetail.targetInventory.originWeight,
+            inspectedWeight: worksheetDetail.targetInventory.inspectedWeight,
+            location: worksheetDetail.targetInventory.originLocation,
+            inspectedLocation: worksheetDetail.targetInventory.inspectedLocation?.name,
             packingType: worksheetDetail.targetInventory.inventory?.packingType || '',
             inspectedStatus: worksheetDetail.targetInventory.status,
             orderInventoryId: worksheetDetail.targetInventory.id
@@ -547,8 +551,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
         query: gql`
           mutation {
             cycleCountAdjustment(${gqlBuilder.buildArgs({
-              cycleCountNo: this._cycleCountNo,
-              cycleCountWorksheetDetails: this._getCycleCountWSD()
+              cycleCountNo: this._cycleCountNo
             })}) 
           }
         `
@@ -565,13 +568,10 @@ class CycleCountReport extends localize(i18next)(PageView) {
   }
 
   openCycleCountRecheckPopup() {
-    const notTallyInventories = this.grist.dirtyData.records.filter(
-      record => record.status === WORKSHEET_STATUS.NOT_TALLY.value
-    )
     openPopup(
       html`
         <cycle-count-recheck-popup
-          .inventories="${notTallyInventories}"
+          .cycleCountNo="${this._cycleCountNo}"
           .customerId="${this.customerId}"
           @completed="${() => this.grist.fetch()}"
         ></cycle-count-recheck-popup>
@@ -582,15 +582,6 @@ class CycleCountReport extends localize(i18next)(PageView) {
         title: i18next.t('title.cycle_count_recheck')
       }
     )
-  }
-
-  _getCycleCountWSD() {
-    return this.grist.dirtyData.records.map(worksheetDetail => {
-      return {
-        name: worksheetDetail.name,
-        description: worksheetDetail.description
-      }
-    })
   }
 
   async _exportableData() {
