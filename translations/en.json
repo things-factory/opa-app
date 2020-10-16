@@ -15,6 +15,7 @@
 
   "button.accept": "accept",
   "button.activate": "activate",
+  "button.add_edit": "add & edit",
   "button.add_x": "add {state.x}",
   "button.adjust": "adjust",
   "button.adjust_inventory": "adjust inventory",

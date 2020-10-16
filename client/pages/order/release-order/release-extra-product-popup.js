@@ -173,7 +173,7 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
         >
           ${i18next.t('button.cancel')}
         </button>
-        <button @click="${this._addExtraProducts.bind(this)}">${i18next.t('button.add')}</button>
+        <button @click="${this._addExtraProducts.bind(this)}">${i18next.t('button.add_edit')}</button>
       </div>
     `
   }

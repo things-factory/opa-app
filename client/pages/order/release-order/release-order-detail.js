@@ -660,7 +660,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
       this._allowROAddProductSetting
     ) {
       this._actions = [
-        { title: i18next.t('button.add'), action: this._openExtraProductPopup.bind(this) },
+        { title: i18next.t('button.edit'), action: this._openExtraProductPopup.bind(this) },
         ...this._actions
       ]
     }

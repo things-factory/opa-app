@@ -55,6 +55,21 @@ export const addReleaseGoodProducts = {
             const foundInv: Inventory = await trxMgr.getRepository(Inventory).findOne(curOrderInv.inventory.id)
             curOrderInv.inventory = foundInv
 
+            let foundPickingHistory: InventoryHistory = await trxMgr.getRepository(InventoryHistory).findOne({
+              where: {
+                refOrderId: releaseGood.id,
+                palletId: foundInv.palletId,
+                transactionType: INVENTORY_TRANSACTION_TYPE.PICKING
+              }
+            })
+
+            if (foundPickingHistory) {
+              let pickedQty = Number(foundPickingHistory.qty.toString().replace('-', ''))
+
+              if (curOrderInv.releaseQty < pickedQty)
+                throw new Error(`${foundPickingHistory.palletId} has picked ${pickedQty}`)
+            }
+
             existingOrderInv = await trxMgr.getRepository(OrderInventory).findOne({
               where: {
                 releaseGood,
@@ -96,21 +111,6 @@ export const addReleaseGoodProducts = {
                 await trxMgr.getRepository(OrderInventory).save(curOrderInv)
               }
             } else {
-              let foundPickingHistory: InventoryHistory = await trxMgr.getRepository(InventoryHistory).findOne({
-                where: {
-                  refOrderId: releaseGood.id,
-                  palletId: foundInv.palletId,
-                  transactionType: INVENTORY_TRANSACTION_TYPE.PICKING
-                }
-              })
-
-              if (foundPickingHistory) {
-                let pickedQty = Number(foundPickingHistory.qty.toString().replace('-', ''))
-
-                if (curOrderInv.releaseQty < pickedQty)
-                  throw new Error(`${foundPickingHistory.palletId} has picked ${pickedQty}`)
-              }
-
               foundInv.lockedQty = Number(curOrderInv.releaseQty)
               foundInv.lockedWeight = Number(curOrderInv.releaseWeight)
               foundInv.updater = user
