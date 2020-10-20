@@ -109,6 +109,15 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
           width: 120
         },
         {
+          type: 'datetime',
+          name: 'initialInboundAt',
+          header: i18next.t('field.initial inbound date'),
+          record: { align: 'left' },
+          sortable: false,
+          imex: { header: i18next.t('field.initial inbound date'), key: 'initialInboundAt', width: 75, type: 'string' },
+          width: 150
+        },
+        {
           type: 'object',
           name: 'bizplace',
           header: i18next.t('field.customer'),
@@ -189,15 +198,6 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
           },
           sortable: true,
           width: 120
-        },
-        {
-          type: 'datetime',
-          name: 'initialInboundAt',
-          header: i18next.t('field.initial inbound date'),
-          record: { align: 'left' },
-          sortable: false,
-          imex: { header: i18next.t('field.initial inbound date'), key: 'initialInboundAt', width: 75, type: 'string' },
-          width: 150
         }
       ]
     }
