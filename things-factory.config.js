@@ -40,8 +40,8 @@ export default {
       page: 'picking_bins'
     },
     {
-      tagname: 'opa-product-list',
-      page: 'opa_products'
+      tagname: 'opa-product-allocation',
+      page: 'opa_product_allocation'
     },
 
     /**

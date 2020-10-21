@@ -17,7 +17,7 @@ import { css, html } from 'lit-element'
 import { openPopup } from '@things-factory/layout-base'
 import './opa-product-batch-allocation'
 
-class OpaProductList extends localize(i18next)(PageView) {
+class OpaProductAllocation extends localize(i18next)(PageView) {
   static get properties() {
     return {
       searchFields: Array,
@@ -391,4 +391,4 @@ class OpaProductList extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('opa-product-list', OpaProductList)
+window.customElements.define('opa-product-allocation', OpaProductAllocation)
