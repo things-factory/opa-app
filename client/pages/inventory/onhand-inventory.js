@@ -114,7 +114,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.initial inbound date'),
           record: { align: 'left' },
           sortable: false,
-          imex: { header: i18next.t('field.initial inbound date'), key: 'initialInboundAt', width: 75, type: 'string' },
+          imex: { header: i18next.t('field.initial inbound date'), key: 'initialInboundAt', width: 75, type: 'date' },
           width: 150
         },
         {
