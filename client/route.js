@@ -45,6 +45,10 @@ export default function route(page) {
       import('./pages/mockup/opa-product-list')
       return page
 
+    case 'unpack_product':
+      import('./pages/mockup/unpack-product')
+      return page
+
     /**
      * Order Menus Section
      */

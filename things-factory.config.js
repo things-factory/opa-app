@@ -43,6 +43,10 @@ export default {
       tagname: 'opa-product-list',
       page: 'opa_products'
     },
+    {
+      tagname: 'unpack-product',
+      page: 'unpack_product'
+    },
 
     /**
      * Order Menus Section
