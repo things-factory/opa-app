@@ -41,6 +41,10 @@ export default function route(page) {
       import('./pages/master/picking-bin-list')
       return page
 
+    case 'opa_products':
+      import('./pages/mockup/opa-product-list')
+      return page
+
     /**
      * Order Menus Section
      */

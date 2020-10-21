@@ -39,6 +39,10 @@ export default {
       tagname: 'picking-bin-list',
       page: 'picking_bins'
     },
+    {
+      tagname: 'opa-product-list',
+      page: 'opa_products'
+    },
 
     /**
      * Order Menus Section
