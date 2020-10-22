@@ -47,6 +47,10 @@ export default {
       tagname: 'unpack-product',
       page: 'unpack_product'
     },
+    {
+      tagname: 'packing-product',
+      page: 'packing_product'
+    },
 
     /**
      * Order Menus Section

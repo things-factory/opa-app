@@ -49,6 +49,10 @@ export default function route(page) {
       import('./pages/mockup/unpack-product')
       return page
 
+    case 'packing_product':
+      import('./pages/mockup/packing-product')
+      return page
+
     /**
      * Order Menus Section
      */
