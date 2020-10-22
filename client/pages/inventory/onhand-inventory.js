@@ -78,7 +78,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
       list: {
         fields: ['palletId', 'product', 'bizplace', 'location']
       },
-      pagination: { pages: [10, 20, 50, 2500] },
+      pagination: { pages: [10, 20, 50, 999] },
       rows: {
         selectable: {
           multiple: true
@@ -111,10 +111,10 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
         {
           type: 'datetime',
           name: 'initialInboundAt',
-          header: i18next.t('field.initial inbound date'),
+          header: i18next.t('field.initial_inbound_date'),
           record: { align: 'left' },
-          sortable: false,
-          imex: { header: i18next.t('field.initial inbound date'), key: 'initialInboundAt', width: 75, type: 'date' },
+          sortable: true,
+          imex: { header: i18next.t('field.initial_inbound_date'), key: 'initialInboundAt', width: 75, type: 'date' },
           width: 150
         },
         {
