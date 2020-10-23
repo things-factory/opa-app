@@ -198,7 +198,7 @@ class TransportVehiclesPopup extends localize(i18next)(LitElement) {
           transportVehicles(${gqlBuilder.buildArgs({
             filters: this.searchForm.queryFilters,
             pagination: { page, limit },
-            sortings: sorters
+            sortings: [{ name: 'name' }]
           })}) {
             items {
               id
