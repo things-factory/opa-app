@@ -51,6 +51,10 @@ export default {
       tagname: 'packing-product',
       page: 'packing_product'
     },
+    {
+      tagname: 'worksheet-batch-picking',
+      page: 'worksheet_batch_picking'
+    },
 
     /**
      * Order Menus Section

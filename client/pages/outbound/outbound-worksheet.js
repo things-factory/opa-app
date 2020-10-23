@@ -6,8 +6,11 @@ import { client, navigate, PageView } from '@things-factory/shell'
 import { ScrollbarStyles } from '@things-factory/styles'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
+import { openPopup } from '@things-factory/layout-base'
 import { css, html } from 'lit-element'
 import { WORKSHEET_TYPE } from '../constants'
+
+import '../mockup/batch-picking-popup'
 
 class OutboundWorksheet extends localize(i18next)(PageView) {
   static get styles() {
@@ -54,6 +57,12 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
   get context() {
     return {
       title: i18next.t('title.outbound_worksheet'),
+      actions: [
+        {
+          title: i18next.t('button.batch_picking'),
+          action: this._createBatchPicking.bind(this)
+        }
+      ],
       exportable: {
         name: i18next.t('title.outbound_worksheet'),
         data: this._exportableData.bind(this)
@@ -282,6 +291,19 @@ class OutboundWorksheet extends localize(i18next)(PageView) {
           }) || {}
       }
     }
+  }
+
+  _createBatchPicking() {
+    const orderNo = {
+      records: {
+        orderNo: 'ABC123'
+      }
+    }
+    openPopup(html` <batch-picking-popup .orderNo=${orderNo}></batch-picking-popup> `, {
+      backdrop: true,
+      size: 'large',
+      title: i18next.t('title.batch_picking_selection')
+    })
   }
 
   get _columns() {

@@ -53,6 +53,10 @@ export default function route(page) {
       import('./pages/mockup/packing-product')
       return page
 
+    case 'worksheet_batch_picking':
+      import('./pages/mockup/worksheet-batch-picking')
+      return page
+
     /**
      * Order Menus Section
      */
