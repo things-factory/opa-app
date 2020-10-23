@@ -181,7 +181,7 @@ class CustomerGrnList extends localize(i18next)(PageView) {
       query: gql`
         query {
           goodsReceivalNotes(${gqlBuilder.buildArgs({
-            filters: [...filters, { name: 'status', operator: 'notin', value: ['READY_TO_SEND'] }],
+            filters: [...filters],
             pagination: { page, limit },
             sortings: sorters
           })}) {

@@ -53,7 +53,7 @@ class CustomerReceivedNote extends localize(i18next)(PageView) {
 
       if (this._grnNo) {
         await this._fetchGRNTemplate()
-        await this._fetchGRN()
+        // await this._fetchGRN()
       }
 
       this._updateContext()
@@ -69,34 +69,34 @@ class CustomerReceivedNote extends localize(i18next)(PageView) {
     }
   }
 
-  async _fetchGRN() {
-    if (!this._grnNo) return
-    const response = await client.query({
-      query: gql`
-        query {
-          goodsReceivalNote(${gqlBuilder.buildArgs({
-            name: this._grnNo
-          })}) {
-            id
-            name
-            customerStatus
-          }
-        }
-      `
-    })
+  // async _fetchGRN() {
+  //   if (!this._grnNo) return
+  //   const response = await client.query({
+  //     query: gql`
+  //       query {
+  //         goodsReceivalNote(${gqlBuilder.buildArgs({
+  //           name: this._grnNo
+  //         })}) {
+  //           id
+  //           name
+  //           customerStatus
+  //         }
+  //       }
+  //     `
+  //   })
 
-    if (!response.errors) {
-      const grn = response.data.goodsReceivalNote
-      this._status = grn.customerStatus
-    }
-  }
+  //   if (!response.errors) {
+  //     const grn = response.data.goodsReceivalNote
+  //     this._status = grn.customerStatus
+  //   }
+  // }
 
   _updateContext() {
     this._actions = []
 
-    if (this._status === ORDER_STATUS.PENDING_RECEIVE.value) {
-      this._actions = [...this._actions, { title: i18next.t('button.receive'), action: this._receivedGrn.bind(this) }]
-    }
+    // if (this._status === ORDER_STATUS.PENDING_RECEIVE.value) {
+    //   this._actions = [...this._actions, { title: i18next.t('button.receive'), action: this._receivedGrn.bind(this) }]
+    // }
 
     this._actions = [
       ...this._actions,

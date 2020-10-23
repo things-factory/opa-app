@@ -95,9 +95,9 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
   _updateContext() {
     this._actions = []
 
-    if (this._status === ORDER_STATUS.READY_TO_SEND.value) {
-      this._actions = [...this._actions, { title: i18next.t('button.send'), action: this._sendGrn.bind(this) }]
-    }
+    // if (this._status === ORDER_STATUS.READY_TO_SEND.value) {
+    //   this._actions = [...this._actions, { title: i18next.t('button.send'), action: this._sendGrn.bind(this) }]
+    // }
 
     this._actions = [
       ...this._actions,
@@ -116,39 +116,39 @@ class ReceivedNoteDetail extends localize(i18next)(PageView) {
     })
   }
 
-  async _sendGrn() {
-    try {
-      const result = await CustomAlert({
-        title: i18next.t('title.are_you_sure'),
-        text: i18next.t('text.send_goods_received_note'),
-        confirmButton: { text: i18next.t('button.confirm') },
-        cancelButton: { text: i18next.t('button.cancel') }
-      })
+  // async _sendGrn() {
+  //   try {
+  //     const result = await CustomAlert({
+  //       title: i18next.t('title.are_you_sure'),
+  //       text: i18next.t('text.send_goods_received_note'),
+  //       confirmButton: { text: i18next.t('button.confirm') },
+  //       cancelButton: { text: i18next.t('button.cancel') }
+  //     })
 
-      if (!result.value) {
-        return
-      }
+  //     if (!result.value) {
+  //       return
+  //     }
 
-      const response = await client.query({
-        query: gql`
-        mutation {
-          sendGoodsReceivalNote(${gqlBuilder.buildArgs({
-            name: this._grnNo
-          })}) {
-            name
-          }
-        }
-      `
-      })
+  //     const response = await client.query({
+  //       query: gql`
+  //       mutation {
+  //         sendGoodsReceivalNote(${gqlBuilder.buildArgs({
+  //           name: this._grnNo
+  //         })}) {
+  //           name
+  //         }
+  //       }
+  //     `
+  //     })
 
-      if (!response.errors) {
-        navigate('received_note_list')
-        this._showToast({ message: i18next.t('text.goods_received_note_has_been_sent_successfully') })
-      }
-    } catch (e) {
-      this._showToast(e)
-    }
-  }
+  //     if (!response.errors) {
+  //       navigate('received_note_list')
+  //       this._showToast({ message: i18next.t('text.goods_received_note_has_been_sent_successfully') })
+  //     }
+  //   } catch (e) {
+  //     this._showToast(e)
+  //   }
+  // }
 
   _showToast({ type, message }) {
     document.dispatchEvent(
