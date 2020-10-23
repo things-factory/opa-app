@@ -136,7 +136,7 @@ class BatchPickingPopup extends connect(store)(localize(i18next)(LitElement)) {
           },
           {
             releaseGood: 'RO-2020102322022777',
-            itemQty: 6,
+            itemQty: 4,
             customer: 'HARTAMAS OUTLET',
             releaseDate: '20/10/2020'
           },
