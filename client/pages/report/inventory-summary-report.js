@@ -168,7 +168,8 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
           })(),
           max: new Date().toISOString().split('T')[0]
         },
-        value: new Date().toISOString().split('T')[0]
+        value: new Date().toISOString().split('T')[0],
+        handlers: { change: this._submit.bind(this) }
       },
       {
         label: i18next.t('field.has_transaction_or_balance'),
@@ -421,6 +422,7 @@ class InventorySummaryReport extends connect(store)(localize(i18next)(PageView))
     min = min.toISOString().split('T')[0]
 
     this._toDateInput.min = min
+    this._submit()
   }
 
   _submit(e) {
