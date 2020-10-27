@@ -136,6 +136,34 @@ export default function route(page) {
       import('./pages/order/transport-order/print-delivery-note')
       return page
 
+    case 'create_return_order':
+      import('./pages/order/return-order/create-return-order')
+      return page
+
+    case 'return_order_detail':
+      import('./pages/order/return-order/return-order-detail')
+      return page
+
+    case 'return_orders':
+      import('./pages/order/return-order/return-order-list')
+      return page
+
+    case 'return_order_requests':
+      import('./pages/order/return-order/return-order-requests')
+      return page
+
+    case 'receive_return_order_requests':
+      import('./pages/order/return-order/receive-return-order-requests')
+      return page
+
+    case 'check_return_order':
+      import('./pages/order/return-order/check-return-order')
+      return page
+
+    case 'return_order_assign_buffer_location':
+      import('./pages/order/return-order/return-order-assign-buffer-location')
+      return page
+
     /**
      * GRN Menus Section
      */

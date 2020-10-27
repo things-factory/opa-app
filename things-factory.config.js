@@ -135,6 +135,34 @@ export default {
       tagname: 'rejected-vas-order',
       page: 'rejected_vas_order'
     },
+    {
+      tagname: 'create-return-order',
+      page: 'create_return_order'
+    },
+    {
+      tagname: 'return-order-detail',
+      page: 'return_order_detail'
+    },
+    {
+      tagname: 'return-order-list',
+      page: 'return_orders'
+    },
+    {
+      tagname: 'return-order-requests',
+      page: 'return_order_requests'
+    },
+    {
+      tagname: 'receive-return-order-requests',
+      page: 'receive_return_order_requests'
+    },
+    {
+      tagname: 'check-return-order',
+      page: 'check_return_order'
+    },
+    {
+      tagname: 'return-order-assign-buffer-location',
+      page: 'return_order_assign_buffer_location'
+    },
 
     /**
      * Order Menus Section
