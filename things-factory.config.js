@@ -420,6 +420,10 @@ export default {
     {
       tagname: 'elccl-inventory-pallet-detail-report',
       page: 'elccl_inventory_pallet_detail_report'
+    },
+    {
+      tagname: 'elccl-daily-order-inventory-report',
+      page: 'elccl_daily_order_inventory_report'
     }
   ],
   bootstrap
