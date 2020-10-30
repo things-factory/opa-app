@@ -156,6 +156,10 @@ export default function route(page) {
       import('./pages/order/return-order/receive-return-order-requests')
       return page
 
+    case 'rejected_return_order':
+      import('./pages/order/return-order/rejected-return-order')
+      return page
+
     case 'check_return_order':
       import('./pages/order/return-order/check-return-order')
       return page
@@ -357,6 +361,10 @@ export default function route(page) {
       import('./pages/outbound/outbound-worksheet')
       return page
 
+    case 'outbound_return_worksheets':
+      import('./pages/outbound/outbound-return-worksheet')
+      return page
+
     case 'worksheet_picking':
       import('./pages/outbound/worksheet-picking')
       return page
@@ -367,6 +375,10 @@ export default function route(page) {
 
     case 'worksheet_return':
       import('./pages/outbound/worksheet-return')
+      return page
+
+    case 'worksheet_external_return':
+      import('./pages/outbound/worksheet-external-return')
       return page
 
     case 'picking':

@@ -634,6 +634,7 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
       }
 
       newRecord.product = { id: record.inventory.productId, name: record.inventory.productName }
+      newRecord.inventory = { id: record.id }
 
       return newRecord
     })

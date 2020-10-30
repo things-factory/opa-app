@@ -160,6 +160,10 @@ export default {
       page: 'check_return_order'
     },
     {
+      tagname: 'rejected-return-order',
+      page: 'rejected_return_order'
+    },
+    {
       tagname: 'return-order-assign-buffer-location',
       page: 'return_order_assign_buffer_location'
     },
@@ -374,8 +378,16 @@ export default {
       page: 'outbound_worksheets'
     },
     {
+      tagname: 'outbound-return-worksheet',
+      page: 'outbound_return_worksheets'
+    },
+    {
       tagname: 'worksheet-picking',
       page: 'worksheet_picking'
+    },
+    {
+      tagname: 'worksheet-external-return',
+      page: 'worksheet_external_return'
     },
     {
       tagname: 'picking-product',

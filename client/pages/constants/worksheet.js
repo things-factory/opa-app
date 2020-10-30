@@ -36,6 +36,10 @@ export const WORKSHEET_TYPE = {
   LOADING: {
     name: i18next.t('label.loading'),
     value: 'LOADING'
+  },
+  OUTBOUND_RETURN: {
+    name: i18next.t('label.outbound_return'),
+    value: 'OUTBOUND_RETURN'
   }
 }
 

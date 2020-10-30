@@ -18,9 +18,8 @@ import {
   VAS_ETC_TYPE,
   VAS_PRODUCT_TYPE
 } from '../../constants'
-import './buffer-location-selector'
 
-class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(PageView)) {
+class RejectedReturnOrder extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
       _userType: String,
@@ -39,7 +38,8 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
       _attachments: Array,
       _status: String,
       _mimetype: String,
-      _doPath: String
+      _doPath: String,
+      _rejectReason: String
     }
   }
 
@@ -110,6 +110,12 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
 
   render() {
     return html`
+      <popup-note
+        .title="${i18next.t('title.rejection_reason')}"
+        .value="${this._rejectReason}"
+        .readonly="${true}"
+      ></popup-note>
+
       <form name="returnOrder" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.return_order_no')}: ${this._returnOrderNo}</legend>
@@ -134,12 +140,6 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
 
           <label>${i18next.t('label.eta_date')}</label>
           <input name="etaDate" type="date" readonly />
-        </fieldset>
-
-        <fieldset>
-          <legend>${i18next.t('title.assign_warehouse')}</legend>
-          <label>${i18next.t('label.warehouse')}</label>
-          <input id="buffer-location" name="buffer-location" readonly @click="${this._openBufferSelector.bind(this)}" />
         </fieldset>
       </form>
 
@@ -200,17 +200,8 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
 
   get context() {
     return {
-      title: i18next.t('title.assign_warehouse'),
-      actions: [
-        {
-          title: i18next.t('button.assign_warehouse'),
-          action: this._assignBufferLocation.bind(this)
-        },
-        {
-          title: i18next.t('button.back'),
-          action: () => history.back()
-        }
-      ]
+      title: i18next.t('title.rejected_return_order'),
+      actions: [{ title: i18next.t('button.back'), action: () => history.back() }]
     }
   }
 
@@ -230,14 +221,10 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
     return this.shadowRoot.querySelector('data-grist#vas-grist')
   }
 
-  get bufferLocationField() {
-    return this.shadowRoot.querySelector('input#buffer-location')
-  }
-
-  async pageUpdated(changes) {
+  pageUpdated(changes) {
     if (this.active && changes.resourceId) {
       this._returnOrderNo = changes.resourceId
-      await this._fetchReturnOrder()
+      this._fetchReturnOrder()
     }
   }
 
@@ -411,6 +398,7 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
             status
             refNo
             ownTransport
+            remark
             eta
             etaDate
             attachment {
@@ -505,6 +493,7 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
       this._ownTransport = response.data.returnOrderDetail.ownTransport
 
       this._status = returnOrder.status
+      this._rejectReason = returnOrder.remark
 
       this._fillupROForm(response.data.returnOrderDetail)
 
@@ -528,6 +517,43 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
 
   get _isDownloadable() {
     return this._status !== ORDER_STATUS.PENDING.value
+  }
+
+  _updateContext() {
+    this._actions = []
+    if (this._status === ORDER_STATUS.PENDING.value) {
+      this._actions = [
+        {
+          title: i18next.t('button.delete'),
+          action: this._deleteReturnOrder.bind(this)
+        },
+        {
+          title: i18next.t('button.confirm'),
+          action: this._confirmReturnOrder.bind(this)
+        }
+      ]
+    }
+
+    if (
+      this._status !== ORDER_STATUS.PENDING.value &&
+      this.partnerBizplaceId === this.customerBizplaceId &&
+      this._status !== ORDER_STATUS.PENDING_RECEIVE.value &&
+      this._status !== ORDER_STATUS.PENDING_CANCEL.value &&
+      this._status !== ORDER_STATUS.CANCELLED.value &&
+      this._status !== ORDER_STATUS.DONE.value
+    ) {
+      this._actions = [
+        {
+          title: i18next.t('button.cancel_order'),
+          action: this._submitCancellationReturnOrder.bind(this)
+        }
+      ]
+    }
+
+    store.dispatch({
+      type: UPDATE_CONTEXT,
+      context: this.context
+    })
   }
 
   _fillupROForm(data) {
@@ -556,68 +582,6 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
     }
   }
 
-  async _assignBufferLocation() {
-    try {
-      this._validateBufferLocation()
-
-      let result = await CustomAlert({
-        title: i18next.t('title.are_you_sure'),
-        text: i18next.t('text.assign_warehouse'),
-        confirmButton: { text: i18next.t('button.confirm') },
-        cancelButton: { text: i18next.t('button.cancel') }
-      })
-
-      if (!result.value) return
-
-      const response = await client.query({
-        query: gql`
-          mutation {
-            generateReturnOrderWorksheet(${gqlBuilder.buildArgs({
-              returnOrderNo: this._returnOrderNo,
-              bufferLocation: { id: this.bufferLocationField.getAttribute('location-id') }
-            })}) {
-              returnOrderWorksheet {
-                name
-              }
-            }
-          }
-        `
-      })
-
-      if (!response.errors) {
-        navigate(`outbound_return_worksheets`)
-        this._showToast({ message: i18next.t('text.warehouse_is_assigned') })
-      }
-    } catch (e) {
-      this._showToast(e)
-    }
-  }
-
-  _validateBufferLocation() {
-    if (!this.bufferLocationField.getAttribute('location-id'))
-      throw new Error(i18next.t('text.warehouse_is_not_assigned'))
-  }
-
-  _openBufferSelector() {
-    openPopup(
-      html`
-        <buffer-location-selector
-          @selected="${e => {
-            this.bufferLocationField.value = `${e.detail.name} ${
-              e.detail.description ? `(${e.detail.description})` : ''
-            }`
-            this.bufferLocationField.setAttribute('location-id', e.detail.id)
-          }}"
-        ></buffer-location-selector>
-      `,
-      {
-        backdrop: true,
-        size: 'large',
-        title: i18next.t('title.select_warehouse')
-      }
-    )
-  }
-
   _showToast({ type, message }) {
     document.dispatchEvent(
       new CustomEvent('notify', {
@@ -630,4 +594,4 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
   }
 }
 
-window.customElements.define('return-order-assign-buffer-location', ReturnOrderAssignBufferLocation)
+window.customElements.define('rejected-return-order', RejectedReturnOrder)

@@ -271,23 +271,9 @@ class ReceiveReturnOrderRequests extends connect(store)(localize(i18next)(PageVi
         },
         {
           type: 'integer',
-          name: 'qty',
-          header: i18next.t('field.available_qty'),
-          record: { align: 'center' },
-          width: 100
-        },
-        {
-          type: 'integer',
           name: 'returnQty',
           header: i18next.t('field.return_qty'),
           record: { align: 'center', options: { min: 0 } },
-          width: 100
-        },
-        {
-          type: 'float',
-          name: 'weight',
-          header: i18next.t('field.available_weight'),
-          record: { align: 'center' },
           width: 100
         },
         {
