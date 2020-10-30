@@ -57,6 +57,10 @@ export default function route(page) {
       import('./pages/mockup/worksheet-batch-picking')
       return page
 
+    case 'inventory_aging_and_valuation_report':
+      import('./pages/mockup/inventory-aging-and-valuation-report')
+      return page
+
     /**
      * Order Menus Section
      */

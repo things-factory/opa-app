@@ -55,6 +55,10 @@ export default {
       tagname: 'worksheet-batch-picking',
       page: 'worksheet_batch_picking'
     },
+    {
+      tagname: 'inventory-aging-and-valuation-report',
+      page: 'inventory_aging_and_valuation_report'
+    },
 
     /**
      * Order Menus Section
