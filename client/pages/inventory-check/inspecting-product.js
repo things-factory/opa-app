@@ -116,6 +116,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                   this.cycleCountNo = this.cycleCountNoInput.value
                   this.fetchCycleCountWorksheet()
                 }
+                this.cycleCountNoInput.value = ''
               }
             }}"
           ></barcode-scanable-input>
@@ -1109,6 +1110,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     this.selectedLocation = null
     this.selectedInventory = null
     this.formattedLocations = []
+    this.cycleCountNo = ''
     this.inputForm.reset()
     this.conditionForm?.reset()
   }

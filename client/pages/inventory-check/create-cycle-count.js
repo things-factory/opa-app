@@ -234,7 +234,7 @@ class CreateCycleCount extends localize(i18next)(PageView) {
       if (worksheetNo) {
         await CustomAlert({
           title: i18next.t('title.completed'),
-          text: i18next.t('text.completed_x', { state: { x: i18next.t('text.create_cycle_count_worksheet') } }),
+          text: i18next.t('text.complete_x', { state: { x: i18next.t('text.creating_cycle_count_worksheet') } }),
           confirmButton: { text: i18next.t('button.confirm') }
         })
 
@@ -242,7 +242,7 @@ class CreateCycleCount extends localize(i18next)(PageView) {
       } else {
         CustomAlert({
           title: i18next.t('title.error'),
-          text: i18next.t('text.x_error', { state: { x: i18next.t('label.create_cycle_count_worksheet') } }),
+          text: i18next.t('text.x_error', { state: { x: i18next.t('text.create_cycle_count_worksheet') } }),
           confirmButton: { text: i18next.t('button.confirm') }
         })
       }
@@ -270,17 +270,16 @@ class CreateCycleCount extends localize(i18next)(PageView) {
             customerId,
             executionDate
           })}) {
-            name
+            cycleCountWorksheet {
+              name
+            }
           }
         }
       `
     })
 
     if (!response.errors) {
-      const worksheetNo = response.data.generateCycleCountWorksheet.name
-      return worksheetNo
-    } else {
-      return null
+      return response.data.generateCycleCountWorksheet.cycleCountWorksheet.name
     }
   }
 

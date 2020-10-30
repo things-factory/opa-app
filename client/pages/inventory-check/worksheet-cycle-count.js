@@ -444,7 +444,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
       if (!response.errors) {
         await CustomAlert({
           title: i18next.t('label.activated'),
-          text: i18next.t('text.completed_x', { state: { x: i18next.t('text.activate_cycle_count_worksheet') } }),
+          text: i18next.t('text.complete_x', { state: { x: i18next.t('text.activating_cycle_count_worksheet') } }),
           confirmButton: { text: i18next.t('button.confirm') }
         })
         await this.grist.fetch()
