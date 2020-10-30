@@ -108,14 +108,18 @@ class ElcclDailyOrderInventoryReport extends connect(store)(localize(i18next)(Pa
     return {
       list: {
         fields: [
-          'batchId',
-          'product|name',
-          'packingType',
-          'initialDate',
-          'initialQty',
-          'adjustmentQty',
-          'totalOutQty',
-          'closingQty'
+          'createdAt',
+          'orderNo',
+          'orderRefNo',
+          'doRefNo',
+          'bag',
+          'bagRunningTotal',
+          'basket',
+          'basketRunningTotal',
+          'carton',
+          'cartonRunningTotal',
+          'pallet',
+          'palletRunningTotal'
         ]
       },
       rows: {
@@ -123,71 +127,88 @@ class ElcclDailyOrderInventoryReport extends connect(store)(localize(i18next)(Pa
         insertable: false,
         appendable: false
       },
+      pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
-          type: 'string',
-          name: 'batchId',
-          record: { editable: false, align: 'center' },
-          imex: { header: i18next.t('field.batchId'), key: 'batchId', width: 15, type: 'string' },
-          header: i18next.t('field.batchId'),
-          width: 180
-        },
-        {
-          type: 'string',
-          name: 'product|name',
-          header: i18next.t('field.product'),
-          record: { editable: false, align: 'left' },
-          imex: { header: i18next.t('field.product'), key: 'product|name', width: 75, type: 'string' },
-          width: 320
-        },
-        {
-          type: 'string',
-          name: 'packingType',
-          header: i18next.t('field.packing_type'),
-          record: { editable: false, align: 'center' },
-          imex: { header: i18next.t('field.packing_type'), key: 'packingType', width: 25, type: 'string' },
-          width: 160
-        },
-        {
           type: 'date',
-          name: 'initialDate',
-          header: i18next.t('field.initial_inbound_date'),
+          name: 'createdAt',
           record: { editable: false, align: 'center' },
-          imex: { header: i18next.t('field.initial_inbound_date'), key: 'initialDate', width: 25, type: 'date' },
-          width: 180
+          imex: { header: i18next.t('field.created_at'), key: 'createdAt', width: 15, type: 'date' },
+          header: i18next.t('field.created_at'),
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'orderNo',
+          header: i18next.t('field.order_no'),
+          record: { editable: false, align: 'left' },
+          imex: { header: i18next.t('field.order_no'), key: 'orderNo', width: 75, type: 'string' },
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'orderRefNo',
+          header: i18next.t('field.order_ref_no'),
+          record: { editable: false, align: 'left' },
+          imex: { header: i18next.t('field.order_ref_no'), key: 'orderRefNo', width: 25, type: 'string' },
+          width: 120
+        },
+        {
+          type: 'string',
+          name: 'doRefNo',
+          header: i18next.t('field.do_ref_no'),
+          record: { editable: false, align: 'center' },
+          imex: { header: i18next.t('field.do_ref_no'), key: 'doRefNo', width: 25, type: 'string' },
+          width: 120
         },
         {
           type: 'float',
-          name: 'initialQty',
-          header: i18next.t('field.initial_inbound_qty'),
+          name: 'bag',
+          header: i18next.t('field.bag'),
           record: { editable: false, align: 'center' },
-          imex: { header: i18next.t('field.initial_inbound_qty'), key: 'initialQty', width: 25, type: 'string' },
-          width: 140
+          imex: { header: i18next.t('field.bag'), key: 'bag', width: 25, type: 'string' },
+          width: 100
         },
         {
           type: 'float',
-          name: 'adjustmentQty',
-          header: i18next.t('field.adjustment_qty'),
+          name: 'bagRunningTotal',
+          header: i18next.t('field.bag_total'),
           record: { editable: false, align: 'center' },
-          imex: { header: i18next.t('field.adjustment_qty'), key: 'adjustmentQty', width: 25, type: 'string' },
-          width: 140
+          imex: { header: i18next.t('field.bag_total'), key: 'bagRunningTotal', width: 25, type: 'string' },
+          width: 100
         },
         {
           type: 'float',
-          name: 'totalOutQty',
+          name: 'carton',
           record: { editable: false, align: 'center' },
-          header: i18next.t('field.outbound_qty'),
-          imex: { header: i18next.t('field.outbound_qty'), key: 'totalOutQty', width: 25, type: 'string' },
-          width: 140
+          header: i18next.t('field.carton'),
+          imex: { header: i18next.t('field.carton'), key: 'carton', width: 25, type: 'string' },
+          width: 100
         },
         {
           type: 'float',
-          name: 'closingQty',
+          name: 'cartonRunningTotal',
           record: { editable: false, align: 'center' },
-          header: i18next.t('field.closing_balance'),
-          imex: { header: i18next.t('field.closing_balance'), key: 'closingQty', width: 25, type: 'string' },
-          width: 140
+          header: i18next.t('field.carton_total'),
+          imex: { header: i18next.t('field.carton_total'), key: 'cartonRunningTotal', width: 25, type: 'string' },
+          width: 100
+        },
+        {
+          type: 'float',
+          name: 'pallet',
+          record: { editable: false, align: 'center' },
+          header: i18next.t('field.pallet'),
+          imex: { header: i18next.t('field.pallet'), key: 'pallet', width: 25, type: 'string' },
+          width: 100
+        },
+        {
+          type: 'float',
+          name: 'palletRunningTotal',
+          record: { editable: false, align: 'center' },
+          header: i18next.t('field.pallet_total'),
+          imex: { header: i18next.t('field.pallet_total'), key: 'palletRunningTotal', width: 25, type: 'string' },
+          width: 100
         }
       ]
     }
