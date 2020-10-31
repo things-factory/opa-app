@@ -115,8 +115,8 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     return this.shadowRoot.querySelector('input[name=truckNo]')
   }
 
-  get selectTruckInput() {
-    return this.shadowRoot.querySelector('input[name=truckNo]')
+  get warehouseTruckInput() {
+    return this.shadowRoot.querySelector('input[name=warehouseTruck]')
   }
 
   get palletQty() {
@@ -137,10 +137,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
 
   get scannable() {
     return this._selectedTaskStatus && this._selectedTaskStatus === WORKSHEET_STATUS.EXECUTING.value
-  }
-
-  get transportVehiclesField() {
-    return this.shadowRoot.querySelector('input#truckNo')
   }
 
   render() {
@@ -179,9 +175,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
 
           <label>${i18next.t('label.started_at')}</label>
           <input name="startedAt" type="datetime-local" readonly />
-
-          <input id="ownCollection" type="checkbox" name="ownCollection" disabled />
-          <label for="ownCollection">${i18next.t('label.own_collection')}</label>
         </fieldset>
       </form>
 
@@ -209,12 +202,20 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
           <form id="input-form" class="single-column-form">
             <fieldset>
               <legend>${i18next.t('label.delivery_information')}</legend>
+              <input
+                id="ownCollection"
+                type="checkbox"
+                name="ownCollection"
+                ?checked="${this._ownCollection}"
+                @change="${e => (this._ownCollection = e.currentTarget.checked)}"
+              />
+              <label for="ownCollection">${i18next.t('label.own_collection')}</label>
+
               <label>${i18next.t('label.lorry_no')}</label>
               <input ?hidden=${!this._ownCollection} name="truckNo" />
               <input
                 ?hidden=${this._ownCollection}
-                id="truckNo"
-                name="truckNo"
+                name="warehouseTruck"
                 readonly
                 @click="${this._openBufferSelector.bind(this)}"
               />
@@ -295,8 +296,8 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       html`
         <transport-vehicles-popup
           @selected="${e => {
-            this.transportVehiclesField.value = `${e.detail.name}`
-            this.selectTruckInput.setAttribute('value', e.detail.name)
+            this.warehouseTruckInput.value = e.detail.name
+            console.log(this.warehouseTruckInput.value)
           }}"
         ></transport-vehicles-popup>
       `,
@@ -564,12 +565,13 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
       })
       let truckNo = null
       if (!this._ownCollection) {
-        truckNo = this.selectTruckInput.value
+        truckNo = this.warehouseTruckInput.value
       } else {
         truckNo = this.truckInput.value.toUpperCase().replace(/\s+/g, '')
       }
 
       const palletQty = this.palletQty.value
+      const ownCollection = this._ownCollection
       const response = await client.query({
         query: gql`
           mutation {
@@ -578,7 +580,8 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               releaseGoodNo: this._releaseGoodNo,
               orderInfo: {
                 truckNo,
-                palletQty
+                palletQty,
+                ownCollection
               }
             })})
           }
@@ -857,6 +860,7 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
     this.loadedProductData = { records: [] }
     this.infoForm.reset()
     this.inputForm.reset()
+    this.warehouseTruckInput.value = ''
     this._selectedTaskStatus = null
     this._selectedDeliveryOrder = null
     this._updateContext()

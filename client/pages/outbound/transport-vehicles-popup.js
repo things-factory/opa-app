@@ -90,7 +90,6 @@ class TransportVehiclesPopup extends localize(i18next)(LitElement) {
 
       <div class="grist-container">
         <div class="grist">
-          <h2>${i18next.t('label.lorry_no')}</h2>
           <data-grist
             id="transportVehicles"
             .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
