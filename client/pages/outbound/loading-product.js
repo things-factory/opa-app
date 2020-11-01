@@ -297,7 +297,6 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         <transport-vehicles-popup
           @selected="${e => {
             this.warehouseTruckInput.value = e.detail.name
-            console.log(this.warehouseTruckInput.value)
           }}"
         ></transport-vehicles-popup>
       `,
