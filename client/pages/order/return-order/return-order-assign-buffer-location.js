@@ -572,7 +572,7 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
       const response = await client.query({
         query: gql`
           mutation {
-            generateReturnOrderWorksheet(${gqlBuilder.buildArgs({
+            generateUnloadingReturnWorksheet(${gqlBuilder.buildArgs({
               returnOrderNo: this._returnOrderNo,
               bufferLocation: { id: this.bufferLocationField.getAttribute('location-id') }
             })}) {
@@ -585,7 +585,7 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
       })
 
       if (!response.errors) {
-        navigate(`outbound_return_worksheets`)
+        navigate(`external_return_worksheets`)
         this._showToast({ message: i18next.t('text.warehouse_is_assigned') })
       }
     } catch (e) {

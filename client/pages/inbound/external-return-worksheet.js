@@ -9,7 +9,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { WORKSHEET_TYPE } from '../constants'
 
-class OutboundReturnWorksheet extends localize(i18next)(PageView) {
+class ExternalReturnWorksheet extends localize(i18next)(PageView) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -53,9 +53,9 @@ class OutboundReturnWorksheet extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.outbound_return_worksheet'),
+      title: i18next.t('title.external_return_worksheet'),
       exportable: {
-        name: i18next.t('title.outbound_return_worksheet'),
+        name: i18next.t('title.external_return_worksheet'),
         data: this._exportableData.bind(this)
       }
     }
@@ -133,8 +133,10 @@ class OutboundReturnWorksheet extends localize(i18next)(PageView) {
               const type = record.type
 
               // Handle PICKING
-              if (type === WORKSHEET_TYPE.OUTBOUND_RETURN.value) {
-                navigate(`worksheet_external_return/${record.name}`)
+              if (type === WORKSHEET_TYPE.UNLOADING_RETURN.value) {
+                navigate(`worksheet_unloading_return/${record.name}`)
+              } else if (type === WORKSHEET_TYPE.PUTAWAY_RETURN.value) {
+                navigate(`worksheet_putaway_return/${record.name}`)
               }
             }
           }
@@ -219,8 +221,8 @@ class OutboundReturnWorksheet extends localize(i18next)(PageView) {
     const filters = this.searchForm.queryFilters
     filters.push({
       name: 'type',
-      operator: 'eq',
-      value: WORKSHEET_TYPE.OUTBOUND_RETURN.value
+      operator: 'in',
+      value: [WORKSHEET_TYPE.UNLOADING_RETURN.value, WORKSHEET_TYPE.PUTAWAY_RETURN.value]
     })
     const response = await client.query({
       query: gql`
@@ -322,4 +324,4 @@ class OutboundReturnWorksheet extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('outbound-return-worksheet', OutboundReturnWorksheet)
+window.customElements.define('external-return-worksheet', ExternalReturnWorksheet)

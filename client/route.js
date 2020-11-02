@@ -307,6 +307,10 @@ export default function route(page) {
       import('./pages/inbound/inbound-worksheet')
       return page
 
+    case 'external_return_worksheets':
+      import('./pages/inbound/external-return-worksheet')
+      return page
+
     case 'putaway':
       import('./pages/inbound/putaway-product')
       return page
@@ -323,6 +327,14 @@ export default function route(page) {
       import('./pages/inbound/worksheet-putaway')
       return page
 
+    case 'worksheet_unloading_return':
+      import('./pages/inbound/worksheet-unloading-return')
+      return page
+
+    case 'worksheet_putaway_return':
+      import('./pages/inbound/worksheet-putaway-return')
+      return page
+
     case 'worksheet_vas':
       import('./pages/vas/worksheet-vas')
       return page
@@ -333,6 +345,10 @@ export default function route(page) {
 
     case 'unloading':
       import('./pages/inbound/unload-product')
+      return page
+
+    case 'unloading_return':
+      import('./pages/inbound/unload-return-product')
       return page
 
     case 'execute_vas':
@@ -361,10 +377,6 @@ export default function route(page) {
       import('./pages/outbound/outbound-worksheet')
       return page
 
-    case 'outbound_return_worksheets':
-      import('./pages/outbound/outbound-return-worksheet')
-      return page
-
     case 'worksheet_picking':
       import('./pages/outbound/worksheet-picking')
       return page
@@ -375,10 +387,6 @@ export default function route(page) {
 
     case 'worksheet_return':
       import('./pages/outbound/worksheet-return')
-      return page
-
-    case 'worksheet_external_return':
-      import('./pages/outbound/worksheet-external-return')
       return page
 
     case 'picking':

@@ -37,9 +37,13 @@ export const WORKSHEET_TYPE = {
     name: i18next.t('label.loading'),
     value: 'LOADING'
   },
-  OUTBOUND_RETURN: {
-    name: i18next.t('label.outbound_return'),
-    value: 'OUTBOUND_RETURN'
+  UNLOADING_RETURN: {
+    name: i18next.t('label.unloading_return'),
+    value: 'UNLOADING_RETURN'
+  },
+  PUTAWAY_RETURN: {
+    name: i18next.t('label.putaway_return'),
+    value: 'PUTAWAY_RETURN'
   }
 }
 

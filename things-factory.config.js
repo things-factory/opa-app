@@ -318,6 +318,10 @@ export default {
       page: 'inbound_worksheets'
     },
     {
+      tagname: 'external-return-worksheet',
+      page: 'external_return_worksheets'
+    },
+    {
       tagname: 'worksheet-unloading',
       page: 'worksheet_unloading'
     },
@@ -326,8 +330,12 @@ export default {
       page: 'worksheet_putaway'
     },
     {
-      tagname: 'worksheet-return',
-      page: 'worksheet_return'
+      tagname: 'worksheet-unloading-return',
+      page: 'worksheet_unloading_return'
+    },
+    {
+      tagname: 'worksheet-putaway-return',
+      page: 'worksheet_putaway_return'
     },
     {
       tagname: 'worksheet-vas',
@@ -340,6 +348,10 @@ export default {
     {
       tagname: 'unload-product',
       page: 'unloading'
+    },
+    {
+      tagname: 'unload-return-product',
+      page: 'unloading_return'
     },
     {
       tagname: 'putaway-product',
