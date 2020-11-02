@@ -21,11 +21,9 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
           flex-direction: column;
           overflow: hidden;
         }
-
         search-form {
           overflow: visible;
         }
-
         data-grist {
           overflow-y: auto;
           flex: 1;
@@ -46,7 +44,6 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
   render() {
     return html`
       <search-form id="search-form" .fields=${this._searchFields} @submit=${e => this.dataGrist.fetch()}></search-form>
-
       <data-grist
         .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
         .config=${this.config}
@@ -112,7 +109,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
           type: 'datetime',
           name: 'initialInboundAt',
           header: i18next.t('field.initial_inbound_date'),
-          record: { align: 'left' },
+          record: { align: 'center' },
           sortable: true,
           imex: { header: i18next.t('field.initial_inbound_date'), key: 'initialInboundAt', width: 75, type: 'date' },
           width: 150

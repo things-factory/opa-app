@@ -501,14 +501,26 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
               description
             }
             inventoryInfos {
+              id
               name
               batchId
+              palletId
+              product {
+                id
+                name
+                description
+              }
               productName
               packingType
               qty
               weight
               releaseQty
               releaseWeight
+              location {
+                id
+                name
+              }
+              status
             }
             shippingOrderInfo {
               containerNo
@@ -550,6 +562,21 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
       const orderInventories = releaseOrder.inventoryInfos.map(inventoryInfo => {
         return {
           ...inventoryInfo,
+          inventory: {
+            id: inventoryInfo.id,
+            name: inventoryInfo.name,
+            palletId: inventoryInfo.palletId,
+            product: inventoryInfo.product,
+            batchId: inventoryInfo.batchId,
+            location: inventoryInfo.location,
+            packingType: inventoryInfo.packingType,
+            remainQty: inventoryInfo.qty,
+            remainWeight: inventoryInfo.weight
+          },
+          remainQty: inventoryInfo.qty,
+          remainWeight: inventoryInfo.weight,
+          status: inventoryInfo.status,
+          existing: true,
           roundedWeight: inventoryInfo.releaseQty * (inventoryInfo.weight / inventoryInfo.qty) || ''
         }
       })
@@ -625,7 +652,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
         }
       ]
     }
-    let addProductStatus = [ORDER_STATUS.READY_TO_PICK.value, ORDER_STATUS.PICKING.value, ORDER_STATUS.LOADING.value]
+    let addProductStatus = [ORDER_STATUS.PICKING.value, ORDER_STATUS.LOADING.value]
 
     if (
       this._userType == 'OFFICE ADMIN' &&
@@ -633,7 +660,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
       this._allowROAddProductSetting
     ) {
       this._actions = [
-        { title: i18next.t('button.add'), action: this._openExtraProductPopup.bind(this) },
+        { title: i18next.t('button.edit'), action: this._openExtraProductPopup.bind(this) },
         ...this._actions
       ]
     }
@@ -842,6 +869,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
         <release-extra-product-popup
           .releaseGoodNo="${this._releaseOrderNo}"
           .bizplace="${this.partnerBizplaceId}"
+          .existingInventoryData="${this.inventoryData}"
           @completed="${e => {
             this._fetchReleaseOrder(this._releaseOrderNo)
             this._updateContext()

@@ -1,6 +1,6 @@
 {
   "name": "@things-factory/opa-app",
-  "version": "2.7.14",
+  "version": "2.7.25",
   "main": "dist-server/index.js",
   "browser": "client/index.js",
   "things-factory": true,
@@ -61,7 +61,7 @@
     "@things-factory/system-ui": "^2.0.0",
     "@things-factory/transport-base": "^2.0.0",
     "@things-factory/tutorial-ui": "^2.5.0",
-    "@things-factory/warehouse-base": "^2.7.0-uat.0  <2.7.0",
+    "@things-factory/warehouse-base": "^2.7.0",
     "@things-factory/worksheet-base": "^2.7.0",
     "@things-scene/chartjs": "*",
     "@things-scene/clock": "*",
@@ -93,7 +93,6 @@
   },
   "devDependencies": {},
   "resolutions": {
-    "@things-factory/warehouse-base": "^2.7.0-uat.0  <2.7.0",
     "puppeteer": "5.2.1"
   }
 }
