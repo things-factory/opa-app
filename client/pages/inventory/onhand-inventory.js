@@ -75,7 +75,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
       list: {
         fields: ['palletId', 'product', 'bizplace', 'location']
       },
-      pagination: { pages: [10, 20, 50, 999] },
+      pagination: { pages: [10, 20, 50, 2500] },
       rows: {
         selectable: {
           multiple: true
