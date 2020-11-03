@@ -910,7 +910,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       let result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.create_release_order'),
-        confirmButton: { text: i18next.t('button.confirm') },
+        confirmButton: { text: i18next.t('button.submit') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
 
@@ -919,8 +919,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       if (this._crossDocking) {
         result = await CustomAlert({
           title: i18next.t('label.cross_docking'),
-          text: i18next.t('text.create_arrival_notice'),
-          confirmButton: { text: i18next.t('button.confirm') },
+          text: i18next.t('text.create_release_order'),
+          confirmButton: { text: i18next.t('button.submit') },
           cancelButton: { text: i18next.t('button.cancel') }
         })
 

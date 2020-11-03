@@ -641,7 +641,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
         text: i18next.t('text.create_arrival_notice'),
-        confirmButton: { text: i18next.t('button.confirm') },
+        confirmButton: { text: i18next.t('button.submit') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
 
@@ -656,7 +656,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         const result = await CustomAlert({
           title: i18next.t('title.are_you_sure'),
           text: i18next.t('text.there_is_no_pallet_qty'),
-          confirmButton: { text: i18next.t('button.confirm') },
+          confirmButton: { text: i18next.t('button.submit') },
           cancelButton: { text: i18next.t('button.cancel') }
         })
 

@@ -128,8 +128,10 @@ class WorksheetReturn extends localize(i18next)(PageView) {
   }
 
   async pageUpdated(changes) {
-    if (this.active) {
-      this._worksheetNo = changes.resourceId
+    if (this.active && (changes.resourceId || this._worksheetNo)) {
+      if (changes.resourceId) {
+        this._worksheetNo = changes.resourceId
+      }
       await this.fetchWorksheet()
       this._updateContext()
       this._updateGristConfig()
@@ -172,7 +174,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'qty',
+          name: 'releaseQty',
           header: i18next.t('field.qty'),
           record: { align: 'center' },
           width: 80
@@ -218,6 +220,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
               name
               description
               targetInventory {
+                releaseQty
                 inventory {
                   batchId
                   palletId
@@ -257,6 +260,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
             ...worksheetDetail.targetInventory.inventory,
             name: worksheetDetail.name,
             description: worksheetDetail.description,
+            releaseQty: worksheetDetail.targetInventory.releaseQty,
             status: worksheetDetail.status
           }
         })

@@ -149,6 +149,25 @@ export const addReleaseGoodProducts = {
                   await trxMgr.getRepository(OrderInventory).save(curOrderInv)
                 }
               }
+
+              if (pickingWorksheet) {
+                // if has picking worksheet, status will be deactivated to prevent any action from warehouse operator until office admin has confirmation
+                pickingWorksheet = {
+                  ...pickingWorksheet,
+                  status: WORKSHEET_STATUS.DEACTIVATED
+                }
+                await trxMgr.getRepository(Worksheet).save(pickingWorksheet)
+              }
+
+              if (loadingWorksheet) {
+                // if has loading worksheet, status will be deactivated to prevent any action from warehouse operator until office admin has confirmation
+                loadingWorksheet = {
+                  ...loadingWorksheet,
+                  status: WORKSHEET_STATUS.DEACTIVATED
+                }
+      
+                await trxMgr.getRepository(Worksheet).save(loadingWorksheet)
+              }
             }
           }
         }

@@ -139,6 +139,7 @@ class ReturnProduct extends connect(store)(localize(i18next)(PageView)) {
                 if (this.releaseGoodNoInput.value) {
                   this._fetchProducts(this.releaseGoodNoInput.value)
                 }
+                this.releaseGoodNoInput.value = ''
               }
             }}"
           ></barcode-scanable-input>
@@ -217,10 +218,10 @@ class ReturnProduct extends connect(store)(localize(i18next)(PageView)) {
                             ${(this.locations || []).map(
                               location =>
                                 html`
-                                  <option value="${location && location.name}"
-                                    >${location && location.name}
-                                    ${location && location.status ? ` (${location && location.status})` : ''}</option
-                                  >
+                                  <option value="${location && location.name}"></option>
+                                    ${location && location.name}
+                                    ${location && location.status ? ` (${location && location.status})` : ''}
+                                  </option>
                                 `
                             )}
                           </select>

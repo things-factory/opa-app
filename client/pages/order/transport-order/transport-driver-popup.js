@@ -9,11 +9,11 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 
-class TransportVehiclesPopup extends localize(i18next)(LitElement) {
+class TransportDriverPopup extends localize(i18next)(LitElement) {
   static get properties() {
     return {
       _searchFields: Array,
-      vehiclesConfig: Object,
+      driverConfig: Object,
       data: Object
     }
   }
@@ -85,15 +85,15 @@ class TransportVehiclesPopup extends localize(i18next)(LitElement) {
       <search-form
         id="search-form"
         .fields=${this._searchFields}
-        @submit=${() => this.transportVehiclesGrist.fetch()}
+        @submit=${() => this.transportDriverGrist.fetch()}
       ></search-form>
 
       <div class="grist-container">
         <div class="grist">
           <data-grist
-            id="transportVehicles"
+            id="transportDriver"
             .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-            .config=${this.vehiclesConfig}
+            .config=${this.driverConfig}
             .fetchHandler="${this.fetchHandler.bind(this)}"
           ></data-grist>
         </div>
@@ -107,7 +107,7 @@ class TransportVehiclesPopup extends localize(i18next)(LitElement) {
         >
           ${i18next.t('button.cancel')}
         </button>
-        <button @click=${this._selectVehicle.bind(this)}>${i18next.t('button.confirm')}</button>
+        <button @click=${this._selectDriver.bind(this)}>${i18next.t('button.confirm')}</button>
       </div>
     `
   }
@@ -121,30 +121,22 @@ class TransportVehiclesPopup extends localize(i18next)(LitElement) {
   firstUpdated() {
     this._searchFields = [
       {
-        label: i18next.t('label.lorry_no'),
+        label: i18next.t('field.driver'),
         name: 'name',
         type: 'text',
         props: { searchOper: 'i_like' }
       },
       {
-        label: i18next.t('field.size'),
-        name: 'size',
-        type: 'text',
-        props: { searchOper: 'i_like' }
-      },
-      {
-        label: i18next.t('field.status'),
-        name: 'status',
+        label: i18next.t('field.driver_code'),
+        name: 'driverCode',
         type: 'text',
         props: { searchOper: 'i_like' }
       }
     ]
 
-    this.vehiclesConfig = {
+    this.driverConfig = {
       rows: {
-        selectable: {
-          multiple: false
-        },
+        selectable: { multiple: false },
         appendable: false
       },
       columns: [
@@ -155,28 +147,21 @@ class TransportVehiclesPopup extends localize(i18next)(LitElement) {
           name: 'name',
           record: { align: 'left' },
           header: i18next.t('field.name'),
-          width: 180
+          width: 200
         },
         {
           type: 'string',
           name: 'description',
           record: { align: 'left' },
           header: i18next.t('field.description'),
-          width: 220
-        },
-        {
-          type: 'string',
-          name: 'size',
-          record: { align: 'center' },
-          header: i18next.t('field.size'),
           width: 120
         },
         {
           type: 'string',
-          name: 'status',
+          name: 'driverCode',
           record: { align: 'center' },
-          header: i18next.t('field.status'),
-          width: 120
+          header: i18next.t('field.driver_code'),
+          width: 100
         }
       ]
     }
@@ -186,15 +171,15 @@ class TransportVehiclesPopup extends localize(i18next)(LitElement) {
     return this.shadowRoot.querySelector('search-form')
   }
 
-  get transportVehiclesGrist() {
-    return this.shadowRoot.querySelector('data-grist#transportVehicles')
+  get transportDriverGrist() {
+    return this.shadowRoot.querySelector('data-grist#transportDriver')
   }
 
   async fetchHandler({ page, limit, sorters = [] }) {
     const response = await client.query({
       query: gql`
         query {
-          transportVehicles(${gqlBuilder.buildArgs({
+          transportDrivers(${gqlBuilder.buildArgs({
             filters: this.searchForm.queryFilters,
             pagination: { page, limit },
             sortings: [{ name: 'name' }]
@@ -202,16 +187,8 @@ class TransportVehiclesPopup extends localize(i18next)(LitElement) {
             items {
               id
               name
-              regNumber
               description
-              size
-              status
-              updatedAt
-              updater{
-                id
-                name
-                description
-              }
+              driverCode
             }
             total
           }
@@ -220,22 +197,22 @@ class TransportVehiclesPopup extends localize(i18next)(LitElement) {
     })
 
     return {
-      total: response.data.transportVehicles.total || 0,
-      records: response.data.transportVehicles.items || []
+      total: response.data.transportDrivers.total || 0,
+      records: response.data.transportDrivers.items || []
     }
   }
 
-  _selectVehicle() {
-    const selectedVehicle = this.transportVehiclesGrist.selected[0]
-    if (selectedVehicle) {
-      this.dispatchEvent(new CustomEvent('selected', { detail: this.transportVehiclesGrist.selected[0] }))
+  _selectDriver() {
+    const selectedDriver = this.transportDriverGrist.selected[0]
+    if (selectedDriver) {
+      this.dispatchEvent(new CustomEvent('selected', { detail: this.transportDriverGrist.selected[0] }))
       history.back()
     } else {
       document.dispatchEvent(
-        new CustomEvent('notify', { detail: { message: i18next.t('text.vehicle_is_not_selected') } })
+        new CustomEvent('notify', { detail: { message: i18next.t('text.driver_is_not_selected') } })
       )
     }
   }
 }
 
-window.customElements.define('transport-vehicles-popup', TransportVehiclesPopup)
+window.customElements.define('transport-driver-popup', TransportDriverPopup)

@@ -71,14 +71,14 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
 
   async pageInitialized() {
     const _deliveryStatus = await getCodeByName('DELIVERY_STATUS')
-    this._bizplaces = [...(await this._fetchBizplaceList())]
+    const _userBizplaces = await this.fetchBizplaces()
 
     this._searchFields = [
       {
         name: 'name',
         label: i18next.t('field.do_no'),
         type: 'text',
-        props: { searchOper: 'eq' }
+        props: { searchOper: 'i_like' }
       },
       {
         name: 'releaseGoodNo',
@@ -87,16 +87,17 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
         props: { searchOper: 'i_like' }
       },
       {
-        name: 'bizplaceName',
         label: i18next.t('field.customer'),
+        name: 'bizplaceId',
         type: 'select',
         options: [
           { value: '' },
-          ...this._bizplaces
-            .map(bizplaceList => {
+          ..._userBizplaces
+            .filter(userBizplaces => !userBizplaces.mainBizplace)
+            .map(userBizplace => {
               return {
-                name: bizplaceList.name,
-                value: bizplaceList.name
+                name: userBizplace.name,
+                value: userBizplace.id
               }
             })
             .sort(this._compareValues('name', 'asc'))
@@ -268,12 +269,12 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
     }
   }
 
-  async _fetchBizplaceList() {
+  async fetchBizplaces(bizplace = []) {
     const response = await client.query({
       query: gql`
           query {
             bizplaces(${gqlBuilder.buildArgs({
-              filters: []
+              filters: [...bizplace]
             })}) {
               items{
                 id
@@ -284,10 +285,7 @@ class DeliveryOrderList extends localize(i18next)(PageView) {
           }
         `
     })
-
-    if (!response.errors) {
-      return response.data.bizplaces.items
-    }
+    return response.data.bizplaces.items
   }
 
   _compareValues(key, order = 'asc') {
