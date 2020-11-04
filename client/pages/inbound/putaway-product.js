@@ -7,17 +7,20 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
-import { WORKSHEET_STATUS } from '../constants'
+import { ARRIVAL_NOTICE, ORDER_TYPES, RETURN_ORDER, WORKSHEET_STATUS } from '../constants'
 
 const OPERATION_TYPE = {
   PUTAWAY: 'putaway',
   TRANSFER: 'transfer'
 }
 
+const AVAIL_ORDER_TYPES = { ARRIVAL_NOTICE, RETURN_ORDER }
+
 class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
-      arrivalNoticeNo: String,
+      refOrderType: String,
+      orderNo: String,
       config: Object,
       data: Object,
       _productName: String,
@@ -101,9 +104,13 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
-  get arrivalNoticeNoInput() {
+  get orderTypeSelector() {
+    return this.shadowRoot.querySelector('select[name=orderType]')
+  }
+
+  get orderNoInput() {
     return this.shadowRoot
-      .querySelector('barcode-scanable-input[name=arrivalNoticeNo]')
+      .querySelector('barcode-scanable-input[name=orderNo]')
       .shadowRoot.querySelector('input')
   }
 
@@ -144,15 +151,30 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       <form id="info-form" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.scan_area')}</legend>
-          <label>${i18next.t('label.arrival_notice_no')}</label>
+          <label>${i18next.t('label.order_type')}</label>
+          <select name="orderType" @change="${this.orderTypeChangeHandler.bind(this)}">
+            ${Object.keys(AVAIL_ORDER_TYPES).map(
+              key => this.refOrderType === AVAIL_ORDER_TYPES[key].value ? html`
+                <option value="${AVAIL_ORDER_TYPES[key].value}" selected>
+                  ${i18next.t(`label.${AVAIL_ORDER_TYPES[key].name}`)}
+                </option>
+              ` : html`
+                <option value="${AVAIL_ORDER_TYPES[key].value}">
+                  ${i18next.t(`label.${AVAIL_ORDER_TYPES[key].name}`)}
+                </option>
+              `
+            )}
+          </select>
+
+          <label>${i18next.t('label.order_no')}</label>
           <barcode-scanable-input
-            name="arrivalNoticeNo"
+            name="orderNo"
             custom-input
             @keypress="${async e => {
               if (e.keyCode === 13) {
                 e.preventDefault()
-                if (this.arrivalNoticeNoInput.value) {
-                  this._fetchProducts(this.arrivalNoticeNoInput.value)
+                if (this.orderNoInput.value) {
+                  this._fetchProducts(this.orderNoInput.value)
                 }
               }
             }}"
@@ -160,7 +182,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
         </fieldset>
 
         <fieldset>
-          <legend>${`${i18next.t('title.arrival_notice')}: ${this.arrivalNoticeNo}`}</legend>
+          <legend>${`${this.refOrderType === AVAIL_ORDER_TYPES.RETURN_ORDER.value ? i18next.t('title.return_order') : i18next.t('title.arrival_notice')}: ${this.orderNo}`}</legend>
 
           <label>${i18next.t('label.customer')}</label>
           <input name="bizplaceName" readonly />
@@ -300,8 +322,9 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
   constructor() {
     super()
     this.data = { records: [] }
+    this.refOrderType = AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value
     this._productName = ''
-    this.arrivalNoticeNo = ''
+    this.orderNo = ''
     this._selectedOrderProduct = null
     this._selectedTaskStatus = null
     this._operationType = OPERATION_TYPE.PUTAWAY
@@ -394,7 +417,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
 
   pageUpdated() {
     if (this.active) {
-      this._focusOnArrivalNoticeField()
+      this._focusOnOrderNoField()
     }
   }
 
@@ -418,8 +441,8 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     })
   }
 
-  _focusOnArrivalNoticeField() {
-    setTimeout(() => this.arrivalNoticeNoInput.focus(), 100)
+  _focusOnOrderNoField() {
+    setTimeout(() => this.orderNoInput.focus(), 100)
   }
 
   _focusOnPalletInput() {
@@ -442,80 +465,157 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     setTimeout(() => this.qtyInput.focus(), 100)
   }
 
-  async _fetchProducts(arrivalNoticeNo) {
+  async _fetchProducts(orderNo) {
     this._clearView()
-    const response = await client.query({
-      query: gql`
-        query {
-          putawayWorksheet(${gqlBuilder.buildArgs({
-            arrivalNoticeNo
-          })}) {
-            worksheetInfo {
-              bizplaceName
-              refNo
-              startedAt
-            }
-            worksheetDetailInfos {
-              name
-              palletId
-              batchId
-              product {
-                name
-                description
+
+    if(this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
+      const response = await client.query({
+        query: gql`
+          query {
+            putawayWorksheet(${gqlBuilder.buildArgs({
+              arrivalNoticeNo: orderNo
+            })}) {
+              worksheetInfo {
+                bizplaceName
+                refNo
+                startedAt
               }
-              qty
-              status
-              description
-              targetName
-              packingType
-              location {
+              worksheetDetailInfos {
                 name
+                palletId
+                batchId
+                product {
+                  name
+                  description
+                }
+                qty
+                status
                 description
-              }
-              reusablePallet {
-                id
-                name
+                targetName
+                packingType
+                location {
+                  name
+                  description
+                }
+                reusablePallet {
+                  id
+                  name
+                }
               }
             }
           }
+        `
+      })
+  
+      if (!response.errors) {
+        this.orderNo = orderNo
+        this._fillUpForm(this.infoForm, response.data.putawayWorksheet.worksheetInfo)
+  
+        this.data = {
+          records: response.data.putawayWorksheet.worksheetDetailInfos
+            .map(record => {
+              let reusablePalletName = ''
+              if (record.reusablePallet) {
+                reusablePalletName = record.reusablePallet.name
+              }
+              return {
+                ...record,
+                completed: record.status === WORKSHEET_STATUS.DONE.value,
+                reusablePalletName: reusablePalletName
+              }
+            })
+            .sort((a, b) => {
+              if (a.completed !== b.completed) {
+                if (a.completed) return 1
+                if (b.completed) return -1
+              }
+  
+              if (a.batchId > b.batchId) return 1
+              if (b.batchId < b.batchId) return -1
+  
+              if (a.palletId > b.palletId) return 1
+              if (a.palletId < b.palletId) return -1
+  
+              return 0
+            })
         }
-      `
-    })
-
-    if (!response.errors) {
-      this.arrivalNoticeNo = arrivalNoticeNo
-      this._fillUpForm(this.infoForm, response.data.putawayWorksheet.worksheetInfo)
-
-      this.data = {
-        records: response.data.putawayWorksheet.worksheetDetailInfos
-          .map(record => {
-            let reusablePalletName = ''
-            if (record.reusablePallet) {
-              reusablePalletName = record.reusablePallet.name
-            }
-            return {
-              ...record,
-              completed: record.status === WORKSHEET_STATUS.DONE.value,
-              reusablePalletName: reusablePalletName
-            }
-          })
-          .sort((a, b) => {
-            if (a.completed !== b.completed) {
-              if (a.completed) return 1
-              if (b.completed) return -1
-            }
-
-            if (a.batchId > b.batchId) return 1
-            if (b.batchId < b.batchId) return -1
-
-            if (a.palletId > b.palletId) return 1
-            if (a.palletId < b.palletId) return -1
-
-            return 0
-          })
+  
+        this._completeHandler()
       }
-
-      this._completeHandler()
+    } else if(this.refOrderType === AVAIL_ORDER_TYPES.RETURN_ORDER.value){
+      const response = await client.query({
+        query: gql`
+          query {
+            putawayReturningWorksheet(${gqlBuilder.buildArgs({
+              returnOrderNo: orderNo
+            })}) {
+              worksheetInfo {
+                bizplaceName
+                refNo
+                startedAt
+              }
+              worksheetDetailInfos {
+                name
+                palletId
+                batchId
+                product {
+                  name
+                  description
+                }
+                qty
+                status
+                description
+                targetName
+                packingType
+                location {
+                  name
+                  description
+                }
+                reusablePallet {
+                  id
+                  name
+                }
+              }
+            }
+          }
+        `
+      })
+  
+      if (!response.errors) {
+        this.orderNo = orderNo
+        this._fillUpForm(this.infoForm, response.data.putawayReturningWorksheet.worksheetInfo)
+  
+        this.data = {
+          records: response.data.putawayReturningWorksheet.worksheetDetailInfos
+            .map(record => {
+              let reusablePalletName = ''
+              if (record.reusablePallet) {
+                reusablePalletName = record.reusablePallet.name
+              }
+              return {
+                ...record,
+                completed: record.status === WORKSHEET_STATUS.DONE.value,
+                reusablePalletName: reusablePalletName
+              }
+            })
+            .sort((a, b) => {
+              if (a.completed !== b.completed) {
+                if (a.completed) return 1
+                if (b.completed) return -1
+              }
+  
+              if (a.batchId > b.batchId) return 1
+              if (b.batchId < b.batchId) return -1
+  
+              if (a.palletId > b.palletId) return 1
+              if (a.palletId < b.palletId) return -1
+  
+              return 0
+            })
+        }
+  
+        this._completeHandler()
+      }
     }
   }
 
@@ -524,7 +624,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
     this.infoForm.reset()
     this.inputForm.reset()
     this._productName = ''
-    this.arrivalNoticeNo = ''
+    this.orderNo = ''
     this._selectedOrderProduct = null
     this._selectedTaskStatus = null
     this.incompleteLocationName = false
@@ -555,10 +655,16 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
 
   _transactionHandler(e) {
     if (e.keyCode === 13) {
-      if (this._operationType === OPERATION_TYPE.PUTAWAY) {
-        this._putaway()
-      } else if (this._operationType === OPERATION_TYPE.TRANSFER) {
-        this._transfer()
+      if(this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
+        if (this._operationType === OPERATION_TYPE.PUTAWAY) {
+          this._putaway()
+        } else if (this._operationType === OPERATION_TYPE.TRANSFER) {
+          this._transfer()
+        }
+      } else if(this.refOrderType === AVAIL_ORDER_TYPES.RETURN_ORDER.value){
+        if (this._operationType === OPERATION_TYPE.PUTAWAY) {
+          this._putawayReturn()
+        }
       }
     }
   }
@@ -580,7 +686,37 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
         })
 
         if (!response.errors) {
-          this._fetchProducts(this.arrivalNoticeNo)
+          this._fetchProducts(this.orderNo)
+          this._focusOnPalletInput()
+          this._selectedTaskStatus = null
+          this._selectedOrderProduct = null
+          this.palletInput.value = ''
+          this.locationInput.value = ''
+        }
+      }
+    } catch (e) {
+      this._showToast(e)
+    }
+  }
+
+  async _putawayReturn(e) {
+    try {
+      await this._validatePutaway()
+      if (!this.incompleteLocationName) {
+        const response = await client.query({
+          query: gql`
+            mutation {
+              putawayReturn(${gqlBuilder.buildArgs({
+                worksheetDetailName: this._selectedOrderProduct.name,
+                palletId: this.palletInput.value,
+                toLocation: this.locationInput.value
+              })})
+            }
+          `
+        })
+
+        if (!response.errors) {
+          this._fetchProducts(this.orderNo)
           this._focusOnPalletInput()
           this._selectedTaskStatus = null
           this._selectedOrderProduct = null
@@ -609,7 +745,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!response.errors) {
-        this._fetchProducts(this.arrivalNoticeNo)
+        this._fetchProducts(this.orderNo)
         this._focusOnPalletInput()
         this._selectedTaskStatus = null
         this._selectedOrderProduct = null
@@ -771,7 +907,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       })
 
       if (!response.errors) {
-        this._fetchProducts(this.arrivalNoticeNo)
+        this._fetchProducts(this.orderNo)
         this._focusOnPalletInput()
         this._selectedTaskStatus = null
         this._selectedOrderProduct = null
@@ -793,7 +929,12 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       cancelButton: { text: i18next.t('button.cancel') }
     })
 
-    if (result.value) this._complete()
+    if (result.value) 
+    if(this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
+      this._complete()
+    } else if(this.refOrderType === AVAIL_ORDER_TYPES.RETURN_ORDER.value){
+      this._completeReturn()
+    }
   }
 
   async _complete() {
@@ -801,7 +942,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       query: gql`
         mutation {
           completePutaway(${gqlBuilder.buildArgs({
-            arrivalNoticeNo: this.arrivalNoticeNo
+            arrivalNoticeNo: this.orderNo
           })})
         }
       `
@@ -815,6 +956,32 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
         confirmButton: { text: i18next.t('button.confirm') }
       })
     }
+  }
+
+  async _completeReturn() {
+    const response = await client.query({
+      query: gql`
+        mutation {
+          completePutawayReturn(${gqlBuilder.buildArgs({
+            returnOrderNo: this.orderNo
+          })})
+        }
+      `
+    })
+
+    if (!response.errors) {
+      this._clearView()
+      await CustomAlert({
+        title: i18next.t('title.completed'),
+        text: i18next.t('text.putaway_completed'),
+        confirmButton: { text: i18next.t('button.confirm') }
+      })
+    }
+  }
+
+  orderTypeChangeHandler(e) {
+    this.refOrderType = e.currentTarget.value
+    this.orderNoInput.select()
   }
 
   _showToast({ type, message }) {

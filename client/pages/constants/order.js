@@ -5,8 +5,18 @@ export const COLLECTION = { name: 'collection_order', value: 'COLLECTION' }
 export const RELEASE_OF_GOODS = { name: 'release_of_goods', value: 'RELEASE_OF_GOODS' }
 export const VAS_ORDER = { name: 'vas_order', value: 'VAS_ORDER' }
 export const CYCLE_COUNT = { name: 'cycle_count', value: 'CYCLE_COUNT' }
+export const RETURN_ORDER = { name: 'return_order', value: 'RETURN_ORDER' }
 
-export const ORDER_TYPES = { ARRIVAL_NOTICE, SHIPPING, DELIVERY, COLLECTION, RELEASE_OF_GOODS, VAS_ORDER, CYCLE_COUNT }
+export const ORDER_TYPES = {
+  ARRIVAL_NOTICE,
+  SHIPPING,
+  DELIVERY,
+  COLLECTION,
+  RELEASE_OF_GOODS,
+  VAS_ORDER,
+  CYCLE_COUNT,
+  RETURN_ORDER
+}
 
 export const ORDER_STATUS = {
   PENDING: { name: 'order_status_pending', value: 'PENDING' },

@@ -136,6 +136,38 @@ export default function route(page) {
       import('./pages/order/transport-order/print-delivery-note')
       return page
 
+    case 'create_return_order':
+      import('./pages/order/return-order/create-return-order')
+      return page
+
+    case 'return_order_detail':
+      import('./pages/order/return-order/return-order-detail')
+      return page
+
+    case 'return_orders':
+      import('./pages/order/return-order/return-order-list')
+      return page
+
+    case 'return_order_requests':
+      import('./pages/order/return-order/return-order-requests')
+      return page
+
+    case 'receive_return_order_requests':
+      import('./pages/order/return-order/receive-return-order-requests')
+      return page
+
+    case 'rejected_return_order':
+      import('./pages/order/return-order/rejected-return-order')
+      return page
+
+    case 'check_return_order':
+      import('./pages/order/return-order/check-return-order')
+      return page
+
+    case 'return_order_assign_buffer_location':
+      import('./pages/order/return-order/return-order-assign-buffer-location')
+      return page
+
     /**
      * GRN Menus Section
      */
@@ -275,6 +307,10 @@ export default function route(page) {
       import('./pages/inbound/inbound-worksheet')
       return page
 
+    case 'external_return_worksheets':
+      import('./pages/inbound/external-return-worksheet')
+      return page
+
     case 'putaway':
       import('./pages/inbound/putaway-product')
       return page
@@ -291,6 +327,14 @@ export default function route(page) {
       import('./pages/inbound/worksheet-putaway')
       return page
 
+    case 'worksheet_unloading_return':
+      import('./pages/inbound/worksheet-unloading-return')
+      return page
+
+    case 'worksheet_putaway_return':
+      import('./pages/inbound/worksheet-putaway-return')
+      return page
+
     case 'worksheet_vas':
       import('./pages/vas/worksheet-vas')
       return page
@@ -301,6 +345,10 @@ export default function route(page) {
 
     case 'unloading':
       import('./pages/inbound/unload-product')
+      return page
+
+    case 'unloading_return':
+      import('./pages/inbound/unload-return-product')
       return page
 
     case 'execute_vas':
