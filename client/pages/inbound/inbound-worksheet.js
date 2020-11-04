@@ -113,7 +113,7 @@ class InboundWorksheet extends localize(i18next)(PageView) {
         options: [
           { value: '' },
           ..._worksheetTypes.map(type => {
-            return { name: i18next.t(`label.${type.name}`), value: type.value }
+            return { name: i18next.t(`${type.name}`), value: type.value }
           })
         ],
         props: { searchOper: 'eq' }

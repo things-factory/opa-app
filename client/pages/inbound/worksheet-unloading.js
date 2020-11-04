@@ -9,7 +9,7 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import '../components/popup-note'
-import { WORKSHEET_STATUS } from '../constants'
+import { WORKSHEET_STATUS, ARRIVAL_NOTICE } from '../constants'
 import '../vas/related-vas-list'
 import './adjust-batch-id'
 import './adjust-pallet-qty'
@@ -26,7 +26,8 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       config: Object,
       data: Object,
       vasWorksheetNo: String,
-      crossDocking: Boolean
+      crossDocking: Boolean,
+      looseItem: Boolean
     }
   }
 
@@ -130,6 +131,9 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
 
             <input name="crossDocking" type="checkbox" .checked="${this.crossDocking}" disabled />
             <label>${i18next.t('label.cross_docking')}</label>
+
+            <input name="looseItem" type="checkbox" .checked="${this.looseItem}" disabled />
+            <label>${i18next.t('label.loose_item')}</label>
           </fieldset>
         </form>
 
@@ -146,7 +150,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
           .data="${this.data}"
         ></data-grist>
 
-        <!-- <related-vas-list .worksheetNo="${this.vasWorksheetNo}"></related-vas-list> -->
+        <related-vas-list .worksheetNo="${this.vasWorksheetNo}"></related-vas-list>
       </div>
     `
   }
@@ -240,11 +244,11 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     }
   }
 
-  // updated(changedProps) {
-  //   if (changedProps.has('_ganNo') && this._ganNo) {
-  //     this.checkHavingVas(this._ganNo)
-  //   }
-  // }
+  updated(changedProps) {
+    if (changedProps.has('_ganNo') && this._ganNo) {
+      this.checkHavingVas(this._ganNo)
+    }
+  }
 
   get form() {
     return this.shadowRoot.querySelector('form')
@@ -332,6 +336,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
       this._ganNo = (this._gan && this._gan.name) || ''
       this._bizplace = worksheet.bizplace.name
       this.crossDocking = worksheet?.arrivalNotice?.crossDocking
+      this.looseItem = worksheet?.arrivalNotice?.looseItem
 
       this._fillupForm({
         ...worksheet,
@@ -370,24 +375,24 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
     }
   }
 
-  // async checkHavingVas(orderNo) {
-  //   const response = await client.query({
-  //     query: gql`
-  //       query {
-  //         havingVas(${gqlBuilder.buildArgs({
-  //           orderType: ARRIVAL_NOTICE.value,
-  //           orderNo
-  //         })}) {
-  //           name
-  //         }
-  //       }
-  //     `
-  //   })
+  async checkHavingVas(orderNo) {
+    const response = await client.query({
+      query: gql`
+        query {
+          havingVas(${gqlBuilder.buildArgs({
+            orderType: ARRIVAL_NOTICE.value,
+            orderNo
+          })}) {
+            name
+          }
+        }
+      `
+    })
 
-  //   if (!response.errors) {
-  //     this.vasWorksheetNo = response.data.havingVas?.name
-  //   }
-  // }
+    if (!response.errors) {
+      this.vasWorksheetNo = response.data.havingVas?.name
+    }
+  }
 
   _updateContext() {
     this._actions = []
