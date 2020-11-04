@@ -259,7 +259,20 @@ export const addReleaseGoodProducts = {
                 ...pickingWorksheet,
                 status: WORKSHEET_STATUS.DEACTIVATED
               }
-              let savedOrderInv = await trxMgr.getRepository(OrderInventory).save(newOrderInv)
+
+              let savedOrderInv: OrderInventory = new OrderInventory()
+              savedOrderInv.name = newOrderInv.name
+              savedOrderInv.type = newOrderInv.type
+              savedOrderInv.releaseQty = newOrderInv.releaseQty
+              savedOrderInv.releaseWeight = newOrderInv.releaseWeight
+              savedOrderInv.inventory = newOrderInv.inventory
+              savedOrderInv.status = newOrderInv.status
+              savedOrderInv.releaseGood = newOrderInv.releaseGood
+              savedOrderInv.bizplace = newOrderInv.bizplace
+              savedOrderInv.domain = domain
+              savedOrderInv.creator = user
+              savedOrderInv.updater = user
+              savedOrderInv = await trxMgr.getRepository(OrderInventory).save(savedOrderInv)
 
               if (!existingOrderInv && pickingWorksheet) {
                 // if this is a new orderInventory and has existing worksheet then generate a new worksheet detail for it
