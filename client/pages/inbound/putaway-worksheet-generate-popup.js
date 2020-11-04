@@ -402,7 +402,7 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
     try {
       this.checkValidity()
 
-      if(arrivalNotice) {
+      if(this.arrivalNotice) {
         if (!this.arrivalNotice || !this.arrivalNotice.name) return
 
         const result = await CustomAlert({
@@ -438,7 +438,9 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
           this.dispatchEvent(new CustomEvent('completed'))
           history.back()
         }
-      } else if(returnOrder) {
+      } 
+      
+      if(this.returnOrder) {
         if (!this.returnOrder || !this.returnOrder.name) return
 
         const result = await CustomAlert({

@@ -204,6 +204,7 @@ class WorksheetPutawayReturn extends localize(i18next)(PageView) {Ø
           })}) {
             status
             returnOrder {
+              id
               name
               description
               refNo
@@ -357,7 +358,7 @@ class WorksheetPutawayReturn extends localize(i18next)(PageView) {Ø
       const response = await client.query({
         query: gql`
           mutation {
-            activatePutawayReturning(${gqlBuilder.buildArgs({
+            activatePutawayReturn(${gqlBuilder.buildArgs({
               worksheetNo: this._worksheetNo,
               putawayWorksheetDetails: this._getPutawayWorksheetDetails()
             })}) {
