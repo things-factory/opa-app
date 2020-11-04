@@ -263,7 +263,7 @@ export const addReleaseGoodProducts = {
 
               if (!existingOrderInv && pickingWorksheet) {
                 // if this is a new orderInventory and has existing worksheet then generate a new worksheet detail for it
-                await generatePickingWorksheetDetail(trxMgr, domain, bizplace, user, pickingWorksheet, savedOrderInv)
+                await generatePickingWorksheetDetail(trxMgr, domain, user, pickingWorksheet, savedOrderInv)
               }
             }
           }
