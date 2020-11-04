@@ -538,10 +538,10 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
     }
 
     // duplication of pallet id
-    const palletIds = inventories.map(inv => inv.palletId)
-    if (palletIds.some((palletId, idx, palletIds) => palletIds.indexOf(palletId) !== idx)) {
-      throw new Error(i18next.t('text.pallet_id_is_duplicated'))
-    }
+    // const palletIds = inventories.map(inv => inv.palletId)
+    // if (palletIds.some((palletId, idx, palletIds) => palletIds.indexOf(palletId) !== idx)) {
+    //   throw new Error(i18next.t('text.pallet_id_is_duplicated'))
+    // }
   }
 
   _validateVas() {

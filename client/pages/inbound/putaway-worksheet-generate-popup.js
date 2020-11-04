@@ -13,6 +13,7 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
       crossDockGristConfig: Object,
       crossDockGristData: Object,
       arrivalNotice: Object,
+      returnOrder: Object,
       crossDocking: Boolean
     }
   }
@@ -248,7 +249,7 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
   }
 
   updated(changedProps) {
-    if (changedProps.has('arrivalNotice')) {
+    if (changedProps.has('arrivalNotice') || changedProps.has('returnOrder')) {
       this.fetchPartiallyUnloadedPalltets()
     }
 
@@ -258,53 +259,106 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
   }
 
   async fetchPartiallyUnloadedPalltets() {
-    if (!this.arrivalNotice || !this.arrivalNotice.id) return
+    if(this.arrivalNotice) {
+      if (!this.arrivalNotice || !this.arrivalNotice.id) return
 
-    try {
-      const response = await client.query({
-        query: gql`
-          query { 
-            inventories(${gqlBuilder.buildArgs({
-              filters: [
-                {
-                  name: 'status',
-                  operator: 'eq',
-                  value: INVENTORY_STATUS.PARTIALLY_UNLOADED.value
-                },
-                {
-                  name: 'refOrderId',
-                  operator: 'eq',
-                  value: this.arrivalNotice.id
-                }
-              ]
-            })}) {
-              items {
-                id
-                batchId
-                product {
+      try {
+        const response = await client.query({
+          query: gql`
+            query { 
+              inventories(${gqlBuilder.buildArgs({
+                filters: [
+                  {
+                    name: 'status',
+                    operator: 'eq',
+                    value: INVENTORY_STATUS.PARTIALLY_UNLOADED.value
+                  },
+                  {
+                    name: 'refOrderId',
+                    operator: 'eq',
+                    value: this.arrivalNotice.id
+                  }
+                ]
+              })}) {
+                items {
                   id
-                  name
-                  description
-                }
-                packingType
-                palletId
-                qty
-                weight
-                updatedAt
-                updater {
-                  name
+                  batchId
+                  product {
+                    id
+                    name
+                    description
+                  }
+                  packingType
+                  palletId
+                  qty
+                  weight
+                  updatedAt
+                  updater {
+                    name
+                  }
                 }
               }
             }
-          }
-        `
-      })
-
-      if (!response.errors) {
-        this.inventoryGristData = { records: response.data.inventories.items }
+          `
+        })
+  
+        if (!response.errors) {
+          this.inventoryGristData = { records: response.data.inventories.items }
+        }
+      } catch (e) {
+        this._showToast(e)
       }
-    } catch (e) {
-      this._showToast(e)
+    } 
+    
+    if(this.returnOrder) {
+      if (!this.returnOrder || !this.returnOrder.id) return
+
+      try {
+        const response = await client.query({
+          query: gql`
+            query { 
+              inventories(${gqlBuilder.buildArgs({
+                filters: [
+                  {
+                    name: 'status',
+                    operator: 'eq',
+                    value: INVENTORY_STATUS.PARTIALLY_UNLOADED.value
+                  },
+                  {
+                    name: 'refOrderId',
+                    operator: 'eq',
+                    value: this.returnOrder.id
+                  }
+                ]
+              })}) {
+                items {
+                  id
+                  batchId
+                  product {
+                    id
+                    name
+                    description
+                  }
+                  packingType
+                  palletId
+                  qty
+                  weight
+                  updatedAt
+                  updater {
+                    name
+                  }
+                }
+              }
+            }
+          `
+        })
+
+        if (!response.errors) {
+          this.inventoryGristData = { records: response.data.inventories.items }
+        }
+      } catch (e) {
+        this._showToast(e)
+      }
     }
   }
 
@@ -347,41 +401,81 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
   async _generatePutawayWorksheet() {
     try {
       this.checkValidity()
-      if (!this.arrivalNotice || !this.arrivalNotice.name) return
 
-      const result = await CustomAlert({
-        title: i18next.t('title.are_you_sure'),
-        text: i18next.t('text.generate_putaway_worksheet'),
-        confirmButton: { text: i18next.t('button.confirm') },
-        cancelButton: { text: i18next.t('button.cancel') }
-      })
+      if(arrivalNotice) {
+        if (!this.arrivalNotice || !this.arrivalNotice.name) return
 
-      if (!result.value) return
-      const inventories = this.inventoryGrist.selected.map(record => {
-        return { id: record.id }
-      })
-
-      const response = await client.query({
-        query: gql`
-            mutation {
-              generatePartialPutawayWorksheet(${gqlBuilder.buildArgs({
-                arrivalNoticeNo: this.arrivalNotice.name,
-                inventories
-              })})
-            }
-          `
-      })
-
-      if (!response.errors) {
-        await CustomAlert({
-          title: i18next.t('title.completed'),
+        const result = await CustomAlert({
+          title: i18next.t('title.are_you_sure'),
           text: i18next.t('text.generate_putaway_worksheet'),
-          confirmButton: { text: i18next.t('button.confirm') }
+          confirmButton: { text: i18next.t('button.confirm') },
+          cancelButton: { text: i18next.t('button.cancel') }
         })
 
-        this.dispatchEvent(new CustomEvent('completed'))
-        history.back()
+        if (!result.value) return
+        const inventories = this.inventoryGrist.selected.map(record => {
+          return { id: record.id }
+        })
+
+        const response = await client.query({
+          query: gql`
+              mutation {
+                generatePartialPutawayWorksheet(${gqlBuilder.buildArgs({
+                  arrivalNoticeNo: this.arrivalNotice.name,
+                  inventories
+                })})
+              }
+            `
+        })
+
+        if (!response.errors) {
+          await CustomAlert({
+            title: i18next.t('title.completed'),
+            text: i18next.t('text.generate_putaway_worksheet'),
+            confirmButton: { text: i18next.t('button.confirm') }
+          })
+
+          this.dispatchEvent(new CustomEvent('completed'))
+          history.back()
+        }
+      } else if(returnOrder) {
+        if (!this.returnOrder || !this.returnOrder.name) return
+
+        const result = await CustomAlert({
+          title: i18next.t('title.are_you_sure'),
+          text: i18next.t('text.generate_putaway_worksheet'),
+          confirmButton: { text: i18next.t('button.confirm') },
+          cancelButton: { text: i18next.t('button.cancel') }
+        })
+
+        if (!result.value) return
+        const inventories = this.inventoryGrist.selected.map(record => {
+          return { id: record.id }
+        })
+
+        const response = await client.query({
+          query: gql`
+              mutation {
+                generatePartialPutawayReturnWorksheet(${gqlBuilder.buildArgs({
+                  returnOrderNo: this.returnOrder.name,
+                  inventories
+                })})
+              }
+            `
+        })
+
+        if (!response.errors) {
+          await CustomAlert({
+            title: i18next.t('title.completed'),
+            text: i18next.t('text.generate_putaway_worksheet'),
+            confirmButton: { text: i18next.t('button.confirm') }
+          })
+
+          this.dispatchEvent(new CustomEvent('completed'))
+          history.back()
+        }
       }
+      
     } catch (e) {
       this._showToast(e)
     }

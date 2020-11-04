@@ -542,7 +542,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
   
         this._completeHandler()
       }
-    } else {
+    } else if(this.refOrderType === AVAIL_ORDER_TYPES.RETURN_ORDER.value){
       const response = await client.query({
         query: gql`
           query {
@@ -583,10 +583,10 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
   
       if (!response.errors) {
         this.orderNo = orderNo
-        this._fillUpForm(this.infoForm, response.data.putawayWorksheet.worksheetInfo)
+        this._fillUpForm(this.infoForm, response.data.putawayReturningWorksheet.worksheetInfo)
   
         this.data = {
-          records: response.data.putawayWorksheet.worksheetDetailInfos
+          records: response.data.putawayReturningWorksheet.worksheetDetailInfos
             .map(record => {
               let reusablePalletName = ''
               if (record.reusablePallet) {
@@ -655,10 +655,16 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
 
   _transactionHandler(e) {
     if (e.keyCode === 13) {
-      if (this._operationType === OPERATION_TYPE.PUTAWAY) {
-        this._putaway()
-      } else if (this._operationType === OPERATION_TYPE.TRANSFER) {
-        this._transfer()
+      if(this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
+        if (this._operationType === OPERATION_TYPE.PUTAWAY) {
+          this._putaway()
+        } else if (this._operationType === OPERATION_TYPE.TRANSFER) {
+          this._transfer()
+        }
+      } else if(this.refOrderType === AVAIL_ORDER_TYPES.RETURN_ORDER.value){
+        if (this._operationType === OPERATION_TYPE.PUTAWAY) {
+          this._putawayReturn()
+        }
       }
     }
   }
@@ -671,6 +677,36 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
           query: gql`
             mutation {
               putaway(${gqlBuilder.buildArgs({
+                worksheetDetailName: this._selectedOrderProduct.name,
+                palletId: this.palletInput.value,
+                toLocation: this.locationInput.value
+              })})
+            }
+          `
+        })
+
+        if (!response.errors) {
+          this._fetchProducts(this.orderNo)
+          this._focusOnPalletInput()
+          this._selectedTaskStatus = null
+          this._selectedOrderProduct = null
+          this.palletInput.value = ''
+          this.locationInput.value = ''
+        }
+      }
+    } catch (e) {
+      this._showToast(e)
+    }
+  }
+
+  async _putawayReturn(e) {
+    try {
+      await this._validatePutaway()
+      if (!this.incompleteLocationName) {
+        const response = await client.query({
+          query: gql`
+            mutation {
+              putawayReturn(${gqlBuilder.buildArgs({
                 worksheetDetailName: this._selectedOrderProduct.name,
                 palletId: this.palletInput.value,
                 toLocation: this.locationInput.value
@@ -893,7 +929,12 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       cancelButton: { text: i18next.t('button.cancel') }
     })
 
-    if (result.value) this._complete()
+    if (result.value) 
+    if(this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
+      this._complete()
+    } else if(this.refOrderType === AVAIL_ORDER_TYPES.RETURN_ORDER.value){
+      this._completeReturn()
+    }
   }
 
   async _complete() {
@@ -901,7 +942,28 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
       query: gql`
         mutation {
           completePutaway(${gqlBuilder.buildArgs({
-            orderNo: this.orderNo
+            arrivalNoticeNo: this.orderNo
+          })})
+        }
+      `
+    })
+
+    if (!response.errors) {
+      this._clearView()
+      await CustomAlert({
+        title: i18next.t('title.completed'),
+        text: i18next.t('text.putaway_completed'),
+        confirmButton: { text: i18next.t('button.confirm') }
+      })
+    }
+  }
+
+  async _completeReturn() {
+    const response = await client.query({
+      query: gql`
+        mutation {
+          completePutawayReturn(${gqlBuilder.buildArgs({
+            returnOrderNo: this.orderNo
           })})
         }
       `

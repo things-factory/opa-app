@@ -15,7 +15,7 @@ import { PALLET_STATUS } from '../constants'
 class UnloadReturnProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
     return {
-      _arrivalNoticeNo: String,
+      _returnOrderNo: String,
       _palletId: String,
       _productName: String,
       orderInventoryConfig: Object,
@@ -686,7 +686,7 @@ class UnloadReturnProduct extends connect(store)(localize(i18next)(PageView)) {
       const response = await client.query({
         query: gql`
           mutation {
-            completeUnloadingPartially(${gqlBuilder.buildArgs({
+            completeUnloadReturnPartially(${gqlBuilder.buildArgs({
               returnOrderNo: this._returnOrderNo,
               worksheetDetail: this._getWorksheetDetails().find(wsd => wsd.name === this._selectedOrderInventory.name)
             })})
@@ -723,7 +723,7 @@ class UnloadReturnProduct extends connect(store)(localize(i18next)(PageView)) {
     }
 
     if (
-      this._selectedOrderInventory.actualPalletQty > this._selectedOrderInventory.palletQty &&
+      this._selectedOrderInventory.actualPackQty > this._selectedOrderInventory.packQty &&
       !this._selectedOrderInventory.issue
     ) {
       throw new Error('there_is_no_issue_noted')

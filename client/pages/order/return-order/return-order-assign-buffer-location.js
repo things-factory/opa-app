@@ -572,7 +572,7 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
       const response = await client.query({
         query: gql`
           mutation {
-            generateUnloadingReturnWorksheet(${gqlBuilder.buildArgs({
+            generateReturnOrderWorksheet(${gqlBuilder.buildArgs({
               returnOrderNo: this._returnOrderNo,
               bufferLocation: { id: this.bufferLocationField.getAttribute('location-id') }
             })}) {

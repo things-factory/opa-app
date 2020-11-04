@@ -9,6 +9,7 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { WORKSHEET_STATUS } from '../constants'
 import './pallet-label-popup'
+import './putaway-worksheet-generate-popup'
 
 class WorksheetUnloadingReturn extends localize(i18next)(PageView) {
   static get properties() {
@@ -245,6 +246,7 @@ class WorksheetUnloadingReturn extends localize(i18next)(PageView) {
       const worksheet = response.data.worksheet
       const worksheetDetails = worksheet.worksheetDetails
       this._worksheetStatus = worksheet.status
+      this._returnOrder = worksheet && worksheet.returnOrder
       this._returnOrderNo = (worksheet.returnOrder && worksheet.returnOrder.name) || ''
       this._fillupForm({
         ...worksheet,
@@ -280,8 +282,8 @@ class WorksheetUnloadingReturn extends localize(i18next)(PageView) {
 
       if (this.data?.records?.some(wsd => wsd.status === WORKSHEET_STATUS.PARTIALLY_UNLOADED.value)) {
         this._actions.push({
-          title: i18next.t('button.create_putaway_worksheet')
-          // action: this._showPutawayWorksheetPopup.bind(this)
+          title: i18next.t('button.create_putaway_worksheet'),
+          action: this._showPutawayWorksheetPopup.bind(this)
         })
       }
     }
@@ -373,7 +375,6 @@ class WorksheetUnloadingReturn extends localize(i18next)(PageView) {
         await this.fetchWorksheet()
         this._updateContext()
         this._updateGristConfig()
-        navigate(`outbound_return_worksheets`)
       }
     } catch (e) {
       this._showToast(e)
@@ -409,6 +410,26 @@ class WorksheetUnloadingReturn extends localize(i18next)(PageView) {
       size: 'large',
       title: i18next.t('title.pallet_label')
     })
+  }
+
+  _showPutawayWorksheetPopup() {
+    openPopup(
+      html`
+        <putaway-worksheet-generate-popup
+          .crossDocking="${this.crossDocking}"
+          .returnOrder="${this._returnOrder}"
+          @completed="${async () => {
+            await this.fetchWorksheet()
+            this._updateContext()
+          }}"
+        ></putaway-worksheet-generate-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.generate_putaway_worksheet')
+      }
+    )
   }
 
   _showToast({ type, message }) {
