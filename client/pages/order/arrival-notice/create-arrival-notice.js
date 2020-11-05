@@ -356,14 +356,14 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           type: 'string',
           name: 'targetType',
           header: i18next.t('field.target_type'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           width: 150
         },
         {
           type: 'string',
           name: 'targetDisplay',
           header: i18next.t('field.target'),
-          record: { align: 'center' },
+          record: { align: 'left' },
           width: 250
         },
         {
@@ -455,7 +455,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         header: i18next.t('field.product'),
         record: {
           editable: true,
-          align: 'center',
+          align: 'left',
           options: {
             queryName: 'products',
             nameField: 'name',
