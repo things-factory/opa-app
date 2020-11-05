@@ -156,7 +156,7 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
       this.record &&
       this.record.operationGuide &&
       this.record.operationGuide.data &&
-      this.record.operationGuide.data.ftoProduct
+      this.record.operationGuide.data.toProduct
     ) {
       const toProduct = this.record.operationGuide.data.toProduct
       this._selectedProduct = toProduct
