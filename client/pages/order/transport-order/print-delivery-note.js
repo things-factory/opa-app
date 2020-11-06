@@ -20,7 +20,8 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       _date: Date,
       _recipient: String,
       _proceedFlag: Boolean,
-      _customerContactPoints: Array
+      _customerContactPoints: Array,
+      _bizplace: Object
     }
   }
 
@@ -86,6 +87,10 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
               doStatus
               ownCollection
               truckNo
+              bizplace {
+                id
+                name
+              }
             }
             contactPointInfo {
               id
@@ -110,6 +115,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       this._ownCollection = deliveryOrderData.deliveryOrderInfo.ownCollection
       this._customerContactPoints = deliveryOrderData.contactPointInfo
       this._truckNo = deliveryOrderData.deliveryOrderInfo.truckNo
+      this._bizplace = deliveryOrderData.deliveryOrderInfo.bizplace
     }
   }
 
@@ -171,6 +177,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
           .ownCollection="${this._ownCollection}"
           .truckNo="${this._truckNo}"
           .doNo="${this._doNo}"
+          .bizplace="${this._bizplace}"
           @delivery-dispatched="${() => {
             this.pageReset()
           }}"
@@ -178,7 +185,7 @@ class PrintDeliveryOrder extends localize(i18next)(PageView) {
       `,
       {
         backdrop: true,
-        size: 'medium',
+        size: 'large',
         title: i18next.t('title.edit_delivery_note')
       }
     )

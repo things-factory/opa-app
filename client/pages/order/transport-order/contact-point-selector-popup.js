@@ -1,4 +1,3 @@
-import '@things-factory/barcode-ui'
 import '@things-factory/grist-ui'
 import '@things-factory/import-ui'
 import '@things-factory/form-ui'
@@ -9,12 +8,13 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 
-class TransportVehiclesPopup extends localize(i18next)(LitElement) {
+class ContactPointSelectorPopup extends localize(i18next)(LitElement) {
   static get properties() {
     return {
       _searchFields: Array,
-      vehiclesConfig: Object,
-      data: Object
+      contactPointConfig: Object,
+      data: Object,
+      bizplace: Object
     }
   }
 
@@ -85,15 +85,15 @@ class TransportVehiclesPopup extends localize(i18next)(LitElement) {
       <search-form
         id="search-form"
         .fields=${this._searchFields}
-        @submit=${() => this.transportVehiclesGrist.fetch()}
+        @submit=${() => this.contactPointGrist.fetch()}
       ></search-form>
 
       <div class="grist-container">
         <div class="grist">
           <data-grist
-            id="transportVehicles"
+            id="contactPoint"
             .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
-            .config=${this.vehiclesConfig}
+            .config=${this.contactPointConfig}
             .fetchHandler="${this.fetchHandler.bind(this)}"
           ></data-grist>
         </div>
@@ -107,7 +107,7 @@ class TransportVehiclesPopup extends localize(i18next)(LitElement) {
         >
           ${i18next.t('button.cancel')}
         </button>
-        <button @click=${this._selectVehicle.bind(this)}>${i18next.t('button.confirm')}</button>
+        <button @click=${this._selectContactPoint.bind(this)}>${i18next.t('button.confirm')}</button>
       </div>
     `
   }
@@ -121,30 +121,28 @@ class TransportVehiclesPopup extends localize(i18next)(LitElement) {
   firstUpdated() {
     this._searchFields = [
       {
-        label: i18next.t('label.lorry_no'),
+        label: i18next.t('label.name'),
         name: 'name',
         type: 'text',
         props: { searchOper: 'i_like' }
       },
       {
-        label: i18next.t('field.size'),
-        name: 'size',
+        label: i18next.t('field.address'),
+        name: 'address',
         type: 'text',
         props: { searchOper: 'i_like' }
       },
       {
-        label: i18next.t('field.status'),
-        name: 'status',
+        label: i18next.t('field.email'),
+        name: 'email',
         type: 'text',
         props: { searchOper: 'i_like' }
       }
     ]
 
-    this.vehiclesConfig = {
+    this.contactPointConfig = {
       rows: {
-        selectable: {
-          multiple: false
-        },
+        selectable: { multiple: false },
         appendable: false
       },
       columns: [
@@ -159,24 +157,17 @@ class TransportVehiclesPopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'string',
-          name: 'description',
+          name: 'email',
           record: { align: 'left' },
-          header: i18next.t('field.description'),
-          width: 220
+          header: i18next.t('field.email'),
+          width: 180
         },
         {
           type: 'string',
-          name: 'size',
-          record: { align: 'center' },
-          header: i18next.t('field.size'),
-          width: 120
-        },
-        {
-          type: 'string',
-          name: 'status',
-          record: { align: 'center' },
-          header: i18next.t('field.status'),
-          width: 120
+          name: 'address',
+          record: { align: 'left' },
+          header: i18next.t('field.address'),
+          width: 320
         }
       ]
     }
@@ -186,32 +177,31 @@ class TransportVehiclesPopup extends localize(i18next)(LitElement) {
     return this.shadowRoot.querySelector('search-form')
   }
 
-  get transportVehiclesGrist() {
-    return this.shadowRoot.querySelector('data-grist#transportVehicles')
+  get contactPointGrist() {
+    return this.shadowRoot.querySelector('data-grist#contactPoint')
   }
 
   async fetchHandler({ page, limit, sorters = [] }) {
+    const filters = this.searchForm.queryFilters
+    filters.push({
+      name: 'bizplace',
+      operator: 'eq',
+      value: this.bizplace.id
+    })
+
     const response = await client.query({
       query: gql`
         query {
-          transportVehicles(${gqlBuilder.buildArgs({
-            filters: this.searchForm.queryFilters,
+          contactPoints(${gqlBuilder.buildArgs({
+            filters,
             pagination: { page, limit },
             sortings: [{ name: 'name' }]
           })}) {
             items {
               id
               name
-              regNumber
-              description
-              size
-              status
-              updatedAt
-              updater{
-                id
-                name
-                description
-              }
+              email
+              address
             }
             total
           }
@@ -220,22 +210,22 @@ class TransportVehiclesPopup extends localize(i18next)(LitElement) {
     })
 
     return {
-      total: response.data.transportVehicles.total || 0,
-      records: response.data.transportVehicles.items || []
+      total: response.data.contactPoints.total || 0,
+      records: response.data.contactPoints.items || []
     }
   }
 
-  _selectVehicle() {
-    const selectedVehicle = this.transportVehiclesGrist.selected[0]
-    if (selectedVehicle) {
-      this.dispatchEvent(new CustomEvent('selected', { detail: this.transportVehiclesGrist.selected[0] }))
+  _selectContactPoint() {
+    const selectedCP = this.contactPointGrist.selected[0]
+    if (selectedCP) {
+      this.dispatchEvent(new CustomEvent('selected', { detail: this.contactPointGrist.selected[0] }))
       history.back()
     } else {
       document.dispatchEvent(
-        new CustomEvent('notify', { detail: { message: i18next.t('text.vehicle_is_not_selected') } })
+        new CustomEvent('notify', { detail: { message: i18next.t('text.destination_is_not_selected') } })
       )
     }
   }
 }
 
-window.customElements.define('transport-vehicles-popup', TransportVehiclesPopup)
+window.customElements.define('contact-point-selector-popup', ContactPointSelectorPopup)

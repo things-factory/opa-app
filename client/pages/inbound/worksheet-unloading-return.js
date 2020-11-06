@@ -2,18 +2,21 @@ import '@things-factory/barcode-ui'
 import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
+import { openPopup } from '@things-factory/layout-base'
 import { client, CustomAlert, navigate, PageView, store, UPDATE_CONTEXT } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { WORKSHEET_STATUS } from '../constants'
+import './pallet-label-popup'
+import './putaway-worksheet-generate-popup'
 
-class WorksheetReturn extends localize(i18next)(PageView) {
+class WorksheetUnloadingReturn extends localize(i18next)(PageView) {
   static get properties() {
     return {
       _worksheetNo: String,
       _worksheetStatus: String,
-      _roNo: String,
+      _returnOrderNo: String,
       config: Object,
       data: Object
     }
@@ -78,7 +81,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.worksheet_return'),
+      title: i18next.t('title.worksheet_unloading_return'),
       actions: this._actions,
       printable: {
         accept: ['preview'],
@@ -93,8 +96,8 @@ class WorksheetReturn extends localize(i18next)(PageView) {
         <form class="multi-column-form">
           <fieldset>
             <legend>${i18next.t('title.return')}</legend>
-            <label>${i18next.t('label.release_good_no')}</label>
-            <input name="releaseGood" readonly />
+            <label>${i18next.t('label.return_order_no')}</label>
+            <input name="returnOrder" readonly />
 
             <label>${i18next.t('label.customer')}</label>
             <input name="bizplace" readonly />
@@ -111,7 +114,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
           </fieldset>
         </form>
 
-        <barcode-tag bcid="qrcode" .value=${this._roNo}></barcode-tag>
+        <barcode-tag bcid="qrcode" .value=${this._returnOrderNo}></barcode-tag>
       </div>
 
       <div class="grist">
@@ -128,10 +131,8 @@ class WorksheetReturn extends localize(i18next)(PageView) {
   }
 
   async pageUpdated(changes) {
-    if (this.active && (changes.resourceId || this._worksheetNo)) {
-      if (changes.resourceId) {
-        this._worksheetNo = changes.resourceId
-      }
+    if (this.active && changes.resourceId) {
+      this._worksheetNo = changes.resourceId
       await this.fetchWorksheet()
       this._updateContext()
       this._updateGristConfig()
@@ -174,17 +175,10 @@ class WorksheetReturn extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'releaseQty',
-          header: i18next.t('field.qty'),
+          name: 'returnQty',
+          header: i18next.t('field.return_qty'),
           record: { align: 'center' },
           width: 80
-        },
-        {
-          type: 'object',
-          name: 'location',
-          header: i18next.t('field.location'),
-          record: { align: 'center' },
-          width: 100
         }
       ]
     }
@@ -212,6 +206,12 @@ class WorksheetReturn extends localize(i18next)(PageView) {
               description
               refNo
             }
+            returnOrder {
+              id
+              name
+              description
+              refNo
+            }
             bizplace {
               name
               description
@@ -220,7 +220,6 @@ class WorksheetReturn extends localize(i18next)(PageView) {
               name
               description
               targetInventory {
-                releaseQty
                 inventory {
                   batchId
                   palletId
@@ -235,6 +234,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
                   }
                   qty
                 }
+                returnQty
               }
               status
             }
@@ -247,12 +247,13 @@ class WorksheetReturn extends localize(i18next)(PageView) {
       const worksheet = response.data.worksheet
       const worksheetDetails = worksheet.worksheetDetails
       this._worksheetStatus = worksheet.status
-      this._roNo = (worksheet.releaseGood && worksheet.releaseGood.name) || ''
+      this._returnOrder = worksheet && worksheet.returnOrder
+      this._returnOrderNo = (worksheet.returnOrder && worksheet.returnOrder.name) || ''
       this._fillupForm({
         ...worksheet,
-        releaseGood: worksheet.releaseGood.name,
+        returnOrder: worksheet.returnOrder.name,
         bizplace: worksheet.bizplace.name,
-        refNo: worksheet.releaseGood.refNo
+        refNo: worksheet.returnOrder.refNo
       })
       this.data = {
         records: worksheetDetails.map(worksheetDetail => {
@@ -260,7 +261,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
             ...worksheetDetail.targetInventory.inventory,
             name: worksheetDetail.name,
             description: worksheetDetail.description,
-            releaseQty: worksheetDetail.targetInventory.releaseQty,
+            returnQty: worksheetDetail.targetInventory.returnQty,
             status: worksheetDetail.status
           }
         })
@@ -273,6 +274,19 @@ class WorksheetReturn extends localize(i18next)(PageView) {
 
     if (this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value) {
       this._actions = [{ title: i18next.t('button.activate'), action: this._activateWorksheet.bind(this) }]
+    }
+
+    if (this._worksheetStatus === WORKSHEET_STATUS.EXECUTING.value) {
+      this._actions = [
+        { title: i18next.t('button.pallet_label_print'), action: this._openPalletLabelPrintPopup.bind(this) }
+      ]
+
+      if (this.data?.records?.some(wsd => wsd.status === WORKSHEET_STATUS.PARTIALLY_UNLOADED.value)) {
+        this._actions.push({
+          title: i18next.t('button.create_putaway_worksheet'),
+          action: this._showPutawayWorksheetPopup.bind(this)
+        })
+      }
     }
 
     this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
@@ -348,9 +362,9 @@ class WorksheetReturn extends localize(i18next)(PageView) {
       const response = await client.query({
         query: gql`
           mutation {
-            activateReturn(${gqlBuilder.buildArgs({
+            activateUnloadingReturn(${gqlBuilder.buildArgs({
               worksheetNo: this._worksheetNo,
-              returnWorksheetDetails: this._getReturnWorksheetDetails()
+              unloadingReturnWorksheetDetails: this._getExternalReturnWorksheetDetails()
             })}) {
               name
             }
@@ -362,20 +376,61 @@ class WorksheetReturn extends localize(i18next)(PageView) {
         await this.fetchWorksheet()
         this._updateContext()
         this._updateGristConfig()
-        navigate(`outbound_worksheets`)
       }
     } catch (e) {
       this._showToast(e)
     }
   }
 
-  _getReturnWorksheetDetails() {
+  _getExternalReturnWorksheetDetails() {
     return this.grist.dirtyData.records.map(worksheetDetail => {
       return {
         name: worksheetDetail.name,
         description: worksheetDetail.description
       }
     })
+  }
+
+  _openPalletLabelPrintPopup() {
+    const _pallets = {
+      records: this.data.records.map(record => {
+        return {
+          id: record.id,
+          palletId: record.palletId,
+          batchId: record.batchId,
+          product: record.product,
+          palletQty: record.palletQty,
+          printQty: record.palletQty,
+          packingType: record.packingType,
+          bizplace: this._bizplace
+        }
+      })
+    }
+    openPopup(html` <pallet-label-popup .pallets="${_pallets}"></pallet-label-popup> `, {
+      backdrop: true,
+      size: 'large',
+      title: i18next.t('title.pallet_label')
+    })
+  }
+
+  _showPutawayWorksheetPopup() {
+    openPopup(
+      html`
+        <putaway-worksheet-generate-popup
+          .crossDocking="${this.crossDocking}"
+          .returnOrder="${this._returnOrder}"
+          @completed="${async () => {
+            await this.fetchWorksheet()
+            this._updateContext()
+          }}"
+        ></putaway-worksheet-generate-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.generate_putaway_worksheet')
+      }
+    )
   }
 
   _showToast({ type, message }) {
@@ -390,4 +445,4 @@ class WorksheetReturn extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('worksheet-return', WorksheetReturn)
+window.customElements.define('worksheet-unloading-return', WorksheetUnloadingReturn)

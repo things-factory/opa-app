@@ -919,7 +919,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       if (this._crossDocking) {
         result = await CustomAlert({
           title: i18next.t('label.cross_docking'),
-          text: i18next.t('text.create_arrival_notice'),
+          text: i18next.t('text.create_release_order'),
           confirmButton: { text: i18next.t('button.submit') },
           cancelButton: { text: i18next.t('button.cancel') }
         })
@@ -958,7 +958,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       if (!response.errors) {
         this.resetPage()
         navigate(`release_order_detail/${response.data.generateReleaseGood.name}`)
-        this._showToast({ message: i18next.t('release_order_created') })
+        this._showToast({ message: i18next.t('text.release_order_created') })
       }
     } catch (e) {
       this._showToast(e)

@@ -8,12 +8,12 @@ import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { WORKSHEET_STATUS } from '../constants'
 
-class WorksheetReturn extends localize(i18next)(PageView) {
+class WorksheetPutawayReturn extends localize(i18next)(PageView) {Ø
   static get properties() {
     return {
       _worksheetNo: String,
       _worksheetStatus: String,
-      _roNo: String,
+      _returnOrderNo: String,
       config: Object,
       data: Object
     }
@@ -78,7 +78,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.worksheet_return'),
+      title: i18next.t('title.worksheet_putaway_return'),
       actions: this._actions,
       printable: {
         accept: ['preview'],
@@ -92,12 +92,15 @@ class WorksheetReturn extends localize(i18next)(PageView) {
       <div class="form-container">
         <form class="multi-column-form">
           <fieldset>
-            <legend>${i18next.t('title.return')}</legend>
-            <label>${i18next.t('label.release_good_no')}</label>
-            <input name="releaseGood" readonly />
+            <legend>${i18next.t('title.putaway')}</legend>
+            <label>${i18next.t('label.return_order_no')}</label>
+            <input name="returnOrder" readonly />
 
             <label>${i18next.t('label.customer')}</label>
             <input name="bizplace" readonly />
+
+            <label>${i18next.t('label.staging_area')}</label>
+            <input name="bufferLocation" readonly />
 
             <label>${i18next.t('label.ref_no')}</label>
             <input name="refNo" readonly />
@@ -111,7 +114,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
           </fieldset>
         </form>
 
-        <barcode-tag bcid="qrcode" .value=${this._roNo}></barcode-tag>
+        <barcode-tag bcid="qrcode" .value=${this._returnOrderNo}></barcode-tag>
       </div>
 
       <div class="grist">
@@ -141,7 +144,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
   pageInitialized() {
     this.preConfig = {
       rows: { appendable: false },
-      list: { fields: ['batchId', 'palletId', 'product'] },
+      list: { fields: ['batchId', 'palletId', 'product', 'packingType', 'qty', 'location', 'status'] },
       pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -174,17 +177,10 @@ class WorksheetReturn extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'releaseQty',
+          name: 'qty',
           header: i18next.t('field.qty'),
           record: { align: 'center' },
           width: 80
-        },
-        {
-          type: 'object',
-          name: 'location',
-          header: i18next.t('field.location'),
-          record: { align: 'center' },
-          width: 100
         }
       ]
     }
@@ -207,7 +203,8 @@ class WorksheetReturn extends localize(i18next)(PageView) {
             name: this._worksheetNo
           })}) {
             status
-            releaseGood {
+            returnOrder {
+              id
               name
               description
               refNo
@@ -216,11 +213,17 @@ class WorksheetReturn extends localize(i18next)(PageView) {
               name
               description
             }
+            bufferLocation {
+              name
+              description
+              warehouse {
+                id
+              }
+            }
             worksheetDetails {
               name
               description
               targetInventory {
-                releaseQty
                 inventory {
                   batchId
                   palletId
@@ -247,12 +250,13 @@ class WorksheetReturn extends localize(i18next)(PageView) {
       const worksheet = response.data.worksheet
       const worksheetDetails = worksheet.worksheetDetails
       this._worksheetStatus = worksheet.status
-      this._roNo = (worksheet.releaseGood && worksheet.releaseGood.name) || ''
+      this._returnOrderNo = (worksheet.returnOrder && worksheet.returnOrder.name) || ''
       this._fillupForm({
         ...worksheet,
-        releaseGood: worksheet.releaseGood.name,
+        returnOrder: worksheet.returnOrder.name,
         bizplace: worksheet.bizplace.name,
-        refNo: worksheet.releaseGood.refNo
+        bufferLocation: worksheet.bufferLocation.name,
+        refNo: worksheet.returnOrder.refNo
       })
       this.data = {
         records: worksheetDetails.map(worksheetDetail => {
@@ -260,7 +264,6 @@ class WorksheetReturn extends localize(i18next)(PageView) {
             ...worksheetDetail.targetInventory.inventory,
             name: worksheetDetail.name,
             description: worksheetDetail.description,
-            releaseQty: worksheetDetail.targetInventory.releaseQty,
             status: worksheetDetail.status
           }
         })
@@ -284,6 +287,13 @@ class WorksheetReturn extends localize(i18next)(PageView) {
   }
 
   _updateGristConfig() {
+    const currentLocationColumn = {
+      type: 'object',
+      name: 'location',
+      record: { align: 'center' },
+      header: i18next.t('field.current_location'),
+      width: 200
+    }
     const statusColumnConfig = {
       type: 'string',
       name: 'status',
@@ -302,7 +312,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
       !this.preConfig.columns.some(e => e.name === 'status') &&
       this._worksheetStatus !== WORKSHEET_STATUS.DEACTIVATED.value
     ) {
-      this.preConfig.columns = [...this.preConfig.columns, statusColumnConfig]
+      this.preConfig.columns = [...this.preConfig.columns, currentLocationColumn, statusColumnConfig]
     } else if (
       this.preConfig.columns.some(e => e.name === 'status') &&
       this._worksheetStatus === WORKSHEET_STATUS.DEACTIVATED.value
@@ -336,7 +346,7 @@ class WorksheetReturn extends localize(i18next)(PageView) {
     try {
       const result = await CustomAlert({
         title: i18next.t('title.are_you_sure'),
-        text: i18next.t('text.activate_return_worksheet'),
+        text: i18next.t('text.activate_putaway_worksheet'),
         confirmButton: { text: i18next.t('button.confirm') },
         cancelButton: { text: i18next.t('button.cancel') }
       })
@@ -348,9 +358,9 @@ class WorksheetReturn extends localize(i18next)(PageView) {
       const response = await client.query({
         query: gql`
           mutation {
-            activateReturn(${gqlBuilder.buildArgs({
+            activatePutawayReturn(${gqlBuilder.buildArgs({
               worksheetNo: this._worksheetNo,
-              returnWorksheetDetails: this._getReturnWorksheetDetails()
+              putawayWorksheetDetails: this._getPutawayWorksheetDetails()
             })}) {
               name
             }
@@ -362,14 +372,14 @@ class WorksheetReturn extends localize(i18next)(PageView) {
         await this.fetchWorksheet()
         this._updateContext()
         this._updateGristConfig()
-        navigate(`outbound_worksheets`)
+        navigate(`external_return_worksheets`)
       }
     } catch (e) {
       this._showToast(e)
     }
   }
 
-  _getReturnWorksheetDetails() {
+  _getPutawayWorksheetDetails() {
     return this.grist.dirtyData.records.map(worksheetDetail => {
       return {
         name: worksheetDetail.name,
@@ -390,4 +400,4 @@ class WorksheetReturn extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('worksheet-return', WorksheetReturn)
+window.customElements.define('worksheet-putaway-return', WorksheetPutawayReturn)

@@ -135,6 +135,38 @@ export default {
       tagname: 'rejected-vas-order',
       page: 'rejected_vas_order'
     },
+    {
+      tagname: 'create-return-order',
+      page: 'create_return_order'
+    },
+    {
+      tagname: 'return-order-detail',
+      page: 'return_order_detail'
+    },
+    {
+      tagname: 'return-order-list',
+      page: 'return_orders'
+    },
+    {
+      tagname: 'return-order-requests',
+      page: 'return_order_requests'
+    },
+    {
+      tagname: 'receive-return-order-requests',
+      page: 'receive_return_order_requests'
+    },
+    {
+      tagname: 'check-return-order',
+      page: 'check_return_order'
+    },
+    {
+      tagname: 'rejected-return-order',
+      page: 'rejected_return_order'
+    },
+    {
+      tagname: 'return-order-assign-buffer-location',
+      page: 'return_order_assign_buffer_location'
+    },
 
     /**
      * Order Menus Section
@@ -286,6 +318,10 @@ export default {
       page: 'inbound_worksheets'
     },
     {
+      tagname: 'external-return-worksheet',
+      page: 'external_return_worksheets'
+    },
+    {
       tagname: 'worksheet-unloading',
       page: 'worksheet_unloading'
     },
@@ -294,8 +330,12 @@ export default {
       page: 'worksheet_putaway'
     },
     {
-      tagname: 'worksheet-return',
-      page: 'worksheet_return'
+      tagname: 'worksheet-unloading-return',
+      page: 'worksheet_unloading_return'
+    },
+    {
+      tagname: 'worksheet-putaway-return',
+      page: 'worksheet_putaway_return'
     },
     {
       tagname: 'worksheet-vas',
@@ -308,6 +348,10 @@ export default {
     {
       tagname: 'unload-product',
       page: 'unloading'
+    },
+    {
+      tagname: 'unload-return-product',
+      page: 'unloading_return'
     },
     {
       tagname: 'putaway-product',
@@ -346,8 +390,16 @@ export default {
       page: 'outbound_worksheets'
     },
     {
+      tagname: 'outbound-return-worksheet',
+      page: 'outbound_return_worksheets'
+    },
+    {
       tagname: 'worksheet-picking',
       page: 'worksheet_picking'
+    },
+    {
+      tagname: 'worksheet-external-return',
+      page: 'worksheet_external_return'
     },
     {
       tagname: 'picking-product',

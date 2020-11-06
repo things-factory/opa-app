@@ -8,7 +8,14 @@ import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import '../components/popup-note'
 import '../components/vas-templates'
-import { VAS_BATCH_AND_PRODUCT_TYPE, VAS_BATCH_NO_TYPE, VAS_ETC_TYPE, VAS_PRODUCT_TYPE } from '../constants'
+import {
+  ORDER_VAS_STATUS,
+  VAS_BATCH_AND_PRODUCT_TYPE,
+  VAS_BATCH_NO_TYPE,
+  VAS_ETC_TYPE,
+  VAS_PRODUCT_TYPE,
+  WORKSHEET_STATUS
+} from '../constants'
 import './target-inventory-assignment-popup'
 
 class RelatedVasList extends localize(i18next)(LitElement) {
@@ -125,14 +132,14 @@ class RelatedVasList extends localize(i18next)(LitElement) {
           name: 'set',
           header: i18next.t('field.set'),
           record: { align: 'center' },
-          width: 100
+          width: 60
         },
         {
           type: 'string',
           name: 'targetType',
           header: i18next.t('field.target_type'),
-          record: { align: 'center' },
-          width: 150
+          record: { align: 'left' },
+          width: 200
         },
         {
           type: 'string',
@@ -156,24 +163,24 @@ class RelatedVasList extends localize(i18next)(LitElement) {
                 return getRenderer()(record.otherTarget, column, record, rowIndex, field)
               }
             },
-            align: 'center'
+            align: 'left'
           },
 
-          width: 250
+          width: 200
         },
         {
           type: 'string',
           name: 'packingType',
           header: i18next.t('field.packingType'),
           record: { align: 'center' },
-          width: 250
+          width: 100
         },
         {
           type: 'integer',
           name: 'qty',
           header: i18next.t('field.qty'),
           record: { align: 'center' },
-          width: 100
+          width: 60
         },
         {
           type: 'object',
@@ -185,12 +192,6 @@ class RelatedVasList extends localize(i18next)(LitElement) {
           type: 'string',
           name: 'remark',
           header: i18next.t('field.remark'),
-          width: 250
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.comment'),
           width: 200
         }
       ]
@@ -216,14 +217,19 @@ class RelatedVasList extends localize(i18next)(LitElement) {
               description
               issue
               seq
+              status
               targetVas {
                 vas {
                   name
                   description
+                  operationGuide
+                  operationGuideType
                 }
                 set
                 targetType
                 targetBatchId
+                status
+                operationGuide
                 targetProduct {
                   id
                   name
@@ -246,7 +252,7 @@ class RelatedVasList extends localize(i18next)(LitElement) {
       this.data = {
         ...this.data,
         records: worksheetDetails
-          .sort((a, b) => a.seq - b.seq)
+          .sort((a, b) => a.targetVas.set - b.targetVas.set)
           .map(wsd => {
             return {
               ...wsd.targetVas,

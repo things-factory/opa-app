@@ -538,7 +538,7 @@ class WorksheetVas extends localize(i18next)(PageView) {
 
     this._actions = [
       ...this._actions,
-      { title: i18next.t('button.vas_pallet_label_print'), action: this._printVasLabel.bind(this) },
+      { title: i18next.t('button.pallet_label_print'), action: this._printVasLabel.bind(this) },
       { title: i18next.t('button.back'), action: () => history.back() }
     ]
 

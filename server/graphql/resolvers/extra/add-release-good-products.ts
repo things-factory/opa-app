@@ -149,6 +149,25 @@ export const addReleaseGoodProducts = {
                   await trxMgr.getRepository(OrderInventory).save(curOrderInv)
                 }
               }
+
+              if (pickingWorksheet) {
+                // if has picking worksheet, status will be deactivated to prevent any action from warehouse operator until office admin has confirmation
+                pickingWorksheet = {
+                  ...pickingWorksheet,
+                  status: WORKSHEET_STATUS.DEACTIVATED
+                }
+                await trxMgr.getRepository(Worksheet).save(pickingWorksheet)
+              }
+
+              if (loadingWorksheet) {
+                // if has loading worksheet, status will be deactivated to prevent any action from warehouse operator until office admin has confirmation
+                loadingWorksheet = {
+                  ...loadingWorksheet,
+                  status: WORKSHEET_STATUS.DEACTIVATED
+                }
+      
+                await trxMgr.getRepository(Worksheet).save(loadingWorksheet)
+              }
             }
           }
         }
@@ -240,11 +259,24 @@ export const addReleaseGoodProducts = {
                 ...pickingWorksheet,
                 status: WORKSHEET_STATUS.DEACTIVATED
               }
-              let savedOrderInv = await trxMgr.getRepository(OrderInventory).save(newOrderInv)
+
+              let savedOrderInv: OrderInventory = new OrderInventory()
+              savedOrderInv.name = newOrderInv.name
+              savedOrderInv.type = newOrderInv.type
+              savedOrderInv.releaseQty = newOrderInv.releaseQty
+              savedOrderInv.releaseWeight = newOrderInv.releaseWeight
+              savedOrderInv.inventory = newOrderInv.inventory
+              savedOrderInv.status = newOrderInv.status
+              savedOrderInv.releaseGood = newOrderInv.releaseGood
+              savedOrderInv.bizplace = newOrderInv.bizplace
+              savedOrderInv.domain = domain
+              savedOrderInv.creator = user
+              savedOrderInv.updater = user
+              savedOrderInv = await trxMgr.getRepository(OrderInventory).save(savedOrderInv)
 
               if (!existingOrderInv && pickingWorksheet) {
                 // if this is a new orderInventory and has existing worksheet then generate a new worksheet detail for it
-                await generatePickingWorksheetDetail(trxMgr, domain, bizplace, user, pickingWorksheet, savedOrderInv)
+                await generatePickingWorksheetDetail(trxMgr, domain, user, pickingWorksheet, savedOrderInv)
               }
             }
           }

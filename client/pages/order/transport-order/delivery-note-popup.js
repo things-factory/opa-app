@@ -1,11 +1,15 @@
+import { MultiColumnFormStyles } from '@things-factory/form-ui'
 import '@things-factory/grist-ui'
+import { i18next, localize } from '@things-factory/i18n-base'
+import { openPopup } from '@things-factory/layout-base'
 import { client } from '@things-factory/shell'
-import { gqlBuilder } from '@things-factory/utils'
+import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
+import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import { fetchSettingRule } from '../../../fetch-setting-value'
-import { i18next, localize } from '@things-factory/i18n-base'
-import { SingleColumnFormStyles } from '@things-factory/form-ui'
-import gql from 'graphql-tag'
+import './contact-point-selector-popup'
+import './transport-driver-popup'
+import '../../outbound/transport-vehicles-popup'
 
 class DeliveryNotePopup extends localize(i18next)(LitElement) {
   static get properties() {
@@ -15,8 +19,11 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
       _otherDestination: Boolean,
       _truckExist: Boolean,
       _truckList: Array,
+      bizplace: Object,
       contactPoints: Array,
       doNo: String,
+      doGristConfig: Object,
+      doData: Object,
       ownCollection: Boolean,
       truckNo: String
     }
@@ -30,14 +37,42 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
 
   static get styles() {
     return [
-      SingleColumnFormStyles,
+      MultiColumnFormStyles,
       css`
         :host {
-          padding: 10px;
           display: flex;
           flex-direction: column;
-          overflow-x: overlay;
-          background-color: var(--main-section-background-color);
+          overflow: hidden;
+          background-color: white;
+        }
+        .container {
+          flex: 1;
+          display: flex;
+          overflow-y: auto;
+          min-height: 20vh;
+        }
+
+        .grist {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          overflow-y: auto;
+        }
+        .grist h2 mwc-icon {
+          vertical-align: middle;
+          margin: var(--grist-title-icon-margin);
+          font-size: var(--grist-title-icon-size);
+          color: var(--grist-title-icon-color);
+        }
+        data-grist {
+          overflow-y: hidden;
+          flex: 1;
+        }
+        h2 {
+          padding: var(--subtitle-padding);
+          font: var(--subtitle-font);
+          color: var(--subtitle-text-color);
+          border-bottom: var(--subtitle-border-bottom);
         }
         .button-container {
           padding: var(--button-container-padding);
@@ -69,12 +104,70 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
   async firstUpdated() {
     this._driverList = await this._fetchTruckDriver()
     this._truckList = await this._fetchTrucks()
+    await this.fetchDeliveryInfo()
     this._isDisabled = await fetchSettingRule('disable-reusable-pallet')
+
+    this.doGristConfig = {
+      list: { fields: ['ready', 'targetType', 'targetDisplay', 'packingType'] },
+      pagination: { infinite: true },
+      rows: { appendable: false },
+      columns: [
+        { type: 'gutter', gutterName: 'sequence' },
+        {
+          type: 'string',
+          name: 'productName',
+          header: i18next.t('field.product'),
+          width: 220
+        },
+        {
+          type: 'string',
+          name: 'batchId',
+          header: i18next.t('field.batch_no'),
+          record: { align: 'center' },
+          width: 120
+        },
+        {
+          type: 'string',
+          name: 'packingType',
+          header: i18next.t('field.packing_type'),
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'integer',
+          name: 'releaseQty',
+          header: i18next.t('field.qty'),
+          record: { align: 'center' },
+          width: 80
+        },
+        {
+          type: 'integer',
+          name: 'releaseWeight',
+          header: i18next.t('field.weight'),
+          record: { align: 'center' },
+          width: 80
+        },
+        {
+          type: 'string',
+          name: 'systemRemark',
+          header: i18next.t('field.system_remark'),
+          record: { align: 'left' },
+          width: 150
+        },
+        {
+          type: 'string',
+          name: 'remark',
+          header: i18next.t('field.remark'),
+          record: { align: 'center', editable: true },
+          width: 180
+        }
+      ]
+    }
   }
 
   render() {
     return html`
-      <form id="input-form" class="single-column-form">
+      <form id="input-form" name="doForm" class="multi-column-form">
         <fieldset>
           <legend>${i18next.t('title.delivery_information')} - ${this.doNo}</legend>
           <label>${i18next.t('label.delivery_date')}</label>
@@ -82,31 +175,30 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
 
           <label>${i18next.t('label.driver_name')}</label>
           <input name="otherDriver" ?hidden="${!this.ownCollection}" />
-          <select name="ownDriver" ?hidden="${this.ownCollection}">
-            <option value="">-- ${i18next.t('text.please_select_a_driver')} --</option>
-            ${(this._driverList || []).map(
-              driver => html` <option value="${driver && driver.name}">${driver && driver.name}</option> `
-            )}
-          </select>
+          <input
+            name="ownDriver"
+            ?hidden="${this.ownCollection}"
+            readonly
+            @click="${this._openDriverSelector.bind(this)}"
+          />
 
           <label>${i18next.t('label.truck_no')}</label>
           <input name="otherTruck" ?hidden="${!this.ownCollection}" value="${this.truckNo}" />
-          <select name="ownTruck" ?hidden="${this.ownCollection}">
-            ${this._truckExist == true
-              ? html`<option value="${this.truckNo}">${this.truckNo}</option>`
-              : html`<option value="">-- ${i18next.t('text.please_select_a_truck')} --</option>`}
-            ${(this._truckList || []).map(
-              truck => html` <option value="${truck && truck.name}">${truck && truck.name}</option> `
-            )}
-          </select>
+          <input
+            name="ownTruck"
+            ?hidden="${this.ownCollection}"
+            readonly
+            @click="${this._openTruckSelector.bind(this)}"
+            value=${this.truckNo === null ? '' : this.truckNo}
+          />
 
           <label ?hidden="${this._otherDestination}">${i18next.t('label.to')}</label>
-          <select name="contactPoint" ?hidden="${this._otherDestination}">
-            <option value="">-- ${i18next.t('text.please_select_a_destination')} --</option>
-            ${(this.contactPoints || []).map(
-              cp => html` <option value="${cp && cp.id}">${cp && cp.contactName},${cp && cp.address}</option> `
-            )}
-          </select>
+          <input
+            name="contactPoint"
+            ?hidden="${this._otherDestination}"
+            readonly
+            @click="${this._openCPSelector.bind(this)}"
+          />
 
           <input
             name="otherDestBoolean"
@@ -122,6 +214,9 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
           <label ?hidden="${!this._otherDestination}">${i18next.t('label.other_destination')}</label>
           <textarea name="otherDestination" ?hidden="${!this._otherDestination}"></textarea>
 
+          <label>${i18next.t('label.overall_remark')}</label>
+          <textarea name="remark"></textarea>
+
           <label ?hidden="${this._isDisabled}">${i18next.t('label.reusable_pallet')}</label>
           <textarea
             name="reusablePallet"
@@ -132,6 +227,19 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
         </fieldset>
       </form>
 
+      <div class="container">
+        <div class="grist">
+          <h2><mwc-icon>list_alt</mwc-icon>${i18next.t('title.edit_remark')}</h2>
+
+          <data-grist
+            id="do-grist"
+            .mode=${isMobileDevice() ? 'LIST' : 'GRID'}
+            .config=${this.doGristConfig}
+            .data=${this.doData}
+          ></data-grist>
+        </div>
+      </div>
+
       <div class="button-container">
         <button @click="${this._saveDeliveryInfo}">${i18next.t('button.dispatch')}</button>
       </div>
@@ -140,6 +248,78 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
 
   get inputForm() {
     return this.shadowRoot.querySelector('form#input-form')
+  }
+
+  get doForm() {
+    return this.shadowRoot.querySelector('form[name=doForm]')
+  }
+
+  get contactPointInput() {
+    return this.shadowRoot.querySelector('input[name=contactPoint]')
+  }
+
+  get truckNoInput() {
+    return this.shadowRoot.querySelector('input[name=ownTruck]')
+  }
+
+  get truckDriverInput() {
+    return this.shadowRoot.querySelector('input[name=ownDriver]')
+  }
+
+  get doGrist() {
+    return this.shadowRoot.querySelector('data-grist#do-grist')
+  }
+
+  _openCPSelector() {
+    openPopup(
+      html`
+        <contact-point-selector-popup
+          .bizplace="${this.bizplace}"
+          @selected="${e => {
+            this.contactPointInput.value = e.detail.name
+          }}"
+        ></contact-point-selector-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.select_destination')
+      }
+    )
+  }
+
+  _openTruckSelector() {
+    openPopup(
+      html`
+        <transport-vehicles-popup
+          @selected="${e => {
+            this.truckNoInput.value = e.detail.name
+          }}"
+        ></transport-vehicles-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.select_truck')
+      }
+    )
+  }
+
+  _openDriverSelector() {
+    openPopup(
+      html`
+        <transport-driver-popup
+          @selected="${e => {
+            this.truckDriverInput.value = e.detail.name
+          }}"
+        ></transport-driver-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.select_driver')
+      }
+    )
   }
 
   async _fetchTruckDriver() {
@@ -192,13 +372,45 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
     }
   }
 
+  async fetchDeliveryInfo() {
+    const response = await client.query({
+      query: gql`
+        query {
+          deliveryOrderItems(${gqlBuilder.buildArgs({
+            name: this.doNo
+          })}) {
+            items {
+              releaseQty
+              releaseWeight
+              status
+              remark
+              systemRemark
+              batchId
+              productName
+              packingType
+            }
+          }
+        }
+      `
+    })
+
+    if (!response.errors) {
+      this.doData = {
+        records: response.data.deliveryOrderItems.items
+      }
+    }
+  }
+
   async _saveDeliveryInfo() {
     try {
+      const orderItems = this._getOrderItems()
+      console.log(orderItems)
       const response = await client.query({
         query: gql`
           mutation {
             dispatchDeliveryOrder(${gqlBuilder.buildArgs({
-              orderInfo: { ...this._getDeliveryInfo() }
+              orderInfo: { ...this._getDeliveryInfo() },
+              orderItems: this._getOrderItems()
             })}) {
               id
               name
@@ -232,10 +444,27 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
         contactPoint: this._getInputByName('contactPoint').value,
         contactName: this._getInputByName('contactName').value,
         otherDestination: this._getInputByName('otherDestination').value,
-        reusablePallet: this._getInputByName('reusablePallet').value
+        reusablePallet: this._getInputByName('reusablePallet').value,
+        remark: this._getInputByName('remark').value
       }
     } else {
       throw new Error(i18next.t('text.delivery_info_not_valid'))
+    }
+  }
+
+  _getOrderItems() {
+    if (this.doGrist.dirtyData && this.doGrist.dirtyData.records && this.doGrist.dirtyData.records.length > 0) {
+      return this.doGrist.dirtyData.records.map(record => {
+        let newRecord = {
+          productName: record.productName,
+          releaseQty: record.releaseQty,
+          releaseWeight: record.releaseWeight,
+          batchId: record.batchId,
+          packingType: record.packingType,
+          remark: record?.remark ? record.remark : ''
+        }
+        return newRecord
+      })
     }
   }
 

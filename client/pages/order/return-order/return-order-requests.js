@@ -7,9 +7,9 @@ import { ScrollbarStyles } from '@things-factory/styles'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { WORKSHEET_TYPE } from '../constants'
+import { ORDER_STATUS } from '../../constants'
 
-class InboundWorksheet extends localize(i18next)(PageView) {
+class ReturnOrderRequests extends localize(i18next)(PageView) {
   static get styles() {
     return [
       ScrollbarStyles,
@@ -23,6 +23,7 @@ class InboundWorksheet extends localize(i18next)(PageView) {
         search-form {
           overflow: visible;
         }
+
         data-grist {
           overflow-y: auto;
           flex: 1;
@@ -33,7 +34,6 @@ class InboundWorksheet extends localize(i18next)(PageView) {
 
   static get properties() {
     return {
-      _email: String,
       _searchFields: Array,
       config: Object,
       data: Object
@@ -54,9 +54,9 @@ class InboundWorksheet extends localize(i18next)(PageView) {
 
   get context() {
     return {
-      title: i18next.t('title.inbound_worksheet'),
+      title: i18next.t('title.return_order_requests'),
       exportable: {
-        name: i18next.t('title.inbound_worksheet'),
+        name: i18next.t('title.return_order_requests'),
         data: this._exportableData.bind(this)
       }
     }
@@ -69,37 +69,28 @@ class InboundWorksheet extends localize(i18next)(PageView) {
   }
 
   async pageInitialized() {
-    const _worksheetTypes = [
-      { name: WORKSHEET_TYPE.UNLOADING.name, value: WORKSHEET_TYPE.UNLOADING.value },
-      { name: WORKSHEET_TYPE.PUTAWAY.name, value: WORKSHEET_TYPE.PUTAWAY.value }
-    ]
-    const _worksheetStatus = await getCodeByName('WORKSHEET_STATUS')
-    this._bizplaces = [...(await this._fetchBizplaceList())]
+    const _orderStatus = await getCodeByName('RETURN_LIST_STATUS')
+    const _userBizplaces = await this.fetchBizplaces()
 
     this._searchFields = [
       {
-        name: 'arrivalNoticeNo',
-        label: i18next.t('field.arrival_notice'),
+        label: i18next.t('field.return_order_no'),
+        name: 'name',
         type: 'text',
         props: { searchOper: 'i_like' }
       },
       {
-        name: 'arrivalNoticeRefNo',
-        label: i18next.t('field.ref_no'),
-        type: 'text',
-        props: { searchOper: 'i_like' }
-      },
-      {
-        name: 'bizplaceId',
         label: i18next.t('field.customer'),
+        name: 'bizplaceId',
         type: 'select',
         options: [
           { value: '' },
-          ...this._bizplaces
-            .map(bizplaceList => {
+          ..._userBizplaces
+            .filter(userBizplaces => !userBizplaces.mainBizplace)
+            .map(userBizplace => {
               return {
-                name: bizplaceList.name,
-                value: bizplaceList.id
+                name: userBizplace.name,
+                value: userBizplace.id
               }
             })
             .sort(this._compareValues('name', 'asc'))
@@ -107,24 +98,31 @@ class InboundWorksheet extends localize(i18next)(PageView) {
         props: { searchOper: 'eq' }
       },
       {
-        name: 'type',
-        label: i18next.t('label.type'),
-        type: 'select',
-        options: [
-          { value: '' },
-          ..._worksheetTypes.map(type => {
-            return { name: i18next.t(`${type.name}`), value: type.value }
-          })
-        ],
-        props: { searchOper: 'eq' }
+        label: i18next.t('field.eta'),
+        name: 'etaDate',
+        type: 'date',
+        props: { searchOper: 'i_like' }
       },
       {
+        label: i18next.t('field.ref_no'),
+        name: 'refNo',
+        type: 'text',
+        props: { searchOper: 'i_like' }
+      },
+      {
+        label: i18next.t('field.own_transport'),
+        name: 'ownTransport',
+        type: 'checkbox',
+        props: { searchOper: 'eq' },
+        attrs: ['indeterminate']
+      },
+      {
+        label: i18next.t('field.status'),
         name: 'status',
-        label: i18next.t('label.status'),
         type: 'select',
         options: [
           { value: '' },
-          ..._worksheetStatus.map(status => {
+          ..._orderStatus.map(status => {
             return { name: i18next.t(`label.${status.description}`), value: status.name }
           })
         ],
@@ -133,10 +131,8 @@ class InboundWorksheet extends localize(i18next)(PageView) {
     ]
 
     this.config = {
-      list: {
-        fields: ['arrivalNotice', 'bizplace', 'type', 'arrivalRefNo', 'status', 'startedAt', 'endedAt']
-      },
-      rows: { appendable: false },
+      rows: { selectable: { multiple: true }, appendable: false },
+      list: { fields: ['name', 'bizplace', 'releaseDate', 'status', 'updatedAt'] },
       columns: [
         { type: 'gutter', gutterName: 'dirty' },
         { type: 'gutter', gutterName: 'sequence' },
@@ -146,45 +142,28 @@ class InboundWorksheet extends localize(i18next)(PageView) {
           icon: 'reorder',
           handlers: {
             click: (columns, data, column, record, rowIndex) => {
-              if (!record.id) return
-              const type = record.type
-
-              // Handle UNLOADING
-              if (type === WORKSHEET_TYPE.UNLOADING.value) {
-                navigate(`worksheet_unloading/${record.name}`)
-
-                // Handle PUTAWAY
-              } else if (type === WORKSHEET_TYPE.PUTAWAY.value) {
-                navigate(`worksheet_putaway/${record.name}`)
-                // Handle VAS
-              } else if (type === WORKSHEET_TYPE.VAS.value) {
-                navigate(`worksheet_vas/${record.name}`)
+              const status = record.status
+              if (status === ORDER_STATUS.PENDING_RECEIVE.value || status === ORDER_STATUS.PENDING_CANCEL.value) {
+                navigate(`receive_return_order_requests/${record.name}`) // 1. move to order receiving page
+              } else if (status === ORDER_STATUS.REJECTED.value) {
+                navigate(`rejected_return_order/${record.name}`) // 1. move to rejected detail page
+              } else if (status === ORDER_STATUS.INTRANSIT.value) {
+                navigate(`check_return_order/${record.name}`) // 2. move to order arriving check page
+              } else if (status === ORDER_STATUS.ARRIVED.value) {
+                navigate(`return_order_assign_buffer_location/${record.name}`) // 3. move to assign buffer location
+              } else {
+                navigate(`return_order_detail/${record.name}`)
               }
             }
           }
         },
         {
-          type: 'object',
-          name: 'arrivalNotice',
-          header: i18next.t('field.arrival_notice'),
-          record: { align: 'left' },
-          sortable: true,
-          width: 160
-        },
-        {
           type: 'string',
-          name: 'arrivalRefNo',
-          header: i18next.t('field.ref_no'),
+          name: 'name',
+          header: i18next.t('field.ro'),
           record: { align: 'left' },
           sortable: true,
-          width: 120
-        },
-        {
-          type: 'boolean',
-          name: 'crossDocking',
-          header: i18next.t('field.cross_docking'),
-          record: { align: 'center' },
-          width: 100
+          width: 150
         },
         {
           type: 'object',
@@ -196,11 +175,28 @@ class InboundWorksheet extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'type',
-          header: i18next.t('field.type'),
+          name: 'refNo',
+          header: i18next.t('field.ref_no'),
           record: { align: 'left' },
           sortable: true,
+          width: 160
+        },
+
+        {
+          type: 'date',
+          name: 'etaDate',
+          header: i18next.t('field.eta'),
+          record: { align: 'center' },
+          sortable: true,
           width: 120
+        },
+        {
+          type: 'boolean',
+          name: 'ownTransport',
+          header: i18next.t('field.own_transport'),
+          record: { align: 'center' },
+          sortable: true,
+          width: 60
         },
         {
           type: 'string',
@@ -212,33 +208,17 @@ class InboundWorksheet extends localize(i18next)(PageView) {
         },
         {
           type: 'datetime',
-          name: 'startedAt',
-          header: i18next.t('field.started_at'),
-          record: { align: 'center' },
-          sortable: true,
-          width: 160
-        },
-        {
-          type: 'datetime',
-          name: 'endedAt',
-          header: i18next.t('field.ended_at'),
+          name: 'updatedAt',
+          header: i18next.t('field.updated_at'),
           record: { align: 'center' },
           sortable: true,
           width: 160
         },
         {
           type: 'object',
-          name: 'updater',
-          header: i18next.t('field.updater'),
-          record: { editable: false, align: 'left' },
-          sortable: true,
-          width: 150
-        },
-        {
-          type: 'datetime',
-          name: 'updatedAt',
-          header: i18next.t('field.updated_at'),
-          record: { editable: false, align: 'left' },
+          name: 'acceptedBy',
+          header: i18next.t('field.accepted_by'),
+          record: { align: 'left' },
           sortable: true,
           width: 200
         }
@@ -254,49 +234,34 @@ class InboundWorksheet extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('data-grist')
   }
 
-  async fetchHandler({ page, limit, sorters = [{ name: 'createdAt', desc: true }] }) {
-    const filters = this.searchForm.queryFilters
-    if (!filters.find(filter => filter.name === 'type')) {
-      filters.push({
-        name: 'type',
-        operator: 'in',
-        value: [WORKSHEET_TYPE.UNLOADING.value, WORKSHEET_TYPE.PUTAWAY.value]
-      })
-    }
-
+  async fetchHandler({ page, limit, sorters = [{ name: 'updatedAt', desc: true }] }) {
     const response = await client.query({
       query: gql`
         query {
-          worksheets(${gqlBuilder.buildArgs({
-            filters,
+          returnOrderRequests(${gqlBuilder.buildArgs({
+            filters: await this.searchForm.getQueryFilters(),
             pagination: { page, limit },
             sortings: sorters
           })}) {
             items {
               id
-              name
-              arrivalNotice {
-                id
-                name
-                description
-                refNo
-                crossDocking
-              }
               bizplace {
                 id
                 name
                 description
               }
-              type
+              name
+              eta
+              etaDate
               status
-              createdAt
-              startedAt
-              endedAt
-              updater {
+              refNo
+              ownTransport
+              updatedAt
+              acceptedBy {
+                id
                 name
                 description
               }
-              updatedAt
             }
             total
           }
@@ -306,25 +271,18 @@ class InboundWorksheet extends localize(i18next)(PageView) {
 
     if (!response.errors) {
       return {
-        total: response.data.worksheets.total || 0,
-        records:
-          response.data.worksheets.items.map(item => {
-            return {
-              ...item,
-              arrivalRefNo: item.arrivalNotice.refNo || '',
-              crossDocking: item.arrivalNotice.crossDocking
-            }
-          }) || {}
+        total: response.data.returnOrderRequests.total || 0,
+        records: response.data.returnOrderRequests.items || []
       }
     }
   }
 
-  async _fetchBizplaceList() {
+  async fetchBizplaces(bizplace = []) {
     const response = await client.query({
       query: gql`
           query {
             bizplaces(${gqlBuilder.buildArgs({
-              filters: []
+              filters: [...bizplace]
             })}) {
               items{
                 id
@@ -335,10 +293,7 @@ class InboundWorksheet extends localize(i18next)(PageView) {
           }
         `
     })
-
-    if (!response.errors) {
-      return response.data.bizplaces.items
-    }
+    return response.data.bizplaces.items
   }
 
   _compareValues(key, order = 'asc') {
@@ -369,4 +324,4 @@ class InboundWorksheet extends localize(i18next)(PageView) {
   }
 }
 
-window.customElements.define('inbound-worksheet', InboundWorksheet)
+window.customElements.define('return-order-requests', ReturnOrderRequests)
