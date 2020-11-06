@@ -94,6 +94,7 @@ export const ORDER_INVENTORY_STATUS = {
 export const ORDER_VAS_STATUS = {
   PENDING: { name: 'vas_status_pending', value: 'PENDING' },
   PROCESSING: { name: 'vas_status_processing', value: 'PROCESSING' },
+  READY_TO_PROCESS: { name: 'vas_status_ready_to_process', value: 'READY_TO_PROCESS' },
   DONE: { name: 'vas_status_done', value: 'DONE' }
 }
 

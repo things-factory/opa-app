@@ -294,14 +294,14 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
           name: 'set',
           header: i18next.t('field.set'),
           record: { align: 'center' },
-          width: 100
+          width: 60
         },
         {
           type: 'string',
           name: 'targetType',
           header: i18next.t('field.target_type'),
-          record: { align: 'center' },
-          width: 150
+          record: { align: 'left' },
+          width: 200
         },
         {
           type: 'string',
@@ -335,28 +335,28 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
           name: 'packingType',
           header: i18next.t('field.packingType'),
           record: { align: 'center' },
-          width: 250
+          width: 120
         },
         {
           type: 'integer',
           name: 'qty',
           header: i18next.t('field.qty'),
           record: { align: 'center' },
-          width: 100
+          width: 60
         },
         {
           type: 'integer',
           name: 'weight',
           header: i18next.t('field.weight'),
           record: { align: 'center' },
-          width: 100
+          width: 60
         },
         {
           type: 'object',
           name: 'vas',
           header: i18next.t('field.vas'),
           record: { align: 'center', options: { queryName: 'vass' } },
-          width: 250
+          width: 150
         },
         {
           type: 'string',
@@ -370,13 +370,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
           name: 'remark',
           header: i18next.t('field.remark'),
           record: { align: 'center' },
-          width: 350
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.comment'),
-          width: 350
+          width: 250
         }
       ]
     }

@@ -8,7 +8,14 @@ import gql from 'graphql-tag'
 import { css, html, LitElement } from 'lit-element'
 import '../components/popup-note'
 import '../components/vas-templates'
-import { VAS_BATCH_AND_PRODUCT_TYPE, VAS_BATCH_NO_TYPE, VAS_ETC_TYPE, VAS_PRODUCT_TYPE } from '../constants'
+import {
+  ORDER_VAS_STATUS,
+  VAS_BATCH_AND_PRODUCT_TYPE,
+  VAS_BATCH_NO_TYPE,
+  VAS_ETC_TYPE,
+  VAS_PRODUCT_TYPE,
+  WORKSHEET_STATUS
+} from '../constants'
 import './target-inventory-assignment-popup'
 
 class RelatedVasList extends localize(i18next)(LitElement) {
@@ -186,12 +193,6 @@ class RelatedVasList extends localize(i18next)(LitElement) {
           name: 'remark',
           header: i18next.t('field.remark'),
           width: 200
-        },
-        {
-          type: 'string',
-          name: 'description',
-          header: i18next.t('field.comment'),
-          width: 200
         }
       ]
     }
@@ -216,6 +217,7 @@ class RelatedVasList extends localize(i18next)(LitElement) {
               description
               issue
               seq
+              status
               targetVas {
                 vas {
                   name
@@ -226,6 +228,7 @@ class RelatedVasList extends localize(i18next)(LitElement) {
                 set
                 targetType
                 targetBatchId
+                status
                 operationGuide
                 targetProduct {
                   id
