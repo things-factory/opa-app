@@ -307,7 +307,6 @@ class ElcclDailyCollectionReport extends connect(store)(localize(i18next)(PageVi
             return column.imex
           })
       ]
-      debugger
       return {
         header: headerSetting,
         data: this.report.data.records,
