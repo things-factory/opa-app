@@ -2,6 +2,7 @@ import gql from 'graphql-tag'
 
 export const ElcclDailyOrderInventoryReport = gql`
   type ElcclDailyOrderInventoryReport {
+    bizplace: Bizplace
     bag: Float
     bagRunningTotal: Float
     basket: Float

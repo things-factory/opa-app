@@ -404,7 +404,7 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
             column.record.options.basicArgs.filters = [
               ...column.record.options.basicArgs.filters,
               {
-                name: 'id',
+                name: 'inventoryId',
                 value: _selectedInventories,
                 operator: 'notin'
               }

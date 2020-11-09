@@ -304,9 +304,7 @@ class ClaimChitDetail extends connect(store)(localize(i18next)(PageView)) {
 
             ${Object.keys(this._bizplaceList.data ? this._bizplaceList.data.bizplaces.items : {}).map(key => {
               let bizplace = this._bizplaceList.data.bizplaces.items[key]
-              return html`
-                <option value="${bizplace.id}">${bizplace.name}</option>
-              `
+              return html` <option value="${bizplace.id}">${bizplace.name}</option> `
             })}
             <option value="others">Others</option>
           </select>

@@ -256,10 +256,6 @@ class InboundReusablePallet extends connect(store)(localize(i18next)(PageView)) 
     }
   }
 
-  _removeSelected() {
-    debugger
-  }
-
   _showToast({ type, message }) {
     document.dispatchEvent(
       new CustomEvent('notify', {
