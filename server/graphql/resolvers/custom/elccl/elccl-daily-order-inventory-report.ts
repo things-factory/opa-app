@@ -141,6 +141,7 @@ export const elcclDailyOrderInventoryReport = {
         let items = result.map(itm => {
           return {
             bag: itm.bag,
+            bizplace: bizplace,
             bagRunningTotal: itm.bag_running_total,
             basket: itm.basket,
             basketRunningTotal: itm.basket_running_total,

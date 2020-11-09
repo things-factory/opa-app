@@ -140,6 +140,14 @@ class ElcclDailyOrderInventoryReport extends connect(store)(localize(i18next)(Pa
         },
         {
           type: 'string',
+          name: 'bizplace|name',
+          header: i18next.t('field.customer'),
+          record: { editable: false, align: 'left' },
+          imex: { header: i18next.t('field.customer'), key: 'bizplace|name', width: 150, type: 'string' },
+          width: 300
+        },
+        {
+          type: 'string',
           name: 'orderNo',
           header: i18next.t('field.order_no'),
           record: { editable: false, align: 'left' },
@@ -245,6 +253,9 @@ class ElcclDailyOrderInventoryReport extends connect(store)(localize(i18next)(Pa
                 sortings: sorters
               })}) {
                 items{
+                  bizplace {
+                    name
+                  }
                   bag
                   bagRunningTotal
                   basket
