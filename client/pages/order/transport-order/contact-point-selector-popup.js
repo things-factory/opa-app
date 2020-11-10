@@ -150,6 +150,11 @@ class ContactPointSelectorPopup extends localize(i18next)(LitElement) {
         { type: 'gutter', gutterName: 'row-selector', multiple: false },
         {
           type: 'string',
+          name: 'id',
+          hidden: true
+        },
+        {
+          type: 'string',
           name: 'name',
           record: { align: 'left' },
           header: i18next.t('field.name'),

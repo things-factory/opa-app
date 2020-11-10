@@ -188,6 +188,22 @@ class ElcclDailyOrderInventoryReport extends connect(store)(localize(i18next)(Pa
         },
         {
           type: 'float',
+          name: 'basket',
+          header: i18next.t('field.basket'),
+          record: { editable: false, align: 'center' },
+          imex: { header: i18next.t('field.basket'), key: 'basket', width: 25, type: 'string' },
+          width: 100
+        },
+        {
+          type: 'float',
+          name: 'basketRunningTotal',
+          header: i18next.t('field.basket_total'),
+          record: { editable: false, align: 'center' },
+          imex: { header: i18next.t('field.basket_total'), key: 'basketRunningTotal', width: 25, type: 'string' },
+          width: 100
+        },
+        {
+          type: 'float',
           name: 'carton',
           record: { editable: false, align: 'center' },
           header: i18next.t('field.carton'),
