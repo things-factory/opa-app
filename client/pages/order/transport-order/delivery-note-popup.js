@@ -25,7 +25,8 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
       doGristConfig: Object,
       doData: Object,
       ownCollection: Boolean,
-      truckNo: String
+      truckNo: String,
+      selectedCP: String
     }
   }
 
@@ -276,7 +277,8 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
         <contact-point-selector-popup
           .bizplace="${this.bizplace}"
           @selected="${e => {
-            this.contactPointInput.value = e.detail.name
+            this.contactPointInput.value = `${e.detail.name}, ${e.detail.address}`
+            this.selectedCP = e.detail.id
           }}"
         ></contact-point-selector-popup>
       `,
@@ -441,7 +443,7 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
           ? this._getInputByName('otherTruck').value.toUpperCase().replace(/\s+/g, '')
           : null,
         ownTruck: this.ownCollection ? null : this._getInputByName('ownTruck').value,
-        contactPoint: this._getInputByName('contactPoint').value,
+        contactPoint: this.selectedCP,
         contactName: this._getInputByName('contactName').value,
         otherDestination: this._getInputByName('otherDestination').value,
         reusablePallet: this._getInputByName('reusablePallet').value,
