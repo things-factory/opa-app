@@ -637,23 +637,23 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
       ]
     }
 
-    if (
-      this._status !== ORDER_STATUS.PENDING.value &&
-      this.partnerBizplaceId === this.customerBizplaceId &&
-      this._status !== ORDER_STATUS.PENDING_RECEIVE.value &&
-      this._status !== ORDER_STATUS.PENDING_CANCEL.value &&
-      this._status !== ORDER_STATUS.CANCELLED.value &&
-      this._status !== ORDER_STATUS.DONE.value
-    ) {
+    let cancelOrderStatus = [
+      ORDER_STATUS.DONE.value,
+      ORDER_STATUS.PICKING.value,
+      ORDER_STATUS.READY_TO_PICK.value,
+      ORDER_STATUS.LOADING.value
+    ]
+    if (cancelOrderStatus.indexOf(this._status) >= 0 && this.partnerBizplaceId === this.customerBizplaceId) {
       this._actions = [
         {
           title: i18next.t('button.cancel_order'),
           action: this._submitCancellationReleaseOrder.bind(this)
-        }
+        },
+        ...this._actions
       ]
     }
-    let addProductStatus = [ORDER_STATUS.PICKING.value, ORDER_STATUS.LOADING.value]
 
+    let addProductStatus = [ORDER_STATUS.PICKING.value, ORDER_STATUS.LOADING.value]
     if (
       this._userType == 'OFFICE ADMIN' &&
       addProductStatus.indexOf(this._status) >= 0 &&
@@ -665,9 +665,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
       ]
     }
 
-    if (!this._crossDocking) {
-      this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
-    }
+    this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
 
     store.dispatch({
       type: UPDATE_CONTEXT,
