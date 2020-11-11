@@ -93,6 +93,7 @@
   },
   "devDependencies": {},
   "resolutions": {
-    "puppeteer": "5.2.1"
+    "puppeteer": "5.2.1",
+    "babel-loader": "8.1.0"
   }
 }
