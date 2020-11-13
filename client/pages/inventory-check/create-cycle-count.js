@@ -242,7 +242,7 @@ class CreateCycleCount extends localize(i18next)(PageView) {
       } else {
         CustomAlert({
           title: i18next.t('title.error'),
-          text: i18next.t('text.x_error', { state: { x: i18next.t('label.create_cycle_count_worksheet') } }),
+          text: i18next.t('text.x_error', { state: { x: i18next.t('text.create_cycle_count_worksheet') } }),
           confirmButton: { text: i18next.t('button.confirm') }
         })
       }
@@ -267,8 +267,8 @@ class CreateCycleCount extends localize(i18next)(PageView) {
       query: gql`
         mutation {
           generateCycleCountWorksheet(${gqlBuilder.buildArgs({
-            customerId,
-            executionDate
+            executionDate,
+            customerId
           })}) {
             name
           }
@@ -277,8 +277,7 @@ class CreateCycleCount extends localize(i18next)(PageView) {
     })
 
     if (!response.errors) {
-      const worksheetNo = response.data.generateCycleCountWorksheet.name
-      return worksheetNo
+      return response.data.generateCycleCountWorksheet.name
     } else {
       return null
     }
