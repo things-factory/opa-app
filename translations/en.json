@@ -445,6 +445,7 @@
   "label.country_code": "country code",
   "label.crates_cargo": "crates cargo",
   "label.create_claim_chit": "create claim chit",
+  "label.create_cycle_count_worksheet error": "create cycle count worksheet error",
   "label.cross_docking": "cross docking",
   "label.current_batch_no": "current batch no",
   "label.current_location": "current location",
