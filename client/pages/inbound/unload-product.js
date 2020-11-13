@@ -10,7 +10,8 @@ import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import '../components/popup-note'
 import '../components/popup-unloading'
-import { PALLET_STATUS } from '../constants'
+import './palletizing-pallets-popup'
+import { PALLET_STATUS, VAS_TYPE } from '../constants'
 
 class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
   static get properties() {
@@ -18,6 +19,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       _arrivalNoticeNo: String,
       _palletId: String,
       _productName: String,
+      _isLooseItem: Boolean,
       orderProductConfig: Object,
       orderProductData: Object,
       palletProductConfig: Object,
@@ -27,7 +29,8 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       _unloadedInventories: Array,
       _isReusablePallet: Boolean,
       _reusablePalletId: Array,
-      _reusablePalletIdData: Object
+      _reusablePalletIdData: Object,
+      orderVasData: Object
     }
   }
 
@@ -80,6 +83,15 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
         }
         h2 + data-grist {
           padding-top: var(--grist-title-with-grid-padding);
+        }
+        div.palletizing {
+          grid-column: span 12 / auto;
+          display: inline-flex;
+          align-items: center;
+          font-size: 12px;
+          background-color: #ccc0;
+          border: 1px solid #6e7e8e;
+          color: #394e63;
         }
         @media (max-width: 460px) {
           :host {
@@ -208,6 +220,16 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
               <input name="packQty" type="number" readonly />
             </fieldset>
 
+            ${this._isLooseItem ? html`
+                  <fieldset>
+                    <legend>${i18next.t('title.palletizing')}</legend>
+                    <div class="palletizing" @click="${this._openPalletizingPallets.bind(this)}">
+                      <mwc-icon>apps</mwc-icon>Pallets
+                    </div>
+                  </fieldset>
+                `
+              : ''}
+
             <fieldset>
               <legend>${i18next.t('title.input_section')}</legend>
 
@@ -232,10 +254,12 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
   constructor() {
     super()
     this._isReusablePallet = false
+    this._isLooseItem = false
     this._arrivalNoticeNo = ''
     this._productName = ''
     this.orderProductData = { records: [] }
     this.reusablePalletIdData = { records: [] }
+    this.orderVasData = { records: [] }
   }
 
   updated(changedProps) {
@@ -429,8 +453,23 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
               bizplaceName
               containerNo
               refNo
+              looseItem
               bufferLocation
               startedAt
+              orderVas {
+                targetVas {
+                  id
+                  name
+                  vas {
+                    id
+                    name
+                    description
+                    type
+                  }
+                  qty
+                  remark
+                }
+              }
             }
             worksheetDetailInfos {
               batchId
@@ -456,8 +495,29 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
     })
 
     if (!response.errors) {
+      let worksheetInfo = response.data.unloadingWorksheet.worksheetInfo
+      let orderVasInfo = worksheetInfo.orderVas
+
       this._arrivalNoticeNo = arrivalNoticeNo
-      this._fillUpInfoForm(response.data.unloadingWorksheet.worksheetInfo)
+      this._isLooseItem = worksheetInfo.looseItem
+      this._fillUpInfoForm(worksheetInfo)
+
+      this.orderVasData = orderVasInfo ? {
+        records: orderVasInfo
+        .filter(x => x.targetVas.vas.type == VAS_TYPE.MATERIALS.value)
+        .map((orderVas, idx) => {
+          let newTargetVas = worksheetInfo.orderVas[idx].targetVas
+          return {
+            ...newTargetVas,
+            id: newTargetVas.id,
+            name: newTargetVas.name,
+            description: newTargetVas.description,
+            qty: newTargetVas.qty,
+            remark: newTargetVas.remark,
+            vas: newTargetVas.vas
+          }
+        })
+      } : { records: [] }
 
       this.orderProductData = {
         records: response.data.unloadingWorksheet.worksheetDetailInfos.map(worksheetDetailInfo => {
@@ -937,6 +997,25 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
     return this.orderProductData.records.map(task => {
       return { name: task.name, issue: task.issue ? task.issue : null }
     })
+  }
+
+  _openPalletizingPallets() {
+    openPopup(
+      html`
+        <palletizing-pallet-popup
+        .orderNo="${this._arrivalNoticeNo}"
+        .data="${this.orderVasData}"
+        @order-vas-data="${e => {
+            this._fetchProducts(this._arrivalNoticeNo)
+          }}"
+        ></palletizing-pallet-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.palletizing_with_pallets')
+      }
+    )
   }
 
   _focusOnArrivalNoticeField() {

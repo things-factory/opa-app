@@ -12,3 +12,14 @@ export const VAS_TARGET_TYPES = [
   { display: i18next.t('label.batch_and_product'), value: VAS_BATCH_AND_PRODUCT_TYPE },
   { display: i18next.t('label.etc'), value: VAS_ETC_TYPE }
 ]
+
+export const VAS_TYPE = {
+  SERVICE: {
+    name: 'service',
+    value: 'SERVICE'
+  },
+  MATERIALS: {
+    name: 'materials',
+    value: 'MATERIALS'
+  }
+}
