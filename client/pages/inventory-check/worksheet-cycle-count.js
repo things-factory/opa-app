@@ -84,10 +84,6 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
         accept: ['preview'],
         content: this
       }
-      // exportable: {
-      //   name: i18next.t('title.worksheet_cycle_count'),
-      //   data: this._exportableData.bind(this)
-      // }
     }
   }
 
