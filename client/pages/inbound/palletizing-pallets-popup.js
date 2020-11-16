@@ -94,7 +94,7 @@ export class PalletizingPalletPopup extends localize(i18next)(LitElement) {
     this.config = {
       pagination: { infinite: true },
       rows: { appendable: true },
-      list: { fields: ['name'] },
+      list: { fields: ['vas', 'qty', 'remark'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
