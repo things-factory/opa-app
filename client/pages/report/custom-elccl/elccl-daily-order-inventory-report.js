@@ -258,7 +258,7 @@ class ElcclDailyOrderInventoryReport extends connect(store)(localize(i18next)(Pa
       let filter = this.searchForm.queryFilters
 
       var datetime = new Date()
-      var tzoffset = datetime.getTimezoneOffset() * 60000
+      var tzoffset = datetime.getTimezoneOffset() * 60
 
       const response = await client.query({
         query: gql`

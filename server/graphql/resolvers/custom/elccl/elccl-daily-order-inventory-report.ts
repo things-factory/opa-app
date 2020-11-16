@@ -33,6 +33,7 @@ export const elcclDailyOrderInventoryReport = {
       }
 
       let month = params.filters.find(data => data.name === 'month').value + '-01'
+      let tzoffset = params.filters.find(data => data.name === 'tzoffset').value + ' seconds'
 
       if (!bizplaceFilter || !month ) throw 'Invalid input'
 
@@ -54,10 +55,10 @@ export const elcclDailyOrderInventoryReport = {
             left join arrival_notices an on an.id = rih.ref_order_id::uuid and an.domain_id =rih.domain_id 
             where ((rih.transaction_type <> 'PUTAWAY' and rih.transaction_type <> 'ADJUSTMENT' and rih.transaction_type <> 'RELOCATE') or rih.qty <> 0)
             and rih.domain_id =$1 and rih.bizplace_id = $2
-            and rih.created_at <= date_trunc('month',$3::timestamp) + '1 month' - '1 day'::interval
+            and rih.created_at < $3::timestamp + '1 month' + $4::interval
           )
         `,
-        [context.state.domain.id, bizplace.id, month]
+        [context.state.domain.id, bizplace.id, month, tzoffset]
         )
 
         await trxMgr.query(
