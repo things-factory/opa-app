@@ -621,6 +621,9 @@ class LocationList extends connect(store)(localize(i18next)(PageView)) {
         /* for location record mapping */
         searchParams.append('location', record.name)
         searchParams.append('label', record.indicator)
+        searchParams.append('row', record.row)
+        searchParams.append('column', record.column)
+        searchParams.append('shelf', record.shelf)
 
         try {
           const response = await fetch(`/label-command/${labelId}?${searchParams.toString()}`, {

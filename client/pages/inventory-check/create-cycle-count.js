@@ -88,6 +88,11 @@ class CreateCycleCount extends localize(i18next)(PageView) {
           <label>${i18next.t('label.execute_date')}</label>
           <input name="executionDate" type="date" min="${this._getStdDate()}" required />
         </fieldset>
+        <fieldset>
+          <legend>${i18next.t('title.cycle_count_configuration')}</legend>
+          <label>${i18next.t('label.no_of_random_item')}</label>
+          <input name="limit" type="number" />
+        </fieldset>
       </form>
 
       <h2>${i18next.t('label.customer')}</h2>
@@ -178,6 +183,10 @@ class CreateCycleCount extends localize(i18next)(PageView) {
     return this.shadowRoot.querySelector('input[name=executionDate]')
   }
 
+  get limitField() {
+    return this.shadowRoot.querySelector('input[name=limit]')
+  }
+
   get cycleCountForm() {
     return this.shadowRoot.querySelector('form[name=cycleCount]')
   }
@@ -229,7 +238,15 @@ class CreateCycleCount extends localize(i18next)(PageView) {
         allowEscapeKey: false
       })
 
-      const worksheetNo = await this.generateCycleCountWorksheet(this.dataGrist.selected[0].id, this.date.value)
+      let limit
+      if (this.limitField.value) limit = this.limitField.value
+      else limit = null
+
+      const worksheetNo = await this.generateCycleCountWorksheet(
+        this.dataGrist.selected[0].id,
+        this.date.value,
+        parseInt(limit)
+      )
 
       if (worksheetNo) {
         await CustomAlert({
@@ -242,7 +259,7 @@ class CreateCycleCount extends localize(i18next)(PageView) {
       } else {
         CustomAlert({
           title: i18next.t('title.error'),
-          text: i18next.t('text.x_error', { state: { x: i18next.t('label.create_cycle_count_worksheet') } }),
+          text: i18next.t('text.x_error', { state: { x: i18next.t('text.create_cycle_count_worksheet') } }),
           confirmButton: { text: i18next.t('button.confirm') }
         })
       }
@@ -260,15 +277,20 @@ class CreateCycleCount extends localize(i18next)(PageView) {
     if (!this.cycleCountForm.checkValidity()) {
       throw new Error(i18next.t('text.cycle_count_date_invalid'))
     }
+
+    if (this.limitField.value && this.limitField.value <= 0) {
+      throw new Error(i18next.t('text.invalid_no_of_random_item_value'))
+    }
   }
 
-  async generateCycleCountWorksheet(customerId, executionDate) {
+  async generateCycleCountWorksheet(customerId, executionDate, limit) {
     const response = await client.query({
       query: gql`
         mutation {
           generateCycleCountWorksheet(${gqlBuilder.buildArgs({
+            executionDate,
             customerId,
-            executionDate
+            limit
           })}) {
             name
           }
@@ -277,11 +299,15 @@ class CreateCycleCount extends localize(i18next)(PageView) {
     })
 
     if (!response.errors) {
-      const worksheetNo = response.data.generateCycleCountWorksheet.name
-      return worksheetNo
+      this.clearView()
+      return response.data.generateCycleCountWorksheet.name
     } else {
       return null
     }
+  }
+
+  clearView() {
+    this.cycleCountForm.reset()
   }
 
   _getStdDate() {

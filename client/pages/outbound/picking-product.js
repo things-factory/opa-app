@@ -225,7 +225,7 @@ class PickingProduct extends connect(store)(localize(i18next)(PageView)) {
                   <fieldset>
                     <legend>${i18next.t('title.reusable_pallet')}</legend>
                     <div class="reusable_pallet" @click="${this._openPalletOutbound.bind(this)}">
-                      <mwc-icon>apps</mwc-icon>Reusable Pallets
+                      <mwc-icon>apps</mwc-icon>Plastic Pallets
                     </div>
                   </fieldset>
                 `
