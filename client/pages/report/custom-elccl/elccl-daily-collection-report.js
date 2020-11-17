@@ -183,6 +183,27 @@ class ElcclDailyCollectionReport extends connect(store)(localize(i18next)(PageVi
         },
         {
           type: 'string',
+          name: 'self_collect_summary',
+          record: { editable: false, align: 'left' },
+          header: i18next.t('field.self_collect_summary'),
+          imex: {
+            header: i18next.t('field.self_collect_summary'),
+            key: 'self_collect_summary',
+            width: 150,
+            type: 'string'
+          },
+          width: 300
+        },
+        {
+          type: 'string',
+          name: 'delivery_summary',
+          record: { editable: false, align: 'left' },
+          header: i18next.t('field._summary'),
+          imex: { header: i18next.t('field._summary'), key: '_summary', width: 150, type: 'string' },
+          width: 300
+        },
+        {
+          type: 'string',
           name: 'self_collect',
           record: { editable: false, align: 'left' },
           header: i18next.t('field.self_collect'),
@@ -219,11 +240,12 @@ class ElcclDailyCollectionReport extends connect(store)(localize(i18next)(PageVi
     try {
       this._validate()
 
+      var tzoffset = new Date().getTimezoneOffset() * 60
       const response = await client.query({
         query: gql`
           query {
             elcclDailyCollectionReport(${gqlBuilder.buildArgs({
-              filters: [...this.searchForm.queryFilters],
+              filters: [...this.searchForm.queryFilters, { name: 'tzoffset', value: tzoffset }],
               pagination: { page, limit },
               sortings: sorters
             })}) {              
@@ -233,8 +255,10 @@ class ElcclDailyCollectionReport extends connect(store)(localize(i18next)(PageVi
               batch_id
               self_collect
               total_self_collect
+              self_collect_summary
               delivery
               total_delivery
+              delivery_summary
             }
           }
         `
