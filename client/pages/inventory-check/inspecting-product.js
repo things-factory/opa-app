@@ -138,7 +138,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         <div class="left-column">
           <form id="condition-form" class="multi-column-form" @change="${this.fillUpGrist.bind(this)}">
             <fieldset>
-              <label>${i18next.t('field.warehouse')}</label>
+              <label>${i18next.t('field.w/h')}</label>
               <select name="warehouse" .disabled="${!this.formattedLocations?.length}">
                 <option></option>
                 ${this.warehouses.map(warehouse => html` <option>${warehouse}</option> `)}

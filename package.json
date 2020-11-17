@@ -97,7 +97,6 @@
     "@things-factory/sales-ui": "^2.7.0-uat.0  <2.7.0",
     "@things-factory/warehouse-base": "^2.7.0-uat.0  <2.7.0",
     "@things-factory/worksheet-base": "^2.7.0-uat.0  <2.7.0",
-    "babel-loader": "8.1.0",
     "puppeteer": "5.2.1"
   }
 }
