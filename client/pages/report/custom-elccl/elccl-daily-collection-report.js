@@ -198,8 +198,8 @@ class ElcclDailyCollectionReport extends connect(store)(localize(i18next)(PageVi
           type: 'string',
           name: 'delivery_summary',
           record: { editable: false, align: 'left' },
-          header: i18next.t('field._summary'),
-          imex: { header: i18next.t('field._summary'), key: '_summary', width: 150, type: 'string' },
+          header: i18next.t('field.delivery_summary'),
+          imex: { header: i18next.t('field.delivery_summary'), key: 'delivery_summary', width: 150, type: 'string' },
           width: 300
         },
         {
