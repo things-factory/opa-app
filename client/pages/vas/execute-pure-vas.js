@@ -52,8 +52,8 @@ class ExecutePureVas extends localize(i18next)(AbstractExecuteVas) {
               <label>${i18next.t('label.qty')}</label>
               <input name="qty" readonly />
 
-              <label>${i18next.t('label.weight')}</label>
-              <input name="weight" readonly />
+              <label>${i18next.t('label.std_unit_value')}</label>
+              <input name="stdUnitValue" readonly />
 
               <label>${i18next.t('label.remark')}</label>
               <input name="remark" readonly />
@@ -95,7 +95,7 @@ class ExecutePureVas extends localize(i18next)(AbstractExecuteVas) {
           }
           otherTarget
           qty
-          weight
+          stdUnitValue
           operationGuide
           vas {
             id
@@ -107,7 +107,7 @@ class ExecutePureVas extends localize(i18next)(AbstractExecuteVas) {
           inventory {
             palletId
             qty
-            weight
+            stdUnitValue
           }
           description
           remark
@@ -130,13 +130,13 @@ class ExecutePureVas extends localize(i18next)(AbstractExecuteVas) {
   _fillUpDetailInfoForm(data) {
     const palletIdInput = this.detailInfoForm.querySelector('input[name=palletId]')
     const qtyInput = this.detailInfoForm.querySelector('input[name=qty]')
-    const weightInput = this.detailInfoForm.querySelector('input[name=weight]')
+    const stdUnitValueInput = this.detailInfoForm.querySelector('input[name=stdUnitValue]')
     const remarkInput = this.detailInfoForm.querySelector('input[name=remark]')
     const descriptionInput = this.detailInfoForm.querySelector('input[name=description]')
 
     palletIdInput.value = data.palletId
     qtyInput.value = data.qty
-    weightInput.value = data.weight
+    stdUnitValueInput.value = data.stdUnitValue
     remarkInput.value = data.remark
     descriptionInput.value = data.description
   }

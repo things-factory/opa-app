@@ -154,7 +154,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           'location',
           'inspectedLocation',
           'inspectedQty',
-          'inspectedWeight',
+          'inspectedStdUnitValue',
           'inspectedBatchNo',
           'status'
         ]
@@ -243,10 +243,15 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'inspectedWeight',
-          header: i18next.t('field.inspected_weight'),
+          name: 'inspectedStdUnitValue',
+          header: i18next.t('field.inspected_std_unit_value'),
           record: { align: 'center' },
-          imex: { header: i18next.t('field.inspected_weight'), key: 'inspectedWeight', width: 100, type: 'number' },
+          imex: {
+            header: i18next.t('field.inspected_std_unit_value'),
+            key: 'inspectedStdUnitValue',
+            width: 100,
+            type: 'number'
+          },
           width: 100
         }
       ]
@@ -304,7 +309,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
                 }
                 inspectedBatchNo
                 inspectedQty
-                inspectedWeight
+                inspectedStdUnitValue
               }
             }
             total
@@ -332,7 +337,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           status: worksheetDetail.status,
           inspectedLocation: worksheetDetail.targetInventory.inspectedLocation,
           inspectedQty: worksheetDetail.targetInventory.inspectedQty,
-          inspectedWeight: worksheetDetail.targetInventory.inspectedWeight,
+          inspectedStdUnitValue: worksheetDetail.targetInventory.inspectedStdUnitValue,
           inspectedBatchNo: worksheetDetail.targetInventory.inspectedBatchNo,
           packingType: worksheetDetail.targetInventory.inventory.packingType
         }
@@ -542,7 +547,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
   //             palletId
   //             batchId
   //             packingType
-  //             weight
+  //             stdUnitValue
   //             bizplace {
   //               id
   //               name

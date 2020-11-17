@@ -245,7 +245,7 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
     this.inventoryGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true }, appendable: false },
-      list: { fields: ['productName', 'batchId', 'packingType', 'returnQty', 'returnWeight'] },
+      list: { fields: ['productName', 'batchId', 'packingType', 'returnQty', 'returnStdUnitValue'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -278,8 +278,8 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
         },
         {
           type: 'float',
-          name: 'returnWeight',
-          header: i18next.t('field.return_weight'),
+          name: 'returnStdUnitValue',
+          header: i18next.t('field.return_std_unit_value'),
           record: { align: 'center', options: { min: 0 } },
           width: 100
         }
@@ -361,8 +361,8 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
         },
         {
           type: 'integer',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'stdUnitValue',
+          header: i18next.t('field.std_unit_value'),
           record: { align: 'center' },
           width: 100
         },
@@ -438,9 +438,9 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
               productName
               packingType
               qty
-              weight
+              stdUnitValue
               returnQty
-              returnWeight
+              returnStdUnitValue
               location {
                 id
                 name
@@ -463,7 +463,7 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
               }
               packingType
               qty
-              weight
+              stdUnitValue
               otherTarget
               description
               remark
@@ -489,13 +489,13 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
             location: inventoryInfo.location,
             packingType: inventoryInfo.packingType,
             remainQty: inventoryInfo.qty,
-            remainWeight: inventoryInfo.weight
+            remainStdUnitValue: inventoryInfo.stdUnitValue
           },
           remainQty: inventoryInfo.qty,
-          remainWeight: inventoryInfo.weight,
+          remainStdUnitValue: inventoryInfo.stdUnitValue,
           status: inventoryInfo.status,
           existing: true,
-          roundedWeight: inventoryInfo.returnQty * (inventoryInfo.weight / inventoryInfo.qty) || ''
+          roundedStdUnitValue: inventoryInfo.returnQty * (inventoryInfo.stdUnitValue / inventoryInfo.qty) || ''
         }
       })
 

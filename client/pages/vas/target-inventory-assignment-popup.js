@@ -387,7 +387,6 @@ class TargetInventoryAssignmentPopup extends localize(i18next)(LitElement) {
             batchId
             packingType
             qty
-            weight
             product {
               id
               name

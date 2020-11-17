@@ -504,8 +504,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'stdUnitValue',
+          header: i18next.t('field.std_unit_value'),
           record: { align: 'center' },
           width: 100
         },
@@ -615,13 +615,13 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                     ignoreCondition: true
                   },
                   {
-                    name: 'remainWeight',
-                    header: i18next.t('field.remain_weight'),
+                    name: 'remainStdUnitValue',
+                    header: i18next.t('field.remain_std_unit_value'),
                     record: { align: 'center' },
                     ignoreCondition: true
                   }
                 ],
-                list: { fields: ['batchId', 'productName', 'packingType', 'remainQty', 'remainWeight'] }
+                list: { fields: ['batchId', 'productName', 'packingType', 'remainQty', 'remainStdUnitValue'] }
               }
             },
             width: 300
@@ -653,15 +653,15 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
           },
           {
             type: 'float',
-            name: 'remainWeight',
-            header: i18next.t('field.available_weight'),
+            name: 'remainStdUnitValue',
+            header: i18next.t('field.available_std_unit_value'),
             record: { align: 'center' },
             width: 140
           },
           {
             type: 'float',
-            name: 'releaseWeight',
-            header: i18next.t('field.release_weight'),
+            name: 'releaseStdUnitValue',
+            header: i18next.t('field.release_std_unit_value'),
             record: { editable: true, align: 'center', options: { min: 0 } },
             width: 140
           }
@@ -726,13 +726,13 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                   { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
                   { name: 'remainQty', type: 'float', record: { align: 'center' } },
                   {
-                    name: 'remainWeight',
+                    name: 'remainStdUnitValue',
                     type: 'float',
-                    header: i18next.t('field.total_weight'),
+                    header: i18next.t('field.total_std_unit_value'),
                     record: { align: 'center' }
                   }
                 ],
-                list: { fields: ['palletId', 'product', 'batchId', 'location', 'remainWeight'] }
+                list: { fields: ['palletId', 'product', 'batchId', 'location', 'remainStdUnitValue'] }
               }
             },
             width: 250
@@ -777,15 +777,15 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
           },
           {
             type: 'float',
-            name: 'remainWeight',
-            header: i18next.t('field.available_weight'),
+            name: 'remainStdUnitValue',
+            header: i18next.t('field.available_std_unit_value'),
             record: { align: 'center' },
             width: 100
           },
           {
             type: 'float',
-            name: 'releaseWeight',
-            header: i18next.t('field.release_weight'),
+            name: 'releaseStdUnitValue',
+            header: i18next.t('field.release_std_unit_value'),
             record: { editable: true, align: 'center', options: { min: 0 } },
             width: 100
           }
@@ -802,27 +802,27 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
 
   _onInventoryFieldChanged(e) {
     let columnName = e.detail.column.name
-    let roundedWeight = e.detail.record.roundedWeight || 0
+    let roundedStdUnitValue = e.detail.record.roundedStdUnitValue || 0
     let releaseQty = 0
 
-    if (columnName == 'releaseWeight' || columnName == 'releaseQty') {
+    if (columnName == 'releaseStdUnitValue' || columnName == 'releaseQty') {
       if (e.detail.record.isCrossDocking) return
 
-      let packageWeight = e.detail.record.remainWeight / e.detail.record.remainQty
+      let packageStdUnitValue = e.detail.record.remainStdUnitValue / e.detail.record.remainQty
       if (
-        e.detail.record.remainWeight &&
+        e.detail.record.remainStdUnitValue &&
         e.detail.record.remainQty &&
-        e.detail.record.remainWeight > 0 &&
+        e.detail.record.remainStdUnitValue > 0 &&
         e.detail.record.remainQty > 0
       ) {
         if (columnName === 'releaseQty') {
           releaseQty = e.detail.after || 0
         } else {
-          releaseQty = Math.round(e.detail.after / packageWeight)
+          releaseQty = Math.round(e.detail.after / packageStdUnitValue)
         }
 
-        roundedWeight = releaseQty * packageWeight
-        roundedWeight = parseFloat(roundedWeight.toFixed(2))
+        roundedStdUnitValue = releaseQty * packageStdUnitValue
+        roundedStdUnitValue = parseFloat(roundedStdUnitValue.toFixed(2))
       }
     }
 
@@ -831,9 +831,9 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
       records: this.inventoryGrist.dirtyData.records.map((record, idx) => {
         // const factor = this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value ? e.detail.row : e.detail.record.id
 
-        if ((columnName == 'releaseWeight' || columnName == 'releaseQty') && idx === e.detail.row) {
-          if (columnName == 'releaseWeight') record.releaseQty = releaseQty
-          record.releaseWeight = roundedWeight
+        if ((columnName == 'releaseStdUnitValue' || columnName == 'releaseQty') && idx === e.detail.row) {
+          if (columnName == 'releaseStdUnitValue') record.releaseQty = releaseQty
+          record.releaseStdUnitValue = roundedStdUnitValue
         }
 
         let returnObj = {
@@ -864,12 +864,12 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         }
 
         this._validateReleaseQty(changeRecord.releaseQty, changeRecord.remainQty)
-      } else if (changedColumn === 'releaseWeight') {
+      } else if (changedColumn === 'releaseStdUnitValue') {
         if (changeRecord.isCrossDocking) {
           throw new Error(i18next.t('text.cannot_change_x', { state: { x: i18next.t('label.cross_docking') } }))
         }
 
-        this._validateReleaseWeight(changeRecord.releaseWeight, changeRecord.remainWeight)
+        this._validateReleaseStdUnitValue(changeRecord.releaseStdUnitValue, changeRecord.remainStdUnitValue)
       }
       this._updateInventoryList()
     } catch (e) {
@@ -892,12 +892,12 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     }
   }
 
-  _validateReleaseWeight(releaseWeight, remainWeight) {
-    if (remainWeight === undefined) throw new Error(i18next.t('text.there_is_no_selected_items'))
-    if (releaseWeight > remainWeight) {
-      throw new Error(i18next.t('text.available_weight_insufficient'))
-    } else if (releaseWeight <= 0) {
-      throw new Error(i18next.t('text.invalid_weight_input'))
+  _validateReleaseStdUnitValue(releaseStdUnitValue, remainStdUnitValue) {
+    if (remainStdUnitValue === undefined) throw new Error(i18next.t('text.there_is_no_selected_items'))
+    if (releaseStdUnitValue > remainStdUnitValue) {
+      throw new Error(i18next.t('text.available_std_unit_value_insufficient'))
+    } else if (releaseStdUnitValue <= 0) {
+      throw new Error(i18next.t('text.invalid_std_unit_value_input'))
     }
   }
 
@@ -1020,7 +1020,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
   _validateInventories() {
     const inventories = this.inventoryGrist?.dirtyData?.records
     if (!inventories?.length) throw new Error(i18next.t('text.no_products'))
-    // required field (batchId, packingType, weight, unit, packQty)
+    // required field (batchId, packingType, stdUnitValue, unit, packQty)
     if (!inventories.every(record => record.releaseQty && record.batchId && record.packingType)) {
       throw new Error(i18next.t('text.empty_value_in_list'))
     }
@@ -1197,7 +1197,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
     return this.inventoryGrist.data.records.map(record => {
       let newRecord = {
         releaseQty: record.releaseQty,
-        releaseWeight: record.releaseWeight,
+        releaseStdUnitValue: record.releaseStdUnitValue,
         batchId: record.inventory.batchId,
         packingType: record.inventory.packingType,
         type: ORDER_TYPES.RELEASE_OF_GOODS.value,
@@ -1246,7 +1246,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
           } else if (record.targetType === VAS_BATCH_AND_PRODUCT_TYPE) {
             result.targetBatchId = record.target.batchId
             result.targetProduct = { id: record.target.productId }
-            result.weight = record.weight
+            result.stdUnitValue = record.stdUnitValue
           } else {
             result.otherTarget = record.target
             delete result.qty
@@ -1280,8 +1280,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
               return {
                 ...record,
                 packQty: record.releaseQty,
-                unitWeight: record.releaseWeight / record.releaseQty,
-                totalWeight: record.releaseWeight
+                unitStdUnitValue: record.releaseStdUnitValue / record.releaseQty,
+                totalStdUnitValue: record.releaseStdUnitValue
               }
             })}"
             .vasList="${this.vasData.records}"
@@ -1343,8 +1343,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                 batchId
                 packingType
                 packQty
-                weight
-                releaseWeight
+                stdUnitValue
+                releaseStdUnitValue
                 releaseQty
                 product {
                   id
@@ -1363,7 +1363,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
         this._pickingStd = this._crossDocking ? PICKING_STANDARD.SELECT_BY_PRODUCT.value : this._pickingStd
         if (this._crossDocking) {
           this.crossDockingProducts = response.data.arrivalNotice.orderProducts
-            .filter(op => op.releaseQty && op.releaseWeight)
+            .filter(op => op.releaseQty && op.releaseStdUnitValue)
             .map(op => {
               op.isCrossDocking = true
               op.inventory = {
@@ -1375,7 +1375,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                 packingType: op.packingType
               }
               op.remainQty = op.packQty
-              op.remainWeight = op.packQty * op.weight
+              op.remainStdUnitValue = op.packQty * op.stdUnitValue
               op.location = {
                 name: i18next.t('label.cross_docking')
               }

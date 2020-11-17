@@ -128,9 +128,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   get orderNoInput() {
-    return this.shadowRoot
-      .querySelector('barcode-scanable-input[name=orderNo]')
-      .shadowRoot.querySelector('input')
+    return this.shadowRoot.querySelector('barcode-scanable-input[name=orderNo]').shadowRoot.querySelector('input')
   }
 
   get palletInput() {
@@ -148,16 +146,18 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           <legend>${i18next.t('title.scan_area')}</legend>
           <label>${i18next.t('label.order_type')}</label>
           <select name="orderType" @change="${this.orderTypeChangeHandler.bind(this)}">
-            ${Object.keys(AVAIL_ORDER_TYPES).map(
-              key => this.refOrderType === AVAIL_ORDER_TYPES[key].value ? html`
-                <option value="${AVAIL_ORDER_TYPES[key].value}" selected>
-                  ${i18next.t(`label.${AVAIL_ORDER_TYPES[key].name}`)}
-                </option>
-              ` : html`
-                <option value="${AVAIL_ORDER_TYPES[key].value}">
-                  ${i18next.t(`label.${AVAIL_ORDER_TYPES[key].name}`)}
-                </option>
-              `
+            ${Object.keys(AVAIL_ORDER_TYPES).map(key =>
+              this.refOrderType === AVAIL_ORDER_TYPES[key].value
+                ? html`
+                    <option value="${AVAIL_ORDER_TYPES[key].value}" selected>
+                      ${i18next.t(`label.${AVAIL_ORDER_TYPES[key].name}`)}
+                    </option>
+                  `
+                : html`
+                    <option value="${AVAIL_ORDER_TYPES[key].value}">
+                      ${i18next.t(`label.${AVAIL_ORDER_TYPES[key].name}`)}
+                    </option>
+                  `
             )}
           </select>
 
@@ -179,12 +179,20 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
         </fieldset>
 
         <fieldset>
-          <legend>${`${this.refOrderType === AVAIL_ORDER_TYPES.RETURN_ORDER.value ? i18next.t('title.return_order') : i18next.t('title.arrival_notice')}: ${this._orderNo}`}</legend>
+          <legend>
+            ${`${
+              this.refOrderType === AVAIL_ORDER_TYPES.RETURN_ORDER.value
+                ? i18next.t('title.return_order')
+                : i18next.t('title.arrival_notice')
+            }: ${this._orderNo}`}
+          </legend>
 
           <label>${i18next.t('label.customer')}</label>
           <input name="bizplaceName" readonly />
 
-          <label ?hidden="${this.refOrderType === AVAIL_ORDER_TYPES.RETURN_ORDER.value}">${i18next.t('label.container_no')}</label>
+          <label ?hidden="${this.refOrderType === AVAIL_ORDER_TYPES.RETURN_ORDER.value}"
+            >${i18next.t('label.container_no')}</label
+          >
           <input ?hidden="${this.refOrderType === AVAIL_ORDER_TYPES.RETURN_ORDER.value}" name="containerNo" readonly />
 
           <label>${i18next.t('label.ref_no')}</label>
@@ -238,7 +246,8 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
               <input name="packQty" type="number" readonly />
             </fieldset>
 
-            ${this._isLooseItem ? html`
+            ${this._isLooseItem
+              ? html`
                   <fieldset>
                     <legend>${i18next.t('title.palletizing')}</legend>
                     <div class="palletizing" @click="${this._openPalletizingPallets.bind(this)}">
@@ -335,7 +344,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _changeGristConfig() {
-    if(this.refOrderType === AVAIL_ORDER_TYPES.RETURN_ORDER.value) {
+    if (this.refOrderType === AVAIL_ORDER_TYPES.RETURN_ORDER.value) {
       this.orderProductConfig = {
         rows: {
           appendable: false,
@@ -347,7 +356,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
                 this._productName = `${record.product.name} ${
                   record.product.description ? `(${record.product.description})` : ''
                 }`
-  
+
                 this.inputForm.reset()
                 this.palletInput.value = ''
                 this._fillUpInputForm(record)
@@ -403,7 +412,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           }
         ]
       }
-  
+
       this.palletProductConfig = {
         rows: {
           appendable: false,
@@ -450,7 +459,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           }
         ]
       }
-    } else if(this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
+    } else if (this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
       this.orderProductConfig = {
         rows: {
           appendable: false,
@@ -462,7 +471,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
                 this._productName = `${record.product.name} ${
                   record.product.description ? `(${record.product.description})` : ''
                 }`
-  
+
                 this.inputForm.reset()
                 this.palletInput.value = ''
                 this._fillUpInputForm(record)
@@ -532,7 +541,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           }
         ]
       }
-  
+
       this.palletProductConfig = {
         rows: {
           appendable: false,
@@ -583,7 +592,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   async _fetchProducts(orderNo) {
-    if(this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
+    if (this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
       const response = await client.query({
         query: gql`
           query {
@@ -643,22 +652,24 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
         this._isLooseItem = worksheetInfo.looseItem
         this._fillUpInfoForm(worksheetInfo)
 
-        this.orderVasData = orderVasInfo ? {
-          records: orderVasInfo
-          .filter(x => x.targetVas.vas.type == VAS_TYPE.MATERIALS.value)
-          .map((orderVas, idx) => {
-            let newTargetVas = worksheetInfo.orderVas[idx].targetVas
-            return {
-              ...newTargetVas,
-              id: newTargetVas.id,
-              name: newTargetVas.name,
-              description: newTargetVas.description,
-              qty: newTargetVas.qty,
-              remark: newTargetVas.remark,
-              vas: newTargetVas.vas
+        this.orderVasData = orderVasInfo
+          ? {
+              records: orderVasInfo
+                .filter(x => x.targetVas.vas.type == VAS_TYPE.MATERIALS.value)
+                .map((orderVas, idx) => {
+                  let newTargetVas = worksheetInfo.orderVas[idx].targetVas
+                  return {
+                    ...newTargetVas,
+                    id: newTargetVas.id,
+                    name: newTargetVas.name,
+                    description: newTargetVas.description,
+                    qty: newTargetVas.qty,
+                    remark: newTargetVas.remark,
+                    vas: newTargetVas.vas
+                  }
+                })
             }
-          })
-        } : { records: [] }
+          : { records: [] }
 
         this.orderProductData = {
           records: response.data.unloadingWorksheet.worksheetDetailInfos.map(worksheetDetailInfo => {
@@ -671,8 +682,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           })
         }
       }
-    }
-    else {
+    } else {
       const response = await client.query({
         query: gql`
           query {
@@ -712,17 +722,16 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           }
         `
       })
-  
+
       if (!response.errors) {
         this._orderNo = orderNo
         this._fillUpInfoForm(response.data.unloadingReturnWorksheet.worksheetInfo)
-  
+
         this.orderProductData = {
           records: response.data.unloadingReturnWorksheet.worksheetDetailInfos.map(worksheetDetailInfo => {
             return {
               ...worksheetDetailInfo,
-              validity:
-                worksheetDetailInfo.actualPackQty === worksheetDetailInfo.packQty
+              validity: worksheetDetailInfo.actualPackQty === worksheetDetailInfo.packQty
             }
           })
         }
@@ -841,7 +850,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       try {
         this._validateUnloading()
 
-        if(this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
+        if (this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
           const response = await client.query({
             query: gql`
               mutation {
@@ -855,11 +864,11 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
               }
             `
           })
-  
+
           if (!response.errors) {
             this.palletInput.value = ''
             this.actualQtyInput.value = ''
-  
+
             await this._fetchProducts(this._orderNo)
             await this._fetchInventories()
             this._focusOnPalletInput()
@@ -879,17 +888,16 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
               }
             `
           })
-  
+
           if (!response.errors) {
             this.palletInput.value = ''
             this.actualQtyInput.value = ''
-  
+
             await this._fetchProducts(this._orderNo)
             await this._fetchInventories()
             this._focusOnPalletInput()
           }
         }
-        
       } catch (e) {
         this._showToast({ message: e.message })
       }
@@ -898,8 +906,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
 
   _validateUnloading() {
     // 1. validate for order selection
-      if (!this._selectedOrderProduct) throw new Error(i18next.t('text.target_does_not_selected'))
-    
+    if (!this._selectedOrderProduct) throw new Error(i18next.t('text.target_does_not_selected'))
 
     // 2. pallet id existing
     if (!this.palletInput.value) {
@@ -988,7 +995,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
         return
       }
 
-      if(this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
+      if (this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
         const response = await client.query({
           query: gql`
             mutation {
@@ -1022,14 +1029,14 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
             }
           `
         })
-  
+
         if (!response.errors) {
           await CustomAlert({
             title: i18next.t('title.completed'),
             text: i18next.t('text.unloading_completed'),
             confirmButton: { text: i18next.t('button.confirm') }
           })
-  
+
           this._selectedInventory = null
           this.palletInput.value = ''
           this.actualQtyInput.value = ''
@@ -1052,7 +1059,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
       throw new Error('text.nothing_unloaded')
     }
 
-    if(this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
+    if (this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
       if (
         this._selectedOrderProduct.actualPalletQty > this._selectedOrderProduct.palletQty &&
         !this._selectedOrderProduct.issue
@@ -1083,7 +1090,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
         return
       }
 
-      if(this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
+      if (this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
         const response = await client.query({
           query: gql`
               mutation {
@@ -1111,7 +1118,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
               }
             `
         })
-  
+
         if (!response.errors) {
           this._selectedInventory = null
           this.palletInput.value = ''
@@ -1145,7 +1152,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
         return
       }
 
-      if(this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
+      if (this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
         const response = await client.query({
           query: gql`
             mutation {
@@ -1206,7 +1213,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
             }
           `
         })
-  
+
         if (!response.errors) {
           // const havingVas = await this.checkHavingVas(this._arrivalNoticeNo)
           // if (havingVas) {
@@ -1216,17 +1223,17 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           //     confirmButton: { text: i18next.t('button.move_to_x', { state: { x: i18next.t('title.vas') } }) },
           //     cancelButton: { text: i18next.t('button.cancel') }
           //   })
-  
+
           //   if (!result.value) {
           //     this._arrivalNoticeNo = null
           //     this._clearView()
           //     return
           //   }
-  
+
           //   let searchParam = new URLSearchParams()
           //   searchParam.append('orderNo', this._arrivalNoticeNo)
           //   searchParam.append('orderType', ARRIVAL_NOTICE.value)
-  
+
           //   navigate(`execute_vas?${searchParam.toString()}`)
           // } else {
           //   await CustomAlert({
@@ -1235,13 +1242,13 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           //     confirmButton: { text: i18next.t('button.confirm') }
           //   })
           // }
-  
+
           await CustomAlert({
             title: i18next.t('title.completed'),
             text: i18next.t('text.unloading_completed'),
             confirmButton: { text: i18next.t('button.confirm') }
           })
-  
+
           this._orderNo = null
           this._clearView()
         }
@@ -1308,7 +1315,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   _validateComplete() {
-    if(this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
+    if (this.refOrderType === AVAIL_ORDER_TYPES.ARRIVAL_NOTICE.value) {
       if (!this._orderNo) {
         throw new Error(i18next.t('text.there_is_no_arrival_notice_no'))
       }
@@ -1319,16 +1326,12 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
           .every(task => task.issue)
       )
         throw new Error(i18next.t('text.there_is_no_issue_noted'))
-    }  else if(this.refOrderType === AVAIL_ORDER_TYPES.RETURN_ORDER.value) {
+    } else if (this.refOrderType === AVAIL_ORDER_TYPES.RETURN_ORDER.value) {
       if (!this._orderNo) {
         throw new Error(i18next.t('text.there_is_no_return_order_no'))
       }
 
-      if (
-        !this.orderProductData.records
-          .filter(task => task.actualPackQty !== task.packQty)
-          .every(task => task.issue)
-      )
+      if (!this.orderProductData.records.filter(task => task.actualPackQty !== task.packQty).every(task => task.issue))
         throw new Error(i18next.t('text.there_is_no_issue_noted'))
     }
   }
@@ -1343,9 +1346,9 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
     openPopup(
       html`
         <palletizing-pallet-popup
-        .orderNo="${this._orderNo}"
-        .data="${this.orderVasData}"
-        @order-vas-data="${e => {
+          .orderNo="${this._orderNo}"
+          .data="${this.orderVasData}"
+          @order-vas-data="${e => {
             this._fetchProducts(this._orderNo)
           }}"
         ></palletizing-pallet-popup>

@@ -294,7 +294,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
     this.inventoryGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true }, appendable: false },
-      list: { fields: ['productName', 'batchId', 'packingType', 'releaseQty', 'releaseWeight'] },
+      list: { fields: ['productName', 'batchId', 'packingType', 'releaseQty', 'releaseStdUnitValue'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -334,22 +334,22 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'float',
-          name: 'weight',
-          header: i18next.t('field.available_weight'),
+          name: 'stdUnitValue',
+          header: i18next.t('field.available_std_unit_value'),
           record: { align: 'center' },
           width: 100
         },
         {
           type: 'float',
-          name: 'releaseWeight',
-          header: i18next.t('field.release_weight'),
+          name: 'releaseStdUnitValue',
+          header: i18next.t('field.release_std_unit_value'),
           record: { align: 'center', options: { min: 0 } },
           width: 100
         },
         {
           type: 'float',
-          name: 'roundedWeight',
-          header: i18next.t('field.rounded_weight'),
+          name: 'roundedStdUnitValue',
+          header: i18next.t('field.rounded_std_unit_value'),
           record: { align: 'center', options: { min: 0 } },
           width: 100
         }
@@ -431,8 +431,8 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'integer',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'stdUnitValue',
+          header: i18next.t('field.std_unit_value'),
           record: { align: 'center' },
           width: 100
         },
@@ -513,9 +513,9 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
               productName
               packingType
               qty
-              weight
+              stdUnitValue
               releaseQty
-              releaseWeight
+              releaseStdUnitValue
               location {
                 id
                 name
@@ -544,7 +544,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
               }
               packingType
               qty
-              weight
+              stdUnitValue
               otherTarget
               description
               remark
@@ -571,13 +571,13 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
             location: inventoryInfo.location,
             packingType: inventoryInfo.packingType,
             remainQty: inventoryInfo.qty,
-            remainWeight: inventoryInfo.weight
+            remainStdUnitValue: inventoryInfo.stdUnitValue
           },
           remainQty: inventoryInfo.qty,
-          remainWeight: inventoryInfo.weight,
+          remainStdUnitValue: inventoryInfo.stdUnitValue,
           status: inventoryInfo.status,
           existing: true,
-          roundedWeight: inventoryInfo.releaseQty * (inventoryInfo.weight / inventoryInfo.qty) || ''
+          roundedStdUnitValue: inventoryInfo.releaseQty * (inventoryInfo.stdUnitValue / inventoryInfo.qty) || ''
         }
       })
 

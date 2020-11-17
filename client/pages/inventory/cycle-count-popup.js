@@ -146,8 +146,8 @@ class CycleCountPopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'float',
-          name: 'weight',
-          header: i18next.t('field.available_weight'),
+          name: 'stdUnitValue',
+          header: i18next.t('field.available_std_unit_value'),
           record: { align: 'center' },
           width: 100
         }

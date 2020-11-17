@@ -115,7 +115,7 @@ export class VasCreatePopup extends localize(i18next)(LitElement) {
         target: this.targetForm.target,
         packingType: this.targetForm.selectedPackingType,
         qty: (this.targetForm.qty && parseInt(this.targetForm.qty)) || '',
-        weight: (this.targetForm.weight && parseFloat(this.targetForm.weight)) || ''
+        stdUnitValue: (this.targetForm.stdUnitValue && parseFloat(this.targetForm.stdUnitValue)) || ''
       }
     }
   }

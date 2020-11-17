@@ -175,10 +175,10 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'number',
-          name: 'weight',
-          header: i18next.t('field.total_weight'),
+          name: 'stdUnitValue',
+          header: i18next.t('field.total_std_unit_value'),
           record: { align: 'center' },
-          imex: { header: i18next.t('field.total_weight'), key: 'weight', width: 30, type: 'number' },
+          imex: { header: i18next.t('field.total_std_unit_value'), key: 'stdUnitValue', width: 30, type: 'number' },
           sortable: true,
           width: 80
         },
@@ -306,7 +306,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
               palletId
               batchId
               packingType
-              weight
+              stdUnitValue
               bizplace {
                 id
                 name
@@ -367,7 +367,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
               palletId
               batchId
               packingType
-              weight
+              stdUnitValue
               bizplace {
                 id
                 name

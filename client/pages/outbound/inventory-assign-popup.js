@@ -19,12 +19,12 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
       bizplaceId: String,
       packingType: String,
       releaseQty: Number,
-      releaseWeight: Number,
+      releaseStdUnitValue: Number,
       config: Object,
       _data: Object,
       data: Object,
       pickQty: Number,
-      pickWeight: Number
+      pickStdUnitValue: Number
     }
   }
 
@@ -102,11 +102,11 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
           <label>${i18next.t('label.release_qty')}</label>
           <input readonly name="releaseQty" value="${`${this.pickQty} / ${this.releaseQty}`}" />
 
-          <label>${i18next.t('label.release_weight')}</label>
+          <label>${i18next.t('label.release_std_unit_value')}</label>
           <input
             readonly
-            name="releaseWeight"
-            value="${`${Math.round(this.pickWeight * 100) / 100} / ${this.releaseWeight}`}"
+            name="releaseStdUnitValue"
+            value="${`${Math.round(this.pickStdUnitValue * 100) / 100} / ${this.releaseStdUnitValue}`}"
           />
         </fieldset>
       </form>
@@ -236,15 +236,15 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'float',
-          name: 'pickWeight',
-          header: i18next.t('field.pick_weight'),
+          name: 'pickStdUnitValue',
+          header: i18next.t('field.pick_std_unit_value'),
           record: { align: 'center', editable: true },
           width: 60
         },
         {
           type: 'float',
-          name: 'weight',
-          header: i18next.t('field.available_weight'),
+          name: 'stdUnitValue',
+          header: i18next.t('field.available_std_unit_value'),
           record: { align: 'center' },
           width: 60
         },
@@ -290,7 +290,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
                 shelf
               }
               qty
-              weight
+              stdUnitValue
               createdAt
             }
             total
@@ -314,40 +314,40 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
 
   _calculateData(_data) {
     this.pickQty = 0
-    this.pickWeight = 0
+    this.pickStdUnitValue = 0
 
     this.data = {
       ..._data,
       records: _data.records.map(item => {
         let picked = false
         let pickQty = 0
-        let pickWeight = 0
+        let pickStdUnitValue = 0
 
         if (this.pickQty < this.releaseQty) {
           picked = true
           const leftQty = this.releaseQty - this.pickQty
-          const leftWeight = this.releaseWeight - this.pickWeight
+          const leftStdUnitValue = this.releaseStdUnitValue - this.pickStdUnitValue
           pickQty = leftQty > item.qty ? item.qty : leftQty
-          pickWeight = leftWeight > item.weight ? item.weight : leftWeight
+          pickStdUnitValue = leftStdUnitValue > item.stdUnitValue ? item.stdUnitValue : leftStdUnitValue
 
-          // rounding off the pickWeight will update the *Pick Weight* column on grist
-          pickWeight = Math.round(pickWeight * 100) / 100
+          // rounding off the pickStdUnitValue will update the *Pick StdUnitValue* column on grist
+          pickStdUnitValue = Math.round(pickStdUnitValue * 100) / 100
           this.pickQty += pickQty
-          this.pickWeight += pickWeight
+          this.pickStdUnitValue += pickStdUnitValue
         }
 
         // need to round off so that it will bypass the validation upon submission
-        this.pickWeight = Math.round(this.pickWeight * 100) / 100
+        this.pickStdUnitValue = Math.round(this.pickStdUnitValue * 100) / 100
 
         // need to round off so that it will bypass the validation upon submission
-        this.pickWeight = Math.round(this.pickWeight * 100) / 100
+        this.pickStdUnitValue = Math.round(this.pickStdUnitValue * 100) / 100
 
         return {
           ...item,
           ...item.location,
           picked,
           pickQty,
-          pickWeight
+          pickStdUnitValue
         }
       })
     }
@@ -355,58 +355,58 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
 
   async _onInventoryFieldChanged(e) {
     const columnName = e.detail.column.name
-    if (columnName === 'pickQty' || columnName === 'pickWeight') {
+    if (columnName === 'pickQty' || columnName === 'pickStdUnitValue') {
       let totalPickQty = 0
-      let totalPickWeight = 0
+      let totalPickStdUnitValue = 0
 
       if (columnName === 'pickQty') {
         this.data = {
           records: this.grist.dirtyData.records.map(data => {
             let pickQty = data.pickQty
-            let pickWeight = (data.weight / data.qty) * data.pickQty
-            pickWeight = Math.round(pickWeight * 100) / 100
+            let pickStdUnitValue = (data.stdUnitValue / data.qty) * data.pickQty
+            pickStdUnitValue = Math.round(pickStdUnitValue * 100) / 100
 
             if (pickQty > data.qty || Number.isNaN(pickQty)) {
               pickQty = data.qty
-              pickWeight = data.weight
+              pickStdUnitValue = data.stdUnitValue
             } else if (pickQty < 0) {
               pickQty = 0
-              pickWeight = 0
+              pickStdUnitValue = 0
             }
 
             totalPickQty += pickQty
-            totalPickWeight += pickWeight
+            totalPickStdUnitValue += pickStdUnitValue
 
             return {
               ...data,
               pickQty,
-              pickWeight,
+              pickStdUnitValue,
               picked: Boolean(data.pickQty)
             }
           })
         }
-      } else if (columnName === 'pickWeight') {
+      } else if (columnName === 'pickStdUnitValue') {
         this.data = {
           records: this.grist.dirtyData.records.map(data => {
-            let pickQty = Math.round((data.qty * data.pickWeight) / data.weight)
-            let pickWeight = data.pickWeight
+            let pickQty = Math.round((data.qty * data.pickStdUnitValue) / data.stdUnitValue)
+            let pickStdUnitValue = data.pickStdUnitValue
 
-            if (pickWeight > data.weight || Number.isNaN(pickWeight)) {
+            if (pickStdUnitValue > data.stdUnitValue || Number.isNaN(pickStdUnitValue)) {
               pickQty = data.qty
-              pickWeight = data.weight
-            } else if (pickWeight < 0) {
+              pickStdUnitValue = data.stdUnitValue
+            } else if (pickStdUnitValue < 0) {
               pickQty = 0
-              pickWeight = 0
+              pickStdUnitValue = 0
             }
 
             totalPickQty += pickQty
-            totalPickWeight += pickWeight
+            totalPickStdUnitValue += pickStdUnitValue
 
             return {
               ...data,
-              pickQty: Math.round((pickQty * data.weight) / data.weight),
-              pickWeight,
-              picked: Boolean(data.pickWeight)
+              pickQty: Math.round((pickQty * data.stdUnitValue) / data.stdUnitValue),
+              pickStdUnitValue,
+              picked: Boolean(data.pickStdUnitValue)
             }
           })
         }
@@ -414,7 +414,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
 
       await this.grist.updateComplete
       this.pickQty = totalPickQty
-      this.pickWeight = Math.round(totalPickWeight * 100) / 100
+      this.pickStdUnitValue = Math.round(totalPickStdUnitValue * 100) / 100
     }
   }
 
@@ -449,20 +449,22 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
       throw new Error(i18next.t('text.selected_item_qty_is_more_than_order_release_qty'))
     if (this.pickQty < this.releaseQty)
       throw new Error(i18next.t('text.selected_item_qty_is_less_than_order_release_qty'))
-    if (this.pickWeight > this.releaseWeight) throw new Error(i18next.t('text.picked_weight_over_than_release'))
-    if (this.pickWeight < this.releaseWeight) throw new Error(i18next.t('text.picked_weight_less_than_release'))
+    if (this.pickStdUnitValue > this.releaseStdUnitValue)
+      throw new Error(i18next.t('text.picked_std_unit_value_over_than_release'))
+    if (this.pickStdUnitValue < this.releaseStdUnitValue)
+      throw new Error(i18next.t('text.picked_std_unit_value_less_than_release'))
   }
 
   _composeWorksheetDetails() {
     return this.grist.dirtyData.records
-      .filter(record => record.pickQty && record.pickWeight)
+      .filter(record => record.pickQty && record.pickStdUnitValue)
       .map(record => {
         return {
           description: record.description,
           targetInventory: {
             inventory: { id: record.id },
             releaseQty: record.pickQty,
-            releaseWeight: record.pickWeight,
+            releaseStdUnitValue: record.pickStdUnitValue,
             type: ORDER_TYPES.RELEASE_OF_GOODS.value
           }
         }

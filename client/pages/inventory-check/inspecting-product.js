@@ -239,15 +239,15 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                     : ''}"
                 />
 
-                <label>${i18next.t('label.inspected_weight')}</label>
+                <label>${i18next.t('label.inspected_std_unit_value')}</label>
                 <input
-                  name="inspectedWeight"
+                  name="inspectedStdUnitValue"
                   type="number"
                   step=".01"
-                  .value="${this.selectedInventory?.weight
-                    ? this.selectedInventory?.inspectedWeight
-                      ? this.selectedInventory.inspectedWeight
-                      : this.selectedInventory.weight
+                  .value="${this.selectedInventory?.stdUnitValue
+                    ? this.selectedInventory?.inspectedStdUnitValue
+                      ? this.selectedInventory.inspectedStdUnitValue
+                      : this.selectedInventory.stdUnitValue
                     : ''}"
                 />
 
@@ -336,8 +336,8 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     return this.renderRoot.querySelector('input[name=inspectedQty]')
   }
 
-  get inspectedWeightInput() {
-    return this.renderRoot.querySelector('input[name=inspectedWeight]')
+  get inspectedStdUnitValueInput() {
+    return this.renderRoot.querySelector('input[name=inspectedStdUnitValue]')
   }
 
   selectOnInput(input) {
@@ -404,8 +404,8 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           'inspectedBatchNo',
           'qty',
           'inspectedQty',
-          'weight',
-          'inspectedWeight',
+          'stdUnitValue',
+          'inspectedStdUnitValue',
           'inspectedLocation'
         ]
       },
@@ -436,11 +436,17 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           width: 100,
           record: { align: 'center' }
         },
-        { type: 'float', name: 'weight', header: i18next.t('label.weight'), width: 80, record: { align: 'center' } },
         {
           type: 'float',
-          name: 'inspectedWeight',
-          header: i18next.t('label.inspected_weight'),
+          name: 'stdUnitValue',
+          header: i18next.t('label.std_unit_value'),
+          width: 80,
+          record: { align: 'center' }
+        },
+        {
+          type: 'float',
+          name: 'inspectedStdUnitValue',
+          header: i18next.t('label.inspected_std_unit_value'),
           width: 100,
           record: { align: 'center' }
         },
@@ -454,7 +460,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       ]
     }
 
-    const missingInventoryColumns = ['sequence', 'palletId', 'batchId', 'qty', 'weight']
+    const missingInventoryColumns = ['sequence', 'palletId', 'batchId', 'qty', 'stdUnitValue']
     this.missingInventoryConfig = {
       pagination: { infinite: true },
       rows: {
@@ -504,11 +510,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               palletId
               batchId
               qty
-              weight
+              stdUnitValue
               status
               inspectedBatchNo
               inspectedQty
-              inspectedWeight
+              inspectedStdUnitValue
               inspectedLocation {
                 id
                 name
@@ -613,8 +619,8 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       inspectedBatchNo: wsdInfo.inspectedBatchNo || '',
       qty: wsdInfo.qty,
       inspectedQty: wsdInfo.inspectedQty || 0,
-      weight: wsdInfo.weight,
-      inspectedWeight: wsdInfo.inspectedWeight || 0,
+      stdUnitValue: wsdInfo.stdUnitValue,
+      inspectedStdUnitValue: wsdInfo.inspectedStdUnitValue || 0,
       inspectedLocation: wsdInfo.inspectedLocation || 0,
       orderInventoryStatus: wsdInfo.relatedOrderInv.status
     }
@@ -810,13 +816,13 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           return
         }
 
-        let { inspectedBatchNo, inspectedQty, inspectedWeight } = Object.fromEntries(
+        let { inspectedBatchNo, inspectedQty, inspectedStdUnitValue } = Object.fromEntries(
           new FormData(this.inputForm).entries()
         )
 
         inventory.inspectedBatchNo = inspectedBatchNo
         inventory.inspectedQty = Number(inspectedQty)
-        inventory.inspectedWeight = Number(inspectedWeight)
+        inventory.inspectedStdUnitValue = Number(inspectedStdUnitValue)
 
         this.selectedInventory = inventory
         await this.relocatePallet()
@@ -837,11 +843,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         return
       }
 
-      let { inspectedBatchNo, inspectedQty, inspectedWeight } = Object.fromEntries(
+      let { inspectedBatchNo, inspectedQty, inspectedStdUnitValue } = Object.fromEntries(
         new FormData(this.inputForm).entries()
       )
       inspectedQty = Number(inspectedQty)
-      inspectedWeight = Number(inspectedWeight)
+      inspectedStdUnitValue = Number(inspectedStdUnitValue)
 
       const response = await client.query({
         query: gql`
@@ -851,7 +857,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               palletId,
               inspectedBatchNo,
               inspectedQty,
-              inspectedWeight,
+              inspectedStdUnitValue,
               locationName
             })})
           }
@@ -917,11 +923,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         return
       }
 
-      let { inspectedBatchNo, inspectedQty, inspectedWeight } = Object.fromEntries(
+      let { inspectedBatchNo, inspectedQty, inspectedStdUnitValue } = Object.fromEntries(
         new FormData(this.inputForm).entries()
       )
       inspectedQty = Number(inspectedQty)
-      inspectedWeight = Number(inspectedWeight)
+      inspectedStdUnitValue = Number(inspectedStdUnitValue)
       var locationName = this.locationInput.value
 
       const response = await client.query({
@@ -931,7 +937,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               worksheetDetailName: this.selectedInventory.worksheetDetailName,
               inspectedBatchNo,
               inspectedQty,
-              inspectedWeight,
+              inspectedStdUnitValue,
               inspectedLocationName: locationName
             })})
           }
@@ -951,11 +957,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     try {
       this.checkInputFormValidity()
 
-      let { inspectedBatchNo, inspectedQty, inspectedWeight } = Object.fromEntries(
+      let { inspectedBatchNo, inspectedQty, inspectedStdUnitValue } = Object.fromEntries(
         new FormData(this.inputForm).entries()
       )
       inspectedQty = Number(inspectedQty)
-      inspectedWeight = Number(inspectedWeight)
+      inspectedStdUnitValue = Number(inspectedStdUnitValue)
 
       const response = await client.query({
         query: gql`
@@ -964,7 +970,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               worksheetDetailName: this.selectedInventory.worksheetDetailName,
               inspectedBatchNo,
               inspectedQty,
-              inspectedWeight
+              inspectedStdUnitValue
             })})
           }
         `
@@ -1059,11 +1065,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   checkInputFormValidity() {
-    let { inspectedBatchNo, inspectedQty, inspectedWeight, location } = Object.fromEntries(
+    let { inspectedBatchNo, inspectedQty, inspectedStdUnitValue, location } = Object.fromEntries(
       new FormData(this.inputForm).entries()
     )
     inspectedQty = Number(inspectedQty)
-    inspectedWeight = Number(inspectedWeight)
+    inspectedStdUnitValue = Number(inspectedStdUnitValue)
 
     const palletId = this.palletIdInput.value
     if (!palletId) {
@@ -1086,14 +1092,16 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('field.inspected_qty') } }))
     }
 
-    if (!inspectedWeight) {
-      this.selectOnInput(this.inspectedWeightInput)
-      throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('field.inspected_weight') } }))
+    if (!inspectedStdUnitValue) {
+      this.selectOnInput(this.inspectedStdUnitValueInput)
+      throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('field.inspected_std_unit_value') } }))
     }
 
-    if (inspectedWeight <= 0) {
-      this.selectOnInput(this.inspectedWeightInput)
-      throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('field.inspected_weight') } }))
+    if (inspectedStdUnitValue <= 0) {
+      this.selectOnInput(this.inspectedStdUnitValueInput)
+      throw new Error(
+        i18next.t('text.x_should_be_positive', { state: { x: i18next.t('field.inspected_std_unit_value') } })
+      )
     }
 
     const locationName = this.locationInput.value

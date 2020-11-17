@@ -295,14 +295,21 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
                   ignoreCondition: true
                 },
                 {
-                  name: 'releaseWeight',
-                  header: i18next.t('field.return_weight'),
+                  name: 'releaseStdUnitValue',
+                  header: i18next.t('field.return_std_unit_value'),
                   record: { align: 'center' },
                   ignoreCondition: true
                 }
               ],
               list: {
-                fields: ['releaseGoodName', 'batchId', 'productName', 'packingType', 'releaseQty', 'releaseWeight']
+                fields: [
+                  'releaseGoodName',
+                  'batchId',
+                  'productName',
+                  'packingType',
+                  'releaseQty',
+                  'releaseStdUnitValue'
+                ]
               }
             }
           },
@@ -334,15 +341,15 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'releaseWeight',
-          header: i18next.t('field.release_weight'),
+          name: 'releaseStdUnitValue',
+          header: i18next.t('field.release_std_unit_value'),
           record: { editable: true, align: 'center', options: { min: 0 } },
           width: 140
         },
         {
           type: 'float',
-          name: 'returnWeight',
-          header: i18next.t('field.return_weight'),
+          name: 'returnStdUnitValue',
+          header: i18next.t('field.return_std_unit_value'),
           record: { editable: true, align: 'center', options: { min: 0 } },
           width: 140
         }
@@ -419,34 +426,34 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
   //Fields Changed Handler
   _onInventoryFieldChanged(e) {
     let columnName = e.detail.column.name
-    let roundedWeight = e.detail.record.roundedWeight || 0
+    let roundedStdUnitValue = e.detail.record.roundedStdUnitValue || 0
     let returnQty = 0
 
-    if (columnName == 'returnWeight' || columnName == 'returnQty') {
-      let packageWeight = e.detail.record.releaseWeight / e.detail.record.releaseQty
+    if (columnName == 'returnStdUnitValue' || columnName == 'returnQty') {
+      let packageStdUnitValue = e.detail.record.releaseStdUnitValue / e.detail.record.releaseQty
       if (
-        e.detail.record.releaseWeight &&
+        e.detail.record.releaseStdUnitValue &&
         e.detail.record.releaseQty &&
-        e.detail.record.releaseWeight > 0 &&
+        e.detail.record.releaseStdUnitValue > 0 &&
         e.detail.record.releaseQty > 0
       ) {
         if (columnName === 'returnQty') {
           returnQty = e.detail.after || 0
         } else {
-          returnQty = Math.round(e.detail.after / packageWeight)
+          returnQty = Math.round(e.detail.after / packageStdUnitValue)
         }
 
-        roundedWeight = returnQty * packageWeight
-        roundedWeight = parseFloat(roundedWeight.toFixed(2))
+        roundedStdUnitValue = returnQty * packageStdUnitValue
+        roundedStdUnitValue = parseFloat(roundedStdUnitValue.toFixed(2))
       }
     }
 
     this.inventoryData = {
       ...this.inventoryGrist.dirtyData,
       records: this.inventoryGrist.dirtyData.records.map((record, idx) => {
-        if ((columnName == 'returnWeight' || columnName == 'returnQty') && idx === e.detail.row) {
-          if (columnName == 'returnWeight') record.returnQty = returnQty
-          record.returnWeight = roundedWeight
+        if ((columnName == 'returnStdUnitValue' || columnName == 'returnQty') && idx === e.detail.row) {
+          if (columnName == 'returnStdUnitValue') record.returnQty = returnQty
+          record.returnStdUnitValue = roundedStdUnitValue
         }
 
         let returnObj = {
@@ -466,8 +473,8 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
     try {
       if (changedColumn === 'returnQty') {
         this._validateReleaseQty(changeRecord.returnQty, changeRecord.releaseQty)
-      } else if (changedColumn === 'returnWeight') {
-        this._validateReleaseWeight(changeRecord.returnWeight, changeRecord.releaseWeight)
+      } else if (changedColumn === 'returnStdUnitValue') {
+        this._validateReleaseStdUnitValue(changeRecord.returnStdUnitValue, changeRecord.releaseStdUnitValue)
       }
       this._updateInventoryList()
     } catch (e) {
@@ -491,12 +498,12 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
     }
   }
 
-  _validateReleaseWeight(returnWeight, releaseWeight) {
-    if (releaseWeight === undefined) throw new Error(i18next.t('text.there_is_no_selected_items'))
-    if (returnWeight > releaseWeight) {
-      throw new Error(i18next.t('text.available_weight_insufficient'))
-    } else if (returnWeight <= 0) {
-      throw new Error(i18next.t('text.invalid_weight_input'))
+  _validateReleaseStdUnitValue(returnStdUnitValue, releaseStdUnitValue) {
+    if (releaseStdUnitValue === undefined) throw new Error(i18next.t('text.there_is_no_selected_items'))
+    if (returnStdUnitValue > releaseStdUnitValue) {
+      throw new Error(i18next.t('text.available_std_unit_value_insufficient'))
+    } else if (returnStdUnitValue <= 0) {
+      throw new Error(i18next.t('text.invalid_std_unit_value_input'))
     }
   }
 
@@ -528,7 +535,7 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
   _validateInventories() {
     const inventories = this.inventoryGrist?.dirtyData?.records
     if (!inventories?.length) throw new Error(i18next.t('text.no_products'))
-    // required field (batchId, packingType, weight, unit, packQty)
+    // required field (batchId, packingType, stdUnitValue, unit, packQty)
     if (!inventories.every(record => record.returnQty && record.batchId && record.packingType)) {
       throw new Error(i18next.t('text.empty_value_in_list'))
     }
@@ -626,7 +633,7 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
     return this.inventoryGrist.data.records.map(record => {
       let newRecord = {
         returnQty: record.returnQty,
-        returnWeight: record.returnWeight,
+        returnStdUnitValue: record.returnStdUnitValue,
         batchId: record.inventory.batchId,
         packingType: record.inventory.packingType,
         type: ORDER_TYPES.RETURN_ORDER.value,
@@ -669,7 +676,7 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
           } else if (record.targetType === VAS_BATCH_AND_PRODUCT_TYPE) {
             result.targetBatchId = record.target.batchId
             result.targetProduct = { id: record.target.productId }
-            result.weight = record.weight
+            result.stdUnitValue = record.stdUnitValue
           } else {
             result.otherTarget = record.target
             delete result.qty

@@ -346,8 +346,8 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'stdUnitValue',
+          header: i18next.t('field.std_unit_value'),
           record: { align: 'center' },
           width: 60
         },
@@ -426,12 +426,12 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
               }
               status
               packingType
-              weight
-              unit
+              stdUnitValue
+              stdUnit
               packQty
               releaseQty
-              releaseWeight
-              totalWeight
+              releaseStdUnitValue
+              totalStdUnit
               palletQty
             }
             orderVass {
@@ -450,7 +450,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
               }
               packingType
               qty
-              weight
+              stdUnitValue
               otherTarget
               description
               remark
@@ -509,8 +509,8 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'float',
-        name: 'releaseWeight',
-        header: i18next.t('field.release_weight'),
+        name: 'releaseStdUnitValue',
+        header: i18next.t('field.release_std_unit_value'),
         record: { editable: true, align: 'center' },
         width: 160
       }
@@ -541,16 +541,16 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'float',
-        name: 'weight',
-        header: i18next.t('field.weight'),
+        name: 'stdUnitValue',
+        header: i18next.t('field.std_unit_value'),
         record: { align: 'center' },
-        width: 80
+        width: 100
       },
       {
-        type: 'code',
-        name: 'unit',
-        header: i18next.t('field.unit'),
-        record: { align: 'center', codeName: 'WEIGHT_UNITS' },
+        type: 'string',
+        name: 'stdUnit',
+        header: i18next.t('field.std_unit'),
+        record: { align: 'center' },
         width: 80
       },
       {
@@ -562,8 +562,8 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'integer',
-        name: 'totalWeight',
-        header: i18next.t('field.total_weight'),
+        name: 'totalStdUnit',
+        header: i18next.t('field.total_std_unit'),
         record: { align: 'center' },
         width: 120
       },
@@ -583,7 +583,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
     }
 
     this.productGristConfig = {
-      list: { fields: ['batchId', 'product', 'packingType', 'totalWeight'] },
+      list: { fields: ['batchId', 'product', 'packingType', 'totalStdUnit'] },
       pagination: { infinite: true },
       rows: { selectable: { multiple: true }, appendable: false },
       columns: productGristColumns

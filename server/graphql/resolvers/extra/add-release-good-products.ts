@@ -84,16 +84,16 @@ export const addReleaseGoodProducts = {
 
               if (curOrderInv.releaseQty === 0) {
                 foundInv.lockedQty = Number(foundInv.lockedQty) - Number(existingOrderInv.releaseQty)
-                foundInv.lockedWeight = Number(foundInv.lockedWeight) - Number(existingOrderInv.releaseWeight)
+                foundInv.lockedStdUnitValue = Number(foundInv.lockedStdUnitValue) - Number(existingOrderInv.releaseStdUnitValue)
 
                 await trxMgr.getRepository(Inventory).save(foundInv)
 
                 if (existingOrderInv) {
-                  // if found existing OrderInventory and worksheetDetail then qty, weight, and status are updated
+                  // if found existing OrderInventory and worksheetDetail then qty, stdUnitValue, and status are updated
                   curOrderInv = {
                     ...existingOrderInv,
                     releaseQty: curOrderInv.releaseQty,
-                    releaseWeight: curOrderInv.releaseWeight,
+                    lockedStdUnitValue: curOrderInv.lockedStdUnitValue,
                     status: ORDER_INVENTORY_STATUS.CANCELLED
                   }
 
@@ -114,17 +114,17 @@ export const addReleaseGoodProducts = {
                 }
               } else {
                 foundInv.lockedQty = Number(curOrderInv.releaseQty)
-                foundInv.lockedWeight = Number(curOrderInv.releaseWeight)
+                foundInv.lockedStdUnitValue = Number(curOrderInv.releaseStdUnitValue)
                 foundInv.updater = user
 
                 await trxMgr.getRepository(Inventory).save(foundInv)
 
                 if (existingOrderInv) {
-                  // if found existing OrderInventory and worksheetDetail then qty, weight, and status are updated
+                  // if found existing OrderInventory and worksheetDetail then qty, stdUnitValue, and status are updated
                   curOrderInv = {
                     ...existingOrderInv,
                     releaseQty: curOrderInv.releaseQty,
-                    releaseWeight: curOrderInv.releaseWeight
+                    releaseStdUnitValue: curOrderInv.releaseStdUnitValue
                   }
 
                   let existingWorksheetDetail: WorksheetDetail = await trxMgr.getRepository(WorksheetDetail).findOne({
@@ -189,7 +189,7 @@ export const addReleaseGoodProducts = {
 
             // check if it is release by inventory (has inventory value) or product
             if (newOrderInv.inventory?.id) {
-              // if release by inventory, then quantity and weight values are updated
+              // if release by inventory, then quantity and stdUnitValue values are updated
               const foundInv: Inventory = await trxMgr.getRepository(Inventory).findOne(newOrderInv.inventory.id)
               newOrderInv.inventory = foundInv
 
@@ -205,7 +205,7 @@ export const addReleaseGoodProducts = {
               })
 
               foundInv.lockedQty = Number(foundInv.lockedQty) + newOrderInv.releaseQty
-              foundInv.lockedWeight = Number(foundInv.lockedWeight) + newOrderInv.releaseWeight
+              foundInv.lockedStdUnitValue = Number(foundInv.lockedStdUnitValue) + newOrderInv.releaseStdUnitValue
               foundInv.updater = user
 
               await trxMgr.getRepository(Inventory).save(foundInv)
@@ -222,11 +222,11 @@ export const addReleaseGoodProducts = {
             }
 
             if (existingOrderInv) {
-              // if found existing OrderInventory and worksheetDetail then qty, weight, and status are updated
+              // if found existing OrderInventory and worksheetDetail then qty, stdUnitValue, and status are updated
               newOrderInv = {
                 ...existingOrderInv,
                 releaseQty: existingOrderInv.releaseQty + newOrderInv.releaseQty,
-                releaseWeight: existingOrderInv.releaseWeight + newOrderInv.releaseWeight,
+                releaseStdUnitValue: existingOrderInv.releaseStdUnitValue + newOrderInv.releaseStdUnitValue,
                 status:
                   existingOrderInv.status === ORDER_INVENTORY_STATUS.CANCELLED
                     ? pickingWorksheet
@@ -264,7 +264,7 @@ export const addReleaseGoodProducts = {
               savedOrderInv.name = newOrderInv.name
               savedOrderInv.type = newOrderInv.type
               savedOrderInv.releaseQty = newOrderInv.releaseQty
-              savedOrderInv.releaseWeight = newOrderInv.releaseWeight
+              savedOrderInv.releaseStdUnitValue = newOrderInv.releaseStdUnitValue
               savedOrderInv.inventory = newOrderInv.inventory
               savedOrderInv.status = newOrderInv.status
               savedOrderInv.releaseGood = newOrderInv.releaseGood

@@ -6,7 +6,7 @@ import { client, CustomAlert } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { PACKING_UNITS, PACKING_UNIT_QTY, PACKING_UNIT_WEIGHT } from '../../constants'
+import { PACKING_UNITS, PACKING_UNIT_QTY, PACKING_UNIT_STDUNIT } from '../../constants'
 import { VasTemplate } from './vas-template'
 
 class VasRepack extends localize(i18next)(VasTemplate) {
@@ -62,8 +62,9 @@ class VasRepack extends localize(i18next)(VasTemplate) {
                   html`<option
                     value="${unit.value}"
                     ?selected="${this._getOperationGuideData('packingUnit') === unit.value}"
-                    >${unit.display}</option
-                  >`
+                  >
+                    ${unit.display}
+                  </option>`
               )}
             </select>
 
@@ -72,14 +73,15 @@ class VasRepack extends localize(i18next)(VasTemplate) {
               ? html`
                   <select id="to-packing-type-selector" required>
                     ${this.packingTypes.map(
-                        packingType => html`
-                          <option
-                            value="${packingType.name}"
-                            ?selected="${this._getOperationGuideData('toPackingType') === packingType.name}"
-                            >${packingType.description}</option
-                          >
-                        `
-                      )}
+                      packingType => html`
+                        <option
+                          value="${packingType.name}"
+                          ?selected="${this._getOperationGuideData('toPackingType') === packingType.name}"
+                        >
+                          ${packingType.description}
+                        </option>
+                      `
+                    )}
                   </select>
                 `
               : html`
@@ -106,7 +108,7 @@ class VasRepack extends localize(i18next)(VasTemplate) {
 
             ${this._getOperationGuideData('packingUnit') === PACKING_UNIT_QTY.value
               ? html` <label>${i18next.t('label.required_package_qty')}</label> `
-              : html` <label>${i18next.t('label.required_package_weight')}</label> `}
+              : html` <label>${i18next.t('label.required_package_std_unit_value')}</label> `}
 
             <input
               readonly
@@ -260,7 +262,7 @@ class VasRepack extends localize(i18next)(VasTemplate) {
     this.config = {
       rows: { appendable: false },
       pagination: { infinite: true },
-      list: { fields: ['fromPalletId', 'palletId', 'locationName', 'qty', 'weight'] },
+      list: { fields: ['fromPalletId', 'palletId', 'locationName', 'qty', 'stdUnitValue'] },
       columns: [
         ...gutters,
         {
@@ -289,8 +291,8 @@ class VasRepack extends localize(i18next)(VasTemplate) {
         },
         {
           type: 'integer',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'stdUnitValue',
+          header: i18next.t('field.std_unit_value'),
           width: 60
         }
       ]
@@ -381,11 +383,11 @@ class VasRepack extends localize(i18next)(VasTemplate) {
             .reduce(
               (amount, rf) => {
                 amount.qty += rf.reducedQty
-                amount.weight += rf.reducedWeight
+                amount.stdUnitValue += rf.reducedStdUnitValue
 
                 return amount
               },
-              { qty: 0, weight: 0 }
+              { qty: 0, stdUnitValue: 0 }
             )
         }
       })
@@ -411,8 +413,9 @@ class VasRepack extends localize(i18next)(VasTemplate) {
         if (this.targetInfo.qty % stdAmount) throw new Error(i18next.t('text.qty_cannot_be_divided_completely'))
         this.requiredPackageQtyInput.value = this.targetInfo.qty / stdAmount
       } else {
-        if (this.targetInfo.weight % stdAmount) throw new Error(i18next.t('text.weight_cannot_be_divided_completely'))
-        this.requiredPackageQtyInput.value = this.targetInfo.weight / stdAmount
+        if (this.targetInfo.stdUnitValue % stdAmount)
+          throw new Error(i18next.t('text.std_unit_value_cannot_be_divided_completely'))
+        this.requiredPackageQtyInput.value = this.targetInfo.stdUnitValue / stdAmount
       }
     } catch (e) {
       this.requiredPackageQtyInput.value = ''
@@ -433,9 +436,9 @@ class VasRepack extends localize(i18next)(VasTemplate) {
     if (packingUnit === PACKING_UNIT_QTY.value) {
       if (this.targetInfo.qty && stdAmount * packageQty > this.targetInfo.qty)
         throw new Error(i18next.t('text.qty_exceed_limit'))
-    } else if (packingUnit === PACKING_UNIT_WEIGHT.value) {
-      if (this.targetInfo.weight && stdAmount * packageQty > this.targetInfo.weight) {
-        throw new Error(i18next.t('text.weight_exceed_limit'))
+    } else if (packingUnit === PACKING_UNIT_STDUNIT.value) {
+      if (this.targetInfo.stdUnitValue && stdAmount * packageQty > this.targetInfo.stdUnitValue) {
+        throw new Error(i18next.t('text.std_unit_value_exceed_limit'))
       }
     }
   }
@@ -518,7 +521,7 @@ class VasRepack extends localize(i18next)(VasTemplate) {
     //     if (packingUnit === PACKING_UNIT_QTY.value) {
     //       totalAmount += rf.reducedQty
     //     } else {
-    //       totalAmount += rf.reducedWeight
+    //       totalAmount += rf.reducedStdUnitValue
     //     }
     //     return totalAmount
     //   }, 0)
