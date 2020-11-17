@@ -307,15 +307,15 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
         },
         {
           type: 'float',
-          name: 'weight',
-          header: i18next.t('field.available_weight'),
+          name: 'stdUnitValue',
+          header: i18next.t('field.available_std_unit_value'),
           record: { align: 'center' },
           width: 100
         },
         {
           type: 'float',
-          name: 'releaseWeight',
-          header: i18next.t('field.release_weight'),
+          name: 'releaseStdUnitValue',
+          header: i18next.t('field.release_std_unit_value'),
           record: { align: 'center', options: { min: 0 } },
           width: 100
         }
@@ -397,8 +397,8 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
         },
         {
           type: 'integer',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'stdUnitValue',
+          header: i18next.t('field.std_unit_value'),
           record: { align: 'center' },
           width: 100
         },
@@ -476,9 +476,9 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
               productName
               packingType
               qty
-              weight
+              stdUnitValue
               releaseQty
-              releaseWeight
+              releaseStdUnitValue
             }
             shippingOrderInfo {
               containerNo
@@ -502,7 +502,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
               }
               packingType
               qty
-              weight
+              stdUnitValue
               otherTarget
               description
               remark
@@ -520,7 +520,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
       const orderInventories = releaseOrder.inventoryInfos.map(inventoryInfo => {
         return {
           ...inventoryInfo,
-          roundedWeight: inventoryInfo.releaseQty * (inventoryInfo.weight / inventoryInfo.qty) || ''
+          roundedStdUnitValue: inventoryInfo.releaseQty * (inventoryInfo.stdUnitValue / inventoryInfo.qty) || ''
         }
       })
 

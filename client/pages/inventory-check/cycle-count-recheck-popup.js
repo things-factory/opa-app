@@ -119,7 +119,7 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
           'packingType',
           'inspectedLocation',
           'inspectedQty',
-          'inspectedWeight',
+          'inspectedStdUnitValue',
           'status'
         ]
       },
@@ -192,15 +192,15 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'float',
-          name: 'weight',
-          header: i18next.t('field.system_weight'),
+          name: 'stdUnitValue',
+          header: i18next.t('field.system_std_unit_value'),
           record: { align: 'center' },
           width: 100
         },
         {
           type: 'float',
-          name: 'inspectedWeight',
-          header: i18next.t('field.inspected_weight'),
+          name: 'inspectedStdUnitValue',
+          header: i18next.t('field.inspected_std_unit_value'),
           record: { align: 'center' },
           width: 100
         },
@@ -249,8 +249,8 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
             }
             originQty
             inspectedQty
-            originWeight
-            inspectedWeight
+            originStdUnitValue
+            inspectedStdUnitValue
             status
           }
         }
@@ -271,8 +271,8 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
             inspectedLocation: targetInv.inspectedLocation,
             qty: targetInv.originQty,
             inspectedQty: targetInv.inspectedQty,
-            weight: targetInv.originWeight,
-            inspectedWeight: targetInv.inspectedWeight,
+            stdUnitValue: targetInv.originStdUnitValue,
+            inspectedStdUnitValue: targetInv.inspectedStdUnitValue,
             status: targetInv.status
           }
         })

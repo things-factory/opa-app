@@ -160,7 +160,7 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
           { column: 'packingType', title: 'Sub Total' },
           { column: 'batchId', title: 'Batch Total' }
         ],
-        totals: ['qty', 'weight']
+        totals: ['qty', 'stdUnitValue']
       },
       columns: [
         {
@@ -227,11 +227,11 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'number',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'stdUnitValue',
+          header: i18next.t('field.std_unit_value'),
           record: { align: 'center' },
           sortable: true,
-          imex: { header: i18next.t('field.weight'), key: 'weight', width: 25, type: 'string' },
+          imex: { header: i18next.t('field.std_unit_value'), key: 'stdUnitValue', width: 25, type: 'string' },
           width: 100
         }
       ]
@@ -279,7 +279,7 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
                 description
               }
               qty
-              weight
+              stdUnitValue
               status
               packingType
               transactionType

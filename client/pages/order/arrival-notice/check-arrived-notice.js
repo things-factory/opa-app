@@ -262,7 +262,7 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
 
   pageInitialized() {
     this.productGristConfig = {
-      list: { fields: ['batchId', 'product', 'packingType', 'totalWeight'] },
+      list: { fields: ['batchId', 'product', 'packingType', 'totalStdUnitValue'] },
       pagination: { infinite: true },
       rows: { selectable: { multiple: true }, appendable: false },
       columns: [
@@ -290,16 +290,16 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'stdUnitValue',
+          header: i18next.t('field.std_unit_value'),
           record: { align: 'center' },
-          width: 80
+          width: 100
         },
         {
-          type: 'code',
-          name: 'unit',
-          header: i18next.t('field.unit'),
-          record: { align: 'center', codeName: 'WEIGHT_UNITS' },
+          type: 'string',
+          name: 'stdUnit',
+          header: i18next.t('field.std_unit'),
+          record: { align: 'center' },
           width: 80
         },
         {
@@ -311,8 +311,8 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'totalWeight',
-          header: i18next.t('field.total_weight'),
+          name: 'totalStdUnit',
+          header: i18next.t('field.total_std_unit'),
           record: { align: 'center' },
           width: 120
         },
@@ -401,8 +401,8 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'stdUnitValue',
+          header: i18next.t('field.std_unit_value'),
           record: { align: 'center' },
           width: 60
         },
@@ -487,10 +487,10 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
               }
               status
               packingType
-              weight
-              unit
+              stdUnitValue
+              stdUnit
               packQty
-              totalWeight
+              totalStdUnit
               palletQty
             }
             orderVass {
@@ -509,7 +509,7 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
               }
               packingType
               qty
-              weight
+              stdUnitValue
               otherTarget
               description
               remark

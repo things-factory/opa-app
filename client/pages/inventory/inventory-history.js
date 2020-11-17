@@ -247,20 +247,25 @@ class InventoryHistory extends localize(i18next)(PageView) {
         },
         {
           type: 'number',
-          name: 'openingWeight',
-          header: i18next.t('field.opening_weight'),
+          name: 'openingStdUnitValue',
+          header: i18next.t('field.opening_std_unit_value'),
           record: { align: 'center' },
           sortable: true,
-          imex: { header: i18next.t('field.opening_weight'), key: 'openingWeight', width: 75, type: 'number' },
+          imex: {
+            header: i18next.t('field.opening_std_unit_value'),
+            key: 'openingStdUnitValue',
+            width: 75,
+            type: 'number'
+          },
           width: 100
         },
         {
           type: 'number',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'stdUnitValue',
+          header: i18next.t('field.std_unit_value'),
           record: { align: 'center' },
           sortable: true,
-          imex: { header: i18next.t('field.weight'), key: 'weight', width: 75, type: 'number' },
+          imex: { header: i18next.t('field.std_unit_value'), key: 'stdUnitValue', width: 75, type: 'number' },
           width: 100
         },
         {
@@ -421,9 +426,9 @@ class InventoryHistory extends localize(i18next)(PageView) {
                   description
                 }
                 openingQty
-                openingWeight
+                openingStdUnitValue
                 qty
-                weight
+                stdUnitValue
                 warehouse {
                   id
                   name

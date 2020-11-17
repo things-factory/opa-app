@@ -166,7 +166,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           'inspectedStatus',
           'inspectedLocation',
           'inspectedQty',
-          'inspectedWeight',
+          'inspectedStdUnitValue',
           'status'
         ]
       },
@@ -257,17 +257,22 @@ class CycleCountReport extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'weight',
-          header: i18next.t('field.system_weight'),
-          imex: { header: i18next.t('field.system_weight'), key: 'weight', width: 20, type: 'string' },
+          name: 'stdUnitValue',
+          header: i18next.t('field.system_std_unit_value'),
+          imex: { header: i18next.t('field.system_std_unit_value'), key: 'stdUnitValue', width: 20, type: 'string' },
           record: { align: 'center' },
           width: 100
         },
         {
           type: 'float',
-          name: 'inspectedWeight',
-          header: i18next.t('field.inspected_weight'),
-          imex: { header: i18next.t('field.inspected_weight'), key: 'inspectedWeight', width: 20, type: 'string' },
+          name: 'inspectedStdUnitValue',
+          header: i18next.t('field.inspected_std_unit_value'),
+          imex: {
+            header: i18next.t('field.inspected_std_unit_value'),
+            key: 'inspectedStdUnitValue',
+            width: 20,
+            type: 'string'
+          },
           record: { align: 'center' },
           width: 100
         },
@@ -322,7 +327,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
                 id
                 inspectedBatchNo
                 inspectedQty
-                inspectedWeight
+                inspectedStdUnitValue
                 inspectedLocation {
                   id
                   name
@@ -333,7 +338,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
                   batchId
                   packingType
                   qty
-                  weight
+                  stdUnitValue
                   location {
                     id
                     name
@@ -399,8 +404,8 @@ class CycleCountReport extends localize(i18next)(PageView) {
                 inspectedBatchNo
                 originQty
                 inspectedQty
-                originWeight
-                inspectedWeight
+                originStdUnitValue
+                inspectedStdUnitValue
                 originLocation {
                   id
                   name
@@ -459,8 +464,8 @@ class CycleCountReport extends localize(i18next)(PageView) {
             inspectedBatchNo: worksheetDetail.targetInventory.inspectedBatchNo,
             qty: worksheetDetail.targetInventory.originQty,
             inspectedQty: worksheetDetail.targetInventory.inspectedQty,
-            weight: worksheetDetail.targetInventory.originWeight,
-            inspectedWeight: worksheetDetail.targetInventory.inspectedWeight,
+            stdUnitValue: worksheetDetail.targetInventory.originStdUnitValue,
+            inspectedStdUnitValue: worksheetDetail.targetInventory.inspectedStdUnitValue,
             location: worksheetDetail.targetInventory.originLocation,
             inspectedLocation: worksheetDetail.targetInventory.inspectedLocation?.name,
             packingType: worksheetDetail.targetInventory.inventory?.packingType || '',

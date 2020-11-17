@@ -306,15 +306,15 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'weight',
-          header: i18next.t('field.available_weight'),
+          name: 'stdUnitValue',
+          header: i18next.t('field.available_std_unit_value'),
           record: { align: 'center' },
           width: 100
         },
         {
           type: 'float',
-          name: 'releaseWeight',
-          header: i18next.t('field.release_weight'),
+          name: 'releaseStdUnitValue',
+          header: i18next.t('field.release_std_unit_value'),
           record: { align: 'center', options: { min: 0 } },
           width: 100
         }
@@ -396,8 +396,8 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'stdUnitValue',
+          header: i18next.t('field.std_unit_value'),
           record: { align: 'center' },
           width: 100
         },
@@ -464,9 +464,9 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
               productName
               packingType
               qty
-              weight
+              stdUnitValue
               releaseQty
-              releaseWeight
+              releaseStdUnitValue
             }
             shippingOrder {
               name
@@ -492,7 +492,7 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
               }
               packingType
               qty
-              weight
+              stdUnitValue
               otherTarget
               description
               remark
