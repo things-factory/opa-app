@@ -422,7 +422,7 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
               stdUnitValue
               stdUnit
               packQty
-              totalStdUnit
+              totalStdUnitValue
               palletQty
               releaseQty
               releaseStdUnitValue
@@ -558,8 +558,8 @@ class AssignBufferLocation extends localize(i18next)(PageView) {
       },
       {
         type: 'integer',
-        name: 'totalStdUnit',
-        header: i18next.t('field.total_std_unit'),
+        name: 'totalStdUnitValue',
+        header: i18next.t('field.total_std_unit_value'),
         record: { align: 'center' },
         width: 120
       },

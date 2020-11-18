@@ -514,8 +514,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'float',
-        name: 'totalStdUnit',
-        header: i18next.t('field.total_std_unit'),
+        name: 'totalStdUnitValue',
+        header: i18next.t('field.total_std_unit_value'),
         record: { align: 'center' },
         width: 120
       },
@@ -536,7 +536,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
     this.productGristConfig = {
       pagination: { infinite: true },
-      list: { fields: ['batch_no', 'product', 'packingType', 'totalStdUnit'] },
+      list: { fields: ['batch_no', 'product', 'packingType', 'totalStdUnitValue'] },
       columns: productGristColumns
     }
   }
@@ -626,9 +626,9 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       throw new Error(i18next.t('text.x_is_empty', { state: { x: i18next.t('label.stdUnit') } }))
 
     if (stdUnitValue && stdUnit && packQty) {
-      calcedRecord.totalStdUnit = `${(stdUnitValue * packQty).toFixed(2)} ${stdUnit}`
+      calcedRecord.totalStdUnitValue = `${(stdUnitValue * packQty).toFixed(2)} ${stdUnit}`
     } else {
-      calcedRecord.totalStdUnit = ''
+      calcedRecord.totalStdUnitValue = ''
     }
 
     if (!this._crossDocking) return calcedRecord
@@ -976,7 +976,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         stdUnitValue: record.stdUnitValue,
         stdUnit: record.stdUnit,
         packQty: record.packQty,
-        totalStdUnit: record.totalStdUnit
+        totalStdUnitValue: record.totalStdUnitValue
       }
 
       if (record.palletQty) orderProduct.palletQty = record.palletQty
@@ -1066,7 +1066,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
                 ...record,
                 unitStdUnitValue: record.stdUnitValue,
                 packQty: record.packQty - (record.releaseQty || 0),
-                totalStdUnit: record.stdUnitValue * (record.packQty - (record.releaseQty || 0))
+                totalStdUnitValue: record.stdUnitValue * (record.packQty - (record.releaseQty || 0))
               }
             })}"
             .vasList="${this.vasData.records}"

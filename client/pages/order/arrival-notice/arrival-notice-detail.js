@@ -448,8 +448,8 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
       },
       {
         type: 'integer',
-        name: 'totalStdUnit',
-        header: i18next.t('field.total_std_unit'),
+        name: 'totalStdUnitValue',
+        header: i18next.t('field.total_std_unit_value'),
         record: { align: 'center' },
         width: 120
       },
@@ -469,7 +469,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
     }
 
     this.productGristConfig = {
-      list: { fields: ['batchId', 'product', 'packingType', 'totalStdUnit'] },
+      list: { fields: ['batchId', 'product', 'packingType', 'totalStdUnitValue'] },
       pagination: { infinite: true },
       rows: {
         appendable: false,
@@ -535,7 +535,7 @@ class ArrivalNoticeDetail extends localize(i18next)(PageView) {
               stdUnitValue
               stdUnit
               packQty
-              totalStdUnit
+              totalStdUnitValue
               palletQty
               releaseQty
               releaseStdUnitValue

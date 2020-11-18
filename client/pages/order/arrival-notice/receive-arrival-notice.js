@@ -431,7 +431,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
               packQty
               releaseQty
               releaseStdUnitValue
-              totalStdUnit
+              totalStdUnitValue
               palletQty
             }
             orderVass {
@@ -562,8 +562,8 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'integer',
-        name: 'totalStdUnit',
-        header: i18next.t('field.total_std_unit'),
+        name: 'totalStdUnitValue',
+        header: i18next.t('field.total_std_unit_value'),
         record: { align: 'center' },
         width: 120
       },
@@ -583,7 +583,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
     }
 
     this.productGristConfig = {
-      list: { fields: ['batchId', 'product', 'packingType', 'totalStdUnit'] },
+      list: { fields: ['batchId', 'product', 'packingType', 'totalStdUnitValue'] },
       pagination: { infinite: true },
       rows: { selectable: { multiple: true }, appendable: false },
       columns: productGristColumns

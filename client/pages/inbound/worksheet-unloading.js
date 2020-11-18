@@ -189,7 +189,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
           }
         }
       },
-      list: { fields: ['remark', 'batchId', 'product', 'palletQty', 'packQty', 'totalStdUnit', 'status'] },
+      list: { fields: ['remark', 'batchId', 'product', 'palletQty', 'packQty', 'totalStdUnitValue', 'status'] },
       pagination: { infinite: true },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
@@ -229,7 +229,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'totalStdUnit',
+          name: 'totalStdUnitValue',
           header: i18next.t('field.total_std_unit'),
           record: { align: 'center' },
           width: 120
@@ -317,7 +317,7 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
                 packingType
                 packQty
                 remark
-                totalStdUnit
+                totalStdUnitValue
                 palletQty
               }
               status

@@ -311,8 +311,8 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'totalStdUnit',
-          header: i18next.t('field.total_std_unit'),
+          name: 'totalStdUnitValue',
+          header: i18next.t('field.total_std_unit_value'),
           record: { align: 'center' },
           width: 120
         },
@@ -490,7 +490,7 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
               stdUnitValue
               stdUnit
               packQty
-              totalStdUnit
+              totalStdUnitValue
               palletQty
             }
             orderVass {
