@@ -113,6 +113,11 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
       pagination: { infinite: true },
       rows: { appendable: false },
       columns: [
+        { 
+          type: 'object',
+          name: 'inventory',
+          hidden: true
+        },
         { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'string',
@@ -382,6 +387,9 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
             name: this.doNo
           })}) {
             items {
+              inventory {
+                id
+              }
               releaseQty
               releaseWeight
               status
@@ -458,6 +466,7 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
     if (this.doGrist.dirtyData && this.doGrist.dirtyData.records && this.doGrist.dirtyData.records.length > 0) {
       return this.doGrist.dirtyData.records.map(record => {
         let newRecord = {
+          inventory: record.inventory,
           productName: record.productName,
           releaseQty: record.releaseQty,
           releaseWeight: record.releaseWeight,
