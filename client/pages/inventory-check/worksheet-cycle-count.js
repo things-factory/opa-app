@@ -253,6 +253,19 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
             type: 'number'
           },
           width: 100
+        },
+        {
+          type: 'string',
+          name: 'stdUnit',
+          header: i18next.t('field.std_unit'),
+          record: { align: 'center' },
+          imex: {
+            header: i18next.t('field.std_unit'),
+            key: 'stdUnit',
+            width: 80,
+            type: 'string'
+          },
+          width: 80
         }
       ]
     }
@@ -294,6 +307,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
                   batchId
                   palletId
                   packingType
+                  stdUnit
                   location {
                     name
                     description
@@ -338,6 +352,10 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           inspectedLocation: worksheetDetail.targetInventory.inspectedLocation,
           inspectedQty: worksheetDetail.targetInventory.inspectedQty,
           inspectedStdUnitValue: worksheetDetail.targetInventory.inspectedStdUnitValue,
+          stdUnit:
+            worksheetDetail.targetInventory &&
+            worksheetDetail.targetInventory.inventory &&
+            worksheetDetail.targetInventory.inventory.stdUnit,
           inspectedBatchNo: worksheetDetail.targetInventory.inspectedBatchNo,
           packingType: worksheetDetail.targetInventory.inventory.packingType
         }

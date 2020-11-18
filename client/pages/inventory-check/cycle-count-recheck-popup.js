@@ -120,6 +120,7 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
           'inspectedLocation',
           'inspectedQty',
           'inspectedStdUnitValue',
+          'stdUnit',
           'status'
         ]
       },
@@ -206,6 +207,13 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'string',
+          name: 'stdUnit',
+          header: i18next.t('field.std_unit'),
+          record: { align: 'center' },
+          width: 80
+        },
+        {
+          type: 'string',
           name: 'status',
           header: i18next.t('field.status'),
           record: { align: 'center' },
@@ -231,6 +239,7 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
             id
             inventory {
               palletId
+              stdUnit
               product {
                 name
                 description
@@ -272,6 +281,7 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
             qty: targetInv.originQty,
             inspectedQty: targetInv.inspectedQty,
             stdUnitValue: targetInv.originStdUnitValue,
+            stdUnit: targetInv.inventory && targetInv.inventory.stdUnit,
             inspectedStdUnitValue: targetInv.inspectedStdUnitValue,
             status: targetInv.status
           }

@@ -278,6 +278,14 @@ class CycleCountReport extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
+          name: 'stdUnit',
+          header: i18next.t('field.std_unit'),
+          imex: { header: i18next.t('field.std_unit'), key: 'stdUnit', width: 20, type: 'string' },
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'string',
           name: 'status',
           header: i18next.t('field.status'),
           imex: { header: i18next.t('field.status'), key: 'status', width: 20, type: 'string' },
@@ -339,6 +347,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
                   packingType
                   qty
                   stdUnitValue
+                  stdUnit
                   location {
                     id
                     name
@@ -419,6 +428,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
                 inventory {
                   palletId
                   packingType
+                  stdUnit
                   product {
                     name
                     description
@@ -466,6 +476,10 @@ class CycleCountReport extends localize(i18next)(PageView) {
             inspectedQty: worksheetDetail.targetInventory.inspectedQty,
             stdUnitValue: worksheetDetail.targetInventory.originStdUnitValue,
             inspectedStdUnitValue: worksheetDetail.targetInventory.inspectedStdUnitValue,
+            stdUnit:
+              worksheetDetail.targetInventory &&
+              worksheetDetail.targetInventory.inventory &&
+              worksheetDetail.targetInventory.inventory.stdUnit,
             location: worksheetDetail.targetInventory.originLocation,
             inspectedLocation: worksheetDetail.targetInventory.inspectedLocation?.name,
             packingType: worksheetDetail.targetInventory.inventory?.packingType || '',
