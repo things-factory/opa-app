@@ -664,6 +664,7 @@
   "label.staging_area": "staging area",
   "label.started_at": "started at",
   "label.status": "status",
+  "label.std_unit": "std unit",
   "label.std_amount": "single pack standard amount",
   "label.std_qty_in_single_pallet": "std qty in single pallet",
   "label.std_qty": "std qty",

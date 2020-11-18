@@ -251,6 +251,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                     : ''}"
                 />
 
+                <label>${i18next.t('label.std_unit')}</label>
+                <input name="stdUnit" .value="${this.selectedInventory?.stdUnit}" />
+
                 <label>${i18next.t('field.location')}</label>
                 ${this.viewType === VIEW_TYPE.INVENTORY_SELECTED
                   ? html` <input name="location" readonly .value="${this.selectedLocation?.name || ''}" /> `
@@ -409,6 +412,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           'qty',
           'inspectedQty',
           'stdUnitValue',
+          'stdUnit',
           'inspectedStdUnitValue',
           'inspectedLocation'
         ]
@@ -448,6 +452,13 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           record: { align: 'center' }
         },
         {
+          type: 'string',
+          name: 'stdUnit',
+          header: i18next.t('label.std_unit'),
+          width: 80,
+          record: { align: 'center' }
+        },
+        {
           type: 'float',
           name: 'inspectedStdUnitValue',
           header: i18next.t('label.inspected_std_unit_value'),
@@ -464,7 +475,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       ]
     }
 
-    const missingInventoryColumns = ['sequence', 'palletId', 'batchId', 'qty', 'stdUnitValue']
+    const missingInventoryColumns = ['sequence', 'palletId', 'batchId', 'qty', 'stdUnitValue', 'stdUnit']
     this.missingInventoryConfig = {
       pagination: { infinite: true },
       rows: {
@@ -515,6 +526,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               batchId
               qty
               stdUnitValue
+              stdUnit
               status
               inspectedBatchNo
               inspectedQty
@@ -624,6 +636,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       qty: wsdInfo.qty,
       inspectedQty: wsdInfo.inspectedQty || 0,
       stdUnitValue: wsdInfo.stdUnitValue,
+      stdUnit: wsdInfo.stdUnit,
       inspectedStdUnitValue: wsdInfo.inspectedStdUnitValue || 0,
       inspectedLocation: wsdInfo.inspectedLocation || 0,
       orderInventoryStatus: wsdInfo.relatedOrderInv.status
