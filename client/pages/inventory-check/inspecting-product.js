@@ -7,8 +7,10 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
+import { openPopup } from '@things-factory/layout-base'
 import { fetchLocationSortingRule } from '../../fetch-location-sorting-rule'
 import { LOCATION_SORTING_RULE, ORDER_INVENTORY_STATUS, WORKSHEET_STATUS } from '../constants'
+import './check-inventory-popup'
 
 const VIEW_TYPE = {
   LOCATION_SELECTED: 'LOCATION_SELECTED',
@@ -252,7 +254,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                 />
 
                 <label>${i18next.t('label.std_unit')}</label>
-                <input name="stdUnit" .value="${this.selectedInventory?.stdUnit}" />
+                <input name="stdUnit" .value="${this.selectedInventory?.stdUnit || ''}" readonly />
 
                 <label>${i18next.t('field.location')}</label>
                 ${this.viewType === VIEW_TYPE.INVENTORY_SELECTED
@@ -777,17 +779,22 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         break
     }
 
+    actions.push({
+      title: i18next.t('button.check_unknown_pallet'),
+      action: this.checkUnknownPallet.bind(this)
+    })
+
+    actions.push({
+      title: i18next.t('button.add_x', { state: { x: i18next.t('label.pallet') } }),
+      action: this.addExtraPallet.bind(this)
+    })
+
     if (this.formattedLocations?.length && this.formattedLocations.every(loc => loc.completed)) {
       actions.push({
         title: i18next.t('button.complete'),
         action: this.completeCycleCount.bind(this)
       })
     }
-
-    actions.push({
-      title: i18next.t('button.add_x', { state: { x: i18next.t('label.pallet') } }),
-      action: this.addExtraPallet.bind(this)
-    })
 
     store.dispatch({
       type: UPDATE_CONTEXT,
@@ -907,6 +914,22 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
+  checkUnknownPallet() {
+    openPopup(
+      html`
+        <check-inventory-popup
+          .bizplaceName="${this.bizplaceNameInput.value}"
+          .cycleCountNo="${this.cycleCountNo}"
+        ></check-inventory-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.check_unknown_inventory')
+      }
+    )
+  }
+
   async checkMissingPallet() {
     try {
       const result = await CustomAlert({
@@ -1010,6 +1033,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       if (!response.errors) {
         await this.fetchCycleCountWorksheet()
         this.renewInventoryGrist()
+        this.locationInput.value = ''
       }
     } catch (e) {
       this.showToast(e)
