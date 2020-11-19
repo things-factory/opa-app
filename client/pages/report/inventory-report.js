@@ -158,7 +158,8 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
         groups: [
           { column: 'product|name' },
           { column: 'packingType', title: 'Sub Total' },
-          { column: 'batchId', title: 'Batch Total' }
+          { column: 'batchId', title: 'Batch Total' },
+          { column: 'uom', title: 'UOM' }
         ],
         totals: ['qty', 'uomValue']
       },
@@ -175,10 +176,7 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
-          record: {
-            editable: false,
-            align: 'center'
-          },
+          record: { editable: false, align: 'center' },
           imex: { header: i18next.t('field.packing_type'), key: 'packingType', width: 25, type: 'string' },
           width: 180
         },
@@ -190,6 +188,14 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
           sortable: false,
           imex: { header: i18next.t('field.batch_no'), key: 'batchId', width: 25, type: 'string' },
           width: 200
+        },
+        {
+          type: 'string',
+          name: 'uom',
+          header: i18next.t('field.uom'),
+          record: { editable: false, align: 'center' },
+          imex: { header: i18next.t('field.uom'), key: 'uom', width: 10, type: 'string' },
+          width: 80
         },
         {
           type: 'string',
@@ -279,6 +285,7 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
                 description
               }
               qty
+              uom
               uomValue
               status
               packingType
