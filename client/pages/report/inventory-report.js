@@ -158,9 +158,10 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
         groups: [
           { column: 'product|name' },
           { column: 'packingType', title: 'Sub Total' },
-          { column: 'batchId', title: 'Batch Total' }
+          { column: 'batchId', title: 'Batch Total' },
+          { column: 'uom', title: 'UOM' }
         ],
-        totals: ['qty', 'stdUnitValue']
+        totals: ['qty', 'uomValue']
       },
       columns: [
         {
@@ -175,10 +176,7 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
           type: 'string',
           name: 'packingType',
           header: i18next.t('field.packing_type'),
-          record: {
-            editable: false,
-            align: 'center'
-          },
+          record: { editable: false, align: 'center' },
           imex: { header: i18next.t('field.packing_type'), key: 'packingType', width: 25, type: 'string' },
           width: 180
         },
@@ -190,6 +188,14 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
           sortable: false,
           imex: { header: i18next.t('field.batch_no'), key: 'batchId', width: 25, type: 'string' },
           width: 200
+        },
+        {
+          type: 'string',
+          name: 'uom',
+          header: i18next.t('field.uom'),
+          record: { editable: false, align: 'center' },
+          imex: { header: i18next.t('field.uom'), key: 'uom', width: 10, type: 'string' },
+          width: 80
         },
         {
           type: 'string',
@@ -227,11 +233,11 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'number',
-          name: 'stdUnitValue',
-          header: i18next.t('field.std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           sortable: true,
-          imex: { header: i18next.t('field.std_unit_value'), key: 'stdUnitValue', width: 25, type: 'string' },
+          imex: { header: i18next.t('field.uom_value'), key: 'uomValue', width: 25, type: 'string' },
           width: 100
         }
       ]
@@ -279,7 +285,8 @@ class InventoryReport extends connect(store)(localize(i18next)(PageView)) {
                 description
               }
               qty
-              stdUnitValue
+              uom
+              uomValue
               status
               packingType
               transactionType

@@ -35,7 +35,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       _disableCrossDockingSetting: Boolean,
       _hideCrossDockingSetting: Boolean,
       containerSizes: Array,
-      stdUnitValueUnits: Array,
+      uomValueUnits: Array,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -319,7 +319,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     this._validateTransport()
 
     this.containerSizes = await getCodeByName('CONTAINER_SIZES')
-    this.stdUnitValueUnits = await getCodeByName('WEIGHT_UNITS')
+    this.uomValueUnits = await getCodeByName('WEIGHT_UNITS')
     this._configureProductGrist()
 
     this.vasGristConfig = {
@@ -384,8 +384,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'stdUnitValue',
-          header: i18next.t('field.stdUnitValue'),
+          name: 'uomValue',
+          header: i18next.t('field.uomValue'),
           record: { align: 'center' },
           width: 100
         },
@@ -421,8 +421,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'float',
-        name: 'releaseStdUnitValue',
-        header: i18next.t('field.release_std_unit_value'),
+        name: 'releaseUomValue',
+        header: i18next.t('field.release_uom_value'),
         record: { editable: true, align: 'center' },
         width: 160
       }
@@ -488,16 +488,16 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'float',
-        name: 'stdUnitValue',
-        header: i18next.t('field.std_unit_value'),
+        name: 'uomValue',
+        header: i18next.t('field.uom_value'),
         record: { editable: true, align: 'center', options: { min: 0 } },
         width: 100
       },
 
       {
         type: 'select',
-        name: 'stdUnit',
-        header: i18next.t('field.std_unit'),
+        name: 'uom',
+        header: i18next.t('field.uom'),
         record: {
           editable: true,
           align: 'center',
@@ -514,8 +514,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'float',
-        name: 'totalStdUnitValue',
-        header: i18next.t('field.total_std_unit_value'),
+        name: 'totalUomValue',
+        header: i18next.t('field.total_uom_value'),
         record: { align: 'center' },
         width: 120
       },
@@ -536,7 +536,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
     this.productGristConfig = {
       pagination: { infinite: true },
-      list: { fields: ['batch_no', 'product', 'packingType', 'totalStdUnitValue'] },
+      list: { fields: ['batch_no', 'product', 'packingType', 'totalUomValue'] },
       columns: productGristColumns
     }
   }
@@ -549,7 +549,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
       if (event.detail.column.name == 'product') {
         let primaryUnit = !!changeRecord.product?.primaryUnit
-        changeRecord.stdUnit = primaryUnit ? changeRecord.product.primaryUnit : ''
+        changeRecord.uom = primaryUnit ? changeRecord.product.primaryUnit : ''
         changeRecord.rowOptionPrimaryUnit = {
           options: [
             ...(primaryUnit
@@ -564,7 +564,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
                     display: '',
                     value: ''
                   },
-                  ...this.stdUnitValueUnits.map(unit => {
+                  ...this.uomValueUnits.map(unit => {
                     return { display: unit.name, value: unit.name }
                   })
                 ])
@@ -575,7 +575,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         changeRecord.packingType = packingType ? changeRecord.product.packingType : ''
       }
 
-      const amountRelatedColumns = ['stdUnitValue', 'stdUnit', 'packQty', 'releaseQty', 'releaseStdUnitValue']
+      const amountRelatedColumns = ['uomValue', 'uom', 'packQty', 'releaseQty', 'releaseUomValue']
       if (amountRelatedColumns.indexOf(changedColumn) >= 0) {
         const calcedAmount = this._calcAmount(changedColumn, changeRecord)
         for (let key in calcedAmount) {
@@ -616,35 +616,35 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
   _calcAmount(changedColumn, changeRecord) {
     let calcedRecord = {}
-    let { stdUnitValue, stdUnit, packQty, releaseQty, releaseStdUnitValue } = changeRecord
+    let { uomValue, uom, packQty, releaseQty, releaseUomValue } = changeRecord
 
-    if (changedColumn === 'stdUnitValue' && (!stdUnitValue || stdUnitValue < 0))
-      throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.stdUnitValue') } }))
+    if (changedColumn === 'uomValue' && (!uomValue || uomValue < 0))
+      throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.uomValue') } }))
     if (changedColumn === 'packQty' && (!packQty || packQty < 0))
       throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.pack_qty') } }))
-    if (changedColumn === 'stdUnit' && !stdUnit)
-      throw new Error(i18next.t('text.x_is_empty', { state: { x: i18next.t('label.stdUnit') } }))
+    if (changedColumn === 'uom' && !uom)
+      throw new Error(i18next.t('text.x_is_empty', { state: { x: i18next.t('label.uom') } }))
 
-    if (stdUnitValue && stdUnit && packQty) {
-      calcedRecord.totalStdUnitValue = `${(stdUnitValue * packQty).toFixed(2)} ${stdUnit}`
+    if (uomValue && uom && packQty) {
+      calcedRecord.totalUomValue = `${(uomValue * packQty).toFixed(2)} ${uom}`
     } else {
-      calcedRecord.totalStdUnitValue = ''
+      calcedRecord.totalUomValue = ''
     }
 
     if (!this._crossDocking) return calcedRecord
 
-    if (changedColumn === 'releaseQty' || changedColumn === 'releaseStdUnitValue') {
+    if (changedColumn === 'releaseQty' || changedColumn === 'releaseUomValue') {
       if (isNaN(releaseQty)) {
         releaseQty = 0
         calcedRecord.releaseQty = releaseQty
       }
-      if (isNaN(releaseStdUnitValue)) {
-        releaseStdUnitValue = 0
-        calcedRecord.releaseStdUnitValue = releaseStdUnitValue
+      if (isNaN(releaseUomValue)) {
+        releaseUomValue = 0
+        calcedRecord.releaseUomValue = releaseUomValue
       }
 
-      if (!stdUnitValue)
-        throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.std_unit_value') } }))
+      if (!uomValue)
+        throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.uom_value') } }))
       if (!packQty)
         throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.pack_qty') } }))
 
@@ -655,23 +655,23 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         if (releaseQty > packQty) {
           throw new Error(i18next.t('text.x_exceed_limit', { state: { x: i18next.t('label.release_qty') } }))
         }
-        calcedRecord.releaseStdUnitValue = releaseQty * stdUnitValue
+        calcedRecord.releaseUomValue = releaseQty * uomValue
       } else {
-        if (releaseStdUnitValue === undefined || releaseStdUnitValue < 0) {
+        if (releaseUomValue === undefined || releaseUomValue < 0) {
           throw new Error(
-            i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.release_std_unit_value') } })
+            i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.release_uom_value') } })
           )
         }
 
-        if (releaseStdUnitValue > packQty * stdUnitValue) {
-          throw new Error(i18next.t('text.x_exceed_limit', { state: { x: i18next.t('label.release_std_unit_value') } }))
+        if (releaseUomValue > packQty * uomValue) {
+          throw new Error(i18next.t('text.x_exceed_limit', { state: { x: i18next.t('label.release_uom_value') } }))
         }
 
-        if (releaseStdUnitValue % stdUnitValue) {
-          throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('label.release_std_unit_value') } }))
+        if (releaseUomValue % uomValue) {
+          throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('label.release_uom_value') } }))
         }
 
-        calcedRecord.releaseQty = releaseStdUnitValue / stdUnitValue
+        calcedRecord.releaseQty = releaseUomValue / uomValue
       }
     }
 
@@ -855,10 +855,10 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     const records = this.productGrist.dirtyData.records
     if (!records?.length) throw new Error(i18next.t('text.no_products'))
 
-    const checkRequiredFields = ({ batchId, packingType, stdUnitValue, stdUnit, packQty }) =>
-      !batchId || !packingType || !stdUnitValue || !stdUnit || !packQty
+    const checkRequiredFields = ({ batchId, packingType, uomValue, uom, packQty }) =>
+      !batchId || !packingType || !uomValue || !uom || !packQty
 
-    // required field (batchId, packingType, stdUnitValue, stdUnit, packQty, palletQty)
+    // required field (batchId, packingType, uomValue, uom, packQty, palletQty)
     if (records.some(checkRequiredFields)) {
       throw new Error(i18next.t('text.empty_value_in_list'))
     }
@@ -874,14 +874,11 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       )
     }
 
-    if (
-      this._crossDocking &&
-      records.every(({ releaseQty, releaseStdUnitValue }) => !releaseQty || !releaseStdUnitValue)
-    ) {
+    if (this._crossDocking && records.every(({ releaseQty, releaseUomValue }) => !releaseQty || !releaseUomValue)) {
       throw new Error(
         i18next.t('text.invalid_x', {
           state: {
-            x: `${i18next.t('label.release_qty')}, ${i18next.t('label.release_std_unit_value')}`
+            x: `${i18next.t('label.release_qty')}, ${i18next.t('label.release_uom_value')}`
           }
         })
       )
@@ -973,16 +970,16 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         batchId: record.batchId,
         product: { id: record.product.id },
         packingType: record.packingType,
-        stdUnitValue: record.stdUnitValue,
-        stdUnit: record.stdUnit,
+        uomValue: record.uomValue,
+        uom: record.uom,
         packQty: record.packQty,
-        totalStdUnitValue: record.totalStdUnitValue
+        totalUomValue: record.totalUomValue
       }
 
       if (record.palletQty) orderProduct.palletQty = record.palletQty
-      if (this._crossDocking && record.releaseQty !== undefined && record.releaseStdUnitValue !== undefined) {
+      if (this._crossDocking && record.releaseQty !== undefined && record.releaseUomValue !== undefined) {
         orderProduct.releaseQty = record.releaseQty
-        orderProduct.releaseStdUnitValue = record.releaseStdUnitValue
+        orderProduct.releaseUomValue = record.releaseUomValue
       }
 
       return orderProduct
@@ -1024,7 +1021,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             result.targetProduct = { id: record.target.productId }
             result.packingType = record.packingType
             result.qty = record.qty
-            result.stdUnitValue = record.stdUnitValue
+            result.uomValue = record.uomValue
           } else {
             result.otherTarget = record.target
           }
@@ -1064,9 +1061,9 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             .targetList="${this.productGrist.dirtyData.records.map(record => {
               return {
                 ...record,
-                unitStdUnitValue: record.stdUnitValue,
+                unitUomValue: record.uomValue,
                 packQty: record.packQty - (record.releaseQty || 0),
-                totalStdUnitValue: record.stdUnitValue * (record.packQty - (record.releaseQty || 0))
+                totalUomValue: record.uomValue * (record.packQty - (record.releaseQty || 0))
               }
             })}"
             .vasList="${this.vasData.records}"
@@ -1116,8 +1113,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     if (this.productGrist.dirtyData.records.some(record => !record.packingType))
       throw new Error(i18next.t('text.invalid_packing_type'))
 
-    if (this.productGrist.dirtyData.records.some(record => !record.stdUnitValue))
-      throw new Error(i18next.t('text.std_unit_value'))
+    if (this.productGrist.dirtyData.records.some(record => !record.uomValue))
+      throw new Error(i18next.t('text.uom_value'))
 
     if (this.productGrist.dirtyData.records.some(record => !record.packQty))
       throw new Error(i18next.t('text.invalid_pack_qty'))

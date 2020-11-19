@@ -320,7 +320,7 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
 
     this.productGristConfig = {
       pagination: { infinite: true },
-      list: { fields: ['batch_no', 'product', 'packingType', 'totalStdUnitValue'] },
+      list: { fields: ['batch_no', 'product', 'packingType', 'totalUomValue'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -373,8 +373,8 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'stdUnitValue',
-          header: i18next.t('field.std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { editable: true, align: 'center', options: { min: 0 } },
           width: 80
         },
@@ -394,8 +394,8 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'totalStdUnitValue',
-          header: i18next.t('field.total_std_unit_value'),
+          name: 'totalUomValue',
+          header: i18next.t('field.total_uom_value'),
           record: { align: 'center' },
           width: 120
         },
@@ -515,8 +515,8 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'float',
-        name: 'releaseStdUnitValue',
-        header: i18next.t('field.release_std_unit_value'),
+        name: 'releaseUomValue',
+        header: i18next.t('field.release_uom_value'),
         record: { editable: true, align: 'center' },
         width: 160
       }
@@ -574,8 +574,8 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'float',
-        name: 'stdUnitValue',
-        header: i18next.t('field.std_unit_value'),
+        name: 'uomValue',
+        header: i18next.t('field.uom_value'),
         record: { editable: true, align: 'center', options: { min: 0 } },
         width: 80
       },
@@ -595,8 +595,8 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'float',
-        name: 'totalStdUnitValue',
-        header: i18next.t('field.total_std_unit_value'),
+        name: 'totalUomValue',
+        header: i18next.t('field.total_uom_value'),
         record: { align: 'center' },
         width: 120
       },
@@ -617,7 +617,7 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
 
     this.productGristConfig = {
       pagination: { infinite: true },
-      list: { fields: ['batch_no', 'product', 'packingType', 'totalStdUnitValue'] },
+      list: { fields: ['batch_no', 'product', 'packingType', 'totalUomValue'] },
       columns: productGristColumns
     }
   }
@@ -628,7 +628,7 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
       let changeRecord = event.detail.after
       const changedColumn = event.detail.column.name
 
-      const amountRelatedColumns = ['stdUnitValue', 'unit', 'packQty', 'releaseQty', 'releaseStdUnitValue']
+      const amountRelatedColumns = ['uomValue', 'unit', 'packQty', 'releaseQty', 'releaseUomValue']
       if (amountRelatedColumns.indexOf(changedColumn) >= 0) {
         const calcedAmount = this._calcAmount(changedColumn, changeRecord)
         for (let key in calcedAmount) {
@@ -666,9 +666,9 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
     }
   }
 
-  _calcTotalStdUnitValue(stdUnitValue, unit, packQty) {
-    if (stdUnitValue && unit && packQty) {
-      return `${(stdUnitValue * packQty).toFixed(2)} ${unit}`
+  _calcTotalUomValue(uomValue, unit, packQty) {
+    if (uomValue && unit && packQty) {
+      return `${(uomValue * packQty).toFixed(2)} ${unit}`
     } else {
       return null
     }
@@ -676,35 +676,35 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
 
   _calcAmount(changedColumn, changeRecord) {
     let calcedRecord = {}
-    let { stdUnitValue, unit, packQty, releaseQty, releaseStdUnitValue } = changeRecord
+    let { uomValue, unit, packQty, releaseQty, releaseUomValue } = changeRecord
 
-    if (changedColumn === 'stdUnitValue' && (!stdUnitValue || stdUnitValue < 0))
-      throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.std_unit_value') } }))
+    if (changedColumn === 'uomValue' && (!uomValue || uomValue < 0))
+      throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.uom_value') } }))
     if (changedColumn === 'packQty' && (!packQty || packQty < 0))
       throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.pack_qty') } }))
     if (changedColumn === 'unit' && !unit)
       throw new Error(i18next.t('text.x_is_empty', { state: { x: i18next.t('label.unit') } }))
 
-    if (stdUnitValue && unit && packQty) {
-      calcedRecord.totalStdUnitValue = `${(stdUnitValue * packQty).toFixed(2)} ${unit}`
+    if (uomValue && unit && packQty) {
+      calcedRecord.totalUomValue = `${(uomValue * packQty).toFixed(2)} ${unit}`
     } else {
-      calcedRecord.totalStdUnitValue = ''
+      calcedRecord.totalUomValue = ''
     }
 
     if (!this._crossDocking) return calcedRecord
 
-    if (changedColumn === 'releaseQty' || changedColumn === 'releaseStdUnitValue') {
+    if (changedColumn === 'releaseQty' || changedColumn === 'releaseUomValue') {
       if (isNaN(releaseQty)) {
         releaseQty = 0
         calcedRecord.releaseQty = releaseQty
       }
-      if (isNaN(releaseStdUnitValue)) {
-        releaseStdUnitValue = 0
-        calcedRecord.releaseStdUnitValue = releaseStdUnitValue
+      if (isNaN(releaseUomValue)) {
+        releaseUomValue = 0
+        calcedRecord.releaseUomValue = releaseUomValue
       }
 
-      if (!stdUnitValue)
-        throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.std_unit_value') } }))
+      if (!uomValue)
+        throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.uom_value') } }))
       if (!packQty)
         throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.pack_qty') } }))
 
@@ -715,23 +715,23 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
         if (releaseQty > packQty) {
           throw new Error(i18next.t('text.x_exceed_limit', { state: { x: i18next.t('label.release_qty') } }))
         }
-        calcedRecord.releaseStdUnitValue = releaseQty * stdUnitValue
+        calcedRecord.releaseUomValue = releaseQty * uomValue
       } else {
-        if (releaseStdUnitValue === undefined || releaseStdUnitValue < 0) {
+        if (releaseUomValue === undefined || releaseUomValue < 0) {
           throw new Error(
-            i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.release_std_unit_value') } })
+            i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.release_uom_value') } })
           )
         }
 
-        if (releaseStdUnitValue > packQty * stdUnitValue) {
-          throw new Error(i18next.t('text.x_exceed_limit', { state: { x: i18next.t('label.release_std_unit_value') } }))
+        if (releaseUomValue > packQty * uomValue) {
+          throw new Error(i18next.t('text.x_exceed_limit', { state: { x: i18next.t('label.release_uom_value') } }))
         }
 
-        if (releaseStdUnitValue % stdUnitValue) {
-          throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('label.release_std_unit_value') } }))
+        if (releaseUomValue % uomValue) {
+          throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('label.release_uom_value') } }))
         }
 
-        calcedRecord.releaseQty = releaseStdUnitValue / stdUnitValue
+        calcedRecord.releaseQty = releaseUomValue / uomValue
       }
     }
 
@@ -968,22 +968,22 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
     if (!this.productGrist.dirtyData.records || !this.productGrist.dirtyData.records.length)
       throw new Error(i18next.t('text.no_products'))
 
-    // required field (batchId, packingType, stdUnitValue, unit, packQty, palletQty)
+    // required field (batchId, packingType, uomValue, unit, packQty, palletQty)
     if (
       this.productGrist.dirtyData.records.filter(
-        record => !record.batchId || !record.packingType || !record.stdUnitValue || !record.unit || !record.packQty
+        record => !record.batchId || !record.packingType || !record.uomValue || !record.unit || !record.packQty
       ).length
     )
       throw new Error(i18next.t('text.empty_value_in_list'))
 
     if (
       this._crossDocking &&
-      this.productGrist.dirtyData.records.every(record => !record.releaseQty || !record.releaseStdUnitValue)
+      this.productGrist.dirtyData.records.every(record => !record.releaseQty || !record.releaseUomValue)
     ) {
       throw new Error(
         i18next.t('text.invalid_x', {
           state: {
-            x: `${i18next.t('label.release_qty')}, ${i18next.t('label.release_std_unit_value')}`
+            x: `${i18next.t('label.release_qty')}, ${i18next.t('label.release_uom_value')}`
           }
         })
       )
@@ -1060,16 +1060,16 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
         batchId: record.batchId,
         product: { id: record.product.id },
         packingType: record.packingType,
-        stdUnitValue: record.stdUnitValue,
+        uomValue: record.uomValue,
         unit: record.unit,
         packQty: record.packQty,
-        totalStdUnitValue: record.totalStdUnitValue
+        totalUomValue: record.totalUomValue
       }
 
       if (record.palletQty) orderProduct.palletQty = record.palletQty
-      if (this._crossDocking && record.releaseQty !== undefined && record.releaseStdUnitValue !== undefined) {
+      if (this._crossDocking && record.releaseQty !== undefined && record.releaseUomValue !== undefined) {
         orderProduct.releaseQty = record.releaseQty
-        orderProduct.releaseStdUnitValue = record.releaseStdUnitValue
+        orderProduct.releaseUomValue = record.releaseUomValue
       }
 
       return orderProduct

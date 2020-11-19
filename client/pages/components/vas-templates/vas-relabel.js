@@ -385,8 +385,8 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
       throw new Error(i18next.t('text.invalid_item_qty'))
     }
 
-    if (!this.targetInfo.stdUnitValue) {
-      throw new Error(i18next.t('text.invalid_item_std_unit_value'))
+    if (!this.targetInfo.uomValue) {
+      throw new Error(i18next.t('text.invalid_item_uom_value'))
     }
 
     const isRelabelable = await this._checkValidInventory()
@@ -401,7 +401,7 @@ class VasRelabel extends localize(i18next)(VasTemplate) {
             batchId: this._selectedBatchId || this.targetInfo.target.batchId,
             productId: this._selectedProduct?.id || this.targetInfo.target.productId,
             packingType: this.targetInfo.packingType,
-            unitStdUnitValue: this.targetInfo.stdUnitValue / this.targetInfo.qty
+            unitUomValue: this.targetInfo.uomValue / this.targetInfo.qty
           })})
         }
       `

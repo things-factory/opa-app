@@ -110,7 +110,7 @@ export class ExtraProductPopup extends localize(i18next)(LitElement) {
     this.config = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true } },
-      list: { fields: ['batch_no', 'product', 'packingType', 'totalStdUnitValue'] },
+      list: { fields: ['batch_no', 'product', 'packingType', 'totalUomValue'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -162,8 +162,8 @@ export class ExtraProductPopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'float',
-          name: 'stdUnitValue',
-          header: i18next.t('field.std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { editable: true, align: 'center', options: { min: 0 } },
           width: 80
         },
@@ -183,8 +183,8 @@ export class ExtraProductPopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'float',
-          name: 'totalStdUnitValue',
-          header: i18next.t('field.total_std_unit_value'),
+          name: 'totalUomValue',
+          header: i18next.t('field.total_uom_value'),
           record: { align: 'center' },
           width: 120
         },
@@ -207,18 +207,18 @@ export class ExtraProductPopup extends localize(i18next)(LitElement) {
     const changeRecord = event.detail.after
     const changedColumn = event.detail.column.name
 
-    if (changedColumn === 'stdUnitValue' || changedColumn === 'unit' || changedColumn === 'packQty') {
-      changeRecord.totalStdUnitValue = this._calcTotalStdUnitValue(
-        changeRecord.stdUnitValue,
+    if (changedColumn === 'uomValue' || changedColumn === 'unit' || changedColumn === 'packQty') {
+      changeRecord.totalUomValue = this._calcTotalUomValue(
+        changeRecord.uomValue,
         changeRecord.unit,
         changeRecord.packQty
       )
     }
   }
 
-  _calcTotalStdUnitValue(stdUnitValue, unit, packQty) {
-    if (stdUnitValue && unit && packQty) {
-      return `${(stdUnitValue * packQty).toFixed(2)} ${unit}`
+  _calcTotalUomValue(uomValue, unit, packQty) {
+    if (uomValue && unit && packQty) {
+      return `${(uomValue * packQty).toFixed(2)} ${unit}`
     } else {
       return null
     }
@@ -270,10 +270,10 @@ export class ExtraProductPopup extends localize(i18next)(LitElement) {
         product: { id: record.product.id },
         packingType: record.packingType,
         status: ORDER_PRODUCT_STATUS.READY_TO_APPROVED.value,
-        stdUnitValue: record.stdUnitValue,
+        uomValue: record.uomValue,
         unit: record.unit,
         packQty: record.packQty,
-        totalStdUnitValue: record.totalStdUnitValue
+        totalUomValue: record.totalUomValue
       }
     })
   }
@@ -283,13 +283,13 @@ export class ExtraProductPopup extends localize(i18next)(LitElement) {
     if (!this.grist.dirtyData.records || !this.grist.dirtyData.records.length)
       throw new Error(i18next.t('text.no_products'))
 
-    // required field (batchId, packingType, stdUnitValue, unit, packQty, palletQty)
+    // required field (batchId, packingType, uomValue, unit, packQty, palletQty)
     if (
       this.grist.dirtyData.records.filter(
         record =>
           !record.batchId ||
           !record.packingType ||
-          !record.stdUnitValue ||
+          !record.uomValue ||
           !record.unit ||
           !record.packQty ||
           !record.palletQty

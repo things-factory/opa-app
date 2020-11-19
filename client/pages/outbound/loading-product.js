@@ -354,15 +354,15 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'string',
-          name: 'releaseStdUnitValue',
-          header: i18next.t('field.release_std_unit_value'),
+          name: 'releaseUomValue',
+          header: i18next.t('field.release_uom_value'),
           record: { align: 'center' },
           width: 100
         },
         {
           type: 'string',
-          name: 'stdUnit',
-          header: i18next.t('field.std_unit'),
+          name: 'uom',
+          header: i18next.t('field.uom'),
           record: { align: 'center' },
           width: 80
         },
@@ -456,15 +456,15 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'number',
-          name: 'releaseStdUnitValue',
-          header: i18next.t('field.std_unit_value'),
+          name: 'releaseUomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           width: 80
         },
         {
           type: 'string',
-          name: 'stdUnit',
-          header: i18next.t('field.std_unit'),
+          name: 'uom',
+          header: i18next.t('field.uom'),
           record: { align: 'center' },
           width: 80
         }
@@ -506,9 +506,9 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               }
               qty
               releaseQty
-              releaseStdUnitValue
+              releaseUomValue
               inventory {
-                stdUnit
+                uom
               }
             }
           }
@@ -711,11 +711,11 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
           })}) {
             items {
               releaseQty
-              releaseStdUnitValue
+              releaseUomValue
               inventory {
                 palletId
                 batchId
-                stdUnit
+                uom
                 product {
                   name
                   description

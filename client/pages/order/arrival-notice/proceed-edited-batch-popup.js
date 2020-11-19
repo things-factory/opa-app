@@ -147,7 +147,7 @@ export class ProceedEditedBatchPopup extends localize(i18next)(LitElement) {
 
   firstUpdated() {
     this.config = this.productGristConfig = {
-      list: { fields: ['remark', 'batchId', 'product', 'packingType', 'totalStdUnitValue'] },
+      list: { fields: ['remark', 'batchId', 'product', 'packingType', 'totalUomValue'] },
       pagination: { infinite: true },
       rows: { selectable: { multiple: true }, appendable: false },
       columns: [
@@ -182,8 +182,8 @@ export class ProceedEditedBatchPopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'float',
-          name: 'stdUnitValue',
-          header: i18next.t('field.std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           width: 80
         },
@@ -202,8 +202,8 @@ export class ProceedEditedBatchPopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'integer',
-          name: 'totalStdUnitValue',
-          header: i18next.t('field.total_std_unit_value'),
+          name: 'totalUomValue',
+          header: i18next.t('field.total_uom_value'),
           record: { align: 'center' },
           width: 120
         },

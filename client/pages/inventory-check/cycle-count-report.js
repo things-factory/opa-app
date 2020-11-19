@@ -166,7 +166,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           'inspectedStatus',
           'inspectedLocation',
           'inspectedQty',
-          'inspectedStdUnitValue',
+          'inspectedUomValue',
           'status'
         ]
       },
@@ -257,19 +257,19 @@ class CycleCountReport extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'stdUnitValue',
-          header: i18next.t('field.system_std_unit_value'),
-          imex: { header: i18next.t('field.system_std_unit_value'), key: 'stdUnitValue', width: 20, type: 'string' },
+          name: 'uomValue',
+          header: i18next.t('field.system_uom_value'),
+          imex: { header: i18next.t('field.system_uom_value'), key: 'uomValue', width: 20, type: 'string' },
           record: { align: 'center' },
           width: 100
         },
         {
           type: 'float',
-          name: 'inspectedStdUnitValue',
-          header: i18next.t('field.inspected_std_unit_value'),
+          name: 'inspectedUomValue',
+          header: i18next.t('field.inspected_uom_value'),
           imex: {
-            header: i18next.t('field.inspected_std_unit_value'),
-            key: 'inspectedStdUnitValue',
+            header: i18next.t('field.inspected_uom_value'),
+            key: 'inspectedUomValue',
             width: 20,
             type: 'string'
           },
@@ -278,9 +278,9 @@ class CycleCountReport extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'stdUnit',
-          header: i18next.t('field.std_unit'),
-          imex: { header: i18next.t('field.std_unit'), key: 'stdUnit', width: 20, type: 'string' },
+          name: 'uom',
+          header: i18next.t('field.uom'),
+          imex: { header: i18next.t('field.uom'), key: 'uom', width: 20, type: 'string' },
           record: { align: 'center' },
           width: 100
         },
@@ -335,7 +335,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
                 id
                 inspectedBatchNo
                 inspectedQty
-                inspectedStdUnitValue
+                inspectedUomValue
                 inspectedLocation {
                   id
                   name
@@ -346,8 +346,8 @@ class CycleCountReport extends localize(i18next)(PageView) {
                   batchId
                   packingType
                   qty
-                  stdUnitValue
-                  stdUnit
+                  uomValue
+                  uom
                   location {
                     id
                     name
@@ -413,8 +413,8 @@ class CycleCountReport extends localize(i18next)(PageView) {
                 inspectedBatchNo
                 originQty
                 inspectedQty
-                originStdUnitValue
-                inspectedStdUnitValue
+                originUomValue
+                inspectedUomValue
                 originLocation {
                   id
                   name
@@ -428,7 +428,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
                 inventory {
                   palletId
                   packingType
-                  stdUnit
+                  uom
                   product {
                     name
                     description
@@ -474,12 +474,12 @@ class CycleCountReport extends localize(i18next)(PageView) {
             inspectedBatchNo: worksheetDetail.targetInventory.inspectedBatchNo,
             qty: worksheetDetail.targetInventory.originQty,
             inspectedQty: worksheetDetail.targetInventory.inspectedQty,
-            stdUnitValue: worksheetDetail.targetInventory.originStdUnitValue,
-            inspectedStdUnitValue: worksheetDetail.targetInventory.inspectedStdUnitValue,
-            stdUnit:
+            uomValue: worksheetDetail.targetInventory.originUomValue,
+            inspectedUomValue: worksheetDetail.targetInventory.inspectedUomValue,
+            uom:
               worksheetDetail.targetInventory &&
               worksheetDetail.targetInventory.inventory &&
-              worksheetDetail.targetInventory.inventory.stdUnit,
+              worksheetDetail.targetInventory.inventory.uom,
             location: worksheetDetail.targetInventory.originLocation,
             inspectedLocation: worksheetDetail.targetInventory.inspectedLocation?.name,
             packingType: worksheetDetail.targetInventory.inventory?.packingType || '',

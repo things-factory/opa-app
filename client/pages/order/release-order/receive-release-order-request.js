@@ -307,15 +307,15 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
         },
         {
           type: 'float',
-          name: 'stdUnitValue',
-          header: i18next.t('field.available_std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.available_uom_value'),
           record: { align: 'center' },
           width: 100
         },
         {
           type: 'float',
-          name: 'releaseStdUnitValue',
-          header: i18next.t('field.release_std_unit_value'),
+          name: 'releaseUomValue',
+          header: i18next.t('field.release_uom_value'),
           record: { align: 'center', options: { min: 0 } },
           width: 100
         }
@@ -397,8 +397,8 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
         },
         {
           type: 'integer',
-          name: 'stdUnitValue',
-          header: i18next.t('field.std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           width: 100
         },
@@ -476,9 +476,9 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
               productName
               packingType
               qty
-              stdUnitValue
+              uomValue
               releaseQty
-              releaseStdUnitValue
+              releaseUomValue
             }
             shippingOrderInfo {
               containerNo
@@ -502,7 +502,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
               }
               packingType
               qty
-              stdUnitValue
+              uomValue
               otherTarget
               description
               remark
@@ -520,7 +520,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
       const orderInventories = releaseOrder.inventoryInfos.map(inventoryInfo => {
         return {
           ...inventoryInfo,
-          roundedStdUnitValue: inventoryInfo.releaseQty * (inventoryInfo.stdUnitValue / inventoryInfo.qty) || ''
+          roundedUomValue: inventoryInfo.releaseQty * (inventoryInfo.uomValue / inventoryInfo.qty) || ''
         }
       })
 

@@ -262,7 +262,7 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
 
   pageInitialized() {
     this.productGristConfig = {
-      list: { fields: ['batchId', 'product', 'packingType', 'totalStdUnitValue'] },
+      list: { fields: ['batchId', 'product', 'packingType', 'totalUomValue'] },
       pagination: { infinite: true },
       rows: { selectable: { multiple: true }, appendable: false },
       columns: [
@@ -290,15 +290,15 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'stdUnitValue',
-          header: i18next.t('field.std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           width: 100
         },
         {
           type: 'string',
-          name: 'stdUnit',
-          header: i18next.t('field.std_unit'),
+          name: 'uom',
+          header: i18next.t('field.uom'),
           record: { align: 'center' },
           width: 80
         },
@@ -311,8 +311,8 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'totalStdUnitValue',
-          header: i18next.t('field.total_std_unit_value'),
+          name: 'totalUomValue',
+          header: i18next.t('field.total_uom_value'),
           record: { align: 'center' },
           width: 120
         },
@@ -401,8 +401,8 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'stdUnitValue',
-          header: i18next.t('field.std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           width: 60
         },
@@ -487,10 +487,10 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
               }
               status
               packingType
-              stdUnitValue
-              stdUnit
+              uomValue
+              uom
               packQty
-              totalStdUnitValue
+              totalUomValue
               palletQty
             }
             orderVass {
@@ -509,7 +509,7 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
               }
               packingType
               qty
-              stdUnitValue
+              uomValue
               otherTarget
               description
               remark

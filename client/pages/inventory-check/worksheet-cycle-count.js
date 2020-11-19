@@ -154,7 +154,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           'location',
           'inspectedLocation',
           'inspectedQty',
-          'inspectedStdUnitValue',
+          'inspectedUomValue',
           'inspectedBatchNo',
           'status'
         ]
@@ -243,12 +243,12 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'inspectedStdUnitValue',
-          header: i18next.t('field.inspected_std_unit_value'),
+          name: 'inspectedUomValue',
+          header: i18next.t('field.inspected_uom_value'),
           record: { align: 'center' },
           imex: {
-            header: i18next.t('field.inspected_std_unit_value'),
-            key: 'inspectedStdUnitValue',
+            header: i18next.t('field.inspected_uom_value'),
+            key: 'inspectedUomValue',
             width: 100,
             type: 'number'
           },
@@ -256,12 +256,12 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'stdUnit',
-          header: i18next.t('field.std_unit'),
+          name: 'uom',
+          header: i18next.t('field.uom'),
           record: { align: 'center' },
           imex: {
-            header: i18next.t('field.std_unit'),
-            key: 'stdUnit',
+            header: i18next.t('field.uom'),
+            key: 'uom',
             width: 80,
             type: 'string'
           },
@@ -307,7 +307,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
                   batchId
                   palletId
                   packingType
-                  stdUnit
+                  uom
                   location {
                     name
                     description
@@ -323,7 +323,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
                 }
                 inspectedBatchNo
                 inspectedQty
-                inspectedStdUnitValue
+                inspectedUomValue
               }
             }
             total
@@ -351,11 +351,11 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           status: worksheetDetail.status,
           inspectedLocation: worksheetDetail.targetInventory.inspectedLocation,
           inspectedQty: worksheetDetail.targetInventory.inspectedQty,
-          inspectedStdUnitValue: worksheetDetail.targetInventory.inspectedStdUnitValue,
-          stdUnit:
+          inspectedUomValue: worksheetDetail.targetInventory.inspectedUomValue,
+          uom:
             worksheetDetail.targetInventory &&
             worksheetDetail.targetInventory.inventory &&
-            worksheetDetail.targetInventory.inventory.stdUnit,
+            worksheetDetail.targetInventory.inventory.uom,
           inspectedBatchNo: worksheetDetail.targetInventory.inspectedBatchNo,
           packingType: worksheetDetail.targetInventory.inventory.packingType
         }
@@ -565,7 +565,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
   //             palletId
   //             batchId
   //             packingType
-  //             stdUnitValue
+  //             uomValue
   //             bizplace {
   //               id
   //               name

@@ -155,8 +155,8 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'float',
-          name: 'releaseStdUnitValue',
-          header: i18next.t('field.release_std_unit_value'),
+          name: 'releaseUomValue',
+          header: i18next.t('field.release_uom_value'),
           record: { align: 'center' },
           width: 60
         }
@@ -227,7 +227,7 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
             items {
               id
               qty
-              stdUnitValue
+              uomValue
             }
           }
         }
@@ -241,9 +241,9 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
 
   _composeWorksheetDetails(record, inventories) {
     let leftReleaseQty = record.releaseQty
-    let leftReleaseStdUnitValue = record.releaseStdUnitValue
+    let leftReleaseUomValue = record.releaseUomValue
     let compReleaseQty = 0
-    let compReleaseStdUnitValue = 0
+    let compReleaseUomValue = 0
 
     let worksheetDetails = []
     let idx = 0
@@ -252,27 +252,27 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
 
       if (inv.qty > leftReleaseQty) {
         compReleaseQty += leftReleaseQty
-        compReleaseStdUnitValue += leftReleaseStdUnitValue
+        compReleaseUomValue += leftReleaseUomValue
 
         worksheetDetails.push({
           targetInventory: {
             inventory: { id: inv.id },
             releaseQty: leftReleaseQty,
-            releaseStdUnitValue: leftReleaseStdUnitValue,
+            releaseUomValue: leftReleaseUomValue,
             type: ORDER_TYPES.RELEASE_OF_GOODS.value
           }
         })
       } else {
         compReleaseQty += inv.qty
-        compReleaseStdUnitValue += inv.stdUnitValue
+        compReleaseUomValue += inv.uomValue
         leftReleaseQty -= inv.qty
-        leftReleaseStdUnitValue -= inv.stdUnitValue
+        leftReleaseUomValue -= inv.uomValue
 
         worksheetDetails.push({
           targetInventory: {
             inventory: { id: inv.id },
             releaseQty: inv.qty,
-            releaseStdUnitValue: inv.stdUnitValue,
+            releaseUomValue: inv.uomValue,
             type: ORDER_TYPES.RELEASE_OF_GOODS.value
           }
         })

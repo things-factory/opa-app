@@ -143,8 +143,8 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'integer',
-          name: 'releaseStdUnitValue',
-          header: i18next.t('field.std_unit_value'),
+          name: 'releaseUomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           width: 80
         },
@@ -383,7 +383,7 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
           })}) {
             items {
               releaseQty
-              releaseStdUnitValue
+              releaseUomValue
               status
               remark
               systemRemark
@@ -460,7 +460,7 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
         let newRecord = {
           productName: record.productName,
           releaseQty: record.releaseQty,
-          releaseStdUnitValue: record.releaseStdUnitValue,
+          releaseUomValue: record.releaseUomValue,
           batchId: record.batchId,
           packingType: record.packingType,
           remark: record?.remark ? record.remark : ''

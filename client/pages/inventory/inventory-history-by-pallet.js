@@ -52,7 +52,7 @@ class InventoryHistoryByPallet extends localize(i18next)(LitElement) {
   firstUpdated() {
     this.config = {
       list: {
-        fields: ['palletId', 'batchId', 'location', 'orderNo', 'orderRefNo', 'qty', 'stdUnitValue', 'description']
+        fields: ['palletId', 'batchId', 'location', 'orderNo', 'orderRefNo', 'qty', 'uomValue', 'description']
       },
       rows: { appendable: false },
       pagination: { infinite: true },
@@ -108,16 +108,16 @@ class InventoryHistoryByPallet extends localize(i18next)(LitElement) {
         },
         {
           type: 'number',
-          name: 'stdUnitValue',
-          header: i18next.t('field.std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           sortable: true,
           width: 80
         },
         {
           type: 'number',
-          name: 'openingStdUnitValue',
-          header: i18next.t('field.opening_std_unit_value'),
+          name: 'openingUomValue',
+          header: i18next.t('field.opening_uom_value'),
           record: { align: 'center' },
           sortable: true,
           width: 80
@@ -186,11 +186,11 @@ class InventoryHistoryByPallet extends localize(i18next)(LitElement) {
                 batchId
                 qty
                 openingQty
-                stdUnitValue
-                openingStdUnitValue
+                uomValue
+                openingUomValue
                 orderRefNo
                 orderNo
-                stdUnitValue
+                uomValue
                 description
                 status
                 transactionType

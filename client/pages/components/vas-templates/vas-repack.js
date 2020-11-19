@@ -6,7 +6,7 @@ import { client, CustomAlert } from '@things-factory/shell'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
-import { PACKING_UNITS, PACKING_UNIT_QTY, PACKING_UNIT_STDUNIT } from '../../constants'
+import { PACKING_UNITS, PACKING_UNIT_QTY, PACKING_UNIT_UOM } from '../../constants'
 import { VasTemplate } from './vas-template'
 
 class VasRepack extends localize(i18next)(VasTemplate) {
@@ -108,7 +108,7 @@ class VasRepack extends localize(i18next)(VasTemplate) {
 
             ${this._getOperationGuideData('packingUnit') === PACKING_UNIT_QTY.value
               ? html` <label>${i18next.t('label.required_package_qty')}</label> `
-              : html` <label>${i18next.t('label.required_package_std_unit_value')}</label> `}
+              : html` <label>${i18next.t('label.required_package_uom_value')}</label> `}
 
             <input
               readonly
@@ -262,7 +262,7 @@ class VasRepack extends localize(i18next)(VasTemplate) {
     this.config = {
       rows: { appendable: false },
       pagination: { infinite: true },
-      list: { fields: ['fromPalletId', 'palletId', 'locationName', 'qty', 'stdUnitValue'] },
+      list: { fields: ['fromPalletId', 'palletId', 'locationName', 'qty', 'uomValue'] },
       columns: [
         ...gutters,
         {
@@ -291,8 +291,8 @@ class VasRepack extends localize(i18next)(VasTemplate) {
         },
         {
           type: 'integer',
-          name: 'stdUnitValue',
-          header: i18next.t('field.std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           width: 60
         }
       ]
@@ -383,11 +383,11 @@ class VasRepack extends localize(i18next)(VasTemplate) {
             .reduce(
               (amount, rf) => {
                 amount.qty += rf.reducedQty
-                amount.stdUnitValue += rf.reducedStdUnitValue
+                amount.uomValue += rf.reducedUomValue
 
                 return amount
               },
-              { qty: 0, stdUnitValue: 0 }
+              { qty: 0, uomValue: 0 }
             )
         }
       })
@@ -413,9 +413,9 @@ class VasRepack extends localize(i18next)(VasTemplate) {
         if (this.targetInfo.qty % stdAmount) throw new Error(i18next.t('text.qty_cannot_be_divided_completely'))
         this.requiredPackageQtyInput.value = this.targetInfo.qty / stdAmount
       } else {
-        if (this.targetInfo.stdUnitValue % stdAmount)
-          throw new Error(i18next.t('text.std_unit_value_cannot_be_divided_completely'))
-        this.requiredPackageQtyInput.value = this.targetInfo.stdUnitValue / stdAmount
+        if (this.targetInfo.uomValue % stdAmount)
+          throw new Error(i18next.t('text.uom_value_cannot_be_divided_completely'))
+        this.requiredPackageQtyInput.value = this.targetInfo.uomValue / stdAmount
       }
     } catch (e) {
       this.requiredPackageQtyInput.value = ''
@@ -436,9 +436,9 @@ class VasRepack extends localize(i18next)(VasTemplate) {
     if (packingUnit === PACKING_UNIT_QTY.value) {
       if (this.targetInfo.qty && stdAmount * packageQty > this.targetInfo.qty)
         throw new Error(i18next.t('text.qty_exceed_limit'))
-    } else if (packingUnit === PACKING_UNIT_STDUNIT.value) {
-      if (this.targetInfo.stdUnitValue && stdAmount * packageQty > this.targetInfo.stdUnitValue) {
-        throw new Error(i18next.t('text.std_unit_value_exceed_limit'))
+    } else if (packingUnit === PACKING_UNIT_UOM.value) {
+      if (this.targetInfo.uomValue && stdAmount * packageQty > this.targetInfo.uomValue) {
+        throw new Error(i18next.t('text.uom_value_exceed_limit'))
       }
     }
   }
@@ -521,7 +521,7 @@ class VasRepack extends localize(i18next)(VasTemplate) {
     //     if (packingUnit === PACKING_UNIT_QTY.value) {
     //       totalAmount += rf.reducedQty
     //     } else {
-    //       totalAmount += rf.reducedStdUnitValue
+    //       totalAmount += rf.reducedUomValue
     //     }
     //     return totalAmount
     //   }, 0)

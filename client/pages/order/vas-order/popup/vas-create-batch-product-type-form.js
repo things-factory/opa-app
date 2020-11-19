@@ -90,16 +90,16 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
           @change="${this._checkQtyValidity.bind(this)}"
         />
 
-        <label>${i18next.t('label.std_unit_value')}</label>
+        <label>${i18next.t('label.uom_value')}</label>
         <input
           ?readonly="${!this.selectedBatchId || !this.selectedProductId || !this.selectedPackingType}"
-          id="std-unit-value-input"
+          id="uom-unit-value-input"
           type="number"
           min="0.01"
           step="0.01"
-          .value="${(this.record && this.record.qty) || this.maximumStdUnitValue}"
-          @change="${this._checkStdUnitValueValidity.bind(this)}"
-          placeholder="${this.maximumStdUnitValue}"
+          .value="${(this.record && this.record.qty) || this.maximumUomValue}"
+          @change="${this._checkUomValueValidity.bind(this)}"
+          placeholder="${this.maximumUomValue}"
         />
       </fieldset>
     </form>`
@@ -118,8 +118,8 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
     return this.shadowRoot.querySelector('select#target-product-selector')
   }
 
-  get stdUnitValueInput() {
-    return this.shadowRoot.querySelector('input#std-unit-value-input')
+  get uomValueInput() {
+    return this.shadowRoot.querySelector('input#uom-unit-value-input')
   }
 
   get targetProductList() {
@@ -159,8 +159,8 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
     }`
   }
 
-  get stdUnitValue() {
-    return this.stdUnitValueInput.value
+  get uomValue() {
+    return this.uomValueInput.value
   }
 
   get maximumQty() {
@@ -171,21 +171,21 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
     }
   }
 
-  get maximumStdUnitValue() {
+  get maximumUomValue() {
     if (this.selectedBatchId && this.selectedProductId && this.selectedPackingType) {
-      return this._calcAvailAmount().totalStdUnitValue
+      return this._calcAvailAmount().totalUomValue
     } else {
       return ''
     }
   }
 
   _checkQtyValidity() {
-    let totalQty, unitStdUnitValue
+    let totalQty, unitUomValue
 
     try {
       const amount = this._calcAvailAmount()
       totalQty = amount.totalQty
-      unitStdUnitValue = amount.unitStdUnitValue
+      unitUomValue = amount.unitUomValue
       const qty = Number(this.qtyInput.value)
 
       if (!totalQty) {
@@ -206,38 +206,38 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
       this._showToast(e)
     } finally {
       const qty = Number(this.qtyInput.value)
-      this.stdUnitValueInput.value = qty * unitStdUnitValue
+      this.uomValueInput.value = qty * unitUomValue
     }
   }
 
-  _checkStdUnitValueValidity() {
-    let totalStdUnitValue, unitStdUnitValue
+  _checkUomValueValidity() {
+    let totalUomValue, unitUomValue
 
     try {
       const amount = this._calcAvailAmount()
-      totalStdUnitValue = amount.totalStdUnitValue
-      unitStdUnitValue = amount.unitStdUnitValue
-      const stdUnitValue = Number(this.stdUnitValueInput.value)
+      totalUomValue = amount.totalUomValue
+      unitUomValue = amount.unitUomValue
+      const uomValue = Number(this.uomValueInput.value)
 
-      if (totalStdUnitValue) {
+      if (totalUomValue) {
         this.qtyInput.value = ''
         throw new Error('text.there_is_no_product')
       }
 
-      if (stdUnitValue <= 0) {
-        this.stdUnitValueInput.value = 1
-        throw new Error('text.std_unit_value_should_be_positive')
+      if (uomValue <= 0) {
+        this.uomValueInput.value = 1
+        throw new Error('text.uom_value_should_be_positive')
       }
 
-      if (totalStdUnitValue && stdUnitValue > totalStdUnitValue) {
-        this.stdUnitValueInput.value = totalStdUnitValue
-        throw new Error(i18next.t('text.std_unit_value_exceed_limit'))
+      if (totalUomValue && uomValue > totalUomValue) {
+        this.uomValueInput.value = totalUomValue
+        throw new Error(i18next.t('text.uom_value_exceed_limit'))
       }
     } catch (e) {
       this._showToast(e)
     } finally {
-      const stdUnitValue = Number(this.stdUnitValueInput.value)
-      this.qtyInput.value = stdUnitValue / unitStdUnitValue
+      const uomValue = Number(this.uomValueInput.value)
+      this.qtyInput.value = uomValue / unitUomValue
     }
   }
 
@@ -249,20 +249,20 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
         target.packingType === this.selectedPackingType
     )
 
-    if (targetItems.every(item => item.unitStdUnitValue === targetItems[0].unitStdUnitValue)) {
-      let { totalQty, unitStdUnitValue, totalStdUnitValue } = targetItems.reduce(
+    if (targetItems.every(item => item.unitUomValue === targetItems[0].unitUomValue)) {
+      let { totalQty, unitUomValue, totalUomValue } = targetItems.reduce(
         (availAmount, item) => {
           availAmount = {
-            unitStdUnitValue: item.unitStdUnitValue,
+            unitUomValue: item.unitUomValue,
             totalQty: availAmount.totalQty + item.packQty,
-            totalStdUnitValue: availAmount.totalStdUnitValue + item.totalStdUnitValue
+            totalUomValue: availAmount.totalUomValue + item.totalUomValue
           }
           return availAmount
         },
         {
           totalQty: 0,
-          unitStdUnitValue: 0,
-          totalStdUnitValue: 0
+          unitUomValue: 0,
+          totalUomValue: 0
         }
       )
 
@@ -287,21 +287,21 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
         .reduce(
           (choosenAmount, task) => {
             choosenAmount.totalQty += task.qty
-            choosenAmount.totalStdUnitValue += task.stdUnitValue
+            choosenAmount.totalUomValue += task.uomValue
 
             return choosenAmount
           },
-          { totalQty: 0, totalStdUnitValue: 0 }
+          { totalQty: 0, totalUomValue: 0 }
         )
 
-      // 현재 VAS에 포함된 수량과 stdUnitValue을 더하여 return
+      // 현재 VAS에 포함된 수량과 uomValue을 더하여 return
       return {
         totalQty: totalQty - choosenAmount.totalQty + (this.record.qty || 0),
-        totalStdUnitValue: totalStdUnitValue - choosenAmount.totalStdUnitValue + (this.record.stdUnitValue || 0),
-        unitStdUnitValue
+        totalUomValue: totalUomValue - choosenAmount.totalUomValue + (this.record.uomValue || 0),
+        unitUomValue
       }
     } else {
-      throw new Error(i18next.t('text.some_unit_std_unit_value_is_diff'))
+      throw new Error(i18next.t('text.some_unit_uom_value_is_diff'))
     }
   }
 }

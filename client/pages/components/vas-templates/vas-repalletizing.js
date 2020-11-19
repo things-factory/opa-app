@@ -204,7 +204,7 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
     this.config = {
       rows: { appendable: false },
       pagination: { infinite: true },
-      list: { fields: ['fromPalletId', 'palletId', 'locationName', 'qty', 'stdUnitValue'] },
+      list: { fields: ['fromPalletId', 'palletId', 'locationName', 'qty', 'uomValue'] },
       columns: [
         ...gutters,
         {
@@ -233,8 +233,8 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
         },
         {
           type: 'integer',
-          name: 'stdUnitValue',
-          header: i18next.t('field.std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           width: 60
         }
       ]
@@ -302,10 +302,10 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
             .reduce(
               (amount, rf) => {
                 amount.qty += rf.reducedQty
-                amount.stdUnitValue += rf.reducedStdUnitValue
+                amount.uomValue += rf.reducedUomValue
                 return amount
               },
-              { qty: 0, stdUnitValue: 0 }
+              { qty: 0, uomValue: 0 }
             )
         }
       })

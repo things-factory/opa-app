@@ -343,8 +343,8 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'stdUnitValue',
-          header: i18next.t('field.std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           width: 100
         },
@@ -397,8 +397,8 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'float',
-        name: 'releaseStdUnitValue',
-        header: i18next.t('field.release_std_unit_value'),
+        name: 'releaseUomValue',
+        header: i18next.t('field.release_uom_value'),
         record: { editable: true, align: 'center' },
         width: 160
       }
@@ -429,8 +429,8 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'float',
-        name: 'stdUnitValue',
-        header: i18next.t('field.std_unit_value'),
+        name: 'uomValue',
+        header: i18next.t('field.uom_value'),
         record: { align: 'center' },
         width: 80
       },
@@ -450,8 +450,8 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'integer',
-        name: 'totalStdUnitValue',
-        header: i18next.t('field.total_std_unit_value'),
+        name: 'totalUomValue',
+        header: i18next.t('field.total_uom_value'),
         record: { align: 'center' },
         width: 120
       },
@@ -471,7 +471,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
     }
 
     this.productGristConfig = {
-      list: { fields: ['batchId', 'product', 'packingType', 'totalStdUnitValue'] },
+      list: { fields: ['batchId', 'product', 'packingType', 'totalUomValue'] },
       pagination: { infinite: true },
       rows: { selectable: { multiple: true }, appendable: false },
       columns: productGristColumns
@@ -522,13 +522,13 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
               }
               status
               packingType
-              stdUnitValue
+              uomValue
               unit
               packQty
-              totalStdUnitValue
+              totalUomValue
               palletQty
               releaseQty
-              releaseStdUnitValue
+              releaseUomValue
             }
             orderVass {
               vas {
@@ -546,7 +546,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
               }
               packingType
               qty
-              stdUnitValue
+              uomValue
               otherTarget
               description
               remark

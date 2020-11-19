@@ -241,20 +241,20 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                     : ''}"
                 />
 
-                <label>${i18next.t('label.inspected_std_unit_value')}</label>
+                <label>${i18next.t('label.inspected_uom_value')}</label>
                 <input
-                  name="inspectedStdUnitValue"
+                  name="inspectedUomValue"
                   type="number"
                   step=".01"
-                  .value="${this.selectedInventory?.stdUnitValue
-                    ? this.selectedInventory?.inspectedStdUnitValue
-                      ? this.selectedInventory.inspectedStdUnitValue
-                      : this.selectedInventory.stdUnitValue
+                  .value="${this.selectedInventory?.uomValue
+                    ? this.selectedInventory?.inspectedUomValue
+                      ? this.selectedInventory.inspectedUomValue
+                      : this.selectedInventory.uomValue
                     : ''}"
                 />
 
-                <label>${i18next.t('label.std_unit')}</label>
-                <input name="stdUnit" .value="${this.selectedInventory?.stdUnit || ''}" readonly />
+                <label>${i18next.t('label.uom')}</label>
+                <input name="uom" .value="${this.selectedInventory?.uom || ''}" readonly />
 
                 <label>${i18next.t('field.location')}</label>
                 ${this.viewType === VIEW_TYPE.INVENTORY_SELECTED
@@ -345,8 +345,8 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     return this.renderRoot.querySelector('input[name=inspectedQty]')
   }
 
-  get inspectedStdUnitValueInput() {
-    return this.renderRoot.querySelector('input[name=inspectedStdUnitValue]')
+  get inspectedUomValueInput() {
+    return this.renderRoot.querySelector('input[name=inspectedUomValue]')
   }
 
   selectOnInput(input) {
@@ -413,9 +413,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           'inspectedBatchNo',
           'qty',
           'inspectedQty',
-          'stdUnitValue',
-          'stdUnit',
-          'inspectedStdUnitValue',
+          'uomValue',
+          'uom',
+          'inspectedUomValue',
           'inspectedLocation'
         ]
       },
@@ -448,22 +448,22 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'float',
-          name: 'stdUnitValue',
-          header: i18next.t('label.std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('label.uom_value'),
           width: 80,
           record: { align: 'center' }
         },
         {
           type: 'string',
-          name: 'stdUnit',
-          header: i18next.t('label.std_unit'),
+          name: 'uom',
+          header: i18next.t('label.uom'),
           width: 80,
           record: { align: 'center' }
         },
         {
           type: 'float',
-          name: 'inspectedStdUnitValue',
-          header: i18next.t('label.inspected_std_unit_value'),
+          name: 'inspectedUomValue',
+          header: i18next.t('label.inspected_uom_value'),
           width: 100,
           record: { align: 'center' }
         },
@@ -477,7 +477,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       ]
     }
 
-    const missingInventoryColumns = ['sequence', 'palletId', 'batchId', 'qty', 'stdUnitValue', 'stdUnit']
+    const missingInventoryColumns = ['sequence', 'palletId', 'batchId', 'qty', 'uomValue', 'uom']
     this.missingInventoryConfig = {
       pagination: { infinite: true },
       rows: {
@@ -527,12 +527,12 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               palletId
               batchId
               qty
-              stdUnitValue
-              stdUnit
+              uomValue
+              uom
               status
               inspectedBatchNo
               inspectedQty
-              inspectedStdUnitValue
+              inspectedUomValue
               inspectedLocation {
                 id
                 name
@@ -637,9 +637,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       inspectedBatchNo: wsdInfo.inspectedBatchNo || '',
       qty: wsdInfo.qty,
       inspectedQty: wsdInfo.inspectedQty || 0,
-      stdUnitValue: wsdInfo.stdUnitValue,
-      stdUnit: wsdInfo.stdUnit,
-      inspectedStdUnitValue: wsdInfo.inspectedStdUnitValue || 0,
+      uomValue: wsdInfo.uomValue,
+      uom: wsdInfo.uom,
+      inspectedUomValue: wsdInfo.inspectedUomValue || 0,
       inspectedLocation: wsdInfo.inspectedLocation || 0,
       orderInventoryStatus: wsdInfo.relatedOrderInv.status
     }
@@ -843,13 +843,13 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
             return
           }
 
-          let { inspectedBatchNo, inspectedQty, inspectedStdUnitValue } = Object.fromEntries(
+          let { inspectedBatchNo, inspectedQty, inspectedUomValue } = Object.fromEntries(
             new FormData(this.inputForm).entries()
           )
 
           inventory.inspectedBatchNo = inspectedBatchNo
           inventory.inspectedQty = Number(inspectedQty)
-          inventory.inspectedStdUnitValue = Number(inspectedStdUnitValue)
+          inventory.inspectedUomValue = Number(inspectedUomValue)
 
           this.selectedInventory = inventory
           await this.relocatePallet()
@@ -870,11 +870,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           return
         }
 
-        let { inspectedBatchNo, inspectedQty, inspectedStdUnitValue } = Object.fromEntries(
+        let { inspectedBatchNo, inspectedQty, inspectedUomValue } = Object.fromEntries(
           new FormData(this.inputForm).entries()
         )
         inspectedQty = Number(inspectedQty)
-        inspectedStdUnitValue = Number(inspectedStdUnitValue)
+        inspectedUomValue = Number(inspectedUomValue)
 
         const response = await client.query({
           query: gql`
@@ -884,7 +884,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                 palletId,
                 inspectedBatchNo,
                 inspectedQty,
-                inspectedStdUnitValue,
+                inspectedUomValue,
                 locationName
               })})
             }
@@ -977,11 +977,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         return
       }
 
-      let { inspectedBatchNo, inspectedQty, inspectedStdUnitValue } = Object.fromEntries(
+      let { inspectedBatchNo, inspectedQty, inspectedUomValue } = Object.fromEntries(
         new FormData(this.inputForm).entries()
       )
       inspectedQty = Number(inspectedQty)
-      inspectedStdUnitValue = Number(inspectedStdUnitValue)
+      inspectedUomValue = Number(inspectedUomValue)
       var locationName = this.locationInput.value
 
       const response = await client.query({
@@ -991,7 +991,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               worksheetDetailName: this.selectedInventory.worksheetDetailName,
               inspectedBatchNo,
               inspectedQty,
-              inspectedStdUnitValue,
+              inspectedUomValue,
               inspectedLocationName: locationName
             })})
           }
@@ -1011,11 +1011,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     try {
       this.checkInputFormValidity()
 
-      let { inspectedBatchNo, inspectedQty, inspectedStdUnitValue } = Object.fromEntries(
+      let { inspectedBatchNo, inspectedQty, inspectedUomValue } = Object.fromEntries(
         new FormData(this.inputForm).entries()
       )
       inspectedQty = Number(inspectedQty)
-      inspectedStdUnitValue = Number(inspectedStdUnitValue)
+      inspectedUomValue = Number(inspectedUomValue)
 
       const response = await client.query({
         query: gql`
@@ -1024,7 +1024,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               worksheetDetailName: this.selectedInventory.worksheetDetailName,
               inspectedBatchNo,
               inspectedQty,
-              inspectedStdUnitValue
+              inspectedUomValue
             })})
           }
         `
@@ -1141,11 +1141,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
   }
 
   checkInputFormValidity() {
-    let { inspectedBatchNo, inspectedQty, inspectedStdUnitValue, location } = Object.fromEntries(
+    let { inspectedBatchNo, inspectedQty, inspectedUomValue, location } = Object.fromEntries(
       new FormData(this.inputForm).entries()
     )
     inspectedQty = Number(inspectedQty)
-    inspectedStdUnitValue = Number(inspectedStdUnitValue)
+    inspectedUomValue = Number(inspectedUomValue)
 
     const palletId = this.palletIdInput.value
     if (!palletId) {
@@ -1168,16 +1168,14 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('field.inspected_qty') } }))
     }
 
-    if (!inspectedStdUnitValue) {
-      this.selectOnInput(this.inspectedStdUnitValueInput)
-      throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('field.inspected_std_unit_value') } }))
+    if (!inspectedUomValue) {
+      this.selectOnInput(this.inspectedUomValueInput)
+      throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('field.inspected_uom_value') } }))
     }
 
-    if (inspectedStdUnitValue <= 0) {
-      this.selectOnInput(this.inspectedStdUnitValueInput)
-      throw new Error(
-        i18next.t('text.x_should_be_positive', { state: { x: i18next.t('field.inspected_std_unit_value') } })
-      )
+    if (inspectedUomValue <= 0) {
+      this.selectOnInput(this.inspectedUomValueInput)
+      throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('field.inspected_uom_value') } }))
     }
 
     const locationName = this.locationInput.value
