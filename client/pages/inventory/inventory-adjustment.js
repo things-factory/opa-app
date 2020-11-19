@@ -253,6 +253,15 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           width: 80
         },
         {
+          type: 'string',
+          name: 'uom',
+          header: i18next.t('field.uom'),
+          record: { align: 'left' },
+          imex: { header: i18next.t('field.uom'), key: 'uom', width: 25, type: 'string' },
+          sortable: true,
+          width: 80
+        },
+        {
           type: 'object',
           name: 'location',
           header: i18next.t('field.location'),
@@ -460,6 +469,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
               palletId
               batchId
               packingType
+              uom
               uomValue
               bizplace {
                 id
