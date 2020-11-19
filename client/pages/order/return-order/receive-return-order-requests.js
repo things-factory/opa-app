@@ -245,7 +245,7 @@ class ReceiveReturnOrderRequests extends connect(store)(localize(i18next)(PageVi
     this.inventoryGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true }, appendable: false },
-      list: { fields: ['productName', 'batchId', 'packingType', 'returnQty', 'returnStdUnitValue'] },
+      list: { fields: ['productName', 'batchId', 'packingType', 'returnQty', 'returnUomValue'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -278,15 +278,15 @@ class ReceiveReturnOrderRequests extends connect(store)(localize(i18next)(PageVi
         },
         {
           type: 'float',
-          name: 'returnStdUnitValue',
-          header: i18next.t('field.return_std_unit_value'),
+          name: 'returnUomValue',
+          header: i18next.t('field.return_uom_value'),
           record: { align: 'center', options: { min: 0 } },
           width: 100
         },
         {
           type: 'float',
-          name: 'roundedStdUnitValue',
-          header: i18next.t('field.rounded_std_unit_value'),
+          name: 'roundedUomValue',
+          header: i18next.t('field.rounded_uom_value'),
           record: { align: 'center', options: { min: 0 } },
           width: 100
         }
@@ -368,8 +368,8 @@ class ReceiveReturnOrderRequests extends connect(store)(localize(i18next)(PageVi
         },
         {
           type: 'integer',
-          name: 'stdUnitValue',
-          header: i18next.t('field.std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           width: 100
         },
@@ -445,9 +445,9 @@ class ReceiveReturnOrderRequests extends connect(store)(localize(i18next)(PageVi
               productName
               packingType
               qty
-              stdUnitValue
+              uomValue
               returnQty
-              returnStdUnitValue
+              returnUomValue
               location {
                 id
                 name
@@ -470,7 +470,7 @@ class ReceiveReturnOrderRequests extends connect(store)(localize(i18next)(PageVi
               }
               packingType
               qty
-              stdUnitValue
+              uomValue
               otherTarget
               description
               remark
@@ -496,13 +496,13 @@ class ReceiveReturnOrderRequests extends connect(store)(localize(i18next)(PageVi
             location: inventoryInfo.location,
             packingType: inventoryInfo.packingType,
             remainQty: inventoryInfo.qty,
-            remainStdUnitValue: inventoryInfo.stdUnitValue
+            remainUomValue: inventoryInfo.uomValue
           },
           remainQty: inventoryInfo.qty,
-          remainStdUnitValue: inventoryInfo.stdUnitValue,
+          remainUomValue: inventoryInfo.uomValue,
           status: inventoryInfo.status,
           existing: true,
-          roundedStdUnitValue: inventoryInfo.returnQty * (inventoryInfo.stdUnitValue / inventoryInfo.qty) || ''
+          roundedUomValue: inventoryInfo.returnQty * (inventoryInfo.uomValue / inventoryInfo.qty) || ''
         }
       })
 

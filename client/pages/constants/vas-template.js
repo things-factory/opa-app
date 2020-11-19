@@ -1,8 +1,8 @@
 import { i18next } from '@things-factory/i18n-base'
 
-export const PACKING_UNIT_STDUNIT = {
-  value: 'STDUNIT',
-  display: i18next.t('label.std_unit_value')
+export const PACKING_UNIT_UOM = {
+  value: 'UOM',
+  display: i18next.t('label.uom_value')
 }
 
 export const PACKING_UNIT_QTY = {
@@ -10,7 +10,7 @@ export const PACKING_UNIT_QTY = {
   display: i18next.t('label.qty')
 }
 
-export const PACKING_UNITS = [PACKING_UNIT_QTY, PACKING_UNIT_STDUNIT]
+export const PACKING_UNITS = [PACKING_UNIT_QTY, PACKING_UNIT_UOM]
 
 export const WOODEN_PALLET = {
   value: 'WOODEN_PALLET',

@@ -235,7 +235,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 productName: record.productName,
                 packingType: record.packingType,
                 releaseQty: record.releaseQty,
-                releaseStdUnitValue: record.releaseStdUnitValue
+                releaseUomValue: record.releaseUomValue
               }
             }
           }
@@ -255,7 +255,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 bizplaceId: record.bizplaceId,
                 packingType: record.packingType,
                 releaseQty: record.releaseQty,
-                releaseStdUnitValue: record.releaseStdUnitValue
+                releaseUomValue: record.releaseUomValue
               }
               this._showInventoryAssignPopup()
             }
@@ -342,8 +342,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'releaseStdUnitValue',
-          header: i18next.t('field.release_std_unit_value'),
+          name: 'releaseUomValue',
+          header: i18next.t('field.release_uom_value'),
           record: { align: 'center' },
           width: 60
         }
@@ -430,7 +430,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               productName
               packingType
               releaseQty
-              releaseStdUnitValue
+              releaseUomValue
               inventory {
                 qty
                 palletId
@@ -452,7 +452,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 productName
                 packingType
                 releaseQty
-                releaseStdUnitValue
+                releaseUomValue
                 status
               }
             }
@@ -562,7 +562,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               targetInventory {
                 productName
                 releaseQty
-                releaseStdUnitValue
+                releaseUomValue
                 inventory {
                   batchId
                   palletId
@@ -616,7 +616,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               description
               targetInventory {
                 releaseQty
-                releaseStdUnitValue                
+                releaseUomValue                
                 inventory {
                   palletId
                   batchId
@@ -654,7 +654,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             description: worksheetDetail.description,
             status: worksheetDetail.status,
             releaseQty: worksheetDetail.targetInventory.releaseQty,
-            releaseStdUnitValue: worksheetDetail.targetInventory.releaseStdUnitValue
+            releaseUomValue: worksheetDetail.targetInventory.releaseUomValue
           }
         })
       }
@@ -741,7 +741,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             .bizplaceId="${this._selectedProduct.bizplaceId}"
             .packingType="${this._selectedProduct.packingType}"
             .releaseQty="${this._selectedProduct.releaseQty}"
-            .releaseStdUnitValue="${this._selectedProduct.releaseStdUnitValue}"
+            .releaseUomValue="${this._selectedProduct.releaseUomValue}"
             @completed="${async () => {
               await this.fetchOrderInventories()
               await this.fetchWorksheetDetails(

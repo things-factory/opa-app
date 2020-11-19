@@ -240,13 +240,13 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'float',
-          name: 'stdUnitValue',
-          header: i18next.t('field.total_std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.total_uom_value'),
           record: { align: 'center', editable: true },
           sortable: true,
           imex: {
-            header: i18next.t('field.total_std_unit_value'),
-            key: 'stdUnitValue',
+            header: i18next.t('field.total_uom_value'),
+            key: 'uomValue',
             width: 10,
             type: 'float'
           },
@@ -393,7 +393,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
               palletId
               batchId
               packingType
-              stdUnitValue
+              uomValue
               bizplace {
                 id
                 name
@@ -460,7 +460,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
               palletId
               batchId
               packingType
-              stdUnitValue
+              uomValue
               bizplace {
                 id
                 name
@@ -520,8 +520,8 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
 
   _updateAmount(e) {
     switch (e.detail.column.name) {
-      case 'stdUnitValue':
-        if (e.detail.after < 0) this.dataGrist._data.records[e.detail.row].stdUnitValue = 0
+      case 'uomValue':
+        if (e.detail.after < 0) this.dataGrist._data.records[e.detail.row].uomValue = 0
         break
       case 'qty':
         if (e.detail.after < 0) this.dataGrist._data.records[e.detail.row].qty = 0
@@ -534,7 +534,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   async _saveInventories() {
     var patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
     patches.map(x => {
-      delete x.productStdUnitValue
+      delete x.productUomValue
       if (x.bizplace) {
         delete x.bizplace['__seq__']
         delete x.bizplace['__origin__']
@@ -549,14 +549,14 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         delete x.location['__selected__']
       }
       if (x.product) {
-        delete x.product['productStdUnitValue']
+        delete x.product['productUomValue']
         delete x.product['__seq__']
         delete x.product['__origin__']
         delete x.product['__selected__']
         delete x.product['type']
       }
-      if (x.stdUnitValue) {
-        x.stdUnitValue = parseFloat(x.stdUnitValue)
+      if (x.uomValue) {
+        x.uomValue = parseFloat(x.uomValue)
       }
     })
     if (patches && patches.length) {
@@ -590,7 +590,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   async importHandler(patches) {
     patches.map(itm => {
       itm.qty = parseFloat(itm.qty)
-      itm.stdUnitValue = parseFloat(itm.stdUnitValue)
+      itm.uomValue = parseFloat(itm.uomValue)
     })
 
     const response = await client.query({

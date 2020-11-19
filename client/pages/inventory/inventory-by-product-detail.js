@@ -132,8 +132,8 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
         },
         {
           type: 'number',
-          name: 'stdUnitValue',
-          header: i18next.t('field.std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           sortable: true,
           width: 80
@@ -206,7 +206,7 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
                 palletId
                 batchId
                 qty
-                stdUnitValue
+                uomValue
                 remainQty                
                 warehouse {
                   name

@@ -346,8 +346,8 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'stdUnitValue',
-          header: i18next.t('field.std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           width: 60
         },
@@ -426,12 +426,12 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
               }
               status
               packingType
-              stdUnitValue
-              stdUnit
+              uomValue
+              uom
               packQty
               releaseQty
-              releaseStdUnitValue
-              totalStdUnitValue
+              releaseUomValue
+              totalUomValue
               palletQty
             }
             orderVass {
@@ -450,7 +450,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
               }
               packingType
               qty
-              stdUnitValue
+              uomValue
               otherTarget
               description
               remark
@@ -509,8 +509,8 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'float',
-        name: 'releaseStdUnitValue',
-        header: i18next.t('field.release_std_unit_value'),
+        name: 'releaseUomValue',
+        header: i18next.t('field.release_uom_value'),
         record: { editable: true, align: 'center' },
         width: 160
       }
@@ -541,15 +541,15 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'float',
-        name: 'stdUnitValue',
-        header: i18next.t('field.std_unit_value'),
+        name: 'uomValue',
+        header: i18next.t('field.uom_value'),
         record: { align: 'center' },
         width: 100
       },
       {
         type: 'string',
-        name: 'stdUnit',
-        header: i18next.t('field.std_unit'),
+        name: 'uom',
+        header: i18next.t('field.uom'),
         record: { align: 'center' },
         width: 80
       },
@@ -562,8 +562,8 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'integer',
-        name: 'totalStdUnitValue',
-        header: i18next.t('field.total_std_unit_value'),
+        name: 'totalUomValue',
+        header: i18next.t('field.total_uom_value'),
         record: { align: 'center' },
         width: 120
       },
@@ -583,7 +583,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
     }
 
     this.productGristConfig = {
-      list: { fields: ['batchId', 'product', 'packingType', 'totalStdUnitValue'] },
+      list: { fields: ['batchId', 'product', 'packingType', 'totalUomValue'] },
       pagination: { infinite: true },
       rows: { selectable: { multiple: true }, appendable: false },
       columns: productGristColumns

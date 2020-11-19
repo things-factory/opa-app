@@ -295,21 +295,14 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
                   ignoreCondition: true
                 },
                 {
-                  name: 'releaseStdUnitValue',
-                  header: i18next.t('field.return_std_unit_value'),
+                  name: 'releaseUomValue',
+                  header: i18next.t('field.return_uom_value'),
                   record: { align: 'center' },
                   ignoreCondition: true
                 }
               ],
               list: {
-                fields: [
-                  'releaseGoodName',
-                  'batchId',
-                  'productName',
-                  'packingType',
-                  'releaseQty',
-                  'releaseStdUnitValue'
-                ]
+                fields: ['releaseGoodName', 'batchId', 'productName', 'packingType', 'releaseQty', 'releaseUomValue']
               }
             }
           },
@@ -341,15 +334,15 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'releaseStdUnitValue',
-          header: i18next.t('field.release_std_unit_value'),
+          name: 'releaseUomValue',
+          header: i18next.t('field.release_uom_value'),
           record: { editable: true, align: 'center', options: { min: 0 } },
           width: 140
         },
         {
           type: 'float',
-          name: 'returnStdUnitValue',
-          header: i18next.t('field.return_std_unit_value'),
+          name: 'returnUomValue',
+          header: i18next.t('field.return_uom_value'),
           record: { editable: true, align: 'center', options: { min: 0 } },
           width: 140
         }
@@ -426,34 +419,34 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
   //Fields Changed Handler
   _onInventoryFieldChanged(e) {
     let columnName = e.detail.column.name
-    let roundedStdUnitValue = e.detail.record.roundedStdUnitValue || 0
+    let roundedUomValue = e.detail.record.roundedUomValue || 0
     let returnQty = 0
 
-    if (columnName == 'returnStdUnitValue' || columnName == 'returnQty') {
-      let packageStdUnitValue = e.detail.record.releaseStdUnitValue / e.detail.record.releaseQty
+    if (columnName == 'returnUomValue' || columnName == 'returnQty') {
+      let packageUomValue = e.detail.record.releaseUomValue / e.detail.record.releaseQty
       if (
-        e.detail.record.releaseStdUnitValue &&
+        e.detail.record.releaseUomValue &&
         e.detail.record.releaseQty &&
-        e.detail.record.releaseStdUnitValue > 0 &&
+        e.detail.record.releaseUomValue > 0 &&
         e.detail.record.releaseQty > 0
       ) {
         if (columnName === 'returnQty') {
           returnQty = e.detail.after || 0
         } else {
-          returnQty = Math.round(e.detail.after / packageStdUnitValue)
+          returnQty = Math.round(e.detail.after / packageUomValue)
         }
 
-        roundedStdUnitValue = returnQty * packageStdUnitValue
-        roundedStdUnitValue = parseFloat(roundedStdUnitValue.toFixed(2))
+        roundedUomValue = returnQty * packageUomValue
+        roundedUomValue = parseFloat(roundedUomValue.toFixed(2))
       }
     }
 
     this.inventoryData = {
       ...this.inventoryGrist.dirtyData,
       records: this.inventoryGrist.dirtyData.records.map((record, idx) => {
-        if ((columnName == 'returnStdUnitValue' || columnName == 'returnQty') && idx === e.detail.row) {
-          if (columnName == 'returnStdUnitValue') record.returnQty = returnQty
-          record.returnStdUnitValue = roundedStdUnitValue
+        if ((columnName == 'returnUomValue' || columnName == 'returnQty') && idx === e.detail.row) {
+          if (columnName == 'returnUomValue') record.returnQty = returnQty
+          record.returnUomValue = roundedUomValue
         }
 
         let returnObj = {
@@ -473,8 +466,8 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
     try {
       if (changedColumn === 'returnQty') {
         this._validateReleaseQty(changeRecord.returnQty, changeRecord.releaseQty)
-      } else if (changedColumn === 'returnStdUnitValue') {
-        this._validateReleaseStdUnitValue(changeRecord.returnStdUnitValue, changeRecord.releaseStdUnitValue)
+      } else if (changedColumn === 'returnUomValue') {
+        this._validateReleaseUomValue(changeRecord.returnUomValue, changeRecord.releaseUomValue)
       }
       this._updateInventoryList()
     } catch (e) {
@@ -498,12 +491,12 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
     }
   }
 
-  _validateReleaseStdUnitValue(returnStdUnitValue, releaseStdUnitValue) {
-    if (releaseStdUnitValue === undefined) throw new Error(i18next.t('text.there_is_no_selected_items'))
-    if (returnStdUnitValue > releaseStdUnitValue) {
-      throw new Error(i18next.t('text.available_std_unit_value_insufficient'))
-    } else if (returnStdUnitValue <= 0) {
-      throw new Error(i18next.t('text.invalid_std_unit_value_input'))
+  _validateReleaseUomValue(returnUomValue, releaseUomValue) {
+    if (releaseUomValue === undefined) throw new Error(i18next.t('text.there_is_no_selected_items'))
+    if (returnUomValue > releaseUomValue) {
+      throw new Error(i18next.t('text.available_uom_value_insufficient'))
+    } else if (returnUomValue <= 0) {
+      throw new Error(i18next.t('text.invalid_uom_value_input'))
     }
   }
 
@@ -535,7 +528,7 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
   _validateInventories() {
     const inventories = this.inventoryGrist?.dirtyData?.records
     if (!inventories?.length) throw new Error(i18next.t('text.no_products'))
-    // required field (batchId, packingType, stdUnitValue, unit, packQty)
+    // required field (batchId, packingType, uomValue, unit, packQty)
     if (!inventories.every(record => record.returnQty && record.batchId && record.packingType)) {
       throw new Error(i18next.t('text.empty_value_in_list'))
     }
@@ -633,7 +626,7 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
     return this.inventoryGrist.data.records.map(record => {
       let newRecord = {
         returnQty: record.returnQty,
-        returnStdUnitValue: record.returnStdUnitValue,
+        returnUomValue: record.returnUomValue,
         batchId: record.inventory.batchId,
         packingType: record.inventory.packingType,
         type: ORDER_TYPES.RETURN_ORDER.value,
@@ -676,7 +669,7 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
           } else if (record.targetType === VAS_BATCH_AND_PRODUCT_TYPE) {
             result.targetBatchId = record.target.batchId
             result.targetProduct = { id: record.target.productId }
-            result.stdUnitValue = record.stdUnitValue
+            result.uomValue = record.uomValue
           } else {
             result.otherTarget = record.target
             delete result.qty

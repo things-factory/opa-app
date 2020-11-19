@@ -245,7 +245,7 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
     this.inventoryGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true }, appendable: false },
-      list: { fields: ['productName', 'batchId', 'packingType', 'returnQty', 'returnStdUnitValue'] },
+      list: { fields: ['productName', 'batchId', 'packingType', 'returnQty', 'returnUomValue'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -278,8 +278,8 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
         },
         {
           type: 'float',
-          name: 'returnStdUnitValue',
-          header: i18next.t('field.return_std_unit_value'),
+          name: 'returnUomValue',
+          header: i18next.t('field.return_uom_value'),
           record: { align: 'center', options: { min: 0 } },
           width: 100
         }
@@ -361,8 +361,8 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
         },
         {
           type: 'integer',
-          name: 'stdUnitValue',
-          header: i18next.t('field.std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           width: 100
         },
@@ -438,9 +438,9 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
               productName
               packingType
               qty
-              stdUnitValue
+              uomValue
               returnQty
-              returnStdUnitValue
+              returnUomValue
               location {
                 id
                 name
@@ -463,7 +463,7 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
               }
               packingType
               qty
-              stdUnitValue
+              uomValue
               otherTarget
               description
               remark
@@ -489,13 +489,13 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
             location: inventoryInfo.location,
             packingType: inventoryInfo.packingType,
             remainQty: inventoryInfo.qty,
-            remainStdUnitValue: inventoryInfo.stdUnitValue
+            remainUomValue: inventoryInfo.uomValue
           },
           remainQty: inventoryInfo.qty,
-          remainStdUnitValue: inventoryInfo.stdUnitValue,
+          remainUomValue: inventoryInfo.uomValue,
           status: inventoryInfo.status,
           existing: true,
-          roundedStdUnitValue: inventoryInfo.returnQty * (inventoryInfo.stdUnitValue / inventoryInfo.qty) || ''
+          roundedUomValue: inventoryInfo.returnQty * (inventoryInfo.uomValue / inventoryInfo.qty) || ''
         }
       })
 

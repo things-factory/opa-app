@@ -119,8 +119,8 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
           'packingType',
           'inspectedLocation',
           'inspectedQty',
-          'inspectedStdUnitValue',
-          'stdUnit',
+          'inspectedUomValue',
+          'uom',
           'status'
         ]
       },
@@ -193,22 +193,22 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'float',
-          name: 'stdUnitValue',
-          header: i18next.t('field.system_std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.system_uom_value'),
           record: { align: 'center' },
           width: 100
         },
         {
           type: 'float',
-          name: 'inspectedStdUnitValue',
-          header: i18next.t('field.inspected_std_unit_value'),
+          name: 'inspectedUomValue',
+          header: i18next.t('field.inspected_uom_value'),
           record: { align: 'center' },
           width: 100
         },
         {
           type: 'string',
-          name: 'stdUnit',
-          header: i18next.t('field.std_unit'),
+          name: 'uom',
+          header: i18next.t('field.uom'),
           record: { align: 'center' },
           width: 80
         },
@@ -239,7 +239,7 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
             id
             inventory {
               palletId
-              stdUnit
+              uom
               product {
                 name
                 description
@@ -258,8 +258,8 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
             }
             originQty
             inspectedQty
-            originStdUnitValue
-            inspectedStdUnitValue
+            originUomValue
+            inspectedUomValue
             status
           }
         }
@@ -280,9 +280,9 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
             inspectedLocation: targetInv.inspectedLocation,
             qty: targetInv.originQty,
             inspectedQty: targetInv.inspectedQty,
-            stdUnitValue: targetInv.originStdUnitValue,
-            stdUnit: targetInv.inventory && targetInv.inventory.stdUnit,
-            inspectedStdUnitValue: targetInv.inspectedStdUnitValue,
+            uomValue: targetInv.originUomValue,
+            uom: targetInv.inventory && targetInv.inventory.uom,
+            inspectedUomValue: targetInv.inspectedUomValue,
             status: targetInv.status
           }
         })

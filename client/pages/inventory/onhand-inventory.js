@@ -175,10 +175,10 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'number',
-          name: 'stdUnitValue',
-          header: i18next.t('field.total_std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.total_uom_value'),
           record: { align: 'center' },
-          imex: { header: i18next.t('field.total_std_unit_value'), key: 'stdUnitValue', width: 30, type: 'number' },
+          imex: { header: i18next.t('field.total_uom_value'), key: 'uomValue', width: 30, type: 'number' },
           sortable: true,
           width: 80
         },
@@ -306,7 +306,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
               palletId
               batchId
               packingType
-              stdUnitValue
+              uomValue
               bizplace {
                 id
                 name
@@ -367,7 +367,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
               palletId
               batchId
               packingType
-              stdUnitValue
+              uomValue
               bizplace {
                 id
                 name

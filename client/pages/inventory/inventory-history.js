@@ -247,13 +247,13 @@ class InventoryHistory extends localize(i18next)(PageView) {
         },
         {
           type: 'number',
-          name: 'openingStdUnitValue',
-          header: i18next.t('field.opening_std_unit_value'),
+          name: 'openingUomValue',
+          header: i18next.t('field.opening_uom_value'),
           record: { align: 'center' },
           sortable: true,
           imex: {
-            header: i18next.t('field.opening_std_unit_value'),
-            key: 'openingStdUnitValue',
+            header: i18next.t('field.opening_uom_value'),
+            key: 'openingUomValue',
             width: 75,
             type: 'number'
           },
@@ -261,11 +261,11 @@ class InventoryHistory extends localize(i18next)(PageView) {
         },
         {
           type: 'number',
-          name: 'stdUnitValue',
-          header: i18next.t('field.std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           sortable: true,
-          imex: { header: i18next.t('field.std_unit_value'), key: 'stdUnitValue', width: 75, type: 'number' },
+          imex: { header: i18next.t('field.uom_value'), key: 'uomValue', width: 75, type: 'number' },
           width: 100
         },
         {
@@ -426,9 +426,9 @@ class InventoryHistory extends localize(i18next)(PageView) {
                   description
                 }
                 openingQty
-                openingStdUnitValue
+                openingUomValue
                 qty
-                stdUnitValue
+                uomValue
                 warehouse {
                   id
                   name

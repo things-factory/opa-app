@@ -156,8 +156,8 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
           },
           {
             type: 'float',
-            name: 'releaseStdUnitValue',
-            header: i18next.t('field.release_std_unit_value'),
+            name: 'releaseUomValue',
+            header: i18next.t('field.release_uom_value'),
             record: { align: 'center' },
             width: 80
           }
@@ -214,8 +214,8 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'number',
-          name: 'stdUnitValue',
-          header: i18next.t('field.std_unit_value'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           sortable: true,
           width: 80
@@ -291,7 +291,7 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
                   packingType
                   palletId
                   qty
-                  stdUnitValue
+                  uomValue
                   updatedAt
                   updater {
                     name
@@ -342,7 +342,7 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
                   packingType
                   palletId
                   qty
-                  stdUnitValue
+                  uomValue
                   updatedAt
                   updater {
                     name
@@ -380,7 +380,7 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
                 }
                 status
                 releaseQty
-                releaseStdUnitValue
+                releaseUomValue
             }
           }
         }
@@ -516,18 +516,18 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
             return true
           }
 
-          const { qty, stdUnitValue } = nonSelectedInvs
+          const { qty, uomValue } = nonSelectedInvs
             .filter(nonSelectedInv => compareIdenticality(nonSelectedInv, crossDockInv))
             .reduce(
               (amount, inv) => {
                 amount.qty += inv.qty
-                amount.stdUnitValue += inv.stdUnitValue
+                amount.uomValue += inv.uomValue
                 return amount
               },
-              { qty: 0, stdUnitValue: 0 }
+              { qty: 0, uomValue: 0 }
             )
 
-          return crossDockInv.releaseQty <= qty && crossDockInv.releaseStdUnitValue <= stdUnitValue
+          return crossDockInv.releaseQty <= qty && crossDockInv.releaseUomValue <= uomValue
         })
 
         if (!isEveryQtySufficient) {
