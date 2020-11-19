@@ -252,7 +252,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                 />
 
                 <label>${i18next.t('label.uom')}</label>
-                <input name="uom" .value="${this.selectedInventory?.uom}" />
+                <input name="uom" .value="${this.selectedInventory?.uom}" readonly />
 
                 <label>${i18next.t('field.location')}</label>
                 ${this.viewType === VIEW_TYPE.INVENTORY_SELECTED
