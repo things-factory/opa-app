@@ -113,9 +113,9 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
       pagination: { infinite: true },
       rows: { appendable: false },
       columns: [
-        { 
-          type: 'object',
-          name: 'inventory',
+        {
+          type: 'string',
+          name: 'pallet',
           hidden: true
         },
         { type: 'gutter', gutterName: 'sequence' },
@@ -387,9 +387,6 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
             name: this.doNo
           })}) {
             items {
-              inventory {
-                id
-              }
               releaseQty
               releaseWeight
               status
@@ -398,6 +395,7 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
               batchId
               productName
               packingType
+              pallet
             }
           }
         }
@@ -413,8 +411,6 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
 
   async _saveDeliveryInfo() {
     try {
-      const orderItems = this._getOrderItems()
-      console.log(orderItems)
       const response = await client.query({
         query: gql`
           mutation {
@@ -466,7 +462,7 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
     if (this.doGrist.dirtyData && this.doGrist.dirtyData.records && this.doGrist.dirtyData.records.length > 0) {
       return this.doGrist.dirtyData.records.map(record => {
         let newRecord = {
-          inventory: record.inventory,
+          pallet: record.pallet,
           productName: record.productName,
           releaseQty: record.releaseQty,
           releaseWeight: record.releaseWeight,
