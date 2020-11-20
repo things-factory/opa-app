@@ -525,6 +525,13 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         header: i18next.t('field.pallet_qty'),
         record: { editable: true, align: 'center', options: { min: 0 } },
         width: 80
+      },
+      {
+        type: 'string',
+        name: 'remark',
+        header: i18next.t('field.remark'),
+        record: { editable: true, align: 'left' },
+        width: 300
       }
     ]
 
@@ -973,7 +980,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         uomValue: record.uomValue,
         uom: record.uom,
         packQty: record.packQty,
-        totalUomValue: record.totalUomValue
+        totalUomValue: record.totalUomValue,
+        remark: record.remark
       }
 
       if (record.palletQty) orderProduct.palletQty = record.palletQty

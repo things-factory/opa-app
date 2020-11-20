@@ -322,6 +322,13 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
           header: i18next.t('field.pallet_qty'),
           record: { align: 'center' },
           width: 80
+        },
+        {
+          type: 'string',
+          name: 'remark',
+          header: i18next.t('field.remark'),
+          record: { align: 'left' },
+          width: 300
         }
       ]
     }
@@ -492,6 +499,7 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
               packQty
               totalUomValue
               palletQty
+              remark
             }
             orderVass {
               vas {

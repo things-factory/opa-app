@@ -236,6 +236,12 @@ class WorksheetUnloading extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
+          name: 'remark',
+          header: i18next.t('field.remark'),
+          width: 300
+        },
+        {
+          type: 'string',
           name: 'description',
           header: i18next.t('field.comment'),
           width: 200

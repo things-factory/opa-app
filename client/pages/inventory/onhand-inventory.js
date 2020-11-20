@@ -204,6 +204,15 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
           },
           sortable: true,
           width: 120
+        },
+        {
+          type: 'string',
+          name: 'remark',
+          header: i18next.t('field.remark'),
+          record: { align: 'left' },
+          imex: { header: i18next.t('field.uom'), key: 'uom', width: 40, type: 'string' },
+          sortable: true,
+          width: 200
         }
       ]
     }
@@ -345,6 +354,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
                 description
               }
               initialInboundAt
+              remark
             }
             total
           }

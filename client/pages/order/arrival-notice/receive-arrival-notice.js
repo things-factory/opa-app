@@ -433,6 +433,7 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
               releaseUomValue
               totalUomValue
               palletQty
+              remark
             }
             orderVass {
               vas {
@@ -573,6 +574,13 @@ class ReceiveArrivalNotice extends localize(i18next)(PageView) {
         header: i18next.t('field.pallet_qty'),
         record: { align: 'center' },
         width: 80
+      },
+      {
+        type: 'string',
+        name: 'remark',
+        header: i18next.t('field.remark'),
+        record: { align: 'left' },
+        width: 300
       }
     ]
 
