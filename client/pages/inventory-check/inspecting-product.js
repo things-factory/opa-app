@@ -920,6 +920,8 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         <check-inventory-popup
           .bizplaceName="${this.bizplaceNameInput.value}"
           .cycleCountNo="${this.cycleCountNo}"
+          .selectedLocation="${this.selectedLocation.name}"
+          .missingInventory="${this.missingInventoryData}"
         ></check-inventory-popup>
       `,
       {

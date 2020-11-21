@@ -1,6 +1,5 @@
 import '@things-factory/barcode-ui'
 import { SingleColumnFormStyles } from '@things-factory/form-ui'
-import '@things-factory/grist-ui'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { css, html, LitElement } from 'lit-element'
 
@@ -9,6 +8,8 @@ class CheckInventoryPopup extends localize(i18next)(LitElement) {
     return {
       bizplaceName: String,
       cycleCountNo: String,
+      selectedLocation: String,
+      missingInventory: Object,
       config: Object,
       data: Object
     }
@@ -69,26 +70,40 @@ class CheckInventoryPopup extends localize(i18next)(LitElement) {
     ]
   }
 
+  async firstUpdated() {
+    await this.updateComplete
+    console.log(this.missingInventory)
+    if (this.selectedLocation) this.locationInput.value = this.selectedLocation
+    this.focusOnPalletInput()
+  }
+
   get palletIdInput() {
     return this.shadowRoot.querySelector('barcode-scanable-input[name=palletId]').shadowRoot.querySelector('input')
   }
 
+  get locationInput() {
+    return this.shadowRoot.querySelector('barcode-scanable-input[name=location]').shadowRoot.querySelector('input')
+  }
+
   render() {
     return html`
-      <form id="input-form" class="single-column-form">
+      <form
+        id="input-form"
+        class="single-column-form"
+        @keypress="${async e => {
+          if (e.keyCode === 13) {
+            e.preventDefault()
+            this._checkPalletId()
+          }
+        }}"
+      >
         <fieldset>
           <legend>${i18next.t('title.scan_area')}</legend>
           <label>${i18next.t('label.pallet_id')}</label>
-          <barcode-scanable-input
-            name="palletId"
-            custom-input
-            @keypress="${async e => {
-              if (e.keyCode === 13) {
-                e.preventDefault()
-                this._checkPalletId()
-              }
-            }}"
-          ></barcode-scanable-input>
+          <barcode-scanable-input name="palletId" custom-input></barcode-scanable-input>
+
+          <label>${i18next.t('label.current_location')}</label>
+          <barcode-scanable-input name="location" custom-input></barcode-scanable-input>
         </fieldset>
       </form>
     `
@@ -117,7 +132,7 @@ class CheckInventoryPopup extends localize(i18next)(LitElement) {
         return response.data.checkInventoryOwner
       }
     } catch (e) {
-      this.showToast(e)
+      this._showToast(e)
     }
   }
 
