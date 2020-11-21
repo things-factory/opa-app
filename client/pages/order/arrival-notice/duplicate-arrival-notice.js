@@ -372,17 +372,17 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
           width: 150
         },
         {
-          type: 'float',
-          name: 'uomValue',
-          header: i18next.t('field.uom_value'),
-          record: { editable: true, align: 'center', options: { min: 0 } },
-          width: 80
-        },
-        {
           type: 'code',
           name: 'unit',
           header: i18next.t('field.unit'),
           record: { editable: true, align: 'center', codeName: 'WEIGHT_UNITS' },
+          width: 80
+        },
+        {
+          type: 'float',
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
+          record: { editable: true, align: 'center', options: { min: 0 } },
           width: 80
         },
         {

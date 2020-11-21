@@ -487,14 +487,6 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         width: 150
       },
       {
-        type: 'float',
-        name: 'uomValue',
-        header: i18next.t('field.uom_value'),
-        record: { editable: true, align: 'center', options: { min: 0 } },
-        width: 100
-      },
-
-      {
         type: 'select',
         name: 'uom',
         header: i18next.t('field.uom'),
@@ -504,6 +496,13 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
           rowOptionField: 'rowOptionPrimaryUnit'
         },
         width: 80
+      },
+      {
+        type: 'float',
+        name: 'uomValue',
+        header: i18next.t('field.uom_value'),
+        record: { editable: true, align: 'center', options: { min: 0 } },
+        width: 100
       },
       {
         type: 'integer',
