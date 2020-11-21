@@ -9,8 +9,7 @@ import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
 import { openPopup } from '@things-factory/layout-base'
 import { fetchLocationSortingRule } from '../../fetch-location-sorting-rule'
-import { LOCATION_SORTING_RULE, ORDER_INVENTORY_STATUS, WORKSHEET_STATUS } from '../constants'
-import './check-inventory-popup'
+import { LOCATION_SORTING_RULE, ORDER_TYPES, ORDER_INVENTORY_STATUS, WORKSHEET_STATUS } from '../constants'
 
 const VIEW_TYPE = {
   LOCATION_SELECTED: 'LOCATION_SELECTED',
@@ -29,6 +28,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       selectedLocation: Object,
       selectedInventory: Object,
       viewType: String,
+      isReleasing: Boolean,
       missingInventoryConfig: Object,
       missingInventoryData: Object,
       formattedLocations: Array,
@@ -270,6 +270,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
 
   constructor() {
     super()
+    this.isReleasing = false
     this.locationData = { records: [] }
     this.inventoryData = { records: [] }
     this.formattedLocations = []
@@ -398,6 +399,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
             if (!this.selectedInventory?.id !== record.id) {
               this.selectedInventory = record
               this.viewType = VIEW_TYPE.INVENTORY_SELECTED
+              await this.checkOrderInventory()
               this.updateContext(this.viewType)
               await this.updateComplete
               this.selectOnInput(this.inspectedBatchNoInput)
@@ -559,6 +561,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                 row
               }
               relatedOrderInv {
+                inventory {
+                  id
+                }
                 status
               }
             }
@@ -641,6 +646,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       uom: wsdInfo.uom,
       inspectedUomValue: wsdInfo.inspectedUomValue || 0,
       inspectedLocation: wsdInfo.inspectedLocation || 0,
+      inventoryId: wsdInfo.relatedOrderInv.inventory.id,
       orderInventoryStatus: wsdInfo.relatedOrderInv.status
     }
   }
@@ -757,10 +763,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       case VIEW_TYPE.INVENTORY_SELECTED:
         if (this.selectedInventory) {
           if (
-            this.selectedInventory.completed &&
-            this.selectedInventory.orderInventoryStatus !== ORDER_INVENTORY_STATUS.TERMINATED.value
+            (this.selectedInventory.completed &&
+            this.selectedInventory.orderInventoryStatus !== ORDER_INVENTORY_STATUS.TERMINATED.value) 
           ) {
-            actions.push({ title: i18next.t('button.undo'), action: this.undoInventoryCheck.bind(this) })
+              if(!this.isReleasing)
+                actions.push({ title: i18next.t('button.undo'), action: this.undoInventoryCheck.bind(this) })
           } else {
             actions.push({
               title: i18next.t('button.check_missing_x', { state: { x: i18next.t('label.pallet') } }),
@@ -930,6 +937,44 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         title: i18next.t('title.check_unknown_inventory')
       }
     )
+  }
+
+  async checkOrderInventory() {
+    try {
+      const filters = [
+        { name: 'inventory', operator: 'eq', value: this.selectedInventory.inventoryId },
+        { name: 'status', operator: 'noteq', value: ORDER_INVENTORY_STATUS.TERMINATED.value },
+        { name: 'type', operator: 'eq', value: ORDER_TYPES.RELEASE_OF_GOODS.value }
+      ]
+
+      const response = await client.query({
+        query: gql`
+          query {
+            orderInventories(${gqlBuilder.buildArgs({
+              filters
+            })}) {
+              items {
+                id
+                name
+              }
+              total
+            }
+          }
+        `
+      })
+
+      if (!response.errors) {
+        const orderInventories = response.data.orderInventories.items
+
+        if(orderInventories.length > 0) {
+          this.isReleasing = true
+        } else {
+          this.isReleasing = false
+        }
+      }
+    } catch (e) {
+      this.showToast(e)
+    }
   }
 
   async checkMissingPallet() {
