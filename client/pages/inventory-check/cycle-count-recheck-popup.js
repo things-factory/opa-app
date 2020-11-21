@@ -119,7 +119,8 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
           'packingType',
           'inspectedLocation',
           'inspectedQty',
-          'inspectedWeight',
+          'inspectedUomValue',
+          'uom',
           'status'
         ]
       },
@@ -192,17 +193,24 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'float',
-          name: 'weight',
-          header: i18next.t('field.system_weight'),
+          name: 'uomValue',
+          header: i18next.t('field.system_uom_value'),
           record: { align: 'center' },
           width: 100
         },
         {
           type: 'float',
-          name: 'inspectedWeight',
-          header: i18next.t('field.inspected_weight'),
+          name: 'inspectedUomValue',
+          header: i18next.t('field.inspected_uom_value'),
           record: { align: 'center' },
           width: 100
+        },
+        {
+          type: 'string',
+          name: 'uom',
+          header: i18next.t('field.uom'),
+          record: { align: 'center' },
+          width: 80
         },
         {
           type: 'string',
@@ -231,6 +239,7 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
             id
             inventory {
               palletId
+              uom
               product {
                 name
                 description
@@ -249,8 +258,8 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
             }
             originQty
             inspectedQty
-            originWeight
-            inspectedWeight
+            originUomValue
+            inspectedUomValue
             status
           }
         }
@@ -271,8 +280,9 @@ class CycleCountRecheckPopup extends localize(i18next)(LitElement) {
             inspectedLocation: targetInv.inspectedLocation,
             qty: targetInv.originQty,
             inspectedQty: targetInv.inspectedQty,
-            weight: targetInv.originWeight,
-            inspectedWeight: targetInv.inspectedWeight,
+            uomValue: targetInv.originUomValue,
+            uom: targetInv.inventory && targetInv.inventory.uom,
+            inspectedUomValue: targetInv.inspectedUomValue,
             status: targetInv.status
           }
         })

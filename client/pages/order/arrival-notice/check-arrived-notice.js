@@ -262,7 +262,7 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
 
   pageInitialized() {
     this.productGristConfig = {
-      list: { fields: ['batchId', 'product', 'packingType', 'totalWeight'] },
+      list: { fields: ['batchId', 'product', 'packingType', 'totalUomValue'] },
       pagination: { infinite: true },
       rows: { selectable: { multiple: true }, appendable: false },
       columns: [
@@ -290,16 +290,16 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
-          width: 80
+          width: 100
         },
         {
-          type: 'code',
-          name: 'unit',
-          header: i18next.t('field.unit'),
-          record: { align: 'center', codeName: 'WEIGHT_UNITS' },
+          type: 'string',
+          name: 'uom',
+          header: i18next.t('field.uom'),
+          record: { align: 'center' },
           width: 80
         },
         {
@@ -311,8 +311,8 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'totalWeight',
-          header: i18next.t('field.total_weight'),
+          name: 'totalUomValue',
+          header: i18next.t('field.total_uom_value'),
           record: { align: 'center' },
           width: 120
         },
@@ -322,6 +322,13 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
           header: i18next.t('field.pallet_qty'),
           record: { align: 'center' },
           width: 80
+        },
+        {
+          type: 'string',
+          name: 'remark',
+          header: i18next.t('field.remark'),
+          record: { align: 'left' },
+          width: 300
         }
       ]
     }
@@ -401,8 +408,8 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           width: 60
         },
@@ -487,11 +494,12 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
               }
               status
               packingType
-              weight
-              unit
+              uomValue
+              uom
               packQty
-              totalWeight
+              totalUomValue
               palletQty
+              remark
             }
             orderVass {
               vas {
@@ -509,7 +517,7 @@ class CheckArrivedNotice extends localize(i18next)(PageView) {
               }
               packingType
               qty
-              weight
+              uomValue
               otherTarget
               description
               remark

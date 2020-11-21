@@ -35,6 +35,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       _disableCrossDockingSetting: Boolean,
       _hideCrossDockingSetting: Boolean,
       containerSizes: Array,
+      uomValueUnits: Array,
       productGristConfig: Object,
       vasGristConfig: Object,
       productData: Object,
@@ -318,6 +319,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     this._validateTransport()
 
     this.containerSizes = await getCodeByName('CONTAINER_SIZES')
+    this.uomValueUnits = await getCodeByName('WEIGHT_UNITS')
     this._configureProductGrist()
 
     this.vasGristConfig = {
@@ -382,8 +384,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'uomValue',
+          header: i18next.t('field.uomValue'),
           record: { align: 'center' },
           width: 100
         },
@@ -419,8 +421,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'float',
-        name: 'releaseWeight',
-        header: i18next.t('field.release_weight'),
+        name: 'releaseUomValue',
+        header: i18next.t('field.release_uom_value'),
         record: { editable: true, align: 'center' },
         width: 160
       }
@@ -460,7 +462,15 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             queryName: 'products',
             nameField: 'name',
             descriptionField: 'description',
-            list: { fields: ['name', 'description'] }
+            select: [
+              { name: 'id', hidden: true },
+              { name: 'sku', header: i18next.t('field.sku'), record: { align: 'center' } },
+              { name: 'name', header: i18next.t('field.name'), record: { align: 'center' } },
+              { name: 'description', header: i18next.t('field.description'), record: { align: 'center' } },
+              { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
+              { name: 'primaryUnit', header: i18next.t('field.primary_unit'), record: { align: 'center' } }
+            ],
+            list: { fields: ['sku', 'name', 'description'] }
           }
         },
         width: 350
@@ -477,18 +487,22 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         width: 150
       },
       {
-        type: 'float',
-        name: 'weight',
-        header: i18next.t('field.weight'),
-        record: { editable: true, align: 'center', options: { min: 0 } },
+        type: 'select',
+        name: 'uom',
+        header: i18next.t('field.uom'),
+        record: {
+          editable: true,
+          align: 'center',
+          rowOptionField: 'rowOptionPrimaryUnit'
+        },
         width: 80
       },
       {
-        type: 'code',
-        name: 'unit',
-        header: i18next.t('field.unit'),
-        record: { editable: true, align: 'center', codeName: 'WEIGHT_UNITS' },
-        width: 80
+        type: 'float',
+        name: 'uomValue',
+        header: i18next.t('field.uom_value'),
+        record: { editable: true, align: 'center', options: { min: 0 } },
+        width: 100
       },
       {
         type: 'integer',
@@ -499,8 +513,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'float',
-        name: 'totalWeight',
-        header: i18next.t('field.total_weight'),
+        name: 'totalUomValue',
+        header: i18next.t('field.total_uom_value'),
         record: { align: 'center' },
         width: 120
       },
@@ -510,6 +524,13 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         header: i18next.t('field.pallet_qty'),
         record: { editable: true, align: 'center', options: { min: 0 } },
         width: 80
+      },
+      {
+        type: 'string',
+        name: 'remark',
+        header: i18next.t('field.remark'),
+        record: { editable: true, align: 'left' },
+        width: 300
       }
     ]
 
@@ -521,7 +542,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
     this.productGristConfig = {
       pagination: { infinite: true },
-      list: { fields: ['batch_no', 'product', 'packingType', 'totalWeight'] },
+      list: { fields: ['batch_no', 'product', 'packingType', 'totalUomValue'] },
       columns: productGristColumns
     }
   }
@@ -532,7 +553,35 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       let changeRecord = event.detail.after
       const changedColumn = event.detail.column.name
 
-      const amountRelatedColumns = ['weight', 'unit', 'packQty', 'releaseQty', 'releaseWeight']
+      if (event.detail.column.name == 'product') {
+        let primaryUnit = !!changeRecord.product?.primaryUnit
+        changeRecord.uom = primaryUnit ? changeRecord.product.primaryUnit : ''
+        changeRecord.rowOptionPrimaryUnit = {
+          options: [
+            ...(primaryUnit
+              ? [
+                  {
+                    display: changeRecord.product.primaryUnit,
+                    value: changeRecord.product.primaryUnit
+                  }
+                ]
+              : [
+                  {
+                    display: '',
+                    value: ''
+                  },
+                  ...this.uomValueUnits.map(unit => {
+                    return { display: unit.name, value: unit.name }
+                  })
+                ])
+          ]
+        }
+
+        let packingType = !!changeRecord.product?.packingType
+        changeRecord.packingType = packingType ? changeRecord.product.packingType : ''
+      }
+
+      const amountRelatedColumns = ['uomValue', 'uom', 'packQty', 'releaseQty', 'releaseUomValue']
       if (amountRelatedColumns.indexOf(changedColumn) >= 0) {
         const calcedAmount = this._calcAmount(changedColumn, changeRecord)
         for (let key in calcedAmount) {
@@ -573,34 +622,35 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
 
   _calcAmount(changedColumn, changeRecord) {
     let calcedRecord = {}
-    let { weight, unit, packQty, releaseQty, releaseWeight } = changeRecord
+    let { uomValue, uom, packQty, releaseQty, releaseUomValue } = changeRecord
 
-    if (changedColumn === 'weight' && (!weight || weight < 0))
-      throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.weight') } }))
+    if (changedColumn === 'uomValue' && (!uomValue || uomValue < 0))
+      throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.uomValue') } }))
     if (changedColumn === 'packQty' && (!packQty || packQty < 0))
       throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.pack_qty') } }))
-    if (changedColumn === 'unit' && !unit)
-      throw new Error(i18next.t('text.x_is_empty', { state: { x: i18next.t('label.unit') } }))
+    if (changedColumn === 'uom' && !uom)
+      throw new Error(i18next.t('text.x_is_empty', { state: { x: i18next.t('label.uom') } }))
 
-    if (weight && unit && packQty) {
-      calcedRecord.totalWeight = `${(weight * packQty).toFixed(2)} ${unit}`
+    if (uomValue && uom && packQty) {
+      calcedRecord.totalUomValue = `${(uomValue * packQty).toFixed(2)} ${uom}`
     } else {
-      calcedRecord.totalWeight = ''
+      calcedRecord.totalUomValue = ''
     }
 
     if (!this._crossDocking) return calcedRecord
 
-    if (changedColumn === 'releaseQty' || changedColumn === 'releaseWeight') {
+    if (changedColumn === 'releaseQty' || changedColumn === 'releaseUomValue') {
       if (isNaN(releaseQty)) {
         releaseQty = 0
         calcedRecord.releaseQty = releaseQty
       }
-      if (isNaN(releaseWeight)) {
-        releaseWeight = 0
-        calcedRecord.releaseWeight = releaseWeight
+      if (isNaN(releaseUomValue)) {
+        releaseUomValue = 0
+        calcedRecord.releaseUomValue = releaseUomValue
       }
 
-      if (!weight) throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.weight') } }))
+      if (!uomValue)
+        throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.uom_value') } }))
       if (!packQty)
         throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.pack_qty') } }))
 
@@ -611,21 +661,23 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         if (releaseQty > packQty) {
           throw new Error(i18next.t('text.x_exceed_limit', { state: { x: i18next.t('label.release_qty') } }))
         }
-        calcedRecord.releaseWeight = releaseQty * weight
+        calcedRecord.releaseUomValue = releaseQty * uomValue
       } else {
-        if (releaseWeight === undefined || releaseWeight < 0) {
-          throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.release_weight') } }))
+        if (releaseUomValue === undefined || releaseUomValue < 0) {
+          throw new Error(
+            i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.release_uom_value') } })
+          )
         }
 
-        if (releaseWeight > packQty * weight) {
-          throw new Error(i18next.t('text.x_exceed_limit', { state: { x: i18next.t('label.release_weight') } }))
+        if (releaseUomValue > packQty * uomValue) {
+          throw new Error(i18next.t('text.x_exceed_limit', { state: { x: i18next.t('label.release_uom_value') } }))
         }
 
-        if (releaseWeight % weight) {
-          throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('label.release_weight') } }))
+        if (releaseUomValue % uomValue) {
+          throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('label.release_uom_value') } }))
         }
 
-        calcedRecord.releaseQty = releaseWeight / weight
+        calcedRecord.releaseQty = releaseUomValue / uomValue
       }
     }
 
@@ -809,10 +861,10 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     const records = this.productGrist.dirtyData.records
     if (!records?.length) throw new Error(i18next.t('text.no_products'))
 
-    const checkRequiredFields = ({ batchId, packingType, weight, unit, packQty }) =>
-      !batchId || !packingType || !weight || !unit || !packQty
+    const checkRequiredFields = ({ batchId, packingType, uomValue, uom, packQty }) =>
+      !batchId || !packingType || !uomValue || !uom || !packQty
 
-    // required field (batchId, packingType, weight, unit, packQty, palletQty)
+    // required field (batchId, packingType, uomValue, uom, packQty, palletQty)
     if (records.some(checkRequiredFields)) {
       throw new Error(i18next.t('text.empty_value_in_list'))
     }
@@ -828,11 +880,11 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
       )
     }
 
-    if (this._crossDocking && records.every(({ releaseQty, releaseWeight }) => !releaseQty || !releaseWeight)) {
+    if (this._crossDocking && records.every(({ releaseQty, releaseUomValue }) => !releaseQty || !releaseUomValue)) {
       throw new Error(
         i18next.t('text.invalid_x', {
           state: {
-            x: `${i18next.t('label.release_qty')}, ${i18next.t('label.release_weight')}`
+            x: `${i18next.t('label.release_qty')}, ${i18next.t('label.release_uom_value')}`
           }
         })
       )
@@ -924,16 +976,17 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         batchId: record.batchId,
         product: { id: record.product.id },
         packingType: record.packingType,
-        weight: record.weight,
-        unit: record.unit,
+        uomValue: record.uomValue,
+        uom: record.uom,
         packQty: record.packQty,
-        totalWeight: record.totalWeight
+        totalUomValue: record.totalUomValue,
+        remark: record.remark
       }
 
       if (record.palletQty) orderProduct.palletQty = record.palletQty
-      if (this._crossDocking && record.releaseQty !== undefined && record.releaseWeight !== undefined) {
+      if (this._crossDocking && record.releaseQty !== undefined && record.releaseUomValue !== undefined) {
         orderProduct.releaseQty = record.releaseQty
-        orderProduct.releaseWeight = record.releaseWeight
+        orderProduct.releaseUomValue = record.releaseUomValue
       }
 
       return orderProduct
@@ -975,7 +1028,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             result.targetProduct = { id: record.target.productId }
             result.packingType = record.packingType
             result.qty = record.qty
-            result.weight = record.weight
+            result.uomValue = record.uomValue
           } else {
             result.otherTarget = record.target
           }
@@ -1015,9 +1068,9 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
             .targetList="${this.productGrist.dirtyData.records.map(record => {
               return {
                 ...record,
-                unitWeight: record.weight,
+                unitUomValue: record.uomValue,
                 packQty: record.packQty - (record.releaseQty || 0),
-                totalWeight: record.weight * (record.packQty - (record.releaseQty || 0))
+                totalUomValue: record.uomValue * (record.packQty - (record.releaseQty || 0))
               }
             })}"
             .vasList="${this.vasData.records}"
@@ -1067,8 +1120,8 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     if (this.productGrist.dirtyData.records.some(record => !record.packingType))
       throw new Error(i18next.t('text.invalid_packing_type'))
 
-    if (this.productGrist.dirtyData.records.some(record => !record.weight))
-      throw new Error(i18next.t('text.invalid_weight'))
+    if (this.productGrist.dirtyData.records.some(record => !record.uomValue))
+      throw new Error(i18next.t('text.uom_value'))
 
     if (this.productGrist.dirtyData.records.some(record => !record.packQty))
       throw new Error(i18next.t('text.invalid_pack_qty'))

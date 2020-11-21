@@ -174,11 +174,20 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
           width: 80
         },
         {
-          type: 'number',
-          name: 'weight',
-          header: i18next.t('field.total_weight'),
+          type: 'float',
+          name: 'uomValue',
+          header: i18next.t('field.total_uom_value'),
           record: { align: 'center' },
-          imex: { header: i18next.t('field.total_weight'), key: 'weight', width: 30, type: 'number' },
+          sortable: true,
+          imex: { header: i18next.t('field.total_uom_value'), key: 'uomValue', width: 30, type: 'float' },
+          width: 110
+        },
+        {
+          type: 'string',
+          name: 'uom',
+          header: i18next.t('field.uom'),
+          record: { align: 'center' },
+          imex: { header: i18next.t('field.uom'), key: 'uom', width: 25, type: 'string' },
           sortable: true,
           width: 80
         },
@@ -195,6 +204,15 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
           },
           sortable: true,
           width: 120
+        },
+        {
+          type: 'string',
+          name: 'remark',
+          header: i18next.t('field.remark'),
+          record: { align: 'left' },
+          imex: { header: i18next.t('field.uom'), key: 'uom', width: 40, type: 'string' },
+          sortable: true,
+          width: 200
         }
       ]
     }
@@ -306,7 +324,8 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
               palletId
               batchId
               packingType
-              weight
+              uom
+              uomValue
               bizplace {
                 id
                 name
@@ -335,6 +354,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
                 description
               }
               initialInboundAt
+              remark
             }
             total
           }
@@ -367,7 +387,8 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
               palletId
               batchId
               packingType
-              weight
+              uom
+              uomValue
               bizplace {
                 id
                 name

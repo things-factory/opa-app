@@ -148,8 +148,8 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'integer',
-          name: 'releaseWeight',
-          header: i18next.t('field.weight'),
+          name: 'releaseUomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           width: 80
         },
@@ -388,7 +388,7 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
           })}) {
             items {
               releaseQty
-              releaseWeight
+              releaseUomValue
               status
               remark
               systemRemark
@@ -465,7 +465,7 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
           pallet: record.pallet,
           productName: record.productName,
           releaseQty: record.releaseQty,
-          releaseWeight: record.releaseWeight,
+          releaseUomValue: record.releaseUomValue,
           batchId: record.batchId,
           packingType: record.packingType,
           remark: record?.remark ? record.remark : ''

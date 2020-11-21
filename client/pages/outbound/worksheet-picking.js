@@ -218,7 +218,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 product: record.product,
                 packingType: record.packingType,
                 releaseQty: record.releaseQty,
-                releaseWeight: record.releaseWeight,
+                releaseUomValue: record.releaseUomValue,
                 completed: record.completed
               }
 
@@ -249,7 +249,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 bizplaceId: record.bizplaceId,
                 packingType: record.packingType,
                 releaseQty: record.releaseQty,
-                releaseWeight: record.releaseWeight
+                releaseUomValue: record.releaseUomValue
               }
               this._showInventoryAssignPopup()
             }
@@ -285,8 +285,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'releaseWeight',
-          header: i18next.t('field.release_weight'),
+          name: 'releaseUomValue',
+          header: i18next.t('field.release_uom_value'),
           record: { align: 'center' },
           width: 60
         }
@@ -350,8 +350,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'releaseWeight',
-          header: i18next.t('field.release_weight'),
+          name: 'releaseUomValue',
+          header: i18next.t('field.release_uom_value'),
           record: { align: 'center' },
           width: 60
         }
@@ -401,7 +401,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               }
               packingType
               releaseQty
-              releaseWeight
+              releaseUomValue
               inventory {
                 qty
                 lockedQty
@@ -428,7 +428,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 }
                 packingType
                 releaseQty
-                releaseWeight
+                releaseUomValue
                 status
                 inventory {
                   product {
@@ -482,25 +482,25 @@ class WorksheetPicking extends localize(i18next)(PageView) {
 
       this.productGristData = {
         records: tempOrderInvs.map(ordInv => {
-          const { compQty, compWeight } = completedOrderInvs.reduce(
+          const { compQty, compUomValue } = completedOrderInvs.reduce(
             (result, compOrdInv) => {
               if (this._checkSameOrderInv(ordInv, compOrdInv)) {
                 result.compQty += compOrdInv.releaseQty
-                result.compWeight += compOrdInv.releaseWeight
+                result.compUomValue += compOrdInv.releaseUomValue
               }
 
-              // need to round off the completed weight to bypass the validation
-              result.compWeight = Math.round(result.compWeight * 100) / 100
+              // need to round off the completed uomValue to bypass the validation
+              result.compUomValue = Math.round(result.compUomValue * 100) / 100
 
               return result
             },
-            { compQty: 0, compWeight: 0 }
+            { compQty: 0, compUomValue: 0 }
           )
 
           return {
             ...ordInv,
             bizplaceId: worksheet.bizplace.id,
-            completed: compQty === ordInv.releaseQty && compWeight === ordInv.releaseWeight
+            completed: compQty === ordInv.releaseQty && compUomValue === ordInv.releaseUomValue
           }
         })
       }
@@ -565,7 +565,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               description
               targetInventory {
                 releaseQty
-                releaseWeight
+                releaseUomValue
                 inventory {
                   qty
                   lockedQty
@@ -626,7 +626,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
               targetInventory {
                 batchId
                 releaseQty
-                releaseWeight
+                releaseUomValue
                 product {
                   name
                   description
@@ -670,7 +670,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             description: wsd.description,
             status: wsd.status,
             releaseQty: wsd.targetInventory.releaseQty,
-            releaseWeight: wsd.targetInventory.releaseWeight,
+            releaseUomValue: wsd.targetInventory.releaseUomValue,
             availableQty:
               wsd.targetInventory.inventory.qty -
               wsd.targetInventory.inventory.lockedQty +
@@ -818,7 +818,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             .bizplaceId="${this._selectedProduct.bizplaceId}"
             .packingType="${this._selectedProduct.packingType}"
             .releaseQty="${this._selectedProduct.releaseQty}"
-            .releaseWeight="${this._selectedProduct.releaseWeight}"
+            .releaseUomValue="${this._selectedProduct.releaseUomValue}"
             @completed="${async () => {
               await this.fetchOrderInventories()
               await this.fetchWorksheetDetails(

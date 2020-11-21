@@ -29,8 +29,9 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
                 <option
                   value="${batch}"
                   ?selected="${this.record && this.record.target && this.record.target.batchId === batch}"
-                  >${batch}</option
                 >
+                  ${batch}
+                </option>
               `
           )}
         </select>
@@ -53,8 +54,9 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
                 <option
                   value="${product.id}"
                   ?selected="${this.record && this.record.target && this.record.target.productId === product.id}"
-                  >${product.name} ${product.description ? `- ${product.description}` : ''}</option
                 >
+                  ${product.name} ${product.description ? `- ${product.description}` : ''}
+                </option>
               `
           )}
         </select>
@@ -72,9 +74,7 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
           <option></option>
           ${this.packingTypeList.map(
             packingType => html`
-              <option ?selected="${this.record && this.record.packingType === packingType}">
-                ${packingType}
-              </option>
+              <option ?selected="${this.record && this.record.packingType === packingType}">${packingType}</option>
             `
           )}
         </select>
@@ -90,16 +90,16 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
           @change="${this._checkQtyValidity.bind(this)}"
         />
 
-        <label>${i18next.t('label.weight')}</label>
+        <label>${i18next.t('label.uom_value')}</label>
         <input
           ?readonly="${!this.selectedBatchId || !this.selectedProductId || !this.selectedPackingType}"
-          id="weight-input"
+          id="uom-unit-value-input"
           type="number"
           min="0.01"
           step="0.01"
-          .value="${(this.record && this.record.qty) || this.maximumWeight}"
-          @change="${this._checkWeightValidity.bind(this)}"
-          placeholder="${this.maximumWeight}"
+          .value="${(this.record && this.record.qty) || this.maximumUomValue}"
+          @change="${this._checkUomValueValidity.bind(this)}"
+          placeholder="${this.maximumUomValue}"
         />
       </fieldset>
     </form>`
@@ -118,8 +118,8 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
     return this.shadowRoot.querySelector('select#target-product-selector')
   }
 
-  get weightInput() {
-    return this.shadowRoot.querySelector('input#weight-input')
+  get uomValueInput() {
+    return this.shadowRoot.querySelector('input#uom-unit-value-input')
   }
 
   get targetProductList() {
@@ -159,8 +159,8 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
     }`
   }
 
-  get weight() {
-    return this.weightInput.value
+  get uomValue() {
+    return this.uomValueInput.value
   }
 
   get maximumQty() {
@@ -171,21 +171,21 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
     }
   }
 
-  get maximumWeight() {
+  get maximumUomValue() {
     if (this.selectedBatchId && this.selectedProductId && this.selectedPackingType) {
-      return this._calcAvailAmount().totalWeight
+      return this._calcAvailAmount().totalUomValue
     } else {
       return ''
     }
   }
 
   _checkQtyValidity() {
-    let totalQty, unitWeight
+    let totalQty, unitUomValue
 
     try {
       const amount = this._calcAvailAmount()
       totalQty = amount.totalQty
-      unitWeight = amount.unitWeight
+      unitUomValue = amount.unitUomValue
       const qty = Number(this.qtyInput.value)
 
       if (!totalQty) {
@@ -206,38 +206,38 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
       this._showToast(e)
     } finally {
       const qty = Number(this.qtyInput.value)
-      this.weightInput.value = qty * unitWeight
+      this.uomValueInput.value = qty * unitUomValue
     }
   }
 
-  _checkWeightValidity() {
-    let totalWeight, unitWeight
+  _checkUomValueValidity() {
+    let totalUomValue, unitUomValue
 
     try {
       const amount = this._calcAvailAmount()
-      totalWeight = amount.totalWeight
-      unitWeight = amount.unitWeight
-      const weight = Number(this.weightInput.value)
+      totalUomValue = amount.totalUomValue
+      unitUomValue = amount.unitUomValue
+      const uomValue = Number(this.uomValueInput.value)
 
-      if (totalWeight) {
+      if (totalUomValue) {
         this.qtyInput.value = ''
         throw new Error('text.there_is_no_product')
       }
 
-      if (weight <= 0) {
-        this.weightInput.value = 1
-        throw new Error('text.weight_should_be_positive')
+      if (uomValue <= 0) {
+        this.uomValueInput.value = 1
+        throw new Error('text.uom_value_should_be_positive')
       }
 
-      if (totalWeight && weight > totalWeight) {
-        this.weightInput.value = totalWeight
-        throw new Error(i18next.t('text.weight_exceed_limit'))
+      if (totalUomValue && uomValue > totalUomValue) {
+        this.uomValueInput.value = totalUomValue
+        throw new Error(i18next.t('text.uom_value_exceed_limit'))
       }
     } catch (e) {
       this._showToast(e)
     } finally {
-      const weight = Number(this.weightInput.value)
-      this.qtyInput.value = weight / unitWeight
+      const uomValue = Number(this.uomValueInput.value)
+      this.qtyInput.value = uomValue / unitUomValue
     }
   }
 
@@ -249,20 +249,20 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
         target.packingType === this.selectedPackingType
     )
 
-    if (targetItems.every(item => item.unitWeight === targetItems[0].unitWeight)) {
-      let { totalQty, unitWeight, totalWeight } = targetItems.reduce(
+    if (targetItems.every(item => item.unitUomValue === targetItems[0].unitUomValue)) {
+      let { totalQty, unitUomValue, totalUomValue } = targetItems.reduce(
         (availAmount, item) => {
           availAmount = {
-            unitWeight: item.unitWeight,
+            unitUomValue: item.unitUomValue,
             totalQty: availAmount.totalQty + item.packQty,
-            totalWeight: availAmount.totalWeight + item.totalWeight
+            totalUomValue: availAmount.totalUomValue + item.totalUomValue
           }
           return availAmount
         },
         {
           totalQty: 0,
-          unitWeight: 0,
-          totalWeight: 0
+          unitUomValue: 0,
+          totalUomValue: 0
         }
       )
 
@@ -287,21 +287,21 @@ export class VasCreateBatchProductTypeForm extends AbstractVasCreateForm {
         .reduce(
           (choosenAmount, task) => {
             choosenAmount.totalQty += task.qty
-            choosenAmount.totalWeight += task.weight
+            choosenAmount.totalUomValue += task.uomValue
 
             return choosenAmount
           },
-          { totalQty: 0, totalWeight: 0 }
+          { totalQty: 0, totalUomValue: 0 }
         )
 
-      // 현재 VAS에 포함된 수량과 weight을 더하여 return
+      // 현재 VAS에 포함된 수량과 uomValue을 더하여 return
       return {
         totalQty: totalQty - choosenAmount.totalQty + (this.record.qty || 0),
-        totalWeight: totalWeight - choosenAmount.totalWeight + (this.record.weight || 0),
-        unitWeight
+        totalUomValue: totalUomValue - choosenAmount.totalUomValue + (this.record.uomValue || 0),
+        unitUomValue
       }
     } else {
-      throw new Error(i18next.t('text.some_unit_weight_is_diff'))
+      throw new Error(i18next.t('text.some_unit_uom_value_is_diff'))
     }
   }
 }

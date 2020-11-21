@@ -232,7 +232,7 @@ class ReturnOrderDetail extends connect(store)(localize(i18next)(PageView)) {
     this.inventoryGristConfig = {
       pagination: { infinite: true },
       rows: { selectable: { multiple: true }, appendable: false },
-      list: { fields: ['productName', 'batchId', 'packingType', 'returnQty', 'returnWeight'] },
+      list: { fields: ['productName', 'batchId', 'packingType', 'returnQty', 'returnUomValue'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -265,8 +265,8 @@ class ReturnOrderDetail extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'float',
-          name: 'returnWeight',
-          header: i18next.t('field.return_weight'),
+          name: 'returnUomValue',
+          header: i18next.t('field.return_uom_value'),
           record: { align: 'center', options: { min: 0 } },
           width: 100
         }
@@ -348,8 +348,8 @@ class ReturnOrderDetail extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'integer',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           width: 100
         },
@@ -425,9 +425,9 @@ class ReturnOrderDetail extends connect(store)(localize(i18next)(PageView)) {
               productName
               packingType
               qty
-              weight
+              uomValue
               returnQty
-              returnWeight
+              returnUomValue
               location {
                 id
                 name
@@ -450,7 +450,7 @@ class ReturnOrderDetail extends connect(store)(localize(i18next)(PageView)) {
               }
               packingType
               qty
-              weight
+              uomValue
               otherTarget
               description
               remark
@@ -476,13 +476,13 @@ class ReturnOrderDetail extends connect(store)(localize(i18next)(PageView)) {
             location: inventoryInfo.location,
             packingType: inventoryInfo.packingType,
             remainQty: inventoryInfo.qty,
-            remainWeight: inventoryInfo.weight
+            remainUomValue: inventoryInfo.uomValue
           },
           remainQty: inventoryInfo.qty,
-          remainWeight: inventoryInfo.weight,
+          remainUomValue: inventoryInfo.uomValue,
           status: inventoryInfo.status,
           existing: true,
-          roundedWeight: inventoryInfo.returnQty * (inventoryInfo.weight / inventoryInfo.qty) || ''
+          roundedUomValue: inventoryInfo.returnQty * (inventoryInfo.uomValue / inventoryInfo.qty) || ''
         }
       })
 

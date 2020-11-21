@@ -55,8 +55,9 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
                 <option
                   value="${PALLET_TYPE.value}"
                   ?selected="${this._getOperationGuideData('palletType') === PALLET_TYPE.value}"
-                  >${PALLET_TYPE.display}</option
                 >
+                  ${PALLET_TYPE.display}
+                </option>
               `
             )}
           </select>
@@ -203,7 +204,7 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
     this.config = {
       rows: { appendable: false },
       pagination: { infinite: true },
-      list: { fields: ['fromPalletId', 'palletId', 'locationName', 'qty', 'weight'] },
+      list: { fields: ['fromPalletId', 'palletId', 'locationName', 'qty', 'uomValue'] },
       columns: [
         ...gutters,
         {
@@ -232,8 +233,8 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
         },
         {
           type: 'integer',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           width: 60
         }
       ]
@@ -301,10 +302,10 @@ class VasRepalletizing extends localize(i18next)(VasTemplate) {
             .reduce(
               (amount, rf) => {
                 amount.qty += rf.reducedQty
-                amount.weight += rf.reducedWeight
+                amount.uomValue += rf.reducedUomValue
                 return amount
               },
-              { qty: 0, weight: 0 }
+              { qty: 0, uomValue: 0 }
             )
         }
       })

@@ -155,8 +155,8 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'float',
-          name: 'releaseWeight',
-          header: i18next.t('field.release_weight'),
+          name: 'releaseUomValue',
+          header: i18next.t('field.release_uom_value'),
           record: { align: 'center' },
           width: 60
         }
@@ -227,7 +227,7 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
             items {
               id
               qty
-              weight
+              uomValue
             }
           }
         }
@@ -241,9 +241,9 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
 
   _composeWorksheetDetails(record, inventories) {
     let leftReleaseQty = record.releaseQty
-    let leftReleaseWeight = record.releaseWeight
+    let leftReleaseUomValue = record.releaseUomValue
     let compReleaseQty = 0
-    let compReleaseWeight = 0
+    let compReleaseUomValue = 0
 
     let worksheetDetails = []
     let idx = 0
@@ -252,27 +252,27 @@ class InventoryAutoAssignPopup extends localize(i18next)(LitElement) {
 
       if (inv.qty > leftReleaseQty) {
         compReleaseQty += leftReleaseQty
-        compReleaseWeight += leftReleaseWeight
+        compReleaseUomValue += leftReleaseUomValue
 
         worksheetDetails.push({
           targetInventory: {
             inventory: { id: inv.id },
             releaseQty: leftReleaseQty,
-            releaseWeight: leftReleaseWeight,
+            releaseUomValue: leftReleaseUomValue,
             type: ORDER_TYPES.RELEASE_OF_GOODS.value
           }
         })
       } else {
         compReleaseQty += inv.qty
-        compReleaseWeight += inv.weight
+        compReleaseUomValue += inv.uomValue
         leftReleaseQty -= inv.qty
-        leftReleaseWeight -= inv.weight
+        leftReleaseUomValue -= inv.uomValue
 
         worksheetDetails.push({
           targetInventory: {
             inventory: { id: inv.id },
             releaseQty: inv.qty,
-            releaseWeight: inv.weight,
+            releaseUomValue: inv.uomValue,
             type: ORDER_TYPES.RELEASE_OF_GOODS.value
           }
         })

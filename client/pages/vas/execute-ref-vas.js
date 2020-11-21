@@ -57,8 +57,8 @@ class ExecuteRefVas extends localize(i18next)(AbstractExecuteVas) {
               <label>${i18next.t('label.qty')}</label>
               <input name="qty" readonly />
 
-              <label>${i18next.t('label.weight')}</label>
-              <input name="weight" readonly />
+              <label>${i18next.t('label.uom_value')}</label>
+              <input name="uomValue" readonly />
 
               <label>${i18next.t('label.remark')}</label>
               <input name="remark" readonly />
@@ -102,7 +102,7 @@ class ExecuteRefVas extends localize(i18next)(AbstractExecuteVas) {
           }
           otherTarget
           qty
-          weight
+          uomValue
           operationGuide
           vas {
             id
@@ -114,7 +114,7 @@ class ExecuteRefVas extends localize(i18next)(AbstractExecuteVas) {
           inventory {
             palletId
             qty
-            weight
+            uomValue
           }
           description
           remark
@@ -141,10 +141,10 @@ class ExecuteRefVas extends localize(i18next)(AbstractExecuteVas) {
 
   _fillUpDetailInfoForm(data) {
     const qtyInput = this.detailInfoForm.querySelector('input[name=qty]')
-    const weightInput = this.detailInfoForm.querySelector('input[name=weight]')
+    const uomValueInput = this.detailInfoForm.querySelector('input[name=uomValue]')
     const remarkInput = this.detailInfoForm.querySelector('input[name=remark]')
     qtyInput.value = data.qty
-    weightInput.value = data.weight
+    uomValueInput.value = data.uomValue
     remarkInput.value = data.remark || ''
   }
 

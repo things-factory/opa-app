@@ -256,9 +256,11 @@ class ElcclDailyCollectionReport extends connect(store)(localize(i18next)(PageVi
               self_collect
               self_collect_summary
               total_self_collect
+              self_collect_summary
               delivery
               delivery_summary
               total_delivery
+              delivery_summary
             }
           }
         `

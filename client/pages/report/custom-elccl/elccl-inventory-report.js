@@ -142,7 +142,7 @@ class ElcclInventoryReport extends connect(store)(localize(i18next)(PageView)) {
           { column: 'product|name' },
           { column: 'packingType', title: 'Sub Total' }
         ],
-        totals: ['qty', 'weight']
+        totals: ['qty', 'uomValue']
       },
       columns: [
         {
@@ -209,11 +209,11 @@ class ElcclInventoryReport extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'number',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           sortable: true,
-          imex: { header: i18next.t('field.weight'), key: 'weight', width: 25, type: 'string' },
+          imex: { header: i18next.t('field.uom_value'), key: 'uomValue', width: 25, type: 'string' },
           width: 100
         }
       ]
@@ -272,9 +272,9 @@ class ElcclInventoryReport extends connect(store)(localize(i18next)(PageView)) {
               packingType
               refNo
               openingQty
-              openingWeight
+              openingUomValue
               qty
-              weight
+              uomValue
               orderName
               createdAt
             }

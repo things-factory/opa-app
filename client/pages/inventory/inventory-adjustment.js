@@ -240,16 +240,25 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'float',
-          name: 'weight',
-          header: i18next.t('field.total_weight'),
+          name: 'uomValue',
+          header: i18next.t('field.total_uom_value'),
           record: { align: 'center', editable: true },
           sortable: true,
           imex: {
-            header: i18next.t('field.total_weight'),
-            key: 'weight',
+            header: i18next.t('field.total_uom_value'),
+            key: 'uomValue',
             width: 10,
             type: 'float'
           },
+          width: 80
+        },
+        {
+          type: 'string',
+          name: 'uom',
+          header: i18next.t('field.uom'),
+          record: { align: 'left' },
+          imex: { header: i18next.t('field.uom'), key: 'uom', width: 25, type: 'string' },
+          sortable: true,
           width: 80
         },
         {
@@ -281,6 +290,15 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           },
           sortable: true,
           width: 120
+        },
+        {
+          type: 'string',
+          name: 'remark',
+          header: i18next.t('field.remark'),
+          record: { align: 'left' },
+          imex: { header: i18next.t('field.uom'), key: 'uom', width: 40, type: 'string' },
+          sortable: true,
+          width: 200
         },
         {
           type: 'datetime',
@@ -393,7 +411,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
               palletId
               batchId
               packingType
-              weight
+              uomValue
               bizplace {
                 id
                 name
@@ -424,6 +442,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
                 name
                 description
               }
+              remark
             }
             total
           }
@@ -460,7 +479,8 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
               palletId
               batchId
               packingType
-              weight
+              uom
+              uomValue
               bizplace {
                 id
                 name
@@ -520,8 +540,8 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
 
   _updateAmount(e) {
     switch (e.detail.column.name) {
-      case 'weight':
-        if (e.detail.after < 0) this.dataGrist._data.records[e.detail.row].weight = 0
+      case 'uomValue':
+        if (e.detail.after < 0) this.dataGrist._data.records[e.detail.row].uomValue = 0
         break
       case 'qty':
         if (e.detail.after < 0) this.dataGrist._data.records[e.detail.row].qty = 0
@@ -534,7 +554,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   async _saveInventories() {
     var patches = this.dataGrist.exportPatchList({ flagName: 'cuFlag' })
     patches.map(x => {
-      delete x.productWeight
+      delete x.productUomValue
       if (x.bizplace) {
         delete x.bizplace['__seq__']
         delete x.bizplace['__origin__']
@@ -549,14 +569,14 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
         delete x.location['__selected__']
       }
       if (x.product) {
-        delete x.product['productWeight']
+        delete x.product['productUomValue']
         delete x.product['__seq__']
         delete x.product['__origin__']
         delete x.product['__selected__']
         delete x.product['type']
       }
-      if (x.weight) {
-        x.weight = parseFloat(x.weight)
+      if (x.uomValue) {
+        x.uomValue = parseFloat(x.uomValue)
       }
     })
     if (patches && patches.length) {
@@ -590,7 +610,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
   async importHandler(patches) {
     patches.map(itm => {
       itm.qty = parseFloat(itm.qty)
-      itm.weight = parseFloat(itm.weight)
+      itm.uomValue = parseFloat(itm.uomValue)
     })
 
     const response = await client.query({

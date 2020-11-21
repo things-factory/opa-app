@@ -161,13 +161,13 @@ class CreateVasOrder extends localize(i18next)(PageView) {
                   ignoreCondition: true
                 },
                 {
-                  name: 'remainWeight',
-                  header: i18next.t('field.remain_weight'),
+                  name: 'remainUomValue',
+                  header: i18next.t('field.remain_uom_value'),
                   record: { align: 'center' },
                   ignoreCondition: true
                 }
               ],
-              list: { fields: ['batchId', 'productName', 'packingType', 'remainQty', 'remainWeight'] }
+              list: { fields: ['batchId', 'productName', 'packingType', 'remainQty', 'remainUomValue'] }
             }
           },
           width: 300
@@ -191,8 +191,8 @@ class CreateVasOrder extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'remainWeight',
-          header: i18next.t('field.available_weight'),
+          name: 'remainUomValue',
+          header: i18next.t('field.available_uom_value'),
           record: { align: 'center' },
           width: 140
         }
@@ -261,8 +261,8 @@ class CreateVasOrder extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           width: 100
         },
@@ -510,7 +510,7 @@ class CreateVasOrder extends localize(i18next)(PageView) {
             result.targetProduct = { id: record.target.productId }
             result.packingType = record.packingType
             result.qty = record.qty
-            result.weight = record.weight
+            result.uomValue = record.uomValue
           } else {
             result.otherTarget = record.target
           }
@@ -532,8 +532,8 @@ class CreateVasOrder extends localize(i18next)(PageView) {
               return {
                 ...record,
                 packQty: record.remainQty,
-                unitWeight: record.remainWeight / record.remainQty,
-                totalWeight: record.remainWeight
+                unitUomValue: record.remainUomValue / record.remainQty,
+                totalUomValue: record.remainUomValue
               }
             })}"
             .vasList="${this.vasData.records}"

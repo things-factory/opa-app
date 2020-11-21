@@ -154,7 +154,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           'location',
           'inspectedLocation',
           'inspectedQty',
-          'inspectedWeight',
+          'inspectedUomValue',
           'inspectedBatchNo',
           'status'
         ]
@@ -243,11 +243,29 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'inspectedWeight',
-          header: i18next.t('field.inspected_weight'),
+          name: 'inspectedUomValue',
+          header: i18next.t('field.inspected_uom_value'),
           record: { align: 'center' },
-          imex: { header: i18next.t('field.inspected_weight'), key: 'inspectedWeight', width: 100, type: 'number' },
+          imex: {
+            header: i18next.t('field.inspected_uom_value'),
+            key: 'inspectedUomValue',
+            width: 100,
+            type: 'number'
+          },
           width: 100
+        },
+        {
+          type: 'string',
+          name: 'uom',
+          header: i18next.t('field.uom'),
+          record: { align: 'center' },
+          imex: {
+            header: i18next.t('field.uom'),
+            key: 'uom',
+            width: 80,
+            type: 'string'
+          },
+          width: 80
         }
       ]
     }
@@ -289,6 +307,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
                   batchId
                   palletId
                   packingType
+                  uom
                   location {
                     name
                     description
@@ -304,7 +323,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
                 }
                 inspectedBatchNo
                 inspectedQty
-                inspectedWeight
+                inspectedUomValue
               }
             }
             total
@@ -332,7 +351,11 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
           status: worksheetDetail.status,
           inspectedLocation: worksheetDetail.targetInventory.inspectedLocation,
           inspectedQty: worksheetDetail.targetInventory.inspectedQty,
-          inspectedWeight: worksheetDetail.targetInventory.inspectedWeight,
+          inspectedUomValue: worksheetDetail.targetInventory.inspectedUomValue,
+          uom:
+            worksheetDetail.targetInventory &&
+            worksheetDetail.targetInventory.inventory &&
+            worksheetDetail.targetInventory.inventory.uom,
           inspectedBatchNo: worksheetDetail.targetInventory.inspectedBatchNo,
           packingType: worksheetDetail.targetInventory.inventory.packingType
         }
@@ -542,7 +565,7 @@ class WorksheetCycleCount extends localize(i18next)(PageView) {
   //             palletId
   //             batchId
   //             packingType
-  //             weight
+  //             uomValue
   //             bizplace {
   //               id
   //               name

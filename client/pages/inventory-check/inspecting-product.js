@@ -7,8 +7,9 @@ import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin.js'
+import { openPopup } from '@things-factory/layout-base'
 import { fetchLocationSortingRule } from '../../fetch-location-sorting-rule'
-import { LOCATION_SORTING_RULE, ORDER_INVENTORY_STATUS, WORKSHEET_STATUS } from '../constants'
+import { LOCATION_SORTING_RULE, ORDER_TYPES, ORDER_INVENTORY_STATUS, WORKSHEET_STATUS } from '../constants'
 
 const VIEW_TYPE = {
   LOCATION_SELECTED: 'LOCATION_SELECTED',
@@ -27,6 +28,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       selectedLocation: Object,
       selectedInventory: Object,
       viewType: String,
+      isReleasing: Boolean,
       missingInventoryConfig: Object,
       missingInventoryData: Object,
       formattedLocations: Array,
@@ -138,7 +140,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         <div class="left-column">
           <form id="condition-form" class="multi-column-form" @change="${this.fillUpGrist.bind(this)}">
             <fieldset>
-              <label>${i18next.t('field.warehouse')}</label>
+              <label>${i18next.t('field.w/h')}</label>
               <select name="warehouse" .disabled="${!this.formattedLocations?.length}">
                 <option></option>
                 ${this.warehouses.map(warehouse => html` <option>${warehouse}</option> `)}
@@ -239,17 +241,20 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                     : ''}"
                 />
 
-                <label>${i18next.t('label.inspected_weight')}</label>
+                <label>${i18next.t('label.inspected_uom_value')}</label>
                 <input
-                  name="inspectedWeight"
+                  name="inspectedUomValue"
                   type="number"
                   step=".01"
-                  .value="${this.selectedInventory?.weight
-                    ? this.selectedInventory?.inspectedWeight
-                      ? this.selectedInventory.inspectedWeight
-                      : this.selectedInventory.weight
+                  .value="${this.selectedInventory?.uomValue
+                    ? this.selectedInventory?.inspectedUomValue
+                      ? this.selectedInventory.inspectedUomValue
+                      : this.selectedInventory.uomValue
                     : ''}"
                 />
+
+                <label>${i18next.t('label.uom')}</label>
+                <input name="uom" .value="${this.selectedInventory?.uom || ''}" readonly />
 
                 <label>${i18next.t('field.location')}</label>
                 ${this.viewType === VIEW_TYPE.INVENTORY_SELECTED
@@ -265,6 +270,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
 
   constructor() {
     super()
+    this.isReleasing = false
     this.locationData = { records: [] }
     this.inventoryData = { records: [] }
     this.formattedLocations = []
@@ -332,12 +338,16 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     return this.renderRoot.querySelector('input[name=inspectedBatchNo]')
   }
 
+  get bizplaceNameInput() {
+    return this.renderRoot.querySelector('input[name=bizplace]')
+  }
+
   get inspectedQtyInput() {
     return this.renderRoot.querySelector('input[name=inspectedQty]')
   }
 
-  get inspectedWeightInput() {
-    return this.renderRoot.querySelector('input[name=inspectedWeight]')
+  get inspectedUomValueInput() {
+    return this.renderRoot.querySelector('input[name=inspectedUomValue]')
   }
 
   selectOnInput(input) {
@@ -389,6 +399,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
             if (!this.selectedInventory?.id !== record.id) {
               this.selectedInventory = record
               this.viewType = VIEW_TYPE.INVENTORY_SELECTED
+              await this.checkOrderInventory()
               this.updateContext(this.viewType)
               await this.updateComplete
               this.selectOnInput(this.inspectedBatchNoInput)
@@ -404,8 +415,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           'inspectedBatchNo',
           'qty',
           'inspectedQty',
-          'weight',
-          'inspectedWeight',
+          'uomValue',
+          'uom',
+          'inspectedUomValue',
           'inspectedLocation'
         ]
       },
@@ -436,11 +448,24 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           width: 100,
           record: { align: 'center' }
         },
-        { type: 'float', name: 'weight', header: i18next.t('label.weight'), width: 80, record: { align: 'center' } },
         {
           type: 'float',
-          name: 'inspectedWeight',
-          header: i18next.t('label.inspected_weight'),
+          name: 'uomValue',
+          header: i18next.t('label.uom_value'),
+          width: 80,
+          record: { align: 'center' }
+        },
+        {
+          type: 'string',
+          name: 'uom',
+          header: i18next.t('label.uom'),
+          width: 80,
+          record: { align: 'center' }
+        },
+        {
+          type: 'float',
+          name: 'inspectedUomValue',
+          header: i18next.t('label.inspected_uom_value'),
           width: 100,
           record: { align: 'center' }
         },
@@ -454,7 +479,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       ]
     }
 
-    const missingInventoryColumns = ['sequence', 'palletId', 'batchId', 'qty', 'weight']
+    const missingInventoryColumns = ['sequence', 'palletId', 'batchId', 'qty', 'uomValue', 'uom']
     this.missingInventoryConfig = {
       pagination: { infinite: true },
       rows: {
@@ -504,11 +529,12 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               palletId
               batchId
               qty
-              weight
+              uomValue
+              uom
               status
               inspectedBatchNo
               inspectedQty
-              inspectedWeight
+              inspectedUomValue
               inspectedLocation {
                 id
                 name
@@ -535,6 +561,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                 row
               }
               relatedOrderInv {
+                inventory {
+                  id
+                }
                 status
               }
             }
@@ -613,9 +642,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       inspectedBatchNo: wsdInfo.inspectedBatchNo || '',
       qty: wsdInfo.qty,
       inspectedQty: wsdInfo.inspectedQty || 0,
-      weight: wsdInfo.weight,
-      inspectedWeight: wsdInfo.inspectedWeight || 0,
+      uomValue: wsdInfo.uomValue,
+      uom: wsdInfo.uom,
+      inspectedUomValue: wsdInfo.inspectedUomValue || 0,
       inspectedLocation: wsdInfo.inspectedLocation || 0,
+      inventoryId: wsdInfo.relatedOrderInv.inventory.id,
       orderInventoryStatus: wsdInfo.relatedOrderInv.status
     }
   }
@@ -732,10 +763,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       case VIEW_TYPE.INVENTORY_SELECTED:
         if (this.selectedInventory) {
           if (
-            this.selectedInventory.completed &&
-            this.selectedInventory.orderInventoryStatus !== ORDER_INVENTORY_STATUS.TERMINATED.value
+            (this.selectedInventory.completed &&
+            this.selectedInventory.orderInventoryStatus !== ORDER_INVENTORY_STATUS.TERMINATED.value) 
           ) {
-            actions.push({ title: i18next.t('button.undo'), action: this.undoInventoryCheck.bind(this) })
+              if(!this.isReleasing)
+                actions.push({ title: i18next.t('button.undo'), action: this.undoInventoryCheck.bind(this) })
           } else {
             actions.push({
               title: i18next.t('button.check_missing_x', { state: { x: i18next.t('label.pallet') } }),
@@ -754,17 +786,22 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         break
     }
 
+    actions.push({
+      title: i18next.t('button.check_unknown_pallet'),
+      action: this.checkUnknownPallet.bind(this)
+    })
+
+    actions.push({
+      title: i18next.t('button.add_x', { state: { x: i18next.t('label.pallet') } }),
+      action: this.addExtraPallet.bind(this)
+    })
+
     if (this.formattedLocations?.length && this.formattedLocations.every(loc => loc.completed)) {
       actions.push({
         title: i18next.t('button.complete'),
         action: this.completeCycleCount.bind(this)
       })
     }
-
-    actions.push({
-      title: i18next.t('button.add_x', { state: { x: i18next.t('label.pallet') } }),
-      action: this.addExtraPallet.bind(this)
-    })
 
     store.dispatch({
       type: UPDATE_CONTEXT,
@@ -781,28 +818,58 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
 
       const palletId = this.palletIdInput.value
 
-      var locationName = this.locationInput.value
-      let location
-      let inventory
+      const isInventoryOwner = await this.checkPalletInformation(palletId, this.bizplaceNameInput.value)
 
-      for (let i = 0; i < this.formattedLocations.length; i++) {
-        location = this.formattedLocations[i]
+      if (isInventoryOwner) {
+        var locationName = this.locationInput.value
+        let location
+        let inventory
 
-        for (let j = 0; j < location.inventories.length; j++) {
-          if (palletId === location.inventories[j].palletId) {
-            inventory = location.inventories[j]
-            break
+        for (let i = 0; i < this.formattedLocations.length; i++) {
+          location = this.formattedLocations[i]
+
+          for (let j = 0; j < location.inventories.length; j++) {
+            if (palletId === location.inventories[j].palletId) {
+              inventory = location.inventories[j]
+              break
+            }
           }
+
+          if (inventory) break
         }
 
-        if (inventory) break
-      }
+        if (inventory && location.id !== this.selectedLocation.id) {
+          const result = await CustomAlert({
+            title: i18next.t('title.same_pallet_is_found'),
+            text: i18next.t('text.same_pallet_is_found_in_location', { state: { location: location.name } }),
+            confirmButton: { text: i18next.t('button.relocate') },
+            cancelButton: { text: i18next.t('button.cancel') }
+          })
 
-      if (inventory && location.id !== this.selectedLocation.id) {
+          if (!result.value) {
+            return
+          }
+
+          let { inspectedBatchNo, inspectedQty, inspectedUomValue } = Object.fromEntries(
+            new FormData(this.inputForm).entries()
+          )
+
+          inventory.inspectedBatchNo = inspectedBatchNo
+          inventory.inspectedQty = Number(inspectedQty)
+          inventory.inspectedUomValue = Number(inspectedUomValue)
+
+          this.selectedInventory = inventory
+          await this.relocatePallet()
+          return
+        } else if (inventory) {
+          this.selectOnInput(this.palletIdInput)
+          throw new Error(i18next.t('title.same_pallet_is_found'))
+        }
+
         const result = await CustomAlert({
-          title: i18next.t('title.same_pallet_is_found'),
-          text: i18next.t('text.same_pallet_is_found_in_location', { state: { location: location.name } }),
-          confirmButton: { text: i18next.t('button.relocate') },
+          title: i18next.t('title.are_you_sure'),
+          text: i18next.t('button.add_x', { state: { x: i18next.t('label.pallet') } }),
+          confirmButton: { text: i18next.t('button.confirm') },
           cancelButton: { text: i18next.t('button.cancel') }
         })
 
@@ -810,60 +877,100 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           return
         }
 
-        let { inspectedBatchNo, inspectedQty, inspectedWeight } = Object.fromEntries(
+        let { inspectedBatchNo, inspectedQty, inspectedUomValue } = Object.fromEntries(
           new FormData(this.inputForm).entries()
         )
+        inspectedQty = Number(inspectedQty)
+        inspectedUomValue = Number(inspectedUomValue)
 
-        inventory.inspectedBatchNo = inspectedBatchNo
-        inventory.inspectedQty = Number(inspectedQty)
-        inventory.inspectedWeight = Number(inspectedWeight)
+        const response = await client.query({
+          query: gql`
+            mutation {
+              addExtraPallet(${gqlBuilder.buildArgs({
+                cycleCountNo: this.cycleCountNo,
+                palletId,
+                inspectedBatchNo,
+                inspectedQty,
+                inspectedUomValue,
+                locationName
+              })})
+            }
+          `
+        })
 
-        this.selectedInventory = inventory
-        await this.relocatePallet()
-        return
-      } else if (inventory) {
-        this.selectOnInput(this.palletIdInput)
-        throw new Error(i18next.t('title.same_pallet_is_found'))
+        if (!response.errors) {
+          await this.fetchCycleCountWorksheet()
+          this.renewInventoryGrist()
+          this.inputForm.reset()
+          this.palletIdInput.value = ''
+          this.locationInput.value = ''
+        }
+      } else {
+        await CustomAlert({
+          title: i18next.t('title.inventory_not_found'),
+          text: i18next.t('text.inventory_does_not_belong_to_current_customer_account'),
+          confirmButton: { text: i18next.t('button.okay') }
+        })
+
+        this.inputForm.reset()
+        this.palletIdInput.value = ''
+        this.locationInput.value = ''
       }
+    } catch (e) {
+      this.showToast(e)
+    }
+  }
 
-      const result = await CustomAlert({
-        title: i18next.t('title.are_you_sure'),
-        text: i18next.t('button.add_x', { state: { x: i18next.t('label.pallet') } }),
-        confirmButton: { text: i18next.t('button.confirm') },
-        cancelButton: { text: i18next.t('button.cancel') }
-      })
-
-      if (!result.value) {
-        return
+  checkUnknownPallet() {
+    openPopup(
+      html`
+        <check-inventory-popup
+          .bizplaceName="${this.bizplaceNameInput.value}"
+          .cycleCountNo="${this.cycleCountNo}"
+          .selectedLocation="${this.selectedLocation.name}"
+          .missingInventory="${this.missingInventoryData}"
+        ></check-inventory-popup>
+      `,
+      {
+        backdrop: true,
+        size: 'large',
+        title: i18next.t('title.check_unknown_inventory')
       }
+    )
+  }
 
-      let { inspectedBatchNo, inspectedQty, inspectedWeight } = Object.fromEntries(
-        new FormData(this.inputForm).entries()
-      )
-      inspectedQty = Number(inspectedQty)
-      inspectedWeight = Number(inspectedWeight)
+  async checkOrderInventory() {
+    try {
+      const filters = [
+        { name: 'inventory', operator: 'eq', value: this.selectedInventory.inventoryId },
+        { name: 'status', operator: 'noteq', value: ORDER_INVENTORY_STATUS.TERMINATED.value },
+        { name: 'type', operator: 'eq', value: ORDER_TYPES.RELEASE_OF_GOODS.value }
+      ]
 
       const response = await client.query({
         query: gql`
-          mutation {
-            addExtraPallet(${gqlBuilder.buildArgs({
-              cycleCountNo: this.cycleCountNo,
-              palletId,
-              inspectedBatchNo,
-              inspectedQty,
-              inspectedWeight,
-              locationName
-            })})
+          query {
+            orderInventories(${gqlBuilder.buildArgs({
+              filters
+            })}) {
+              items {
+                id
+                name
+              }
+              total
+            }
           }
         `
       })
 
       if (!response.errors) {
-        await this.fetchCycleCountWorksheet()
-        this.renewInventoryGrist()
-        this.inputForm.reset()
-        this.palletIdInput.value = ''
-        this.locationInput.value = ''
+        const orderInventories = response.data.orderInventories.items
+
+        if(orderInventories.length > 0) {
+          this.isReleasing = true
+        } else {
+          this.isReleasing = false
+        }
       }
     } catch (e) {
       this.showToast(e)
@@ -917,11 +1024,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         return
       }
 
-      let { inspectedBatchNo, inspectedQty, inspectedWeight } = Object.fromEntries(
+      let { inspectedBatchNo, inspectedQty, inspectedUomValue } = Object.fromEntries(
         new FormData(this.inputForm).entries()
       )
       inspectedQty = Number(inspectedQty)
-      inspectedWeight = Number(inspectedWeight)
+      inspectedUomValue = Number(inspectedUomValue)
       var locationName = this.locationInput.value
 
       const response = await client.query({
@@ -931,7 +1038,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               worksheetDetailName: this.selectedInventory.worksheetDetailName,
               inspectedBatchNo,
               inspectedQty,
-              inspectedWeight,
+              inspectedUomValue,
               inspectedLocationName: locationName
             })})
           }
@@ -951,11 +1058,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     try {
       this.checkInputFormValidity()
 
-      let { inspectedBatchNo, inspectedQty, inspectedWeight } = Object.fromEntries(
+      let { inspectedBatchNo, inspectedQty, inspectedUomValue } = Object.fromEntries(
         new FormData(this.inputForm).entries()
       )
       inspectedQty = Number(inspectedQty)
-      inspectedWeight = Number(inspectedWeight)
+      inspectedUomValue = Number(inspectedUomValue)
 
       const response = await client.query({
         query: gql`
@@ -964,7 +1071,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
               worksheetDetailName: this.selectedInventory.worksheetDetailName,
               inspectedBatchNo,
               inspectedQty,
-              inspectedWeight
+              inspectedUomValue
             })})
           }
         `
@@ -973,6 +1080,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       if (!response.errors) {
         await this.fetchCycleCountWorksheet()
         this.renewInventoryGrist()
+        this.locationInput.value = ''
       }
     } catch (e) {
       this.showToast(e)
@@ -1058,12 +1166,33 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     this.updateContext()
   }
 
+  async checkPalletInformation(palletId, bizplaceName) {
+    try {
+      const response = await client.query({
+        query: gql`
+          query {
+            checkInventoryOwner(${gqlBuilder.buildArgs({
+              palletId,
+              bizplaceName
+            })})
+          }
+        `
+      })
+
+      if (!response.errors) {
+        return response.data.checkInventoryOwner
+      }
+    } catch (e) {
+      this.showToast(e)
+    }
+  }
+
   checkInputFormValidity() {
-    let { inspectedBatchNo, inspectedQty, inspectedWeight, location } = Object.fromEntries(
+    let { inspectedBatchNo, inspectedQty, inspectedUomValue, location } = Object.fromEntries(
       new FormData(this.inputForm).entries()
     )
     inspectedQty = Number(inspectedQty)
-    inspectedWeight = Number(inspectedWeight)
+    inspectedUomValue = Number(inspectedUomValue)
 
     const palletId = this.palletIdInput.value
     if (!palletId) {
@@ -1086,14 +1215,14 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('field.inspected_qty') } }))
     }
 
-    if (!inspectedWeight) {
-      this.selectOnInput(this.inspectedWeightInput)
-      throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('field.inspected_weight') } }))
+    if (!inspectedUomValue) {
+      this.selectOnInput(this.inspectedUomValueInput)
+      throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('field.inspected_uom_value') } }))
     }
 
-    if (inspectedWeight <= 0) {
-      this.selectOnInput(this.inspectedWeightInput)
-      throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('field.inspected_weight') } }))
+    if (inspectedUomValue <= 0) {
+      this.selectOnInput(this.inspectedUomValueInput)
+      throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('field.inspected_uom_value') } }))
     }
 
     const locationName = this.locationInput.value

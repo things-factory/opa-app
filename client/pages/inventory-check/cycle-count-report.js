@@ -166,7 +166,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
           'inspectedStatus',
           'inspectedLocation',
           'inspectedQty',
-          'inspectedWeight',
+          'inspectedUomValue',
           'status'
         ]
       },
@@ -257,17 +257,30 @@ class CycleCountReport extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'weight',
-          header: i18next.t('field.system_weight'),
-          imex: { header: i18next.t('field.system_weight'), key: 'weight', width: 20, type: 'string' },
+          name: 'uomValue',
+          header: i18next.t('field.system_uom_value'),
+          imex: { header: i18next.t('field.system_uom_value'), key: 'uomValue', width: 20, type: 'string' },
           record: { align: 'center' },
           width: 100
         },
         {
           type: 'float',
-          name: 'inspectedWeight',
-          header: i18next.t('field.inspected_weight'),
-          imex: { header: i18next.t('field.inspected_weight'), key: 'inspectedWeight', width: 20, type: 'string' },
+          name: 'inspectedUomValue',
+          header: i18next.t('field.inspected_uom_value'),
+          imex: {
+            header: i18next.t('field.inspected_uom_value'),
+            key: 'inspectedUomValue',
+            width: 20,
+            type: 'string'
+          },
+          record: { align: 'center' },
+          width: 100
+        },
+        {
+          type: 'string',
+          name: 'uom',
+          header: i18next.t('field.uom'),
+          imex: { header: i18next.t('field.uom'), key: 'uom', width: 20, type: 'string' },
           record: { align: 'center' },
           width: 100
         },
@@ -322,7 +335,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
                 id
                 inspectedBatchNo
                 inspectedQty
-                inspectedWeight
+                inspectedUomValue
                 inspectedLocation {
                   id
                   name
@@ -333,7 +346,8 @@ class CycleCountReport extends localize(i18next)(PageView) {
                   batchId
                   packingType
                   qty
-                  weight
+                  uomValue
+                  uom
                   location {
                     id
                     name
@@ -399,8 +413,8 @@ class CycleCountReport extends localize(i18next)(PageView) {
                 inspectedBatchNo
                 originQty
                 inspectedQty
-                originWeight
-                inspectedWeight
+                originUomValue
+                inspectedUomValue
                 originLocation {
                   id
                   name
@@ -414,6 +428,7 @@ class CycleCountReport extends localize(i18next)(PageView) {
                 inventory {
                   palletId
                   packingType
+                  uom
                   product {
                     name
                     description
@@ -459,8 +474,12 @@ class CycleCountReport extends localize(i18next)(PageView) {
             inspectedBatchNo: worksheetDetail.targetInventory.inspectedBatchNo,
             qty: worksheetDetail.targetInventory.originQty,
             inspectedQty: worksheetDetail.targetInventory.inspectedQty,
-            weight: worksheetDetail.targetInventory.originWeight,
-            inspectedWeight: worksheetDetail.targetInventory.inspectedWeight,
+            uomValue: worksheetDetail.targetInventory.originUomValue,
+            inspectedUomValue: worksheetDetail.targetInventory.inspectedUomValue,
+            uom:
+              worksheetDetail.targetInventory &&
+              worksheetDetail.targetInventory.inventory &&
+              worksheetDetail.targetInventory.inventory.uom,
             location: worksheetDetail.targetInventory.originLocation,
             inspectedLocation: worksheetDetail.targetInventory.inspectedLocation?.name,
             packingType: worksheetDetail.targetInventory.inventory?.packingType || '',

@@ -295,14 +295,14 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
                   ignoreCondition: true
                 },
                 {
-                  name: 'releaseWeight',
-                  header: i18next.t('field.return_weight'),
+                  name: 'releaseUomValue',
+                  header: i18next.t('field.return_uom_value'),
                   record: { align: 'center' },
                   ignoreCondition: true
                 }
               ],
               list: {
-                fields: ['releaseGoodName', 'batchId', 'productName', 'packingType', 'releaseQty', 'releaseWeight']
+                fields: ['releaseGoodName', 'batchId', 'productName', 'packingType', 'releaseQty', 'releaseUomValue']
               }
             }
           },
@@ -334,15 +334,15 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'releaseWeight',
-          header: i18next.t('field.release_weight'),
+          name: 'releaseUomValue',
+          header: i18next.t('field.release_uom_value'),
           record: { editable: true, align: 'center', options: { min: 0 } },
           width: 140
         },
         {
           type: 'float',
-          name: 'returnWeight',
-          header: i18next.t('field.return_weight'),
+          name: 'returnUomValue',
+          header: i18next.t('field.return_uom_value'),
           record: { editable: true, align: 'center', options: { min: 0 } },
           width: 140
         }
@@ -419,34 +419,34 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
   //Fields Changed Handler
   _onInventoryFieldChanged(e) {
     let columnName = e.detail.column.name
-    let roundedWeight = e.detail.record.roundedWeight || 0
+    let roundedUomValue = e.detail.record.roundedUomValue || 0
     let returnQty = 0
 
-    if (columnName == 'returnWeight' || columnName == 'returnQty') {
-      let packageWeight = e.detail.record.releaseWeight / e.detail.record.releaseQty
+    if (columnName == 'returnUomValue' || columnName == 'returnQty') {
+      let packageUomValue = e.detail.record.releaseUomValue / e.detail.record.releaseQty
       if (
-        e.detail.record.releaseWeight &&
+        e.detail.record.releaseUomValue &&
         e.detail.record.releaseQty &&
-        e.detail.record.releaseWeight > 0 &&
+        e.detail.record.releaseUomValue > 0 &&
         e.detail.record.releaseQty > 0
       ) {
         if (columnName === 'returnQty') {
           returnQty = e.detail.after || 0
         } else {
-          returnQty = Math.round(e.detail.after / packageWeight)
+          returnQty = Math.round(e.detail.after / packageUomValue)
         }
 
-        roundedWeight = returnQty * packageWeight
-        roundedWeight = parseFloat(roundedWeight.toFixed(2))
+        roundedUomValue = returnQty * packageUomValue
+        roundedUomValue = parseFloat(roundedUomValue.toFixed(2))
       }
     }
 
     this.inventoryData = {
       ...this.inventoryGrist.dirtyData,
       records: this.inventoryGrist.dirtyData.records.map((record, idx) => {
-        if ((columnName == 'returnWeight' || columnName == 'returnQty') && idx === e.detail.row) {
-          if (columnName == 'returnWeight') record.returnQty = returnQty
-          record.returnWeight = roundedWeight
+        if ((columnName == 'returnUomValue' || columnName == 'returnQty') && idx === e.detail.row) {
+          if (columnName == 'returnUomValue') record.returnQty = returnQty
+          record.returnUomValue = roundedUomValue
         }
 
         let returnObj = {
@@ -466,8 +466,8 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
     try {
       if (changedColumn === 'returnQty') {
         this._validateReleaseQty(changeRecord.returnQty, changeRecord.releaseQty)
-      } else if (changedColumn === 'returnWeight') {
-        this._validateReleaseWeight(changeRecord.returnWeight, changeRecord.releaseWeight)
+      } else if (changedColumn === 'returnUomValue') {
+        this._validateReleaseUomValue(changeRecord.returnUomValue, changeRecord.releaseUomValue)
       }
       this._updateInventoryList()
     } catch (e) {
@@ -491,12 +491,12 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
     }
   }
 
-  _validateReleaseWeight(returnWeight, releaseWeight) {
-    if (releaseWeight === undefined) throw new Error(i18next.t('text.there_is_no_selected_items'))
-    if (returnWeight > releaseWeight) {
-      throw new Error(i18next.t('text.available_weight_insufficient'))
-    } else if (returnWeight <= 0) {
-      throw new Error(i18next.t('text.invalid_weight_input'))
+  _validateReleaseUomValue(returnUomValue, releaseUomValue) {
+    if (releaseUomValue === undefined) throw new Error(i18next.t('text.there_is_no_selected_items'))
+    if (returnUomValue > releaseUomValue) {
+      throw new Error(i18next.t('text.available_uom_value_insufficient'))
+    } else if (returnUomValue <= 0) {
+      throw new Error(i18next.t('text.invalid_uom_value_input'))
     }
   }
 
@@ -528,7 +528,7 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
   _validateInventories() {
     const inventories = this.inventoryGrist?.dirtyData?.records
     if (!inventories?.length) throw new Error(i18next.t('text.no_products'))
-    // required field (batchId, packingType, weight, unit, packQty)
+    // required field (batchId, packingType, uomValue, unit, packQty)
     if (!inventories.every(record => record.returnQty && record.batchId && record.packingType)) {
       throw new Error(i18next.t('text.empty_value_in_list'))
     }
@@ -626,7 +626,7 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
     return this.inventoryGrist.data.records.map(record => {
       let newRecord = {
         returnQty: record.returnQty,
-        returnWeight: record.returnWeight,
+        returnUomValue: record.returnUomValue,
         batchId: record.inventory.batchId,
         packingType: record.inventory.packingType,
         type: ORDER_TYPES.RETURN_ORDER.value,
@@ -669,7 +669,7 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
           } else if (record.targetType === VAS_BATCH_AND_PRODUCT_TYPE) {
             result.targetBatchId = record.target.batchId
             result.targetProduct = { id: record.target.productId }
-            result.weight = record.weight
+            result.uomValue = record.uomValue
           } else {
             result.otherTarget = record.target
             delete result.qty

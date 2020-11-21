@@ -354,15 +354,15 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'string',
-          name: 'releaseWeight',
-          header: i18next.t('field.release_weight'),
+          name: 'releaseUomValue',
+          header: i18next.t('field.release_uom_value'),
           record: { align: 'center' },
           width: 100
         },
         {
           type: 'string',
-          name: 'unit',
-          header: i18next.t('field.weight_unit'),
+          name: 'uom',
+          header: i18next.t('field.uom'),
           record: { align: 'center' },
           width: 80
         },
@@ -456,15 +456,15 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'number',
-          name: 'releaseWeight',
-          header: i18next.t('field.weight'),
+          name: 'releaseUomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           width: 80
         },
         {
           type: 'string',
-          name: 'unit',
-          header: i18next.t('field.weight_unit'),
+          name: 'uom',
+          header: i18next.t('field.uom'),
           record: { align: 'center' },
           width: 80
         }
@@ -506,9 +506,9 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
               }
               qty
               releaseQty
-              releaseWeight
+              releaseUomValue
               inventory {
-                unit
+                uom
               }
             }
           }
@@ -711,11 +711,11 @@ class LoadingProduct extends connect(store)(localize(i18next)(PageView)) {
           })}) {
             items {
               releaseQty
-              releaseWeight
+              releaseUomValue
               inventory {
                 palletId
                 batchId
-                unit
+                uom
                 product {
                   name
                   description

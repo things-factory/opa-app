@@ -343,8 +343,8 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'integer',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           width: 100
         },
@@ -397,8 +397,8 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'float',
-        name: 'releaseWeight',
-        header: i18next.t('field.release_weight'),
+        name: 'releaseUomValue',
+        header: i18next.t('field.release_uom_value'),
         record: { editable: true, align: 'center' },
         width: 160
       }
@@ -429,8 +429,8 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'float',
-        name: 'weight',
-        header: i18next.t('field.weight'),
+        name: 'uomValue',
+        header: i18next.t('field.uom_value'),
         record: { align: 'center' },
         width: 80
       },
@@ -450,8 +450,8 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'integer',
-        name: 'totalWeight',
-        header: i18next.t('field.total_weight'),
+        name: 'totalUomValue',
+        header: i18next.t('field.total_uom_value'),
         record: { align: 'center' },
         width: 120
       },
@@ -471,7 +471,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
     }
 
     this.productGristConfig = {
-      list: { fields: ['batchId', 'product', 'packingType', 'totalWeight'] },
+      list: { fields: ['batchId', 'product', 'packingType', 'totalUomValue'] },
       pagination: { infinite: true },
       rows: { selectable: { multiple: true }, appendable: false },
       columns: productGristColumns
@@ -522,13 +522,13 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
               }
               status
               packingType
-              weight
+              uomValue
               unit
               packQty
-              totalWeight
+              totalUomValue
               palletQty
               releaseQty
-              releaseWeight
+              releaseUomValue
             }
             orderVass {
               vas {
@@ -546,7 +546,7 @@ class RejectedArrivalNotice extends localize(i18next)(PageView) {
               }
               packingType
               qty
-              weight
+              uomValue
               otherTarget
               description
               remark

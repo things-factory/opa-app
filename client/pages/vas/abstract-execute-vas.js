@@ -371,7 +371,7 @@ export class AbstractExecuteVas extends LitElement {
       completed: task.status === WORKSHEET_STATUS.DONE.value,
       description: task.description,
       qty: task.qty,
-      weight: task.weight,
+      uomValue: task.uomValue,
       inventory: task.inventory,
       issue: task.issue
     }

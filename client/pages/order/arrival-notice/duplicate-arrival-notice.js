@@ -320,7 +320,7 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
 
     this.productGristConfig = {
       pagination: { infinite: true },
-      list: { fields: ['batch_no', 'product', 'packingType', 'totalWeight'] },
+      list: { fields: ['batch_no', 'product', 'packingType', 'totalUomValue'] },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         {
@@ -372,17 +372,17 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
           width: 150
         },
         {
-          type: 'float',
-          name: 'weight',
-          header: i18next.t('field.weight'),
-          record: { editable: true, align: 'center', options: { min: 0 } },
-          width: 80
-        },
-        {
           type: 'code',
           name: 'unit',
           header: i18next.t('field.unit'),
           record: { editable: true, align: 'center', codeName: 'WEIGHT_UNITS' },
+          width: 80
+        },
+        {
+          type: 'float',
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
+          record: { editable: true, align: 'center', options: { min: 0 } },
           width: 80
         },
         {
@@ -394,8 +394,8 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
         },
         {
           type: 'float',
-          name: 'totalWeight',
-          header: i18next.t('field.total_weight'),
+          name: 'totalUomValue',
+          header: i18next.t('field.total_uom_value'),
           record: { align: 'center' },
           width: 120
         },
@@ -515,8 +515,8 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'float',
-        name: 'releaseWeight',
-        header: i18next.t('field.release_weight'),
+        name: 'releaseUomValue',
+        header: i18next.t('field.release_uom_value'),
         record: { editable: true, align: 'center' },
         width: 160
       }
@@ -574,8 +574,8 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'float',
-        name: 'weight',
-        header: i18next.t('field.weight'),
+        name: 'uomValue',
+        header: i18next.t('field.uom_value'),
         record: { editable: true, align: 'center', options: { min: 0 } },
         width: 80
       },
@@ -595,8 +595,8 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
       },
       {
         type: 'float',
-        name: 'totalWeight',
-        header: i18next.t('field.total_weight'),
+        name: 'totalUomValue',
+        header: i18next.t('field.total_uom_value'),
         record: { align: 'center' },
         width: 120
       },
@@ -617,7 +617,7 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
 
     this.productGristConfig = {
       pagination: { infinite: true },
-      list: { fields: ['batch_no', 'product', 'packingType', 'totalWeight'] },
+      list: { fields: ['batch_no', 'product', 'packingType', 'totalUomValue'] },
       columns: productGristColumns
     }
   }
@@ -628,7 +628,7 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
       let changeRecord = event.detail.after
       const changedColumn = event.detail.column.name
 
-      const amountRelatedColumns = ['weight', 'unit', 'packQty', 'releaseQty', 'releaseWeight']
+      const amountRelatedColumns = ['uomValue', 'unit', 'packQty', 'releaseQty', 'releaseUomValue']
       if (amountRelatedColumns.indexOf(changedColumn) >= 0) {
         const calcedAmount = this._calcAmount(changedColumn, changeRecord)
         for (let key in calcedAmount) {
@@ -666,9 +666,9 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
     }
   }
 
-  _calcTotalWeight(weight, unit, packQty) {
-    if (weight && unit && packQty) {
-      return `${(weight * packQty).toFixed(2)} ${unit}`
+  _calcTotalUomValue(uomValue, unit, packQty) {
+    if (uomValue && unit && packQty) {
+      return `${(uomValue * packQty).toFixed(2)} ${unit}`
     } else {
       return null
     }
@@ -676,34 +676,35 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
 
   _calcAmount(changedColumn, changeRecord) {
     let calcedRecord = {}
-    let { weight, unit, packQty, releaseQty, releaseWeight } = changeRecord
+    let { uomValue, unit, packQty, releaseQty, releaseUomValue } = changeRecord
 
-    if (changedColumn === 'weight' && (!weight || weight < 0))
-      throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.weight') } }))
+    if (changedColumn === 'uomValue' && (!uomValue || uomValue < 0))
+      throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.uom_value') } }))
     if (changedColumn === 'packQty' && (!packQty || packQty < 0))
       throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.pack_qty') } }))
     if (changedColumn === 'unit' && !unit)
       throw new Error(i18next.t('text.x_is_empty', { state: { x: i18next.t('label.unit') } }))
 
-    if (weight && unit && packQty) {
-      calcedRecord.totalWeight = `${(weight * packQty).toFixed(2)} ${unit}`
+    if (uomValue && unit && packQty) {
+      calcedRecord.totalUomValue = `${(uomValue * packQty).toFixed(2)} ${unit}`
     } else {
-      calcedRecord.totalWeight = ''
+      calcedRecord.totalUomValue = ''
     }
 
     if (!this._crossDocking) return calcedRecord
 
-    if (changedColumn === 'releaseQty' || changedColumn === 'releaseWeight') {
+    if (changedColumn === 'releaseQty' || changedColumn === 'releaseUomValue') {
       if (isNaN(releaseQty)) {
         releaseQty = 0
         calcedRecord.releaseQty = releaseQty
       }
-      if (isNaN(releaseWeight)) {
-        releaseWeight = 0
-        calcedRecord.releaseWeight = releaseWeight
+      if (isNaN(releaseUomValue)) {
+        releaseUomValue = 0
+        calcedRecord.releaseUomValue = releaseUomValue
       }
 
-      if (!weight) throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.weight') } }))
+      if (!uomValue)
+        throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.uom_value') } }))
       if (!packQty)
         throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.pack_qty') } }))
 
@@ -714,21 +715,23 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
         if (releaseQty > packQty) {
           throw new Error(i18next.t('text.x_exceed_limit', { state: { x: i18next.t('label.release_qty') } }))
         }
-        calcedRecord.releaseWeight = releaseQty * weight
+        calcedRecord.releaseUomValue = releaseQty * uomValue
       } else {
-        if (releaseWeight === undefined || releaseWeight < 0) {
-          throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.release_weight') } }))
+        if (releaseUomValue === undefined || releaseUomValue < 0) {
+          throw new Error(
+            i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.release_uom_value') } })
+          )
         }
 
-        if (releaseWeight > packQty * weight) {
-          throw new Error(i18next.t('text.x_exceed_limit', { state: { x: i18next.t('label.release_weight') } }))
+        if (releaseUomValue > packQty * uomValue) {
+          throw new Error(i18next.t('text.x_exceed_limit', { state: { x: i18next.t('label.release_uom_value') } }))
         }
 
-        if (releaseWeight % weight) {
-          throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('label.release_weight') } }))
+        if (releaseUomValue % uomValue) {
+          throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('label.release_uom_value') } }))
         }
 
-        calcedRecord.releaseQty = releaseWeight / weight
+        calcedRecord.releaseQty = releaseUomValue / uomValue
       }
     }
 
@@ -965,22 +968,22 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
     if (!this.productGrist.dirtyData.records || !this.productGrist.dirtyData.records.length)
       throw new Error(i18next.t('text.no_products'))
 
-    // required field (batchId, packingType, weight, unit, packQty, palletQty)
+    // required field (batchId, packingType, uomValue, unit, packQty, palletQty)
     if (
       this.productGrist.dirtyData.records.filter(
-        record => !record.batchId || !record.packingType || !record.weight || !record.unit || !record.packQty
+        record => !record.batchId || !record.packingType || !record.uomValue || !record.unit || !record.packQty
       ).length
     )
       throw new Error(i18next.t('text.empty_value_in_list'))
 
     if (
       this._crossDocking &&
-      this.productGrist.dirtyData.records.every(record => !record.releaseQty || !record.releaseWeight)
+      this.productGrist.dirtyData.records.every(record => !record.releaseQty || !record.releaseUomValue)
     ) {
       throw new Error(
         i18next.t('text.invalid_x', {
           state: {
-            x: `${i18next.t('label.release_qty')}, ${i18next.t('label.release_weight')}`
+            x: `${i18next.t('label.release_qty')}, ${i18next.t('label.release_uom_value')}`
           }
         })
       )
@@ -1057,16 +1060,16 @@ class DuplicateArrivalNotice extends localize(i18next)(PageView) {
         batchId: record.batchId,
         product: { id: record.product.id },
         packingType: record.packingType,
-        weight: record.weight,
+        uomValue: record.uomValue,
         unit: record.unit,
         packQty: record.packQty,
-        totalWeight: record.totalWeight
+        totalUomValue: record.totalUomValue
       }
 
       if (record.palletQty) orderProduct.palletQty = record.palletQty
-      if (this._crossDocking && record.releaseQty !== undefined && record.releaseWeight !== undefined) {
+      if (this._crossDocking && record.releaseQty !== undefined && record.releaseUomValue !== undefined) {
         orderProduct.releaseQty = record.releaseQty
-        orderProduct.releaseWeight = record.releaseWeight
+        orderProduct.releaseUomValue = record.releaseUomValue
       }
 
       return orderProduct

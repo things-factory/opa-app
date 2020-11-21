@@ -126,7 +126,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
       { column: 'product', name: 'Product' },
       { column: 'location', name: 'Location' },
       { column: 'qty', name: 'Quantity' },
-      { column: 'weight', name: 'Weight' }
+      { column: 'uomValue', name: 'UomValue' }
     ]
 
     this.config = {
@@ -154,7 +154,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
                 case 'approved':
                   compareData = record.lastInventoryHistory
                   compareData.qty = compareData.openingQty + compareData.qty
-                  compareData.weight = compareData.openingWeight + compareData.weight
+                  compareData.uomValue = compareData.openingUomValue + compareData.uomValue
                   break
                 default:
                   break
@@ -375,7 +375,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
                   description
                 }
                 qty
-                weight
+                uomValue
               }
               batchId
               packingType
@@ -396,7 +396,7 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
                 description
               }
               qty
-              weight
+              uomValue
               status
               transactionType
               lastInventoryHistory{ 
@@ -420,8 +420,8 @@ class InventoryAdjustmentApproval extends connect(store)(localize(i18next)(PageV
                 }
                 openingQty
                 qty
-                openingWeight
-                weight
+                openingUomValue
+                uomValue
               }
               createdAt
               updatedAt

@@ -132,8 +132,8 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
         },
         {
           type: 'number',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           sortable: true,
           width: 80
@@ -206,7 +206,7 @@ class InventoryByProductDetail extends localize(i18next)(LitElement) {
                 palletId
                 batchId
                 qty
-                weight
+                uomValue
                 remainQty                
                 warehouse {
                   name

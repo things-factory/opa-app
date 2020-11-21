@@ -278,13 +278,13 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
                 { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
                 { name: 'remainQty', type: 'float', record: { align: 'center' } },
                 {
-                  name: 'remainWeight',
+                  name: 'remainUomValue',
                   type: 'float',
-                  header: i18next.t('field.total_weight'),
+                  header: i18next.t('field.total_uom_value'),
                   record: { align: 'center' }
                 }
               ],
-              list: { fields: ['palletId', 'product', 'batchId', 'location', 'remainWeight'] }
+              list: { fields: ['palletId', 'product', 'batchId', 'location', 'remainUomValue'] }
             }
           },
           width: 250
@@ -336,15 +336,15 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'float',
-          name: 'remainWeight',
-          header: i18next.t('field.available_weight'),
+          name: 'remainUomValue',
+          header: i18next.t('field.available_uom_value'),
           record: { align: 'center' },
           width: 100
         },
         {
           type: 'float',
-          name: 'releaseWeight',
-          header: i18next.t('field.release_weight'),
+          name: 'releaseUomValue',
+          header: i18next.t('field.release_uom_value'),
           record: { editable: true, align: 'center', options: { min: 0 } },
           width: 100
         }
@@ -410,13 +410,13 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
                 { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
                 { name: 'remainQty', type: 'float', record: { align: 'center' } },
                 {
-                  name: 'remainWeight',
+                  name: 'remainUomValue',
                   type: 'float',
-                  header: i18next.t('field.total_weight'),
+                  header: i18next.t('field.total_uom_value'),
                   record: { align: 'center' }
                 }
               ],
-              list: { fields: ['palletId', 'product', 'batchId', 'location', 'remainWeight'] }
+              list: { fields: ['palletId', 'product', 'batchId', 'location', 'remainUomValue'] }
             }
           },
           width: 250
@@ -461,15 +461,15 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'float',
-          name: 'remainWeight',
-          header: i18next.t('field.available_weight'),
+          name: 'remainUomValue',
+          header: i18next.t('field.available_uom_value'),
           record: { align: 'center' },
           width: 100
         },
         {
           type: 'float',
-          name: 'releaseWeight',
-          header: i18next.t('field.release_weight'),
+          name: 'releaseUomValue',
+          header: i18next.t('field.release_uom_value'),
           record: { editable: true, align: 'center', options: { min: 0 } },
           width: 100
         }
@@ -574,34 +574,34 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
 
   _onInventoryFieldChanged(e) {
     let columnName = e.detail.column.name
-    let roundedWeight = e.detail.record.roundedWeight || 0
+    let roundedUomValue = e.detail.record.roundedUomValue || 0
     let releaseQty = 0
 
-    if (columnName == 'releaseWeight' || columnName == 'releaseQty') {
-      let packageWeight = e.detail.record.remainWeight / e.detail.record.remainQty
+    if (columnName == 'releaseUomValue' || columnName == 'releaseQty') {
+      let packageUomValue = e.detail.record.remainUomValue / e.detail.record.remainQty
       if (
-        e.detail.record.remainWeight &&
+        e.detail.record.remainUomValue &&
         e.detail.record.remainQty &&
-        e.detail.record.remainWeight > 0 &&
+        e.detail.record.remainUomValue > 0 &&
         e.detail.record.remainQty > 0
       ) {
         if (columnName === 'releaseQty') {
           releaseQty = e.detail.after || 0
         } else {
-          releaseQty = Math.round(e.detail.after / packageWeight)
+          releaseQty = Math.round(e.detail.after / packageUomValue)
         }
 
-        roundedWeight = releaseQty * packageWeight
-        roundedWeight = parseFloat(roundedWeight.toFixed(2))
+        roundedUomValue = releaseQty * packageUomValue
+        roundedUomValue = parseFloat(roundedUomValue.toFixed(2))
       }
     }
 
     this.inventoryData = {
       ...this.inventoryGrist.dirtyData,
       records: this.inventoryGrist.dirtyData.records.map((record, idx) => {
-        if ((columnName == 'releaseWeight' || columnName == 'releaseQty') && idx === e.detail.row) {
-          if (columnName == 'releaseWeight') record.releaseQty = releaseQty
-          record.releaseWeight = roundedWeight
+        if ((columnName == 'releaseUomValue' || columnName == 'releaseQty') && idx === e.detail.row) {
+          if (columnName == 'releaseUomValue') record.releaseQty = releaseQty
+          record.releaseUomValue = roundedUomValue
         }
 
         let returnObj = {
@@ -623,9 +623,9 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
     this.existingInventoryData = {
       ...this.existingInventoryGrist.dirtyData,
       records: this.existingInventoryGrist.dirtyData.records.map((record, idx) => {
-        if ((columnName == 'releaseWeight' || columnName == 'releaseQty') && idx === e.detail.row) {
-          if (columnName == 'releaseWeight') record.releaseQty = releaseQty
-          record.releaseWeight = roundedWeight
+        if ((columnName == 'releaseUomValue' || columnName == 'releaseQty') && idx === e.detail.row) {
+          if (columnName == 'releaseUomValue') record.releaseQty = releaseQty
+          record.releaseUomValue = roundedUomValue
         }
 
         let returnObj = {
@@ -652,8 +652,8 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
     try {
       if (changedColumn === 'releaseQty') {
         this._validateReleaseQty(changeRecord.releaseQty, changeRecord.remainQty)
-      } else if (changedColumn === 'releaseWeight') {
-        this._validateReleaseWeight(changeRecord.releaseWeight, changeRecord.remainWeight)
+      } else if (changedColumn === 'releaseUomValue') {
+        this._validateReleaseUomValue(changeRecord.releaseUomValue, changeRecord.remainUomValue)
       }
       this._updateInventoryList()
     } catch (e) {
@@ -674,10 +674,10 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
     }
   }
 
-  _validateReleaseWeight(releaseWeight, remainWeight) {
-    if (remainWeight === undefined) throw new Error(i18next.t('text.there_is_no_selected_items'))
-    if (releaseWeight > remainWeight) {
-      throw new Error(i18next.t('text.available_weight_insufficient'))
+  _validateReleaseUomValue(releaseUomValue, remainUomValue) {
+    if (remainUomValue === undefined) throw new Error(i18next.t('text.there_is_no_selected_items'))
+    if (releaseUomValue > remainUomValue) {
+      throw new Error(i18next.t('text.available_uom_value_insufficient'))
     }
   }
 
@@ -726,7 +726,7 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
       orderInventories = this.inventoryGrist.dirtyData.records.map(record => {
         let newRecord = {
           releaseQty: record.releaseQty,
-          releaseWeight: record.releaseWeight,
+          releaseUomValue: record.releaseUomValue,
           batchId: record.inventory.batchId,
           packingType: record.inventory.packingType,
           type: ORDER_TYPES.RELEASE_OF_GOODS.value,
@@ -751,7 +751,7 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
       existingOrderInventories = this.existingInventoryGrist.dirtyData.records.map(record => {
         let existRecord = {
           releaseQty: record.releaseQty,
-          releaseWeight: record.releaseWeight,
+          releaseUomValue: record.releaseUomValue,
           batchId: record.inventory.batchId,
           packingType: record.inventory.packingType,
           type: ORDER_TYPES.RELEASE_OF_GOODS.value,
@@ -784,10 +784,10 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
     // no records
     if (!this.inventoryGrist.dirtyData.records || !this.inventoryGrist.dirtyData.records.length)
       throw new Error(i18next.t('text.no_products'))
-    // required field (batchId, packingType, weight, unit, packQty, palletQty)
+    // required field (batchId, packingType, uomValue, unit, packQty, palletQty)
     if (
       this.inventoryGrist.dirtyData.records.filter(
-        record => !record.batchId || !record.packingType || !record.releaseWeight || !record.releaseQty
+        record => !record.batchId || !record.packingType || !record.releaseUomValue || !record.releaseQty
       ).length
     )
       throw new Error(i18next.t('text.empty_value_in_list'))

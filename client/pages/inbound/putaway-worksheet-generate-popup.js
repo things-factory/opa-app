@@ -156,8 +156,8 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
           },
           {
             type: 'float',
-            name: 'releaseWeight',
-            header: i18next.t('field.release_weight'),
+            name: 'releaseUomValue',
+            header: i18next.t('field.release_uom_value'),
             record: { align: 'center' },
             width: 80
           }
@@ -214,8 +214,8 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'number',
-          name: 'weight',
-          header: i18next.t('field.weight'),
+          name: 'uomValue',
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           sortable: true,
           width: 80
@@ -259,7 +259,7 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
   }
 
   async fetchPartiallyUnloadedPalltets() {
-    if(this.arrivalNotice) {
+    if (this.arrivalNotice) {
       if (!this.arrivalNotice || !this.arrivalNotice.id) return
 
       try {
@@ -291,7 +291,7 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
                   packingType
                   palletId
                   qty
-                  weight
+                  uomValue
                   updatedAt
                   updater {
                     name
@@ -301,16 +301,16 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
             }
           `
         })
-  
+
         if (!response.errors) {
           this.inventoryGristData = { records: response.data.inventories.items }
         }
       } catch (e) {
         this._showToast(e)
       }
-    } 
-    
-    if(this.returnOrder) {
+    }
+
+    if (this.returnOrder) {
       if (!this.returnOrder || !this.returnOrder.id) return
 
       try {
@@ -342,7 +342,7 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
                   packingType
                   palletId
                   qty
-                  weight
+                  uomValue
                   updatedAt
                   updater {
                     name
@@ -380,7 +380,7 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
                 }
                 status
                 releaseQty
-                releaseWeight
+                releaseUomValue
             }
           }
         }
@@ -402,7 +402,7 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
     try {
       this.checkValidity()
 
-      if(this.arrivalNotice) {
+      if (this.arrivalNotice) {
         if (!this.arrivalNotice || !this.arrivalNotice.name) return
 
         const result = await CustomAlert({
@@ -438,9 +438,9 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
           this.dispatchEvent(new CustomEvent('completed'))
           history.back()
         }
-      } 
-      
-      if(this.returnOrder) {
+      }
+
+      if (this.returnOrder) {
         if (!this.returnOrder || !this.returnOrder.name) return
 
         const result = await CustomAlert({
@@ -477,7 +477,6 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
           history.back()
         }
       }
-      
     } catch (e) {
       this._showToast(e)
     }
@@ -517,18 +516,18 @@ class PutawayWorksheetGeneratePopup extends localize(i18next)(LitElement) {
             return true
           }
 
-          const { qty, weight } = nonSelectedInvs
+          const { qty, uomValue } = nonSelectedInvs
             .filter(nonSelectedInv => compareIdenticality(nonSelectedInv, crossDockInv))
             .reduce(
               (amount, inv) => {
                 amount.qty += inv.qty
-                amount.weight += inv.weight
+                amount.uomValue += inv.uomValue
                 return amount
               },
-              { qty: 0, weight: 0 }
+              { qty: 0, uomValue: 0 }
             )
 
-          return crossDockInv.releaseQty <= qty && crossDockInv.releaseWeight <= weight
+          return crossDockInv.releaseQty <= qty && crossDockInv.releaseUomValue <= uomValue
         })
 
         if (!isEveryQtySufficient) {

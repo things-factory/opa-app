@@ -19,12 +19,12 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
       bizplaceId: String,
       packingType: String,
       releaseQty: Number,
-      releaseWeight: Number,
+      releaseUomValue: Number,
       config: Object,
       _data: Object,
       data: Object,
       pickQty: Number,
-      pickWeight: Number
+      pickUomValue: Number
     }
   }
 
@@ -102,11 +102,11 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
           <label>${i18next.t('label.release_qty')}</label>
           <input readonly name="releaseQty" value="${`${this.pickQty} / ${this.releaseQty}`}" />
 
-          <label>${i18next.t('label.release_weight')}</label>
+          <label>${i18next.t('label.release_uom_value')}</label>
           <input
             readonly
-            name="releaseWeight"
-            value="${`${Math.round(this.pickWeight * 100) / 100} / ${this.releaseWeight}`}"
+            name="releaseUomValue"
+            value="${`${Math.round(this.pickUomValue * 100) / 100} / ${this.releaseUomValue}`}"
           />
         </fieldset>
       </form>
@@ -236,15 +236,15 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'float',
-          name: 'pickWeight',
-          header: i18next.t('field.pick_weight'),
+          name: 'pickUomValue',
+          header: i18next.t('field.pick_uom_value'),
           record: { align: 'center', editable: true },
           width: 60
         },
         {
           type: 'float',
-          name: 'weight',
-          header: i18next.t('field.available_weight'),
+          name: 'uomValue',
+          header: i18next.t('field.available_uom_value'),
           record: { align: 'center' },
           width: 60
         },
@@ -290,7 +290,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
                 shelf
               }
               qty
-              weight
+              uomValue
               createdAt
             }
             total
@@ -314,40 +314,40 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
 
   _calculateData(_data) {
     this.pickQty = 0
-    this.pickWeight = 0
+    this.pickUomValue = 0
 
     this.data = {
       ..._data,
       records: _data.records.map(item => {
         let picked = false
         let pickQty = 0
-        let pickWeight = 0
+        let pickUomValue = 0
 
         if (this.pickQty < this.releaseQty) {
           picked = true
           const leftQty = this.releaseQty - this.pickQty
-          const leftWeight = this.releaseWeight - this.pickWeight
+          const leftUomValue = this.releaseUomValue - this.pickUomValue
           pickQty = leftQty > item.qty ? item.qty : leftQty
-          pickWeight = leftWeight > item.weight ? item.weight : leftWeight
+          pickUomValue = leftUomValue > item.uomValue ? item.uomValue : leftUomValue
 
-          // rounding off the pickWeight will update the *Pick Weight* column on grist
-          pickWeight = Math.round(pickWeight * 100) / 100
+          // rounding off the pickUomValue will update the *Pick UomValue* column on grist
+          pickUomValue = Math.round(pickUomValue * 100) / 100
           this.pickQty += pickQty
-          this.pickWeight += pickWeight
+          this.pickUomValue += pickUomValue
         }
 
         // need to round off so that it will bypass the validation upon submission
-        this.pickWeight = Math.round(this.pickWeight * 100) / 100
+        this.pickUomValue = Math.round(this.pickUomValue * 100) / 100
 
         // need to round off so that it will bypass the validation upon submission
-        this.pickWeight = Math.round(this.pickWeight * 100) / 100
+        this.pickUomValue = Math.round(this.pickUomValue * 100) / 100
 
         return {
           ...item,
           ...item.location,
           picked,
           pickQty,
-          pickWeight
+          pickUomValue
         }
       })
     }
@@ -355,58 +355,58 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
 
   async _onInventoryFieldChanged(e) {
     const columnName = e.detail.column.name
-    if (columnName === 'pickQty' || columnName === 'pickWeight') {
+    if (columnName === 'pickQty' || columnName === 'pickUomValue') {
       let totalPickQty = 0
-      let totalPickWeight = 0
+      let totalPickUomValue = 0
 
       if (columnName === 'pickQty') {
         this.data = {
           records: this.grist.dirtyData.records.map(data => {
             let pickQty = data.pickQty
-            let pickWeight = (data.weight / data.qty) * data.pickQty
-            pickWeight = Math.round(pickWeight * 100) / 100
+            let pickUomValue = (data.uomValue / data.qty) * data.pickQty
+            pickUomValue = Math.round(pickUomValue * 100) / 100
 
             if (pickQty > data.qty || Number.isNaN(pickQty)) {
               pickQty = data.qty
-              pickWeight = data.weight
+              pickUomValue = data.uomValue
             } else if (pickQty < 0) {
               pickQty = 0
-              pickWeight = 0
+              pickUomValue = 0
             }
 
             totalPickQty += pickQty
-            totalPickWeight += pickWeight
+            totalPickUomValue += pickUomValue
 
             return {
               ...data,
               pickQty,
-              pickWeight,
+              pickUomValue,
               picked: Boolean(data.pickQty)
             }
           })
         }
-      } else if (columnName === 'pickWeight') {
+      } else if (columnName === 'pickUomValue') {
         this.data = {
           records: this.grist.dirtyData.records.map(data => {
-            let pickQty = Math.round((data.qty * data.pickWeight) / data.weight)
-            let pickWeight = data.pickWeight
+            let pickQty = Math.round((data.qty * data.pickUomValue) / data.uomValue)
+            let pickUomValue = data.pickUomValue
 
-            if (pickWeight > data.weight || Number.isNaN(pickWeight)) {
+            if (pickUomValue > data.uomValue || Number.isNaN(pickUomValue)) {
               pickQty = data.qty
-              pickWeight = data.weight
-            } else if (pickWeight < 0) {
+              pickUomValue = data.uomValue
+            } else if (pickUomValue < 0) {
               pickQty = 0
-              pickWeight = 0
+              pickUomValue = 0
             }
 
             totalPickQty += pickQty
-            totalPickWeight += pickWeight
+            totalPickUomValue += pickUomValue
 
             return {
               ...data,
-              pickQty: Math.round((pickQty * data.weight) / data.weight),
-              pickWeight,
-              picked: Boolean(data.pickWeight)
+              pickQty: Math.round((pickQty * data.uomValue) / data.uomValue),
+              pickUomValue,
+              picked: Boolean(data.pickUomValue)
             }
           })
         }
@@ -414,7 +414,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
 
       await this.grist.updateComplete
       this.pickQty = totalPickQty
-      this.pickWeight = Math.round(totalPickWeight * 100) / 100
+      this.pickUomValue = Math.round(totalPickUomValue * 100) / 100
     }
   }
 
@@ -449,20 +449,20 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
       throw new Error(i18next.t('text.selected_item_qty_is_more_than_order_release_qty'))
     if (this.pickQty < this.releaseQty)
       throw new Error(i18next.t('text.selected_item_qty_is_less_than_order_release_qty'))
-    if (this.pickWeight > this.releaseWeight) throw new Error(i18next.t('text.picked_weight_over_than_release'))
-    if (this.pickWeight < this.releaseWeight) throw new Error(i18next.t('text.picked_weight_less_than_release'))
+    if (this.pickUomValue > this.releaseUomValue) throw new Error(i18next.t('text.picked_uom_value_over_than_release'))
+    if (this.pickUomValue < this.releaseUomValue) throw new Error(i18next.t('text.picked_uom_value_less_than_release'))
   }
 
   _composeWorksheetDetails() {
     return this.grist.dirtyData.records
-      .filter(record => record.pickQty && record.pickWeight)
+      .filter(record => record.pickQty && record.pickUomValue)
       .map(record => {
         return {
           description: record.description,
           targetInventory: {
             inventory: { id: record.id },
             releaseQty: record.pickQty,
-            releaseWeight: record.pickWeight,
+            releaseUomValue: record.pickUomValue,
             type: ORDER_TYPES.RELEASE_OF_GOODS.value
           }
         }

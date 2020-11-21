@@ -144,10 +144,10 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
         },
         {
           type: 'number',
-          name: 'weight',
-          header: i18next.t('field.total_weight'),
+          name: 'uomValue',
+          header: i18next.t('field.total_uom_value'),
           record: { align: 'center' },
-          imex: { header: i18next.t('field.total_weight'), key: 'weight', width: 30, type: 'number' },
+          imex: { header: i18next.t('field.total_uom_value'), key: 'uomValue', width: 30, type: 'number' },
           sortable: true,
           width: 80
         },
@@ -164,6 +164,15 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
           },
           sortable: true,
           width: 120
+        },
+        {
+          type: 'string',
+          name: 'remark',
+          header: i18next.t('field.remark'),
+          record: { align: 'left' },
+          imex: { header: i18next.t('field.uom'), key: 'uom', width: 40, type: 'string' },
+          sortable: true,
+          width: 200
         }
       ]
     }
@@ -250,12 +259,13 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
               }
               packingType
               qty
-              weight
+              uomValue
               zone
               location {
                 name
                 description
               }
+              remark
               updatedAt
               updater {
                 name
@@ -289,7 +299,7 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
               palletId
               batchId
               packingType
-              weight
+              uomValue
               bizplace {
                 id
                 name
