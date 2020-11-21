@@ -7,9 +7,9 @@ export const ElcclInventoryReport = gql`
     product: Product
     refNo: String
     openingQty: Float
-    openingWeight: Float
+    openingUomValue: Float
+    uomValue: Float
     qty: Float
-    weight: Float
     orderName: String
     createdAt: String
   }
