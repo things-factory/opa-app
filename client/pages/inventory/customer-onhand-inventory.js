@@ -152,6 +152,15 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
           width: 80
         },
         {
+          type: 'string',
+          name: 'uom',
+          header: i18next.t('field.uom'),
+          record: { align: 'center' },
+          imex: { header: i18next.t('field.uom'), key: 'uom', width: 25, type: 'string' },
+          sortable: true,
+          width: 80
+        },
+        {
           type: 'object',
           name: 'location',
           header: i18next.t('field.location'),
@@ -260,6 +269,7 @@ class CustomerOnhandInventory extends localize(i18next)(PageView) {
               packingType
               qty
               uomValue
+              uom
               zone
               location {
                 name

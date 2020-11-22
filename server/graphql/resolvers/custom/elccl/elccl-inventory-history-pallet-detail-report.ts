@@ -60,7 +60,7 @@ export const elcclInventoryHistoryPalletDetailReport = {
           bzp.name as bizplace_name,
           i2.pallet_id, ih.seq, ih.status, ih.transaction_type, i2.product_id, 
           ih.id as inventory_history_id, ih.packing_type, ih.qty, ih.opening_qty,
-          ih.weight, ih.opening_weight, ih.created_at
+          ih.uom_value, ih.opening_uom_value, ih.created_at
           from inventories i2 
           inner join reduced_inventory_histories ih on ih.pallet_id = i2.pallet_id and ih.domain_id = i2.domain_id
           inner join bizplaces bzp on bzp.id = ih.bizplace_id
@@ -80,12 +80,12 @@ export const elcclInventoryHistoryPalletDetailReport = {
           order by ih.pallet_id, ih.seq
         ), inventoryHistoryMovement as (
           select bizplace_name, container_size, pallet_id, seq, status, transaction_type, batch_id,
-            inventory_history_id, packing_type, qty, opening_qty, weight, opening_weight, created_at, job_sheet from (
+            inventory_history_id, packing_type, qty, opening_qty, uom_value, opening_uom_value, created_at, job_sheet from (
               select row_number() over(partition by pallet_id order by created_at asc) as rn, *  from invHistory where status = 'STORED'
             )as invIn where rn = 1
             union all
             select bizplace_name, container_size, pallet_id, seq, status, transaction_type, batch_id,
-            inventory_history_id, packing_type, qty, opening_qty, weight, opening_weight, created_at, job_sheet from (
+            inventory_history_id, packing_type, qty, opening_qty, uom_value, opening_uom_value, created_at, job_sheet from (
               select row_number() over(partition by pallet_id order by created_at desc) as rn, *  from invHistory
             )as invOut where rn = 1 and status = 'TERMINATED'
         ), inventoryHistoriesByPallet as (

@@ -84,7 +84,7 @@ export const elcclInventoryHistoryReport = {
             SELECT prd.name AS product_name, prd.description AS product_description, trim(invh.batch_id) as batch_id, invh.product_id,
             invh.packing_type, invh.bizplace_id, invh.domain_id,
             invh.ref_order_id, invh.order_no, invh.order_ref_no, invh.transaction_type, invh.created_at,
-            invh.qty, invh.opening_qty, invh.weight, invh.opening_weight
+            invh.qty, invh.opening_qty, invh.uom_value, invh.opening_uom_value
             FROM reduced_inventory_histories invh
             INNER JOIN products prd ON cast(prd.id AS VARCHAR) = invh.product_id
             WHERE invh.domain_id = $1
@@ -104,8 +104,8 @@ export const elcclInventoryHistoryReport = {
             src.bizplace_id, src.domain_id,
             SUM(COALESCE(invh.qty,0)) AS qty,
             0 AS opening_qty,
-            SUM(COALESCE(invh.weight,0)) AS weight,
-            0 AS opening_weight,
+            SUM(COALESCE(invh.uom_value,0)) AS uom_value,
+            0 AS opening_uom_value,
             'Opening Balance' AS order_name,
             '-' AS ref_no,
             0 AS rn,
@@ -128,11 +128,11 @@ export const elcclInventoryHistoryReport = {
             src.domain_id
             UNION ALL
             SELECT product_name, product_description, batch_id, product_id, packing_type, bizplace_id, 
-            domain_id, sum(qty) as qty, sum(opening_qty) as qty, sum(weight) as qty, sum(opening_weight) as qty, order_name, ref_no, rn, MIN(created_at) as created_at
+            domain_id, sum(qty) as qty, sum(opening_qty) as opening_qty, sum(uom_value) as uom_value, sum(opening_uom_value) as opening_uom_value, order_name, ref_no, rn, MIN(created_at) as created_at
             FROM (
               SELECT invh.product_name, invh.product_description, invh.batch_id, invh.product_id, invh.packing_type, invh.bizplace_id, 
               invh.domain_id,
-              invh.qty, invh.opening_qty,	invh.weight, invh.opening_weight,
+              invh.qty, invh.opening_qty,	invh.uom_value, invh.opening_uom_value,
               CASE WHEN invh.transaction_type = 'ADJUSTMENT' THEN 'ADJUSTMENT'
                 WHEN invh.transaction_type = 'NEW' THEN 'NEW'
                 ELSE COALESCE(order_no, '-') END AS order_name,
@@ -146,7 +146,7 @@ export const elcclInventoryHistoryReport = {
               LEFT JOIN worksheets wks ON cast(wks.id AS VARCHAR) = invh.ref_order_id AND invh.transaction_type = 'PICKING'
               LEFT JOIN release_goods rel ON cast(rel.id AS VARCHAR) = cast(wks.release_good_id AS VARCHAR) AND 
                 invh.transaction_type = 'PICKING'
-              WHERE (invh.qty <> 0 OR invh.weight <> 0)
+              WHERE (invh.qty <> 0 OR invh.uom_value <> 0)
               AND invh.created_at BETWEEN $1::timestamp AND $2::timestamp
             ) AS inv_movement 
             GROUP BY product_name, product_description, batch_id, product_id, packing_type, bizplace_id, 
@@ -158,7 +158,7 @@ export const elcclInventoryHistoryReport = {
         const result: any = await trxMgr.query(
           ` 
           select product_name, product_description, batch_id, product_id, packing_type, bizplace_id, 
-          domain_id, qty, opening_qty, weight, opening_weight, order_name, ref_no, created_at::date
+          domain_id, qty, opening_qty, uom_value, opening_uom_value, order_name, ref_no, created_at::date
           from temp_inv_history invh where
           exists (
             select * from (
@@ -186,9 +186,9 @@ export const elcclInventoryHistoryReport = {
             },
             refNo: itm.ref_no,
             qty: itm.qty,
-            weight: itm.weight,
+            uomValue: itm.uom_value,
             openingQty: itm.opening_qty,
-            openingWeight: itm.opening_weight,
+            openingUomValue: itm.opening_uom_value,
             orderName: itm.order_name,
             createdAt: itm.created_at
           }
