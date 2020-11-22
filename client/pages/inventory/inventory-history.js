@@ -270,6 +270,15 @@ class InventoryHistory extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
+          name: 'uom',
+          header: i18next.t('field.uom'),
+          record: { align: 'center' },
+          sortable: true,
+          imex: { header: i18next.t('field.uom'), key: 'uom', width: 75, type: 'string' },
+          width: 80
+        },
+        {
+          type: 'string',
           name: 'zone',
           header: i18next.t('field.zone'),
           record: { align: 'center' },
@@ -428,6 +437,7 @@ class InventoryHistory extends localize(i18next)(PageView) {
                 openingQty
                 openingUomValue
                 qty
+                uom
                 uomValue
                 warehouse {
                   id

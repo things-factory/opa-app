@@ -54,7 +54,7 @@ export const elcclInventoryHistorySummaryReport = {
           `
           create temp table temp_inv_history as (
             select i2.pallet_id, i2.product_id, i2.packing_type, i2.batch_id,
-            ih.id as inventory_history_id, ih.seq, ih.status, ih.transaction_type, ih.qty, ih.opening_qty, ih.weight, ih.opening_weight, ih.created_at
+            ih.id as inventory_history_id, ih.seq, ih.status, ih.transaction_type, ih.qty, ih.opening_qty, ih.uom_value, ih.opening_uom_value, ih.created_at
             from inventories i2 
             inner join reduced_inventory_histories ih on ih.pallet_id = i2.pallet_id and ih.domain_id = i2.domain_id
             where 

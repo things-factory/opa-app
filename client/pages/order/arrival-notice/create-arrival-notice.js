@@ -976,11 +976,11 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         batchId: record.batchId,
         product: { id: record.product.id },
         packingType: record.packingType,
-        uomValue: record.uomValue,
+        uomValue: record?.uomValue ? record.uomValue : 0,
         uom: record.uom,
         packQty: record.packQty,
-        totalUomValue: record.totalUomValue,
-        remark: record.remark
+        totalUomValue: record?.totalUomValue ? record?.totalUomValue : 0,
+        remark: record?.remark ? record.remark : null
       }
 
       if (record.palletQty) orderProduct.palletQty = record.palletQty
