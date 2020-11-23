@@ -1247,6 +1247,7 @@
   "title.receive_delivery_order": "receive delivery order",
   "title.receive_goods_detail": "receive goods detail",
   "title.receive_goods_master": "receive goods master",
+  "title.receive_return_order": "receive return order",
   "title.receive_shipping_notice": "receive shipping notice",
   "title.receive_transport_order": "receive transport order",
   "title.receive_vas_order": "receive vas order",

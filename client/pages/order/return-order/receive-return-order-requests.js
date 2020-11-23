@@ -289,6 +289,13 @@ class ReceiveReturnOrderRequests extends connect(store)(localize(i18next)(PageVi
           header: i18next.t('field.rounded_uom_value'),
           record: { align: 'center', options: { min: 0 } },
           width: 100
+        },
+        {
+          type: 'string',
+          name: 'remark',
+          header: i18next.t('field.remark'),
+          record: { align: 'left' },
+          width: 300
         }
       ]
     }
@@ -452,6 +459,7 @@ class ReceiveReturnOrderRequests extends connect(store)(localize(i18next)(PageVi
                 id
                 name
               }
+              remark
               status
             }
             orderVass {
@@ -500,6 +508,7 @@ class ReceiveReturnOrderRequests extends connect(store)(localize(i18next)(PageVi
           },
           remainQty: inventoryInfo.qty,
           remainUomValue: inventoryInfo.uomValue,
+          remark: inventoryInfo.remark,
           status: inventoryInfo.status,
           existing: true,
           roundedUomValue: inventoryInfo.returnQty * (inventoryInfo.uomValue / inventoryInfo.qty) || ''

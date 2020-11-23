@@ -379,12 +379,6 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
             width: 40
           },
           {
-            type: 'string',
-            name: 'palletId',
-            header: i18next.t('field.pallet_id'),
-            width: 200
-          },
-          {
             type: 'object',
             name: 'product',
             header: i18next.t('field.product'),
@@ -1375,6 +1369,7 @@ class UnloadProduct extends connect(store)(localize(i18next)(PageView)) {
 
   orderTypeChangeHandler(e) {
     this.refOrderType = e.currentTarget.value
+    this._clearView()
     this._changeGristConfig()
     this.orderNoInput.select()
   }
