@@ -405,8 +405,6 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
 
   async _saveDeliveryInfo() {
     try {
-      const orderItems = this._getOrderItems()
-      console.log(orderItems)
       const response = await client.query({
         query: gql`
           mutation {
