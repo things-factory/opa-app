@@ -179,6 +179,13 @@ class WorksheetUnloadingReturn extends localize(i18next)(PageView) {
           header: i18next.t('field.return_qty'),
           record: { align: 'center' },
           width: 80
+        },
+        {
+          type: 'string',
+          name: 'remark',
+          header: i18next.t('field.remark'),
+          record: { align: 'left' },
+          width: 300
         }
       ]
     }
@@ -234,6 +241,7 @@ class WorksheetUnloadingReturn extends localize(i18next)(PageView) {
                   }
                   qty
                 }
+                remark
                 returnQty
               }
               status
@@ -262,6 +270,7 @@ class WorksheetUnloadingReturn extends localize(i18next)(PageView) {
             name: worksheetDetail.name,
             description: worksheetDetail.description,
             returnQty: worksheetDetail.targetInventory.returnQty,
+            remark: worksheetDetail.targetInventory.remark,
             status: worksheetDetail.status
           }
         })

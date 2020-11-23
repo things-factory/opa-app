@@ -276,6 +276,13 @@ class CheckReturnOrder extends connect(store)(localize(i18next)(PageView)) {
           header: i18next.t('field.return_uom_value'),
           record: { align: 'center', options: { min: 0 } },
           width: 100
+        },
+        {
+          type: 'string',
+          name: 'remark',
+          header: i18next.t('field.remark'),
+          record: { align: 'left' },
+          width: 300
         }
       ]
     }
@@ -439,6 +446,7 @@ class CheckReturnOrder extends connect(store)(localize(i18next)(PageView)) {
                 id
                 name
               }
+              remark
               status
             }
             orderVass {
@@ -487,6 +495,7 @@ class CheckReturnOrder extends connect(store)(localize(i18next)(PageView)) {
           },
           remainQty: inventoryInfo.qty,
           remainUomValue: inventoryInfo.uomValue,
+          remark: inventoryInfo.remark,
           status: inventoryInfo.status,
           existing: true,
           roundedUomValue: inventoryInfo.returnQty * (inventoryInfo.uomValue / inventoryInfo.qty) || ''
