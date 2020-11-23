@@ -345,6 +345,13 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
           header: i18next.t('field.return_uom_value'),
           record: { editable: true, align: 'center', options: { min: 0 } },
           width: 140
+        },
+        {
+          type: 'string',
+          name: 'remark',
+          header: i18next.t('field.remark'),
+          record: { editable: true, align: 'left' },
+          width: 300
         }
       ]
     }
@@ -626,7 +633,8 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
     return this.inventoryGrist.data.records.map(record => {
       let newRecord = {
         returnQty: record.returnQty,
-        returnUomValue: record.returnUomValue,
+        returnUomValue: record?.returnUomValue ? record.returnUomValue : 0,
+        remark: record?.remark ? '[RETURN]' + record.remark : '[RETURN]',
         batchId: record.inventory.batchId,
         packingType: record.inventory.packingType,
         type: ORDER_TYPES.RETURN_ORDER.value,

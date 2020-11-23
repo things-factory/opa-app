@@ -1,5 +1,8 @@
 import '@things-factory/barcode-ui'
 import { SingleColumnFormStyles } from '@things-factory/form-ui'
+import { client } from '@things-factory/shell'
+import { gqlBuilder } from '@things-factory/utils'
+import gql from 'graphql-tag'
 import { i18next, localize } from '@things-factory/i18n-base'
 import { css, html, LitElement } from 'lit-element'
 
@@ -72,8 +75,12 @@ class CheckInventoryPopup extends localize(i18next)(LitElement) {
 
   async firstUpdated() {
     await this.updateComplete
-    console.log(this.missingInventory)
-    if (this.selectedLocation) this.locationInput.value = this.selectedLocation
+
+    if (this.selectedLocation) {
+      this.locationInput.value = this.selectedLocation
+    } else {
+      this.locationInput.value = ''
+    }
     this.focusOnPalletInput()
   }
 
@@ -116,13 +123,53 @@ class CheckInventoryPopup extends localize(i18next)(LitElement) {
 
   async _checkPalletId() {
     try {
+      this._validateInput()
+
+      const isInventoryOwner = await this._checkInventoryOwnership(this.palletIdInput.value, this.bizplaceName)
+      if (!isInventoryOwner)
+        throw new Error(i18next.t('text.inventory_not_belong_to_x', { state: { x: this.bizplaceName } }))
+
+      const isUnderReleasing = await this._checkInventoryRelease(this.palletIdInput.value)
+      if (isUnderReleasing) throw new Error(i18next.t('text.inventory_is_selected_for_releasing'))
+
+      const hasFound = this._checkFromMissingList()
+
+      if (hasFound) {
+        this.dispatchEvent(
+          new CustomEvent('relocate-missing-inventory', {
+            detail: {
+              missingRecord: this.missingInventory.records.find(item => item.palletId === this.palletIdInput.value),
+              locationInput: this.locationInput.value
+            }
+          })
+        )
+      } else {
+        const invInfo = await this._checkCurrentLocationinCC(this.palletIdInput.value, this.cycleCountNo)
+        if (invInfo.currentLocation !== this.locationInput.value) {
+          this.dispatchEvent(
+            new CustomEvent('relocate-inventory', {
+              detail: {
+                recordInformation: invInfo,
+                locationInput: this.locationInput.value
+              }
+            })
+          )
+        }
+      }
+    } catch (e) {
+      history.back()
+      this._showToast(e)
+    }
+  }
+
+  async _checkInventoryOwnership(palletId, bizplaceName) {
+    try {
       const response = await client.query({
         query: gql`
           query {
-            checkCycleCountInventory(${gqlBuilder.buildArgs({
-              palletId: this.palletIdInput.value,
-              bizplaceName: this.bizplaceName,
-              cycleCountNo: this.cycleCountNo
+            checkInventoryOwner(${gqlBuilder.buildArgs({
+              palletId,
+              bizplaceName
             })})
           }
         `
@@ -132,8 +179,83 @@ class CheckInventoryPopup extends localize(i18next)(LitElement) {
         return response.data.checkInventoryOwner
       }
     } catch (e) {
-      this._showToast(e)
+      this.showToast(e)
     }
+  }
+
+  async _checkCurrentLocationinCC(palletId, cycleCountNo) {
+    try {
+      const response = await client.query({
+        query: gql`
+          query {
+            checkStockTakeCurrentLocation(${gqlBuilder.buildArgs({
+              palletId,
+              cycleCountNo
+            })}) {
+              currentLocation
+              batchId
+              palletId
+              qty
+              uom
+              uomValue
+              productName
+              productDescription
+            }
+          }
+        `
+      })
+
+      if (!response.errors) {
+        return response.data.checkStockTakeCurrentLocation
+      }
+    } catch (e) {
+      this.showToast(e)
+    }
+  }
+
+  async _checkInventoryRelease(palletId) {
+    try {
+      const response = await client.query({
+        query: gql`
+          query {
+            checkInventoryRelease(${gqlBuilder.buildArgs({
+              palletId
+            })})
+          }
+        `
+      })
+
+      if (!response.errors) {
+        return response.data.checkInventoryRelease
+      }
+    } catch (e) {
+      this.showToast(e)
+    }
+  }
+
+  _validateInput() {
+    const palletId = this.palletIdInput.value
+    if (!palletId) {
+      this.selectOnInput(this.palletIdInput)
+      throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('label.pallet_id') } }))
+    }
+
+    const locationName = this.locationInput.value
+    if (!locationName) {
+      this.selectOnInput(this.locationInput)
+      throw new Error(i18next.t('text.invalid_x', { state: { x: i18next.t('label.location') } }))
+    }
+  }
+
+  selectOnInput(input) {
+    setTimeout(() => input.select(), 100)
+  }
+
+  _checkFromMissingList() {
+    const foundPalletId = this.palletIdInput.value
+    const missingPalletId = this.missingInventory.records.map(item => item.palletId)
+
+    return missingPalletId.includes(foundPalletId)
   }
 
   _showToast({ type, message }) {

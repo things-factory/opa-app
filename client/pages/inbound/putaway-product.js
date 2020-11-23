@@ -981,6 +981,7 @@ class PutawayProduct extends connect(store)(localize(i18next)(PageView)) {
 
   orderTypeChangeHandler(e) {
     this.refOrderType = e.currentTarget.value
+    this._clearView()
     this.orderNoInput.select()
   }
 

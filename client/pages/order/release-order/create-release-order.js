@@ -730,6 +730,12 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                     type: 'float',
                     header: i18next.t('field.total_uom_value'),
                     record: { align: 'center' }
+                  },
+                  {
+                    name: 'remark',
+                    type: 'string',
+                    header: i18next.t('field.remark'),
+                    record: { align: 'left' }
                   }
                 ],
                 list: { fields: ['palletId', 'product', 'batchId', 'location', 'remainUomValue'] }
