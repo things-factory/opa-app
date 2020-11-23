@@ -10,6 +10,7 @@ import { connect } from 'pwa-helpers/connect-mixin.js'
 import { openPopup } from '@things-factory/layout-base'
 import { fetchLocationSortingRule } from '../../fetch-location-sorting-rule'
 import { LOCATION_SORTING_RULE, ORDER_TYPES, ORDER_INVENTORY_STATUS, WORKSHEET_STATUS } from '../constants'
+import './check-inventory-popup'
 
 const VIEW_TYPE = {
   LOCATION_SELECTED: 'LOCATION_SELECTED',
@@ -141,7 +142,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           <form id="condition-form" class="multi-column-form" @change="${this.fillUpGrist.bind(this)}">
             <fieldset>
               <label>${i18next.t('field.w/h')}</label>
-              <select name="warehouse" .disabled="${!this.formattedLocations?.length}">
+              <select
+                name="warehouse"
+                .disabled="${!this.formattedLocations?.length}"
+                @change="${this.resetLocation.bind(this)}"
+              >
                 <option></option>
                 ${this.warehouses.map(warehouse => html` <option>${warehouse}</option> `)}
               </select>
@@ -583,6 +588,12 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
     }
   }
 
+  resetLocation() {
+    this.zoneSelector.value = ''
+    this.rowSelector.value = ''
+    this.columnSelector.value = ''
+  }
+
   formatLocations(worksheetDetailInfos) {
     const locations = worksheetDetailInfos.reduce((locations, wsdInfo) => {
       if (wsdInfo.relatedOrderInv.status !== 'MISSING') {
@@ -763,11 +774,11 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       case VIEW_TYPE.INVENTORY_SELECTED:
         if (this.selectedInventory) {
           if (
-            (this.selectedInventory.completed &&
-            this.selectedInventory.orderInventoryStatus !== ORDER_INVENTORY_STATUS.TERMINATED.value) 
+            this.selectedInventory.completed &&
+            this.selectedInventory.orderInventoryStatus !== ORDER_INVENTORY_STATUS.TERMINATED.value
           ) {
-              if(!this.isReleasing)
-                actions.push({ title: i18next.t('button.undo'), action: this.undoInventoryCheck.bind(this) })
+            if (!this.isReleasing)
+              actions.push({ title: i18next.t('button.undo'), action: this.undoInventoryCheck.bind(this) })
           } else {
             actions.push({
               title: i18next.t('button.check_missing_x', { state: { x: i18next.t('label.pallet') } }),
@@ -927,13 +938,37 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         <check-inventory-popup
           .bizplaceName="${this.bizplaceNameInput.value}"
           .cycleCountNo="${this.cycleCountNo}"
-          .selectedLocation="${this.selectedLocation.name}"
+          .selectedLocation="${this.selectedLocation?.name ? this.selectedLocation.name : null}"
           .missingInventory="${this.missingInventoryData}"
+          @relocate-missing-inventory="${async e => {
+            history.back()
+            this.viewType = VIEW_TYPE.MISSING_PALLET_SELECTED
+            this.selectedInventory = e.detail.missingRecord
+            this.locationInput.value = e.detail.locationInput
+            this.updateContext(this.viewType)
+            await CustomAlert({
+              title: i18next.t('title.found_in_missing_list'),
+              text: i18next.t('text.kindly_inspect_and_relocate_this_inventory'),
+              confirmButton: { text: i18next.t('button.okay') }
+            })
+          }}"
+          @relocate-inventory="${async e => {
+            history.back()
+            this.viewType = VIEW_TYPE.MISSING_PALLET_SELECTED
+            this.selectedInventory = e.detail.recordInformation
+            this.locationInput.value = e.detail.locationInput
+            this.updateContext(this.viewType)
+            await CustomAlert({
+              title: i18next.t('title.system_and_physical_location_is_different'),
+              text: i18next.t('text.kindly_inspect_and_relocate_this_inventory'),
+              confirmButton: { text: i18next.t('button.okay') }
+            })
+          }}"
         ></check-inventory-popup>
       `,
       {
         backdrop: true,
-        size: 'large',
+        size: 'medium',
         title: i18next.t('title.check_unknown_inventory')
       }
     )
@@ -966,7 +1001,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       if (!response.errors) {
         const orderInventories = response.data.orderInventories.items
 
-        if(orderInventories.length > 0) {
+        if (orderInventories.length > 0) {
           this.isReleasing = true
         } else {
           this.isReleasing = false
@@ -1146,7 +1181,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           confirmButton: { text: i18next.t('button.confirm') }
         })
       } else {
-        CustomAlert({
+        await CustomAlert({
           title: i18next.t('title.error'),
           text: i18next.t('text.x_error', { state: { x: i18next.t('text.inspection') } }),
           confirmButton: { text: i18next.t('button.confirm') }
@@ -1255,7 +1290,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         } else if (field.name === key) {
           if (data[key] instanceof Object) {
             const objectData = data[key]
-            field.value = `${objectData.name} ${objectData.description ? `(${objectData.description})` : ''}`
+            field.value = `${objectData.name}`
           } else {
             field.value = data[key]
           }
