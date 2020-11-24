@@ -236,15 +236,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                 />
 
                 <label>${i18next.t('label.inspected_qty')}</label>
-                <input
-                  name="inspectedQty"
-                  type="number"
-                  .value="${this.selectedInventory?.qty
-                    ? this.selectedInventory?.inspectedQty
-                      ? this.selectedInventory.inspectedQty
-                      : this.selectedInventory.qty
-                    : ''}"
-                />
+                <input name="inspectedQty" type="number" />
 
                 <label>${i18next.t('label.inspected_uom_value')}</label>
                 <input
@@ -418,7 +410,6 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           'palletId',
           'batchId',
           'inspectedBatchNo',
-          'qty',
           'inspectedQty',
           'uomValue',
           'uom',
@@ -445,7 +436,6 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           width: 100,
           record: { align: 'center' }
         },
-        { type: 'integer', name: 'qty', header: i18next.t('label.qty'), width: 80, record: { align: 'center' } },
         {
           type: 'integer',
           name: 'inspectedQty',
@@ -484,7 +474,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       ]
     }
 
-    const missingInventoryColumns = ['sequence', 'palletId', 'batchId', 'qty', 'uomValue', 'uom']
+    const missingInventoryColumns = ['sequence', 'palletId', 'batchId', 'uomValue', 'uom']
     this.missingInventoryConfig = {
       pagination: { infinite: true },
       rows: {
@@ -1083,6 +1073,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       if (!response.errors) {
         await this.fetchCycleCountWorksheet()
         this.renewInventoryGrist()
+        this.inspectedQtyInput.value = ''
       }
     } catch (e) {
       this.showToast(e)
@@ -1115,6 +1106,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       if (!response.errors) {
         await this.fetchCycleCountWorksheet()
         this.renewInventoryGrist()
+        this.inspectedQtyInput.value = ''
         this.locationInput.value = ''
       }
     } catch (e) {
