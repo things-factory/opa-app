@@ -625,7 +625,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
     let { uomValue, uom, packQty, releaseQty, releaseUomValue } = changeRecord
 
     if (changedColumn === 'uomValue' && (!uomValue || uomValue < 0))
-      throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.uomValue') } }))
+      throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.uom_value') } }))
     if (changedColumn === 'packQty' && (!packQty || packQty < 0))
       throw new Error(i18next.t('text.x_should_be_positive', { state: { x: i18next.t('label.pack_qty') } }))
     if (changedColumn === 'uom' && !uom)
