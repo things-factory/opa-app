@@ -239,11 +239,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                 <input
                   name="inspectedQty"
                   type="number"
-                  .value="${this.selectedInventory?.qty
-                    ? this.selectedInventory?.inspectedQty
-                      ? this.selectedInventory.inspectedQty
-                      : this.selectedInventory.qty
-                    : ''}"
+                  .value="${this.selectedInventory?.inspectedQty ? this.selectedInventory.inspectedQty : ''}"
                 />
 
                 <label>${i18next.t('label.inspected_uom_value')}</label>

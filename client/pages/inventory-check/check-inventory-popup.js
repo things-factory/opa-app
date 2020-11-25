@@ -193,6 +193,7 @@ class CheckInventoryPopup extends localize(i18next)(LitElement) {
               cycleCountNo
             })}) {
               currentLocation
+              worksheetDetailName
               batchId
               palletId
               qty
