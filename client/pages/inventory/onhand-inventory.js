@@ -1,15 +1,13 @@
 import { getCodeByName } from '@things-factory/code-base'
 import '@things-factory/form-ui'
 import '@things-factory/grist-ui'
-import { openPopup } from '@things-factory/layout-base'
 import { i18next, localize } from '@things-factory/i18n-base'
-import { client, navigate, PageView, store } from '@things-factory/shell'
+import { client, PageView, store } from '@things-factory/shell'
 import { ScrollbarStyles } from '@things-factory/styles'
 import { gqlBuilder, isMobileDevice } from '@things-factory/utils'
 import gql from 'graphql-tag'
 import { css, html } from 'lit-element'
 import { connect } from 'pwa-helpers/connect-mixin'
-import './cycle-count-popup'
 
 class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
   static get styles() {
@@ -55,12 +53,6 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
   get context() {
     return {
       title: i18next.t('title.onhand_inventory'),
-      actions: [
-        {
-          title: i18next.t('button.cycle_count'),
-          action: this._createCycleCount.bind(this)
-        }
-      ],
       exportable: {
         name: i18next.t('title.onhand_inventory'),
         data: this._exportableData.bind(this)
@@ -169,7 +161,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
           name: 'remainQty',
           header: i18next.t('field.qty'),
           record: { align: 'center' },
-          imex: { header: i18next.t('field.qty'), key: 'qty', width: 30, type: 'number' },
+          imex: { header: i18next.t('field.qty'), key: 'remainQty', width: 30, type: 'float' },
           sortable: true,
           width: 80
         },
@@ -210,7 +202,7 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
           name: 'remark',
           header: i18next.t('field.remark'),
           record: { align: 'left' },
-          imex: { header: i18next.t('field.uom'), key: 'uom', width: 40, type: 'string' },
+          imex: { header: i18next.t('field.remark'), key: 'remark', width: 40, type: 'string' },
           sortable: true,
           width: 200
         }
@@ -428,31 +420,6 @@ class OnhandInventory extends connect(store)(localize(i18next)(PageView)) {
 
   get _columns() {
     return this.config.columns
-  }
-
-  _createCycleCount() {
-    const _selectedInventory = this.dataGrist.selected
-    try {
-      if (_selectedInventory && _selectedInventory.length == 0)
-        throw new Error(i18next.t('text.there_is_no_selected_inventory'))
-      openPopup(
-        html`
-          <cycle-count-popup
-            .selectedInventory="${_selectedInventory}"
-            @completed="${() => {
-              navigate('inventory_check_list')
-            }}"
-          ></cycle-count-popup>
-        `,
-        {
-          backdrop: true,
-          size: 'large',
-          title: i18next.t('title.create_cycle_count')
-        }
-      )
-    } catch (e) {
-      this._showToast(e)
-    }
   }
 
   async _exportableData() {
