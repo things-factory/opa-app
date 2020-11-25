@@ -113,6 +113,10 @@ class CheckInventoryPopup extends localize(i18next)(LitElement) {
           <barcode-scanable-input name="location" custom-input></barcode-scanable-input>
         </fieldset>
       </form>
+
+      <div class="button-container">
+        <button @click="${this._checkPalletId}">${i18next.t('button.check')}</button>
+      </div>
     `
   }
 
