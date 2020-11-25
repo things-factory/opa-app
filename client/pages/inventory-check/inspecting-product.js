@@ -247,11 +247,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                   name="inspectedUomValue"
                   type="number"
                   step=".01"
-                  .value="${this.selectedInventory?.uomValue
-                    ? this.selectedInventory?.inspectedUomValue
-                      ? this.selectedInventory.inspectedUomValue
-                      : this.selectedInventory.uomValue
-                    : ''}"
+                  .value="${this.selectedInventory?.inspectedUomValue ? this.selectedInventory.inspectedUomValue : ''}"
                 />
 
                 <label>${i18next.t('label.uom')}</label>
@@ -416,7 +412,6 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           'inspectedBatchNo',
           'qty',
           'inspectedQty',
-          'uomValue',
           'uom',
           'inspectedUomValue',
           'inspectedLocation'
@@ -451,9 +446,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'float',
-          name: 'uomValue',
-          header: i18next.t('label.uom_value'),
-          width: 80,
+          name: 'inspectedUomValue',
+          header: i18next.t('label.inspected_uom_value'),
+          width: 100,
           record: { align: 'center' }
         },
         {
@@ -461,13 +456,6 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           name: 'uom',
           header: i18next.t('label.uom'),
           width: 80,
-          record: { align: 'center' }
-        },
-        {
-          type: 'float',
-          name: 'inspectedUomValue',
-          header: i18next.t('label.inspected_uom_value'),
-          width: 100,
           record: { align: 'center' }
         },
         {
@@ -480,7 +468,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       ]
     }
 
-    const missingInventoryColumns = ['sequence', 'palletId', 'batchId', 'qty', 'uomValue', 'uom']
+    const missingInventoryColumns = ['sequence', 'palletId', 'batchId', 'uom']
     this.missingInventoryConfig = {
       pagination: { infinite: true },
       rows: {
