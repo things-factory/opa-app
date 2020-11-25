@@ -180,7 +180,7 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
           <input name="deliveryDate" type="date" min="${this._getStdDate()}" required />
 
           <label>${i18next.t('label.driver_name')}</label>
-          <input name="otherDriver" ?hidden="${!this.ownCollection}" />
+          <input name="otherDriver" value='' ?hidden="${!this.ownCollection}" />
           <input
             name="ownDriver"
             ?hidden="${this.ownCollection}"
@@ -436,8 +436,44 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
     }
   }
 
+  _validateDeliveryInfo() {
+    if(this.ownCollection) {
+      if(this._getInputByName('otherDriver').value.trim().length <= 0) {
+        throw new Error(i18next.t('text.driver_is_empty'))
+      }
+
+      if(this._getInputByName('otherTruck').value.trim().length <= 0) {
+        throw new Error(i18next.t('text.truck_no_is_empty'))
+      }
+    } else {
+      if(this._getInputByName('ownDriver').value.trim().length <= 0) {
+        throw new Error(i18next.t('text.driver_is_not_selected'))
+      }
+
+      if(this._getInputByName('ownTruck').value.trim().length <= 0) {
+        throw new Error(i18next.t('text.truck_is_not_selected'))
+      }
+    }
+
+    if(this._otherDestination) {
+      if(this._getInputByName('contactName').value.trim().length <= 0) {
+        throw new Error(i18next.t('text.contact_is_empty'))
+      }
+
+      if(this._getInputByName('otherDestination').value.trim().length <= 0) {
+        throw new Error(i18next.t('text.destination_is_empty'))
+      }
+    } else {
+      if(this._getInputByName('contactPoint').value.trim().length <= 0) {
+        throw new Error(i18next.t('text.to_destination_is_not_selected'))
+      }
+    }
+  }
+
   _getDeliveryInfo() {
     if (this.shadowRoot.querySelector('form').checkValidity()) {
+      this._validateDeliveryInfo()
+
       return {
         name: this.doNo,
         deliveryDate: this._getInputByName('deliveryDate').value,
@@ -447,7 +483,7 @@ class DeliveryNotePopup extends localize(i18next)(LitElement) {
           ? this._getInputByName('otherTruck').value.toUpperCase().replace(/\s+/g, '')
           : null,
         ownTruck: this.ownCollection ? null : this._getInputByName('ownTruck').value,
-        contactPoint: this.selectedCP,
+        contactPoint: this._otherDestination ? null : this.selectedCP,
         contactName: this._getInputByName('contactName').value,
         otherDestination: this._getInputByName('otherDestination').value,
         reusablePallet: this._getInputByName('reusablePallet').value,

@@ -385,7 +385,7 @@ class CreateArrivalNotice extends localize(i18next)(PageView) {
         {
           type: 'float',
           name: 'uomValue',
-          header: i18next.t('field.uomValue'),
+          header: i18next.t('field.uom_value'),
           record: { align: 'center' },
           width: 100
         },
