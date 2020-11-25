@@ -413,7 +413,8 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           'inspectedQty',
           'uom',
           'inspectedUomValue',
-          'inspectedLocation'
+          'inspectedLocation',
+          'orderInventoryStatus'
         ]
       },
       columns: [
