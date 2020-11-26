@@ -24,7 +24,8 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
       _data: Object,
       data: Object,
       pickQty: Number,
-      pickUomValue: Number
+      pickUomValue: Number,
+      uom: String
     }
   }
 
@@ -106,7 +107,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
           <input
             readonly
             name="releaseUomValue"
-            value="${`${Math.round(this.pickUomValue * 100) / 100} / ${this.releaseUomValue}`}"
+            value="${`${Math.round(this.pickUomValue * 100) / 100} / ${this.releaseUomValue + ' ' + this.uom}`}"
           />
         </fieldset>
       </form>
@@ -229,7 +230,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
         },
         {
           type: 'integer',
-          name: 'qty',
+          name: 'qtyVal',
           header: i18next.t('field.available_qty'),
           record: { align: 'center' },
           width: 60
@@ -242,11 +243,18 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
           width: 60
         },
         {
-          type: 'float',
-          name: 'uomValue',
+          type: 'string',
+          name: 'availableUomValue',
           header: i18next.t('field.available_uom_value'),
           record: { align: 'center' },
           width: 60
+        },
+        {
+          type: 'string',
+          name: 'remark',
+          header: i18next.t('field.remark'),
+          record: { align: 'left' },
+          width: 120
         },
         {
           type: 'datetime',
@@ -291,6 +299,8 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
               }
               qty
               uomValue
+              uom
+              remark
               createdAt
             }
             total
@@ -304,7 +314,8 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
         records: response.data.inventoriesByStrategy.items.map(item => {
           return {
             ...item,
-            ...item.location
+            ...item.location,
+            availableUomValue: item.uomValue + ' ' + item.uom
           }
         }),
         total: response.data.inventoriesByStrategy.total
@@ -334,6 +345,7 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
           pickUomValue = Math.round(pickUomValue * 100) / 100
           this.pickQty += pickQty
           this.pickUomValue += pickUomValue
+          this.uom = item.uom
         }
 
         // need to round off so that it will bypass the validation upon submission

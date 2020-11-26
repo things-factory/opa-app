@@ -333,21 +333,21 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           width: 100
         },
         {
-          type: 'float',
-          name: 'uomValue',
+          type: 'string',
+          name: 'remainUomValue',
           header: i18next.t('field.available_uom_value'),
           record: { align: 'center' },
           width: 100
         },
         {
-          type: 'float',
+          type: 'string',
           name: 'releaseUomValue',
           header: i18next.t('field.release_uom_value'),
           record: { align: 'center', options: { min: 0 } },
           width: 100
         },
         {
-          type: 'float',
+          type: 'string',
           name: 'roundedUomValue',
           header: i18next.t('field.rounded_uom_value'),
           record: { align: 'center', options: { min: 0 } },
@@ -516,6 +516,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
               uomValue
               releaseQty
               releaseUomValue
+              uom
               location {
                 id
                 name
@@ -571,13 +572,15 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
             location: inventoryInfo.location,
             packingType: inventoryInfo.packingType,
             remainQty: inventoryInfo.qty,
-            remainUomValue: inventoryInfo.uomValue
+            remainUomValue: inventoryInfo.uomValue + ' ' + inventoryInfo.uom,
+            releaseUomValue: inventoryInfo.releaseUomValue + ' ' + inventoryInfo.uom
           },
           remainQty: inventoryInfo.qty,
-          remainUomValue: inventoryInfo.uomValue,
+          remainUomValue: inventoryInfo.uomValue + ' ' + inventoryInfo.uom,
+          releaseUomValue: inventoryInfo.releaseUomValue + ' ' + inventoryInfo.uom,
           status: inventoryInfo.status,
           existing: true,
-          roundedUomValue: inventoryInfo.releaseQty * (inventoryInfo.uomValue / inventoryInfo.qty) || ''
+          roundedUomValue: (inventoryInfo.releaseQty * (inventoryInfo.uomValue / inventoryInfo.qty)).toFixed(2) + ' ' + inventoryInfo.uom || ''
         }
       })
 

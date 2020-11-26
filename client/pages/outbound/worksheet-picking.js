@@ -284,7 +284,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           width: 60
         },
         {
-          type: 'float',
+          type: 'string',
           name: 'releaseUomValue',
           header: i18next.t('field.release_uom_value'),
           record: { align: 'center' },
@@ -349,7 +349,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           width: 60
         },
         {
-          type: 'float',
+          type: 'string',
           name: 'releaseUomValue',
           header: i18next.t('field.release_uom_value'),
           record: { align: 'center' },
@@ -406,6 +406,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 qty
                 lockedQty
                 palletId
+                uom
                 location {
                   name
                   description
@@ -467,6 +468,8 @@ class WorksheetPicking extends localize(i18next)(PageView) {
           if (ordInv.status === ORDER_INVENTORY_STATUS.PENDING_SPLIT.value) {
             result.tempOrderInvs.push(ordInv)
           } else {
+            ordInv.releaseUomValue = Math.round(ordInv.releaseUomValue).toFixed(2) + ' ' + ordInv.inventory.uom
+
             result.completedOrderInvs.push(ordInv)
           }
 
@@ -567,6 +570,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                 releaseQty
                 releaseUomValue
                 inventory {
+                  uom
                   qty
                   lockedQty
                   batchId
@@ -600,6 +604,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             ...item.targetInventory.inventory,
             ...item.targetInventory.inventory.location,
             description: item.description,
+            releaseUomValue: Math.round(item.targetInventory.releaseUomValue).toFixed(2) + ' ' + item.targetInventory.inventory.uom,
             availableQty:
               item.targetInventory.inventory.qty -
               item.targetInventory.inventory.lockedQty +
@@ -651,7 +656,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
                     description
                   }
                   zone
-                  qty
+                  uom
                 }
               }
             }
@@ -670,7 +675,7 @@ class WorksheetPicking extends localize(i18next)(PageView) {
             description: wsd.description,
             status: wsd.status,
             releaseQty: wsd.targetInventory.releaseQty,
-            releaseUomValue: wsd.targetInventory.releaseUomValue,
+            releaseUomValue: Math.round(wsd.targetInventory.releaseUomValue).toFixed(2) + ' ' + wsd.targetInventory.inventory.uom,
             availableQty:
               wsd.targetInventory.inventory.qty -
               wsd.targetInventory.inventory.lockedQty +

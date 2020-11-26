@@ -306,14 +306,14 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
           width: 100
         },
         {
-          type: 'float',
-          name: 'uomValue',
+          type: 'string',
+          name: 'remainUomValue',
           header: i18next.t('field.available_uom_value'),
           record: { align: 'center' },
           width: 100
         },
         {
-          type: 'float',
+          type: 'string',
           name: 'releaseUomValue',
           header: i18next.t('field.release_uom_value'),
           record: { align: 'center', options: { min: 0 } },
@@ -479,6 +479,7 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
               uomValue
               releaseQty
               releaseUomValue
+              uom
             }
             shippingOrderInfo {
               containerNo
@@ -520,7 +521,9 @@ class ReceiveReleaseOrderRequest extends connect(store)(localize(i18next)(PageVi
       const orderInventories = releaseOrder.inventoryInfos.map(inventoryInfo => {
         return {
           ...inventoryInfo,
-          roundedUomValue: inventoryInfo.releaseQty * (inventoryInfo.uomValue / inventoryInfo.qty) || ''
+          remainUomValue: inventoryInfo.uomValue + ' '+ inventoryInfo.uom,
+          releaseUomValue: inventoryInfo.releaseUomValue + ' ' + inventoryInfo.uom,
+          roundedUomValue: (inventoryInfo.releaseQty * (inventoryInfo.uomValue / inventoryInfo.qty)).toFixed(2) + ' ' + inventoryInfo.uom || ''
         }
       })
 
