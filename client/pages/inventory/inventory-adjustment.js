@@ -296,7 +296,7 @@ class InventoryAdjustment extends connect(store)(localize(i18next)(PageView)) {
           name: 'remark',
           header: i18next.t('field.remark'),
           record: { align: 'left' },
-          imex: { header: i18next.t('field.uom'), key: 'uom', width: 40, type: 'string' },
+          imex: { header: i18next.t('field.remark'), key: 'remark', width: 40, type: 'string' },
           sortable: true,
           width: 200
         },
