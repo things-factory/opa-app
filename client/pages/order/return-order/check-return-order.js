@@ -271,8 +271,8 @@ class CheckReturnOrder extends connect(store)(localize(i18next)(PageView)) {
           width: 100
         },
         {
-          type: 'float',
-          name: 'returnUomValue',
+          type: 'string',
+          name: 'remainUomValueWithUom',
           header: i18next.t('field.return_uom_value'),
           record: { align: 'center', options: { min: 0 } },
           width: 100
@@ -446,6 +446,7 @@ class CheckReturnOrder extends connect(store)(localize(i18next)(PageView)) {
                 id
                 name
               }
+              uom
               remark
               status
             }
@@ -491,10 +492,12 @@ class CheckReturnOrder extends connect(store)(localize(i18next)(PageView)) {
             location: inventoryInfo.location,
             packingType: inventoryInfo.packingType,
             remainQty: inventoryInfo.qty,
-            remainUomValue: inventoryInfo.uomValue
+            remainUomValue: inventoryInfo.uomValue,
+            remainUomValueWithUom: Math.round(inventoryInfo.returnUomValue).toFixed(2) + ' ' + inventoryInfo.uom
           },
           remainQty: inventoryInfo.qty,
           remainUomValue: inventoryInfo.uomValue,
+          remainUomValueWithUom: Math.round(inventoryInfo.returnUomValue).toFixed(2) + ' ' + inventoryInfo.uom,
           remark: inventoryInfo.remark,
           status: inventoryInfo.status,
           existing: true,
