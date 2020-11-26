@@ -277,9 +277,16 @@ class ReceiveReturnOrderRequests extends connect(store)(localize(i18next)(PageVi
           width: 100
         },
         {
-          type: 'string',
-          name: 'remainUomValueWithUom',
+          type: 'float',
+          name: 'returnUomValue',
           header: i18next.t('field.return_uom_value'),
+          record: { align: 'center', options: { min: 0 } },
+          width: 100
+        },
+        {
+          type: 'float',
+          name: 'roundedUomValue',
+          header: i18next.t('field.rounded_uom_value'),
           record: { align: 'center', options: { min: 0 } },
           width: 100
         },
@@ -452,7 +459,6 @@ class ReceiveReturnOrderRequests extends connect(store)(localize(i18next)(PageVi
                 id
                 name
               }
-              uom
               remark
               status
             }
@@ -498,16 +504,14 @@ class ReceiveReturnOrderRequests extends connect(store)(localize(i18next)(PageVi
             location: inventoryInfo.location,
             packingType: inventoryInfo.packingType,
             remainQty: inventoryInfo.qty,
-            remainUomValue: inventoryInfo.uomValue,
-            remainUomValueWithUom: Math.round(inventoryInfo.returnUomValue).toFixed(2) + ' ' + inventoryInfo.uom
+            remainUomValue: inventoryInfo.uomValue
           },
           remainQty: inventoryInfo.qty,
           remainUomValue: inventoryInfo.uomValue,
-          remainUomValueWithUom: Math.round(inventoryInfo.returnUomValue).toFixed(2) + ' ' + inventoryInfo.uom,
           remark: inventoryInfo.remark,
           status: inventoryInfo.status,
           existing: true,
-          roundedUomValue: Math.round(inventoryInfo.returnQty * (inventoryInfo.returnUomValue / inventoryInfo.qty)).toFixed(2) + ' ' + inventoryInfo.uom || ''
+          roundedUomValue: inventoryInfo.returnQty * (inventoryInfo.uomValue / inventoryInfo.qty) || ''
         }
       })
 

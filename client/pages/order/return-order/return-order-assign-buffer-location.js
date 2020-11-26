@@ -277,8 +277,8 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
           width: 100
         },
         {
-          type: 'string',
-          name: 'remainUomValueWithUom',
+          type: 'float',
+          name: 'returnUomValue',
           header: i18next.t('field.return_uom_value'),
           record: { align: 'center', options: { min: 0 } },
           width: 100
@@ -452,7 +452,6 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
                 id
                 name
               }
-              uom
               remark
               status
             }
@@ -498,12 +497,10 @@ class ReturnOrderAssignBufferLocation extends connect(store)(localize(i18next)(P
             location: inventoryInfo.location,
             packingType: inventoryInfo.packingType,
             remainQty: inventoryInfo.qty,
-            remainUomValue: inventoryInfo.uomValue,
-            remainUomValueWithUom: Math.round(inventoryInfo.returnUomValue).toFixed(2) + ' ' + inventoryInfo.uom
+            remainUomValue: inventoryInfo.uomValue
           },
           remainQty: inventoryInfo.qty,
           remainUomValue: inventoryInfo.uomValue,
-          remainUomValueWithUom: Math.round(inventoryInfo.returnUomValue).toFixed(2) + ' ' + inventoryInfo.uom,
           remark: inventoryInfo.remark,
           status: inventoryInfo.status,
           existing: true,

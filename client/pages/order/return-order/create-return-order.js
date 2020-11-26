@@ -295,7 +295,7 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
                   ignoreCondition: true
                 },
                 {
-                  name: 'releaseUomValueWithUom',
+                  name: 'releaseUomValue',
                   header: i18next.t('field.return_uom_value'),
                   record: { align: 'center' },
                   ignoreCondition: true
@@ -333,8 +333,8 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
           width: 140
         },
         {
-          type: 'string',
-          name: 'releaseUomValueWithUom',
+          type: 'float',
+          name: 'releaseUomValue',
           header: i18next.t('field.release_uom_value'),
           record: { editable: true, align: 'center', options: { min: 0 } },
           width: 140
