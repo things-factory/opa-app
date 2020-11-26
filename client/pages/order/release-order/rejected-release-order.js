@@ -305,14 +305,14 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
           width: 100
         },
         {
-          type: 'float',
-          name: 'uomValue',
+          type: 'string',
+          name: 'remainUomValue',
           header: i18next.t('field.available_uom_value'),
           record: { align: 'center' },
           width: 100
         },
         {
-          type: 'float',
+          type: 'string',
           name: 'releaseUomValue',
           header: i18next.t('field.release_uom_value'),
           record: { align: 'center', options: { min: 0 } },
@@ -467,6 +467,7 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
               uomValue
               releaseQty
               releaseUomValue
+              uom
             }
             shippingOrder {
               name
@@ -507,7 +508,13 @@ class RejectedReleaseOrder extends localize(i18next)(PageView) {
     if (!response.errors) {
       const releaseOrder = response.data.releaseGoodDetail
       const shippingOrder = releaseOrder.shippingOrder
-      const orderInventories = releaseOrder.inventoryInfos
+      const orderInventories = releaseOrder.inventoryInfos.map(inventoryInfo => {
+        return {
+          ...inventoryInfo,
+          remainUomValue: inventoryInfo.uomValue + ' '+ inventoryInfo.uom,
+          releaseUomValue: inventoryInfo.releaseUomValue + ' ' + inventoryInfo.uom
+        }
+      })
       const orderVass = releaseOrder.orderVass
 
       this._exportOption = releaseOrder.exportOption

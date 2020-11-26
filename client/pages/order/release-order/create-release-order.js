@@ -600,6 +600,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                 descriptionField: 'productName',
                 select: [
                   { name: 'productId', hidden: true },
+                  { name: 'remainUomValue', hidden: true },
                   { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'left' } },
                   {
                     name: 'productName',
@@ -615,7 +616,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                     ignoreCondition: true
                   },
                   {
-                    name: 'remainUomValue',
+                    name: 'remainUomValueWithUom',
                     header: i18next.t('field.remain_uom_value'),
                     record: { align: 'center' },
                     ignoreCondition: true
@@ -652,8 +653,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             width: 140
           },
           {
-            type: 'float',
-            name: 'remainUomValue',
+            type: 'string',
+            name: 'remainUomValueWithUom',
             header: i18next.t('field.available_uom_value'),
             record: { align: 'center' },
             width: 140
@@ -713,6 +714,7 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                 select: [
                   { name: 'id', hidden: true },
                   { name: 'name', hidden: true },
+                  { name: 'remainUomValue', hidden: true },
                   { name: 'palletId', header: i18next.t('field.pallet_id'), record: { align: 'center' } },
                   { name: 'product', type: 'object', header: i18next.t('field.product_info'), queryName: 'products' },
                   { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
@@ -726,8 +728,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
                   { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
                   { name: 'remainQty', type: 'float', record: { align: 'center' } },
                   {
-                    name: 'remainUomValue',
-                    type: 'float',
+                    name: 'remainUomValueWithUom',
+                    type: 'string',
                     header: i18next.t('field.total_uom_value'),
                     record: { align: 'center' }
                   },
@@ -782,8 +784,8 @@ class CreateReleaseOrder extends localize(i18next)(PageView) {
             width: 100
           },
           {
-            type: 'float',
-            name: 'remainUomValue',
+            type: 'string',
+            name: 'remainUomValueWithUom',
             header: i18next.t('field.available_uom_value'),
             record: { align: 'center' },
             width: 100
