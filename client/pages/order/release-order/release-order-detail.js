@@ -561,6 +561,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
       const releaseOrder = response.data.releaseGoodDetail
       const shippingOrder = releaseOrder.shippingOrderInfo
       const orderInventories = releaseOrder.inventoryInfos.map(inventoryInfo => {
+        let roundedUomValue = inventoryInfo.releaseQty * (inventoryInfo.uomValue / inventoryInfo.qty)
         return {
           ...inventoryInfo,
           inventory: {
@@ -580,7 +581,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
           releaseUomValue: inventoryInfo.releaseUomValue + ' ' + inventoryInfo.uom,
           status: inventoryInfo.status,
           existing: true,
-          roundedUomValue: (inventoryInfo.releaseQty * (inventoryInfo.uomValue / inventoryInfo.qty)).toFixed(2) + ' ' + inventoryInfo.uom || ''
+          roundedUomValue: roundedUomValue > 0 ? roundedUomValue : ''
         }
       })
 
