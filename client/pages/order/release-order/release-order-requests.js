@@ -134,6 +134,13 @@ class ReleaseOrderRequests extends localize(i18next)(PageView) {
           })
         ],
         props: { searchOper: 'eq' }
+      },
+      {
+        label: i18next.t('field.cross_docking'),
+        name: 'crossDocking',
+        type: 'checkbox',
+        props: { searchOper: 'eq' },
+        attrs: ['indeterminate']
       }
     ]
 
