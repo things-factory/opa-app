@@ -560,6 +560,8 @@ class ReturnOrderDetail extends connect(store)(localize(i18next)(PageView)) {
       ]
     }
 
+    this._actions = [...this._actions, { title: i18next.t('button.back'), action: () => history.back() }]
+
     store.dispatch({
       type: UPDATE_CONTEXT,
       context: this.context

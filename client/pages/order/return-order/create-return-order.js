@@ -243,6 +243,7 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
             }
           }
         },
+        { name: 'releaseUomValue', hidden: true },
         {
           type: 'object',
           name: 'inventory',
@@ -263,6 +264,7 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
               select: [
                 { name: 'id', hidden: true },
                 { name: 'name', hidden: true },
+                { name: 'releaseUomValue', hidden: true },
                 { name: 'productId', hidden: true },
                 {
                   name: 'releaseGoodName',
@@ -443,7 +445,7 @@ class CreateReturnOrder extends localize(i18next)(PageView) {
           returnQty = Math.round(e.detail.after / packageUomValue)
         }
 
-        roundedUomValue = returnQty * packageUomValue
+        roundedUomValue = Math.round(returnQty * packageUomValue)
         roundedUomValue = parseFloat(roundedUomValue.toFixed(2))
       }
     }
