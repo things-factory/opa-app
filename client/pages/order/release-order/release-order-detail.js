@@ -296,6 +296,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
       rows: { selectable: { multiple: true }, appendable: false },
       list: { fields: ['productName', 'batchId', 'packingType', 'releaseQty', 'releaseUomValue'] },
       columns: [
+        { name: 'releaseUomValue', hidden: true },
         { type: 'gutter', gutterName: 'sequence' },
         {
           type: 'string',
@@ -341,7 +342,7 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'string',
-          name: 'releaseUomValue',
+          name: 'releaseUomValueWithUom',
           header: i18next.t('field.release_uom_value'),
           record: { align: 'center', options: { min: 0 } },
           width: 100
@@ -574,11 +575,13 @@ class ReleaseOrderDetail extends connect(store)(localize(i18next)(PageView)) {
             packingType: inventoryInfo.packingType,
             remainQty: inventoryInfo.qty,
             remainUomValue: inventoryInfo.uomValue + ' ' + inventoryInfo.uom,
-            releaseUomValue: inventoryInfo.releaseUomValue + ' ' + inventoryInfo.uom
+            releaseUomValue: inventoryInfo.releaseUomValue,
+            releaseUomValueWithUom: inventoryInfo.releaseUomValue + ' ' + inventoryInfo.uom
           },
           remainQty: inventoryInfo.qty,
           remainUomValue: inventoryInfo.uomValue + ' ' + inventoryInfo.uom,
-          releaseUomValue: inventoryInfo.releaseUomValue + ' ' + inventoryInfo.uom,
+          releaseUomValue: inventoryInfo.releaseUomValue,
+          releaseUomValueWithUom: inventoryInfo.releaseUomValue + ' ' + inventoryInfo.uom,
           status: inventoryInfo.status,
           existing: true,
           roundedUomValue: roundedUomValue > 0 ? roundedUomValue : ''

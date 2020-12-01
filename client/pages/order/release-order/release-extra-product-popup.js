@@ -265,6 +265,7 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
               select: [
                 { name: 'id', hidden: true },
                 { name: 'name', hidden: true },
+                { name: 'remainUomValue', hidden: true },
                 { name: 'palletId', header: i18next.t('field.pallet_id'), record: { align: 'center' } },
                 { name: 'product', type: 'object', queryName: 'products' },
                 { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
@@ -278,8 +279,8 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
                 { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
                 { name: 'remainQty', type: 'float', record: { align: 'center' } },
                 {
-                  name: 'remainUomValue',
-                  type: 'float',
+                  name: 'remainUomValueWithUom',
+                  type: 'string',
                   header: i18next.t('field.total_uom_value'),
                   record: { align: 'center' }
                 }
@@ -289,6 +290,7 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
           },
           width: 250
         },
+        { name: 'releaseUomValue', hidden: true },
         {
           type: 'object',
           name: 'product',
@@ -335,15 +337,15 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
           width: 100
         },
         {
-          type: 'float',
-          name: 'remainUomValue',
+          type: 'string',
+          name: 'remainUomValueWithUom',
           header: i18next.t('field.available_uom_value'),
           record: { align: 'center' },
           width: 100
         },
         {
-          type: 'float',
-          name: 'releaseUomValue',
+          type: 'string',
+          name: 'releaseUomValueWithUom',
           header: i18next.t('field.release_uom_value'),
           record: { editable: true, align: 'center', options: { min: 0 } },
           width: 100
@@ -397,6 +399,7 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
               select: [
                 { name: 'id', hidden: true },
                 { name: 'name', hidden: true },
+                { name: 'remainUomValue', hidden: true },
                 { name: 'palletId', header: i18next.t('field.pallet_id'), record: { align: 'center' } },
                 { name: 'product', type: 'object', queryName: 'products' },
                 { name: 'batchId', header: i18next.t('field.batch_no'), record: { align: 'center' } },
@@ -410,8 +413,8 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
                 { name: 'packingType', header: i18next.t('field.packing_type'), record: { align: 'center' } },
                 { name: 'remainQty', type: 'float', record: { align: 'center' } },
                 {
-                  name: 'remainUomValue',
-                  type: 'float',
+                  name: 'remainUomValueWithUom',
+                  type: 'string',
                   header: i18next.t('field.total_uom_value'),
                   record: { align: 'center' }
                 }
@@ -460,8 +463,8 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
           width: 100
         },
         {
-          type: 'float',
-          name: 'remainUomValue',
+          type: 'string',
+          name: 'remainUomValueWithUom',
           header: i18next.t('field.available_uom_value'),
           record: { align: 'center' },
           width: 100
