@@ -424,6 +424,7 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
           },
           width: 250
         },
+        { name: 'remainUomValue', hidden: true },
         {
           type: 'object',
           name: 'product',
@@ -629,11 +630,11 @@ export class ReleaseExtraProductPopup extends localize(i18next)(LitElement) {
         if ((columnName == 'releaseUomValue' || columnName == 'releaseQty') && idx === e.detail.row) {
           if (columnName == 'releaseUomValue') record.releaseQty = releaseQty
           record.releaseUomValue = roundedUomValue
+          record.releaseUomValueWithUom = roundedUomValue + ' ' + record.uom
         }
 
         let returnObj = {
-          ...record,
-          ...record.inventory
+          ...record
         }
 
         if (this._pickingStd === PICKING_STANDARD.SELECT_BY_PRODUCT.value) {
