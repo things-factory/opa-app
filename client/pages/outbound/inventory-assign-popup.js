@@ -229,8 +229,8 @@ class InventoryAssignPopup extends localize(i18next)(LitElement) {
           width: 60
         },
         {
-          type: 'integer',
-          name: 'qtyVal',
+          type: 'int',
+          name: 'qty',
           header: i18next.t('field.available_qty'),
           record: { align: 'center' },
           width: 60
