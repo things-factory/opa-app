@@ -202,6 +202,20 @@ class InventoryPalletReport extends connect(store)(localize(i18next)(PageView)) 
             inventoryHistoryPalletReport(${gqlBuilder.buildArgs({
               filters: [
                 ...this.searchForm.queryFilters.map(filter => {
+                  switch (filter.name) {
+                    case 'fromDate':
+                      let fromDt = new Date(filter.value)
+                      fromDt.setHours(0)
+                      filter.value = fromDt.toISOString()
+                      break
+                    case 'toDate':
+                      let toDt = new Date(filter.value)
+                      toDt.setHours(23, 59, 59)
+                      filter.value = toDt.toISOString()
+                      break
+                    default:
+                      break
+                  }
                   return filter
                 })
               ],

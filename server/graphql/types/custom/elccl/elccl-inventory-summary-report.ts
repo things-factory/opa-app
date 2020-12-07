@@ -10,6 +10,7 @@ export const ElcclInventorySummaryReport = gql`
     closingQty: Float
     totalInQty: Float
     totalOutQty: Float
+    totalReturnQty: Float
     initialQty: Float
     initialDate: String
   }

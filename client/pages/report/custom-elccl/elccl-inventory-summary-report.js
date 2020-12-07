@@ -142,6 +142,7 @@ class ElcclInventorySummaryReport extends connect(store)(localize(i18next)(PageV
           'initialDate',
           'initialQty',
           'adjustmentQty',
+          'totalReturnQty',
           'totalOutQty',
           'closingQty'
         ]
@@ -199,6 +200,14 @@ class ElcclInventorySummaryReport extends connect(store)(localize(i18next)(PageV
           header: i18next.t('field.adjustment_qty'),
           record: { editable: false, align: 'center' },
           imex: { header: i18next.t('field.adjustment_qty'), key: 'adjustmentQty', width: 25, type: 'string' },
+          width: 140
+        },
+        {
+          type: 'float',
+          name: 'totalReturnQty',
+          header: i18next.t('field.return_qty'),
+          record: { editable: false, align: 'center' },
+          imex: { header: i18next.t('field.return_qty'), key: 'totalReturnQty', width: 25, type: 'string' },
           width: 140
         },
         {
@@ -275,6 +284,7 @@ class ElcclInventorySummaryReport extends connect(store)(localize(i18next)(PageV
                   closingQty
                   totalInQty
                   totalOutQty
+                  totalReturnQty
                   initialQty
                   initialDate
                 }

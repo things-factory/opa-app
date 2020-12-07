@@ -54,7 +54,8 @@ export const elcclInventoryHistorySummaryReport = {
           `
           create temp table temp_inv_history as (
             select i2.pallet_id, i2.product_id, i2.packing_type, i2.batch_id,
-            ih.id as inventory_history_id, ih.seq, ih.status, ih.transaction_type, ih.qty, ih.opening_qty, ih.uom_value, ih.opening_uom_value, ih.created_at
+            ih.id as inventory_history_id, ih.seq, ih.status, ih.transaction_type, ih.qty, ih.opening_qty, ih.uom_value, ih.opening_uom_value, ih.created_at,
+            ih.ref_order_id::uuid as ref_order_id
             from inventories i2 
             inner join (
               select ih.* from reduced_inventory_histories ih
@@ -78,19 +79,22 @@ export const elcclInventoryHistorySummaryReport = {
           `
           create temp table temp_elccl_inventory_summary as (
             select src.*,
-            opening_qty + adjustment_qty + total_in_qty + total_out_qty as closing_qty,
+            opening_qty + adjustment_qty + total_in_qty + total_out_qty + total_return_qty as closing_qty,
             prd.name as product_name, prd.description as product_description 
             from (
               select ih.batch_id, ih.packing_type,
-              min(created_at) as initial_date,
-              sum(case when ih.transaction_type = 'UNLOADING' or ih.transaction_type = 'NEW' then qty else 0 end) as initial_qty,
+              min(ih.created_at) as initial_date,
+              sum(case when (ih.transaction_type = 'UNLOADING' or ih.transaction_type = 'NEW') and rtn.id is null then qty else 0 end) as initial_qty,
               sum(case when ih.created_at > $1 and ih.transaction_type = 'ADJUSTMENT' then ih.qty else 0 end) as adjustment_qty,
-              sum(case when ih.created_at < $1 then qty else 0 end) as opening_qty,
-              sum(case when ih.created_at > $1 then case when ih.qty > 0 and ih.transaction_type <> 'ADJUSTMENT' then ih.qty else 0 end else 0 end) as total_in_qty,
+              sum(case when ih.created_at < $1 then ih.qty else 0 end) as opening_qty,
+              sum(case when ih.created_at > $1 then case when ih.qty > 0 and ih.transaction_type <> 'ADJUSTMENT' and rtn.id is null then ih.qty else 0 end else 0 end) as total_in_qty,
               sum(case when ih.created_at > $1 then case when ih.qty < 0 and ih.transaction_type <> 'ADJUSTMENT' then ih.qty else 0 end else 0 end) as total_out_qty,
-              ih.product_id
+              ih.product_id,
+              sum(case when rtn.id is not null then qty else 0 end) as total_return_qty
               from temp_inv_history ih
+              left join return_orders rtn on rtn.id = ih.ref_order_id
               group by ih.batch_id, ih.product_id, ih.packing_type
+              order by batch_id
             ) src
             inner join products prd on prd.id = src.product_id
             where (opening_qty > 0 or total_in_qty > 0)
@@ -123,6 +127,7 @@ export const elcclInventoryHistorySummaryReport = {
             closingQty: itm.closing_qty,
             totalInQty: itm.total_in_qty,
             totalOutQty: itm.total_out_qty,
+            totalReturnQty: itm.total_return_qty,
             initialQty: itm.initial_qty,
             initialDate: itm.initial_date,
             product: {
