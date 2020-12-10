@@ -417,6 +417,10 @@ export default {
       tagname: 'worksheet-loading',
       page: 'worksheet_loading'
     },
+    {
+      tagname: 'worksheet-return',
+      page: 'worksheet_return'
+    },
 
     /**
      * Report Menus Section
