@@ -88,7 +88,7 @@ export const elcclInventoryHistorySummaryReport = {
               sum(case when ih.created_at > $1 and ih.transaction_type = 'ADJUSTMENT' then ih.qty else 0 end) as adjustment_qty,
               sum(case when ih.created_at < $1 then ih.qty else 0 end) as opening_qty,
               sum(case when ih.created_at > $1 then case when ih.qty > 0 and ih.transaction_type <> 'ADJUSTMENT' and rtn.id is null then ih.qty else 0 end else 0 end) as total_in_qty,
-              sum(case when ih.created_at > $1 then case when ih.qty < 0 and ih.transaction_type <> 'ADJUSTMENT' then ih.qty else 0 end else 0 end) as total_out_qty,
+              sum(case when ih.created_at > $1 then case when (ih.qty < 0 and ih.transaction_type <> 'ADJUSTMENT')  or ih.transaction_type = 'RETURN' then ih.qty else 0 end else 0 end) as total_out_qty,
               ih.product_id,
               sum(case when rtn.id is not null then qty else 0 end) as total_return_qty
               from temp_inv_history ih
