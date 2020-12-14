@@ -22,6 +22,7 @@ export class ProceedEditedBatchPopup extends localize(i18next)(LitElement) {
           display: flex;
           flex: 1;
           margin: 10px;
+          overflow-y: auto;
         }
         .grist {
           display: flex;
