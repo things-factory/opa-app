@@ -45,7 +45,9 @@ export const elcclDailyOrderInventoryReport = {
         await trxMgr.query(
           `
           create temp table temp_invHistory as (
-            select rih.pallet_id, rih.seq, rih.order_no , rih.order_ref_no , an.delivery_order_no as do_ref_no, rih.bizplace_id, rih.ref_order_id, rih.created_at, 
+            select rih.pallet_id, rih.seq, 
+            coalesce(grn.name, do2.name, rih.order_no) as order_no , rih.order_ref_no , an.delivery_order_no as do_ref_no, rih.bizplace_id, rih.ref_order_id, 
+            coalesce(grn.created_at, rg.created_at, rih.created_at) as created_at, 
             rih.qty, inv.packing_type, inv.reusable_pallet_id, rih.transaction_type, 
             case when rih.status = 'TERMINATED' then rih.status else 'STORED' end as status,
             (case when lag(case when rih.status = 'TERMINATED' then 0 else 1 end) over (partition by rih.pallet_id order by rih.seq) = (case when rih.status = 'TERMINATED' then 0 else 1 end) 
@@ -53,9 +55,12 @@ export const elcclDailyOrderInventoryReport = {
             from reduced_inventory_histories rih
             inner join inventories inv on inv.domain_id =rih.domain_id and inv.pallet_id =rih.pallet_id 
             left join arrival_notices an on an.id = rih.ref_order_id::uuid and an.domain_id =rih.domain_id 
+            left join goods_receival_notes grn on grn.arrival_notice_id = an.id
+            left join release_goods rg on rg.id = rih.ref_order_id::uuid and rg.domain_id =rih.domain_id 
+            left join delivery_orders do2 on do2.release_good_id = rg.id
             where ((rih.transaction_type <> 'PUTAWAY' and rih.transaction_type <> 'ADJUSTMENT' and rih.transaction_type <> 'RELOCATE') or rih.qty <> 0)
             and rih.domain_id =$1 and rih.bizplace_id = $2
-            and rih.created_at < $3::timestamp + '1 month' + $4::interval
+            and coalesce(grn.created_at, rg.created_at, rih.created_at) < $3::timestamp + '1 month' + $4::interval
           )
         `,
         [context.state.domain.id, bizplace.id, month, tzoffset]

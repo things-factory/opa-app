@@ -54,8 +54,8 @@ export const elcclInventoryHistoryPalletDetailReport = {
 
       const result = await getRepository(InventoryHistory).query(`
         with invHistory as (
-          select case when js.name is null then case when ar.name is null then 'NEW' else ar.name end else js.name end as job_sheet, 
-          case when js.container_size is null then '' else js.container_size end as container_size,
+          select COALESCE(js3.name, js.name, ar.name, 'NEW') as job_sheet,
+          COALESCE(js3.container_size, js.container_size, '') as container_size,
           i2.batch_id,
           bzp.name as bizplace_name,
           i2.pallet_id, ih.seq, ih.status, ih.transaction_type, i2.product_id, 
@@ -67,6 +67,10 @@ export const elcclInventoryHistoryPalletDetailReport = {
           left join order_inventories oi on oi.inventory_id = i2.id and oi.arrival_notice_id is not null
           left join arrival_notices ar on ar.id = oi.arrival_notice_id
           left join job_sheets js on js.id = ar.job_sheet_id
+          left join inventories i3 on i2.ref_inventory_id = i3.id
+          left join order_inventories oi3 on oi3.inventory_id = i3.id and oi3.arrival_notice_id is not null
+          left join arrival_notices ar3 on ar3.id = oi3.arrival_notice_id
+          left join job_sheets js3 on js3.id = ar3.job_sheet_id
           where
             i2.domain_id = '${context.state.domain.id}'
             and (
