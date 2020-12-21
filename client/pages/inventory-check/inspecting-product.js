@@ -239,7 +239,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                 <input
                   name="inspectedQty"
                   type="number"
-                  .value="${this.selectedInventory?.inspectedQty ? this.selectedInventory.inspectedQty : ''}"
+                  .value="${this.selectedInventory?.inspectedQty || this.selectedInventory?.qty || ''}"
                 />
 
                 <label>${i18next.t('label.inspected_uom_value')}</label>
@@ -247,11 +247,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                   name="inspectedUomValue"
                   type="number"
                   step=".01"
-                  .value="${this.selectedInventory?.uomValue
-                    ? this.selectedInventory?.inspectedUomValue
-                      ? this.selectedInventory.inspectedUomValue
-                      : this.selectedInventory.uomValue
-                    : ''}"
+                  .value="${this.selectedInventory?.inspectedUomValue || this.selectedInventory?.uomValue || ''}"
                 />
 
                 <label>${i18next.t('label.uom')}</label>
