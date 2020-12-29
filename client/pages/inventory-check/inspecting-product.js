@@ -10,6 +10,7 @@ import { connect } from 'pwa-helpers/connect-mixin.js'
 import { openPopup } from '@things-factory/layout-base'
 import { fetchLocationSortingRule } from '../../fetch-location-sorting-rule'
 import { LOCATION_SORTING_RULE, ORDER_TYPES, ORDER_INVENTORY_STATUS, WORKSHEET_STATUS } from '../constants'
+import { fetchSettingRule } from '../../fetch-setting-value'
 import './check-inventory-popup'
 
 const VIEW_TYPE = {
@@ -30,6 +31,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       selectedInventory: Object,
       viewType: String,
       isReleasing: Boolean,
+      _hideCCColumnSetting: Boolean,
       missingInventoryConfig: Object,
       missingInventoryData: Object,
       formattedLocations: Array,
@@ -239,7 +241,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                 <input
                   name="inspectedQty"
                   type="number"
-                  .value="${this.selectedInventory?.inspectedQty ? this.selectedInventory.inspectedQty : ''}"
+                  .value="${this._hideCCColumnSetting
+                    ? this.selectedInventory?.inspectedQty || ''
+                    : this.selectedInventory?.inspectedQty || this.selectedInventory?.qty || ''}"
                 />
 
                 <label>${i18next.t('label.inspected_uom_value')}</label>
@@ -247,7 +251,9 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
                   name="inspectedUomValue"
                   type="number"
                   step=".01"
-                  .value="${this.selectedInventory?.inspectedUomValue ? this.selectedInventory.inspectedUomValue : ''}"
+                  .value="${this._hideCCColumnSetting
+                    ? this.selectedInventory?.inspectedUomValue || ''
+                    : this.selectedInventory?.inspectedUomValue || this.selectedInventory?.uomValue || ''}"
                 />
 
                 <label>${i18next.t('label.uom')}</label>
@@ -268,6 +274,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
   constructor() {
     super()
     this.isReleasing = false
+    this._hideCCColumnSetting = false
     this.locationData = { records: [] }
     this.inventoryData = { records: [] }
     this.formattedLocations = []
@@ -353,6 +360,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
 
   async pageInitialized() {
     this.locationSortingRules = await fetchLocationSortingRule(LOCATION_SORTING_RULE.INSPECTING_PRODUCT.value)
+    this._hideCCColumnSetting = await fetchSettingRule('hide-cc-columns')
 
     this.locationConfig = {
       pagination: { infinite: true },
@@ -404,19 +412,35 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
           }
         }
       },
-      list: {
-        fields: [
-          'completed',
-          'palletId',
-          'batchId',
-          'inspectedBatchNo',
-          'inspectedQty',
-          'uom',
-          'inspectedUomValue',
-          'inspectedLocation',
-          'orderInventoryStatus'
-        ]
-      },
+      list: this._hideCCColumnSetting
+        ? {
+            fields: [
+              'completed',
+              'palletId',
+              'batchId',
+              'inspectedBatchNo',
+              'inspectedQty',
+              'inspectedUomValue',
+              'uom',
+              'inspectedLocation',
+              'orderInventoryStatus'
+            ]
+          }
+        : {
+            fields: [
+              'completed',
+              'palletId',
+              'batchId',
+              'inspectedBatchNo',
+              'qty',
+              'inspectedQty',
+              'uomValue',
+              'inspectedUomValue',
+              'uom',
+              'inspectedLocation',
+              'orderInventoryStatus'
+            ]
+          },
       columns: [
         { type: 'gutter', gutterName: 'sequence' },
         { type: 'boolean', name: 'completed', header: i18next.t('button.completed'), width: 80 },
@@ -438,10 +462,26 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
         },
         {
           type: 'integer',
+          name: 'qty',
+          header: i18next.t('label.qty'),
+          width: 80,
+          record: { align: 'center' },
+          hidden: this._hideCCColumnSetting
+        },
+        {
+          type: 'integer',
           name: 'inspectedQty',
           header: i18next.t('label.inspected_qty'),
           width: 100,
           record: { align: 'center' }
+        },
+        {
+          type: 'float',
+          name: 'uomValue',
+          header: i18next.t('label.uom_value'),
+          width: 80,
+          record: { align: 'center' },
+          hidden: this._hideCCColumnSetting
         },
         {
           type: 'float',
@@ -467,7 +507,7 @@ class InspectingProduct extends connect(store)(localize(i18next)(PageView)) {
       ]
     }
 
-    const missingInventoryColumns = ['sequence', 'palletId', 'batchId', 'uom']
+    const missingInventoryColumns = ['sequence', 'palletId', 'batchId', 'qty', 'uomValue', 'uom']
     this.missingInventoryConfig = {
       pagination: { infinite: true },
       rows: {
