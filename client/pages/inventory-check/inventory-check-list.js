@@ -104,7 +104,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
         props: { searchOper: 'eq' }
       },
       {
-        name: 'orderStatus',
+        name: 'inventoryCheckStatus',
         label: i18next.t('field.order_status'),
         type: 'select',
         options: [
@@ -126,7 +126,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
 
     this.config = {
       list: {
-        fields: ['inventoryCheck', 'type', 'Customer', 'executionDate', 'orderStatus', 'status', 'startedAt', 'endedAt']
+        fields: ['inventoryCheck', 'type', 'Customer', 'executionDate', 'inventoryCheckStatus', 'status', 'startedAt', 'endedAt']
       },
       rows: { appendable: false },
       columns: [
@@ -140,7 +140,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
             click: (columns, data, column, record, rowIndex) => {
               if (!record.id) return
               const type = record.type
-              const status = record.orderStatus
+              const status = record.inventoryCheckStatus
 
               // Handle PICKING
               if (
@@ -181,7 +181,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
         },
         {
           type: 'string',
-          name: 'orderStatus',
+          name: 'inventoryCheckStatus',
           header: i18next.t('field.order_status'),
           record: { align: 'center' },
           sortable: true,
@@ -235,7 +235,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
     return this.searchForm.shadowRoot.querySelector('input[name=bizplace]')
   }
 
-  async fetchHandler({ page, limit, sorters = [{ name: 'endedAt', desc: true }] }) {
+  async fetchHandler({ page, limit, sorters }) {
     const filters = await this.searchForm.getQueryFilters()
     filters.push({
       name: 'type',
@@ -246,6 +246,11 @@ class InventoryCheckList extends localize(i18next)(PageView) {
         WORKSHEET_TYPE.STOCK_TAKE.value
       ]
     })
+
+    sorters = [
+      { name: 'inventoryCheckStatus', desc: true },
+      { name: 'endedAt', desc: true }
+    ]
 
     const response = await client.query({
       query: gql`
@@ -295,7 +300,7 @@ class InventoryCheckList extends localize(i18next)(PageView) {
               ...item,
               executionDate: item.inventoryCheck && item.inventoryCheck.executionDate,
               status: item.status,
-              orderStatus: item.inventoryCheck && item.inventoryCheck.status
+              inventoryCheckStatus: item.inventoryCheck && item.inventoryCheck.status
             }
           }) || {}
       }
