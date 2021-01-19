@@ -57,7 +57,8 @@ export const elcclDailyOrderInventoryReport = {
             left join arrival_notices an on an.id = rih.ref_order_id::uuid and an.domain_id =rih.domain_id 
             left join goods_receival_notes grn on grn.arrival_notice_id = an.id
             left join release_goods rg on rg.id = rih.ref_order_id::uuid and rg.domain_id =rih.domain_id 
-            left join delivery_orders do2 on do2.release_good_id = rg.id
+            left join order_inventories oi on oi.release_good_id = rih.ref_order_id::uuid and oi.inventory_id = inv.id
+            left join delivery_orders do2 on do2.id = oi.delivery_order_id
             where ((rih.transaction_type <> 'PUTAWAY' and rih.transaction_type <> 'ADJUSTMENT' and rih.transaction_type <> 'RELOCATE') or rih.qty <> 0)
             and rih.domain_id =$1 and rih.bizplace_id = $2
             and coalesce(grn.created_at, rg.created_at, rih.created_at) < $3::timestamp + '1 month' + $4::interval
