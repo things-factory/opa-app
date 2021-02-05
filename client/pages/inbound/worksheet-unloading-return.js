@@ -207,6 +207,8 @@ class WorksheetUnloadingReturn extends localize(i18next)(PageView) {
           worksheet(${gqlBuilder.buildArgs({
             name: this._worksheetNo
           })}) {
+            id
+            name
             status
             releaseGood {
               name
