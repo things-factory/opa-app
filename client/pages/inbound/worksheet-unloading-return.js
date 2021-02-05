@@ -226,6 +226,7 @@ class WorksheetUnloadingReturn extends localize(i18next)(PageView) {
               description
             }
             worksheetDetails {
+              id
               name
               description
               targetInventory {
@@ -269,6 +270,7 @@ class WorksheetUnloadingReturn extends localize(i18next)(PageView) {
         records: worksheetDetails.map(worksheetDetail => {
           return {
             ...worksheetDetail.targetInventory.inventory,
+            id: worksheetDetail.id,
             name: worksheetDetail.name,
             description: worksheetDetail.description,
             returnQty: worksheetDetail.targetInventory.returnQty,
