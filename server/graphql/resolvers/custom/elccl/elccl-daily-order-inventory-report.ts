@@ -46,9 +46,11 @@ export const elcclDailyOrderInventoryReport = {
           `
           create temp table temp_invHistory as (
             select rih.pallet_id, rih.seq, 
-            coalesce(grn.name, do2.name, rih.order_no) as order_no , rih.order_ref_no , an.delivery_order_no as do_ref_no, rih.bizplace_id, rih.ref_order_id, 
+            coalesce(grn.name, do2.name, rih.order_no) as order_no , rih.order_ref_no , an.delivery_order_no as do_ref_no, 
+            .bizplace_id, rih.ref_order_id, 
             coalesce(grn.created_at, rg.created_at, rih.created_at) as created_at, 
-            rih.qty, inv.packing_type, inv.reusable_pallet_id, rih.transaction_type, 
+            CASE WHEN rih.transaction_type = 'PICKING' THEN COALESCE(-oi.release_qty,rih.qty) ELSE rih.qty END AS qty,
+            inv.packing_type, inv.reusable_pallet_id, rih.transaction_type, 
             case when rih.status = 'TERMINATED' then rih.status else 'STORED' end as status,
             (case when lag(case when rih.status = 'TERMINATED' then 0 else 1 end) over (partition by rih.pallet_id order by rih.seq) = (case when rih.status = 'TERMINATED' then 0 else 1 end) 
               then 0 else 1 end) as startflag
@@ -121,10 +123,14 @@ export const elcclDailyOrderInventoryReport = {
             sum(case when packing_type = 'BAG' then qty else 0 end) as bag, 
             sum(case when packing_type = 'BASKET' then qty else 0 end) as basket,
             0 as carton_running_total, 0 as bag_running_total, 0 as basket_running_total
-            from temp_invHistory 
-            where created_at >= (date '${month}')::timestamp and qty <> 0
-            group by created_at::date, order_no, order_ref_no, do_ref_no
-            order by created_at
+            from 
+            (
+              SELECT pallet_id, packing_type, created_at, order_no, order_ref_no, do_ref_no, min(qty) AS qty FROM temp_invHistory 
+              where created_at >= (date '${month}')::timestamp and qty <> 0
+              group by pallet_id, packing_type, created_at, order_no, order_ref_no, do_ref_no
+              order by pallet_id, created_at, order_no, order_ref_no, do_ref_no
+            ) foo
+            group by created_at, order_no, order_ref_no, do_ref_no
           ) loose
           left join (
             select MIN(started_at) as created_at, order_no, order_ref_no, do_ref_no,
