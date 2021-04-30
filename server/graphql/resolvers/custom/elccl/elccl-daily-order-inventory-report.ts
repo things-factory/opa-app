@@ -47,7 +47,7 @@ export const elcclDailyOrderInventoryReport = {
           create temp table temp_invHistory as (
             select rih.pallet_id, rih.seq, 
             coalesce(grn.name, do2.name, rih.order_no) as order_no , rih.order_ref_no , an.delivery_order_no as do_ref_no, 
-            .bizplace_id, rih.ref_order_id, 
+            rih.bizplace_id, rih.ref_order_id, 
             coalesce(grn.created_at, rg.created_at, rih.created_at) as created_at, 
             CASE WHEN rih.transaction_type = 'PICKING' THEN COALESCE(-oi.release_qty,rih.qty) ELSE rih.qty END AS qty,
             inv.packing_type, inv.reusable_pallet_id, rih.transaction_type, 
